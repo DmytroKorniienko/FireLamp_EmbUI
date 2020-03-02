@@ -1,0 +1,187 @@
+{
+    "app":"JeeUI2",
+    "menu":[
+        "Главная страница",
+        "Настройки чего-то там",
+        "Информация",
+        "О нас"
+    ],
+    "content":[
+        [
+            {
+                "html": "input",
+                "id": "ssid",
+                "name": "ssid",
+                "type": "text",
+                "value": "test",
+                "placeholder": "Точка доступа",
+                "label": "Точка доступа"
+            },
+            {
+                "html": "input",
+                "id": "range",
+                "name": "ssid",
+                "type": "range",
+                "value": "28",
+                "min": "-10",
+                "max": "100",
+                "step": "0.1",
+                "label": "Точка доступа"
+            },
+            {
+                "html": "input",
+                "id": "chk",
+                "name": "ssid",
+                "type": "checkbox",
+                "value": "true",
+                "label": "Точка доступа"
+            },
+            {
+                "html": "input",
+                "id": "pass",
+                "name": "pass",
+                "type": "password",
+                "value": "",
+                "label": "Пароль"
+            },
+            {
+                "html": "input",
+                "id": "test",
+                "name": "test",
+                "type": "text",
+                "value": "test",
+                "placeholder": "Тестовое",
+                "label": "Тестовое"
+            },
+            {
+                "html": "select",
+                "id": "test",
+                "value": "test",
+                "label": "Выбирай!",
+                "options": [
+                    "Первый",
+                    "Второй",
+                    "Третий",
+                    "Четвертый",
+                    "Пятый",
+                    "Шестой",
+                    "Седьмой",
+                    "Восьмой"
+                ]
+            }
+        ],
+        [
+            {
+                "html": "input",
+                "id": "ssid",
+                "name": "ssid",
+                "type": "text",
+                "value": "test",
+                "placeholder": "Точка доступа",
+                "label": "Точка доступа"
+            },
+            {
+                "html": "select",
+                "id": "test",
+                "value": "test",
+                "label": "Выбирай!",
+                "options": [
+                    "Первый",
+                    "Второй",
+                    "Третий",
+                    "Четвертый",
+                    "Пятый",
+                    "Шестой",
+                    "Седьмой",
+                    "Восьмой"
+                ]
+            },
+            {
+                "html": "select",
+                "id": "test",
+                "value": "test",
+                "label": "Выбирай!",
+                "options": [
+                    "Первый",
+                    "Второй",
+                    "Третий",
+                    "Четвертый",
+                    "Пятый",
+                    "Шестой",
+                    "Седьмой",
+                    "Восьмой"
+                ]
+            },
+            {
+                "html": "select",
+                "id": "test",
+                "value": "test",
+                "label": "Выбирай!",
+                "options": [
+                    "Первый",
+                    "Второй",
+                    "Третий",
+                    "Четвертый",
+                    "Пятый",
+                    "Шестой",
+                    "Седьмой",
+                    "Восьмой"
+                ]
+            }
+        ],
+        [
+            {
+                "html": "input",
+                "id": "ssid",
+                "name": "ssid",
+                "type": "text",
+                "value": "test",
+                "placeholder": "Точка доступа",
+                "label": "Точка доступа"
+            },
+            {
+                "html": "select",
+                "id": "test",
+                "value": "test",
+                "label": "Выбирай!",
+                "options": [
+                    "Первый",
+                    "Второй",
+                    "Третий",
+                    "Четвертый",
+                    "Пятый",
+                    "Шестой",
+                    "Седьмой",
+                    "Восьмой"
+                ]
+            },
+            {
+                "html": "select",
+                "id": "test",
+                "value": "test",
+                "label": "Выбирай!",
+                "options": [
+                    "Первый",
+                    "Второй",
+                    "Третий",
+                    "Четвертый",
+                    "Пятый",
+                    "Шестой",
+                    "Седьмой",
+                    "Восьмой"
+                ]
+            }
+        ],
+        [
+            {
+                "html": "input",
+                "id": "ssid",
+                "name": "ssid",
+                "type": "text",
+                "value": "test",
+                "placeholder": "Точка доступа",
+                "label": "Точка доступа"
+            }
+        ]
+    ]
+}
