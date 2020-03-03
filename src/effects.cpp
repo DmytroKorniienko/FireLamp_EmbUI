@@ -71,7 +71,7 @@ void fader(uint8_t step)
 #define EFF_FADE_OUT_SPEED        (70U)                         // скорость затухания
 void sparklesRoutine(CRGB *leds, char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 255-myLamp.effects.getSpeed()){
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     fader(5); return;
   } else {
     myLamp.setEffDelay(millis());
@@ -345,7 +345,7 @@ void fire_drawFrame(bool isColored);
 
 void fireRoutine(CRGB *leds, char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 255-myLamp.effects.getSpeed()){
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
   } else {
     myLamp.setEffDelay(millis());
@@ -658,7 +658,7 @@ void whiteColorRoutine(char *param)
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
 void whiteColorStripeRoutine(CRGB *leds, char *param)
 {
-    if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 255-myLamp.effects.getSpeed()){
+    if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
       return;
     } else {
       myLamp.setEffDelay(millis());
@@ -681,4 +681,64 @@ void whiteColorStripeRoutine(CRGB *leds, char *param)
         myLamp.drawPixelXY(x, max((uint8_t)(HEIGHT - 1U) - (y + 1U) + bottomOffset, 0U), color); // при нечётной - одна, но дважды
       }
     }
+}
+
+// ============= водо/огне/лава/радуга/хренопад ===============
+// SPARKING: What chance (out of 255) is there that a new spark will be lit?
+// Higher chance = more roaring fire.  Lower chance = more flickery fire.
+// Default 120, suggested range 50-200.
+#define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
+void fire2012WithPalette(CRGB*leds, char *param) {
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+
+  uint8_t scale = myLamp.effects.getScale();
+  uint8_t COOLINGNEW = constrain((uint16_t)(scale % 16) * 32 / HEIGHT + 16, 1, 255) ;
+  // Array of temperature readings at each simulation cell
+  static byte heat[WIDTH][HEIGHT];
+
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    // Step 1.  Cool down every cell a little
+    for (int i = 0; i < HEIGHT; i++) {
+      //heat[x][i] = qsub8(heat[x][i], random8(0, ((COOLINGNEW * 10) / HEIGHT) + 2));
+      heat[x][i] = qsub8(heat[x][i], random8(0, COOLINGNEW));
+    }
+
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for (int k = HEIGHT - 1; k >= 2; k--) {
+      heat[x][k] = (heat[x][k - 1] + heat[x][k - 2] + heat[x][k - 2]) / 3;
+    }
+
+    // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+    if (random8() < SPARKINGNEW) {
+      int y = random8(2);
+      heat[x][y] = qadd8(heat[x][y], random8(160, 255));
+    }
+
+    // Step 4.  Map from heat cells to LED colors
+    for (int j = 0; j < HEIGHT; j++) {
+      // Scale the heat value from 0-255 down to 0-240
+      // for best results with color palettes.
+      byte colorindex = scale8(heat[x][j], 240);
+      if  (scale < 16) {            // Lavafall
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(LavaColors_p, colorindex));
+      } else if (scale < 32) {      // Firefall
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(HeatColors_p, colorindex));
+      } else if (scale < 48) {      // Waterfall
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(PartyColors_p, colorindex));
+      } else if (scale < 64) {      // Skyfall
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(CloudColors_p, colorindex));
+      } else if (scale < 80) {      // Forestfall
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(ForestColors_p, colorindex));
+      } else if (scale < 96) {      // Rainbowfall
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(RainbowColors_p, colorindex));        
+      } else {                      // Aurora
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(RainbowStripeColors_p, colorindex));
+      }
+    }
+  }
 }

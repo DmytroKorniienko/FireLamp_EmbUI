@@ -83,7 +83,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef ESP_USE_BUTTON
 const PROGMEM byte PULL_MODE=HIGH_PULL;                             // подтяжка кнопки к питанию (для механических кнопок НО, на массу)
 //const byte PULL_MODE=LOW_PULL;                            // подтяжка кнопки к нулю (для сенсорных кнопок на TP223)
-#define BUTTON_STEP_TIMEOUT   (100U)                        // каждые BUTTON_STEP_TIMEOUT мс будет генерироваться событие удержания кнопки (для регулировки яркости)
+#define BUTTON_STEP_TIMEOUT   (50U)                         // каждые BUTTON_STEP_TIMEOUT мс будет генерироваться событие удержания кнопки (для регулировки яркости)
 #define BUTTON_CLICK_TIMEOUT  (500U)                        // максимальное время между нажатиями кнопки в мс, до достижения которого считается серия последовательных нажатий
 #define BUTTON_TIMEOUT        (700U)                        // с какого момента начинает считаться, что кнопка удерживается в мс
 #endif

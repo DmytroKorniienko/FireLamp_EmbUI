@@ -169,9 +169,10 @@ void LAMP::buttonTick()
     if(!ONflag){
       numHold = 0;
       mode = MODE_NORMAL;
-      effects.moveBy(storedEffect);
+      if(storedEffect!=EFF_NONE)
+        effects.moveBy(storedEffect);
     } else {
-      storedEffect = ((mode == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+      storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
     }
     
     #ifdef LAMP_DEBUG

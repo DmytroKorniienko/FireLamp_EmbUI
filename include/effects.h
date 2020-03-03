@@ -74,12 +74,14 @@ EFF_LIGHTERS,                                 // Светлячки
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
 EFF_PAINTBALL,                                // Пейнтбол
 EFF_CUBE,                                     // Блуждающий кубик
+EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад 
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
 void sparklesRoutine(CRGB*,char*);
 void fireRoutine(CRGB*,char*);
 void whiteColorStripeRoutine(CRGB *, char *);
+void fire2012WithPalette(CRGB*, char *);
 
 //-------------------------------------------------
 
@@ -100,6 +102,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_NONE, nullptr, 127, 127, 127, false, false, nullptr, nullptr},
     {EFF_SPARKLES, "Светлячки", 127, 127, 127, true, true, sparklesRoutine, nullptr},
     {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
+    {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 
@@ -212,18 +215,19 @@ public:
     {
         int i;
 
-        for(i=arrIdx; i<MODE_AMOUNT; i++){
+        for(i=arrIdx+1; i<MODE_AMOUNT; i++){
             if(effects[i].canBeSelected){
                 arrIdx = i;
                 curEff = effects[i].eff_nb;
+                return;
             }
         }
-        if(!effects[i].canBeSelected){ // MODE_AMOUNT-1 не может быть выбран, тогда начнем с начала
-            for(i=0; i<MODE_AMOUNT; i++){
-                if(effects[i].canBeSelected){
-                    arrIdx = i;
-                    curEff = effects[i].eff_nb;
-                }
+        i = 1;
+        for(; i<MODE_AMOUNT; i++){
+            if(effects[i].canBeSelected){
+                arrIdx = i;
+                curEff = effects[i].eff_nb;
+                return;
             }
         }
     }
@@ -232,18 +236,19 @@ public:
     { 
         int i;
 
-        for(i=arrIdx; i>=0; i--){
+        for(i=arrIdx-1; i>0; i--){
             if(effects[i].canBeSelected){
                 arrIdx = i;
                 curEff = effects[i].eff_nb;
+                return;
             }
         }
-        if(!effects[i].canBeSelected){ // 0 не может быть выбран, тогда начнем с конца
-            for(i=MODE_AMOUNT-1; i>=0; i--){
-                if(effects[i].canBeSelected){
-                    arrIdx = i;
-                    curEff = effects[i].eff_nb;
-                }
+        i = MODE_AMOUNT-1;
+        for(; i>=0; i--){
+            if(effects[i].canBeSelected){
+                arrIdx = i;
+                curEff = effects[i].eff_nb;
+                return;
             }
         }
     }
