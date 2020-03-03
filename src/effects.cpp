@@ -71,11 +71,15 @@ void fader(uint8_t step)
 #define EFF_FADE_OUT_SPEED        (70U)                         // скорость затухания
 void sparklesRoutine(CRGB *leds, char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) > myLamp.effects.getSpeed()){
-    myLamp.setEffDelay(millis()); fader(10); return;
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 255-myLamp.effects.getSpeed()){
+    fader(5); return;
   } else {
     myLamp.setEffDelay(millis());
   }
+  
+  // static uint32_t chktime = millis();
+  // LOG.println(millis()-chktime);
+  // chktime = millis();
   
   for (uint8_t i = 0; i < myLamp.effects.getScale(); i++)
   {
@@ -83,7 +87,7 @@ void sparklesRoutine(CRGB *leds, char *param)
     uint8_t y = random(0U, HEIGHT);
     if (myLamp.getPixColorXY(x, y) == 0U)
     {
-      myLamp.setLeds(myLamp.getPixelNumber(x, y),CHSV(random(0U, 255U), 255U, 255U));
+      myLamp.setLeds(myLamp.getPixelNumber(x, y),CHSV(random(0U, 255U), random(0U, 255U), random(0U, 255U)));
     }
   }
   fader(EFF_FADE_OUT_SPEED);
@@ -341,8 +345,8 @@ void fire_drawFrame(bool isColored);
 
 void fireRoutine(CRGB *leds, char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) > myLamp.effects.getSpeed()){
-    myLamp.setEffDelay(millis()); return;
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 255-myLamp.effects.getSpeed()){
+    return;
   } else {
     myLamp.setEffDelay(millis());
   }
@@ -635,4 +639,46 @@ void fire_drawFrame(bool isColored) {                                         //
     _rowcounter = _rowcounter % 65521 + _iseven  ;
   }
   _framecounter++;
+}
+
+// ------------- белый свет -------------
+void whiteColorRoutine(char *param)
+{
+  if (myLamp.isLoading())
+  {
+    FastLED.clear();
+
+    for (uint16_t i = 0U; i < NUM_LEDS; i++)
+    {
+      myLamp.setLeds(i, CHSV(0U, 0U, 255U));
+    }
+  }
+}
+
+// ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
+void whiteColorStripeRoutine(CRGB *leds, char *param)
+{
+    if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 255-myLamp.effects.getSpeed()){
+      return;
+    } else {
+      myLamp.setEffDelay(millis());
+    }
+    
+    uint8_t centerY = max((uint8_t)round(HEIGHT / 2.0F) - 1, 0);
+    uint8_t bottomOffset = (uint8_t)(!(HEIGHT & 1) && (HEIGHT > 1));                      // если высота матрицы чётная, линий с максимальной яркостью две, а линии с минимальной яркостью снизу будут смещены на один ряд
+    for (int16_t y = centerY; y >= 0; y--)
+    {
+      CRGB color = CHSV(
+        45U,                                                                              // определяем тон
+        map(myLamp.effects.getSpeed(), 0U, 255U, 0U, 170U),                            // определяем насыщенность
+        y == centerY                                                                                                    // определяем яркость
+          ? BRIGHTNESS                                                                                                  // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
+          : (myLamp.effects.getScale() / 100.0F) > ((centerY + 1.0F) - (y + 1.0F)) / (centerY + 1.0F) ? BRIGHTNESS : 0);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо 0 в зависимости от масштаба //BRIGHTNESS/((centerY + 1.0F)-y)
+
+      for (uint8_t x = 0U; x < WIDTH; x++)
+      {
+        myLamp.drawPixelXY(x, y, color);                                                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
+        myLamp.drawPixelXY(x, max((uint8_t)(HEIGHT - 1U) - (y + 1U) + bottomOffset, 0U), color); // при нечётной - одна, но дважды
+      }
+    }
 }

@@ -79,6 +79,7 @@ EFF_WHITE_COLOR                               // Белый свет
 
 void sparklesRoutine(CRGB*,char*);
 void fireRoutine(CRGB*,char*);
+void whiteColorStripeRoutine(CRGB *, char *);
 
 //-------------------------------------------------
 
@@ -98,7 +99,8 @@ typedef struct _EFFECT {
 static EFFECT _EFFECTS_ARR[] = {
     {EFF_NONE, nullptr, 127, 127, 127, false, false, nullptr, nullptr},
     {EFF_SPARKLES, "Светлячки", 127, 127, 127, true, true, sparklesRoutine, nullptr},
-    {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr}//,
+    {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
+    {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 
 class EffectWorker {

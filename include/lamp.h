@@ -220,6 +220,8 @@ private:
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     
+    bool isLoading() {return loadingFlag; loadingFlag=false;}
+
     LAMP() : tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME)
     {
 
