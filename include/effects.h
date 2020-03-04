@@ -63,7 +63,6 @@ EFF_RAINBOW_STRIPE,                           // Павлин 3D
 EFF_ZEBRA,                                    // Зебра 3D
 EFF_FOREST,                                   // Лес 3D
 EFF_OCEAN,                                    // Океан 3D
-EFF_COLOR,                                    // Цвет
 EFF_SNOW,                                     // Снегопад
 EFF_SNOWSTORM,                                // Метель
 EFF_STARFALL,                                 // Звездопад
@@ -82,6 +81,7 @@ void whiteColorStripeRoutine(CRGB*, const char*);
 void fire2012WithPalette(CRGB*, const char*);
 void pulse(CRGB*, const char*);
 void rainbowDiagonalRoutine(CRGB*, const char*);
+void colorsRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -104,6 +104,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
     {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
     {EFF_RAINBOW_2D, "Радуга 2D", 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
+    {EFF_COLORS, "Цвета", 127, 127, 127, true, true, colorsRoutine, nullptr},
     {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulse, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };

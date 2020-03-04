@@ -221,7 +221,8 @@ private:
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     
-    bool isLoading() {return loadingFlag; loadingFlag=false;}
+    bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
+    void setLoading(bool flag=true) {loadingFlag = flag;}
 
     LAMP() : tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME)
     {

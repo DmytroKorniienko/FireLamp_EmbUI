@@ -134,6 +134,7 @@ void update(){ // функция выполняется после ввода д
             curEff->brightness = jee.param(F("bright")).toInt();
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
+            myLamp.setLoading(true); // перерисовать эффект
             //LOG.printf_P("%s , получили %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);
 
             if(prevEffect!=nullptr){

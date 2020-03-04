@@ -897,3 +897,20 @@ void rainbowDiagonalRoutine(CRGB *leds, const char *param)
   }
 }
 
+// ------------- цвета -----------------
+void colorsRoutine(CRGB *leds, const char *param)
+{
+  static unsigned int step = 0; // доп. задержка
+  unsigned int delay = (myLamp.effects.getSpeed()==1)?4294967294:255-myLamp.effects.getSpeed(); // на скорости 1 будет очень долгое ожидание)))
+  
+  if (myLamp.isLoading()){ // начальная установка цвета
+    hue = myLamp.effects.getScale(); myLamp.fillAll(CHSV(hue, 255U, 255U)); return;
+  } else {
+    step=(step+1)%(delay+1);
+    if(step!=delay) return;
+  }
+  //LOG.println(hue);
+
+  hue += myLamp.effects.getScale();
+  myLamp.fillAll(CHSV(hue, 255U, 255U));
+}
