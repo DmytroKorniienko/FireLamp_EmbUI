@@ -74,14 +74,16 @@ EFF_LIGHTERS,                                 // Светлячки
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
 EFF_PAINTBALL,                                // Пейнтбол
 EFF_CUBE,                                     // Блуждающий кубик
-EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад 
+EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
+EFF_PULSE,                                    // Пульс 
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
-void sparklesRoutine(CRGB*,char*);
-void fireRoutine(CRGB*,char*);
-void whiteColorStripeRoutine(CRGB *, char *);
-void fire2012WithPalette(CRGB*, char *);
+void sparklesRoutine(CRGB*,const char*);
+void fireRoutine(CRGB*,const char*);
+void whiteColorStripeRoutine(CRGB*, const char*);
+void fire2012WithPalette(CRGB*, const char*);
+void pulse(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -93,7 +95,7 @@ typedef struct _EFFECT {
     byte scale;
     bool canBeSelected;
     bool isFavorite;
-    void (*func)(CRGB*,char*);
+    void (*func)(CRGB*,const char*);
     char *param;
     void setNone(){ eff_nb=EFF_NONE; eff_name=nullptr; brightness=127; speed=127; scale=127; canBeSelected=false; isFavorite=false; func=nullptr; param=nullptr; }
 } EFFECT;
@@ -103,6 +105,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_SPARKLES, "Светлячки", 127, 127, 127, true, true, sparklesRoutine, nullptr},
     {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
     {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
+    {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulse, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 

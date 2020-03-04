@@ -124,7 +124,7 @@ void LAMP::buttonTick()
       tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
       changePower();
 #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Demo mode: %d, storeEffect: %d\n"), mode, storedEffect);
+      LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), mode, storedEffect);
 #endif
     }
     
@@ -140,7 +140,7 @@ void LAMP::buttonTick()
       FastLED.setBrightness(getLampBrightness());
 
 #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("currentMode: %d, storeEffect: %d\n"), mode, storedEffect);
+      LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
 #endif
       
       ONflag = true;
@@ -177,9 +177,9 @@ void LAMP::buttonTick()
     
     #ifdef LAMP_DEBUG
     if(ONflag)
-      LOG.printf_P(PSTR("Лампа выключена, currentMode: %d, storeEffect: %d\n"), mode, storedEffect);
+      LOG.printf_P(PSTR("Лампа выключена, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
     else
-      LOG.printf_P(PSTR("Лампа включена, currentMode: %d, storeEffect: %d\n"), mode, storedEffect);
+      LOG.printf_P(PSTR("Лампа включена, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
     #endif
     
     if (dawnFlag)
@@ -234,7 +234,7 @@ void LAMP::buttonTick()
     // if (otaManager.RequestOtaUpdate())
     // {
     //   ONflag = true;
-    //   currentMode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+    //   lamp mode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
     //   FastLED.clear();
     //   delay(1);
     //   changePower();
@@ -293,8 +293,8 @@ void LAMP::buttonTick()
         if(!numHold){
           numHold = 1;
           // if(mode==MODE_DEMO) {
-          //   storeEffBrightness = modes[currentMode].Brightness; // запоминаем яркость эффекта, которая была изначально
-          //   modes[currentMode].Brightness = GlobalBrightness; // перенакрываем глобальной
+          //   storeEffBrightness = modes[lamp mode].Brightness; // запоминаем яркость эффекта, которая была изначально
+          //   modes[lamp mode].Brightness = GlobalBrightness; // перенакрываем глобальной
           // }
         }
         break;
@@ -374,7 +374,7 @@ void LAMP::buttonTick()
     switch (numHold) {
       case 1:
         LOG.printf_P(PSTR("Новое значение яркости: %d\n"), getLampBrightness());
-        //if(lampMode==MODE_DEMO) {GlobalBrightness = modes[currentMode].Brightness; EepromManager::SaveGlobalBrightness(&GlobalBrightness); modes[currentMode].Brightness = storeEffBrightness;}
+        //if(lampMode==MODE_DEMO) {GlobalBrightness = modes[lamp mode].Brightness; EepromManager::SaveGlobalBrightness(&GlobalBrightness); modes[lamp mode].Brightness = storeEffBrightness;}
         break;
       case 2:
         LOG.printf_P(PSTR("Новое значение скорости: %d\n"), effects.getSpeed());
@@ -395,11 +395,11 @@ void LAMP::buttonTick()
     // if(lampMode==MODE_DEMO && GlobalBrightness>0)
     //   FastLED.setBrightness(GlobalBrightness);
     // else
-    //   FastLED.setBrightness(modes[currentMode].Brightness);
+    //   FastLED.setBrightness(modes[lamp mode].Brightness);
 
     // // возвращаем сохраненную яркость, после регулировки глобальной яркости для демо
     // if(lampMode == MODE_DEMO)
-    //   modes[currentMode].Brightness = storeEffBrightness;
+    //   modes[lamp mode].Brightness = storeEffBrightness;
   }
 
   if (tmNumHoldTimer.isReadyManual() && !startButtonHolding) { // сброс текущей комбинации в обычном режиме, если уже не нажата
@@ -455,12 +455,12 @@ void LAMP::effectsTick()
           effects.moveBy(random(0, effects.getModeAmount()));
         else
           effects.moveNext();
-        //storeEffBrightness = modes[currentMode].Brightness;
+        //storeEffBrightness = modes[lamp mode].Brightness;
         loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
         isFaderOn = false;
         faderStep = 1;
 #ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("%s Demo mode: %d, storeEffect: %d\n"),(RANDOM_DEMO?F("Random"):F("Seq")) , mode, storedEffect);
+        LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?F("Random"):F("Seq")) , mode, storedEffect);
 #endif
         currentEffect = effects.getCurrent();
         if(currentEffect->func!=nullptr)

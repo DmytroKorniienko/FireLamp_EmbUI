@@ -69,7 +69,7 @@ void fader(uint8_t step)
 
 // ------------- конфетти --------------
 #define EFF_FADE_OUT_SPEED        (70U)                         // скорость затухания
-void sparklesRoutine(CRGB *leds, char *param)
+void sparklesRoutine(CRGB *leds, const char *param)
 {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     fader(5); return;
@@ -343,7 +343,7 @@ uint8_t _briefNewValue[_nofmasks];
 
 void fire_drawFrame(bool isColored);
 
-void fireRoutine(CRGB *leds, char *param)
+void fireRoutine(CRGB *leds, const char *param)
 {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
@@ -656,7 +656,7 @@ void whiteColorRoutine(char *param)
 }
 
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
-void whiteColorStripeRoutine(CRGB *leds, char *param)
+void whiteColorStripeRoutine(CRGB *leds, const char *param)
 {
     if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
       return;
@@ -688,7 +688,7 @@ void whiteColorStripeRoutine(CRGB *leds, char *param)
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 #define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
-void fire2012WithPalette(CRGB*leds, char *param) {
+void fire2012WithPalette(CRGB*leds, const char *param) {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
   } else {
@@ -703,7 +703,7 @@ void fire2012WithPalette(CRGB*leds, char *param) {
 
   for (uint8_t x = 0; x < WIDTH; x++) {
     // Step 1.  Cool down every cell a little
-    for (int i = 0; i < HEIGHT; i++) {
+    for (unsigned int i = 0; i < HEIGHT; i++) {
       //heat[x][i] = qsub8(heat[x][i], random8(0, ((COOLINGNEW * 10) / HEIGHT) + 2));
       heat[x][i] = qsub8(heat[x][i], random8(0, COOLINGNEW));
     }
@@ -720,7 +720,7 @@ void fire2012WithPalette(CRGB*leds, char *param) {
     }
 
     // Step 4.  Map from heat cells to LED colors
-    for (int j = 0; j < HEIGHT; j++) {
+    for (unsigned int j = 0; j < HEIGHT; j++) {
       // Scale the heat value from 0-255 down to 0-240
       // for best results with color palettes.
       byte colorindex = scale8(heat[x][j], 240);
@@ -741,4 +741,113 @@ void fire2012WithPalette(CRGB*leds, char *param) {
       }
     }
   }
+}
+
+// --------------------------- эффект пульс ----------------------
+// Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp 
+
+void drawCircle(int16_t x0, int16_t y0, uint16_t radius, const CRGB & color){
+  int a = radius, b = 0;
+  int radiusError = 1 - a;
+
+  if (radius == 0) {
+    myLamp.drawPixelXY(x0, y0, color);
+    return;
+  }
+
+  while (a >= b)  {
+    myLamp.drawPixelXY(a + x0, b + y0, color);
+    myLamp.drawPixelXY(b + x0, a + y0, color);
+    myLamp.drawPixelXY(-a + x0, b + y0, color);
+    myLamp.drawPixelXY(-b + x0, a + y0, color);
+    myLamp.drawPixelXY(-a + x0, -b + y0, color);
+    myLamp.drawPixelXY(-b + x0, -a + y0, color);
+    myLamp.drawPixelXY(a + x0, -b + y0, color);
+    myLamp.drawPixelXY(b + x0, -a + y0, color);
+    b++;
+    if (radiusError < 0)
+      radiusError += 2 * b + 1;
+    else
+    {
+      a--;
+      radiusError += 2 * (b - a + 1);
+    }
+  }
+}
+
+uint8_t pulse_hue;
+uint8_t pulse_step = 0;
+void pulse(CRGB *leds, const char *param) {
+    if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+      return;
+    } else {
+      myLamp.setEffDelay(millis());
+    }
+
+  CRGBPalette16 palette;
+  CRGB _pulse_color;
+  uint8_t currentRadius = 4;
+  uint8_t centerX = random8(WIDTH - 5U) + 3U;
+  uint8_t centerY = random8(HEIGHT - 5U) + 3U;
+  //uint16_t _rc;
+  uint8_t _pulse_hue = 0;
+  uint8_t _pulse_hueall = 0;
+  uint8_t _pulse_delta = 0;
+
+  palette = RainbowColors_p;
+  uint8_t _scale = myLamp.effects.getScale();
+  //const uint8_t limitsteps = 6U;
+  //static const float fadeRate = 0.8;
+
+  myLamp.dimAll(248U); // если эффект устанавливается с другими эффектами от Stefan Petrick, тогда  процедура должна называться dimAll (без двоечки)
+  if (pulse_step <= currentRadius) {
+    for (uint8_t i = 0; i < pulse_step; i++ ) {
+      uint8_t _dark = qmul8( 2U, cos8 (128U / (pulse_step + 1U) * (i + 1U))) ;
+      if (_scale == 1) {            // 1 - случайные диски
+        _pulse_hue = pulse_hue;
+        _pulse_color = CHSV(_pulse_hue, 255U, _dark);
+      
+      } else if (_scale <= 17) {    // 2...17 - перелив цвета дисков 
+        _pulse_delta = (17U - _scale) ;
+        _pulse_color = CHSV(_pulse_hueall, 255U, _dark);
+     
+      } else if (_scale <= 33) {    // 18...33 - выбор цвета дисков 
+        _pulse_hue = (_scale - 18U) * 16U ;
+        _pulse_color = CHSV(_pulse_hue, 255U, _dark);
+      
+      } else if (_scale <= 50) {    // 34...50 - дискоцветы
+        _pulse_hue += (_scale - 33U) * 5U ;
+        _pulse_color = CHSV(_pulse_hue, 255U, _dark);
+      
+      } else if (_scale <= 67) {    // 51...67 - пузыри цветы
+        uint8_t _sat =  qsub8( 255U, cos8 (128U / (pulse_step + 1U) * (i + 1U))) ;
+         _pulse_hue += (68U - _scale) * 7U ;
+        _pulse_color = CHSV(_pulse_hue, _sat, _dark);
+      
+      } else if (_scale < 83) {     // 68...83 - выбор цвета пузырей
+        uint8_t _sat =  qsub8( 255U, cos8 (128U / (pulse_step + 1U) * (i + 1U))) ;
+        _pulse_hue = (_scale - 68U) * 16U ;
+        _pulse_color = CHSV(_pulse_hue, _sat, _dark);
+      
+      } else if (_scale < 100) {    // 84...99 - перелив цвета пузырей
+        uint8_t _sat =  qsub8( 255U, cos8 (128U / (pulse_step + 1U) * (i + 1U))) ;
+        _pulse_delta = (_scale - 85U)  ;
+        _pulse_color = CHSV(_pulse_hueall, _sat, _dark);
+      
+      } else { // 100 - случайные пузыри
+        uint8_t _sat =  qsub8( 255U, cos8 (128U / (pulse_step + 1U) * (i + 1U))) ;
+        _pulse_hue = pulse_hue;
+        _pulse_color = CHSV(_pulse_hue, _sat, _dark);
+      }
+      drawCircle(centerX, centerY, i, _pulse_color  );
+    }
+  } else {
+    centerX = random8(WIDTH - 5U) + 3U;
+    centerY = random8(HEIGHT - 5U) + 3U;
+    _pulse_hueall += _pulse_delta;
+    pulse_hue = random8(0U, 255U);
+    currentRadius = random8(3U, 9U);
+    pulse_step = 0;
+  }
+  pulse_step++;
 }

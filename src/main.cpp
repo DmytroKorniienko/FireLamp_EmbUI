@@ -87,7 +87,6 @@ void loop() {
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
 #endif
-    ESP.wdtFeed(); // пнуть собаку
 }
 
 void mqttCallback(String topic, String payload){ // функция вызывается, когда приходят данные MQTT

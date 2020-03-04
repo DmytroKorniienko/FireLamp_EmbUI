@@ -374,6 +374,12 @@ public:
       leds[idx].nscale8(val);
     }
 
+    void dimAll(uint8_t value) {
+      for (uint16_t i = 0; i < NUM_LEDS; i++) {
+        leds[i].nscale8(value); //fadeToBlackBy
+      }
+    }
+
     CRGB getLeds(uint16_t idx)
     {
       return leds[idx];
