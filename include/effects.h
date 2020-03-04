@@ -51,10 +51,8 @@ typedef enum _EFF_ENUM {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
 EFF_SPARKLES,                                 // Конфетти
 EFF_FIRE,                                     // Огонь
-EFF_WATERFALL,                                // Водопад
-EFF_RAINBOW_VER,                              // Радуга вертикальная
-EFF_RAINBOW_HOR,                              // Радуга горизонтальная
-EFF_RAINBOW_DIAG,                             // Радуга диагональная
+EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
+EFF_RAINBOW_2D,                               // Радуга универсальная
 EFF_COLORS,                                   // Смена цвета
 EFF_MADNESS,                                  // Безумие 3D
 EFF_CLOUDS,                                   // Облака 3D
@@ -74,7 +72,6 @@ EFF_LIGHTERS,                                 // Светлячки
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
 EFF_PAINTBALL,                                // Пейнтбол
 EFF_CUBE,                                     // Блуждающий кубик
-EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
 EFF_PULSE,                                    // Пульс 
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
@@ -84,6 +81,7 @@ void fireRoutine(CRGB*,const char*);
 void whiteColorStripeRoutine(CRGB*, const char*);
 void fire2012WithPalette(CRGB*, const char*);
 void pulse(CRGB*, const char*);
+void rainbowDiagonalRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -105,6 +103,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_SPARKLES, "Светлячки", 127, 127, 127, true, true, sparklesRoutine, nullptr},
     {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
     {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
+    {EFF_RAINBOW_2D, "Радуга 2D", 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
     {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulse, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
@@ -112,6 +111,7 @@ static EFFECT _EFFECTS_ARR[] = {
 class EffectWorker {
 private:
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
+    const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     EFFECT* effects = _EFFECTS_ARR;
     EFF_ENUM curEff = EFF_NONE;
     unsigned int arrIdx = 0;

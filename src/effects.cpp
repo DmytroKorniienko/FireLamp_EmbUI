@@ -851,3 +851,49 @@ void pulse(CRGB *leds, const char *param) {
   }
   pulse_step++;
 }
+
+// радуги 2D
+// ------------- радуга вертикальная/горизонтальная ----------------
+uint8_t hue;
+void rainbowHorVertRoutine(bool isVertical)
+{
+  hue += 4;
+  for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
+  {
+    CHSV thisColor = CHSV((uint8_t)(hue + i * myLamp.effects.getScale()%170), 255, 255);
+    for (uint8_t j = 0U; j < (isVertical?HEIGHT:WIDTH); j++)
+    {
+      myLamp.drawPixelXY((isVertical?i:j), (isVertical?j:i), thisColor);
+    }
+  }
+}
+
+// ------------- радуга диагональная -------------
+void rainbowDiagonalRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  if(myLamp.effects.getScale()<85){
+    rainbowHorVertRoutine(false);
+    return;
+  } else if (myLamp.effects.getScale()>170){
+    rainbowHorVertRoutine(true);
+    return;
+  }
+
+  hue += 4;
+  for (uint8_t i = 0U; i < WIDTH; i++)
+  {
+    for (uint8_t j = 0U; j < HEIGHT; j++)
+    {
+      float twirlFactor = 3.0F * (myLamp.effects.getScale() / 30.0F);      // на сколько оборотов будет закручена матрица, [0..3]
+      CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)myLamp.getmaxDim())), 255, 255);
+      myLamp.drawPixelXY(i, j, thisColor);
+    }
+  }
+}
+

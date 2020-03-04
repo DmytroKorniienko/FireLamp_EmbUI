@@ -53,6 +53,7 @@ typedef enum _LAMPMODE {
 class LAMP {
 private:
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
+    const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     bool MIRR_V; // отзрекаливание по V
     bool MIRR_H; // отзрекаливание по H
@@ -271,6 +272,7 @@ public:
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}
+    uint8_t getmaxDim() {return maxDim;}
     void setEffDelay(uint32_t dl) {effDelay=dl;}
 
     void changePower() // плавное включение/выключение
