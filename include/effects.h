@@ -83,7 +83,10 @@ void rainbowDiagonalRoutine(CRGB*, const char*);
 void colorsRoutine(CRGB*, const char*);
 void matrixRoutine(CRGB*, const char*);
 void snowRoutine(CRGB*, const char*);
-void snowStormStarfallRoutine(CRGB *leds, const char *param);
+void snowStormStarfallRoutine(CRGB*, const char*);
+void lightersRoutine(CRGB*, const char*);
+void ballsRoutine(CRGB*, const char*);
+void lightBallsRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -111,6 +114,9 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_MATRIX, "Матрица", 127, 127, 127, true, true, matrixRoutine, nullptr},
     {EFF_SNOW, "Снегопад", 127, 127, 127, true, true, snowRoutine, nullptr},    
     {EFF_SNOWSTORMSTARFALL, "Метель + Звездопад", 127, 127, 127, true, true, snowStormStarfallRoutine, nullptr},
+    {EFF_LIGHTERS, "Светлячки", 127, 127, 127, true, true, lightersRoutine, nullptr},
+    {EFF_LIGHTER_TRACES, "Светлячки со шлейфом", 127, 127, 127, true, true, ballsRoutine, nullptr},
+    {EFF_PAINTBALL, "Пейнтбол", 127, 127, 127, true, true, lightBallsRoutine, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 

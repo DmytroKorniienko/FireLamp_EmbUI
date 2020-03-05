@@ -1062,3 +1062,191 @@ void snowStormStarfallRoutine(CRGB *leds, const char *param)
     fadePixel(i, HEIGHT - 1U, (myLamp.effects.getScale()<127?SNOW_TAIL_STEP:STAR_TAIL_STEP));
   }
 }
+
+// ------------- светлячки --------------
+#define LIGHTERS_AM           (100U)
+void lightersRoutine(CRGB *leds, const char *param)
+{
+  static int32_t lightersPos[2U][LIGHTERS_AM];
+  static int8_t lightersSpeed[2U][LIGHTERS_AM];
+  static CHSV lightersColor[LIGHTERS_AM];
+  static uint8_t loopCounter;
+  //int32_t angle[LIGHTERS_AM];
+  //int32_t speedV[LIGHTERS_AM];
+  //int8_t angleSpeed[LIGHTERS_AM];
+
+  if (myLamp.isLoading())
+  {
+    randomSeed(millis());
+    for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+    {
+      lightersPos[0U][i] = random(0, WIDTH * 10);
+      lightersPos[1U][i] = random(0, HEIGHT * 10);
+      lightersSpeed[0U][i] = random(-10, 10);
+      lightersSpeed[1U][i] = random(-10, 10);
+      lightersColor[i] = CHSV(random(0U, 255U), 255U, 255U);
+    }
+  }
+
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  FastLED.clear();
+  if (++loopCounter > 20U) loopCounter = 0U;
+  for (uint8_t i = 0U; i < (uint8_t)((LIGHTERS_AM/255.0)*myLamp.effects.getScale())+1; i++) // масштабируем на LIGHTERS_AM, чтобі не было выхода за диапазон
+  {
+    if (loopCounter == 0U)                                  // меняем скорость каждые 255 отрисовок
+    {
+      lightersSpeed[0U][i] += random(-3, 4);
+      lightersSpeed[1U][i] += random(-3, 4);
+      lightersSpeed[0U][i] = constrain(lightersSpeed[0U][i], -20, 20);
+      lightersSpeed[1U][i] = constrain(lightersSpeed[1U][i], -20, 20);
+    }
+
+    lightersPos[0U][i] += lightersSpeed[0U][i];
+    lightersPos[1U][i] += lightersSpeed[1U][i];
+
+    if (lightersPos[0U][i] < 0) lightersPos[0U][i] = (WIDTH - 1) * 10;
+    if (lightersPos[0U][i] >= (int32_t)(WIDTH * 10)) lightersPos[0U][i] = 0;
+
+    if (lightersPos[1U][i] < 0)
+    {
+      lightersPos[1U][i] = 0;
+      lightersSpeed[1U][i] = -lightersSpeed[1U][i];
+    }
+    if (lightersPos[1U][i] >= (int32_t)(HEIGHT - 1) * 10)
+    {
+      lightersPos[1U][i] = (HEIGHT - 1U) * 10;
+      lightersSpeed[1U][i] = -lightersSpeed[1U][i];
+    }
+    myLamp.drawPixelXY(lightersPos[0U][i] / 10, lightersPos[1U][i] / 10, lightersColor[i]);
+  }
+}
+
+// ------------- светлячки со шлейфом -------------
+#define BALLS_AMOUNT          (3U)                          // количество "шариков"
+#define CLEAR_PATH            (1U)                          // очищать путь
+#define BALL_TRACK            (1U)                          // (0 / 1) - вкл/выкл следы шариков
+#define TRACK_STEP            (70U)                         // длина хвоста шарика (чем больше цифра, тем хвост короче)
+void ballsRoutine(CRGB *leds, const char *param)
+{
+  static int16_t coord[BALLS_AMOUNT][2U];
+  static int8_t vector[BALLS_AMOUNT][2U];
+  CRGB ballColors[BALLS_AMOUNT];
+
+  if (myLamp.isLoading())
+  {
+    for (uint8_t j = 0U; j < BALLS_AMOUNT; j++)
+    {
+      int8_t sign;
+      // забиваем случайными данными
+      coord[j][0U] = WIDTH / 2 * 10;
+      random(0, 2) ? sign = 1 : sign = -1;
+      vector[j][0U] = random(4, 15) * sign;
+      coord[j][1U] = HEIGHT / 2 * 10;
+      random(0, 2) ? sign = 1 : sign = -1;
+      vector[j][1U] = random(4, 15) * sign;
+      //ballColors[j] = CHSV(random(0, 9) * 28, 255U, 255U);
+    }
+  }
+
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  if (!BALL_TRACK)                                          // режим без следов шариков
+  {
+    FastLED.clear();
+  }
+  else                                                      // режим со следами
+  {
+    fader(TRACK_STEP);
+  }
+
+  // движение шариков
+  for (uint8_t j = 0U; j < BALLS_AMOUNT; j++)
+  {
+    // цвет зависит от масштаба
+    ballColors[j] = CHSV((myLamp.effects.getScale() * (j + 1))%256U, 255U, 255U);
+          
+    // движение шариков
+    for (uint8_t i = 0U; i < 2U; i++)
+    {
+      coord[j][i] += vector[j][i];
+      if (coord[j][i] < 0)
+      {
+        coord[j][i] = 0;
+        vector[j][i] = -vector[j][i];
+      }
+    }
+
+    if (coord[j][0U] > (int16_t)((WIDTH - 1) * 10))
+    {
+      coord[j][0U] = (WIDTH - 1) * 10;
+      vector[j][0U] = -vector[j][0U];
+    }
+    if (coord[j][1U] > (int16_t)((HEIGHT - 1) * 10))
+    {
+      coord[j][1U] = (HEIGHT - 1) * 10;
+      vector[j][1U] = -vector[j][1U];
+    }
+    myLamp.setLeds(myLamp.getPixelNumber(coord[j][0U] / 10, coord[j][1U] / 10), ballColors[j]);
+  }
+}
+
+// ------------- пейнтбол -------------
+#define BORDERTHICKNESS       (1U)                          // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
+const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
+const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
+void lightBallsRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  // Apply some blurring to whatever's already on the matrix
+  // Note that we never actually clear the matrix, we just constantly
+  // blur it repeatedly.  Since the blurring is 'lossy', there's
+  // an automatic trend toward black -- by design.
+  uint8_t blurAmount = dim8_raw(beatsin8(3,64,100));
+  blur2d(leds, WIDTH, HEIGHT, blurAmount);
+
+  // Use two out-of-sync sine waves
+  uint16_t  i = beatsin16( 79, 0, 255); //91
+  uint16_t  j = beatsin16( 67, 0, 255); //109
+  uint16_t  k = beatsin16( 53, 0, 255); //73
+  uint16_t  m = beatsin16( 97, 0, 255); //123
+
+  // The color of each point shifts over time, each at a different speed.
+  uint32_t ms = millis() / (myLamp.effects.getScale()/4 + 1);
+  leds[myLamp.getPixelNumber( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 29, 200U, 255U);
+  leds[myLamp.getPixelNumber( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 41, 200U, 255U);
+  leds[myLamp.getPixelNumber( highByte(k * paintWidth) + BORDERTHICKNESS, highByte(m * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 37, 200U, 255U);
+  leds[myLamp.getPixelNumber( highByte(m * paintWidth) + BORDERTHICKNESS, highByte(i * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 53, 200U, 255U);
+}
+
+// Trivial XY function for the SmartMatrix; use a different XY
+// function for different matrix grids. See XYMatrix example for code.
+uint16_t XY(uint8_t x, uint8_t y)
+{
+  uint16_t i;
+  if (y & 0x01)
+  {
+    // Odd rows run backwards
+    uint8_t reverseX = (WIDTH - 1) - x;
+    i = (y * WIDTH) + reverseX;
+  }
+  else
+  {
+    // Even rows run forwards
+    i = (y * WIDTH) + x;
+  }
+  return i%(WIDTH*HEIGHT+1);
+}
