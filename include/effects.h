@@ -64,8 +64,7 @@ EFF_ZEBRA,                                    // Зебра 3D
 EFF_FOREST,                                   // Лес 3D
 EFF_OCEAN,                                    // Океан 3D
 EFF_SNOW,                                     // Снегопад
-EFF_SNOWSTORM,                                // Метель
-EFF_STARFALL,                                 // Звездопад
+EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
 EFF_MATRIX,                                   // Матрица
 EFF_LIGHTERS,                                 // Светлячки
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
@@ -83,6 +82,8 @@ void pulseRoutine(CRGB*, const char*);
 void rainbowDiagonalRoutine(CRGB*, const char*);
 void colorsRoutine(CRGB*, const char*);
 void matrixRoutine(CRGB*, const char*);
+void snowRoutine(CRGB*, const char*);
+void snowStormStarfallRoutine(CRGB *leds, const char *param);
 
 //-------------------------------------------------
 
@@ -108,6 +109,8 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_COLORS, "Цвета", 127, 127, 127, true, true, colorsRoutine, nullptr},
     {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulseRoutine, nullptr},
     {EFF_MATRIX, "Матрица", 127, 127, 127, true, true, matrixRoutine, nullptr},
+    {EFF_SNOW, "Снегопад", 127, 127, 127, true, true, snowRoutine, nullptr},    
+    {EFF_SNOWSTORMSTARFALL, "Метель + Звездопад", 127, 127, 127, true, true, snowStormStarfallRoutine, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 

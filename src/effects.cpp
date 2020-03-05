@@ -972,3 +972,93 @@ void matrixRoutine(CRGB *leds, const char *param)
       //myLamp.drawPixelXY(x, HEIGHT - 1U, thisColor - 0x050800);                                     // для длинных хвостов
   }
 }
+
+// ------------- снегопад ----------
+void snowRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  // сдвигаем всё вниз
+  for (uint8_t x = 0U; x < WIDTH; x++)
+  {
+    for (uint8_t y = 0U; y < HEIGHT - 1; y++)
+    {
+      myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x, y + 1U));
+    }
+  }
+
+  for (uint8_t x = 0U; x < WIDTH; x++)
+  {
+    // заполняем случайно верхнюю строку
+    // а также не даём двум блокам по вертикали вместе быть
+    if (myLamp.getPixColorXY(x, HEIGHT - 2U) == 0U && (random(0, 255 - myLamp.effects.getScale()) == 0U))
+      myLamp.drawPixelXY(x, HEIGHT - 1U, 0xE0FFFF - 0x101010 * random(0, 4));
+    else
+      myLamp.drawPixelXY(x, HEIGHT - 1U, 0x000000);
+  }
+}
+
+// ------------- метель -------------
+#define SNOW_DENSE            (60U)                         // плотность снега
+#define SNOW_TAIL_STEP        (100U)                        // длина хвоста
+#define SNOW_SATURATION       (0U)                          // насыщенность (от 0 до 255)
+// ------------- звездопад -------------
+#define STAR_DENSE            (60U)                         // плотность комет
+#define STAR_TAIL_STEP        (100U)                        // длина хвоста кометы
+#define STAR_SATURATION       (150U)                        // насыщенность кометы (от 0 до 255)
+
+// ------------- звездопад/метель -------------
+void snowStormStarfallRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  // заполняем головами комет левую и верхнюю линию
+  for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
+  {
+    if (myLamp.getPixColorXY(0U, i) == 0U &&
+       (random(0, (myLamp.effects.getScale()<127?SNOW_DENSE:STAR_DENSE)) == 0) &&
+        myLamp.getPixColorXY(0U, i + 1U) == 0U &&
+        myLamp.getPixColorXY(0U, i - 1U) == 0U)
+    {
+      myLamp.setLeds(myLamp.getPixelNumber(0U, i), CHSV(random(0, 200), (myLamp.effects.getScale()<127?SNOW_SATURATION:STAR_SATURATION), 255U));
+    }
+  }
+  
+  for (uint8_t i = 0U; i < WIDTH / 2U; i++)
+  {
+    if (myLamp.getPixColorXY(i, HEIGHT - 1U) == 0U &&
+       (random(0, map((myLamp.effects.getScale()%128)*2, 0U, 255U, 10U, 120U)) == 0U) &&
+        myLamp.getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
+        myLamp.getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
+    {
+      myLamp.setLeds(myLamp.getPixelNumber(i, HEIGHT - 1U), CHSV(random(0, 200),  (myLamp.effects.getScale()<127?SNOW_SATURATION:STAR_SATURATION), 255U));
+    }
+  }
+
+  // сдвигаем по диагонали
+  for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
+  {
+    for (uint8_t x = WIDTH - 1U; x > 0U; x--)
+    {
+      myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x - 1U, y + 1U));
+    }
+  }
+
+  // уменьшаем яркость левой и верхней линии, формируем "хвосты"
+  for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
+  {
+    fadePixel(0U, i,  (myLamp.effects.getScale()<127?SNOW_TAIL_STEP:STAR_TAIL_STEP));
+  }
+  for (uint8_t i = 0U; i < WIDTH / 2U; i++)
+  {
+    fadePixel(i, HEIGHT - 1U, (myLamp.effects.getScale()<127?SNOW_TAIL_STEP:STAR_TAIL_STEP));
+  }
+}
