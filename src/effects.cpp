@@ -777,7 +777,7 @@ void drawCircle(int16_t x0, int16_t y0, uint16_t radius, const CRGB & color){
 
 uint8_t pulse_hue;
 uint8_t pulse_step = 0;
-void pulse(CRGB *leds, const char *param) {
+void pulseRoutine(CRGB *leds, const char *param) {
     if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
       return;
     } else {
@@ -904,13 +904,71 @@ void colorsRoutine(CRGB *leds, const char *param)
   unsigned int delay = (myLamp.effects.getSpeed()==1)?4294967294:255-myLamp.effects.getSpeed(); // на скорости 1 будет очень долгое ожидание)))
   
   if (myLamp.isLoading()){ // начальная установка цвета
-    hue = myLamp.effects.getScale(); myLamp.fillAll(CHSV(hue, 255U, 255U)); return;
+    hue = myLamp.effects.getScale();
   } else {
     step=(step+1)%(delay+1);
-    if(step!=delay) return;
+    if(step!=delay) {
+      myLamp.fillAll(CHSV(hue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+    }
+    else {  
+      hue += myLamp.effects.getScale(); // смещаемся на следущий
+      myLamp.fillAll(CHSV(hue, 255U, 255U)); // и выводим
+    }
   }
-  //LOG.println(hue);
+}
 
-  hue += myLamp.effects.getScale();
-  myLamp.fillAll(CHSV(hue, 255U, 255U));
+// ------------- матрица ---------------
+void matrixRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  for (uint8_t x = 0U; x < WIDTH; x++)
+  {
+    // обрабатываем нашу матрицу снизу вверх до второй сверху строчки
+    for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
+    {
+      uint32_t thisColor = myLamp.getPixColorXY(x, y);                                              // берём цвет нашего пикселя
+      uint32_t upperColor = myLamp.getPixColorXY(x, y + 1U);                                        // берём цвет пикселя над нашим
+      if (upperColor >= 0x900000 && random(7 * HEIGHT) != 0U)                  // если выше нас максимальная яркость, игнорим этот факт с некой вероятностью или опускаем цепочку ниже
+        myLamp.drawPixelXY(x, y, upperColor);
+      else if (thisColor == 0U && random((255 - myLamp.effects.getScale()) * HEIGHT) == 0U)  // если наш пиксель ещё не горит, иногда зажигаем новые цепочки
+      //else if (thisColor == 0U && random((255 - myLamp.effects.getScale()) * HEIGHT*3) == 0U)  // для длинных хвостов
+        myLamp.drawPixelXY(x, y, 0x9bf800);
+      else if (thisColor <= 0x050800)                                                        // если наш пиксель почти погас, стараемся сделать затухание медленней
+      {
+        if (thisColor >= 0x030000)
+          myLamp.drawPixelXY(x, y, 0x020300);
+        else if (thisColor != 0U)
+          myLamp.drawPixelXY(x, y, 0U);
+      }
+      else if (thisColor >= 0x900000)                                                        // если наш пиксель максимальной яркости, резко снижаем яркость
+        myLamp.drawPixelXY(x, y, 0x558800);
+      else 
+        myLamp.drawPixelXY(x, y, thisColor - 0x0a1000);                                             // в остальных случаях снижаем яркость на 1 уровень
+        //myLamp.drawPixelXY(x, y, thisColor - 0x050800);                                             // для длинных хвостов
+    }
+    // аналогично обрабатываем верхний ряд пикселей матрицы
+    uint32_t thisColor = myLamp.getPixColorXY(x, HEIGHT - 1U);
+    if (thisColor == 0U)                                                                     // если наш верхний пиксель не горит, заполняем его с вероятностью .Scale
+    {
+      if (random(255 - myLamp.effects.getScale()) == 0U)
+        myLamp.drawPixelXY(x, HEIGHT - 1U, 0x9bf800);
+    }  
+    else if (thisColor <= 0x050800)                                                          // если наш верхний пиксель почти погас, стараемся сделать затухание медленней
+    {
+      if (thisColor >= 0x030000)
+        myLamp.drawPixelXY(x, HEIGHT - 1U, 0x020300);
+      else
+        myLamp.drawPixelXY(x, HEIGHT - 1U, 0U);
+    }
+    else if (thisColor >= 0x900000)                                                          // если наш верхний пиксель максимальной яркости, резко снижаем яркость
+      myLamp.drawPixelXY(x, HEIGHT - 1U, 0x558800);
+    else 
+      myLamp.drawPixelXY(x, HEIGHT - 1U, thisColor - 0x0a1000);                                     // в остальных случаях снижаем яркость на 1 уровень
+      //myLamp.drawPixelXY(x, HEIGHT - 1U, thisColor - 0x050800);                                     // для длинных хвостов
+  }
 }

@@ -79,9 +79,10 @@ void sparklesRoutine(CRGB*,const char*);
 void fireRoutine(CRGB*,const char*);
 void whiteColorStripeRoutine(CRGB*, const char*);
 void fire2012WithPalette(CRGB*, const char*);
-void pulse(CRGB*, const char*);
+void pulseRoutine(CRGB*, const char*);
 void rainbowDiagonalRoutine(CRGB*, const char*);
 void colorsRoutine(CRGB*, const char*);
+void matrixRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -105,7 +106,8 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
     {EFF_RAINBOW_2D, "Радуга 2D", 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
     {EFF_COLORS, "Цвета", 127, 127, 127, true, true, colorsRoutine, nullptr},
-    {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulse, nullptr},
+    {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulseRoutine, nullptr},
+    {EFF_MATRIX, "Матрица", 127, 127, 127, true, true, matrixRoutine, nullptr},
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 
@@ -178,11 +180,11 @@ public:
             configFile.print("[");
             for(int i=0; i<MODE_AMOUNT; i++){
                 cur_eff = &(effects[i]);
-                configFile.printf_P(PSTR("%s{\"nb\":\"%d\",\"br\":\"%d\",\"sp\":\"%d\",\"sc\":\"%d\",\"isF\":\"%d\",\"cbS\":\"%d\",\"prm\":\"%s\"}"),
+                configFile.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (i?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?cur_eff->param:""));
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("%s{\"nb\":\"%d\",\"br\":\"%d\",\"sp\":\"%d\",\"sc\":\"%d\",\"isF\":\"%d\",\"cbS\":\"%d\",\"prm\":\"%s\"}"),
+                LOG.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (i?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?cur_eff->param:""));
 #endif
