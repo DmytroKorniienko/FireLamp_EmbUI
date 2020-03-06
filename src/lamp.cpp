@@ -417,66 +417,28 @@ void LAMP::timeTick() // обработчик будильника "рассве
 
 void LAMP::effectsTick()
 {
-  static byte faderStep = 1;
   EFFECT *currentEffect = effects.getCurrent();
 
   if (!dawnFlag) // флаг устанавливается будильником рассвет
   {
     if (ONflag)
     {
-      if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
-        if(currentEffect->func!=nullptr){
-          //try{
-            currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
-          //} catch(...)
-          //{
-          //  //ONflag = false;
-          //  effects.moveBy(EFF_ENUM::EFF_NONE);
-          //}
-        }
-        effTimer = millis();
+      if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
+        startFader();
       }
 
-      if(!tmFaderTimeout.isReady()){
-        if(isFaderOn && tmFaderStepTime.isReady()) {
-#ifdef LAMP_DEBUG
-//LOG.printf_P(PSTR("leds[1]=%d %d %d\n"),leds[1].red,leds[1].green,leds[1].blue);
-#endif
-          faderStep++;
-          float chVal = ((float)globalBrightness*FADERSTEPTIME)/FADERTIMEOUT;
-          for(int led = 0 ; led < NUM_LEDS ; led++ ) {
-            //leds[led]/=((faderStep>5)?2:1);
-            leds[led].subtractFromRGB((uint8_t)(chVal*faderStep*0.33));
-          }
+      faderTick(); // фейдер
+      
+      if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
+        if(currentEffect->func!=nullptr){
+            currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
         }
-      } else { // время на фейдер вышло
-        tmFaderTimeout.setInterval(0); // отключить до следующего раза, также переключаем эффект на новый, заодно запоминаем яркость текущего эффекта
-        if(RANDOM_DEMO)
-          effects.moveBy(random(0, effects.getModeAmount()));
-        else
-          effects.moveNext();
-        //storeEffBrightness = modes[lamp mode].Brightness;
-        loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
-        isFaderOn = false;
-        faderStep = 1;
-#ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?F("Random"):F("Seq")) , mode, storedEffect);
-#endif
-        currentEffect = effects.getCurrent();
-        if(currentEffect->func!=nullptr)
-          currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+        effTimer = millis();
       }
 
 #ifdef USELEDBUF
       memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
 #endif
-
-      if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-        tmFaderTimeout.setInterval(FADERTIMEOUT); // взводим таймер фейдера
-        tmFaderTimeout.reset();
-        isFaderOn = true;
-        faderStep = 1;
-      }
       
 #ifdef NEWYEAR_MESSAGE
       NewYearMessagePrint(); // отрабатывает только во включенном состоянии

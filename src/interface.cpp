@@ -117,23 +117,28 @@ void update(){ // функция выполняется после ввода д
     }
 
     myLamp.effects.moveBy(curEff->eff_nb);
+    myLamp.restartDemoTimer();
 
     if(curEff->eff_nb!=EFF_NONE){
         if((curEff!=prevEffect && prevEffect!=nullptr) || isRefresh){
             jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
             jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
-            jee.var(F("bright"),String(curEff->brightness));
+            //jee.var(F("bright"),String(curEff->brightness));
+            jee.var(F("bright"),String(myLamp.getLampBrightness()));
             jee.var(F("speed"),String(curEff->speed));
             jee.var(F("scale"),String(curEff->scale));
 
             //LOG.printf_P("%s , передали %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);
             isRefresh = true;
+            myLamp.startFader(true);
         } else {
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
-            curEff->brightness = jee.param(F("bright")).toInt();
+            //curEff->brightness = jee.param(F("bright")).toInt();
+            myLamp.setLampBrightness(jee.param(F("bright")).toInt());
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
+            
             myLamp.setLoading(true); // перерисовать эффект
             //LOG.printf_P("%s , получили %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);
 

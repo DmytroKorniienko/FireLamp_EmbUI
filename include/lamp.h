@@ -73,6 +73,7 @@ private:
     bool manualOff = false;
     bool loadingFlag = true; // флаг для начальной инициализации эффекта
     bool isFaderOn = false; // признак того, что выполняется фейдер текущего эффекта
+    bool manualFader = true; // ручной или автоматический фейдер
     uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
     uint32_t effDelay; // доп. задержка для эффектов
 
@@ -123,13 +124,6 @@ private:
       LOG.printf_P(PSTR("lampMode: %d numHold: %d currentMode: %d brightness: %d speed: %d scale: %d\n"), mode, numHold, effects.getEn(), getLampBrightness(), effects.getSpeed(), effects.getScale());
   }
 #endif
-
-
-
-
-
-
-
 
 #ifdef VERTGAUGE
     void GaugeShow() {
@@ -215,14 +209,60 @@ private:
       }
     }
 #endif
-    byte getLampBrightness() { return (mode==MODE_DEMO)?globalBrightness:effects.getBrightness();}
-    void setLampBrightness(byte brg) { if(mode==MODE_DEMO) globalBrightness = brg; else effects.setBrightness(brg);}
     void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) {if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
+
+    bool faderTick(){
+      static byte faderStep = 1;
+
+      if(!tmFaderTimeout.isReady()){
+        if(isFaderOn && tmFaderStepTime.isReady()) {
+#ifdef LAMP_DEBUG
+//LOG.printf_P(PSTR("leds[1]=%d %d %d\n"),leds[1].red,leds[1].green,leds[1].blue);
+#endif
+          faderStep++;
+          float chVal = ((float)globalBrightness*FADERSTEPTIME)/FADERTIMEOUT;
+          for(int led = 0 ; led < NUM_LEDS ; led++ ) {
+            //leds[led]/=((faderStep>5)?2:1);
+            leds[led].subtractFromRGB((uint8_t)(chVal*faderStep*0.33));
+          }
+        }
+      } else {
+        tmFaderTimeout.setInterval(0); // отключить до следующего раза, также переключаем эффект на новый, заодно запоминаем яркость текущего эффекта
+        //storeEffBrightness = modes[lamp mode].Brightness;
+        loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
+        isFaderOn = false;
+        faderStep = 1;
+
+        if(!manualFader){
+          if(mode==MODE_DEMO){
+            if(RANDOM_DEMO)
+              effects.moveBy(random(0, effects.getModeAmount()));
+            else
+              effects.moveNext();
+
+#ifdef LAMP_DEBUG
+          LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?F("Random"):F("Seq")) , mode, storedEffect);
+#endif
+          }
+        }
+        EFFECT *currentEffect = effects.getCurrent();
+        if(currentEffect->func!=nullptr)
+          currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+        manualFader = false;
+      }
+
+      return isFaderOn;
+    }
+
+
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
+    byte getLampBrightness() { return (mode==MODE_DEMO)?globalBrightness:effects.getBrightness();}
+    void setLampBrightness(byte brg) { if(mode==MODE_DEMO) globalBrightness = brg; else effects.setBrightness(brg);}
+    void restartDemoTimer() {tmDemoTimer.reset();}
 
     LAMP() : tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME)
     {
@@ -270,6 +310,14 @@ public:
     void setOnOff(bool flag) {ONflag = flag; changePower();}
     void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
+
+    void startFader(bool isManual=false)
+    {
+        tmFaderTimeout.setInterval(FADERTIMEOUT); // взводим таймер фейдера
+        tmFaderTimeout.reset();
+        isFaderOn = true;
+        manualFader = isManual;
+    }
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}

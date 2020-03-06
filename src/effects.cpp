@@ -390,7 +390,7 @@ void fire_shiftUp() {
 void fire_drawFrame(bool isColored) {                                         // прорисовка нового кадра
 
 #ifdef FIRE_UNIVERSE                                                          // если определен универсальный огонь вычисляем его базовый цвет  
-  uint8_t baseHue = (myLamp.effects.getScale() * 2.57, _flameseed) ;
+  uint8_t baseHue = myLamp.effects.getScale();
   uint8_t baseSat = (myLamp.effects.getScale() == FIRE_WHITEVALUE) ? 0U : 255U ;  // отключение насыщенности при определенном положении колеса
 #else
   uint8_t baseHue = isColored ? 255U : 0U;                                    // старое определение цвета
@@ -860,7 +860,7 @@ void rainbowHorVertRoutine(bool isVertical)
   hue += 4;
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
-    CHSV thisColor = CHSV((uint8_t)(hue + i * myLamp.effects.getScale()%170), 255, 255);
+    CHSV thisColor = CHSV((uint8_t)(hue + i * myLamp.effects.getScale()%86), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
     for (uint8_t j = 0U; j < (isVertical?HEIGHT:WIDTH); j++)
     {
       myLamp.drawPixelXY((isVertical?i:j), (isVertical?j:i), thisColor);
@@ -1127,7 +1127,7 @@ void lightersRoutine(CRGB *leds, const char *param)
 }
 
 // ------------- светлячки со шлейфом -------------
-#define BALLS_AMOUNT          (3U)                          // количество "шариков"
+#define BALLS_AMOUNT          (7U)                          // максимальное количество "шариков"
 #define CLEAR_PATH            (1U)                          // очищать путь
 #define BALL_TRACK            (1U)                          // (0 / 1) - вкл/выкл следы шариков
 #define TRACK_STEP            (70U)                         // длина хвоста шарика (чем больше цифра, тем хвост короче)
@@ -1169,10 +1169,11 @@ void ballsRoutine(CRGB *leds, const char *param)
   }
 
   // движение шариков
-  for (uint8_t j = 0U; j < BALLS_AMOUNT; j++)
+  int maxBalls = (uint8_t)((BALLS_AMOUNT/255.0)*myLamp.effects.getScale()+0.99);
+  for (uint8_t j = 0U; j < maxBalls; j++)
   {
     // цвет зависит от масштаба
-    ballColors[j] = CHSV((myLamp.effects.getScale() * (j + 1))%256U, 255U, 255U);
+    ballColors[j] = CHSV((myLamp.effects.getScale() * (maxBalls-j) * BALLS_AMOUNT + j), 255U, 255U);
           
     // движение шариков
     for (uint8_t i = 0U; i < 2U; i++)

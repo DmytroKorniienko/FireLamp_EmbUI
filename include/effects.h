@@ -143,16 +143,24 @@ public:
             String cfg_str = configFile.readString();
 
             if (cfg_str == F("")){
+#ifdef LAMP_DEBUG
                 LOG.println(F("Failed to open effects config file"));
+#endif
                 saveConfig();
                 return;
             }
 
-            DynamicJsonDocument doc(1024);
+#ifdef LAMP_DEBUG
+                LOG.println(F("\nStart desialization of effects\n\n"));
+#endif
+
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, cfg_str);
             if (error) {
+#ifdef LAMP_DEBUG
                 LOG.print(F("deserializeJson error: "));
                 LOG.println(error.code());
+#endif
                 return;
             }
 
@@ -176,8 +184,9 @@ public:
             // for (it=arr.begin(); it!=arr.end(); ++it) {
             //     const JsonObject& elem = *it;
             // }
-
+#ifdef LAMP_DEBUG
             LOG.println(F("Effects config loaded"));
+#endif
         }
     }
 
