@@ -14,20 +14,22 @@ void jeeui2::led_handle()
 
 void jeeui2::btnCallback(String name, buttonCallback response)
 {
-    if (name == F("GPIO0") && !digitalRead(BUTTON)){
+#ifdef __BUTTON
+    if (name == F("GPIO0") && !digitalRead(__BUTTON)){
         response();
         btn();
     }
-
     if (btnui == name){
         btnui = F("");
         response();
     }
+#endif
 }
 
 void jeeui2::btn()
 {
-    if (digitalRead(BUTTON))
+#ifdef __BUTTON
+    if (digitalRead(__BUTTON))
         return;
 
     uint8_t old_wifi_mode = wifi_mode;
@@ -35,7 +37,7 @@ void jeeui2::btn()
     led_inv();
     unsigned long t = millis();
     bool i = false;
-    while (!digitalRead(BUTTON))
+    while (!digitalRead(__BUTTON))
     {
         delay(1);
         if (t + 5000 < millis()) // Нажатие 5 секунд
@@ -67,6 +69,7 @@ void jeeui2::btn()
         wifi_connect();
         //ESP.restart();
     }
+#endif
 }
 
 void jeeui2::led_on(){

@@ -49,9 +49,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 int mqtt_int; // интервал отправки данных по MQTT в секундах 
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
-#ifdef ESP_USE_BUTTON
-GButton touch(BTN_PIN, PULL_MODE, NORM_OPEN);               
-#endif
 
 void setup() {
     Serial.begin(115200);

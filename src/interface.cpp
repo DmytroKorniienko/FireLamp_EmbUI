@@ -127,6 +127,7 @@ void update(){ // функция выполняется после ввода д
             jee.var(F("bright"),String(myLamp.getLampBrightness()));
             jee.var(F("speed"),String(curEff->speed));
             jee.var(F("scale"),String(curEff->scale));
+            jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 
             //LOG.printf_P("%s , передали %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);
             isRefresh = true;
@@ -138,6 +139,9 @@ void update(){ // функция выполняется после ввода д
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
+            if(myLamp.isLampOn() != (jee.param(F("ONflag"))==String(F("true")))) {
+                myLamp.setOnOff(jee.param(F("ONflag"))==String(F("true")));
+            }
             
             myLamp.setLoading(true); // перерисовать эффект
             //LOG.printf_P("%s , получили %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);

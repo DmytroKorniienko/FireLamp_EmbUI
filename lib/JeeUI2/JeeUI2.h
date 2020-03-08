@@ -23,7 +23,7 @@
 
 #include <AsyncMqttClient.h>
 
-#define BUTTON 0 
+#define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
 
 class jeeui2
 {
