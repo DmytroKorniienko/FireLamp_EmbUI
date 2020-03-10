@@ -1286,6 +1286,72 @@ uint8_t noise[WIDTH][WIDTH];
 #else
 uint8_t noise[HEIGHT][HEIGHT];
 #endif
+CRGBPalette16 currentPalette(PartyColors_p);
+uint8_t colorLoop = 1;
+
+// ************* СЛУЖЕБНЫЕ *************
+void fillNoiseLED()
+{
+  uint8_t dataSmoothing = 0;
+  if (speed < 50)
+  {
+    dataSmoothing = 200 - (speed * 4);
+  }
+  for (uint8_t i = 0; i < myLamp.getmaxDim(); i++)
+  {
+    int32_t ioffset = scale * i;
+    for (uint8_t j = 0; j < myLamp.getmaxDim(); j++)
+    {
+      int32_t joffset = scale * j;
+
+      uint8_t data = inoise8(x + ioffset, y + joffset, z);
+
+      data = qsub8(data, 16);
+      data = qadd8(data, scale8(data, 39));
+
+      if (dataSmoothing)
+      {
+        uint8_t olddata = noise[i][j];
+        uint8_t newdata = scale8( olddata, dataSmoothing) + scale8( data, 256 - dataSmoothing);
+        data = newdata;
+      }
+
+      noise[i][j] = data;
+    }
+  }
+  z += speed;
+
+  // apply slow drift to X and Y, just for visual variation.
+  x += speed / 8;
+  y -= speed / 16;
+
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    for (uint8_t j = 0; j < HEIGHT; j++)
+    {
+      uint8_t index = noise[j][i];
+      uint8_t bri =   noise[i][j];
+      // if this palette is a 'loop', add a slowly-changing base value
+      if ( colorLoop)
+      {
+        index += ihue;
+      }
+      // brighten up, as the color palette itself often contains the
+      // light/dark dynamic range desired
+      if ( bri > 127 )
+      {
+        bri = 255;
+      }
+      else
+      {
+        bri = dim8_raw( bri * 2);
+      }
+      CRGB color = ColorFromPalette( currentPalette, index, bri);      
+      myLamp.drawPixelXY(i, j, color);                             //leds[getPixelNumber(i, j)] = color;
+    }
+  }
+  ihue += 1;
+}
 
 void fillnoise8()
 {
@@ -1301,7 +1367,7 @@ void fillnoise8()
   z += speed;
 }
 
-void madnessNoiseRoutine(CRGB *leds_, const char *param)
+void madnessNoiseRoutine(CRGB *leds, const char *param)
 {
   if (myLamp.isLoading())
   {
@@ -1318,4 +1384,45 @@ void madnessNoiseRoutine(CRGB *leds_, const char *param)
     }
   }
   ihue += 1;
+}
+
+void rainbowNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    scale = 127UL*myLamp.effects.getScale()/255;
+    speed = 64UL*myLamp.effects.getSpeed()/255;
+    colorLoop = 1;
+  }
+  fillNoiseLED();
+}
+
+void rainbowStripeNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    scale = 64UL*myLamp.effects.getScale()/255;
+    speed = 64UL*myLamp.effects.getSpeed()/255;
+    currentPalette = RainbowStripeColors_p;
+    colorLoop = 1;
+  }
+  fillNoiseLED();
+}
+
+void zebraNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    // 'black out' all 16 palette entries...
+    fill_solid(currentPalette, 16, CRGB::Black);
+    // and set every fourth one to white.
+    currentPalette[0] = CRGB::White;
+    currentPalette[4] = CRGB::White;
+    currentPalette[8] = CRGB::White;
+    currentPalette[12] = CRGB::White;
+    scale = 64UL*myLamp.effects.getScale()/255;
+    speed = 64UL*myLamp.effects.getSpeed()/255;
+    colorLoop = 1;
+  }
+  fillNoiseLED();
 }

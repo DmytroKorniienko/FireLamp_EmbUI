@@ -87,7 +87,11 @@ void snowStormStarfallRoutine(CRGB*, const char*);
 void lightersRoutine(CRGB*, const char*);
 void ballsRoutine(CRGB*, const char*);
 void lightBallsRoutine(CRGB*, const char*);
-void madnessNoiseRoutine(CRGB *leds_, const char *param);
+void madnessNoiseRoutine(CRGB*, const char*);
+void rainbowNoiseRoutine(CRGB*, const char*);
+void rainbowStripeNoiseRoutine(CRGB*, const char*);
+void zebraNoiseRoutine(CRGB*, const char*);
+
 
 //-------------------------------------------------
 
@@ -118,7 +122,12 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_LIGHTERS, "Светлячки", 127, 127, 127, true, true, lightersRoutine, nullptr},
     {EFF_LIGHTER_TRACES, "Светлячки со шлейфом", 127, 127, 127, true, true, ballsRoutine, nullptr},
     {EFF_PAINTBALL, "Пейнтбол", 127, 127, 127, true, true, lightBallsRoutine, nullptr},
+
     {EFF_MADNESS, "Безумие 3D", 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
+    {EFF_RAINBOW, "Радуга 3D", 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
+    {EFF_RAINBOW_STRIPE, "Павлин 3D", 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},
+    {EFF_ZEBRA, "Зебра 3D", 127, 127, 127, true, true, zebraNoiseRoutine, nullptr},
+
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 
