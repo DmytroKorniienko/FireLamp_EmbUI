@@ -687,6 +687,28 @@ void whiteColorStripeRoutine(CRGB *leds, const char *param)
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
+extern const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
+  CRGB::Black,
+  CRGB::DarkSlateGray,
+  CRGB::DimGray,
+  CRGB::LightSlateGray,
+
+  CRGB::DimGray,
+  CRGB::DarkSlateGray,
+  CRGB::Silver,
+  CRGB::DarkCyan,
+
+  CRGB::Lavender,
+  CRGB::Silver,
+  CRGB::Azure,
+  CRGB::LightGrey,
+
+  CRGB::GhostWhite,
+  CRGB::Silver,
+  CRGB::White,
+  CRGB::RoyalBlue
+};
+
 #define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
 void fire2012WithPalette(CRGB*leds, const char *param) {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
@@ -729,7 +751,7 @@ void fire2012WithPalette(CRGB*leds, const char *param) {
       } else if (scale < 32) {      // Firefall
         myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(HeatColors_p, colorindex));
       } else if (scale < 48) {      // Waterfall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(PartyColors_p, colorindex));
+        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(WaterfallColors_p, colorindex)); // PartyColors_p
       } else if (scale < 64) {      // Skyfall
         myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(CloudColors_p, colorindex));
       } else if (scale < 80) {      // Forestfall
@@ -1250,4 +1272,50 @@ uint16_t XY(uint8_t x, uint8_t y)
     i = (y * WIDTH) + x;
   }
   return i%(WIDTH*HEIGHT+1);
+}
+
+//-- 3D Noise эффектцы --------------
+uint16_t speed = 20;                                        // speed is set dynamically once we've started up
+uint16_t scale = 30;                                        // scale is set dynamically once we've started up
+uint8_t ihue = 0;
+static uint16_t x;
+static uint16_t y;
+static uint16_t z;
+#if (WIDTH > HEIGHT)
+uint8_t noise[WIDTH][WIDTH];
+#else
+uint8_t noise[HEIGHT][HEIGHT];
+#endif
+
+void fillnoise8()
+{
+  for (uint8_t i = 0; i < myLamp.getmaxDim(); i++)
+  {
+    int32_t ioffset = scale * i;
+    for (uint8_t j = 0; j < myLamp.getmaxDim(); j++)
+    {
+      int32_t joffset = scale * j;
+      noise[i][j] = inoise8(x + ioffset, y + joffset, z);
+    }
+  }
+  z += speed;
+}
+
+void madnessNoiseRoutine(CRGB *leds_, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    scale = 127UL*myLamp.effects.getScale()/255;
+    speed = 64UL*myLamp.effects.getSpeed()/255;
+  }
+  fillnoise8();
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    for (uint8_t j = 0; j < HEIGHT; j++)
+    {
+      CRGB thisColor = CHSV(noise[j][i], 255, noise[i][j]);
+      myLamp.drawPixelXY(i, j, thisColor);                         //leds[getPixelNumber(i, j)] = CHSV(noise[j][i], 255, noise[i][j]);
+    }
+  }
+  ihue += 1;
 }

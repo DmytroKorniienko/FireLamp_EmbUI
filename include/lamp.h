@@ -54,6 +54,8 @@ private:
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
+    void(*updateParmFunc)() = nullptr; // функтор обновления параметров
+
     bool MIRR_V; // отзрекаливание по V
     bool MIRR_H; // отзрекаливание по H
 
@@ -115,8 +117,11 @@ public:
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
     byte getLampBrightness() { return (mode==MODE_DEMO)?globalBrightness:effects.getBrightness();}
+    byte getNormalizedLampBrightness() { return (byte)(((uint32)BRIGHTNESS)*((mode==MODE_DEMO)?globalBrightness:effects.getBrightness())/255);}
     void setLampBrightness(byte brg) { if(mode==MODE_DEMO) globalBrightness = brg; else effects.setBrightness(brg);}
     void restartDemoTimer() {tmDemoTimer.reset();}
+
+    void updateParm(void(*f)()) { updateParmFunc=f; }
 
     LAMP();
 
@@ -124,7 +129,7 @@ public:
     void init();
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
-    void setOnOff(bool flag) {ONflag = flag; changePower();}
+    void setOnOff(bool flag) {ONflag = flag; changePower(flag);}
     bool isLampOn() {return ONflag;}
     void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
@@ -137,6 +142,7 @@ public:
     void setEffDelay(uint32_t dl) {effDelay=dl;}
 
     void changePower(); // плавное включение/выключение
+    void changePower(bool);
 
     uint32_t getPixelNumber(uint16_t x, uint16_t y); // получить номер пикселя в ленте по координатам
     uint32_t getPixColor(uint32_t thisSegm); // функция получения цвета пикселя по его номеру

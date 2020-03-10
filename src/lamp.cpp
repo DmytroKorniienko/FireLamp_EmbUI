@@ -158,7 +158,7 @@ void LAMP::buttonTick()
       mode = MODE_DEMO;
       randomSeed(millis());
       effects.moveBy(random(0, MODE_AMOUNT));
-      FastLED.setBrightness(getLampBrightness());
+      FastLED.setBrightness(getNormalizedLampBrightness());
       ONflag = true;
       tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
       changePower();
@@ -176,10 +176,10 @@ void LAMP::buttonTick()
       numHold = 1;
       mode = MODE_WHITELAMP;
       effects.moveBy(EFF_WHITE_COLOR);
-      effects.setBrightness(BRIGHTNESS);
-      FastLED.setBrightness(getLampBrightness());
+      effects.setBrightness(255);
+      FastLED.setBrightness(getNormalizedLampBrightness());
 #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
+      LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
       ONflag = true;
       startButtonHolding = true;
@@ -224,7 +224,7 @@ void LAMP::buttonTick()
   // кнопка нажата и удерживается
   if (ONflag && touch.isStep())
   {
-    if(!isFirstHoldingPress && (((getLampBrightness() == BRIGHTNESS || getLampBrightness() <= 1) && numHold == 1)
+    if(!isFirstHoldingPress && (((getLampBrightness() == 255 || getLampBrightness() <= 1) && numHold == 1)
     || ((effects.getSpeed() == 255 || effects.getSpeed() <= 1) && numHold == 2)
     || ((effects.getScale() == 255 || effects.getScale() <= 1) && numHold == 3))){
       if(!setDirectionTimeout){
@@ -252,8 +252,8 @@ void LAMP::buttonTick()
     
     switch (numHold) {
       case 1:
-         setLampBrightness(constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , BRIGHTNESS));
-         FastLED.setBrightness(getLampBrightness());
+         setLampBrightness(constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255));
+         FastLED.setBrightness(getNormalizedLampBrightness());
          break;
 
       case 2:
@@ -287,6 +287,8 @@ void LAMP::buttonTick()
         break;
     }
 #endif
+    if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+
     return;
   }
 
@@ -330,7 +332,7 @@ if(touch.isHold() || !touch.isHolded())
       {
         manualOff = true;
         dawnFlag = false;
-        FastLED.setBrightness(getLampBrightness());
+        FastLED.setBrightness(getNormalizedLampBrightness());
         changePower();
       }
       else
@@ -348,7 +350,7 @@ if(touch.isHold() || !touch.isHolded())
         LOG.printf_P(PSTR("Даблклик, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
   #endif
       effects.moveNext();
-      FastLED.setBrightness(getLampBrightness());
+      FastLED.setBrightness(getNormalizedLampBrightness());
       loadingFlag = true;
     }
 
@@ -356,7 +358,7 @@ if(touch.isHold() || !touch.isHolded())
     if (ONflag && clickCount == 3U)
     {
       effects.movePrev();
-      FastLED.setBrightness(getLampBrightness());
+      FastLED.setBrightness(getNormalizedLampBrightness());
       loadingFlag = true;
     }
 
@@ -414,6 +416,10 @@ if(touch.isHold() || !touch.isHolded())
 
       // showWarning(CRGB::Red, 3000U, 500U);                    // мигание красным цветом 3 секунды - смена рабочего режима лампы, перезагрузка
       // ESP.restart();
+    }
+
+    if(clickCount>0){
+      if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
     }
   }
 }
@@ -503,10 +509,7 @@ void LAMP::effectsTick()
       switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
 #if (VERTGAUGE==1)
         case 1:
-          //if(currentMode==EFF_WHITE_COLOR)
-          //  ind = sqrt((255.0/(BRIGHTNESS-MIN_WHITE_COLOR_BRGHT))*(modes[currentMode].Brightness-MIN_WHITE_COLOR_BRGHT) + 1); // привести к полной шкале
-          //else
-            ind = sqrt((255.0/BRIGHTNESS)*getLampBrightness() + 1); // привести к полной шкале (TODO: проверить и исправить)
+          ind = (byte)((getLampBrightness()+1)*HEIGHT/255.0+1);
           for (byte x = 0; x <= xCol*(xStep-1) ; x+=xStep) {
             for (byte y = 0; y < HEIGHT ; y++) {
               if (ind > y)
@@ -517,18 +520,18 @@ void LAMP::effectsTick()
           }
           break;
         case 2:
-          ind = sqrt(effects.getSpeed() - 1);
+          ind = (byte)((effects.getSpeed()+1)*HEIGHT/255.0+1);
           for (byte x = 0; x <= xCol*(xStep-1) ; x+=xStep) {
-            for (byte y = 0; y <= HEIGHT ; y++) {
-              if (ind <= y)
-                drawPixelXY(x, HEIGHT-1-y, CHSV(100, 255, 255));
+            for (byte y = 0; y < HEIGHT ; y++) {
+              if (ind > y)
+                drawPixelXY(x, y, CHSV(100, 255, 255));
               else
-                drawPixelXY(x, HEIGHT-1-y,  0);
+                drawPixelXY(x, y,  0);
             }
           }
           break;
         case 3:
-          ind = sqrt(effects.getScale() + 1);
+          ind = (byte)((effects.getScale()+1)*HEIGHT/255.0+1);
           for (byte x = 0; x <= xCol*(xStep-1) ; x+=xStep) {
             for (byte y = 0; y < HEIGHT ; y++) {
               if (ind > y)
@@ -540,10 +543,7 @@ void LAMP::effectsTick()
           break;
 #else
         case 1:
-          //if(currentMode==EFF_WHITE_COLOR)
-          //  ind = sqrt((255.0/(BRIGHTNESS-MIN_WHITE_COLOR_BRGHT))*(modes[currentMode].Brightness-MIN_WHITE_COLOR_BRGHT) + 1); // привести к полной шкале
-          //else
-            ind = sqrt((255.0/BRIGHTNESS)*getLampBrightness() + 1); // привести к полной шкале (TODO: проверить и исправить)
+          ind = (byte)((getLampBrightness()+1)*HEIGHT/255.0+1);
           for (byte y = 0; y <= yCol*(yStep-1) ; y+=yStep) {
             for (byte x = 0; x < WIDTH ; x++) {
               if (ind > x)
@@ -554,18 +554,18 @@ void LAMP::effectsTick()
           }
           break;
         case 2:
-          ind = sqrt(effects.getSpeed() - 1);
+          ind = (byte)((effects.getSpeed()+1)*HEIGHT/255.0+1);
           for (byte y = 0; y <= yCol*(yStep-1) ; y+=yStep) {
-            for (byte x = 0; x <= WIDTH ; x++) {
-              if (ind < x)
-                drawPixelXY((WIDTH-x+y)%WIDTH, y, CHSV(100, 255, 255));
+            for (byte x = 0; x < WIDTH ; x++) {
+              if (ind > x)
+                drawPixelXY((x+y)%WIDTH, y, CHSV(100, 255, 255));
               else
-                drawPixelXY((WIDTH-x+y)%WIDTH, y,  0);
+                drawPixelXY((x+y)%WIDTH, y,  0);
             }
           }
           break;
         case 3:
-          ind = sqrt(effects.getScale() + 1);
+          ind = (byte)((effects.getScale()+1)*HEIGHT/255.0+1);
           for (byte y = 0; y <= yCol*(yStep-1) ; y+=yStep) {
             for (byte x = 0; x < WIDTH ; x++) {
               if (ind > x)
@@ -640,23 +640,25 @@ LAMP::LAMP() : tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DE
         manualFader = isManual;
     }
 
-void LAMP::changePower() // плавное включение/выключение
+void LAMP::changePower() {changePower(ONflag);}
+
+void LAMP::changePower(bool flag) // плавное включение/выключение
     {
-      if (ONflag){
-        for (uint8_t i = 0U; i < getLampBrightness(); i = constrain(i + 8, 0, getLampBrightness()))
+      if (flag){
+        for (uint8_t i = 0U; i < getNormalizedLampBrightness(); i = constrain(i + 8, 0, getNormalizedLampBrightness()))
         {
           FastLED.setBrightness(i);
           delay(1);
           FastLED.show();
         }
 
-        FastLED.setBrightness(getLampBrightness());
+        FastLED.setBrightness(getNormalizedLampBrightness());
         delay(2);
         FastLED.show();
       }
       else
       {
-        for (uint8_t i = getLampBrightness(); i > 0; i = constrain(i - 8, 0, getLampBrightness()))
+        for (uint8_t i = getNormalizedLampBrightness(); i > 0; i = constrain(i - 8, 0, getNormalizedLampBrightness()))
         {
           FastLED.setBrightness(i);
           delay(1);

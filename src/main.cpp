@@ -61,6 +61,7 @@ void setup() {
     parameters(); // создаем параметры
 
     myLamp.effects.loadConfig();
+    myLamp.updateParm(updateParm);
 
     jee.ui(interface); // обратный вызов - интерфейс
     jee.update(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами

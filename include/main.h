@@ -54,3 +54,4 @@ void sendData();
 void update();
 void interface();
 void parameters();
+void updateParm();

@@ -85,9 +85,9 @@ void interface(){ // функция в которой мф формируем в
 
     jee.page(); // разделитель между страницами
     //Страница "Управление лампой"
-    jee.checkbox(F("ONflag"),F("Включение&nbspлампы")); myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
-    jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH")); myLamp.setOnOff(jee.param(F("MIRR_H"))==F("true"));
-    jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV")); myLamp.setOnOff(jee.param(F("MIRR_V"))==F("true"));
+    jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
+    jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
+    jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));
 
     jee.page(); // разделитель между страницами
     // Страница "Настройки соединения"
@@ -139,9 +139,6 @@ void update(){ // функция выполняется после ввода д
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
-            if(myLamp.isLampOn() != (jee.param(F("ONflag"))==String(F("true")))) {
-                myLamp.setOnOff(jee.param(F("ONflag"))==String(F("true")));
-            }
             
             myLamp.setLoading(true); // перерисовать эффект
             //LOG.printf_P("%s , получили %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);
@@ -165,4 +162,18 @@ void update(){ // функция выполняется после ввода д
     //jee.var(F("test"),String(777));
 
     jee._refresh = isRefresh; // устанавливать в самом конце!
+}
+
+void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
+{
+#ifdef LAMP_DEBUG
+    LOG.println(F("Обновляем параметры после нажатия кнопки..."));
+#endif
+    EFFECT *curEff = myLamp.effects.getCurrent();
+    jee.var(F("bright"),String(myLamp.getLampBrightness()));
+    jee.var(F("speed"),String(curEff->speed));
+    jee.var(F("scale"),String(curEff->scale));
+    jee.var(F("effList"),String(curEff->eff_nb));
+    jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+    jee._refresh = true;
 }
