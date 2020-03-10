@@ -175,5 +175,6 @@ void updateParm() // передача параметров в UI после на
     jee.var(F("scale"),String(curEff->scale));
     jee.var(F("effList"),String(curEff->eff_nb));
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+    myLamp.setLoading(); // обновить эффект
     jee._refresh = true;
 }

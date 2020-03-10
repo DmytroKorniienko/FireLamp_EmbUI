@@ -1371,9 +1371,9 @@ void madnessNoiseRoutine(CRGB *leds, const char *param)
 {
   if (myLamp.isLoading())
   {
-    scale = 127UL*myLamp.effects.getScale()/255;
-    speed = 64UL*myLamp.effects.getSpeed()/255;
   }
+  scale = 127UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
   fillnoise8();
   for (uint8_t i = 0; i < WIDTH; i++)
   {
@@ -1390,10 +1390,10 @@ void rainbowNoiseRoutine(CRGB *leds, const char *param)
 {
   if (myLamp.isLoading())
   {
-    scale = 127UL*myLamp.effects.getScale()/255;
-    speed = 64UL*myLamp.effects.getSpeed()/255;
     colorLoop = 1;
   }
+  scale = 127UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
   fillNoiseLED();
 }
 
@@ -1401,11 +1401,11 @@ void rainbowStripeNoiseRoutine(CRGB *leds, const char *param)
 {
   if (myLamp.isLoading())
   {
-    scale = 64UL*myLamp.effects.getScale()/255;
-    speed = 64UL*myLamp.effects.getSpeed()/255;
     currentPalette = RainbowStripeColors_p;
     colorLoop = 1;
   }
+  scale = 64UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
   fillNoiseLED();
 }
 
@@ -1420,9 +1420,9 @@ void zebraNoiseRoutine(CRGB *leds, const char *param)
     currentPalette[4] = CRGB::White;
     currentPalette[8] = CRGB::White;
     currentPalette[12] = CRGB::White;
-    scale = 64UL*myLamp.effects.getScale()/255;
-    speed = 64UL*myLamp.effects.getSpeed()/255;
     colorLoop = 1;
   }
+  scale = 64UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
   fillNoiseLED();
 }
