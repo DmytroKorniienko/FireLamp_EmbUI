@@ -642,7 +642,7 @@ void fire_drawFrame(bool isColored) {                                         //
 }
 
 // ------------- белый свет -------------
-void whiteColorRoutine(char *param)
+void whiteColorRoutine(CRGB *leds, const char *param)
 {
   if (myLamp.isLoading())
   {
@@ -1255,6 +1255,74 @@ void lightBallsRoutine(CRGB *leds, const char *param)
   leds[myLamp.getPixelNumber( highByte(m * paintWidth) + BORDERTHICKNESS, highByte(i * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 53, 200U, 255U);
 }
 
+// ------------- блуждающий кубик -------------
+#define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
+void ballRoutine(CRGB *leds, const char *param)
+{
+  static int16_t coordB[2U];
+  static int8_t vectorB[2U];
+  static CRGB ballColor;
+  int8_t ballSize;
+
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  if (myLamp.isLoading())
+  {
+    //FastLED.clear();
+
+    for (uint8_t i = 0U; i < 2U; i++)
+    {
+      coordB[i] = WIDTH / 2 * 10;
+      vectorB[i] = random(8, 20);
+      ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
+    }
+  }
+
+  ballSize = map(myLamp.effects.getScale(), 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
+  for (uint8_t i = 0U; i < 2U; i++)
+  {
+    coordB[i] += vectorB[i];
+    if (coordB[i] < 0)
+    {
+      coordB[i] = 0;
+      vectorB[i] = -vectorB[i];
+      if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
+      //vectorB[i] += random(0, 6) - 3;
+    }
+  }
+  if (coordB[0U] > (int16_t)((WIDTH - ballSize) * 10))
+  {
+    coordB[0U] = (WIDTH - ballSize) * 10;
+    vectorB[0U] = -vectorB[0U];
+    if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
+    //vectorB[0] += random(0, 6) - 3;
+  }
+  if (coordB[1U] > (int16_t)((HEIGHT - ballSize) * 10))
+  {
+    coordB[1U] = (HEIGHT - ballSize) * 10;
+    vectorB[1U] = -vectorB[1U];
+    if (RANDOM_COLOR)
+    {
+      ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
+    }
+    //vectorB[1] += random(0, 6) - 3;
+  }
+  FastLED.clear();
+  for (uint8_t i = 0U; i < ballSize; i++)
+  {
+    for (uint8_t j = 0U; j < ballSize; j++)
+    {
+      myLamp.setLeds(myLamp.getPixelNumber(coordB[0U] / 10 + i, coordB[1U] / 10 + j), ballColor);
+    }
+  }
+}
+
+
+
 // Trivial XY function for the SmartMatrix; use a different XY
 // function for different matrix grids. See XYMatrix example for code.
 uint16_t XY(uint8_t x, uint8_t y)
@@ -1421,6 +1489,66 @@ void zebraNoiseRoutine(CRGB *leds, const char *param)
     currentPalette[8] = CRGB::White;
     currentPalette[12] = CRGB::White;
     colorLoop = 1;
+  }
+  scale = 64UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
+  fillNoiseLED();
+}
+
+void forestNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    currentPalette = ForestColors_p;
+    colorLoop = 0;
+  }
+  scale = 96UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
+  fillNoiseLED();
+}
+
+void oceanNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    currentPalette = OceanColors_p;
+    colorLoop = 0;
+  }
+  scale = 127UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
+  fillNoiseLED();
+}
+
+void plasmaNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    currentPalette = PartyColors_p;
+    colorLoop = 1;
+  }
+  scale = 64UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
+  fillNoiseLED();
+}
+
+void cloudsNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    currentPalette = CloudColors_p;
+    colorLoop = 0;
+  }
+  scale = 64UL*myLamp.effects.getScale()/255;
+  speed = 64UL*myLamp.effects.getSpeed()/255;
+  fillNoiseLED();
+}
+
+void lavaNoiseRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    currentPalette = LavaColors_p;
+    colorLoop = 0;
   }
   scale = 64UL*myLamp.effects.getScale()/255;
   speed = 64UL*myLamp.effects.getSpeed()/255;

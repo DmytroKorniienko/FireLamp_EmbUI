@@ -165,6 +165,7 @@ void LAMP::buttonTick()
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), mode, storedEffect);
 #endif
+      if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
       return;
     }
     
@@ -188,6 +189,7 @@ void LAMP::buttonTick()
       tmChangeDirectionTimer.reset();
       brightDirection = 1;
       changePower();
+      if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
       return;
     }
   } 
@@ -612,6 +614,8 @@ bool LAMP::faderTick(){
 #ifdef LAMP_DEBUG
           LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?F("Random"):F("Seq")) , mode, storedEffect);
 #endif
+            if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+            setLoading();
           }
         }
         EFFECT *currentEffect = effects.getCurrent();

@@ -74,6 +74,7 @@ void setup() {
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
+    updateParm(); // вызвать обновление параметров UI
 }
 
 void loop() {
@@ -100,7 +101,11 @@ void sendData(){
   in = mqtt_int;
   // всё, что ниже будет выполняться через интервалы
 
-  LOG.println(F("MQTT send data"));
+#ifdef ESP8266
+  LOG.printf_P(PSTR("MQTT send data, MEM: %d, HF: %d\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation());
+#else
+  LOG.printf_P(PSTR("MQTT send data, MEM: %d\n"), ESP.getFreeHeap());
+#endif
   //jee.publish("test","30");
   //jee.publish("hum", String(hum));
   //jee.publish("ds18b20", String(ds_tem));

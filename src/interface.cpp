@@ -38,20 +38,39 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "effects.h"
 
+static EFFECT *prevEffect = nullptr;
+static bool isSetup = false;
+
 void parameters(){
-    // создаем параметры для нашего проекта
+    // создаем дефолтные параметры для нашего проекта
     jee.var(F("wifi"), F("STA")); // режим работы WiFi по умолчанию ("STA" или "AP")  (параметр в энергонезависимой памяти)
     jee.var(F("ssid"), F("")); // имя точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
     jee.var(F("pass"), F("")); // пароль точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
 
     // параметры подключения к MQTT
     jee.var(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
+    
     jee.var(F("effList"), F("1"));
     jee.var(F("isSetup"), F("false"));
 
+    jee.var(F("bright"), F("127"));
+    jee.var(F("speed"), F("127"));
+    jee.var(F("scale"), F("127"));
+    jee.var(F("canBeSelected"), F("true"));
+    jee.var(F("isFavorite"), F("true"));
+
+    jee.var(F("ONflag"), F("true"));
+    jee.var(F("MIRR_H"), F("false"));
+    jee.var(F("MIRR_V"), F("false"));
+
+    jee.var(F("GlobBRI"), F("127"));
+
+    //jee.save(); // сохранить
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс
+    //bool isSetup = (jee.param(F("isSetup"))==F("true"));
+    
     jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
     // создаем меню
@@ -68,7 +87,7 @@ void interface(){ // функция в которой мф формируем в
 
     do {
         enEff = myLamp.effects.enumNextEffect(enEff);
-        if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || jee.param(F("isSetup"))==F("true"))){
+        if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || isSetup)){
             jee.option(String((int)enEff.eff_nb),enEff.eff_name);
         }
     } while((enEff.eff_nb!=EFF_NONE));
@@ -78,7 +97,7 @@ void interface(){ // функция в которой мф формируем в
     jee.range(F("speed"),1,255,1,F("Скорость"));
     jee.range(F("scale"),1,255,1,F("Масштаб"));
 
-    if(jee.param(F("isSetup"))==F("true")){
+    if(isSetup){
         jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
         jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));  
     }
@@ -105,13 +124,11 @@ void interface(){ // функция в которой мф формируем в
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные
     // получаем данные в переменную в ОЗУ для дальнейшей работы
     bool isRefresh = false;
-    static EFFECT *prevEffect = nullptr;
-    static bool ispSetup = false;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt());
     mqtt_int = jee.param(F("mqtt_int")).toInt();
 
-    if((jee.param(F("isSetup"))==F("true"))!=ispSetup){
-        ispSetup = !ispSetup;
+    if((jee.param(F("isSetup"))==F("true"))!=isSetup){
+        isSetup = !isSetup;
         if(prevEffect!=nullptr)
             isRefresh = true;
     }
@@ -128,6 +145,8 @@ void update(){ // функция выполняется после ввода д
             jee.var(F("speed"),String(curEff->speed));
             jee.var(F("scale"),String(curEff->scale));
             jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+            if(myLamp.getMode() == MODE_DEMO)
+                jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
 
             //LOG.printf_P("%s , передали %d %d\n",curEff->eff_name,curEff->isFavorite,curEff->canBeSelected);
             isRefresh = true;
@@ -175,6 +194,11 @@ void updateParm() // передача параметров в UI после на
     jee.var(F("scale"),String(curEff->scale));
     jee.var(F("effList"),String(curEff->eff_nb));
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+    if(myLamp.getMode() == MODE_DEMO)
+        jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
+    else
+        myLamp.setGlobalBrightness(jee.param(F("GlobBRI")).toInt());
     myLamp.setLoading(); // обновить эффект
+    prevEffect = curEff; // обновить указатель на предыдущий эффект
     jee._refresh = true;
 }

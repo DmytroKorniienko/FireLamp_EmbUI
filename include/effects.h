@@ -74,8 +74,8 @@ EFF_PULSE,                                    // Пульс
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
-void sparklesRoutine(CRGB*,const char*);
-void fireRoutine(CRGB*,const char*);
+void sparklesRoutine(CRGB*, const char*);
+void fireRoutine(CRGB*, const char*);
 void whiteColorStripeRoutine(CRGB*, const char*);
 void fire2012WithPalette(CRGB*, const char*);
 void pulseRoutine(CRGB*, const char*);
@@ -91,7 +91,11 @@ void madnessNoiseRoutine(CRGB*, const char*);
 void rainbowNoiseRoutine(CRGB*, const char*);
 void rainbowStripeNoiseRoutine(CRGB*, const char*);
 void zebraNoiseRoutine(CRGB*, const char*);
-
+void forestNoiseRoutine(CRGB*, const char*);
+void oceanNoiseRoutine(CRGB*, const char*);
+void plasmaNoiseRoutine(CRGB*, const char*);
+void cloudsNoiseRoutine(CRGB*, const char*);
+void lavaNoiseRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -110,6 +114,7 @@ typedef struct _EFFECT {
 
 static EFFECT _EFFECTS_ARR[] = {
     {EFF_NONE, nullptr, 127, 127, 127, false, false, nullptr, nullptr},
+    
     {EFF_SPARKLES, "Светлячки", 127, 127, 127, true, true, sparklesRoutine, nullptr},
     {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
     {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
@@ -122,11 +127,15 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_LIGHTERS, "Светлячки", 127, 127, 127, true, true, lightersRoutine, nullptr},
     {EFF_LIGHTER_TRACES, "Светлячки со шлейфом", 127, 127, 127, true, true, ballsRoutine, nullptr},
     {EFF_PAINTBALL, "Пейнтбол", 127, 127, 127, true, true, lightBallsRoutine, nullptr},
-
     {EFF_MADNESS, "Безумие 3D", 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
     {EFF_RAINBOW, "Радуга 3D", 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
     {EFF_RAINBOW_STRIPE, "Павлин 3D", 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},
     {EFF_ZEBRA, "Зебра 3D", 127, 127, 127, true, true, zebraNoiseRoutine, nullptr},
+    {EFF_FOREST, "Лес 3D", 127, 127, 127, true, true, forestNoiseRoutine, nullptr},
+    {EFF_OCEAN, "Океан 3D", 127, 127, 127, true, true, oceanNoiseRoutine, nullptr},
+    {EFF_PLASMA, "Плазма 3D", 127, 127, 127, true, true, plasmaNoiseRoutine, nullptr},
+    {EFF_CLOUDS, "Облака 3D", 127, 127, 127, true, true, cloudsNoiseRoutine, nullptr},
+    {EFF_LAVA, "Лава 3D", 127, 127, 127, true, true, lavaNoiseRoutine, nullptr},
 
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
