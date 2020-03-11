@@ -46,6 +46,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define LAMP_DEBUG
 //#define DEBUG_TELNET_OUTPUT  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
 //#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
+#define OTA                                                 // Обновление по ОТА
 //-----------------------------------
 #define LAMP_PIN              (2U)                          // пин ленты                (D4)
 #define BTN_PIN               (4U)                          // пин кнопки               (D2)

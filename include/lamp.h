@@ -39,6 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "misc.h"
 #include "config.h" // подключаем эффекты, там же их настройки
 #include "effects.h"
+#include "OTA.h"
 
 #include <FastLed.h>
 
@@ -46,7 +47,8 @@ typedef enum _LAMPMODE {
   MODE_NORMAL = 0,
   MODE_DEMO,
   MODE_WHITELAMP,
-  MODE_ALARMCLOCK
+  MODE_ALARMCLOCK,
+  MODE_OTA
 } LAMPMODE;
 
 class LAMP {
@@ -111,16 +113,22 @@ private:
     void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) {if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
     bool faderTick();
 
+#ifdef OTA
+    OtaManager otaManager;
+#endif
+    static void showWarning(CRGB color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
+
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
     byte getLampBrightness() { return (mode==MODE_DEMO)?globalBrightness:effects.getBrightness();}
-    byte getNormalizedLampBrightness() { return (byte)(((uint32)BRIGHTNESS)*((mode==MODE_DEMO)?globalBrightness:effects.getBrightness())/255);}
+    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO)?globalBrightness:effects.getBrightness())/255);}
     void setLampBrightness(byte brg) { if(mode==MODE_DEMO) globalBrightness = brg; else effects.setBrightness(brg);}
+    void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void restartDemoTimer() {tmDemoTimer.reset();}
-
+    LAMPMODE getMode() {return mode;}
     void updateParm(void(*f)()) { updateParmFunc=f; }
 
     LAMP();

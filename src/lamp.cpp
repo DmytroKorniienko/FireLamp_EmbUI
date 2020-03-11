@@ -127,6 +127,10 @@ void LAMP::handle()
 
   effectsTick(); // обработчик эффектов
 
+#ifdef OTA
+  otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
+#endif
+
 #ifdef USE_NTP
   timeTick(); // обработчик будильника "рассвет"
 #endif
@@ -367,16 +371,17 @@ if(touch.isHold() || !touch.isHolded())
     // четырёхкратное нажатие
     if (clickCount == 4U)
     {
-      // #ifdef OTA
-      // if (otaManager.RequestOtaUpdate())
-      // {
-      //   ONflag = true;
-      //   lamp mode = EFF_MATRIX;                             // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
-      //   FastLED.clear();
-      //   delay(1);
-      //   changePower();
-      // }
-      // #endif
+      #ifdef OTA
+      if (otaManager.RequestOtaUpdate())
+      {
+        mode = MODE_OTA;
+        effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+        FastLED.clear();
+        ONflag = true;
+        changePower(true);
+        if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+      }
+      #endif
     }
 
 
@@ -632,6 +637,9 @@ LAMP::LAMP() : tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DE
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
 #endif
+#ifdef OTA
+    , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
+#endif
     {
       init(); // инициализация и настройка лампы
     }
@@ -715,3 +723,43 @@ void LAMP::changePower(bool flag) // плавное включение/выкл�
         leds[thisPixel + i] = color;
       }
     }
+
+// ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; блокирующий код!) -------------
+extern LAMP myLamp; // Объект лампы
+void LAMP::showWarning(
+  CRGB color,                                               /* цвет вспышки                                                 */
+  uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
+  uint16_t blinkHalfPeriod)                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
+{
+  uint32_t blinkTimer = millis();
+  enum BlinkState { OFF = 0, ON = 1 } blinkState = BlinkState::OFF;
+  FastLED.setBrightness(myLamp.getLampBrightness());                // установка яркости для предупреждения
+  FastLED.clear();
+  delay(2);
+  FastLED.show();
+
+  for (uint16_t i = 0U; i < NUM_LEDS; i++)                  // установка цвета всех диодов в WARNING_COLOR
+  {
+    myLamp.setLeds(i, color);
+  }
+
+  uint32_t startTime = millis();
+  while (millis() - startTime <= (duration + 5))            // блокировка дальнейшего выполнения циклом на время отображения предупреждения
+  {
+    if (millis() - blinkTimer >= blinkHalfPeriod)           // переключение вспышка/темнота
+    {
+      blinkTimer = millis();
+      blinkState = (BlinkState)!blinkState;
+      FastLED.setBrightness(blinkState == BlinkState::OFF ? 0 : myLamp.getLampBrightness());
+      delay(1);
+      FastLED.show();
+    }
+    delay(50);
+  }
+
+  FastLED.clear();
+  FastLED.setBrightness(myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
+  delay(1);
+  FastLED.show();
+  myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
+}

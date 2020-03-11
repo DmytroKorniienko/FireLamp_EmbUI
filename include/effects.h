@@ -87,6 +87,7 @@ void snowStormStarfallRoutine(CRGB*, const char*);
 void lightersRoutine(CRGB*, const char*);
 void ballsRoutine(CRGB*, const char*);
 void lightBallsRoutine(CRGB*, const char*);
+void ballRoutine(CRGB*, const char*);
 void madnessNoiseRoutine(CRGB*, const char*);
 void rainbowNoiseRoutine(CRGB*, const char*);
 void rainbowStripeNoiseRoutine(CRGB*, const char*);
@@ -127,6 +128,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_LIGHTERS, "Светлячки", 127, 127, 127, true, true, lightersRoutine, nullptr},
     {EFF_LIGHTER_TRACES, "Светлячки со шлейфом", 127, 127, 127, true, true, ballsRoutine, nullptr},
     {EFF_PAINTBALL, "Пейнтбол", 127, 127, 127, true, true, lightBallsRoutine, nullptr},
+    {EFF_CUBE, "Блуждающий кубик", 127, 127, 127, true, true, ballRoutine, nullptr},
     {EFF_MADNESS, "Безумие 3D", 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
     {EFF_RAINBOW, "Радуга 3D", 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
     {EFF_RAINBOW_STRIPE, "Павлин 3D", 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},
@@ -191,11 +193,13 @@ public:
 
                 EFF_ENUM nb = (EFF_ENUM)(item[F("nb")].as<int>());
                 eff = getEffectBy(nb);
-                eff->brightness = item[F("br")].as<int>();
-                eff->speed = item[F("sp")].as<int>();
-                eff->scale = item[F("sc")].as<int>();
-                eff->isFavorite = (bool)(item[F("isF")].as<int>());
-                eff->canBeSelected = (bool)(item[F("cbS")].as<int>());
+                if(eff->eff_nb!=EFF_NONE){
+                    eff->brightness = item[F("br")].as<int>();
+                    eff->speed = item[F("sp")].as<int>();
+                    eff->scale = item[F("sc")].as<int>();
+                    eff->isFavorite = (bool)(item[F("isF")].as<int>());
+                    eff->canBeSelected = (bool)(item[F("cbS")].as<int>());
+                }
 #ifdef LAMP_DEBUG
                 LOG.printf_P(PSTR("(%d - %d - %d - %d - %d - %d)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected);
 #endif
@@ -207,6 +211,7 @@ public:
 #ifdef LAMP_DEBUG
             LOG.println(F("Effects config loaded"));
 #endif
+            doc.clear();
         }
     }
 
@@ -216,14 +221,14 @@ public:
             EFFECT *cur_eff;
 
             configFile.print("[");
-            for(int i=0; i<MODE_AMOUNT; i++){
+            for(int i=1; i<MODE_AMOUNT; i++){ // EFF_NONE не сохраняем
                 cur_eff = &(effects[i]);
                 configFile.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
-                    (i?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
+                    (i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?cur_eff->param:""));
 #ifdef LAMP_DEBUG
                 LOG.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
-                    (i?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
+                    (i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?cur_eff->param:""));
 #endif
             }     
