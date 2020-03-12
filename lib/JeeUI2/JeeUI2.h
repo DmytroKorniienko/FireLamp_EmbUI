@@ -17,8 +17,11 @@
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>        // Include the mDNS library
 #else
 #include <WiFi.h>
+#include <ESPmDNS.h>
+#include <Update.h>
 #endif
 
 #include <AsyncMqttClient.h>
@@ -26,6 +29,8 @@
 #ifndef __DISABLE_BUTTON0
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
 #endif
+
+#define __IDPREFIX F("JeeUI2-")
 
 class jeeui2
 {

@@ -13,13 +13,14 @@
 */
 
 #include "config.h"
+#include "JeeUI2.h"
 #ifdef OTA
 #include <ArduinoOTA.h>
 //#include <ESP8266WiFi.h>
 //#include <ESP8266mDNS.h>
 //#include <WiFiUdp.h>
 
-#define ESP_OTA_PORT          (8266U)                       // номер порта, который будет "прослушиваться" в ожидании команды прошивки по воздуху
+#define ESP_OTA_PORT          (3232U)                       // номер порта, который будет "прослушиваться" в ожидании команды прошивки по воздуху 8266U/3232U
 #define CONFIRMATION_TIMEOUT  (30U)                         // время в сеундах, в течение которого нужно дважды подтвердить старт обновлениЯ по воздуху (иначе сброс в None)
 #define ESP_CONF_TIMEOUT      (120U)                        // время ожидания ОТА
 #define OTA_PASS "12345"
@@ -48,15 +49,6 @@ class OtaManager
 
     bool RequestOtaUpdate()                                 // пользователь однократно запросил обновление по воздуху; возвращает true, когда переходит в режим обновления - startOtaUpdate()
     {
-    //   if (espMode != 1U)
-    //   {
-//#ifdef LAMP_DEBUG
-    //     LOG.print(F("Запрос обновления по воздуху поддерживается только в режиме ESP_MODE = 1\n"));
-//#endif
-
-    //     return false;
-    //   }
-
       if (OtaFlag == OtaPhase::None)
       {
         OtaFlag = OtaPhase::GotFirstConfirm;
@@ -132,13 +124,10 @@ class OtaManager
     void startOtaUpdate()
     {
       char espHostName[65];
-#ifdef ESP8266
-        sprintf_P(espHostName, PSTR("%s-%u"), PSTR("Lamp"), ESP.getChipId());
-#else
-        String id = WiFi.softAPmacAddress();
-        id.replace(F(":"), F(""));
-        sprintf_P(espHostName, PSTR("%s-%u"), PSTR("Lamp"), id.c_str());
-#endif
+      String id = WiFi.softAPmacAddress();
+      id.replace(F(":"), F(""));
+      sprintf_P(espHostName, PSTR("%s%s"),__IDPREFIX, id.c_str());
+
       ArduinoOTA.setPort(ESP_OTA_PORT);
       ArduinoOTA.setHostname(espHostName);
       ArduinoOTA.setPassword(OTA_PASS);
