@@ -243,7 +243,9 @@ void jeeui2::handle()
         delay(100);
         ESP.restart();
     }
+#ifdef ESP8266    
     MDNS.update();
+#endif
     _connected();
     mqtt_handle();
     udpLoop();
