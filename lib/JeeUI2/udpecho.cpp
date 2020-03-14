@@ -9,7 +9,7 @@ void jeeui2::udp(){
     udpMessage = mc;
 }
 
-void jeeui2::udp(String message){
+void jeeui2::udp(const String &message){
     udpMessage = message;
 }
 

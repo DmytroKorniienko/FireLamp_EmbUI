@@ -18,9 +18,9 @@ void jeeui2::connectToMqtt() {
   mqttClient.connect();
 }
        
-String jeeui2::id(String topic){
+String jeeui2::id(const String &topic){
     if(m_pref == F("")) return topic;
-    else return m_pref + '/' + topic;
+    else return String(m_pref + '/' + topic);
 }
 
 bool mqtt_connected = false;
@@ -38,13 +38,13 @@ void jeeui2::onMqttPublish(uint16_t packetId) {
 
 }
 
-typedef void (*mqttCallback) (String topic, String payload);
+typedef void (*mqttCallback) (const String &topic, const String &payload);
 mqttCallback mqt;
 
 void fake(){}
-void emptyFunction(String, String){}
+void emptyFunction(const String &, const String &){}
 
-void jeeui2::mqtt(String pref, String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload), bool remotecontrol){
+void jeeui2::mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol){
     
     
     if(param(F("m_pref")) == F("null")) var(F("m_pref"), pref);
@@ -62,52 +62,52 @@ void jeeui2::mqtt(String pref, String host, int port, String user, String pass, 
 
 }
 
-void jeeui2::mqtt(String pref, String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload)){
+void jeeui2::mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload)){
     mqtt(pref, host, port, user, pass, mqttFunction, false);
     onConnect = fake;
 }
 
-void jeeui2::mqtt(String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload)){
+void jeeui2::mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload)){
     getAPmac();
     mqtt(mc, host, port, user, pass, mqttFunction, false);
     onConnect = fake;
 }
 
-void jeeui2::mqtt(String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload), bool remotecontrol){
+void jeeui2::mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol){
     getAPmac();
     mqtt(mc, host, port, user, pass, mqttFunction, remotecontrol);
     onConnect = fake;
 }
 
-void jeeui2::mqtt(String host, int port, String user, String pass, bool remotecontrol){
+void jeeui2::mqtt(const String &host, int port, const String &user, const String &pass, bool remotecontrol){
     getAPmac();
     mqtt(mc, host, port, user, pass, emptyFunction, remotecontrol);
     onConnect = fake;
 }
 
-void jeeui2::mqtt(String pref, String host, int port, String user, String pass, bool remotecontrol){
+void jeeui2::mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, bool remotecontrol){
     getAPmac();
     mqtt(pref, host, port, user, pass, emptyFunction, remotecontrol);
     onConnect = fake;
 }
 
-void jeeui2::mqtt(String pref, String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload), void (*mqttConnect) (), bool remotecontrol){
+void jeeui2::mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) (), bool remotecontrol){
     getAPmac();
     onConnect = mqttConnect;
     mqtt(pref, host, port, user, pass, emptyFunction, remotecontrol);
 
 }
-void jeeui2::mqtt(String pref, String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload), void (*mqttConnect) ()){
+void jeeui2::mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) ()){
     getAPmac();
     onConnect = mqttConnect;
     mqtt(pref, host, port, user, pass, mqttFunction, false);
 }
-void jeeui2::mqtt(String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload), void (*mqttConnect) ()){
+void jeeui2::mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) ()){
     getAPmac();
     onConnect = mqttConnect;
     mqtt(mc, host, port, user, pass, mqttFunction, false);
 }
-void jeeui2::mqtt(String host, int port, String user, String pass, void (*mqttFunction) (String topic, String payload), void (*mqttConnect) (), bool remotecontrol){
+void jeeui2::mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) (), bool remotecontrol){
     getAPmac();
     onConnect = mqttConnect;
     mqtt(mc, host, port, user, pass, mqttFunction, remotecontrol);
@@ -255,21 +255,21 @@ void jeeui2::subscribeAll(){
     if(dbg)Serial.println(F("Subscribe All"));
 }
 
-void jeeui2::publish(String topic, String payload, bool retained){
+void jeeui2::publish(const String &topic, const String &payload, bool retained){
     if (!connected || !mqtt_enable) return; 
     mqttClient.publish(id(topic).c_str(), 0, retained, payload.c_str());
 }
 
-void jeeui2::publish(String topic, String payload){
+void jeeui2::publish(const String &topic, const String &payload){
     if (!connected || !mqtt_enable) return; 
     mqttClient.publish(id(topic).c_str(), 0, false, payload.c_str());
 }
 
-void jeeui2::pub_mqtt(String key, String value){
+void jeeui2::pub_mqtt(const String &key, const String &value){
     if(!_t_remotecontrol) return;
     publish(key, value, true);
 }
 
-void jeeui2::subscribe(String topic){
+void jeeui2::subscribe(const String &topic){
     mqttClient.subscribe(id(topic).c_str(), 0);
 }

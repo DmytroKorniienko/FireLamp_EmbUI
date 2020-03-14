@@ -12,7 +12,7 @@ void jeeui2::led_handle()
 }
 
 
-void jeeui2::btnCallback(String name, buttonCallback response)
+void jeeui2::btnCallback(const String &name, buttonCallback response)
 {
 #ifdef __BUTTON
     if (name == F("GPIO0") && !digitalRead(__BUTTON)){

@@ -49,7 +49,7 @@ extern LAMP myLamp; // Объект лампы
 extern GButton touch;               
 #endif
 
-void mqttCallback(String topic, String payload);
+void mqttCallback(const String &topic, const String &payload);
 void sendData();
 void update();
 void interface();

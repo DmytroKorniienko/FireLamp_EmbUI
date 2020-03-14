@@ -1,7 +1,7 @@
 #include "JeeUI2.h"
 
 
-void jeeui2::pub(String id, String label, String value, String unit, String bg_color, String text_color){
+void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color, const String &text_color){
 
     buf += String(F("{\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"pub\",");
@@ -16,19 +16,19 @@ void jeeui2::pub(String id, String label, String value, String unit, String bg_c
     pub_transport[id] = "";
 }
 
-void jeeui2::pub(String id, String label, String value, String unit, String bg_color){
+void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color){
     pub(id, label, value, unit, bg_color, F("#ffffff"));
 }
 
-void jeeui2::pub(String id, String label, String value, String unit){
+void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit){
     pub(id, label, value, unit, F("#6060ff"), F("#ffffff"));
 }
 
-void jeeui2::pub(String id, String label, String value){
+void jeeui2::pub(const String &id, const String &label, const String &value){
     pub(id, label, value, F(""), F("#6060ff"), F("#ffffff"));
 }
 
-void jeeui2::pub(String id, String label){
+void jeeui2::pub(const String &id, const String &label){
     pub(id, label, F(""), F(""), F("#6060ff"), F("#ffffff"));
 }
 
@@ -47,7 +47,7 @@ void jeeui2::formWifi(){
 }
 
 
-void jeeui2::app(String name){
+void jeeui2::app(const String &name){
     btn_num = 0;
     mn = 0;
     pg = 0;
@@ -57,7 +57,7 @@ void jeeui2::app(String name){
     buf += String(F("\"ID\":\"")) + mc + "\",";
 }
 
-void jeeui2::text(String id, String label){
+void jeeui2::text(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"text\",");
@@ -66,7 +66,7 @@ void jeeui2::text(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::number(String id, String label){
+void jeeui2::number(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"number\",");
@@ -75,7 +75,7 @@ void jeeui2::number(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::time(String id, String label){
+void jeeui2::time(const String &id, const String &label){
     buf += "{\"html\":\"input\",";
     buf += "\"id\":\"" + id + "\",";
     buf += "\"type\":\"time\",";
@@ -84,7 +84,7 @@ void jeeui2::time(String id, String label){
     buf += "},";
 }
 
-void jeeui2::date(String id, String label){
+void jeeui2::date(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"date\",");
@@ -93,7 +93,7 @@ void jeeui2::date(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::datetime(String id, String label){
+void jeeui2::datetime(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"datetime-local\",");
@@ -102,7 +102,7 @@ void jeeui2::datetime(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::range(String id, int min, int max, float step, String label){
+void jeeui2::range(const String &id, int min, int max, float step, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += String(F("\"min\":\"")) + String(min) + "\",";
@@ -114,7 +114,7 @@ void jeeui2::range(String id, int min, int max, float step, String label){
     buf += F("},");
 }
 
-void jeeui2::email(String id, String label){
+void jeeui2::email(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"email\",");
@@ -123,7 +123,7 @@ void jeeui2::email(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::password(String id, String label){
+void jeeui2::password(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"password\",");
@@ -132,11 +132,11 @@ void jeeui2::password(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::option(String value, String label){
+void jeeui2::option(const String &value, const String &label){
     op += String(F("{\"label\":\"")) + label + String(F("\",\"value\":\"")) + value + String(F("\"},"));
 }
 
-void jeeui2::select(String id, String label){
+void jeeui2::select(const String &id, const String &label){
 
     int lastIndex = op.length() - 1;
     op.remove(lastIndex);
@@ -149,7 +149,7 @@ void jeeui2::select(String id, String label){
     op = "";
 }
 
-void jeeui2::checkbox(String id, String label){
+void jeeui2::checkbox(const String &id, const String &label){
     buf += F("{\"html\":\"input\",");
     buf += F("\"type\":\"checkbox\",");
     buf += String(F("\"id\":\"")) + id + "\",";
@@ -157,7 +157,7 @@ void jeeui2::checkbox(String id, String label){
     buf += String(F("\"label\":\"")) + label + "\"";
     buf += F("},");
 }
-void jeeui2::color(String id, String label){
+void jeeui2::color(const String &id, const String &label){
 
     buf += F("{\"html\":\"input\",");
     buf += String(F("\"id\":\"")) + id + "\",";
@@ -166,7 +166,7 @@ void jeeui2::color(String id, String label){
     buf += String(F("\"label\":\"")) + label + "\"";
     buf += F("},");
 }
-void jeeui2::button(String id, String color, String label){
+void jeeui2::button(const String &id, const String &color, const String &label){
     buf += F("{\"html\":\"button\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += String(F("\"color\":\"")) + color + "\",";
@@ -177,7 +177,7 @@ void jeeui2::button(String id, String color, String label){
     btn_num++;
 }
 
-void jeeui2::button(String id, String color, String label, int column){
+void jeeui2::button(const String &id, const String &color, const String &label, int column){
     buf += F("{\"html\":\"button\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += String(F("\"color\":\"")) + color + "\",";
@@ -189,7 +189,7 @@ void jeeui2::button(String id, String color, String label, int column){
     btn_num++;
 }
 
-void jeeui2::textarea(String id, String label){
+void jeeui2::textarea(const String &id, const String &label){
     buf += F("{\"html\":\"textarea\",");
     buf += String(F("\"id\":\"")) + id + "\",";
     buf += F("\"type\":\"text\",");
@@ -198,7 +198,7 @@ void jeeui2::textarea(String id, String label){
     buf += F("},");
 }
 
-void jeeui2::menu(String name){
+void jeeui2::menu(const String &name){
     
     if (mn == 0)
         buf += F("\"menu\":[");

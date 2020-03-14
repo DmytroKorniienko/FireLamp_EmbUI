@@ -3,7 +3,7 @@
 AsyncWebServer server(80);
 bool __shouldReboot; // OTA update reboot flag
 
-void jeeui2::var(String key, String value) 
+void jeeui2::var(const String &key, const String &value) 
 { 
     if(pub_enable){
         JsonVariant pub_key = pub_transport[key];
@@ -24,7 +24,7 @@ void jeeui2::var(String key, String value)
     cfg[key] = value;
 } 
 
-String jeeui2::param(String key) 
+String jeeui2::param(const String &key) 
 { 
     String value = cfg[key];
     if(dbg)Serial.print(F("READ: "));
@@ -83,7 +83,7 @@ void jeeui2::begin() {
                 }
           } 
           else {
-            var(p->name(), p->value());
+            var(String(p->name()), String(p->value()));
             as();
           }
         }
