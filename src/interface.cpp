@@ -49,6 +49,10 @@ void btnTmSubmCallback()
 #endif
     myLamp.timeProcessor.setTimezone(jee.param(F("timezone")).c_str());
     myLamp.timeProcessor.setTime(jee.param(F("time")).c_str());
+
+    if(myLamp.timeProcessor.getIsSyncOnline()){
+        myLamp.refreshTimeManual(); // принудительное обновление времени
+    }
     isTmSetup = false;
     jee.var(F("isTmSetup"), F("false"));
     jee._refresh = true;
@@ -92,6 +96,7 @@ void parameters(){
 
     jee.var(F("time"), F("00:00"));
     jee.var(F("timezone"), F(""));
+    jee.var(F("isTmSync"), F("true"));
 
     //jee.save(); // сохранить
 }
@@ -135,6 +140,7 @@ void interface(){ // функция в которой мф формируем в
     if(isTmSetup){
         jee.time(F("time"),F("Время"));
         jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
+        jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
         jee.button(F("btnTmSubm"),F("gray"),F("Сохранить"));
     } else {
         jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
@@ -217,6 +223,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
+    myLamp.timeProcessor.setIsSyncOnline(jee.param(F("isTmSync"))==F("true"));
     //jee.param(F("effList"))=String(0);
     jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 

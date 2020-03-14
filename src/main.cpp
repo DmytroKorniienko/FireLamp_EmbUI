@@ -71,12 +71,14 @@ void setup() {
 #else
     jee.begin(false); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
 #endif
-    //update(); // 'этой функцией получаем значения параметров в переменные
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
     updateParm(); // вызвать обновление параметров UI
-    myLamp.refreshTimeManual(); // принудительное обновление времени
+    //update(); // 'этой функцией получаем значения параметров в переменные
+    if(myLamp.timeProcessor.getIsSyncOnline()){
+      myLamp.refreshTimeManual(); // принудительное обновление времени
+    }
 }
 
 void loop() {

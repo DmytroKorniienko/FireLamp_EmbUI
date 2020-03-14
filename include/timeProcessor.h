@@ -68,6 +68,7 @@ private:
 
     unsigned int long query_last_timer;
     bool isSynced = false;
+    bool isSyncOnline = true;
 
     byte week_number = 0;
     byte day_of_week = 0;
@@ -81,6 +82,8 @@ private:
 public:
     void setTimezone(const char *var) { strncpy(timezone,var,sizeof(timezone)); }
     void setTime(const char *var);
+    bool getIsSyncOnline() {return isSyncOnline;}
+    void setIsSyncOnline(bool val) {isSyncOnline=val;}
     long getUnixTime() {return (isSynced?unixtime:dirtytime);}
     String getFormattedShortTime();
     void handleTime(bool force=false);
