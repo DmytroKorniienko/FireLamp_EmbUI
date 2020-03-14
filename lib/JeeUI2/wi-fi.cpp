@@ -1,6 +1,5 @@
 
 bool _wifi_connected = false;
-
 #include "JeeUI2.h"
 
 uint8_t macaddr[6];

@@ -35,6 +35,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
+//#define __IDPREFIX F("JeeUI2-")
 
 #include <Arduino.h>
 #include "JeeUI2.h"
@@ -75,13 +76,15 @@ void setup() {
     ftp_setup(); // запуск ftp-сервера
 #endif
     updateParm(); // вызвать обновление параметров UI
+    myLamp.refreshTimeManual(); // принудительное обновление времени
 }
 
 void loop() {
     myLamp.handle(); // цикл, обработка лампы
 
     jee.handle(); // цикл, необходимый фреймворку
-    
+    jeebuttonshandle();
+
     sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
@@ -101,10 +104,11 @@ void sendData(){
   in = mqtt_int;
   // всё, что ниже будет выполняться через интервалы
 
+
 #ifdef ESP8266
-  LOG.printf_P(PSTR("MQTT send data, MEM: %d, HF: %d\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation());
+  LOG.printf_P(PSTR("MQTT send data, MEM: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #else
-  LOG.printf_P(PSTR("MQTT send data, MEM: %d\n"), ESP.getFreeHeap());
+  LOG.printf_P(PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
   //jee.publish("test","30");
   //jee.publish("hum", String(hum));

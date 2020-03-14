@@ -40,6 +40,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h" // подключаем эффекты, там же их настройки
 #include "effects.h"
 #include "OTA.h"
+//#include "time.h"
+#include "timeProcessor.h"
 
 #include <FastLed.h>
 
@@ -130,6 +132,9 @@ public:
     void restartDemoTimer() {tmDemoTimer.reset();}
     LAMPMODE getMode() {return mode;}
     void updateParm(void(*f)()) { updateParmFunc=f; }
+
+    TimeProcessor timeProcessor;
+    void refreshTimeManual() { timeProcessor.handleTime(true); }
 
     LAMP();
 

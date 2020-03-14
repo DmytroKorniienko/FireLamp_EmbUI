@@ -176,7 +176,7 @@ public:
                 LOG.println(F("\nStart desialization of effects\n\n"));
 #endif
 
-            DynamicJsonDocument doc(4096);
+            DynamicJsonDocument doc(8192);
             DeserializationError error = deserializeJson(doc, cfg_str);
             if (error) {
 #ifdef LAMP_DEBUG
@@ -330,16 +330,16 @@ public:
         }
     }
 
-    EFFECT enumNextEffect(EFFECT current){
+    EFFECT *enumNextEffect(EFFECT *current){
         for(int i=0; i<MODE_AMOUNT; i++){
-            if(effects[i].eff_nb == current.eff_nb){
+            if(effects[i].eff_nb == current->eff_nb){
                 if((i+1)!=MODE_AMOUNT)
-                    return effects[i+1];
+                    return &effects[i+1];
                 else
-                    return effects[0]; // NONE
+                    return &effects[0]; // NONE
             }
         }
-        return effects[0]; // NONE
+        return &effects[0]; // NONE
     }
 
     EFFECT *getEffectBy(EFF_ENUM select){

@@ -111,7 +111,6 @@ void LAMP::init()
         }
     }
 #endif
-
 }
 
 void LAMP::handle()
@@ -128,9 +127,10 @@ void LAMP::handle()
   effectsTick(); // обработчик эффектов
 
 #ifdef OTA
-  otaManager.HandleOtaUpdate();                             // ожидание и обработка команды на обновление прошивки по воздуху
+  otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
 #endif
 
+  timeProcessor.handleTime();                         // Обновление времени
 #ifdef USE_NTP
   timeTick(); // обработчик будильника "рассвет"
 #endif

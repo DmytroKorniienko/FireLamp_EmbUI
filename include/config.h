@@ -43,7 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define FASTLED_ESP8266_RAW_PIN_ORDER                       // FASTLED_ESP8266_RAW_PIN_ORDER, FASTLED_ESP8266_D1_PIN_ORDER or FASTLED_ESP8266_NODEMCU_PIN_ORDER
 //-----------------------------------
 #define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
-#define LAMP_DEBUG
+//#define LAMP_DEBUG
 //#define DEBUG_TELNET_OUTPUT  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
 //#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
 #define OTA                                                 // Обновление по ОТА
@@ -91,7 +91,7 @@ const PROGMEM byte PULL_MODE=HIGH_PULL;                     // подтяжка 
 #define BUTTON_TIMEOUT        (500U)                        // с какого момента начинает считаться, что кнопка удерживается в мс
 #endif
 
-
+#define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
 
 
 

@@ -40,6 +40,31 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 static EFFECT *prevEffect = nullptr;
 static bool isSetup = false;
+static bool isTmSetup = false;
+
+void btnTmSubmCallback()
+{
+#ifdef LAMP_DEBUG
+    LOG.println(F("btnTmSubmCallback pressed"));
+#endif
+    myLamp.timeProcessor.setTimezone(jee.param(F("timezone")).c_str());
+    myLamp.timeProcessor.setTime(jee.param(F("time")).c_str());
+    isTmSetup = false;
+    jee.var(F("isTmSetup"), F("false"));
+    jee._refresh = true;
+}
+
+void jeebuttonshandle()
+{
+    static unsigned long timer;
+    jee.btnCallback(F("btnTmSubm"), btnTmSubmCallback);
+
+    //публикация изменяющихся значений
+    if (timer + 30*1000 > millis())
+        return;
+    timer = millis();
+    jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+}
 
 void parameters(){
     // создаем дефолтные параметры для нашего проекта
@@ -65,6 +90,9 @@ void parameters(){
 
     jee.var(F("GlobBRI"), F("127"));
 
+    jee.var(F("time"), F("00:00"));
+    jee.var(F("timezone"), F(""));
+
     //jee.save(); // сохранить
 }
 
@@ -74,9 +102,9 @@ void interface(){ // функция в которой мф формируем в
     jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
     // создаем меню
-    jee.menu(F("Управление эффектами"));
-    jee.menu(F("Управление лампой"));
-    jee.menu(F("Настройки соединения"));
+    jee.menu(F("Эффекты"));
+    jee.menu(F("Лампа"));
+    jee.menu(F("Настройки"));
     // создаем контент для каждого пункта меню
 
     jee.page(); // разделитель между страницами
@@ -84,9 +112,9 @@ void interface(){ // функция в которой мф формируем в
 
     EFFECT enEff; enEff.setNone();
     jee.checkbox(F("isSetup"),F("Setup"));
-
+    jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
     do {
-        enEff = myLamp.effects.enumNextEffect(enEff);
+        enEff = *myLamp.effects.enumNextEffect(&enEff);
         if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || isSetup)){
             jee.option(String((int)enEff.eff_nb),enEff.eff_name);
         }
@@ -104,7 +132,15 @@ void interface(){ // функция в которой мф формируем в
 
     jee.page(); // разделитель между страницами
     //Страница "Управление лампой"
-    jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
+    if(isTmSetup){
+        jee.time(F("time"),F("Время"));
+        jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
+        jee.button(F("btnTmSubm"),F("gray"),F("Сохранить"));
+    } else {
+        jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
+        jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+    }
+    jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
     jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
     jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));
 
@@ -115,8 +151,6 @@ void interface(){ // функция в которой мф формируем в
         jee.formMqtt(); // форма настроек MQTT
     }
     jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-    //jee.pub(F("test"),F("Тут заголовок и все такое"),F("---"),F(" единиц"));
-    //jee.var(F("test"),String(777)); // обновить опубликованное значение
     
     jee.page(); // разделитель между страницами
 }
@@ -126,6 +160,12 @@ void update(){ // функция выполняется после ввода д
     bool isRefresh = false;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt());
     mqtt_int = jee.param(F("mqtt_int")).toInt();
+
+    
+    if(isTmSetup!=(jee.param(F("isTmSetup"))==F("true"))){
+        isTmSetup = !isTmSetup;
+        isRefresh = true;
+    }
 
     if((jee.param(F("isSetup"))==F("true"))!=isSetup){
         isSetup = !isSetup;
@@ -178,7 +218,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
     //jee.param(F("effList"))=String(0);
-    //jee.var(F("test"),String(777));
+    jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 
     jee._refresh = isRefresh; // устанавливать в самом конце!
 }

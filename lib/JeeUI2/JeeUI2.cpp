@@ -9,7 +9,7 @@ void jeeui2::var(String key, String value)
         JsonVariant pub_key = pub_transport[key];
         if (!pub_key.isNull()) {
             pub_transport[key] = value;
-            if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]"), key.c_str(), value.c_str());
+            if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]\n"), key.c_str(), value.c_str());
             pub_mqtt(key, value);
             String tmp;
             serializeJson(pub_transport, tmp);
@@ -54,18 +54,18 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void jeeui2::begin() { 
-    
     wifi_connect();
 
     /*use mdns for host name resolution*/
     char tmpbuf[32];
     sprintf_P(tmpbuf,PSTR("%s%s"),__IDPREFIX, mc.c_str());    
     if (!MDNS.begin(tmpbuf)) {
-        Serial.println("Error setting up MDNS responder!");
+        Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
         delay(1000);
         }
     }
+    MDNS.addService(F("http"), F("tcp"), 80);
     Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
 
     server.on(PSTR("/post"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -243,6 +243,7 @@ void jeeui2::handle()
         delay(100);
         ESP.restart();
     }
+    MDNS.update();
     _connected();
     mqtt_handle();
     udpLoop();

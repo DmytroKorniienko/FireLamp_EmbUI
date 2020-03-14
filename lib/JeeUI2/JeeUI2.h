@@ -17,6 +17,7 @@
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
+//#include <ESP8266WiFiMulti.h>   // Include the Wi-Fi-Multi library
 #include <ESP8266mDNS.h>        // Include the mDNS library
 #else
 #include <WiFi.h>
@@ -30,7 +31,9 @@
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
 #endif
 
+#ifndef __IDPREFIX
 #define __IDPREFIX F("JeeUI2-")
+#endif
 
 class jeeui2
 {
@@ -48,7 +51,7 @@ class jeeui2
     typedef void (*mqttCallback) ();
 
   public:
-    jeeui2() : cfg(4096), pub_transport(96), btn_transport(96) {}
+    jeeui2() : cfg(3072), pub_transport(256), btn_transport(128) {}
 
     void var(String key, String value);
     String param(String key);

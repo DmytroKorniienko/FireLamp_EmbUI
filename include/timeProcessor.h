@@ -35,24 +35,54 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
-#include <Arduino.h>
-#include "JeeUI2.h"
-#include "config.h"
-#include "lamp.h"
+#ifndef __TIMEPROCESSOR_H
+#define __TIMEPROCESSOR_H
 
-// глобальные переменные для работы с ними в программе
-extern int mqtt_int; // интервал отправки данных по MQTT в секундах 
-extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern GButton touch;               
+#include "config.h"
+#include "misc.h"
+#include "WiFiClient.h"
+#include "ArduinoJson.h"
+
+#if defined(ESP32)
+#include "HTTPClient.h"
+#elif defined(ESP8266)
+#include "ESP8266HTTPClient.h"
 #endif
 
-void mqttCallback(String topic, String payload);
-void sendData();
-void update();
-void interface();
-void parameters();
-void updateParm();
-void jeebuttonshandle();
+//#include <TimeLib.h>
+//#include "Arduino.h"
+// #ifdef USE_NTP
+// #include <NTPClient.h>
+// #include <Timezone.h>
+// #endif
+
+// http://worldtimeapi.org/api/ip
+// http://worldtimeapi.org/api/timezone
+class TimeProcessor
+{
+private:
+    HTTPClient http;
+    WiFiClient client;
+    char timezone[32]="";
+    String getHttpData(const char *url);
+
+    unsigned int long query_last_timer;
+    bool isSynced = false;
+
+    byte week_number = 0;
+    byte day_of_week = 0;
+    int day_of_year = 0;
+    unsigned long int unixtime = 0;
+    int raw_offset = 0;
+
+    unsigned int long query_last_dirtytime_timer;
+    int dirtytime = 0; // приведено к разрешению в millis()
+
+public:
+    void setTimezone(const char *var) { strncpy(timezone,var,sizeof(timezone)); }
+    void setTime(const char *var);
+    long getUnixTime() {return (isSynced?unixtime:dirtytime);}
+    String getFormattedShortTime();
+    void handleTime(bool force=false);
+};
+#endif
