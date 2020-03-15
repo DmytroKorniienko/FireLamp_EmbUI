@@ -6,7 +6,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 	<meta name="theme-color" content="#1f8dd6">
 	<title>JeeUI2</title>
-	<script src="js/maker.js"></script>
 	<link rel="stylesheet" href="css/pure-min.css">
 	<link rel="stylesheet" href="css/side-menu.css">
 	<link rel="stylesheet" href="css/range.css">
@@ -24,6 +23,28 @@
         <div id="debug"></div>
 
     </div>
-	<script src="js/ui.js"></script>
+
+<script src="js/ui.js"></script>
+<script src="js/maker.js"></script>
+
+<script type="text/javascript">
+
+function downloadJSAtOnload() {
+var scripts = ["js/maker.js", "js/ui.js"];
+scripts.forEach(script => {
+	var element = document.createElement("script");
+	element.src = script;
+	document.body.appendChild(element);
+	});
+}
+
+if (window.addEventListener)
+window.addEventListener("load", downloadJSAtOnload, false);
+else if (window.attachEvent)
+window.attachEvent("onload", downloadJSAtOnload);
+else window.onload = downloadJSAtOnload;
+
+</script>
+
 </body>
 </html>

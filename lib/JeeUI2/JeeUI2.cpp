@@ -178,7 +178,6 @@ void jeeui2::begin() {
     server.on(PSTR("/favicon.ico"), HTTP_GET, [](AsyncWebServerRequest *request) {
         AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/favicon.ico.gz"), F("image/x-icon"));
         response->addHeader(F("Content-Encoding"), F("gzip"));
-        //AsyncWebServerResponse *response = request->beginResponse_P(200, F("image/x-icon"), favicon_ico_gz, favicon_ico_gz_len);
         request->send(response);
     });
 
