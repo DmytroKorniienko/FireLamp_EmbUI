@@ -9,7 +9,7 @@ void jeeui2::var(const String &key, const String &value)
         JsonVariant pub_key = pub_transport[key];
         if (!pub_key.isNull()) {
             pub_transport[key] = value;
-            if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]\n"), key.c_str(), value.c_str());
+            //if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]\n"), key.c_str(), value.c_str());
             pub_mqtt(key, value);
             String tmp;
             serializeJson(pub_transport, tmp);
@@ -113,6 +113,7 @@ void jeeui2::begin() {
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
         if(dbg)Serial.println(F("Вызов /echo"));
         foo();
+
         String res = buf;
         AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), res);
 
@@ -121,6 +122,18 @@ void jeeui2::begin() {
         //response->addHeader(F("Expires"),F("0"));
         request->send(response);
         //request->send(200, F("text/plain"), buf);
+
+        // AsyncJsonResponse * response = new AsyncJsonResponse();
+
+        // response->addHeader(F("Server"),F("ESP Async Web Server"));
+        // response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+
+        // DynamicJsonDocument doc(4096);
+        // serializeJson(doc,buf);
+        // response->getRoot().set(doc.to<JsonVariant>());
+        // response->setLength();
+        // request->send(response);
+
         if(dbg)Serial.println(buf);
         buf = F("");
     });
@@ -247,6 +260,35 @@ void jeeui2::begin() {
         }
     });
     
+    //First request will return 0 results unless you start scan from somewhere else (loop/setup)
+    //Do not request more often than 3-5 seconds
+    server.on("/scan", HTTP_GET, [](AsyncWebServerRequest *request){
+    String json = "[";
+    int n = WiFi.scanComplete();
+    if(n == -2){
+        WiFi.scanNetworks(true);
+    } else if(n){
+        for (int i = 0; i < n; ++i){
+        if(i) json += ",";
+        json += "{";
+        json += "\"rssi\":"+String(WiFi.RSSI(i));
+        json += ",\"ssid\":\""+WiFi.SSID(i)+"\"";
+        json += ",\"bssid\":\""+WiFi.BSSIDstr(i)+"\"";
+        json += ",\"channel\":"+String(WiFi.channel(i));
+        json += ",\"secure\":"+String(WiFi.encryptionType(i));
+        json += ",\"hidden\":"+String(WiFi.isHidden(i)?"true":"false");
+        json += "}";
+        }
+        WiFi.scanDelete();
+        if(WiFi.scanComplete() == -2){
+        WiFi.scanNetworks(true);
+        }
+    }
+    json += "]";
+    request->send(200, "application/json", json);
+    json = String();
+    });
+
     server.onNotFound(notFound);
 
     server.begin();

@@ -1554,3 +1554,87 @@ void lavaNoiseRoutine(CRGB *leds, const char *param)
   speed = 64UL*myLamp.effects.getSpeed()/255;
   fillNoiseLED();
 }
+
+// --------------------------- эффект мячики ----------------------
+//  BouncingBalls2014 is a program that lets you animate an LED strip
+//  to look like a group of bouncing balls
+//  Daniel Wilson, 2014
+//  https://github.com/githubcdr/Arduino/blob/master/bouncingballs/bouncingballs.ino
+//  With BIG thanks to the FastLED community!
+//  адаптация от SottNick
+#define bballsGRAVITY           (-9.81)              // Downward (negative) acceleration of gravity in m/s^2
+#define bballsH0                (1)                  // Starting height, in meters, of the ball (strip length)
+#define bballsMaxNUM_BALLS      (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+void BBallsRoutine(CRGB *leds, const char *param)
+{
+  uint8_t bballsNUM_BALLS;                             // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
+
+  static uint8_t bballsCOLOR[bballsMaxNUM_BALLS] ;                   // прикручено при адаптации для разноцветных мячиков
+  static uint8_t bballsX[bballsMaxNUM_BALLS] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
+  static float bballsH[bballsMaxNUM_BALLS] ;                         // An array of heights
+  static float bballsVImpact0 = sqrt( -2 * bballsGRAVITY * bballsH0 );  // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
+  static float bballsVImpact[bballsMaxNUM_BALLS] ;                   // As time goes on the impact velocity will change, so make an array to store those values
+  static float bballsTCycle[bballsMaxNUM_BALLS] ;                    // The time since the last time the ball struck the ground
+  static int   bballsPos[bballsMaxNUM_BALLS] ;                       // The integer position of the dot on the strip (LED index)
+  static long  bballsTLast[bballsMaxNUM_BALLS] ;                     // The clock time of the last ground strike
+  static float bballsCOR[bballsMaxNUM_BALLS] ;                       // Coefficient of Restitution (bounce damping)
+
+  bballsNUM_BALLS = (uint8_t)((bballsMaxNUM_BALLS * myLamp.effects.getScale())/256+1);
+  for (int i = 0 ; i < bballsNUM_BALLS ; i++)
+    bballsCOR[i] = 0.90 - float(i)/(255-myLamp.effects.getSpeed()); // это, видимо, прыгучесть. для каждого мячика уникальная изначально
+
+  if (myLamp.isLoading()){
+    FastLED.clear();
+
+    for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
+      bballsCOLOR[i] = random(0U, 256U);
+      bballsX[i] = random(0U, WIDTH);
+      bballsTLast[i] = millis();
+      bballsH[i] = bballsH0;
+      bballsPos[i] = 0;                                    // Balls start on the ground
+      bballsVImpact[i] = bballsVImpact0;                   // And "pop" up at vImpact0
+      bballsTCycle[i] = 0;
+    }
+  }
+  
+
+  for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
+    myLamp.setLeds(myLamp.getPixelNumber(bballsX[i], bballsPos[i]), CRGB::Black); // off for the next loop around
+
+    bballsTCycle[i] =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
+
+    // A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
+    bballsH[i] = 0.5 * bballsGRAVITY * pow( bballsTCycle[i]/1000 , 2.0 ) + bballsVImpact[i] * bballsTCycle[i]/1000;
+
+    if ( bballsH[i] < 0 ) {                      
+      bballsH[i] = 0;                            // If the ball crossed the threshold of the "ground," put it back on the ground
+      bballsVImpact[i] = bballsCOR[i] * bballsVImpact[i] ;   // and recalculate its new upward velocity as it's old velocity * COR
+      bballsTLast[i] = millis();
+
+//      if ( bballsVImpact[i] < 0.01 ) bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
+      if ( bballsVImpact[i] < 0.01 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
+        {
+          switch (random(3U)) // этот свитч двигает мячики влево-вправо иногда
+            {
+              case 0U:
+              {
+                if (bballsX[i] == 0U) bballsX[i] = WIDTH - 1U;
+                  else --bballsX[i];
+                break;
+              }
+              case 2U:
+              {
+                if (bballsX[i] == WIDTH - 1U) bballsX[i] = 0U;
+                  else ++bballsX[i];
+                break;
+              }
+            }
+          bballsCOR[i] = 0.90 - float(random(0U,5U))/pow(random(1U,6U),2); // а это прыгучесть меняется. кажется, не очень удачно сделано
+          bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
+        }
+    }
+    bballsPos[i] = round( bballsH[i] * (HEIGHT - 1) / bballsH0);       // Map "h" to a "pos" integer index position on the LED strip
+
+    myLamp.setLeds(myLamp.getPixelNumber(bballsX[i], bballsPos[i]), CHSV(bballsCOLOR[i], 255, 255));
+  }
+}

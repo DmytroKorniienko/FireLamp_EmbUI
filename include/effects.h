@@ -70,7 +70,8 @@ EFF_LIGHTERS,                                 // Светлячки
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
 EFF_PAINTBALL,                                // Пейнтбол
 EFF_CUBE,                                     // Блуждающий кубик
-EFF_PULSE,                                    // Пульс 
+EFF_PULSE,                                    // Пульс
+EFF_BBALS,                                    // Прыгающие мячики 
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
@@ -97,6 +98,7 @@ void oceanNoiseRoutine(CRGB*, const char*);
 void plasmaNoiseRoutine(CRGB*, const char*);
 void cloudsNoiseRoutine(CRGB*, const char*);
 void lavaNoiseRoutine(CRGB*, const char*);
+void BBallsRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -129,6 +131,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_LIGHTER_TRACES, "Светлячки со шлейфом", 127, 127, 127, true, true, ballsRoutine, nullptr},
     {EFF_PAINTBALL, "Пейнтбол", 127, 127, 127, true, true, lightBallsRoutine, nullptr},
     {EFF_CUBE, "Блуждающий кубик", 127, 127, 127, true, true, ballRoutine, nullptr},
+    {EFF_BBALS, "Прыгающие мячики", 127, 127, 127, true, true, BBallsRoutine, nullptr},
     {EFF_MADNESS, "Безумие 3D", 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
     {EFF_RAINBOW, "Радуга 3D", 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
     {EFF_RAINBOW_STRIPE, "Павлин 3D", 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},

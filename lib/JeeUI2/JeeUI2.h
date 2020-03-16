@@ -26,6 +26,7 @@
 #endif
 
 #include <AsyncMqttClient.h>
+#include "AsyncJson.h"
 
 #ifndef __DISABLE_BUTTON0
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU

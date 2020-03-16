@@ -11,7 +11,6 @@ void jeeui2::save()
         configFile.print(cfg_str);
 
         if(dbg)Serial.println(F("Save Config"));
-        sv = false;
     }
 }
 
