@@ -65,45 +65,46 @@ String TimeProcessor::getHttpData(const char *url)
 void TimeProcessor::handleTime(bool force)
 {
     static unsigned long timer;
-    unsigned int interval = TIME_SYNC_INTERVAL;
-    if (timer + interval > millis() && !force)
+    if (timer + TIME_SYNC_INTERVAL > millis() && !force)
         return;
     timer = millis();
     
-    String result;
-    if(!strlen(timezone)){
-        result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
-    }
-    else {
-        String tmpStr(PSTR("http://worldtimeapi.org/api/timezone/"));
-        tmpStr+=timezone;
-        result = getHttpData(tmpStr.c_str());
-        if(result.length()<50) // {"error":"unknown location"}
+    {
+        String result;
+        if(!strlen(timezone)){
             result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
-    }
-    query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
-    DynamicJsonDocument doc(512);
-    DeserializationError error = deserializeJson(doc, result);
-    if (error) {
+        }
+        else {
+            String tmpStr(PSTR("http://worldtimeapi.org/api/timezone/"));
+            tmpStr+=timezone;
+            result = getHttpData(tmpStr.c_str());
+            if(result.length()<50) // {"error":"unknown location"}
+                result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
+        }
+        query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
+        DynamicJsonDocument doc(512);
+        DeserializationError error = deserializeJson(doc, result);
+        if (error) {
+    #ifdef LAMP_DEBUG
+            LOG.print(F("deserializeJson error: "));
+            LOG.println(error.code());
+    #endif
+            return;
+        }
+        if(!doc[F("error")].size()){
+            week_number=doc[F("week_number")];
+            day_of_week=doc[F("day_of_week")];
+            day_of_year=doc[F("day_of_year")];
+            unixtime=doc[F("unixtime")];
+            raw_offset=doc[F("raw_offset")];
+            if(unixtime) isSynced = true;
+        } else {
+            if(!unixtime) isSynced = false;
+        }
 #ifdef LAMP_DEBUG
-        LOG.print(F("deserializeJson error: "));
-        LOG.println(error.code());
+        LOG.println(result);
 #endif
-        return;
     }
-    if(!doc[F("error")].size()){
-        week_number=doc[F("week_number")];
-        day_of_week=doc[F("day_of_week")];
-        day_of_year=doc[F("day_of_year")];
-        unixtime=doc[F("unixtime")];
-        raw_offset=doc[F("raw_offset")];
-        if(unixtime) isSynced = true;
-    } else {
-        if(!unixtime) isSynced = false;
-    }
-#ifdef LAMP_DEBUG
-    LOG.println(result);
-#endif
 }
 
 String TimeProcessor::getFormattedShortTime()

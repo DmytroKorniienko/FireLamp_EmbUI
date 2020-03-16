@@ -1036,6 +1036,10 @@ void snowRoutine(CRGB *leds, const char *param)
 // ------------- звездопад/метель -------------
 void snowStormStarfallRoutine(CRGB *leds, const char *param)
 {
+  if (myLamp.isLoading()){
+    FastLED.clear();
+  }
+  
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
   } else {

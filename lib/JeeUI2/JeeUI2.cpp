@@ -168,6 +168,14 @@ void jeeui2::begin() {
         //config = F("");
     });
 
+    server.on(PSTR("/eff_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        request->send(SPIFFS, "/eff_config.json", String(), true);
+    });
+
+    server.on(PSTR("/config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        request->send(SPIFFS, "/config.json", String(), true);
+    });
+
     server.on(PSTR("/js/maker.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/maker.js.gz"), F("application/javascript"));
         response->addHeader(F("Content-Encoding"), F("gzip"));
@@ -319,8 +327,7 @@ void jeeui2::handle()
     mqtt_handle();
     udpLoop();
     static unsigned long timer;
-    unsigned int interval = 300;
-    if (timer + interval > millis())
+    if (timer + 300U > millis())
         return;
     timer = millis();
     btn();

@@ -117,7 +117,7 @@ void LAMP::handle()
 {
 #ifdef ESP_USE_BUTTON
   static unsigned long button_check;
-  if (buttonEnabled && button_check + 30 < millis()) // раз в 30 мс проверяем кнопку
+  if (buttonEnabled && button_check + 30U < millis()) // раз в 30 мс проверяем кнопку
   {
     buttonTick(); // обработчик кнопки
     button_check = millis();
@@ -125,6 +125,16 @@ void LAMP::handle()
 #endif
 
   effectsTick(); // обработчик эффектов
+
+#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+  handleTelnetClient();
+#endif
+
+  // все что ниже, будет выполняться раз в 0.5 секунды
+  static unsigned long half_second_handlers;
+  if (half_second_handlers + 500U > millis())
+      return;
+  half_second_handlers = millis();
 
 #ifdef OTA
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
@@ -134,11 +144,6 @@ void LAMP::handle()
 #ifdef USE_NTP
   timeTick(); // обработчик будильника "рассвет"
 #endif
-
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-  handleTelnetClient();
-#endif
-
 }
 
 #ifdef ESP_USE_BUTTON
@@ -441,8 +446,6 @@ void LAMP::timeTick() // обработчик будильника "рассве
 
 void LAMP::effectsTick()
 {
-  EFFECT *currentEffect = effects.getCurrent();
-
   if (!dawnFlag) // флаг устанавливается будильником рассвет
   {
     if (ONflag)
@@ -454,8 +457,8 @@ void LAMP::effectsTick()
       faderTick(); // фейдер
       
       if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
-        if(currentEffect->func!=nullptr){
-            currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+        if(effects.getCurrent()->func!=nullptr){
+            effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
         }
         effTimer = millis();
       }
