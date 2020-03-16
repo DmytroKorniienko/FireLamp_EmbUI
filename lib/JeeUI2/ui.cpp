@@ -2,14 +2,11 @@
 
 
 void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color, const String &text_color){
-    buf.concat(F("{\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"pub\","));
-    buf.concat(F("\"value\":\"")); buf.concat(value); buf.concat(F("\","));
-    buf.concat(F("\"bg_color\":\"")); buf.concat(bg_color); ; buf.concat(F("\","));
-    buf.concat(F("\"text_color\":\"")); buf.concat(text_color); ; buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); ; buf.concat(F("\","));
-    buf.concat(F("\"unit\":\"")); buf.concat(unit); ; buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"id\":\"%s\",\"type\":\"pub\",\"value\":\"%s\",\"bg_color\":\"%s\",\"text_color\":\"%s\",\"label\":\"%s\",\"unit\":\"%s\"},")
+      ,id.c_str(), value.c_str(), bg_color.c_str(), text_color.c_str(), label.c_str(), unit.c_str());
+
+    jeeui2::buf.concat(buffer);
 
     pub_enable = true;
     pub_transport[id] = value;
@@ -53,159 +50,127 @@ void jeeui2::app(const String &name){
     op = F("");
 
     buf = F("");
-    //buf.reserve(4096); // резервируем сразу большой кусок
+    //buf.reserve(512); // резервируем сразу большой кусок
     buf.concat(F("{\"app\":\"")); buf.concat(name); buf.concat(F("\","));
     buf.concat(F("\"ID\":\"")); buf.concat(mc); buf.concat(F("\","));
 }
 
 void jeeui2::text(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"text\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"text\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::number(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"number\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"number\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::time(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"time\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"time\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::date(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"date\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"date\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::datetime(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"datetime-local\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"datetime-local\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::range(const String &id, int min, int max, float step, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"min\":\"")); buf.concat(min); buf.concat(F("\","));
-    buf.concat(F("\"max\":\"")); buf.concat(max); buf.concat(F("\","));
-    buf.concat(F("\"step\":\"")); buf.concat(step); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"range\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"min\":\"%d\",\"max\":\"%d\",\"step\":\"%.2f\",\"type\":\"range\",\"value\":\"%s\",\"label\":\"%s\"},")
+      , id.c_str(), min, max, step, param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::email(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"email\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"email\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::password(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"password\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"password\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::option(const String &value, const String &label){
-    op.concat(F("{\"label\":\""));
-    op.concat(label);
-    op.concat(F("\",\"value\":\""));
-    op.concat(value);
-    op.concat(F("\"},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"label\":\"%s\",\"value\":%s},"),label.c_str(), value.c_str());
+
+    jeeui2::op.concat(buffer);
 }
 
 void jeeui2::select(const String &id, const String &label){
-
+    char buffer[256];
     int lastIndex = op.length() - 1;
     op.remove(lastIndex);
-
-    buf.concat(F("{\"html\":\"select\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\","));
-    buf.concat(F("\"options\":[")); buf.concat(op); buf.concat(F("]"));
-    buf.concat(F("},"));
+    sprintf_P(buffer,PSTR("{\"html\":\"select\",\"id\":\"%s\",\"value\":%s,\"label\":\"%s\",\"options\":["),id.c_str(),param(id).c_str(),label.c_str());
+    jeeui2::buf.concat(buffer);
+    jeeui2::buf.concat(op);
+    jeeui2::buf.concat(F("]},"));
 
     op = F("");
 }
 
 void jeeui2::checkbox(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"checkbox\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"checkbox\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 void jeeui2::color(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"input\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"color\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"color\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 void jeeui2::button(const String &id, const String &color, const String &label){
-    buf.concat(F("{\"html\":\"button\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"color\":\"")); buf.concat(color); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"button\",\"id\":\"%s\",\"color\":\"%s\",\"label\":\"%s\"},"), id.c_str(), color.c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 
     btn_id[btn_num] = String(F("BTN_")) + id;
     btn_num++;
 }
 
 void jeeui2::button(const String &id, const String &color, const String &label, int column){
-    buf.concat(F("{\"html\":\"button\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"color\":\"")); buf.concat(color); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\","));
-    buf.concat(F("\"col\":\"")); buf.concat(column); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"button\",\"id\":\"%s\",\"color\":\"%s\",\"label\":\"%s\",\"col\":\"%d\"},"), id.c_str(), color.c_str(), label.c_str(), column);
+
+    jeeui2::buf.concat(buffer);
 
     btn_id[btn_num] = String(F("BTN_")) + id;
     btn_num++;
 }
 
 void jeeui2::textarea(const String &id, const String &label){
-    buf.concat(F("{\"html\":\"textarea\","));
-    buf.concat(F("\"id\":\"")); buf.concat(id); buf.concat(F("\","));
-    buf.concat(F("\"type\":\"text\","));
-    buf.concat(F("\"value\":\"")); buf.concat(param(id)); buf.concat(F("\","));
-    buf.concat(F("\"label\":\"")); buf.concat(label); buf.concat(F("\""));
-    buf.concat(F("},"));
+    char buffer[256];
+    sprintf_P(buffer,PSTR("{\"html\":\"textarea\",\"id\":\"%s\",\"type\":\"text\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+
+    jeeui2::buf.concat(buffer);
 }
 
 void jeeui2::menu(const String &name){
-    
     if (mn == 0)
         buf.concat(F("\"menu\":["));
     else{

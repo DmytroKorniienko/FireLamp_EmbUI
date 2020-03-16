@@ -224,12 +224,12 @@ public:
             for(int i=1; i<MODE_AMOUNT; i++){ // EFF_NONE не сохраняем
                 cur_eff = &(effects[i]);
                 configFile.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
-                    (i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
-                    ((cur_eff->param!=nullptr)?cur_eff->param:""));
+                    (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
+                    ((cur_eff->param!=nullptr)?cur_eff->param:(char*)F("")));
 #ifdef LAMP_DEBUG
                 LOG.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
-                    (i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
-                    ((cur_eff->param!=nullptr)?cur_eff->param:""));
+                    (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
+                    ((cur_eff->param!=nullptr)?cur_eff->param:(char*)F("")));
 #endif
             }     
             configFile.print("]");

@@ -162,7 +162,7 @@ class OtaManager
       char espHostName[65];
       String id = WiFi.softAPmacAddress();
       id.replace(F(":"), F(""));
-      sprintf_P(espHostName, PSTR("%s%s"),__IDPREFIX, id.c_str());
+      sprintf_P(espHostName, PSTR("%s%s"),(char*)__IDPREFIX, id.c_str());
 
       ArduinoOTA.setPort(ESP_OTA_PORT);
       ArduinoOTA.setHostname(espHostName);

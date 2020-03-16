@@ -24,6 +24,14 @@ void jeeui2::var(const String &key, const String &value)
     cfg[key] = value;
 } 
 
+void jeeui2::var_create(const String &key, const String &value) 
+{
+    if(dbg)Serial.print(F("WRITE: "));
+    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
+    if(cfg[key].isNull())
+        cfg[key] = value;
+}
+
 String jeeui2::param(const String &key) 
 { 
     String value = cfg[key];
@@ -58,7 +66,7 @@ void jeeui2::begin() {
 
     /*use mdns for host name resolution*/
     char tmpbuf[32];
-    sprintf_P(tmpbuf,PSTR("%s%s"),__IDPREFIX, mc.c_str());    
+    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc.c_str());    
     if (!MDNS.begin(tmpbuf)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
@@ -103,28 +111,48 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        if(dbg)Serial.println(F("Вызов /echo"));
         foo();
-        request->send(200, F("text/plain"), buf);
+        String res = buf;
+        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), res);
+
+        response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        //response->addHeader(F("Pragma"),F("no-cache"));
+        //response->addHeader(F("Expires"),F("0"));
+        request->send(response);
+        //request->send(200, F("text/plain"), buf);
+        if(dbg)Serial.println(buf);
         buf = F("");
     });
 
     server.on(PSTR("/_refresh"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         static unsigned long echoTm; // сброс только через секунду
-        
+        char buffer[20];
+
         if(!_refresh)
             {echoTm = millis();}
         else if(echoTm+1500<millis()){ // 1.5 секунды при цикле опроса в 1 секунду
             _refresh = false;
             echoTm = millis();
         }
+        sprintf_P(buffer,PSTR("{\"_refresh\":%d}"), _refresh);
+        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), buffer);
 
-        request->send(200, F("text/plain"), String(F("{\"_refresh\":\"")) + String(_refresh) + F("\"}"));
+        response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        //response->addHeader(F("Pragma"),F("no-cache"));
+        //response->addHeader(F("Expires"),F("0"));
+        request->send(response);
     });
 
     server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
         String config = deb();
-        request->send(200, F("text/plain"), config);
-        config = F("");
+        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), config);
+
+        response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        //response->addHeader(F("Pragma"),F("no-cache"));
+        //response->addHeader(F("Expires"),F("0"));
+        request->send(response);
+        //config = F("");
     });
 
     server.on(PSTR("/js/maker.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -223,7 +251,7 @@ void jeeui2::begin() {
 
     server.begin();
     foo();
-    upd();
+    //upd();
     mqtt_update();
 }
 

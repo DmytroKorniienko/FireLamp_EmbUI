@@ -118,8 +118,8 @@ String TimeProcessor::getFormattedShortTime()
     }
 
     //LOG.println((millis()-val_tm));
-    sprintf_P(buffer,PSTR("%02u:%02u"),((val+(millis()-val_tm))/(3600000UL)%24) // 3600*1000
-    ,((val+(millis()-val_tm))%(3600000UL))/(60000UL)); // 60*1000
+    sprintf_P(buffer,PSTR("%02u:%02u"),(unsigned)((val+(millis()-val_tm))/(3600000UL)%24) // 3600*1000
+    ,(unsigned)((val+(millis()-val_tm))%(3600000UL))/(60000UL)); // 60*1000
 
     return String(buffer);
 }

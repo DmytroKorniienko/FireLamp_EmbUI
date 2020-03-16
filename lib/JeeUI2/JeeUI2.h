@@ -54,6 +54,7 @@ class jeeui2
     jeeui2() : cfg(3072), pub_transport(256), btn_transport(128) {}
 
     void var(const String &key, const String &value);
+    void var_create(const String &key, const String &value);
     String param(const String &key);
     void led(uint8_t pin, bool invert);
     String deb();

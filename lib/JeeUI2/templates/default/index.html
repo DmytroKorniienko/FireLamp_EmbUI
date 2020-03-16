@@ -12,7 +12,7 @@
 	<link rel="stylesheet" href="css/grids.css">
 	<link rel="stylesheet" href="css/chk.css">
 </head>
-<body> <!-- onload="parse()" -->
+<body onload="parse()"> <!-- onload="parse()" -->
     <div id="layout">
         <a href="#menu" id="menuLink" class="menu-link">
             <span></span>
@@ -23,28 +23,7 @@
         <div id="debug"></div>
 
     </div>
-
 <script src="js/ui.js"></script>
 <script src="js/maker.js"></script>
-
-<script type="text/javascript">
-
-function downloadJSAtOnload() {
-var scripts = ["js/maker.js", "js/ui.js"];
-scripts.forEach(script => {
-	var element = document.createElement("script");
-	element.src = script;
-	document.body.appendChild(element);
-	});
-}
-
-if (window.addEventListener)
-window.addEventListener("load", downloadJSAtOnload, false);
-else if (window.attachEvent)
-window.attachEvent("onload", downloadJSAtOnload);
-else window.onload = downloadJSAtOnload;
-
-</script>
-
 </body>
 </html>

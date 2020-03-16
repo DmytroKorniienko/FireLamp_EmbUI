@@ -70,39 +70,43 @@ void jeebuttonshandle()
     jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 }
 
-void parameters(){
+void create_parameters(){
+#ifdef LAMP_DEBUG
+    LOG.println(F("Создание дефолтных параметров"));
+#endif
     // создаем дефолтные параметры для нашего проекта
-    jee.var(F("wifi"), F("STA")); // режим работы WiFi по умолчанию ("STA" или "AP")  (параметр в энергонезависимой памяти)
-    jee.var(F("ssid"), F("")); // имя точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
-    jee.var(F("pass"), F("")); // пароль точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
+    jee.var_create(F("wifi"), F("STA")); // режим работы WiFi по умолчанию ("STA" или "AP")  (параметр в энергонезависимой памяти)
+    jee.var_create(F("ssid"), F("")); // имя точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
+    jee.var_create(F("pass"), F("")); // пароль точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
 
     // параметры подключения к MQTT
-    jee.var(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
+    jee.var_create(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
     
-    jee.var(F("effList"), F("1"));
-    jee.var(F("isSetup"), F("false"));
+    jee.var_create(F("effList"), F("1"));
+    jee.var_create(F("isSetup"), F("false"));
 
-    jee.var(F("bright"), F("127"));
-    jee.var(F("speed"), F("127"));
-    jee.var(F("scale"), F("127"));
-    jee.var(F("canBeSelected"), F("true"));
-    jee.var(F("isFavorite"), F("true"));
+    jee.var_create(F("bright"), F("127"));
+    jee.var_create(F("speed"), F("127"));
+    jee.var_create(F("scale"), F("127"));
+    jee.var_create(F("canBeSelected"), F("true"));
+    jee.var_create(F("isFavorite"), F("true"));
 
-    jee.var(F("ONflag"), F("true"));
-    jee.var(F("MIRR_H"), F("false"));
-    jee.var(F("MIRR_V"), F("false"));
+    jee.var_create(F("ONflag"), F("true"));
+    jee.var_create(F("MIRR_H"), F("false"));
+    jee.var_create(F("MIRR_V"), F("false"));
 
-    jee.var(F("GlobBRI"), F("127"));
+    jee.var_create(F("GlobBRI"), F("127"));
 
-    jee.var(F("time"), F("00:00"));
-    jee.var(F("timezone"), F(""));
-    jee.var(F("isTmSync"), F("true"));
-
-    //jee.save(); // сохранить
+    jee.var_create(F("time"), F("00:00"));
+    jee.var_create(F("timezone"), F(""));
+    jee.var_create(F("isTmSetup"), F("false"));
+    jee.var_create(F("isTmSync"), F("true"));
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс
-    //bool isSetup = (jee.param(F("isSetup"))==F("true"));
+#ifdef LAMP_DEBUG
+    LOG.println(F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
+#endif
     
     jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
