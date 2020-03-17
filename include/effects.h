@@ -118,7 +118,7 @@ typedef struct _EFFECT {
 static EFFECT _EFFECTS_ARR[] = {
     {EFF_NONE, nullptr, 127, 127, 127, false, false, nullptr, nullptr},
     
-    {EFF_SPARKLES, "Светлячки", 127, 127, 127, true, true, sparklesRoutine, nullptr},
+    {EFF_SPARKLES, "Конфетти", 127, 127, 127, true, true, sparklesRoutine, nullptr},
     {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
     {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
     {EFF_RAINBOW_2D, "Радуга 2D", 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
