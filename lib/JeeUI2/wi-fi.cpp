@@ -2,16 +2,6 @@
 bool _wifi_connected = false;
 #include "JeeUI2.h"
 
-uint8_t macaddr[6];
-
-void jeeui2::prntmac(){
-  for (byte i = 0; i < 6; ++i) {
-    mac += String(macaddr[i], HEX);
-    if (i < 5)
-      mac += ':';
-  }
-}
-
 
 #ifdef ESP8266
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
@@ -118,9 +108,17 @@ void jeeui2::wifi_connect()
                     break;
                 }
             }
+
+            uint8_t macaddr[6];
             WiFi.macAddress(macaddr);
-            ip = WiFi.localIP().toString();
-            prntmac();
+            String _mac;
+            for (byte i = 0; i < 6; ++i) {
+                _mac += String(macaddr[i], HEX);
+                if (i < 5)
+                    _mac += ':';
+            }
+            strncpy(mac,_mac.c_str(),sizeof(mac)-1);
+            strncpy(ip,WiFi.localIP().toString().c_str(),sizeof(ip)-1);
             if(dbg)Serial.println();
             break;
         }

@@ -19,8 +19,8 @@ void jeeui2::btnCallback(const String &name, buttonCallback response)
         response();
         btn();
     }
-    if (btnui == name){
-        btnui = F("");
+    if(strcmp(btnui, name.c_str())==0){
+        *btnui = '\0';
         response();
     }
 #endif

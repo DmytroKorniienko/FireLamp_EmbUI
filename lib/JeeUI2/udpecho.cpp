@@ -6,16 +6,16 @@ bool udpApply = false;
 
 void jeeui2::udp(){
     getAPmac();
-    udpMessage = mc;
+    strncpy(udpMessage,mc,sizeof(udpMessage)-1); // udpMessage = mc;
 }
 
 void jeeui2::udp(const String &message){
-    udpMessage = message;
+    strncpy(udpMessage,message.c_str(),sizeof(udpMessage)-1); //udpMessage = message;
 }
 
 void jeeui2::udpBegin(){
     Udp.begin(localUdpPort);
-    if(udpMessage != F("")) udpApply = true;
+    if(*udpMessage) udpApply = true;
 }
 
 void jeeui2::udpLoop(){
@@ -30,8 +30,8 @@ void jeeui2::udpLoop(){
     int packetSize = Udp.parsePacket();
     if (packetSize)
     {
-        udpRemoteIP = Udp.remoteIP().toString();
-        if(dbg)Serial.printf(PSTR("Received %d bytes from %s, port %d\n"), packetSize, udpRemoteIP.c_str(), Udp.remotePort());
+        strncpy(udpRemoteIP,Udp.remoteIP().toString().c_str(),sizeof(udpRemoteIP)-1); // udpRemoteIP = Udp.remoteIP().toString();
+        if(dbg)Serial.printf(PSTR("Received %d bytes from %s, port %d\n"), packetSize, udpRemoteIP, Udp.remotePort());
         int len = Udp.read(incomingPacket, 64);
         if (len > 0)
         {

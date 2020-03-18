@@ -3,18 +3,22 @@
 AsyncWebServer server(80);
 bool __shouldReboot; // OTA update reboot flag
 
-void jeeui2::var(const String &key, const String &value) 
+void jeeui2::var(const String &key, const String &value, bool pub) 
 { 
+    if(pub_transport.containsKey(key) || pub){
+        String tmp;
+        pub_transport[key] = value;
+        serializeJson(pub_transport, tmp);
+        deserializeJson(pub_transport, tmp);
+        //if(dbg)Serial.printf_P(PSTR("serializeJson: [%s]: %s\n"), key.c_str(), pub_transport.as<String>().c_str());
+        if(pub) return;
+    }
     if(pub_enable){
         JsonVariant pub_key = pub_transport[key];
         if (!pub_key.isNull()) {
             pub_transport[key] = value;
             //if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]\n"), key.c_str(), value.c_str());
             pub_mqtt(key, value);
-            String tmp;
-            serializeJson(pub_transport, tmp);
-            deserializeJson(pub_transport, tmp);
-            tmp = F("");
             return;
         }
     }
@@ -26,18 +30,19 @@ void jeeui2::var(const String &key, const String &value)
 
 void jeeui2::var_create(const String &key, const String &value) 
 {
-    if(dbg)Serial.print(F("WRITE: "));
-    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
-    if(cfg[key].isNull())
+    if(cfg[key].isNull()){
         cfg[key] = value;
+        if(dbg)Serial.print(F("CREATE: "));
+        if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
+    }
 }
 
 String jeeui2::param(const String &key) 
 { 
-    String value = cfg[key];
+    //String value = cfg[key];
     if(dbg)Serial.print(F("READ: "));
-    if(dbg)Serial.println(String(F("key (")) + key + String(F(") value (")) + value + String(F(")")));
-    return value;
+    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), cfg[key].as<String>().c_str(), ESP.getFreeHeap());
+    return cfg[key];
 } 
 
 String jeeui2::deb() 
@@ -66,7 +71,7 @@ void jeeui2::begin() {
 
     /*use mdns for host name resolution*/
     char tmpbuf[32];
-    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc.c_str());    
+    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);    
     if (!MDNS.begin(tmpbuf)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
@@ -83,8 +88,9 @@ void jeeui2::begin() {
         {
           p = request->getParam(i);
           if (p->name().indexOf(F("BTN_")) != -1){
-                btnui = p->name().substring(4, p->name().length());
-                if(btnui == F("bWF")){
+                strncpy(btnui,p->name().substring(4, p->name().length()).c_str(),sizeof(btnui)-1); // btnui = p->name().substring(4, p->name().length());
+                if(dbg) Serial.printf_P(PSTR("BUTTON PRESS: %s\n"),btnui);
+                if(strcmp_P(btnui, PSTR("_sysReset"))==0){
                     var(F("wifi"), F("STA"));
                     save();
                     ESP.restart();
@@ -107,7 +113,7 @@ void jeeui2::begin() {
             value = pub_transport[p->name()].as<String>();
             if(dbg)Serial.printf_P(PSTR("pub: [%s - %s - %s]\n"),p->name().c_str(), p->value().c_str(), value.c_str());
         }
-        request->send(200, F("text/plain"), value);//p->value());
+        request->send(200, F("text/plain"), pub_transport[p->name()].isNull()?p->value():pub_transport[p->name()].as<String>()); //p->value());
     });
 
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
@@ -337,25 +343,21 @@ void jeeui2::handle()
 
 void jeeui2::nonWifiVar(){
     getAPmac();
-    String wifi = param(F("wifi"));
-    String ssid = param(F("ssid"));
-    String pass = param(F("pass"));
-    String ap_ssid = param(F("ap_ssid"));
-    String ap_pass = param(F("ap_pass"));
-    if(wifi == F("null")) var(F("wifi"), F("AP"));
-    if(ssid == F("null")) var(F("ssid"), F("JeeUI2"));
-    if(pass == F("null")) var(F("pass"), "");
-    if(ap_ssid == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc);
-    if(ap_pass == F("null")) var(F("ap_pass"), "");
+    if(param(F("wifi")) == F("null")) var(F("wifi"), F("AP"));
+    if(param(F("ssid")) == F("null")) var(F("ssid"), F("JeeUI2"));
+    if(param(F("pass")) == F("null")) var(F("pass"), "");
+    if(param(F("ap_ssid")) == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc);
+    if(param(F("ap_pass")) == F("null")) var(F("ap_pass"), "");
 }
 
 void jeeui2::getAPmac(){
-    if(mc != F("")) return;
+    if(*mc) return;
     #ifdef ESP32
     WiFi.mode(WIFI_MODE_AP);
     #else
     WiFi.mode(WIFI_AP);
     #endif
-    mc = String(WiFi.softAPmacAddress());
-    mc.replace(F(":"), F(""));
+    String _mac(WiFi.softAPmacAddress());
+    _mac.replace(F(":"), F(""));
+    strncpy(mc, _mac.c_str(), sizeof(mc)-1);
 }

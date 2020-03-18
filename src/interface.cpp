@@ -58,16 +58,24 @@ void btnTmSubmCallback()
     jee._refresh = true;
 }
 
+void bMQTTformCallback()
+{
+    jee.save();
+    ESP.restart();
+}
+
 void jeebuttonshandle()
 {
     static unsigned long timer;
     jee.btnCallback(F("btnTmSubm"), btnTmSubmCallback);
+    jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
 
     //публикация изменяющихся значений
-    if (timer + 30*1000 > millis())
+    if (timer + 5*1000 > millis())
         return;
     timer = millis();
-    jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+    jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime(), true); // обновить опубликованное значение
+    
 }
 
 void create_parameters(){
@@ -166,6 +174,9 @@ void interface(){ // функция в которой мф формируем в
 }
 
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные
+#ifdef LAMP_DEBUG
+    LOG.println(F("In update..."));
+#endif
     // получаем данные в переменную в ОЗУ для дальнейшей работы
     bool isRefresh = false;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt());
@@ -219,9 +230,7 @@ void update(){ // функция выполняется после ввода д
             }
         }
     }
-#ifdef LAMP_DEBUG
-    LOG.println(F("In update..."));
-#endif
+
     prevEffect = curEff;
 
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));

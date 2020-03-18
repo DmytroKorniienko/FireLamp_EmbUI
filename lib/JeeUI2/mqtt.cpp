@@ -1,17 +1,24 @@
 #include "JeeUI2.h"
 
+bool jeeui2::mqtt_connected = false;
+bool jeeui2::mqtt_connect = false;
+bool jeeui2::_t_inc_current = false;
+bool jeeui2::_t_remotecontrol = false;
+char jeeui2::_t_tpc_current[128];
+char jeeui2::_t_pld_current[128];
+char jeeui2::m_pref[16];
 
-bool _t_inc_current = false;
-String _t_tpc_current;
-String _t_pld_current;
-String _t_prf_current;
-bool _t_remotecontrol;
+// bool _t_inc_current = false;
+// String _t_tpc_current;
+// String _t_pld_current;
+// String _t_prf_current;
+// bool _t_remotecontrol;
 
-String _m_host;
-int _m_port;
-String _m_user;
-String _m_pass;
-bool _m_params;
+// String _m_host;
+// int _m_port;
+// String _m_user;
+// String _m_pass;
+// bool _m_params;
 
 void jeeui2::connectToMqtt() {
   Serial.println(F("Connecting to MQTT..."));
@@ -19,12 +26,13 @@ void jeeui2::connectToMqtt() {
 }
        
 String jeeui2::id(const String &topic){
-    if(m_pref == F("")) return topic;
-    else return String(m_pref + '/' + topic);
+    if(*m_pref) return topic;
+    else {
+        String ret;
+        ret = m_pref; ret += '/'; ret += topic;
+        return ret;
+    }
 }
-
-bool mqtt_connected = false;
-bool mqtt_connect = false;
 
 void jeeui2::onMqttSubscribe(uint16_t packetId, uint8_t qos) {
 
@@ -56,7 +64,7 @@ void jeeui2::mqtt(const String &pref, const String &host, int port, const String
     mqtt_enable = true;
     mqtt_update();
 
-    _t_prf_current = m_pref;
+    //_t_prf_current = m_pref;
     if (remotecontrol) _t_remotecontrol = true; rc = true;
     mqt = mqttFunction;
 
@@ -115,34 +123,36 @@ void jeeui2::mqtt(const String &host, int port, const String &user, const String
 
 void jeeui2::mqtt_update(){
     if(!mqtt_enable) return;
-    m_pref = param(F("m_pref"));
-    m_host = param(F("m_host"));
+    strncpy(m_pref,param(F("m_pref")).c_str(),sizeof(m_pref)-1); // m_pref = param(F("m_pref"));
+    strncpy(m_host,param(F("m_host")).c_str(),sizeof(m_host)-1); // m_host = param(F("m_host"));
+    strncpy(m_user,param(F("m_user")).c_str(),sizeof(m_user)-1); // m_user = param(F("m_user"));
+    strncpy(m_pass,param(F("m_pass")).c_str(),sizeof(m_pass)-1); // m_pass = param(F("m_pass"));
     m_port = param(F("m_port")).toInt();
-    m_user = param(F("m_user"));
-    m_pass = param(F("m_pass"));
-    if(m_host == F("") || m_host == F("null") || m_port == 0) m_params = false;
+    if(!*m_host) m_params = false;
     else m_params = true;
 }
 
-bool first_connect = true;
+//bool first_connect = true;
 
 void jeeui2::mqtt_handle(){
     if(!connected || !m_params) return;
     static bool st = false;
     if(!st){
         st = true;
-        _m_host = param(F("m_host"));
-        _m_port = param(F("m_port")).toInt();
-        _m_user = param(F("m_user"));
-        _m_pass = param(F("m_pass"));
+        strncpy(m_host,param(F("m_host")).c_str(),sizeof(m_host)-1); // m_host = param(F("m_host"));
+        strncpy(m_user,param(F("m_user")).c_str(),sizeof(m_user)-1); // m_user = param(F("m_user"));
+        strncpy(m_pass,param(F("m_pass")).c_str(),sizeof(m_pass)-1); // m_pass = param(F("m_pass"));
+
+        m_port = param(F("m_port")).toInt();
+        
         mqttClient.onConnect(_onMqttConnect);
         mqttClient.onDisconnect(onMqttDisconnect);
         mqttClient.onSubscribe(onMqttSubscribe);
         mqttClient.onUnsubscribe(onMqttUnsubscribe);
         mqttClient.onMessage(onMqttMessage);
         mqttClient.onPublish(onMqttPublish);
-        mqttClient.setCredentials(_m_user.c_str(), _m_pass.c_str());
-        mqttClient.setServer(_m_host.c_str(), _m_port);
+        mqttClient.setCredentials(m_user, m_pass);
+        mqttClient.setServer(m_host, m_port);
     }
 
     if(mqtt_connect) onMqttConnect();
@@ -151,7 +161,7 @@ void jeeui2::mqtt_handle(){
 }
 
 void jeeui2::check_wifi_state(){
-    static bool old_wifi_connected = false;
+    //static bool old_wifi_connected = false;
     static unsigned long i;
     if(i + 5000 > millis()) return;
     i = millis();
@@ -182,18 +192,23 @@ void jeeui2::onMqttConnect(){
 void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
     Serial.println(F("Publish received."));
     String tpc = String(topic);
-    if(_t_prf_current != F("")) tpc = tpc.substring(_t_prf_current.length() + 1, tpc.length());
-    String msg = F(""); 
-    for (int i= 0; i < len; i++) {
-        msg += (char)payload[i];
-    }
+    if(*m_pref) tpc = tpc.substring(strlen(m_pref) + 1, tpc.length());
+    char buffer[len+1];
+    //memset(buffer,'\0',sizeof(buffer));
+    strncpy(buffer,payload,sizeof(buffer)-1);
+    // String msg = F(""); 
+    // for (size_t i= 0; i < len; i++) {
+    //     msg += (char)payload[i];
+    // }
+    
     if(tpc.startsWith(F("jee/get/")) || tpc.startsWith(F("jee/set/"))){
         tpc = tpc.substring(4, tpc.length());
-        _t_tpc_current = tpc;
-        _t_pld_current = msg;
+        strncpy(_t_tpc_current, tpc.c_str(), sizeof(_t_tpc_current)-1); // _t_tpc_current = tpc;
+        strncpy(_t_pld_current, buffer, sizeof(_t_pld_current)-1); // _t_pld_current = msg;
+        
         _t_inc_current = true;
     }
-    else mqt(tpc, msg);
+    else mqt(tpc, String(_t_pld_current)); // msg
 }
 
 void jeeui2::remControl(){
@@ -201,14 +216,20 @@ void jeeui2::remControl(){
     if(!_t_remotecontrol || !_t_inc_current) return;
     _t_inc_current = false;
     
-    if(dbg)Serial.printf_P(PSTR("RC [%s - %s]"), _t_tpc_current.c_str(), _t_pld_current.c_str());
-    if(_t_tpc_current == F("get/")) publish(F("jee/cfg"), deb(), false);
-    if(_t_tpc_current.indexOf(F("set/")) != -1){
-        _t_tpc_current = _t_tpc_current.substring(4, _t_tpc_current.length());
-        if(dbg) Serial.println(String(F("SET: ")) + _t_tpc_current);
-        if (_t_tpc_current.indexOf(F("BTN_")) != -1){
-            btnui = _t_tpc_current.substring(4, _t_tpc_current.length());
-            if(btnui == F("bWF")){
+    if(dbg)Serial.printf_P(PSTR("RC [%s - %s]"), _t_tpc_current, _t_pld_current);
+    if(strcmp_P(_t_tpc_current, PSTR("get/"))==0) publish(F("jee/cfg"), deb(), false);
+    //if(_t_tpc_current.indexOf(F("set/")) != -1){
+    char *pos = strstr_P(_t_tpc_current, PSTR("set/"));
+    if(pos!=nullptr){
+        //_t_tpc_current = _t_tpc_current.substring(4, _t_tpc_current.length());
+        strncpy(_t_tpc_current,pos+4,sizeof(_t_tpc_current)-1);
+        if(dbg) Serial.printf(PSTR("SET: %s\n"), _t_tpc_current);
+        //if (_t_tpc_current.indexOf(F("BTN_")) != -1){
+        pos = strstr_P(_t_tpc_current, PSTR("BTN_"));
+        if(pos!=nullptr){
+            //strncpy(btnui, _t_tpc_current.substring(4, _t_tpc_current.length()).c_str(), sizeof(btnui)-1); // btnui = _t_tpc_current.substring(4, _t_tpc_current.length());
+            strncpy(btnui, pos+4, sizeof(btnui)-1); // btnui = _t_tpc_current.substring(4, _t_tpc_current.length());
+            if(strcmp_P(btnui, PSTR("_sysReset"))==0){
                 var(F("wifi"), F("STA"));
                 save();
                 ESP.restart();
@@ -222,8 +243,8 @@ void jeeui2::remControl(){
                 
         }
     }
-    _t_tpc_current = F("");
-    _t_pld_current = F("");
+    *_t_tpc_current = '\0'; // _t_tpc_current = F("");
+    *_t_pld_current = '\0'; // _t_pld_current = F("");
     
 }
 
@@ -248,9 +269,12 @@ void jeeui2::subscribeAll(){
             mqttClient.subscribe(id(String(F("jee/set/")) + key).c_str(), 0);
         }
     }
-    for(int i = 0; i < btn_num + 1; i++){
-        if(dbg)Serial.println( String(F("BTN =>")) + id(String(F("jee/set/")) + btn_id[i]));
-        mqttClient.subscribe(id(String(F("jee/set/")) + btn_id[i]).c_str(), 0);
+
+    JsonArray arr = btn_id.as<JsonArray>();
+    for (size_t i=0; i<arr.size(); i++) {
+        String item = String(F("BTN_"))+arr[i].as<String>();
+        if(dbg)Serial.println( String(F("BTN =>")) + id(String(F("jee/set/")) + item));
+        mqttClient.subscribe(id(String(F("jee/set/")) + item).c_str(), 0);
     }
     if(dbg)Serial.println(F("Subscribe All"));
 }

@@ -33,22 +33,20 @@ void jeeui2::formMqtt(){
     number(F("m_port"), F("MQTT port"));
     text(F("m_user"), F("User"));
     text(F("m_pass"), F("Password"));
-    button(F("bWF"), F("gray"), F("Reconnect"));
+    button(F("bMQTTform"), F("gray"), F("Reconnect"));
 }
 
 void jeeui2::formWifi(){
     text(F("ssid"), F("SSID"));
     password(F("pass"), F("Password"));
-    button(F("bWF"), F("gray"), F("Connect"));
+    button(F("_sysReset"), F("gray"), F("Connect"));
 }
 
 
 void jeeui2::app(const String &name){
-    btn_num = 0;
     mn = 0;
     pg = 0;
     op = F("");
-
     buf = F("");
     //buf.reserve(512); // резервируем сразу большой кусок
     buf.concat(F("{\"app\":\"")); buf.concat(name); buf.concat(F("\","));
@@ -149,8 +147,8 @@ void jeeui2::button(const String &id, const String &color, const String &label){
 
     jeeui2::buf.concat(buffer);
 
-    btn_id[btn_num] = String(F("BTN_")) + id;
-    btn_num++;
+    btn_id.add(id); //btn_id[btn_num] = String(F("BTN_")) + id;
+    //btn_num++;
 }
 
 void jeeui2::button(const String &id, const String &color, const String &label, int column){
@@ -159,8 +157,8 @@ void jeeui2::button(const String &id, const String &color, const String &label, 
 
     jeeui2::buf.concat(buffer);
 
-    btn_id[btn_num] = String(F("BTN_")) + id;
-    btn_num++;
+    btn_id.add(id); //btn_id[btn_num] = String(F("BTN_")) + id;
+    //btn_num++;
 }
 
 void jeeui2::textarea(const String &id, const String &label){

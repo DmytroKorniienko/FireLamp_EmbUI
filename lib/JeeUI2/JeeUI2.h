@@ -26,7 +26,7 @@
 #endif
 
 #include <AsyncMqttClient.h>
-#include "AsyncJson.h"
+//#include "AsyncJson.h"
 
 #ifndef __DISABLE_BUTTON0
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
@@ -41,9 +41,6 @@ class jeeui2
     DynamicJsonDocument cfg;
     DynamicJsonDocument pub_transport;
     DynamicJsonDocument btn_transport;
-    //StaticJsonDocument<4096> cfg;
-    //StaticJsonDocument<96> pub_transport;
-    //StaticJsonDocument<96> btn_transport;
     AsyncMqttClient mqttClient;
 
     typedef void (*buttonCallback) ();
@@ -52,9 +49,24 @@ class jeeui2
     typedef void (*mqttCallback) ();
 
   public:
-    jeeui2() : cfg(3072), pub_transport(256), btn_transport(128) {}
+    jeeui2() : cfg(3072), pub_transport(256), btn_transport(128), btn_id(256) {
+      *ip='\0'; 
+      *mc='\0'; 
+      *mac='\0'; 
+      *m_pref='\0'; 
+      *m_host='\0';
+      *m_user='\0';
+      *m_pass='\0';
+      *m_host='\0';
+      *udpRemoteIP='\0';
+      *incomingPacket='\0';
+      *btnui='\0';
+      *udpMessage='\0';
+      *_t_tpc_current='\0';
+      *_t_pld_current='\0';
+    }
 
-    void var(const String &key, const String &value);
+    void var(const String &key, const String &value, bool pub = false);
     void var_create(const String &key, const String &value);
     String param(const String &key);
     void led(uint8_t pin, bool invert);
@@ -121,16 +133,15 @@ class jeeui2
     updateCallback upd;
     void update(void (*updateFunction) ());
 
-    String ip;
-    String buf;
-    String mc;
-    String mac;
+    char ip[16]; //"255.255.255.255"
+    char mc[13]; // id "ffffffffffff"
+    char mac[18]; // "ff:ff:ff:ff:ff:ff"
     bool _refresh = false;
     bool connected = false;
     
 
     String id(const String &tpoic);
-    String m_pref;
+    static char m_pref[16]; // префикс MQTT
 
   private:
     void arr(const String &key, const String &value);
@@ -144,7 +155,6 @@ class jeeui2
     void load();
     void autosave();
     void as();
-    void prntmac();
     void udpBegin();
     void udpLoop();
     void btn();
@@ -160,32 +170,29 @@ class jeeui2
     bool mqtt_enable = false;
 
     void _connected();
-
     void subscribeAll();
    
-    String m_host;
-    int m_port;
-    String m_user;
-    String m_pass;
+    char m_host[256]; // MQTT
+    int m_port = 0;
+    char m_user[64];
+    char m_pass[64];
     bool m_params;
 
     int sendConfig = 0;
 
     bool pub_enable;
 
-    int btn_num = 0;
-    String btn_id[32];
+    //int btn_num = 0;
+    DynamicJsonDocument btn_id; // json с ид кнопок (для подписки через MQQT)
 
-    String udpRemoteIP;
+    char udpRemoteIP[16];
     unsigned int localUdpPort = 4243;
     char incomingPacket[64];
 
     unsigned int asave = 1000;
     bool sv = false;
     unsigned long astimer;
-
     
-    String op = "";
     uint8_t wifi_mode;
     int LED_PIN = -1;
     bool LED_INVERT = false;
@@ -193,13 +200,11 @@ class jeeui2
     unsigned long a_ap = 0;
     bool wf = false;
     uint8_t pg = 0;
-    String btnui = "";
-    String udpMessage;
+    char btnui[32]; // Последняя нажатая кнопка (аппаратная или UI), после обработки - сброс значения
+    char udpMessage[65]; // Обмен по UDP
     
     bool dbg = false;
-
     bool rc;
-
 
     void connectToMqtt();
     void onMqttConnect();
@@ -210,6 +215,16 @@ class jeeui2
     static void onMqttPublish(uint16_t packetId);
     static void _onMqttConnect(bool sessionPresent);
     void check_wifi_state();
+
+    static bool mqtt_connected;
+    static bool mqtt_connect;
+    static char _t_tpc_current[128]; // топик без префикса
+    static char _t_pld_current[128]; // сообщение
+    static bool _t_inc_current;
+    static bool _t_remotecontrol;
+    String op; // опции для выпадающего списка <-- весьма желательно очищать сразу же...
+public:
+    String buf; // борьба с фрагментацией кучи, буффер должен быть объявлен последним <-- весьма желательно очищать сразу же...
 };
 
 #endif
