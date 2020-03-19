@@ -143,11 +143,11 @@ void sparklesRoutine(CRGB *leds, const char *param)
 #define FIRE_BREATHSPEED          (2U)      // скорость дыхание пламени за 1 кадр (0...255) #4U
 
 #define FIRE_SPARKLES             (true)    // вылетающие искры вкл/выкл
-#define FIRE_SPARKSBRIGHT         (128U)    // первоначальная яркость искр (255...0) #200U
+#define FIRE_SPARKSBRIGHT         (96U)    // первоначальная яркость искр (255...0) #200U
 #define FIRE_EVERYNSPARK          (48U)     // только каждая единичная из указанных искр будет выводится (0...255) #64U
 #define FIRE_SPARKSTRENGTH        (3U)      // стойкость искр относительно напора ветра (1... , 0 = отключить колыхание) #3U
-#define FIRE_SPARKBORNDEEP        (3U)      // глубина от края пламени, на которой зарождаются искры #3U
-#define FIRE_SPARKDELAY           (4U)      // замедлитель скорости искр #2U
+#define FIRE_SPARKBORNDEEP        (2U)      // глубина от края пламени, на которой зарождаются искры #2U
+#define FIRE_SPARKDELAY           (3U)      // замедлитель скорости искр #2U
 
 //#define FIRE_WINDCASE             (2U)      // случайные порывы ветра каждый 256 кадр (1...255 , 0 = отключить)  #2U
 
@@ -345,7 +345,7 @@ void fire_drawFrame(bool isColored);
 
 void fireRoutine(CRGB *leds, const char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
     return;
   } else {
     myLamp.setEffDelay(millis());
@@ -623,14 +623,14 @@ void fire_drawFrame(bool isColored) {                                         //
 #else
         uint8_t newX = x;
 #endif
-        if (myLamp.getPixColorXY(x, y - 1U) > 0U) myLamp.drawPixelXY(newX, y, myLamp.getPixColorXY(x, y - 1U));    // рисуем искорку на новой строчке
+        if (myLamp.getPixColorXY(x, y - 1U) > 0U) myLamp.drawPixelXY(newX, y, myLamp.getPixColorXY(x, y - 1U));    // рисуем искорку на новой строчке 
       }
     }
     for (uint8_t x = 0U; x < WIDTH; x++) {                  // если это не самая нижняя строка искр - перемещаем искорку выше
       if (random8(FIRE_EVERYNSPARK) == 0 && myLamp.getPixColorXY(x, FIRE_HEIGHT - 1U) != 0U) {
         uint16_t px = myLamp.getPixelNumber (x, FIRE_HEIGHT);
-        myLamp.setLeds(px, myLamp.getPixColorXY(x, FIRE_HEIGHT - FIRE_SPARKBORNDEEP));
-        myLamp.setLeds(px, (unsigned int)myLamp.getLeds(px) % FIRE_SPARKSBRIGHT);
+        myLamp.setLeds(px, CRGB(myLamp.getPixColorXY(x, FIRE_HEIGHT - random(0,FIRE_SPARKBORNDEEP)))/(255.0/(FIRE_SPARKSBRIGHT+1)));
+        //myLamp.setLeds(px, (unsigned int)myLamp.getLeds(px) % FIRE_SPARKSBRIGHT);
       } else myLamp.drawPixelXY(x, FIRE_HEIGHT, 0U);
     }
   }
@@ -658,28 +658,54 @@ void whiteColorRoutine(CRGB *leds, const char *param)
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
 void whiteColorStripeRoutine(CRGB *leds, const char *param)
 {
-    if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-      return;
-    } else {
-      myLamp.setEffDelay(millis());
-    }
-    
-    uint8_t centerY = max((uint8_t)round(HEIGHT / 2.0F) - 1, 0);
-    uint8_t bottomOffset = (uint8_t)(!(HEIGHT & 1) && (HEIGHT > 1));                      // если высота матрицы чётная, линий с максимальной яркостью две, а линии с минимальной яркостью снизу будут смещены на один ряд
-    for (int16_t y = centerY; y >= 0; y--)
-    {
-      CRGB color = CHSV(
-        45U,                                                                              // определяем тон
-        map(myLamp.effects.getSpeed(), 0U, 255U, 0U, 170U),                            // определяем насыщенность
-        y == centerY                                                                                                    // определяем яркость
-          ? BRIGHTNESS                                                                                                  // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
-          : (myLamp.effects.getScale() / 100.0F) > ((centerY + 1.0F) - (y + 1.0F)) / (centerY + 1.0F) ? BRIGHTNESS : 0);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо 0 в зависимости от масштаба //BRIGHTNESS/((centerY + 1.0F)-y)
+    // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    //   return;
+    // } else {
+    //   myLamp.setEffDelay(millis());
+    // }
 
-      for (uint8_t x = 0U; x < WIDTH; x++)
-      {
-        myLamp.drawPixelXY(x, y, color);                                                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
-        myLamp.drawPixelXY(x, max((uint8_t)(HEIGHT - 1U) - (y + 1U) + bottomOffset, 0U), color); // при нечётной - одна, но дважды
-      }
+    if(myLamp.effects.getScale()<127){
+        uint8_t centerY = max((uint8_t)round(HEIGHT / 2.0F) - 1, 0);
+        uint8_t bottomOffset = (uint8_t)(!(HEIGHT & 1) && (HEIGHT > 1));                      // если высота матрицы чётная, линий с максимальной яркостью две, а линии с минимальной яркостью снизу будут смещены на один ряд
+        //Serial.printf_P(PSTR("%d %d\n"), centerY, bottomOffset);  
+        for (int16_t y = centerY; y >= 0; y--)
+        {
+          int br = BRIGHTNESS-(13*(WIDTH-y)); if((br-(255-myLamp.getLampBrightness()))<0) br=0;
+          
+          CRGB color = CHSV(
+            45U,                                                                              // определяем тон
+            map(myLamp.effects.getSpeed(), 0U, 255U, 0U, 170U),                            // определяем насыщенность
+            y == centerY                                                                                                    // определяем яркость
+              ? BRIGHTNESS                                                                                                  // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
+              : ((myLamp.effects.getScale()) / 143.0F) > ((centerY + 1.0F) - (y + 1.0F)) / (centerY + 1.0F) ? BRIGHTNESS : br);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
+
+          for (int16_t x = 0U; x < (int16_t)WIDTH; x++)
+          {
+            myLamp.drawPixelXY(x, y, color);                                                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
+            myLamp.drawPixelXY(x, max((uint8_t)(HEIGHT - 1U) - (y + 1U) + bottomOffset, 0U), color); // при нечётной - одна, но дважды
+          }
+        }
+    } else {
+        uint8_t centerX = max((uint8_t)round(WIDTH / 2.0F) - 1, 0);
+        uint8_t leftOffset = (uint8_t)(!(WIDTH & 1) && (WIDTH > 1));                      // если ширина матрицы чётная, линий с максимальной яркостью две, а линии с минимальной яркостью слева будут смещены на один ряд
+        //Serial.printf_P(PSTR("%d %d\n"), centerX, leftOffset); 
+        for (int16_t y = 0U; y < (int16_t)HEIGHT; y++)
+        {
+          for (int16_t x = centerX; x >= 0; x--)
+          {
+            int br = BRIGHTNESS-(13*(WIDTH-x)); if((br-(255-myLamp.getLampBrightness()))<0) br=0;
+            
+            CRGB color = CHSV(
+              45U,                                                                              // определяем тон
+              map(myLamp.effects.getSpeed(), 0U, 255U, 0U, 170U),                            // определяем насыщенность
+              x == centerX                                                                                                    // определяем яркость
+                ? BRIGHTNESS                                                                                                  // для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
+                : ((255-myLamp.effects.getScale()) / 143.0F) > ((centerX + 1.0F) - (x + 1.0F)) / (centerX + 1.0F) ? BRIGHTNESS : br);  // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
+
+            myLamp.drawPixelXY(x, y, color);                                                      // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
+            myLamp.drawPixelXY(max((uint8_t)(WIDTH - 1U) - (x + 1U) + leftOffset, 0U), y, color); // при нечётной - одна, но дважды
+          }
+        }
     }
 }
 
