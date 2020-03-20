@@ -629,7 +629,7 @@ void fire_drawFrame(bool isColored) {                                         //
     for (uint8_t x = 0U; x < WIDTH; x++) {                  // если это не самая нижняя строка искр - перемещаем искорку выше
       if (random8(FIRE_EVERYNSPARK) == 0 && myLamp.getPixColorXY(x, FIRE_HEIGHT - 1U) != 0U) {
         uint16_t px = myLamp.getPixelNumber (x, FIRE_HEIGHT);
-        myLamp.setLeds(px, CRGB(myLamp.getPixColorXY(x, FIRE_HEIGHT - random(0,FIRE_SPARKBORNDEEP)))/(255.0/(FIRE_SPARKSBRIGHT+1)));
+        myLamp.setLeds(px, CRGB(myLamp.getPixColorXY(x, FIRE_HEIGHT - random(0,FIRE_SPARKBORNDEEP)))/(uint8_t)(255/(!FIRE_SPARKSBRIGHT?1:FIRE_SPARKSBRIGHT)+1));
         //myLamp.setLeds(px, (unsigned int)myLamp.getLeds(px) % FIRE_SPARKSBRIGHT);
       } else myLamp.drawPixelXY(x, FIRE_HEIGHT, 0U);
     }

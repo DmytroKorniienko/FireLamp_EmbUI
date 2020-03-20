@@ -182,21 +182,34 @@ void LAMP::buttonTick()
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("Удержание кнопки из выключенного состояния\n"));
 #endif
-      // Включаем белую лампу в полную яркость
       numHold = 1;
-      mode = MODE_WHITELAMP;
-      effects.moveBy(EFF_WHITE_COLOR);
-      effects.setBrightness(255);
+      int clicks = touch.getHoldClicks();
+      if(!clicks) {
+        // Включаем белую лампу в полную яркость
+        brightDirection = 1;
+        mode = MODE_WHITELAMP;
+        effects.moveBy(EFF_WHITE_COLOR);
+        effects.setBrightness(255);
+      }
+      if(clicks==1){
+        // Включаем белую лампу в минимальную яркость
+        brightDirection = 0;
+        mode = MODE_WHITELAMP;
+        effects.moveBy(EFF_WHITE_COLOR);
+        effects.setBrightness(1);
+      }
       FastLED.setBrightness(getNormalizedLampBrightness());
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
       ONflag = true;
+
       startButtonHolding = true;
       setDirectionTimeout = false;
+
       tmNumHoldTimer.reset();
       tmChangeDirectionTimer.reset();
-      brightDirection = 1;
+
       changePower();
       if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
       return;

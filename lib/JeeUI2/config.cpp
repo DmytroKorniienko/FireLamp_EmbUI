@@ -4,14 +4,16 @@ void jeeui2::save()
 {
     if(SPIFFS.begin()){
         File configFile = SPIFFS.open(F("/config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
-        serializeJson(cfg,configFile);
+        // serializeJson(cfg,configFile);
+        // configFile.flush();
+        // configFile.close();
+
+        String cfg_str;
+        serializeJson(cfg, cfg_str);
+        deserializeJson(cfg, cfg_str);
+        configFile.print(cfg_str);
         configFile.flush();
         configFile.close();
-
-        // String cfg_str;
-        // serializeJson(cfg, cfg_str);
-        // deserializeJson(cfg, cfg_str);
-        // configFile.print(cfg_str);
 
         if(dbg)Serial.println(F("Save Config"));
     }
@@ -56,6 +58,7 @@ void jeeui2::load()
             return;
         }
         if(dbg)Serial.println(F("JSON config loaded"));
+        configFile.close();
         sv = false;
     }
 }

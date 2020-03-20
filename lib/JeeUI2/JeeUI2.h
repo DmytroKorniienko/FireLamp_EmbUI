@@ -142,6 +142,8 @@ class jeeui2
 
     String id(const String &tpoic);
     static char m_pref[16]; // префикс MQTT
+    
+    //void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
 
   private:
     void arr(const String &key, const String &value);

@@ -97,6 +97,7 @@ private:
     timerMinim tmNumHoldTimer;             // таймаут удержания кнопки в мс
 
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
+    bool isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
 #ifdef ESP_USE_BUTTON
     GButton touch;               
     void buttonTick(); // обработчик кнопки
@@ -125,10 +126,12 @@ public:
     
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
-    byte getLampBrightness() { return (mode==MODE_DEMO)?globalBrightness:effects.getBrightness();}
-    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO)?globalBrightness:effects.getBrightness())/255);}
-    void setLampBrightness(byte brg) { if(mode==MODE_DEMO) globalBrightness = brg; else effects.setBrightness(brg);}
+    byte getLampBrightness() { return (mode==MODE_DEMO || 1==1)?globalBrightness:effects.getBrightness();}
+    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
+    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) setGlobalBrightness(brg); else effects.setBrightness(brg);}
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
+    void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
+    bool IsGlobalBrightness() {return isGlobalBrightness;}
     void restartDemoTimer() {tmDemoTimer.reset();}
     LAMPMODE getMode() {return mode;}
     void updateParm(void(*f)()) { updateParmFunc=f; }
