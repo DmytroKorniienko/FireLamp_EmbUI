@@ -21,13 +21,26 @@ void jeeui2::save()
 
 void jeeui2::autosave(){
     
-    if (!sv) return;
-    if (sv && astimer + asave < millis()){
+    if (isConfSaved) return;
+    if (!isConfSaved && astimer + asave < millis()){
         save();
-        sv = false;
         if(dbg)Serial.println(F("AutoSave"));
+        astimer = millis();
+        isConfSaved = true; // сохранились
+        //sv = false;
+        //upd();
+        //mqtt_update();
+    } 
+}
+
+void jeeui2::pre_autosave(){
+    if (!sv) return;
+    if (sv && astimer + 1000 < millis()){
         upd();
         mqtt_update();
+        sv = false;
+        isConfSaved = false;
+        astimer = millis(); // обновляем счетчик после последнего изменения UI
     } 
 }
 

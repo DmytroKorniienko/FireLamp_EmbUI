@@ -126,7 +126,7 @@ public:
     
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
-    byte getLampBrightness() { return (mode==MODE_DEMO || 1==1)?globalBrightness:effects.getBrightness();}
+    byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
     void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) setGlobalBrightness(brg); else effects.setBrightness(brg);}
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
@@ -151,6 +151,9 @@ public:
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
 
     void startFader(bool isManual);
+
+    void startDemoMode();
+    void startNormalMode();
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}

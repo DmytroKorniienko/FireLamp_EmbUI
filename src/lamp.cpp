@@ -164,17 +164,7 @@ void LAMP::buttonTick()
 
   if (!ONflag) { // Обработка из выключенного состояния
     if (touch.isDouble()) { // Демо-режим, с переключением каждые 30 секунд для двойного клика в выключенном состоянии
-      mode = MODE_DEMO;
-      randomSeed(millis());
-      effects.moveBy(random(0, MODE_AMOUNT));
-      FastLED.setBrightness(getNormalizedLampBrightness());
-      ONflag = true;
-      tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
-      changePower();
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), mode, storedEffect);
-#endif
-      if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+      startDemoMode();
       return;
     }
     
@@ -778,4 +768,31 @@ void LAMP::showWarning(
   delay(1);
   FastLED.show();
   myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
+}
+
+void LAMP::startDemoMode()
+{
+  storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+  mode = MODE_DEMO;
+  randomSeed(millis());
+  effects.moveBy(random(0, MODE_AMOUNT));
+  FastLED.setBrightness(getNormalizedLampBrightness());
+  ONflag = true;
+  loadingFlag = true;
+  tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
+  changePower();
+#ifdef LAMP_DEBUG
+  LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), mode, storedEffect);
+#endif
+  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+}
+
+void LAMP::startNormalMode()
+{
+  mode = MODE_NORMAL;
+  if(storedEffect!=EFF_NONE)
+    effects.moveBy(storedEffect);
+  FastLED.setBrightness(getNormalizedLampBrightness());
+  loadingFlag = true;
+  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
 }

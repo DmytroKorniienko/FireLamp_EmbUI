@@ -64,11 +64,22 @@ void bMQTTformCallback()
     ESP.restart();
 }
 
+void bDemoCallback()
+{
+    if(myLamp.getMode()!=MODE_DEMO)
+        myLamp.startDemoMode();
+    else
+        myLamp.startNormalMode();
+    
+    jee._refresh = true;
+}
+
 void jeebuttonshandle()
 {
     static unsigned long timer;
     jee.btnCallback(F("btnTmSubm"), btnTmSubmCallback);
     jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
+    jee.btnCallback(F("bDemo"), bDemoCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -130,7 +141,6 @@ void interface(){ // функция в которой мф формируем в
     // Страница "Управление эффектами"
 
     EFFECT enEff; enEff.setNone();
-    jee.checkbox(F("isSetup"),F("Setup"));
     jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
     do {
         enEff = *myLamp.effects.enumNextEffect(&enEff);
@@ -144,11 +154,18 @@ void interface(){ // функция в которой мф формируем в
     jee.range(F("speed"),1,255,1,F("Скорость"));
     jee.range(F("scale"),1,255,1,F("Масштаб"));
 
+    //jee.button(F("btn1"),F("gray"),F("<"), 1);
+    if(myLamp.getMode()==MODE_DEMO)
+        jee.button(F("bDemo"),F("gray"),F("DEMO -> OFF"));
+    else
+        jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
+    //jee.button(F("btn3"),F("gray"),F(">"), 3);
+
     if(isSetup){
         jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
         jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));  
     }
-    jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
+    jee.checkbox(F("isSetup"),F("Конфигурирование"));
 
     jee.page(); // разделитель между страницами
     //Страница "Управление лампой"
@@ -162,6 +179,7 @@ void interface(){ // функция в которой мф формируем в
         jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
     }
     jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
+    jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
     jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
     jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));
 
@@ -240,6 +258,7 @@ void update(){ // функция выполняется после ввода д
     //jee.param(F("effList"))=String(0);
     jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 
+    jee.setDelayedSave(30000); // отложенное сохранение конфига, раз в 30 секунд относительно последнего изменения
     jee._refresh = isRefresh; // устанавливать в самом конце!
 }
 
@@ -263,6 +282,7 @@ void updateParm() // передача параметров в UI после на
 
     myLamp.setLoading(); // обновить эффект
     prevEffect = curEff; // обновить указатель на предыдущий эффект
-    jee.save(); // Cохранить конфиг
+    if(myLamp.getMode()!=MODE_DEMO)
+        jee.save(); // Cохранить конфиг
     jee._refresh = true;
 }

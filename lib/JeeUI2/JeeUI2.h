@@ -143,7 +143,7 @@ class jeeui2
     String id(const String &tpoic);
     static char m_pref[16]; // префикс MQTT
     
-    //void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
+    void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
 
   private:
     void arr(const String &key, const String &value);
@@ -156,6 +156,7 @@ class jeeui2
     void led_inv();
     void load();
     void autosave();
+    void pre_autosave();
     void as();
     void udpBegin();
     void udpLoop();
@@ -193,6 +194,7 @@ class jeeui2
 
     unsigned int asave = 1000;
     bool sv = false;
+    bool isConfSaved = true; // признак сохраненного конфига
     unsigned long astimer;
     
     uint8_t wifi_mode;

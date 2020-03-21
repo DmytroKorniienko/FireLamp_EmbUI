@@ -338,6 +338,7 @@ void jeeui2::handle()
     timer = millis();
     btn();
     led_handle();
+    pre_autosave();
     autosave();
 }
 
