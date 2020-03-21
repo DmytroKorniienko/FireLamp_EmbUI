@@ -1289,15 +1289,18 @@ void lightBallsRoutine(CRGB *leds, const char *param)
 #define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
 void ballRoutine(CRGB *leds, const char *param)
 {
-  static int16_t coordB[2U];
+  static float coordB[2U];
   static int8_t vectorB[2U];
   static CRGB ballColor;
   int8_t ballSize;
 
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    return;
-  } else {
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) > 10000){ // каждые 10 секунд коррекция направления
     myLamp.setEffDelay(millis());
+    for (uint8_t i = 0U; i < 2U; i++)
+    {
+      vectorB[i] += (random(0, 4) - 2); vectorB[i]%=20;
+      ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
+    }
   }
 
   if (myLamp.isLoading())
@@ -1308,50 +1311,43 @@ void ballRoutine(CRGB *leds, const char *param)
     {
       coordB[i] = WIDTH / 2 * 10;
       vectorB[i] = random(8, 20);
-      ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
+      ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
     }
   }
 
   ballSize = map(myLamp.effects.getScale(), 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
   for (uint8_t i = 0U; i < 2U; i++)
   {
-    coordB[i] += vectorB[i];
-    if (coordB[i] < 0)
+    coordB[i] += vectorB[i]*((0.1*myLamp.effects.getSpeed())/255.0);
+    if ((int8_t)coordB[i] < 0)
     {
       coordB[i] = 0;
       vectorB[i] = -vectorB[i];
-      if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
-      //vectorB[i] += random(0, 6) - 3;
+      if (RANDOM_COLOR) ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
     }
   }
-  if (coordB[0U] > (int16_t)((WIDTH - ballSize) * 10))
+  if ((int8_t)coordB[0U] > (int16_t)(WIDTH - ballSize))
   {
-    coordB[0U] = (WIDTH - ballSize) * 10;
+    coordB[0U] = (WIDTH - ballSize);
     vectorB[0U] = -vectorB[0U];
-    if (RANDOM_COLOR) ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
-    //vectorB[0] += random(0, 6) - 3;
+    if (RANDOM_COLOR) ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
   }
-  if (coordB[1U] > (int16_t)((HEIGHT - ballSize) * 10))
+  if ((int8_t)coordB[1U] > (int16_t)(HEIGHT - ballSize))
   {
-    coordB[1U] = (HEIGHT - ballSize) * 10;
+    coordB[1U] = (HEIGHT - ballSize);
     vectorB[1U] = -vectorB[1U];
-    if (RANDOM_COLOR)
-    {
-      ballColor = CHSV(random(0, 9) * myLamp.effects.getScale(), 255U, 255U);
-    }
-    //vectorB[1] += random(0, 6) - 3;
+    if (RANDOM_COLOR) ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
   }
+
   FastLED.clear();
   for (uint8_t i = 0U; i < ballSize; i++)
   {
     for (uint8_t j = 0U; j < ballSize; j++)
     {
-      myLamp.setLeds(myLamp.getPixelNumber(coordB[0U] / 10 + i, coordB[1U] / 10 + j), ballColor);
+      myLamp.setLeds(myLamp.getPixelNumber((int8_t)coordB[0U] + i, (int8_t)coordB[1U] + j), ballColor);
     }
   }
 }
-
-
 
 // Trivial XY function for the SmartMatrix; use a different XY
 // function for different matrix grids. See XYMatrix example for code.
