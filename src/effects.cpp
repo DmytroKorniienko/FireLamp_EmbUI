@@ -1248,12 +1248,6 @@ const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
 const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
 void lightBallsRoutine(CRGB *leds, const char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    return;
-  } else {
-    myLamp.setEffDelay(millis());
-  }
-
   // Apply some blurring to whatever's already on the matrix
   // Note that we never actually clear the matrix, we just constantly
   // blur it repeatedly.  Since the blurring is 'lossy', there's
@@ -1261,14 +1255,16 @@ void lightBallsRoutine(CRGB *leds, const char *param)
   uint8_t blurAmount = dim8_raw(beatsin8(3,64,100));
   blur2d(leds, WIDTH, HEIGHT, blurAmount);
 
+  float speedScale = (((float)myLamp.effects.getSpeed())/255)+(5.0/255.0);
+
   // Use two out-of-sync sine waves
-  uint16_t  i = beatsin16( 79, 0, 255); //91
-  uint16_t  j = beatsin16( 67, 0, 255); //109
-  uint16_t  k = beatsin16( 53, 0, 255); //73
-  uint16_t  m = beatsin16( 97, 0, 255); //123
+  uint16_t  i = beatsin16( 79*speedScale, 0, 255); //91
+  uint16_t  j = beatsin16( 67*speedScale, 0, 255); //109
+  uint16_t  k = beatsin16( 53*speedScale, 0, 255); //73
+  uint16_t  m = beatsin16( 97*speedScale, 0, 255); //123
 
   // The color of each point shifts over time, each at a different speed.
-  uint32_t ms = millis() / (myLamp.effects.getScale()/4 + 1);
+  uint16_t ms = millis() / (myLamp.effects.getScale()/16 + 1);
   leds[myLamp.getPixelNumber( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 29, 200U, 255U);
   leds[myLamp.getPixelNumber( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 41, 200U, 255U);
   leds[myLamp.getPixelNumber( highByte(k * paintWidth) + BORDERTHICKNESS, highByte(m * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 37, 200U, 255U);
