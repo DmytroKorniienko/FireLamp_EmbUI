@@ -68,29 +68,19 @@ void fader(uint8_t step)
 // ============= ЭФФЕКТЫ ===============
 
 // ------------- конфетти --------------
-#define EFF_FADE_OUT_SPEED        (70U)                         // скорость затухания
+#define EFF_FADE_OUT_SPEED        (25U)                         // скорость затухания
 void sparklesRoutine(CRGB *leds, const char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    fader(5); return;
-  } else {
-    myLamp.setEffDelay(millis());
-  }
-  
-  // static uint32_t chktime = millis();
-  // LOG.println(millis()-chktime);
-  // chktime = millis();
-  
-  for (uint8_t i = 0; i < myLamp.effects.getScale(); i++)
+  for (uint8_t i = 0; i < myLamp.effects.getScale()/10+1; i++)
   {
     uint8_t x = random(0U, WIDTH);
     uint8_t y = random(0U, HEIGHT);
     if (myLamp.getPixColorXY(x, y) == 0U)
     {
-      myLamp.setLeds(myLamp.getPixelNumber(x, y),CHSV(random(0U, 255U), random(0U, 255U), random(0U, 255U)));
+      myLamp.setLeds(myLamp.getPixelNumber(x, y),CHSV(random(1U, 255U), random(127U, 255U), random(127U, 255U)));
     }
   }
-  fader(EFF_FADE_OUT_SPEED);
+  fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)myLamp.effects.getSpeed())/255)+1);
 }
 
 // ------------- The Flame / Огонь -----------------
@@ -1294,28 +1284,35 @@ void ballRoutine(CRGB *leds, const char *param)
   static CRGB ballColor;
   int8_t ballSize;
 
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) > 10000){ // каждые 10 секунд коррекция направления
-    myLamp.setEffDelay(millis());
-    for (uint8_t i = 0U; i < 2U; i++)
-    {
-      vectorB[i] += (random(0, 4) - 2); vectorB[i]%=20;
-      ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
-    }
-  }
+  ballSize = map(myLamp.effects.getScale(), 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
 
   if (myLamp.isLoading())
   {
     //FastLED.clear();
-
+    myLamp.setEffDelay(millis());
     for (uint8_t i = 0U; i < 2U; i++)
     {
-      coordB[i] = WIDTH / 2 * 10;
-      vectorB[i] = random(8, 20);
+      coordB[i] = i? (WIDTH - ballSize) / 2 : (HEIGHT - ballSize) / 2;
+      vectorB[i] = random(8, 24) - 12;
       ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
     }
   }
 
-  ballSize = map(myLamp.effects.getScale(), 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) > 10000){ // каждые 10 секунд коррекция направления
+    myLamp.setEffDelay(millis());
+    for (uint8_t i = 0U; i < 2U; i++)
+    {
+      if(abs(vectorB[i])<12)
+        vectorB[i] += (random(0, 8) - 4);
+      else if (vectorB[i]>12)
+        vectorB[i] -= random(1, 6);
+      else
+        vectorB[i] += random(1, 6);
+      if(!vectorB[i]) vectorB[i]++;
+      ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
+    }
+  }
+
   for (uint8_t i = 0U; i < 2U; i++)
   {
     coordB[i] += vectorB[i]*((0.1*myLamp.effects.getSpeed())/255.0);
@@ -1339,7 +1336,8 @@ void ballRoutine(CRGB *leds, const char *param)
     if (RANDOM_COLOR) ballColor = CHSV(random(1, 255) * myLamp.effects.getScale(), 255U, 255U);
   }
 
-  FastLED.clear();
+  //FastLED.clear();
+  fader((uint8_t)(10*((float)myLamp.effects.getSpeed())/255)+50); // фейдер, 10 - коэф. масштабирование (вся шкала 0...10), 50 - смещение (мин. уровень фейдера)
   for (uint8_t i = 0U; i < ballSize; i++)
   {
     for (uint8_t j = 0U; j < ballSize; j++)
