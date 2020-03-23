@@ -41,7 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define FASTLED_INTERRUPT_RETRY_COUNT   (0)                 // default: 2; // Use this to determine how many times FastLED will attempt to re-transmit a frame if interrupted for too long by interrupts
 #define FASTLED_ESP8266_RAW_PIN_ORDER                       // FASTLED_ESP8266_RAW_PIN_ORDER, FASTLED_ESP8266_D1_PIN_ORDER or FASTLED_ESP8266_NODEMCU_PIN_ORDER
 #include <FastLed.h>
-#define FASTLED_ALLOW_INTERRUPTS      (1)                   // default: 1; // Use this to force FastLED to allow interrupts in the clockless chipsets (or to force it to disallow), overriding the default on platforms that support this. Set the value to 1 to allow interrupts or 0 to disallow them.
+//#define FASTLED_ALLOW_INTERRUPTS      (0)                   // default: 1; // Use this to force FastLED to allow interrupts in the clockless chipsets (or to force it to disallow), overriding the default on platforms that support this. Set the value to 1 to allow interrupts or 0 to disallow them.
 
 //-----------------------------------
 #define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
@@ -64,8 +64,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define COLOR_ORDER           (GRB)                         // порядок цветов на ленте. Если цвет отображается некорректно - меняйте. Начать можно с RGB
 
 #define MATRIX_TYPE           (0U)                          // тип матрицы: 0 - зигзаг, 1 - параллельная
-#define CONNECTION_ANGLE      (0U)                          // угол подключения: 0 - левый нижний, 1 - левый верхний, 2 - правый верхний, 3 - правый нижний
-#define STRIP_DIRECTION       (1U)                          // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
+#define CONNECTION_ANGLE      (1U)                          // угол подключения: 0 - левый нижний, 1 - левый верхний, 2 - правый верхний, 3 - правый нижний
+#define STRIP_DIRECTION       (3U)                          // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
                                                             // при неправильной настройке матрицы вы получите предупреждение "Wrong matrix parameters! Set to default"
                                                             // шпаргалка по настройке матрицы здесь! https://alexgyver.ru/matrix_guide/
 #define NUM_LEDS              (uint16_t)(WIDTH * HEIGHT)
@@ -95,11 +95,12 @@ const PROGMEM byte PULL_MODE=HIGH_PULL;                     // подтяжка 
 
 #define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
 
-
-
-
-
-
+#define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)
+#define LET_WIDTH             (5U)                          // ширина буквы шрифта
+#define LET_HEIGHT            (8U)                          // высота буквы шрифта
+#define LET_SPACE             (1U)                          // пробел
+#define LETTER_COLOR          (CRGB::White)                 // цвет букв по умолчанию
+#define DEFAULT_TEXT_SPEED    (100U)                        // скорость движения текста, в миллисекундах - меньше == быстрее
 // ************* НАСТРОЙКА МАТРИЦЫ *****
 #if (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0)
 #define _WIDTH WIDTH

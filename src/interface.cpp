@@ -42,6 +42,14 @@ static EFFECT *prevEffect = nullptr;
 static bool isSetup = false;
 static bool isTmSetup = false;
 
+void btnTxtSendCallback()
+{
+    String tmpStr = jee.param(F("txtColor"));
+    tmpStr.replace(F("#"),F("0x"));
+    //LOG.printf("%s %d\n", tmpStr.c_str(), strtol(tmpStr.c_str(),NULL,0));
+    myLamp.sendStringToLamp(jee.param(F("msg")).c_str(), (CRGB::HTMLColorCode)strtol(tmpStr.c_str(),NULL,0)); // вывести текст на лампу
+}
+
 void btnTmSubmCallback()
 {
 #ifdef LAMP_DEBUG
@@ -55,6 +63,7 @@ void btnTmSubmCallback()
     }
     isTmSetup = false;
     jee.var(F("isTmSetup"), F("false"));
+    myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
     jee._refresh = true;
 }
 
@@ -70,7 +79,12 @@ void bDemoCallback()
         myLamp.startDemoMode();
     else
         myLamp.startNormalMode();
-    
+
+    // // Отладка
+    // myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::Blue);
+    // myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::Green);
+    // myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::Red);
+
     jee._refresh = true;
 }
 
@@ -80,13 +94,13 @@ void jeebuttonshandle()
     jee.btnCallback(F("btnTmSubm"), btnTmSubmCallback);
     jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
     jee.btnCallback(F("bDemo"), bDemoCallback);
+    jee.btnCallback(F("btnTxtSend"), btnTxtSendCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
         return;
     timer = millis();
     jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime(), true); // обновить опубликованное значение
-    
 }
 
 void create_parameters(){
@@ -113,6 +127,8 @@ void create_parameters(){
     jee.var_create(F("ONflag"), F("true"));
     jee.var_create(F("MIRR_H"), F("false"));
     jee.var_create(F("MIRR_V"), F("false"));
+    jee.var_create(F("msg"), F(""));
+    jee.var_create(F("txtColor"), F("#ffffff"));
 
     jee.var_create(F("GlobBRI"), F("127"));
 
@@ -182,6 +198,9 @@ void interface(){ // функция в которой мф формируем в
     jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
     jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
     jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));
+    jee.text(F("msg"),F("Текст для вывода на матрицу"));
+    jee.color(F("txtColor"), F("Цвет сообщения"));
+    jee.button(F("btnTxtSend"),F("gray"),F("Отправить"));
 
     jee.page(); // разделитель между страницами
     // Страница "Настройки соединения"
@@ -251,6 +270,7 @@ void update(){ // функция выполняется после ввода д
 
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
+    
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
     if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));

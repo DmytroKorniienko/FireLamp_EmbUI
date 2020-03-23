@@ -88,13 +88,14 @@ private:
     byte numHold = 0; // режим удержания
     bool buttonEnabled = true; // кнопка обрабатывается если true
 
-    //tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0)
+    DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
     timerMinim tmFaderTimeout;
     timerMinim tmFaderStepTime;
-    timerMinim tmDemoTimer;    // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
-    timerMinim tmConfigSaveTime; // таймер для автосохранения
-    timerMinim tmNumHoldTimer;             // таймаут удержания кнопки в мс
+    timerMinim tmDemoTimer;         // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
+    timerMinim tmConfigSaveTime;    // таймер для автосохранения
+    timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
+    timerMinim tmStringStepTime;    // шаг смещения строки, в мс
 
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
     bool isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
@@ -119,7 +120,13 @@ private:
 #ifdef OTA
     OtaManager otaManager;
 #endif
-    static void showWarning(CRGB color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
+    static void showWarning(CRGB::HTMLColorCode color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
+
+    bool isStringPrinting = false; // печатается ли прямо сейчас строка?
+    void doPrintStringToLamp(const char* text = nullptr, CRGB::HTMLColorCode letterColor = CRGB::Black);
+    bool fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, bool stopText = false, bool isInverse = false, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT);
+    void drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
+    uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -139,6 +146,8 @@ public:
     TimeProcessor timeProcessor;
     void refreshTimeManual() { timeProcessor.handleTime(true); }
 
+    void sendStringToLamp(const char* text = nullptr, CRGB::HTMLColorCode letterColor = CRGB::Black);
+    
     LAMP();
 
     void handle(); // главная функция обработки эффектов

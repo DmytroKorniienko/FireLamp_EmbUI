@@ -407,13 +407,15 @@ if(touch.isHold() || !touch.isHolded())
         // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы или будильника
         // digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
         // #endif
+
+        sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
     }
 
 
     // шестикратное нажатие
     if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
     {
-      // printTime(thisTime, true, ONflag, false, false);
+      myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
     }
 
 
@@ -475,6 +477,7 @@ void LAMP::effectsTick()
 #endif
     }
 
+    doPrintStringToLamp(); // обработчик печати строки
     //onOffTimePrint();
     //osd_Tick(); // вывод сообщений по методу Palpalych https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proshivki-ot-gunner47.2418/page-26#post-26788
 
@@ -638,7 +641,7 @@ bool LAMP::faderTick(){
       return isFaderOn;
     }
 
-LAMP::LAMP() : tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME)
+LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED)
 #ifdef ESP_USE_BUTTON    
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
@@ -733,7 +736,7 @@ void LAMP::changePower(bool flag) // плавное включение/выкл�
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; блокирующий код!) -------------
 extern LAMP myLamp; // Объект лампы
 void LAMP::showWarning(
-  CRGB color,                                               /* цвет вспышки                                                 */
+  CRGB::HTMLColorCode color,                                               /* цвет вспышки                                                 */
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
   uint16_t blinkHalfPeriod)                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
 {
@@ -795,4 +798,182 @@ void LAMP::startNormalMode()
   FastLED.setBrightness(getNormalizedLampBrightness());
   loadingFlag = true;
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+}
+
+bool LAMP::fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, bool stopText, bool isInverse, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
+{
+  static int32_t offset = (MIRR_V ? 0 : WIDTH);
+  
+  if (!text || !strlen(text))
+  {
+    return true;
+  }
+
+  uint16_t i = 0, j = 0;
+  while (text[i] != '\0')
+  {
+    if ((uint8_t)text[i] > 191)                           // работаем с русскими буквами
+    {
+      i++;
+    }
+    else
+    {
+      if(!MIRR_V)
+        drawLetter(text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+      else
+        drawLetter(text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+      i++;
+      j++;
+    }
+  }
+
+  if(!stopText)
+    (MIRR_V ? offset++ : offset--);
+  if ((!MIRR_V && offset < (int32_t)(-j * (letWidth + letSpace))) || (MIRR_V && offset > (int32_t)(j * (letWidth + letSpace))+(signed)WIDTH))       // строка убежала
+  {
+    offset = (MIRR_V ? 0 : WIDTH);
+    return true;
+  }
+
+  return false;
+}
+
+void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+{
+  uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
+
+  if (offset < (int16_t)-letWidth || offset > (int16_t)WIDTH)
+  {
+    return;
+  }
+  if (offset < 0)
+  {
+    start_pos = (uint16_t)-offset;
+  }
+  if (offset > (int16_t)(WIDTH - letWidth))
+  {
+    finish_pos = (uint16_t)(WIDTH - offset);
+  }
+
+  for (uint16_t i = start_pos; i < finish_pos; i++)
+  {
+    uint8_t thisByte;
+
+    if((finish_pos - i <= letSpace) || ((letWidth - 1 - i)<0))
+      thisByte = 0x00;
+    else
+    {
+      thisByte = getFont(letter, i);
+    }
+
+    for (uint16_t j = 0; j < letHeight; j++)
+    {
+      bool thisBit = thisByte & (1 << (letHeight - 1 - j));
+
+      // рисуем столбец (i - горизонтальная позиция, j - вертикальная)
+      if (thisBit)
+      {
+        drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
+      }
+      else
+      {
+        drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
+      }
+    }
+  }
+}
+
+uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпретатор кода символа в массиве fontHEX (для Arduino IDE 1.8.* и выше)
+{
+  asciiCode = asciiCode - '0' + 16;                         // перевод код символа из таблицы ASCII в номер согласно нумерации массива
+
+  if (asciiCode <= 90)                                      // печатаемые символы и английские буквы
+  {
+    return pgm_read_byte(&fontHEX[asciiCode][row]);
+  }
+  else if (asciiCode >= 112 && asciiCode <= 159)
+  {
+    return pgm_read_byte(&fontHEX[asciiCode - 17][row]);
+  }
+  else if (asciiCode >= 96 && asciiCode <= 111)
+  {
+    return pgm_read_byte(&fontHEX[asciiCode + 47][row]);
+  }
+
+  return 0;
+}
+
+void LAMP::sendStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
+{
+  if(text==nullptr){ // текст пустой
+    if(!isStringPrinting){ // ничего сейчас не печатается
+      if(docArrMessages.isNull()){ // массив пустой
+        return; // на выход
+      }
+      else { // есть что печатать
+        JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
+        JsonObject var=arr[0]; // извлекаем очередной
+        doPrintStringToLamp(var[F("s")], (CRGB::HTMLColorCode)(var[F("c")].as<unsigned long>())); // отправляем
+        arr.remove(0); // удаляем отправленный
+#ifdef LAMP_DEBUG
+        //LOG.println(docArrMessages.as<String>());
+#endif
+      }
+    } else {
+        // текст на входе пустой, идет печать
+        return; // на выход
+    }
+  } else { // текст не пустой
+    if(!isStringPrinting){ // ничего сейчас не печатается
+      doPrintStringToLamp(text, letterColor); // отправляем
+    } else { // идет печать, помещаем в очередь
+      JsonArray arr; // добавляем в очередь
+      
+      if(!docArrMessages.isNull())
+        arr = docArrMessages.as<JsonArray>(); // используем имеющийся
+      else
+        arr = docArrMessages.to<JsonArray>(); // создаем новый
+      
+      JsonObject var = arr.createNestedObject();
+      var[F("s")]=text;
+      var[F("c")]=(unsigned long)letterColor;
+#ifdef LAMP_DEBUG
+      LOG.println(docArrMessages.as<String>());
+#endif
+      String tmp; // Тут шаманство, чтобы не ломало JSON
+      serializeJson(docArrMessages, tmp);
+      deserializeJson(docArrMessages, tmp);
+    }
+  }
+}
+
+void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
+{
+  static String toPrint;
+  static CRGB::HTMLColorCode _letterColor;
+
+  if(text!=nullptr && text[0]!='\0'){
+    toPrint += text;
+    _letterColor = letterColor;
+  }
+
+  if(toPrint.length()==0) {
+    isStringPrinting = false;
+    return; // нечего печатать
+  } else {
+    isStringPrinting = true;
+  }
+
+  if(tmStringStepTime.isReadyManual()){
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false)){ // смещаем
+      tmStringStepTime.reset();
+    }
+    else {
+      isStringPrinting = false;
+      toPrint.clear(); // все напечатали
+      sendStringToLamp(); // получаем новую порцию
+    }
+  } else {
+    fillStringManual(toPrint.c_str(), _letterColor, true);
+  }
 }
