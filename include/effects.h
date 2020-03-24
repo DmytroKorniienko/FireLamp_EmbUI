@@ -73,6 +73,7 @@ EFF_CUBE,                                     // Блуждающий кубик
 EFF_PULSE,                                    // Пульс
 EFF_BBALS,                                    // Прыгающие мячики
 EFF_SINUSOID3,                                // Синусоид 3
+EFF_METABALLS,                                // Метасферы
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
@@ -101,6 +102,7 @@ void cloudsNoiseRoutine(CRGB*, const char*);
 void lavaNoiseRoutine(CRGB*, const char*);
 void BBallsRoutine(CRGB*, const char*);
 void Sinusoid3Routine(CRGB*, const char*);
+void metaBallsRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -144,6 +146,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {EFF_CLOUDS, "Облака 3D", 127, 127, 127, true, true, cloudsNoiseRoutine, nullptr},
     {EFF_LAVA, "Лава 3D", 127, 127, 127, true, true, lavaNoiseRoutine, nullptr},
     {EFF_SINUSOID3, "Синусоид 3", 127, 127, 127, true, true, Sinusoid3Routine, nullptr},
+    {EFF_METABALLS, "Метасферы", 127, 127, 127, true, true, metaBallsRoutine, nullptr},
 
     {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };

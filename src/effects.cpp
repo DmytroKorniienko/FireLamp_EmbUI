@@ -1696,3 +1696,61 @@ void Sinusoid3Routine (CRGB *leds, const char *param)
     }
   }
 }
+
+/*
+  Metaballs proof of concept by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  ...very rough 8bit math here...
+  read more about the concept of isosurfaces and metaballs:
+  https://www.gamedev.net/articles/programming/graphics/exploring-metaballs-and-isosurfaces-in-2d-r2556
+*/
+
+// ***** METABALLS / МЕТАШАРИКИ *****
+// v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
+void metaBallsRoutine(CRGB *leds, const char *param)
+{
+  float speed = myLamp.effects.getSpeed()/127.0;
+
+  // get some 2 random moving points
+  uint8_t x2 = inoise8(millis() * speed, 25355, 685 ) / WIDTH;
+  uint8_t y2 = inoise8(millis() * speed, 355, 11685 ) / HEIGHT;
+
+  uint8_t x3 = inoise8(millis() * speed, 55355, 6685 ) / WIDTH;
+  uint8_t y3 = inoise8(millis() * speed, 25355, 22685 ) / HEIGHT;
+
+  // and one Lissajou function
+  uint8_t x1 = beatsin8(23 * speed, 0, 15);
+  uint8_t y1 = beatsin8(28 * speed, 0, 15);
+
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    for (uint8_t x = 0; x < WIDTH; x++) {
+
+      // calculate distances of the 3 points from actual pixel
+      // and add them together with weightening
+      uint8_t  dx =  abs(x - x1);
+      uint8_t  dy =  abs(y - y1);
+      uint8_t dist = 2 * sqrt((dx * dx) + (dy * dy));
+
+      dx =  abs(x - x2);
+      dy =  abs(y - y2);
+      dist += sqrt((dx * dx) + (dy * dy));
+
+      dx =  abs(x - x3);
+      dy =  abs(y - y3);
+      dist += sqrt((dx * dx) + (dy * dy));
+
+      // inverse result
+      byte color = myLamp.effects.getScale()*4 / dist;
+
+      // map color between thresholds
+      if (color > 0 and color < 60) {
+        myLamp.drawPixelXY(x, y, CHSV(color * 9, 255, 255));
+      } else {
+        myLamp.drawPixelXY(x, y, CHSV(0, 255, 255));
+      }
+      // show the 3 points, too
+      myLamp.drawPixelXY(x1, y1, CRGB(255, 255, 255));
+      myLamp.drawPixelXY(x2, y2, CRGB(255, 255, 255));
+      myLamp.drawPixelXY(x3, y3, CRGB(255, 255, 255));
+    }
+  }
+}
