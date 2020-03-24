@@ -491,6 +491,8 @@ void LAMP::effectsTick()
 #ifdef USELEDBUF
       memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);                             // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
 #endif
+    } else {
+      //digitalWrite(BUILTIN_LED, HIGH); // отключить встроенный светодиод
     }
   }
 

@@ -129,6 +129,7 @@ void create_parameters(){
     jee.var_create(F("MIRR_V"), F("false"));
     jee.var_create(F("msg"), F(""));
     jee.var_create(F("txtColor"), F("#ffffff"));
+    jee.var_create(F("txtSpeed"), F("100"));
 
     jee.var_create(F("GlobBRI"), F("127"));
 
@@ -194,13 +195,10 @@ void interface(){ // функция в которой мф формируем в
         jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
         jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
     }
-    jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
-    jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-    jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
-    jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));
     jee.text(F("msg"),F("Текст для вывода на матрицу"));
     jee.color(F("txtColor"), F("Цвет сообщения"));
     jee.button(F("btnTxtSend"),F("gray"),F("Отправить"));
+    jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
 
     jee.page(); // разделитель между страницами
     // Страница "Настройки соединения"
@@ -209,7 +207,10 @@ void interface(){ // функция в которой мф формируем в
         jee.formMqtt(); // форма настроек MQTT
     }
     jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-    
+    jee.range(F("txtSpeed"),30,150,10,F("Скорость прокрутки текста"));
+    jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
+    jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
+    jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));    
     jee.page(); // разделитель между страницами
 }
 
@@ -268,9 +269,9 @@ void update(){ // функция выполняется после ввода д
 
     prevEffect = curEff;
 
+    myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
-    
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
     if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));

@@ -158,6 +158,7 @@ public:
     bool isLampOn() {return ONflag;}
     void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
+    void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
 
     void startFader(bool isManual);
 
