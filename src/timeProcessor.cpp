@@ -67,43 +67,11 @@ void TimeProcessor::handleTime(bool force)
     static unsigned long timer;
     if (timer + TIME_SYNC_INTERVAL > millis() && !force)
         return;
-    timer = millis();
     
-    {
-        String result;
-        if(!strlen(timezone)){
-            result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
-        }
-        else {
-            String tmpStr(PSTR("http://worldtimeapi.org/api/timezone/"));
-            tmpStr+=timezone;
-            result = getHttpData(tmpStr.c_str());
-            if(result.length()<50) // {"error":"unknown location"}
-                result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
-        }
-        query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
-        DynamicJsonDocument doc(512);
-        DeserializationError error = deserializeJson(doc, result);
-        if (error) {
-    #ifdef LAMP_DEBUG
-            LOG.print(F("deserializeJson error: "));
-            LOG.println(error.code());
-    #endif
-            return;
-        }
-        if(!doc[F("error")].size()){
-            week_number=doc[F("week_number")];
-            day_of_week=doc[F("day_of_week")];
-            day_of_year=doc[F("day_of_year")];
-            unixtime=doc[F("unixtime")];
-            raw_offset=doc[F("raw_offset")];
-            if(unixtime) isSynced = true;
-        } else {
-            if(!unixtime) isSynced = false;
-        }
-#ifdef LAMP_DEBUG
-        LOG.println(result);
-#endif
+    timer = millis();
+    if(!getTimeJson(timer)){
+        timer = millis();
+        getTimeNTP(timer);
     }
 }
 
@@ -137,4 +105,66 @@ void TimeProcessor::setTime(const char *var)
 
     dirtytime=(val1*3600+val2*60);
     query_last_dirtytime_timer=millis();
+}
+
+bool TimeProcessor::getTimeJson(unsigned long timer)
+{
+    String result;
+    if(!strlen(timezone)){
+        result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
+    }
+    else {
+        String tmpStr(PSTR("http://worldtimeapi.org/api/timezone/"));
+        tmpStr+=timezone;
+        result = getHttpData(tmpStr.c_str());
+        if(result.length()<50) // {"error":"unknown location"}
+            result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
+    }
+    query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
+    DynamicJsonDocument doc(512);
+    DeserializationError error = deserializeJson(doc, result);
+    if (error) {
+#ifdef LAMP_DEBUG
+        LOG.print(F("deserializeJson error: "));
+        LOG.println(error.code());
+#endif
+        return false;
+    }
+    if(!doc[F("error")].size()){
+        week_number=doc[F("week_number")];
+        day_of_week=doc[F("day_of_week")];
+        day_of_year=doc[F("day_of_year")];
+        unixtime=doc[F("unixtime")];
+        raw_offset=doc[F("raw_offset")];
+        if(unixtime) isSynced = true;
+        sync = SYNC_TYPE::JSON_SYNC;
+    } else {
+        if(!unixtime) isSynced = false;
+    }
+#ifdef LAMP_DEBUG
+    LOG.println(result);
+#endif
+    return isSynced;
+}
+
+bool TimeProcessor::getTimeNTP(unsigned long timer)
+{
+    WiFiUDP wifiUdp;
+#ifdef NTP_ADDRESS
+    NTPClient timeClient(wifiUdp, NTP_ADDRESS, 0); // utcOffsetInSeconds
+#else
+    NTPClient timeClient(wifiUdp, "pool.ntp.org", 0); // utcOffsetInSeconds
+#endif
+    timeClient.begin();
+    timeClient.update();
+
+    if(timeClient.getEpochTime()>0){
+        unixtime = timeClient.getEpochTime();
+        if(unixtime) isSynced = true;
+        query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
+        sync = SYNC_TYPE::NTP_SYNC;
+        return true;
+    } else {
+        return false;
+    }
 }

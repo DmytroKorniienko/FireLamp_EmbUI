@@ -44,23 +44,29 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "ArduinoJson.h"
 
 #if defined(ESP32)
+//#include <WiFi.h>
 #include "HTTPClient.h"
 #elif defined(ESP8266)
+//#include <ESP8266WiFi.h>
 #include "ESP8266HTTPClient.h"
 #endif
 
+#include <WiFiUdp.h>
+//#include <NTP.h>
 //#include <TimeLib.h>
-//#include "Arduino.h"
-// #ifdef USE_NTP
-// #include <NTPClient.h>
-// #include <Timezone.h>
-// #endif
+#include <NTPClient.h>
+//#include <Timezone.h>
 
 // http://worldtimeapi.org/api/ip
 // http://worldtimeapi.org/api/timezone
+
+typedef enum _SYNC_TYPE {NOT_SYNC,JSON_SYNC,NTP_SYNC} SYNC_TYPE;
+
 class TimeProcessor
 {
 private:
+    SYNC_TYPE sync = SYNC_TYPE::NOT_SYNC;
+
     HTTPClient http;
     WiFiClient client;
     char timezone[32]="";
@@ -79,6 +85,8 @@ private:
     unsigned int long query_last_dirtytime_timer;
     int dirtytime = 0; // приведено к разрешению в millis()
 
+    bool getTimeJson(unsigned long timer);
+    bool getTimeNTP(unsigned long timer);
 public:
     void setTimezone(const char *var) { strncpy(timezone,var,sizeof(timezone)); }
     void setTime(const char *var);
@@ -87,5 +95,6 @@ public:
     long getUnixTime() {return (isSynced?unixtime:dirtytime);}
     String getFormattedShortTime();
     void handleTime(bool force=false);
+    void SetOffset(int val) { if(sync==NTP_SYNC) raw_offset=val;}
 };
 #endif

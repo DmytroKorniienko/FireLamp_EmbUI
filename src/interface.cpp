@@ -135,6 +135,7 @@ void create_parameters(){
 
     jee.var_create(F("time"), F("00:00"));
     jee.var_create(F("timezone"), F(""));
+    jee.var_create(F("tm_offs"), F("0"));
     jee.var_create(F("isTmSetup"), F("false"));
     jee.var_create(F("isTmSync"), F("true"));
 
@@ -188,6 +189,7 @@ void interface(){ // функция в которой мф формируем в
     //Страница "Управление лампой"
     if(isTmSetup){
         jee.time(F("time"),F("Время"));
+        jee.number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
         jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
         jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
         jee.button(F("btnTmSubm"),F("gray"),F("Сохранить"));
@@ -207,7 +209,7 @@ void interface(){ // функция в которой мф формируем в
         jee.formMqtt(); // форма настроек MQTT
     }
     jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-    jee.range(F("txtSpeed"),30,150,10,F("Скорость прокрутки текста"));
+    jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
     jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
     jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
     jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));    
@@ -273,6 +275,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
+    myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
     if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
     myLamp.timeProcessor.setIsSyncOnline(jee.param(F("isTmSync"))==F("true"));

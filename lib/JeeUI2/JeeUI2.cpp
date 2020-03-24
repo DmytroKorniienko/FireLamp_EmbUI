@@ -290,7 +290,9 @@ void jeeui2::begin() {
         json += ",\"bssid\":\""+WiFi.BSSIDstr(i)+"\"";
         json += ",\"channel\":"+String(WiFi.channel(i));
         json += ",\"secure\":"+String(WiFi.encryptionType(i));
-        json += ",\"hidden\":"+String(WiFi.isHidden(i)?"true":"false");
+#ifdef ESP8266
+        json += ",\"hidden\":"+String(WiFi.isHidden(i)?"true":"false"); // что-то сломали и в esp32 больше не работает...
+#endif
         json += "}";
         }
         WiFi.scanDelete();
