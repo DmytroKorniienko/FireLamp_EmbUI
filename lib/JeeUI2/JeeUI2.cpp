@@ -175,11 +175,11 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/eff_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
-        request->send(SPIFFS, "/eff_config.json", String(), true);
+        request->send(SPIFFS, F("/eff_config.json"), String(), true);
     });
 
     server.on(PSTR("/config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
-        request->send(SPIFFS, "/config.json", String(), true);
+        request->send(SPIFFS, F("/config.json"), String(), true);
     });
 
     server.on(PSTR("/js/maker.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -276,32 +276,32 @@ void jeeui2::begin() {
     
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
     //Do not request more often than 3-5 seconds
-    server.on("/scan", HTTP_GET, [](AsyncWebServerRequest *request){
-    String json = "[";
+    server.on(PSTR("/scan"), HTTP_GET, [](AsyncWebServerRequest *request){
+    String json = F("[");
     int n = WiFi.scanComplete();
     if(n == -2){
         WiFi.scanNetworks(true);
     } else if(n){
         for (int i = 0; i < n; ++i){
-        if(i) json += ",";
-        json += "{";
-        json += "\"rssi\":"+String(WiFi.RSSI(i));
-        json += ",\"ssid\":\""+WiFi.SSID(i)+"\"";
-        json += ",\"bssid\":\""+WiFi.BSSIDstr(i)+"\"";
-        json += ",\"channel\":"+String(WiFi.channel(i));
-        json += ",\"secure\":"+String(WiFi.encryptionType(i));
+        if(i) json += F(",");
+        json += F("{");
+        json += String(F("\"rssi\":"))+String(WiFi.RSSI(i));
+        json += String(F(",\"ssid\":\""))+WiFi.SSID(i)+F("\"");
+        json += String(F(",\"bssid\":\""))+WiFi.BSSIDstr(i)+F("\"");
+        json += String(F(",\"channel\":"))+String(WiFi.channel(i));
+        json += String(F(",\"secure\":"))+String(WiFi.encryptionType(i));
 #ifdef ESP8266
-        json += ",\"hidden\":"+String(WiFi.isHidden(i)?"true":"false"); // что-то сломали и в esp32 больше не работает...
+        json += String(F(",\"hidden\":"))+String(WiFi.isHidden(i)?F("true"):F("false")); // что-то сломали и в esp32 больше не работает...
 #endif
-        json += "}";
+        json += F("}");
         }
         WiFi.scanDelete();
         if(WiFi.scanComplete() == -2){
         WiFi.scanNetworks(true);
         }
     }
-    json += "]";
-    request->send(200, "application/json", json);
+    json += F("]");
+    request->send(200, F("application/json"), json);
     json = String();
     });
 

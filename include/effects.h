@@ -35,7 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef _EFFECTS_H
+#define _EFFECTS_H
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <string.h>
@@ -74,6 +76,7 @@ EFF_PULSE,                                    // Пульс
 EFF_BBALS,                                    // Прыгающие мячики
 EFF_SINUSOID3,                                // Синусоид 3
 EFF_METABALLS,                                // Метасферы
+EFF_SPIRO,                                    // Спираль
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
@@ -103,6 +106,7 @@ void lavaNoiseRoutine(CRGB*, const char*);
 void BBallsRoutine(CRGB*, const char*);
 void Sinusoid3Routine(CRGB*, const char*);
 void metaBallsRoutine(CRGB*, const char*);
+void spiroRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -119,36 +123,67 @@ typedef struct _EFFECT {
     void setNone(){ eff_nb=EFF_NONE; eff_name=nullptr; brightness=127; speed=127; scale=127; canBeSelected=false; isFavorite=false; func=nullptr; param=nullptr; }
 } EFFECT;
 
+
+const char T_SPARKLES[] PROGMEM = "Конфетти";
+const char T_FIRE[] PROGMEM = "Огненная лампа";
+const char T_EVERYTHINGFALL[] PROGMEM = "Эффектопад";
+const char T_RAINBOW_2D[] PROGMEM = "Радуга 2D";
+const char T_COLORS[] PROGMEM = "Цвета";
+const char T_PULSE[] PROGMEM = "Пульс";
+const char T_MATRIX[] PROGMEM = "Матрица";
+const char T_SNOW[] PROGMEM = "Снегопад";
+const char T_SNOWSTORMSTARFALL[] PROGMEM = "Метель + Звездопад";
+const char T_LIGHTERS[] PROGMEM = "Светлячки";
+const char T_LIGHTER_TRACES[] PROGMEM = "Светлячки со шлейфом";
+const char T_PAINTBALL[] PROGMEM = "Пейнтбол";
+const char T_CUBE[] PROGMEM = "Блуждающий кубик";
+const char T_BBALS[] PROGMEM = "Прыгающие мячики";
+const char T_MADNESS[] PROGMEM = "Безумие 3D";
+const char T_RAINBOW[] PROGMEM = "Радуга 3D";
+const char T_RAINBOW_STRIPE[] PROGMEM = "Павлин 3D";
+const char T_ZEBRA[] PROGMEM = "Зебра 3D";
+const char T_FOREST[] PROGMEM = "Лес 3D";
+const char T_OCEAN[] PROGMEM = "Океан 3D";
+const char T_PLASMA[] PROGMEM = "Плазма 3D";
+const char T_CLOUDS[] PROGMEM = "Облака 3D";
+const char T_LAVA[] PROGMEM = "Лава 3D";
+const char T_SINUSOID3[] PROGMEM = "Синусоид 3";
+const char T_METABALLS[] PROGMEM = "Метасферы";
+const char T_SPIRO[] PROGMEM = "Спираль";
+const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
+
+
 static EFFECT _EFFECTS_ARR[] = {
     {EFF_NONE, nullptr, 127, 127, 127, false, false, nullptr, nullptr},
     
-    {EFF_SPARKLES, "Конфетти", 127, 127, 127, true, true, sparklesRoutine, nullptr},
-    {EFF_FIRE, "Огненная лампа", 127, 127, 127, true, true, fireRoutine, nullptr},
-    {EFF_EVERYTHINGFALL, "Эффектопад", 127, 127, 127, true, true, fire2012WithPalette, nullptr},
-    {EFF_RAINBOW_2D, "Радуга 2D", 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
-    {EFF_COLORS, "Цвета", 127, 127, 127, true, true, colorsRoutine, nullptr},
-    {EFF_PULSE, "Пульс", 127, 127, 127, true, true, pulseRoutine, nullptr},
-    {EFF_MATRIX, "Матрица", 127, 127, 127, true, true, matrixRoutine, nullptr},
-    {EFF_SNOW, "Снегопад", 127, 127, 127, true, true, snowRoutine, nullptr},    
-    {EFF_SNOWSTORMSTARFALL, "Метель + Звездопад", 127, 127, 127, true, true, snowStormStarfallRoutine, nullptr},
-    {EFF_LIGHTERS, "Светлячки", 127, 127, 127, true, true, lightersRoutine, nullptr},
-    {EFF_LIGHTER_TRACES, "Светлячки со шлейфом", 127, 127, 127, true, true, ballsRoutine, nullptr},
-    {EFF_PAINTBALL, "Пейнтбол", 127, 127, 127, true, true, lightBallsRoutine, nullptr},
-    {EFF_CUBE, "Блуждающий кубик", 127, 127, 127, true, true, ballRoutine, nullptr},
-    {EFF_BBALS, "Прыгающие мячики", 127, 127, 127, true, true, BBallsRoutine, nullptr},
-    {EFF_MADNESS, "Безумие 3D", 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
-    {EFF_RAINBOW, "Радуга 3D", 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
-    {EFF_RAINBOW_STRIPE, "Павлин 3D", 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},
-    {EFF_ZEBRA, "Зебра 3D", 127, 127, 127, true, true, zebraNoiseRoutine, nullptr},
-    {EFF_FOREST, "Лес 3D", 127, 127, 127, true, true, forestNoiseRoutine, nullptr},
-    {EFF_OCEAN, "Океан 3D", 127, 127, 127, true, true, oceanNoiseRoutine, nullptr},
-    {EFF_PLASMA, "Плазма 3D", 127, 127, 127, true, true, plasmaNoiseRoutine, nullptr},
-    {EFF_CLOUDS, "Облака 3D", 127, 127, 127, true, true, cloudsNoiseRoutine, nullptr},
-    {EFF_LAVA, "Лава 3D", 127, 127, 127, true, true, lavaNoiseRoutine, nullptr},
-    {EFF_SINUSOID3, "Синусоид 3", 127, 127, 127, true, true, Sinusoid3Routine, nullptr},
-    {EFF_METABALLS, "Метасферы", 127, 127, 127, true, true, metaBallsRoutine, nullptr},
+    {EFF_SPARKLES, T_SPARKLES, 127, 127, 127, true, true, sparklesRoutine, nullptr},
+    {EFF_FIRE, T_FIRE, 127, 127, 127, true, true, fireRoutine, nullptr},
+    {EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, 127, 127, 127, true, true, fire2012WithPalette, nullptr},
+    {EFF_RAINBOW_2D, T_RAINBOW_2D, 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
+    {EFF_COLORS, T_COLORS, 127, 127, 127, true, true, colorsRoutine, nullptr},
+    {EFF_PULSE, T_PULSE, 127, 127, 127, true, true, pulseRoutine, nullptr},
+    {EFF_MATRIX, T_MATRIX, 127, 127, 127, true, true, matrixRoutine, nullptr},
+    {EFF_SNOW, T_SNOW, 127, 127, 127, true, true, snowRoutine, nullptr},    
+    {EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, 127, 127, 127, true, true, snowStormStarfallRoutine, nullptr},
+    {EFF_LIGHTERS, T_LIGHTERS, 127, 127, 127, true, true, lightersRoutine, nullptr},
+    {EFF_LIGHTER_TRACES, T_LIGHTER_TRACES, 127, 127, 127, true, true, ballsRoutine, nullptr},
+    {EFF_PAINTBALL, T_PAINTBALL, 127, 127, 127, true, true, lightBallsRoutine, nullptr},
+    {EFF_CUBE, T_CUBE, 127, 127, 127, true, true, ballRoutine, nullptr},
+    {EFF_BBALS, T_BBALS, 127, 127, 127, true, true, BBallsRoutine, nullptr},
+    {EFF_MADNESS, T_MADNESS, 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
+    {EFF_RAINBOW, T_RAINBOW, 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
+    {EFF_RAINBOW_STRIPE, T_RAINBOW_STRIPE, 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},
+    {EFF_ZEBRA, T_ZEBRA, 127, 127, 127, true, true, zebraNoiseRoutine, nullptr},
+    {EFF_FOREST, T_FOREST, 127, 127, 127, true, true, forestNoiseRoutine, nullptr},
+    {EFF_OCEAN, T_OCEAN, 127, 127, 127, true, true, oceanNoiseRoutine, nullptr},
+    {EFF_PLASMA, T_PLASMA, 127, 127, 127, true, true, plasmaNoiseRoutine, nullptr},
+    {EFF_CLOUDS, T_CLOUDS, 127, 127, 127, true, true, cloudsNoiseRoutine, nullptr},
+    {EFF_LAVA, T_LAVA, 127, 127, 127, true, true, lavaNoiseRoutine, nullptr},
+    {EFF_SINUSOID3, T_SINUSOID3, 127, 127, 127, true, true, Sinusoid3Routine, nullptr},
+    {EFF_METABALLS, T_METABALLS, 127, 127, 127, true, true, metaBallsRoutine, nullptr},
+    {EFF_SPIRO, T_SPIRO, 127, 127, 127, true, true, spiroRoutine, nullptr},
 
-    {EFF_WHITE_COLOR, "Белая лампа", 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
+    {EFF_WHITE_COLOR, T_WHITE_COLOR, 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
 };
 
 class EffectWorker {
@@ -364,3 +399,5 @@ public:
         return &(effects[arrIdx]);
     }
 };
+
+#endif

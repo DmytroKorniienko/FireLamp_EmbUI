@@ -146,7 +146,6 @@ void interface(){ // функция в которой мф формируем в
 #ifdef LAMP_DEBUG
     LOG.println(F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
 #endif
-    
     jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
     // создаем меню
@@ -160,10 +159,12 @@ void interface(){ // функция в которой мф формируем в
 
     EFFECT enEff; enEff.setNone();
     jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
+    char nameBuffer[64]; // Exception (3) при обращении к PROGMEM, поэтому ход конем - копируем во временный буффер
     do {
         enEff = *myLamp.effects.enumNextEffect(&enEff);
         if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || isSetup)){
-            jee.option(String((int)enEff.eff_nb),enEff.eff_name);
+            strncpy_P(nameBuffer, enEff.eff_name, sizeof(nameBuffer)-1);
+            jee.option(String((int)enEff.eff_nb), nameBuffer);//String(enEff.eff_name).c_str());//enEff.eff_name);
         }
     } while((enEff.eff_nb!=EFF_NONE));
     jee.select(F("effList"), F("Эффект"));
@@ -174,7 +175,7 @@ void interface(){ // функция в которой мф формируем в
 
     //jee.button(F("btn1"),F("gray"),F("<"), 1);
     if(myLamp.getMode()==MODE_DEMO)
-        jee.button(F("bDemo"),F("gray"),F("DEMO -> OFF"));
+        jee.button(F("bDemo"),F("green"),F("DEMO -> OFF"));
     else
         jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
     //jee.button(F("btn3"),F("gray"),F(">"), 3);
@@ -196,10 +197,10 @@ void interface(){ // функция в которой мф формируем в
     } else {
         jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
         jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+        jee.text(F("msg"),F("Текст для вывода на матрицу"));
+        jee.color(F("txtColor"), F("Цвет сообщения"));
+        jee.button(F("btnTxtSend"),F("gray"),F("Отправить"));
     }
-    jee.text(F("msg"),F("Текст для вывода на матрицу"));
-    jee.color(F("txtColor"), F("Цвет сообщения"));
-    jee.button(F("btnTxtSend"),F("gray"),F("Отправить"));
     jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
 
     jee.page(); // разделитель между страницами
@@ -211,8 +212,8 @@ void interface(){ // функция в которой мф формируем в
     jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
     jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
     jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-    jee.checkbox(F("MIRR_H"),F("Инверсия&nbspH"));
-    jee.checkbox(F("MIRR_V"),F("Инверсия&nbspV"));    
+    jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
+    jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));    
     jee.page(); // разделитель между страницами
 }
 

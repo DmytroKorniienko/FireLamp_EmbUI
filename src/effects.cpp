@@ -1754,3 +1754,118 @@ void metaBallsRoutine(CRGB *leds, const char *param)
     }
   }
 }
+
+// --------------------------- эффект спирали ----------------------
+/*
+ * Aurora: https://github.com/pixelmatix/aurora
+ * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
+ * Copyright (c) 2014 Jason Coon
+ * Неполная адаптация SottNick
+ */
+uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) {
+  uint8_t beatsin = sin8(theta);
+  uint8_t rangewidth = highest - lowest;
+  uint8_t scaledbeat = scale8(beatsin, rangewidth);
+  uint8_t result = lowest + scaledbeat;
+  return result;
+}
+
+uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) {
+  uint8_t beatcos = cos8(theta);
+  uint8_t rangewidth = highest - lowest;
+  uint8_t scaledbeat = scale8(beatcos, rangewidth);
+  uint8_t result = lowest + scaledbeat;
+  return result;
+}
+  
+void spiroRoutine(CRGB *leds, const char *param)
+{
+    static float spirotheta1 = 0;
+    static float spirotheta2 = 0;
+    static byte spirohueoffset = 0;
+    static uint8_t spirocount = 1;
+    static boolean spiroincrement = false;
+    static boolean spirohandledChange = false;
+
+    const uint8_t spiroradiusx = WIDTH / 4;
+    const uint8_t spiroradiusy = HEIGHT / 4;
+    
+    const uint8_t spirocenterX = WIDTH / 2;
+    const uint8_t spirocenterY = HEIGHT / 2;
+    
+    const uint8_t spirominx = spirocenterX - spiroradiusx;
+    const uint8_t spiromaxx = spirocenterX + spiroradiusx + 1;
+    const uint8_t spirominy = spirocenterY - spiroradiusy;
+    const uint8_t spiromaxy = spirocenterY + spiroradiusy + 1;
+  
+    const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+    const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+    const float speed_factor = (float)myLamp.effects.getSpeed()/127+1;
+    uint8_t spirooffset = 256 / spirocount;
+    boolean change = false;
+
+    // if(myLamp.isLoading()){
+    //   spirotheta1 = 0;
+    //   spirotheta2 = 0;
+    //   spirohueoffset = 0;
+    //   spirocount = 1;
+    //   spiroincrement = false;
+    //   spirohandledChange = false;
+    // }
+
+    myLamp.dimAll(250-speed_factor*7);
+
+    
+    for (int i = 0; i < spirocount; i++) {
+      uint8_t x = mapsin8(spirotheta1 + i * spirooffset, spirominx, spiromaxx);
+      uint8_t y = mapcos8(spirotheta1 + i * spirooffset, spirominy, spiromaxy);
+
+      uint8_t x2 = mapsin8(spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
+      uint8_t y2 = mapcos8(spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
+
+      CRGB color = ColorFromPalette(*curPalette, (spirohueoffset + i * spirooffset), 128U);
+
+      if (x2<WIDTH && y2<HEIGHT){ // добавил проверки. не знаю, почему эффект подвисает без них
+        CRGB tmpColor = myLamp.getPixColorXY(x2, y2);
+        tmpColor += color;
+        myLamp.setLeds(myLamp.getPixelNumber(x2, y2), tmpColor); // += color
+      }
+      
+      if(x2 == spirocenterX && y2 == spirocenterY) change = true;
+    }
+
+    spirotheta2 += 2*speed_factor;
+
+    EVERY_N_MILLIS(12) {
+      spirotheta1 += 1*speed_factor;
+    }
+
+    EVERY_N_MILLIS(50) {
+      if (change && !spirohandledChange) {
+        spirohandledChange = true;
+        
+        if (spirocount >= WIDTH || spirocount == 1) spiroincrement = !spiroincrement;
+
+        if (spiroincrement) {
+          if(spirocount >= 4)
+            spirocount *= 2;
+          else
+            spirocount += 1;
+        }
+        else {
+          if(spirocount > 4)
+            spirocount /= 2;
+          else
+            spirocount -= 1;
+        }
+
+        spirooffset = 256 / spirocount;
+      }
+      
+      if(!change) spirohandledChange = false;
+    }
+
+    EVERY_N_MILLIS(33) {
+      spirohueoffset += 1;
+    }
+}

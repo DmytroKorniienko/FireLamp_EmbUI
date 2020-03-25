@@ -786,7 +786,7 @@ void LAMP::startDemoMode()
   loadingFlag = true;
   tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
   changePower();
-  myLamp.sendStringToLamp("- Demo ON -", CRGB::Green);
+  myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
 #ifdef LAMP_DEBUG
   LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
 #endif

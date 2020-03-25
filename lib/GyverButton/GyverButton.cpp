@@ -194,7 +194,7 @@ void GButton::tick() {
 		last_hold_counter = btn_counter;
 		btn_counter = 0;
 		last_counter = 0;
-		Serial.printf_P("btn_counter=%d last_counter=%d last_hold_counter=%d\n",btn_counter, last_counter, last_hold_counter);
+		//Serial.printf_P(PSTR("btn_counter=%d last_counter=%d last_hold_counter=%d\n"),btn_counter, last_counter, last_hold_counter);
 		flags.isHolded_f = true;
 		flags.step_flag = true;
 		flags.oneClick_f = false;

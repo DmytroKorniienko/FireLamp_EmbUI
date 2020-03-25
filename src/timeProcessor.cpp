@@ -150,15 +150,23 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
 bool TimeProcessor::getTimeNTP(unsigned long timer)
 {
     WiFiUDP wifiUdp;
-#ifdef NTP_ADDRESS
-    NTPClient timeClient(wifiUdp, NTP_ADDRESS, 0); // utcOffsetInSeconds
-#else
-    NTPClient timeClient(wifiUdp, "pool.ntp.org", 0); // utcOffsetInSeconds
+    char ntpNameBuffer[64]; // NTPClient почему-то падает в Exception (3) при попытке передать PSTR, поэтому ход конем - копируем во временный буффер
+    strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
+    NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
+    //NTPClient timeClient(wifiUdp, String(NTP_ADDRESS).c_str(), 0); // utcOffsetInSeconds
+#ifdef LAMP_DEBUG
+  Serial.println(F("Time updating via NTP..."));
 #endif
+
     timeClient.begin();
     timeClient.update();
+    if(timeClient.getEpochTime()<9999999) timeClient.update(); // что-то пошло не так, попытаемся еще раз
 
-    if(timeClient.getEpochTime()>0){
+#ifdef LAMP_DEBUG
+    LOG.println(timeClient.getEpochTime());
+#endif
+
+    if(timeClient.getEpochTime()>9999999){
         unixtime = timeClient.getEpochTime();
         if(unixtime) isSynced = true;
         query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
