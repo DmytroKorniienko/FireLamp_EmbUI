@@ -111,13 +111,13 @@ void spiroRoutine(CRGB*, const char*);
 //-------------------------------------------------
 
 typedef struct _EFFECT {
-    EFF_ENUM eff_nb;
-    const char *eff_name;
+    bool canBeSelected;
+    bool isFavorite;
     byte brightness;
     byte speed;
     byte scale;
-    bool canBeSelected;
-    bool isFavorite;
+    EFF_ENUM eff_nb;
+    const char *eff_name;
     void (*func)(CRGB*,const char*);
     char *param;
     void setNone(){ eff_nb=EFF_NONE; eff_name=nullptr; brightness=127; speed=127; scale=127; canBeSelected=false; isFavorite=false; func=nullptr; param=nullptr; }
@@ -154,46 +154,129 @@ const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
 
 
 static EFFECT _EFFECTS_ARR[] = {
-    {EFF_NONE, nullptr, 127, 127, 127, false, false, nullptr, nullptr},
+    {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
     
-    {EFF_SPARKLES, T_SPARKLES, 127, 127, 127, true, true, sparklesRoutine, nullptr},
-    {EFF_FIRE, T_FIRE, 127, 127, 127, true, true, fireRoutine, nullptr},
-    {EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, 127, 127, 127, true, true, fire2012WithPalette, nullptr},
-    {EFF_RAINBOW_2D, T_RAINBOW_2D, 127, 127, 127, true, true, rainbowDiagonalRoutine, nullptr},
-    {EFF_COLORS, T_COLORS, 127, 127, 127, true, true, colorsRoutine, nullptr},
-    {EFF_PULSE, T_PULSE, 127, 127, 127, true, true, pulseRoutine, nullptr},
-    {EFF_MATRIX, T_MATRIX, 127, 127, 127, true, true, matrixRoutine, nullptr},
-    {EFF_SNOW, T_SNOW, 127, 127, 127, true, true, snowRoutine, nullptr},    
-    {EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, 127, 127, 127, true, true, snowStormStarfallRoutine, nullptr},
-    {EFF_LIGHTERS, T_LIGHTERS, 127, 127, 127, true, true, lightersRoutine, nullptr},
-    {EFF_LIGHTER_TRACES, T_LIGHTER_TRACES, 127, 127, 127, true, true, ballsRoutine, nullptr},
-    {EFF_PAINTBALL, T_PAINTBALL, 127, 127, 127, true, true, lightBallsRoutine, nullptr},
-    {EFF_CUBE, T_CUBE, 127, 127, 127, true, true, ballRoutine, nullptr},
-    {EFF_BBALS, T_BBALS, 127, 127, 127, true, true, BBallsRoutine, nullptr},
-    {EFF_MADNESS, T_MADNESS, 127, 127, 127, true, true, madnessNoiseRoutine, nullptr},
-    {EFF_RAINBOW, T_RAINBOW, 127, 127, 127, true, true, rainbowNoiseRoutine, nullptr},
-    {EFF_RAINBOW_STRIPE, T_RAINBOW_STRIPE, 127, 127, 127, true, true, rainbowStripeNoiseRoutine, nullptr},
-    {EFF_ZEBRA, T_ZEBRA, 127, 127, 127, true, true, zebraNoiseRoutine, nullptr},
-    {EFF_FOREST, T_FOREST, 127, 127, 127, true, true, forestNoiseRoutine, nullptr},
-    {EFF_OCEAN, T_OCEAN, 127, 127, 127, true, true, oceanNoiseRoutine, nullptr},
-    {EFF_PLASMA, T_PLASMA, 127, 127, 127, true, true, plasmaNoiseRoutine, nullptr},
-    {EFF_CLOUDS, T_CLOUDS, 127, 127, 127, true, true, cloudsNoiseRoutine, nullptr},
-    {EFF_LAVA, T_LAVA, 127, 127, 127, true, true, lavaNoiseRoutine, nullptr},
-    {EFF_SINUSOID3, T_SINUSOID3, 127, 127, 127, true, true, Sinusoid3Routine, nullptr},
-    {EFF_METABALLS, T_METABALLS, 127, 127, 127, true, true, metaBallsRoutine, nullptr},
-    {EFF_SPIRO, T_SPIRO, 127, 127, 127, true, true, spiroRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SPARKLES, T_SPARKLES, sparklesRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_FIRE, T_FIRE, fireRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, fire2012WithPalette, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, rainbowDiagonalRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_COLORS, T_COLORS, colorsRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_PULSE, T_PULSE, pulseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_MATRIX, T_MATRIX, matrixRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SNOW, T_SNOW, snowRoutine, nullptr},    
+    {true, true, 127, 127, 127, EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, snowStormStarfallRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_LIGHTERS, T_LIGHTERS, lightersRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_LIGHTER_TRACES, T_LIGHTER_TRACES, ballsRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_PAINTBALL, T_PAINTBALL, lightBallsRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_CUBE, T_CUBE, ballRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_BBALS, T_BBALS, BBallsRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_MADNESS, T_MADNESS, madnessNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOW, T_RAINBOW, rainbowNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOW_STRIPE, T_RAINBOW_STRIPE, rainbowStripeNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_ZEBRA, T_ZEBRA, zebraNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_FOREST, T_FOREST, forestNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_OCEAN, T_OCEAN, oceanNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_PLASMA, T_PLASMA, plasmaNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_CLOUDS, T_CLOUDS, cloudsNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_LAVA, T_LAVA, lavaNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SINUSOID3, T_SINUSOID3, Sinusoid3Routine, nullptr},
+    {true, true, 127, 127, 127, EFF_METABALLS, T_METABALLS, metaBallsRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SPIRO, T_SPIRO, spiroRoutine, nullptr},
 
-    {EFF_WHITE_COLOR, T_WHITE_COLOR, 127, 127, 127, true, true, whiteColorStripeRoutine, nullptr}
+    {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, whiteColorStripeRoutine, nullptr}
+};
+
+#define bballsMaxNUM_BALLS      (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+#define BALLS_AMOUNT          (7U)                   // максимальное количество "шариков"
+#define LIGHTERS_AM           (100U)                 // светлячки
+class SHARED_MEM {
+public:
+    union {
+		struct { // spiroRoutine
+            boolean spiroincrement;
+            boolean spirohandledChange;
+            byte spirohueoffset;
+            uint8_t spirocount;
+            float spirotheta1;
+            float spirotheta2;
+		};
+        struct { // BouncingBalls2014
+            uint8_t bballsCOLOR[bballsMaxNUM_BALLS] ;                   // прикручено при адаптации для разноцветных мячиков
+            uint8_t bballsX[bballsMaxNUM_BALLS] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
+            int   bballsPos[bballsMaxNUM_BALLS] ;                       // The integer position of the dot on the strip (LED index)
+            float bballsH[bballsMaxNUM_BALLS] ;                         // An array of heights
+            float bballsVImpact[bballsMaxNUM_BALLS] ;                   // As time goes on the impact velocity will change, so make an array to store those values
+            float bballsTCycle[bballsMaxNUM_BALLS] ;                    // The time since the last time the ball struck the ground
+            float bballsCOR[bballsMaxNUM_BALLS] ;                       // Coefficient of Restitution (bounce damping)
+            long  bballsTLast[bballsMaxNUM_BALLS] ;                     // The clock time of the last ground strike
+		};
+        struct {
+            //-- 3D Noise эффектцы --------------
+            uint8_t ihue;
+            uint8_t colorLoop;
+            uint16_t speed;                                        // speed is set dynamically once we've started up
+            uint16_t scale;                                        // scale is set dynamically once we've started up
+            uint16_t x;
+            uint16_t y;
+            uint16_t z;
+            #if (WIDTH > HEIGHT)
+            uint8_t noise[WIDTH][WIDTH];
+            #else
+            uint8_t noise[HEIGHT][HEIGHT];
+            #endif
+            //CRGBPalette16 currentPalette;
+		};
+        struct {
+            int16_t ballColor;
+            int8_t vectorB[2U];
+            float coordB[2U];
+		};
+        struct {
+            int8_t vector[BALLS_AMOUNT][2U];
+            int16_t coord[BALLS_AMOUNT][2U];
+		};
+        struct {
+            uint8_t loopCounter;
+            int8_t lightersSpeed[2U][LIGHTERS_AM];
+            int16_t lightersPos[2U][LIGHTERS_AM];
+            uint16_t lightersColor[LIGHTERS_AM];
+		};
+        struct { // радуги
+            uint8_t hue;
+		};
+        struct { // pulse
+            uint8_t pulse_hue;
+            uint8_t pulse_step;
+		};
+        struct {
+            // Array of temperature readings at each simulation cell
+            byte heat[WIDTH][HEIGHT];
+		};
+        struct { // Огонь
+            uint8_t pcnt;
+            uint8_t shiftHue[HEIGHT];                              // массив дороожки горизонтального смещения пламени (hueMask)
+            uint8_t line[WIDTH];
+            uint8_t shiftValue[HEIGHT];                            // массив дороожки горизонтального смещения пламени (hueValue)
+            unsigned char matrixValue[8][16];
+		};
+        struct {
+            float test; // dummy_struct %)
+		};
+		//uint8_t raw[1024];
+	};
+    CRGBPalette16 currentPalette; //-- 3D Noise эффектцы --------------
 };
 
 class EffectWorker {
 private:
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
-    EFFECT* effects = _EFFECTS_ARR;
+
     EFF_ENUM curEff = EFF_NONE;
     unsigned int arrIdx = 0;
     unsigned int storedIdx = 0; // предыдущий эффект
+    EFFECT* effects = _EFFECTS_ARR;
+    
     EffectWorker(const EffectWorker&);  // noncopyable
     EffectWorker& operator=(const EffectWorker&);  // noncopyable
 public:

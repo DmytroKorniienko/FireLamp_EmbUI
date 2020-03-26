@@ -55,38 +55,42 @@ typedef enum _LAMPMODE {
 
 class LAMP {
 private:
+#pragma pack(push,1)
+ struct {
+    bool MIRR_V:1; // отзрекаливание по V
+    bool MIRR_H:1; // отзрекаливание по H
+    bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
+    bool ONflag:1; // флаг включения/выключения
+    bool manualOff:1;
+    bool loadingFlag:1; // флаг для начальной инициализации эффекта
+    bool isFaderOn:1; // признак того, что выполняется фейдер текущего эффекта
+    bool manualFader:1; // ручной или автоматический фейдер
+    bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
+    bool isFirstHoldingPress:1; // флаг: только начали удерживать?
+    bool startButtonHolding:1; // кнопка удерживается
+    bool buttonEnabled:1; // кнопка обрабатывается если true
+    bool brightDirection:1;
+    bool speedDirection:1;
+    bool scaleDirection:1;
+    bool setDirectionTimeout:1; // флаг: начало отсчета таймаута на смену направления регулировки
+    bool isStringPrinting:1; // печатается ли прямо сейчас строка?
+ };
+ #pragma pack(pop)
+    //Button
+    byte numHold = 0; // режим удержания
+    byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
+
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
-
-    void(*updateParmFunc)() = nullptr; // функтор обновления параметров
-
-    bool MIRR_V; // отзрекаливание по V
-    bool MIRR_H; // отзрекаливание по H
 
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     EFF_ENUM storedEffect = EFF_NONE;
-    LAMP(const LAMP&);  // noncopyable
-    LAMP& operator=(const LAMP&);  // noncopyable
 
-    CRGB leds[NUM_LEDS];
-#ifdef USELEDBUF
-    CRGB ledsbuff[NUM_LEDS]; // буфер под эффекты
-#endif
-    bool dawnFlag = false; // флаг устанавливается будильником "рассвет"
-    bool ONflag = false; // флаг включения/выключения
-    bool manualOff = false;
-    bool loadingFlag = true; // флаг для начальной инициализации эффекта
-    bool isFaderOn = false; // признак того, что выполняется фейдер текущего эффекта
-    bool manualFader = true; // ручной или автоматический фейдер
     uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
     uint32_t effDelay; // доп. задержка для эффектов
 
-    //Button
-    bool isFirstHoldingPress = false; // флаг: только начали удерживать?
-    bool startButtonHolding = false; // кнопка удерживается
-    byte numHold = 0; // режим удержания
-    bool buttonEnabled = true; // кнопка обрабатывается если true
+    void(*updateParmFunc)() = nullptr; // функтор обновления параметров
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
@@ -97,14 +101,10 @@ private:
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
 
-    byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
-    bool isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
 #ifdef ESP_USE_BUTTON
     GButton touch;               
     void buttonTick(); // обработчик кнопки
-    bool brightDirection, speedDirection, scaleDirection;
     timerMinim tmChangeDirectionTimer;     // таймаут смены направления увеличение-уменьшение при удержании кнопки
-    bool setDirectionTimeout = false;                    // флаг: начало отсчета таймаута на смену направления регулировки
     void changeDirection(byte numHold);
     void debugPrint();
 #endif
@@ -122,7 +122,6 @@ private:
 #endif
     static void showWarning(CRGB::HTMLColorCode color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
 
-    bool isStringPrinting = false; // печатается ли прямо сейчас строка?
     void doPrintStringToLamp(const char* text = nullptr, CRGB::HTMLColorCode letterColor = CRGB::Black);
     bool fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, bool stopText = false, bool isInverse = false, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT);
     void drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
@@ -187,5 +186,12 @@ public:
     void dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(value); } }
     CRGB getLeds(uint16_t idx) { return leds[idx]; }
     ~LAMP() {}
+private:
+    LAMP(const LAMP&);  // noncopyable
+    LAMP& operator=(const LAMP&);  // noncopyable
+    CRGB leds[NUM_LEDS];
+#ifdef USELEDBUF
+    CRGB ledsbuff[NUM_LEDS]; // буфер под эффекты
+#endif
 };
 

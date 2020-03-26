@@ -653,6 +653,23 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
 #endif
     {
       init(); // инициализация и настройка лампы
+      MIRR_V = false; // отзрекаливание по V
+      MIRR_H = false; // отзрекаливание по H
+      dawnFlag = false; // флаг устанавливается будильником "рассвет"
+      ONflag = false; // флаг включения/выключения
+      manualOff = false;
+      loadingFlag = true; // флаг для начальной инициализации эффекта
+      isFaderOn = false; // признак того, что выполняется фейдер текущего эффекта
+      manualFader = false; // ручной или автоматический фейдер
+      isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
+      isFirstHoldingPress = false; // флаг: только начали удерживать?
+      startButtonHolding = false; // кнопка удерживается
+      buttonEnabled = true; // кнопка обрабатывается если true
+      brightDirection = false;
+      speedDirection = false;
+      scaleDirection = false;
+      setDirectionTimeout = false; // флаг: начало отсчета таймаута на смену направления регулировки
+      isStringPrinting = false; // печатается ли прямо сейчас строка?
     }
 
     void LAMP::startFader(bool isManual=false)

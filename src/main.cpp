@@ -47,9 +47,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 // глобальные переменные для работы с ними в программе
+SHARED_MEM GSHMEM; // глобальная общая память эффектов
 int mqtt_int; // интервал отправки данных по MQTT в секундах 
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
+
 
 void setup() {
     Serial.begin(115200);

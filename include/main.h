@@ -42,6 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 
 // глобальные переменные для работы с ними в программе
+extern SHARED_MEM GSHMEM; // Глобальная разделяемая память эффектов
 extern int mqtt_int; // интервал отправки данных по MQTT в секундах 
 extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 extern LAMP myLamp; // Объект лампы
