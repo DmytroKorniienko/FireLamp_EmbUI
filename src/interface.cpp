@@ -41,6 +41,45 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 static EFFECT *prevEffect = nullptr;
 static bool isSetup = false;
 static bool isTmSetup = false;
+static bool isAddSetup = false;
+
+void btnFDelCallback()
+{
+    // Удаление конфигурации из ФС
+    String filename = String(F("/cfg/"))+jee.param(F("fileName"));
+    if(filename.length()>4)
+        if(SPIFFS.begin()){
+            SPIFFS.remove(filename);
+        }
+    isAddSetup = false;
+    jee.var(F("isAddSetup"), F("false"));
+    jee.var(F("fileName"),F(""));
+    jee._refresh = true;
+}
+
+void btnFLoadCallback()
+{
+    // Загрузка сохраненной конфигурации эффектов вместо текущей
+    String fn = jee.param(F("fileList"));
+    myLamp.effects.loadConfig(fn.c_str());
+    jee.var(F("fileName"),fn);
+    jee._refresh = true;
+}
+
+void btnFSaveCallback()
+{
+    // Сохранение текущей конфигурации эффектов в ФС
+    String filename = String(F("/cfg/"))+jee.param(F("fileName"));
+    if(filename.length()>4)
+        if(SPIFFS.begin()){
+            // if(!SPIFFS.exists(F("/cfg")))
+            //     SPIFFS.mkdir(F("/cfg"));
+            myLamp.effects.saveConfig(filename.c_str());
+        }
+    isAddSetup = false;
+    jee.var(F("isAddSetup"), F("false"));
+    jee._refresh = true;
+}
 
 void btnTxtSendCallback()
 {
@@ -95,6 +134,9 @@ void jeebuttonshandle()
     jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
     jee.btnCallback(F("bDemo"), bDemoCallback);
     jee.btnCallback(F("btnTxtSend"), btnTxtSendCallback);
+    jee.btnCallback(F("btnFLoad"),btnFLoadCallback);
+    jee.btnCallback(F("btnFSave"),btnFSaveCallback);
+    jee.btnCallback(F("btnFDel"),btnFDelCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -140,6 +182,9 @@ void create_parameters(){
     jee.var_create(F("isTmSync"), F("true"));
 
     jee.var_create(F("isGLBbr"),F("false"));
+
+    jee.var_create(F("isAddSetup"), F("false"));
+    jee.var_create(F("fileName"), F("cfg1"));
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс
@@ -159,12 +204,13 @@ void interface(){ // функция в которой мф формируем в
 
     EFFECT enEff; enEff.setNone();
     jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
-    char nameBuffer[64]; // Exception (3) при обращении к PROGMEM, поэтому ход конем - копируем во временный буффер
+    //char nameBuffer[64]; // Exception (3) при обращении к PROGMEM, поэтому ход конем - копируем во временный буффер
     do {
         enEff = *myLamp.effects.enumNextEffect(&enEff);
         if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || isSetup)){
-            strncpy_P(nameBuffer, enEff.eff_name, sizeof(nameBuffer)-1);
-            jee.option(String((int)enEff.eff_nb), nameBuffer);//String(enEff.eff_name).c_str());//enEff.eff_name);
+            //strncpy_P(nameBuffer, enEff.eff_name, sizeof(nameBuffer)-1);
+            //jee.option(String((int)enEff.eff_nb), nameBuffer);
+            jee.option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
         }
     } while((enEff.eff_nb!=EFF_NONE));
     jee.select(F("effList"), F("Эффект"));
@@ -209,11 +255,32 @@ void interface(){ // функция в которой мф формируем в
         jee.formWifi(); // форма настроек Wi-Fi
         jee.formMqtt(); // форма настроек MQTT
     }
-    jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-    jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
-    jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-    jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-    jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));    
+    jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
+    if(isAddSetup){
+        jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
+        jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
+        jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
+        jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
+        jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
+        jee.text(F("fileName"),F("Конфигурация"));
+        jee.button(F("btnFSave"),F("green"),F("Записать в ФС"));
+        jee.button(F("btnFDel"),F("red"),F("Удалить из ФС"));
+    } else {
+        if(SPIFFS.begin()){
+            Dir dir = SPIFFS.openDir(F("/cfg"));
+            String fn;
+            while (dir.next()) {
+                fn=dir.fileName();
+                fn.replace(F("/cfg/"),F(""));
+                //LOG.println(fn);
+                jee.option(fn, fn);
+            }
+        }
+        String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
+        jee.select(F("fileList"), cfg);
+
+        jee.button(F("btnFLoad"),F("gray"),F("Считать с ФС"));
+    }
     jee.page(); // разделитель между страницами
 }
 
@@ -230,6 +297,11 @@ void update(){ // функция выполняется после ввода д
 
     if(isTmSetup!=(jee.param(F("isTmSetup"))==F("true"))){
         isTmSetup = !isTmSetup;
+        isRefresh = true;
+    }
+
+    if(isAddSetup!=(jee.param(F("isAddSetup"))==F("true"))){
+        isAddSetup = !isAddSetup;
         isRefresh = true;
     }
 

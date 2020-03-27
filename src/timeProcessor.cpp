@@ -150,10 +150,10 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
 bool TimeProcessor::getTimeNTP(unsigned long timer)
 {
     WiFiUDP wifiUdp;
-    char ntpNameBuffer[64]; // NTPClient почему-то падает в Exception (3) при попытке передать PSTR, поэтому ход конем - копируем во временный буффер
-    strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
-    NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
-    //NTPClient timeClient(wifiUdp, String(NTP_ADDRESS).c_str(), 0); // utcOffsetInSeconds
+    //char ntpNameBuffer[64]; // NTPClient почему-то падает в Exception (3) при попытке передать PSTR, поэтому ход конем - копируем во временный буффер
+    //strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
+    //NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
+    NTPClient timeClient(wifiUdp, String(FPSTR(NTP_ADDRESS)).c_str(), 0); // utcOffsetInSeconds
 #ifdef LAMP_DEBUG
   Serial.println(F("Time updating via NTP..."));
 #endif

@@ -112,7 +112,7 @@ void jeeui2::password(const String &id, const String &label){
 
 void jeeui2::option(const String &value, const String &label){
     char buffer[256];
-    sprintf_P(buffer,PSTR("{\"label\":\"%s\",\"value\":%s},"),label.c_str(), value.c_str());
+    sprintf_P(buffer,PSTR("{\"label\":\"%s\",\"value\":\"%s\"},"),label.c_str(), value.c_str());
 
     jeeui2::op.concat(buffer);
 }
@@ -121,7 +121,7 @@ void jeeui2::select(const String &id, const String &label){
     char buffer[256];
     int lastIndex = op.length() - 1;
     op.remove(lastIndex);
-    sprintf_P(buffer,PSTR("{\"html\":\"select\",\"id\":\"%s\",\"value\":%s,\"label\":\"%s\",\"options\":["),id.c_str(),param(id).c_str(),label.c_str());
+    sprintf_P(buffer,PSTR("{\"html\":\"select\",\"id\":\"%s\",\"value\":\"%s\",\"label\":\"%s\",\"options\":["),id.c_str(),param(id).c_str(),label.c_str());
     jeeui2::buf.concat(buffer);
     jeeui2::buf.concat(op);
     jeeui2::buf.concat(F("]},"));

@@ -276,7 +276,7 @@ private:
     unsigned int arrIdx = 0;
     unsigned int storedIdx = 0; // предыдущий эффект
     EFFECT* effects = _EFFECTS_ARR;
-    
+
     EffectWorker(const EffectWorker&);  // noncopyable
     EffectWorker& operator=(const EffectWorker&);  // noncopyable
 public:
@@ -286,9 +286,13 @@ public:
 
     ~EffectWorker() {}
 
-    void loadConfig() {
+    void loadConfig(const char *cfg = nullptr) {
         if(SPIFFS.begin()){
-            File configFile = SPIFFS.open(F("/eff_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+            File configFile;
+            if(cfg == nullptr)
+                configFile = SPIFFS.open(F("/eff_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+            else
+                configFile = SPIFFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
             String cfg_str = configFile.readString();
 
             if (cfg_str == F("")){
@@ -342,9 +346,13 @@ public:
         }
     }
 
-    void saveConfig() {
+    void saveConfig(const char *cfg = nullptr) {
         if(SPIFFS.begin()){
-            File configFile = SPIFFS.open(F("/eff_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+            File configFile;
+            if(cfg == nullptr)
+                configFile = SPIFFS.open(F("/eff_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+            else
+                configFile = SPIFFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
             EFFECT *cur_eff;
 
             configFile.print("[");
