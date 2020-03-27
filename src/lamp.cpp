@@ -136,6 +136,9 @@ void LAMP::handle()
       return;
   half_second_handlers = millis();
 
+  newYearMessageHandle();
+
+
 #ifdef OTA
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
 #endif
@@ -318,14 +321,7 @@ if(touch.isHold() || !touch.isHolded())
   #ifdef LAMP_DEBUG
         LOG.printf_P(PSTR("Одиночное нажатие, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
   #endif
-      // #ifdef ONETOUCH_CLOCK     
-      // if (!osd_printCurrentTime(CRGB::White)){}          // попытка напечатать время. Если не получается или текст уже на экране, то переходим ко включению
-      // #endif  
-
-      // #ifdef ONETOUCH_CLOCK
-      // printTime(thisTime, true, ONflag, false, false); // оригинальный вариант вывода времени
-      // #endif
-      
+     
       if(!ONflag){
         numHold = 0;
         mode = MODE_NORMAL;
@@ -472,14 +468,9 @@ void LAMP::effectsTick()
       memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
 #endif
       
-#ifdef NEWYEAR_MESSAGE
-      NewYearMessagePrint(); // отрабатывает только во включенном состоянии
-#endif
     }
 
     doPrintStringToLamp(); // обработчик печати строки
-    //onOffTimePrint();
-    //osd_Tick(); // вывод сообщений по методу Palpalych https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proshivki-ot-gunner47.2418/page-26#post-26788
 
 #ifdef VERTGAUGE
       if(ONflag)
@@ -628,7 +619,7 @@ bool LAMP::faderTick(){
               effects.moveNext();
 
 #ifdef LAMP_DEBUG
-          LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , mode, storedEffect);
+          LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
 #endif
             if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
             setLoading();
@@ -643,7 +634,8 @@ bool LAMP::faderTick(){
       return isFaderOn;
     }
 
-LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED)
+LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000)
+    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef ESP_USE_BUTTON    
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
@@ -995,5 +987,45 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
     }
   } else {
     fillStringManual(toPrint.c_str(), _letterColor, true);
+  }
+}
+
+
+static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
+static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";
+
+void LAMP::newYearMessageHandle()
+{
+  if(!tmNewYearMessage.isReady() || timeProcessor.isDirtyTime())
+    return;
+
+  {
+    char strMessage[256]; // буффер
+    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUnixTime(); // unix_diff_time
+
+    if(calc<0) {
+      sprintf_P(strMessage, NY_MDG_STRING2, timeProcessor.getYear());
+    } else if(calc<300){
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, F("секунд"));
+    } else if(calc/60<60){
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), F("минут"));
+    } else if(calc/(60*60)<60){
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), F("часов"));
+    } else {
+      byte calcN=(int)(calc/(60*60*24))%10; // остаток от деления на 10
+      String str;
+      if(calcN>=2 && calcN<=4)
+        str = F("дня");
+      else if(calc!=11 && calcN==1)
+        str = F("день");
+      else
+        str = F("дней");
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60*24)), str.c_str());
+    }
+
+#ifdef LAMP_DEBUG
+    LOG.printf_P(PSTR("Prepared message: %s\n"), strMessage);
+#endif
+    sendStringToLamp(strMessage, LETTER_COLOR);
   }
 }

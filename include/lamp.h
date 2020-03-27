@@ -100,6 +100,10 @@ private:
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
+    timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
+    
+    time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
+
 
 #ifdef ESP_USE_BUTTON
     GButton touch;               
@@ -163,6 +167,10 @@ public:
 
     void startDemoMode();
     void startNormalMode();
+
+    void newYearMessageHandle();
+    void setNYMessageTimer(int in){ tmNewYearMessage.setInterval(in*60*1000); tmNewYearMessage.reset(); }
+    void setNYUnixTime(time_t tm){ NEWYEAR_UNIXDATETIME = tm; }
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}

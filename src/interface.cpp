@@ -42,6 +42,7 @@ static EFFECT *prevEffect = nullptr;
 static bool isSetup = false;
 static bool isTmSetup = false;
 static bool isAddSetup = false;
+static uint8_t addSList = 1;
 
 void btnFDelCallback()
 {
@@ -185,6 +186,12 @@ void create_parameters(){
 
     jee.var_create(F("isAddSetup"), F("false"));
     jee.var_create(F("fileName"), F("cfg1"));
+
+    jee.var_create(F("ny_period"), F("0"));
+    jee.var_create(F("ny_unix"), F("1609459200"));
+
+    jee.var_create(F("addSList"),F("1"));
+
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс
@@ -257,14 +264,37 @@ void interface(){ // функция в которой мф формируем в
     }
     jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
     if(isAddSetup){
-        jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-        jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
-        jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-        jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-        jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
-        jee.text(F("fileName"),F("Конфигурация"));
-        jee.button(F("btnFSave"),F("green"),F("Записать в ФС"));
-        jee.button(F("btnFDel"),F("red"),F("Удалить из ФС"));
+        jee.option(F("1"), F("Конфигурация"));
+        jee.option(F("2"), F("Время"));
+        jee.option(F("3"), F("Другое"));
+        jee.select(F("addSList"), F("Группа настроек"));
+        switch (addSList)
+        {
+        case 1:
+            jee.text(F("fileName"),F("Конфигурация"));
+            jee.button(F("btnFSave"),F("green"),F("Записать в ФС"));
+            jee.button(F("btnFDel"),F("red"),F("Удалить из ФС"));
+            break;
+         case 2:
+            jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
+            jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
+            jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
+            break;       
+         case 3:
+            jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
+            jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
+            jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
+            jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));         
+            break;       
+         case 4:
+            break;       
+         case 5:
+            break;       
+        default:
+            break;
+        }
+
+
     } else {
         if(SPIFFS.begin()){
             Dir dir = SPIFFS.openDir(F("/cfg"));
@@ -344,11 +374,21 @@ void update(){ // функция выполняется после ввода д
 
     prevEffect = curEff;
 
+    uint8_t cur_addSList = jee.param(F("addSList")).toInt();
+    if(addSList!=cur_addSList){
+        addSList = cur_addSList;
+        isRefresh = true;
+    }
+
     myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
     myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
+    myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
+    myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
+
+
     if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
     myLamp.timeProcessor.setIsSyncOnline(jee.param(F("isTmSync"))==F("true"));

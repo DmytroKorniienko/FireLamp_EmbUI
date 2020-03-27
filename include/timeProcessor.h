@@ -53,7 +53,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include <WiFiUdp.h>
 //#include <NTP.h>
-//#include <TimeLib.h>
+#include <TimeLib.h>
 #include <NTPClient.h>
 //#include <Timezone.h>
 
@@ -96,5 +96,7 @@ public:
     String getFormattedShortTime();
     void handleTime(bool force=false);
     void SetOffset(int val) { if(sync==NTP_SYNC) raw_offset=val;}
+    bool isDirtyTime() {return sync==SYNC_TYPE::NOT_SYNC;}
+    int getYear() { return year(getUnixTime()); }
 };
 #endif
