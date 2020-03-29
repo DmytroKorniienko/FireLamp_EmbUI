@@ -78,18 +78,19 @@ void TimeProcessor::handleTime(bool force)
 String TimeProcessor::getFormattedShortTime()
 {
     char buffer[10];
-    unsigned long val, val_tm;
+    time_t ut=getUnixTime();
+    // unsigned long val, val_tm;
 
-    if(!isSynced){
-        val = dirtytime*1000; val_tm = query_last_dirtytime_timer;
-    } else {
-        val = (unixtime%86400UL+raw_offset)*1000; val_tm = query_last_timer;
-    }
+    // if(!isSynced){
+    //     val = dirtytime*1000; val_tm = query_last_dirtytime_timer;
+    // } else {
+    //     val = (unixtime%86400UL+raw_offset)*1000; val_tm = query_last_timer;
+    // }
 
-    //LOG.println((millis()-val_tm));
-    sprintf_P(buffer,PSTR("%02u:%02u"),(unsigned)((val+(millis()-val_tm))/(3600000UL)%24) // 3600*1000
-    ,(unsigned)((val+(millis()-val_tm))%(3600000UL))/(60000UL)); // 60*1000
-
+    // //LOG.println((millis()-val_tm));
+    // sprintf_P(buffer,PSTR("%02u:%02u"),(unsigned)((val+(millis()-val_tm))/(3600000UL)%24) // 3600*1000
+    // ,(unsigned)((val+(millis()-val_tm))%(3600000UL))/(60000UL)); // 60*1000
+    sprintf_P(buffer,PSTR("%02u:%02u"),hour(ut),minute(ut));
     return String(buffer);
 }
 
@@ -111,14 +112,18 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
 {
     String result;
     if(!strlen(timezone)){
+        timer = millis();
         result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
     }
     else {
+        timer = millis();
         String tmpStr(PSTR("http://worldtimeapi.org/api/timezone/"));
         tmpStr+=timezone;
         result = getHttpData(tmpStr.c_str());
-        if(result.length()<50) // {"error":"unknown location"}
+        if(result.length()<50){ // {"error":"unknown location"}
+            timer = millis();
             result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
+        }
     }
     query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
     DynamicJsonDocument doc(768);

@@ -92,7 +92,7 @@ public:
     void setTime(const char *var);
     bool getIsSyncOnline() {return isSyncOnline;}
     void setIsSyncOnline(bool val) {isSyncOnline=val;}
-    long getUnixTime() {return (isSynced?unixtime:dirtytime)+((millis()-query_last_dirtytime_timer)/1000);}
+    long getUnixTime() {return (isSynced?unixtime+raw_offset+(millis()-query_last_timer)/1000:dirtytime+raw_offset+(millis()-query_last_dirtytime_timer)/1000);}
     String getFormattedShortTime();
     void handleTime(bool force=false);
     void SetOffset(int val) { if(sync==NTP_SYNC) raw_offset=val;}

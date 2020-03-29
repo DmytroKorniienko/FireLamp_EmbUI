@@ -1035,6 +1035,7 @@ void LAMP::periodicTimeHandle()
   static bool cancel = false;
   
   time_t tm = timeProcessor.getUnixTime();
+  //LOG.println(tm);
   if(second(tm)) {cancel=false; return;}
   if(cancel) return;
 
@@ -1048,29 +1049,29 @@ void LAMP::periodicTimeHandle()
         doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_5:
-      if(!tm%5 && tm%60)
+      if(!(tm%5) && tm%60)
         doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_10:
-      if(!tm%10 && tm%60)
+      if(!(tm%10) && tm%60)
         doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_15:
-      if(!tm%15 && tm%60)
+      if(!(tm%15) && tm%60)
         doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_30:
-      if(!tm%30 && tm%60)
+      if(!(tm%30) && tm%60)
         doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_60:
-      if(!tm%60)
+      if(!(tm%60))
         doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
       break;
     
     default:
       break;
   }
-  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint!=PERIODICTIME::PT_NOT_SHOW && !tm%60)
+  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint!=PERIODICTIME::PT_NOT_SHOW && !(tm%60))
     doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
 }
