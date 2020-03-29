@@ -96,7 +96,7 @@ const PROGMEM byte PULL_MODE=HIGH_PULL;                     // подтяжка 
 #define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
 
 //#define NTP_ADDRESS           "pool.ntp.org"              // сервер времени
-const char NTP_ADDRESS[] PROGMEM = "pool.ntp.org";     // сервер времени, можно также попробовать "ntp2.colocall.net"
+const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер времени, можно также попробовать "ntp2.colocall.net"
 
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)
 #define LET_WIDTH             (5U)                          // ширина буквы шрифта

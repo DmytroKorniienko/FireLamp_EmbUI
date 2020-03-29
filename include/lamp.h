@@ -78,6 +78,7 @@ private:
  #pragma pack(pop)
     //Button
     byte numHold = 0; // режим удержания
+    byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
@@ -89,6 +90,8 @@ private:
 
     uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
     uint32_t effDelay; // доп. задержка для эффектов
+
+    PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
     void(*updateParmFunc)() = nullptr; // функтор обновления параметров
 
@@ -162,6 +165,10 @@ public:
     void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
+    void setTextOffset(uint8_t val) { txtOffset=val;}
+    void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
+
+    void periodicTimeHandle();
 
     void startFader(bool isManual);
 

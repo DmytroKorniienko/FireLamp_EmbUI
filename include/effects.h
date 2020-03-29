@@ -491,4 +491,14 @@ public:
     }
 };
 
+typedef enum _PERIODICTIME {
+  PT_NOT_SHOW = 1,
+  PT_EVERY_60,
+  PT_EVERY_30,
+  PT_EVERY_15,
+  PT_EVERY_10,
+  PT_EVERY_5,
+  PT_EVERY_1,
+} PERIODICTIME;
+
 #endif

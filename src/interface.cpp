@@ -173,6 +173,8 @@ void create_parameters(){
     jee.var_create(F("msg"), F(""));
     jee.var_create(F("txtColor"), F("#ffffff"));
     jee.var_create(F("txtSpeed"), F("100"));
+    jee.var_create(F("txtOf"), F("0"));
+    jee.var_create(F("perTime"), F("1"));
 
     jee.var_create(F("GlobBRI"), F("127"));
 
@@ -264,8 +266,8 @@ void interface(){ // функция в которой мф формируем в
     }
     jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
     if(isAddSetup){
-        jee.option(F("1"), F("Конфигурация"));
-        jee.option(F("2"), F("Время"));
+        jee.option(F("1"), F("Конфигурации"));
+        jee.option(F("2"), F("Время/Текст"));
         jee.option(F("3"), F("Другое"));
         jee.select(F("addSList"), F("Группа настроек"));
         switch (addSList)
@@ -279,6 +281,15 @@ void interface(){ // функция в которой мф формируем в
             jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
             jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
             jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
+            jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
+            jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
+            jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
+            jee.option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
+            jee.option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
+            jee.option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
+            jee.option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
+            jee.option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
+            jee.select(F("perTime"), F("Периодический вывод времени"));
             break;       
          case 3:
             jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
@@ -345,7 +356,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.restartDemoTimer();
 
     if(curEff->eff_nb!=EFF_NONE){
-        if((curEff!=prevEffect && prevEffect!=nullptr) || isRefresh){
+        if((curEff!=prevEffect  || isRefresh) && prevEffect!=nullptr){
             jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
             jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
             jee.var(F("bright"),String(myLamp.getLampBrightness()));
@@ -381,6 +392,9 @@ void update(){ // функция выполняется после ввода д
     }
 
     myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
+    myLamp.setTextOffset(jee.param(F("txtOf")).toInt());
+    myLamp.setPeriodicTimePrint((PERIODICTIME)jee.param(F("perTime")).toInt());
+
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));

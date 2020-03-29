@@ -137,7 +137,7 @@ void LAMP::handle()
   half_second_handlers = millis();
 
   newYearMessageHandle();
-
+  periodicTimeHandle();
 
 #ifdef OTA
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
@@ -977,7 +977,7 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, false, 1, txtOffset)){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -986,7 +986,7 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true);
+    fillStringManual(toPrint.c_str(), _letterColor, true, false, 1, txtOffset);
   }
 }
 
@@ -1006,11 +1006,11 @@ void LAMP::newYearMessageHandle()
     if(calc<0) {
       sprintf_P(strMessage, NY_MDG_STRING2, timeProcessor.getYear());
     } else if(calc<300){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, F("секунд"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, PSTR("секунд"));
     } else if(calc/60<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), F("минут"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), PSTR("минут"));
     } else if(calc/(60*60)<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), F("часов"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), PSTR("часов"));
     } else {
       byte calcN=(int)(calc/(60*60*24))%10; // остаток от деления на 10
       String str;
@@ -1028,4 +1028,49 @@ void LAMP::newYearMessageHandle()
 #endif
     sendStringToLamp(strMessage, LETTER_COLOR);
   }
+}
+
+void LAMP::periodicTimeHandle()
+{
+  static bool cancel = false;
+  
+  time_t tm = timeProcessor.getUnixTime();
+  if(second(tm)) {cancel=false; return;}
+  if(cancel) return;
+
+  cancel = true; // только раз в минуту срабатываем, на первую секунду
+  tm = hour(tm) * 60 + minute(tm);
+
+  switch (enPeriodicTimePrint)
+  {
+    case PERIODICTIME::PT_EVERY_1:
+      if(tm%60)
+        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+      break;
+    case PERIODICTIME::PT_EVERY_5:
+      if(!tm%5 && tm%60)
+        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+      break;
+    case PERIODICTIME::PT_EVERY_10:
+      if(!tm%10 && tm%60)
+        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+      break;
+    case PERIODICTIME::PT_EVERY_15:
+      if(!tm%15 && tm%60)
+        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+      break;
+    case PERIODICTIME::PT_EVERY_30:
+      if(!tm%30 && tm%60)
+        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+      break;
+    case PERIODICTIME::PT_EVERY_60:
+      if(!tm%60)
+        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
+      break;
+    
+    default:
+      break;
+  }
+  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint!=PERIODICTIME::PT_NOT_SHOW && !tm%60)
+    doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
 }

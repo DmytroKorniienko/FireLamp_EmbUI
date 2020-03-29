@@ -121,8 +121,11 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
             result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
     }
     query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
-    DynamicJsonDocument doc(512);
+    DynamicJsonDocument doc(768);
     DeserializationError error = deserializeJson(doc, result);
+#ifdef LAMP_DEBUG
+    LOG.println(result);
+#endif
     if (error) {
 #ifdef LAMP_DEBUG
         LOG.print(F("deserializeJson error: "));
@@ -141,26 +144,30 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
     } else {
         if(!unixtime) isSynced = false;
     }
-#ifdef LAMP_DEBUG
-    LOG.println(result);
-#endif
+
     return isSynced;
 }
 
 bool TimeProcessor::getTimeNTP(unsigned long timer)
 {
     WiFiUDP wifiUdp;
-    //char ntpNameBuffer[64]; // NTPClient почему-то падает в Exception (3) при попытке передать PSTR, поэтому ход конем - копируем во временный буффер
-    //strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
-    //NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
-    NTPClient timeClient(wifiUdp, String(FPSTR(NTP_ADDRESS)).c_str(), 0); // utcOffsetInSeconds
+    char ntpNameBuffer[64]; // NTPClient почему-то падает в Exception (3) при попытке передать PSTR, поэтому ход конем - копируем во временный буффер
+    strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
+    NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
+    //NTPClient timeClient(wifiUdp, String(FPSTR(NTP_ADDRESS)).c_str(), 0); // utcOffsetInSeconds
 #ifdef LAMP_DEBUG
   Serial.println(F("Time updating via NTP..."));
 #endif
 
     timeClient.begin();
+    //delay(300);
+    timer = millis();
     timeClient.update();
-    if(timeClient.getEpochTime()<9999999) timeClient.update(); // что-то пошло не так, попытаемся еще раз
+    if(timeClient.getEpochTime()<9999999) {  // что-то пошло не так, попытаемся еще раз c задержкой
+        timer = millis();
+        delay(300);
+        timeClient.update();
+    }
 
 #ifdef LAMP_DEBUG
     LOG.println(timeClient.getEpochTime());
