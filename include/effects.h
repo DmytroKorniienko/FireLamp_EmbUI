@@ -77,6 +77,7 @@ EFF_BBALS,                                    // Прыгающие мячики
 EFF_SINUSOID3,                                // Синусоид 3
 EFF_METABALLS,                                // Метасферы
 EFF_SPIRO,                                    // Спираль
+EFF_RAINBOWCOMET,                             // Радужная комета
 EFF_WHITE_COLOR                               // Белый свет
 } EFF_ENUM;
 
@@ -107,6 +108,7 @@ void BBallsRoutine(CRGB*, const char*);
 void Sinusoid3Routine(CRGB*, const char*);
 void metaBallsRoutine(CRGB*, const char*);
 void spiroRoutine(CRGB*, const char*);
+void rainbowCometRoutine(CRGB*, const char*);
 
 //-------------------------------------------------
 
@@ -150,6 +152,7 @@ const char T_LAVA[] PROGMEM = "Лава 3D";
 const char T_SINUSOID3[] PROGMEM = "Синусоид 3";
 const char T_METABALLS[] PROGMEM = "Метасферы";
 const char T_SPIRO[] PROGMEM = "Спираль";
+const char T_RAINBOWCOMET[] PROGMEM = "Радужная комета";
 const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
 
 
@@ -182,13 +185,15 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_SINUSOID3, T_SINUSOID3, Sinusoid3Routine, nullptr},
     {true, true, 127, 127, 127, EFF_METABALLS, T_METABALLS, metaBallsRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SPIRO, T_SPIRO, spiroRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOWCOMET, T_RAINBOWCOMET, rainbowCometRoutine, nullptr},
 
     {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, whiteColorStripeRoutine, nullptr}
 };
 
-#define bballsMaxNUM_BALLS      (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
-#define BALLS_AMOUNT          (7U)                   // максимальное количество "шариков"
-#define LIGHTERS_AM           (100U)                 // светлячки
+#define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+#define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
+#define LIGHTERS_AM            (100U)               // светлячки
+#define NUM_LAYERS             (2U)                 // The coordinates for 3 16-bit noise spaces.
 class SHARED_MEM {
 public:
     union {
@@ -259,6 +264,17 @@ public:
             uint8_t shiftValue[HEIGHT];                            // массив дороожки горизонтального смещения пламени (hueValue)
             unsigned char matrixValue[8][16];
 		};
+        struct { // радужная комета
+            uint8_t eNs_noisesmooth;
+
+            uint32_t e_x[NUM_LAYERS];
+            uint32_t e_y[NUM_LAYERS];
+            uint32_t e_z[NUM_LAYERS];
+            uint32_t e_scaleX[NUM_LAYERS];
+            uint32_t e_scaleY[NUM_LAYERS];
+            uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+        };
+
         struct {
             float test; // dummy_struct %)
 		};

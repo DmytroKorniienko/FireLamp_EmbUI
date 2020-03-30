@@ -200,6 +200,7 @@ public:
     //fadeToBlackBy
     void dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(value); } }
     CRGB getLeds(uint16_t idx) { return leds[idx]; }
+    void blur2d(uint8_t val) {::blur2d(leds,WIDTH,HEIGHT,val);}
     ~LAMP() {}
 private:
     LAMP(const LAMP&);  // noncopyable
