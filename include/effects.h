@@ -193,7 +193,7 @@ static EFFECT _EFFECTS_ARR[] = {
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
 #define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
 #define LIGHTERS_AM            (100U)               // светлячки
-#define NUM_LAYERS             (2U)                 // The coordinates for 3 16-bit noise spaces.
+#define NUM_LAYERS             (1U)                 // The coordinates for 3 16-bit noise spaces.
 class SHARED_MEM {
 public:
     union {
@@ -273,6 +273,7 @@ public:
             uint32_t e_scaleX[NUM_LAYERS];
             uint32_t e_scaleY[NUM_LAYERS];
             uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+            //uint8_t ledsbuff[sizeof(CRGB)* NUM_LEDS];
         };
 
         struct {

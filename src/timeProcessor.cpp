@@ -144,6 +144,7 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
         day_of_year=doc[F("day_of_year")];
         unixtime=doc[F("unixtime")];
         raw_offset=doc[F("raw_offset")];
+        dst_offset=doc[F("dst_offset")]; // смещение на летнее время, если есть
         if(unixtime) isSynced = true;
         sync = SYNC_TYPE::JSON_SYNC;
     } else {

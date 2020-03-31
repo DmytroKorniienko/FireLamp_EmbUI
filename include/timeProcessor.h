@@ -81,6 +81,7 @@ private:
     int day_of_year = 0;
     unsigned long int unixtime = 0;
     int raw_offset = 0;
+    int dst_offset = 0;
 
     unsigned int long query_last_dirtytime_timer;
     int dirtytime = 0; // приведено к разрешению в millis()
@@ -92,7 +93,7 @@ public:
     void setTime(const char *var);
     bool getIsSyncOnline() {return isSyncOnline;}
     void setIsSyncOnline(bool val) {isSyncOnline=val;}
-    long getUnixTime() {return (isSynced?unixtime+raw_offset+(millis()-query_last_timer)/1000:dirtytime+raw_offset+(millis()-query_last_dirtytime_timer)/1000);}
+    long getUnixTime() {return (isSynced?unixtime+raw_offset+dst_offset+(millis()-query_last_timer)/1000:dirtytime+raw_offset+dst_offset+(millis()-query_last_dirtytime_timer)/1000);}
     String getFormattedShortTime();
     void handleTime(bool force=false);
     void SetOffset(int val) { if(sync==NTP_SYNC) raw_offset=val;}
