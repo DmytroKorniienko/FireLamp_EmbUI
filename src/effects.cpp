@@ -1492,4 +1492,30 @@ void rainbowCometRoutine(CRGB *leds, const char *param)
   }
   MoveFractionalNoiseX(WIDTH / 2U - 1U);
   MoveFractionalNoiseY(HEIGHT / 2U - 1U);
+
+
+  // myLamp.dimAll(254); // < -- затухание эффекта для последующего кадрв
+  // myLamp.blur2d(e_com_BLUR);    // < -- размытие хвоста
+
+  // // gelb im Kreis
+  // byte xx = 2 + sin8( millis() / 10) / 22;
+  // byte yy = 2 + cos8( millis() / 10) / 22;
+  // myLamp.setLeds(myLamp.getPixelNumber( xx, yy), 0xFFFF00);
+
+  // // rot in einer Acht
+  // xx = 4 + sin8( millis() / 46) / 32;
+  // yy = 4 + cos8( millis() / 15) / 32;
+  // myLamp.setLeds(myLamp.getPixelNumber( xx, yy),  0xFF0000);
+
+  // // Noise
+  // GSHMEM.e_x[0] += 3000;
+  // GSHMEM.e_y[0] += 3000;
+  // GSHMEM.e_z[0] += 3000;
+  // GSHMEM.e_scaleX[0] = 8000;
+  // GSHMEM.e_scaleY[0] = 8000;
+  // FillNoise(0);
+  // MoveFractionalNoiseX(3, 0.33);
+  // MoveFractionalNoiseY(3);
+
+
 }

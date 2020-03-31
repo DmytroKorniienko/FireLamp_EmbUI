@@ -189,9 +189,16 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        if(loading) {
+            request->send(500, F("text/plain"), F("Server busy... Try again later"));
+            return;
+        }
         AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/index.html.gz"), F("text/html"));
         response->addHeader(F("Content-Encoding"), F("gzip"));
         request->send(response);
+        //if(dbg) Serial.println(F("LOADING BLOCK: index.htm"));
+        tm_loading = millis();
+        loading = true;
     });
 
     server.on(PSTR("/css/pure-min.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {

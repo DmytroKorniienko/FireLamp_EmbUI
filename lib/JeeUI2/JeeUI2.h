@@ -138,7 +138,15 @@ class jeeui2
     char mac[18]; // "ff:ff:ff:ff:ff:ff"
     bool _refresh = false;
     bool connected = false;
-    
+    bool loading = true; // признак попытки загрузки начальной страницы index.htm
+    unsigned long tm_loading = millis();
+    bool isLoading() {
+      if(loading && tm_loading+5000<millis()){
+        loading = false;
+        if(dbg) Serial.println(F("LOADING UNBLOCK"));
+      }
+      return loading;
+    }
 
     String id(const String &tpoic);
     static char m_pref[16]; // префикс MQTT
