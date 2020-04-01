@@ -174,6 +174,9 @@ public:
 
     void startDemoMode();
     void startNormalMode();
+    void startOTAUpdate();
+
+    void startOTA() { otaManager.RequestOtaUpdate(); if (otaManager.RequestOtaUpdate()) { startOTAUpdate(); } }
 
     void newYearMessageHandle();
     void setNYMessageTimer(int in){ tmNewYearMessage.setInterval(in*60*1000); tmNewYearMessage.reset(); }

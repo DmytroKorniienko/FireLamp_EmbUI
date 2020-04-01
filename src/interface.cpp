@@ -44,6 +44,12 @@ static bool isTmSetup = false;
 static bool isAddSetup = false;
 static uint8_t addSList = 1;
 
+void btnOTACallback()
+{
+    myLamp.startOTA();
+}
+
+
 void btnRefreshCallback()
 {
     jee._refresh = true;
@@ -140,10 +146,11 @@ void jeebuttonshandle()
     jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
     jee.btnCallback(F("bDemo"), bDemoCallback);
     jee.btnCallback(F("btnTxtSend"), btnTxtSendCallback);
-    jee.btnCallback(F("btnFLoad"),btnFLoadCallback);
-    jee.btnCallback(F("btnFSave"),btnFSaveCallback);
-    jee.btnCallback(F("btnFDel"),btnFDelCallback);
-    jee.btnCallback(F("btnRefresh"),btnRefreshCallback);
+    jee.btnCallback(F("btnFLoad"), btnFLoadCallback);
+    jee.btnCallback(F("btnFSave"), btnFSaveCallback);
+    jee.btnCallback(F("btnFDel"), btnFDelCallback);
+    jee.btnCallback(F("btnRefresh"), btnRefreshCallback);
+    jee.btnCallback(F("btnOTA"), btnOTACallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -302,7 +309,8 @@ void interface(){ // функция в которой мф формируем в
                 jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
                 jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
                 jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-                jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));         
+                jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV")); 
+                jee.button(F("btnOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));   
                 break;       
             case 4:
                 break;       

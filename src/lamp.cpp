@@ -378,12 +378,7 @@ if(touch.isHold() || !touch.isHolded())
       #ifdef OTA
       if (otaManager.RequestOtaUpdate())
       {
-        mode = MODE_OTA;
-        effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
-        FastLED.clear();
-        ONflag = true;
-        changePower(true);
-        if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+        startOTAUpdate();
       }
       #endif
     }
@@ -810,6 +805,17 @@ void LAMP::startNormalMode()
   FastLED.setBrightness(getNormalizedLampBrightness());
   loadingFlag = true;
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+}
+
+void LAMP::startOTAUpdate()
+{        
+  mode = MODE_OTA;
+  effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+  FastLED.clear();
+  ONflag = true;
+  changePower(true);
+  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+  myLamp.sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
 }
 
 bool LAMP::fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, bool stopText, bool isInverse, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)

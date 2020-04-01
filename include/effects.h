@@ -51,11 +51,20 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 typedef enum _EFF_ENUM {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
-EFF_SPARKLES,                                 // Конфетти
-EFF_FIRE,                                     // Огонь
-EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
-EFF_RAINBOW_2D,                               // Радуга универсальная
+EFF_WHITE_COLOR,                              // Белый свет
 EFF_COLORS,                                   // Смена цвета
+EFF_RAINBOW_2D,                               // Радуга универсальная
+EFF_SPARKLES,                                 // Конфетти
+EFF_SNOW,                                     // Снегопад
+EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
+EFF_MATRIX,                                   // Матрица
+EFF_LIGHTERS,                                 // Светлячки
+EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
+EFF_CUBE,                                     // Блуждающий кубик
+EFF_PULSE,                                    // Пульс
+EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
+EFF_FIRE,                                     // Огонь
+EFF_PAINTBALL,                                // Пейнтбол
 EFF_MADNESS,                                  // Безумие 3D
 EFF_CLOUDS,                                   // Облака 3D
 EFF_LAVA,                                     // Лава 3D
@@ -65,20 +74,12 @@ EFF_RAINBOW_STRIPE,                           // Павлин 3D
 EFF_ZEBRA,                                    // Зебра 3D
 EFF_FOREST,                                   // Лес 3D
 EFF_OCEAN,                                    // Океан 3D
-EFF_SNOW,                                     // Снегопад
-EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
-EFF_MATRIX,                                   // Матрица
-EFF_LIGHTERS,                                 // Светлячки
-EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
-EFF_PAINTBALL,                                // Пейнтбол
-EFF_CUBE,                                     // Блуждающий кубик
-EFF_PULSE,                                    // Пульс
 EFF_BBALS,                                    // Прыгающие мячики
 EFF_SINUSOID3,                                // Синусоид 3
 EFF_METABALLS,                                // Метасферы
 EFF_SPIRO,                                    // Спираль
 EFF_RAINBOWCOMET,                             // Радужная комета
-EFF_WHITE_COLOR                               // Белый свет
+EFF_RAINBOWCOMET3                             // 3 кометы
 } EFF_ENUM;
 
 void sparklesRoutine(CRGB*, const char*);
@@ -109,7 +110,7 @@ void Sinusoid3Routine(CRGB*, const char*);
 void metaBallsRoutine(CRGB*, const char*);
 void spiroRoutine(CRGB*, const char*);
 void rainbowCometRoutine(CRGB*, const char*);
-
+void rainbowComet3Routine(CRGB*, const char*);
 //-------------------------------------------------
 
 typedef struct _EFFECT {
@@ -153,41 +154,44 @@ const char T_SINUSOID3[] PROGMEM = "Синусоид 3";
 const char T_METABALLS[] PROGMEM = "Метасферы";
 const char T_SPIRO[] PROGMEM = "Спираль";
 const char T_RAINBOWCOMET[] PROGMEM = "Радужная комета";
+const char T_RAINBOWCOMET3[] PROGMEM = "Три кометы";
 const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
 
 
 static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
-    
-    {true, true, 127, 127, 127, EFF_SPARKLES, T_SPARKLES, sparklesRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FIRE, T_FIRE, fireRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, fire2012WithPalette, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, rainbowDiagonalRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, whiteColorStripeRoutine, nullptr},
+
     {true, true, 127, 127, 127, EFF_COLORS, T_COLORS, colorsRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PULSE, T_PULSE, pulseRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_MATRIX, T_MATRIX, matrixRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, rainbowDiagonalRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SPARKLES, T_SPARKLES, sparklesRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SNOW, T_SNOW, snowRoutine, nullptr},    
     {true, true, 127, 127, 127, EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, snowStormStarfallRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_MATRIX, T_MATRIX, matrixRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_LIGHTERS, T_LIGHTERS, lightersRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_LIGHTER_TRACES, T_LIGHTER_TRACES, ballsRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PAINTBALL, T_PAINTBALL, lightBallsRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_CUBE, T_CUBE, ballRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_BBALS, T_BBALS, BBallsRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_PULSE, T_PULSE, pulseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, fire2012WithPalette, nullptr},
+    {true, true, 127, 127, 127, EFF_FIRE, T_FIRE, fireRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_PAINTBALL, T_PAINTBALL, lightBallsRoutine, nullptr},
+
     {true, true, 127, 127, 127, EFF_MADNESS, T_MADNESS, madnessNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_CLOUDS, T_CLOUDS, cloudsNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_LAVA, T_LAVA, lavaNoiseRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_PLASMA, T_PLASMA, plasmaNoiseRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAINBOW, T_RAINBOW, rainbowNoiseRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAINBOW_STRIPE, T_RAINBOW_STRIPE, rainbowStripeNoiseRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_ZEBRA, T_ZEBRA, zebraNoiseRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_FOREST, T_FOREST, forestNoiseRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_OCEAN, T_OCEAN, oceanNoiseRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PLASMA, T_PLASMA, plasmaNoiseRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_CLOUDS, T_CLOUDS, cloudsNoiseRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_LAVA, T_LAVA, lavaNoiseRoutine, nullptr},
+
+    {true, true, 127, 127, 127, EFF_BBALS, T_BBALS, BBallsRoutine, nullptr}, 
     {true, true, 127, 127, 127, EFF_SINUSOID3, T_SINUSOID3, Sinusoid3Routine, nullptr},
     {true, true, 127, 127, 127, EFF_METABALLS, T_METABALLS, metaBallsRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SPIRO, T_SPIRO, spiroRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAINBOWCOMET, T_RAINBOWCOMET, rainbowCometRoutine, nullptr},
-
-    {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, whiteColorStripeRoutine, nullptr}
+    {true, true, 127, 127, 127, EFF_RAINBOWCOMET3, T_RAINBOWCOMET3, rainbowComet3Routine, nullptr}
 };
 
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб

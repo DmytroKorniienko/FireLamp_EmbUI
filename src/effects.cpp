@@ -1492,30 +1492,62 @@ void rainbowCometRoutine(CRGB *leds, const char *param)
   }
   MoveFractionalNoiseX(WIDTH / 2U - 1U);
   MoveFractionalNoiseY(HEIGHT / 2U - 1U);
+}
+
+void rainbowComet3Routine(CRGB *leds, const char *param)
+{ // Rainbow Comet by PalPalych
+/*
+  Follow the Rainbow Comet Efect by PalPalych
+  Speed = tail dispersing
+  Scale = 0 - Random 3d color
+          1...127 - time depending color
+          128...254 - selected color
+          255 - white
+*/
+  const uint8_t e_centerX =  (WIDTH / 2) - 1;
+  const uint8_t e_centerY = (HEIGHT / 2) - 1;
+  uint8_t Scale = myLamp.effects.getScale();
 
 
-  // myLamp.dimAll(254); // < -- затухание эффекта для последующего кадрв
-  // myLamp.blur2d(e_com_BLUR);    // < -- размытие хвоста
+  if(myLamp.isLoading()){
+    //randomSeed(millis());
+    GSHMEM.eNs_noisesmooth = random(0, 200*(uint_fast16_t)myLamp.effects.getSpeed()/255); // степень сглаженности шума 0...200
+    //for(uint8_t i=0; i<NUM_LAYERS;i++){
+        // GSHMEM.e_x[i] = random16();
+        // GSHMEM.e_y[i] = random16();
+        // GSHMEM.e_z[i] = random16();
+        // GSHMEM.e_scaleX[i] = 6000;
+        // GSHMEM.e_scaleY[i] = 6000;
+    //}
+    // memset(GSHMEM.e_x,0,sizeof(GSHMEM.e_x));
+    // memset(GSHMEM.e_y,0,sizeof(GSHMEM.e_y));
+    // memset(GSHMEM.e_z,0,sizeof(GSHMEM.e_z));
+    // memset(GSHMEM.e_scaleX,0,sizeof(GSHMEM.e_scaleX));
+    // memset(GSHMEM.e_scaleY,0,sizeof(GSHMEM.e_scaleY));
+    // memset(GSHMEM.noise3d,0,sizeof(GSHMEM.noise3d));
+  }
 
-  // // gelb im Kreis
-  // byte xx = 2 + sin8( millis() / 10) / 22;
-  // byte yy = 2 + cos8( millis() / 10) / 22;
-  // myLamp.setLeds(myLamp.getPixelNumber( xx, yy), 0xFFFF00);
+  myLamp.blur2d(Scale/5+1);    // < -- размытие хвоста
+  myLamp.dimAll(255-Scale/66);            // < -- затухание эффекта для последующего кадра
+  byte xx = 2 + sin8( millis() / 10) / 22;
+  byte yy = 2 + cos8( millis() / 9) / 22;
+  myLamp.setLeds(myLamp.getPixelNumber( xx, yy), 0x0000FF);
 
-  // // rot in einer Acht
-  // xx = 4 + sin8( millis() / 46) / 32;
-  // yy = 4 + cos8( millis() / 15) / 32;
-  // myLamp.setLeds(myLamp.getPixelNumber( xx, yy),  0xFF0000);
+  xx = 4 + sin8( millis() / 10) / 32;
+  yy = 4 + cos8( millis() / 7) / 32;
+  myLamp.setLeds(myLamp.getPixelNumber( xx, yy), 0xFF0000);
+  myLamp.setLeds(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00);
 
-  // // Noise
-  // GSHMEM.e_x[0] += 3000;
-  // GSHMEM.e_y[0] += 3000;
-  // GSHMEM.e_z[0] += 3000;
-  // GSHMEM.e_scaleX[0] = 8000;
-  // GSHMEM.e_scaleY[0] = 8000;
-  // FillNoise(0);
-  // MoveFractionalNoiseX(3, 0.33);
-  // MoveFractionalNoiseY(3);
-
-
+  uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 30 + 500; //64 + 1000;
+  uint16_t sc2 = (float)myLamp.effects.getSpeed()/127.0+1.5; //1.5...3.5;
+  for(uint8_t i=0; i<NUM_LAYERS; i++){
+    GSHMEM.e_x[i] += 1500*sc2;
+    GSHMEM.e_y[i] += 1500*sc2;
+    GSHMEM.e_z[i] += 1500*sc2;
+    GSHMEM.e_scaleX[i] = sc; // 8000;
+    GSHMEM.e_scaleY[i] = sc; // 8000;
+    FillNoise(i);
+  }
+  MoveFractionalNoiseX(2);
+  MoveFractionalNoiseY(2, 0.33);
 }
