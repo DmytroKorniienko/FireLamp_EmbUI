@@ -44,6 +44,11 @@ static bool isTmSetup = false;
 static bool isAddSetup = false;
 static uint8_t addSList = 1;
 
+void btnRefreshCallback()
+{
+    jee._refresh = true;
+}
+
 void btnFDelCallback()
 {
     // Удаление конфигурации из ФС
@@ -138,6 +143,7 @@ void jeebuttonshandle()
     jee.btnCallback(F("btnFLoad"),btnFLoadCallback);
     jee.btnCallback(F("btnFSave"),btnFSaveCallback);
     jee.btnCallback(F("btnFDel"),btnFDelCallback);
+    jee.btnCallback(F("btnRefresh"),btnRefreshCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -197,132 +203,144 @@ void create_parameters(){
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс
+    if(!jee.isLoading()){
 #ifdef LAMP_DEBUG
-    LOG.println(F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
+        LOG.println(F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
 #endif
-    jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
+        jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
-    // создаем меню
-    jee.menu(F("Эффекты"));
-    jee.menu(F("Лампа"));
-    jee.menu(F("Настройки"));
-    // создаем контент для каждого пункта меню
+        // создаем меню
+        jee.menu(F("Эффекты"));
+        jee.menu(F("Лампа"));
+        jee.menu(F("Настройки"));
+        // создаем контент для каждого пункта меню
 
-    jee.page(); // разделитель между страницами
-    // Страница "Управление эффектами"
+        jee.page(); // разделитель между страницами
+        // Страница "Управление эффектами"
 
-    EFFECT enEff; enEff.setNone();
-    jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
-    //char nameBuffer[64]; // Exception (3) при обращении к PROGMEM, поэтому ход конем - копируем во временный буффер
-    do {
-        enEff = *myLamp.effects.enumNextEffect(&enEff);
-        if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || isSetup)){
-            //strncpy_P(nameBuffer, enEff.eff_name, sizeof(nameBuffer)-1);
-            //jee.option(String((int)enEff.eff_nb), nameBuffer);
-            jee.option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
-        }
-    } while((enEff.eff_nb!=EFF_NONE));
-    jee.select(F("effList"), F("Эффект"));
-
-    jee.range(F("bright"),1,255,1,F("Яркость"));
-    jee.range(F("speed"),1,255,1,F("Скорость"));
-    jee.range(F("scale"),1,255,1,F("Масштаб"));
-
-    //jee.button(F("btn1"),F("gray"),F("<"), 1);
-    if(myLamp.getMode()==MODE_DEMO)
-        jee.button(F("bDemo"),F("green"),F("DEMO -> OFF"));
-    else
-        jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
-    //jee.button(F("btn3"),F("gray"),F(">"), 3);
-
-    if(isSetup){
-        jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
-        jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));  
-    }
-    jee.checkbox(F("isSetup"),F("Конфигурирование"));
-
-    jee.page(); // разделитель между страницами
-    //Страница "Управление лампой"
-    if(isTmSetup){
-        jee.time(F("time"),F("Время"));
-        jee.number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
-        jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
-        jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
-        jee.button(F("btnTmSubm"),F("gray"),F("Сохранить"));
-    } else {
-        jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
-        jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
-        jee.text(F("msg"),F("Текст для вывода на матрицу"));
-        jee.color(F("txtColor"), F("Цвет сообщения"));
-        jee.button(F("btnTxtSend"),F("gray"),F("Отправить"));
-    }
-    jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
-
-    jee.page(); // разделитель между страницами
-    // Страница "Настройки соединения"
-    if(!jee.connected || jee.param(F("wifi"))==F("AP")){
-        jee.formWifi(); // форма настроек Wi-Fi
-        jee.formMqtt(); // форма настроек MQTT
-    }
-    jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
-    if(isAddSetup){
-        jee.option(F("1"), F("Конфигурации"));
-        jee.option(F("2"), F("Время/Текст"));
-        jee.option(F("3"), F("Другое"));
-        jee.select(F("addSList"), F("Группа настроек"));
-        switch (addSList)
-        {
-        case 1:
-            jee.text(F("fileName"),F("Конфигурация"));
-            jee.button(F("btnFSave"),F("green"),F("Записать в ФС"));
-            jee.button(F("btnFDel"),F("red"),F("Удалить из ФС"));
-            break;
-         case 2:
-            jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
-            jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
-            jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
-            jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
-            jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
-            jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
-            jee.option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
-            jee.option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
-            jee.option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
-            jee.option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
-            jee.option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
-            jee.select(F("perTime"), F("Периодический вывод времени"));
-            break;       
-         case 3:
-            jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-            jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-            jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-            jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));         
-            break;       
-         case 4:
-            break;       
-         case 5:
-            break;       
-        default:
-            break;
-        }
-
-
-    } else {
-        if(SPIFFS.begin()){
-            Dir dir = SPIFFS.openDir(F("/cfg"));
-            String fn;
-            while (dir.next()) {
-                fn=dir.fileName();
-                fn.replace(F("/cfg/"),F(""));
-                //LOG.println(fn);
-                jee.option(fn, fn);
+        EFFECT enEff; enEff.setNone();
+        jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
+        //char nameBuffer[64]; // Exception (3) при обращении к PROGMEM, поэтому ход конем - копируем во временный буффер
+        do {
+            enEff = *myLamp.effects.enumNextEffect(&enEff);
+            if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || isSetup)){
+                //strncpy_P(nameBuffer, enEff.eff_name, sizeof(nameBuffer)-1);
+                //jee.option(String((int)enEff.eff_nb), nameBuffer);
+                jee.option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
             }
-        }
-        String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
-        jee.select(F("fileList"), cfg);
+        } while((enEff.eff_nb!=EFF_NONE));
+        jee.select(F("effList"), F("Эффект"));
 
-        jee.button(F("btnFLoad"),F("gray"),F("Считать с ФС"));
+        jee.range(F("bright"),1,255,1,F("Яркость"));
+        jee.range(F("speed"),1,255,1,F("Скорость"));
+        jee.range(F("scale"),1,255,1,F("Масштаб"));
+
+        //jee.button(F("btn1"),F("gray"),F("<"), 1);
+        if(myLamp.getMode()==MODE_DEMO)
+            jee.button(F("bDemo"),F("green"),F("DEMO -> OFF"));
+        else
+            jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
+        //jee.button(F("btn3"),F("gray"),F(">"), 3);
+
+        if(isSetup){
+            jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
+            jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));  
+        }
+        jee.checkbox(F("isSetup"),F("Конфигурирование"));
+
+        jee.page(); // разделитель между страницами
+        //Страница "Управление лампой"
+        if(isTmSetup){
+            jee.time(F("time"),F("Время"));
+            jee.number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
+            jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
+            jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
+            jee.button(F("btnTmSubm"),F("gray"),F("Сохранить"));
+        } else {
+            jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
+            jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+            jee.text(F("msg"),F("Текст для вывода на матрицу"));
+            jee.color(F("txtColor"), F("Цвет сообщения"));
+            jee.button(F("btnTxtSend"),F("gray"),F("Отправить"));
+        }
+        jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
+
+        jee.page(); // разделитель между страницами
+        // Страница "Настройки соединения"
+        if(!jee.connected || jee.param(F("wifi"))==F("AP")){
+            jee.formWifi(); // форма настроек Wi-Fi
+            jee.formMqtt(); // форма настроек MQTT
+        }
+        jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
+        if(isAddSetup){
+            jee.option(F("1"), F("Конфигурации"));
+            jee.option(F("2"), F("Время/Текст"));
+            jee.option(F("3"), F("Другое"));
+            jee.select(F("addSList"), F("Группа настроек"));
+            switch (addSList)
+            {
+            case 1:
+                jee.text(F("fileName"),F("Конфигурация"));
+                jee.button(F("btnFSave"),F("green"),F("Записать в ФС"));
+                jee.button(F("btnFDel"),F("red"),F("Удалить из ФС"));
+                break;
+            case 2:
+                jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
+                jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
+                jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
+                jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
+                jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
+                jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
+                jee.option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
+                jee.option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
+                jee.option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
+                jee.option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
+                jee.option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
+                jee.select(F("perTime"), F("Периодический вывод времени"));
+                break;       
+            case 3:
+                jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
+                jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
+                jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
+                jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));         
+                break;       
+            case 4:
+                break;       
+            case 5:
+                break;       
+            default:
+                break;
+            }
+        } else {
+            if(SPIFFS.begin()){
+                Dir dir = SPIFFS.openDir(F("/cfg"));
+                String fn;
+                while (dir.next()) {
+                    fn=dir.fileName();
+                    fn.replace(F("/cfg/"),F(""));
+                    //LOG.println(fn);
+                    jee.option(fn, fn);
+                }
+            }
+            String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
+            jee.select(F("fileList"), cfg);
+
+            jee.button(F("btnFLoad"),F("gray"),F("Считать с ФС"));
+        }
+        jee.page(); // разделитель между страницами
+    } else {
+#ifdef LAMP_DEBUG
+        LOG.println(F("Внимание: Загрузка минимального интерфейса, т.к. обнаружен вызов index.htm"));
+#endif
+        jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
+
+        // создаем меню
+        jee.menu(F("Эффекты"));
+
+        jee.page(); // разделитель между страницами
+        jee.button(F("btnRefresh"),F("gray"),F("Обновить интерфейс"));
+        jee.page(); // разделитель между страницами
     }
-    jee.page(); // разделитель между страницами
 }
 
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные

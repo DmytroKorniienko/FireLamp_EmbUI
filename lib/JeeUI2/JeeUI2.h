@@ -138,12 +138,12 @@ class jeeui2
     char mac[18]; // "ff:ff:ff:ff:ff:ff"
     bool _refresh = false;
     bool connected = false;
-    bool loading = true; // признак попытки загрузки начальной страницы index.htm
-    unsigned long tm_loading = millis();
+
     bool isLoading() {
       if(loading && tm_loading+5000<millis()){
         loading = false;
         if(dbg) Serial.println(F("LOADING UNBLOCK"));
+        _refresh = true;
       }
       return loading;
     }
@@ -154,6 +154,10 @@ class jeeui2
     void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
 
   private:
+
+    bool loading = true; // признак попытки загрузки начальной страницы index.htm
+    unsigned long tm_loading = millis();
+
     void arr(const String &key, const String &value);
     void wifi_connect();
     void button_handle();
