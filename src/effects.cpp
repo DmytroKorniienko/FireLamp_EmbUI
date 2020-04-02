@@ -1373,8 +1373,8 @@ void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0) {
   for(uint8_t i=0; i<NUM_LAYERS; i++)
     for (uint8_t y = 0; y < HEIGHT; y++) {
       int16_t amount = ((int16_t)(GSHMEM.noise3d[i][0][y] - 128) * 2 * amplitude + shift * 256);
-      int8_t delta = abs(amount) >> 8 ;
-      int8_t fraction = abs(amount) & 255;
+      int8_t delta = ((uint16_t)abs(amount) >> 8) ;
+      int8_t fraction = ((uint16_t)abs(amount) & 255);
       for (uint8_t x = 0 ; x < WIDTH; x++) {
         if (amount < 0) {
           zD = x - delta; zF = zD - 1;
@@ -1403,8 +1403,8 @@ void MoveFractionalNoiseY(int8_t amplitude = 1, float shift = 0) {
   for(uint8_t i=0; i<NUM_LAYERS; i++)
     for (uint8_t x = 0; x < WIDTH; x++) {
       int16_t amount = ((int16_t)(GSHMEM.noise3d[i][x][0] - 128) * 2 * amplitude + shift * 256);
-      int8_t delta = abs(amount) >> 8 ;
-      int8_t fraction = abs(amount) & 255;
+      int8_t delta = (uint16_t)abs(amount) >> 8 ;
+      int8_t fraction = (uint16_t)abs(amount) & 255;
       for (uint8_t y = 0 ; y < WIDTH; y++) {
         if (amount < 0) {
           zD = y - delta; zF = zD - 1;

@@ -43,17 +43,20 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "WiFiClient.h"
 #include "ArduinoJson.h"
 
-#if defined(ESP32)
+#ifdef ESP32
 //#include <WiFi.h>
 #include "HTTPClient.h"
+#include "TimeLib.h"
 #elif defined(ESP8266)
 //#include <ESP8266WiFi.h>
 #include "ESP8266HTTPClient.h"
+#include "TimeLib.h"
+//#include <TimeLib.h>
 #endif
 
 #include <WiFiUdp.h>
 //#include <NTP.h>
-#include <TimeLib.h>
+
 #include <NTPClient.h>
 //#include <Timezone.h>
 

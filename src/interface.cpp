@@ -321,13 +321,29 @@ void interface(){ // функция в которой мф формируем в
             }
         } else {
             if(SPIFFS.begin()){
+#ifdef ESP32
+                File root = SPIFFS.open("/cfg");
+                File file = root.openNextFile();
+#else
                 Dir dir = SPIFFS.openDir(F("/cfg"));
+#endif
                 String fn;
+#ifdef ESP32
+                while (file) {
+                    fn=file.name();
+                    if(!file.isDirectory()){
+#else                    
                 while (dir.next()) {
                     fn=dir.fileName();
-                    fn.replace(F("/cfg/"),F(""));
-                    //LOG.println(fn);
-                    jee.option(fn, fn);
+#endif
+
+                        fn.replace(F("/cfg/"),F(""));
+                        //LOG.println(fn);
+                        jee.option(fn, fn);
+#ifdef ESP32
+                        file = root.openNextFile();
+                    }
+#endif
                 }
             }
             String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
