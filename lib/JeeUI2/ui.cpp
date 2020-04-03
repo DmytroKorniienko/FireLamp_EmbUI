@@ -54,9 +54,8 @@ void jeeui2::app(const String &name){
 }
 
 void jeeui2::text(const String &id, const String &label){
-    char buffer[256];
-    sprintf_P(buffer,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"text\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
-
+    char buffer[512]; buffer[511]='\0';
+    snprintf_P(buffer,sizeof(buffer)-1,PSTR("{\"html\":\"input\",\"id\":\"%s\",\"type\":\"text\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
     jeeui2::buf.concat(buffer);
 }
 
@@ -162,8 +161,8 @@ void jeeui2::button(const String &id, const String &color, const String &label, 
 }
 
 void jeeui2::textarea(const String &id, const String &label){
-    char buffer[256];
-    sprintf_P(buffer,PSTR("{\"html\":\"textarea\",\"id\":\"%s\",\"type\":\"text\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
+    char buffer[512]; buffer[511]='\0';
+    snprintf_P(buffer,sizeof(buffer)-1,PSTR("{\"html\":\"textarea\",\"id\":\"%s\",\"type\":\"text\",\"value\":\"%s\",\"label\":\"%s\"},"), id.c_str(), param(id).c_str(), label.c_str());
 
     jeeui2::buf.concat(buffer);
 }

@@ -891,11 +891,19 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode lette
       // рисуем столбец (i - горизонтальная позиция, j - вертикальная)
       if (thisBit)
       {
-        drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
+        if(!isInverse)
+          drawPixelXY(offset + i, txtOffset + j, letterColor);
+        else
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),222);
+        //drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
       }
       else
       {
-        drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
+        if(isInverse)
+          drawPixelXY(offset + i, txtOffset + j, letterColor);
+        else
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),222);    
+        //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }
   }
@@ -969,9 +977,10 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
 {
   static String toPrint;
   static CRGB::HTMLColorCode _letterColor;
+  isStringPrinting = true;
 
   if(text!=nullptr && text[0]!='\0'){
-    toPrint += text;
+    toPrint.concat(text);
     _letterColor = letterColor;
   }
 
@@ -1052,32 +1061,32 @@ void LAMP::periodicTimeHandle()
   {
     case PERIODICTIME::PT_EVERY_1:
       if(tm%60)
-        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_5:
       if(!(tm%5) && tm%60)
-        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_10:
       if(!(tm%10) && tm%60)
-        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_15:
       if(!(tm%15) && tm%60)
-        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_30:
       if(!(tm%30) && tm%60)
-        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Blue);
       break;
     case PERIODICTIME::PT_EVERY_60:
       if(!(tm%60))
-        doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
       break;
     
     default:
       break;
   }
   if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint!=PERIODICTIME::PT_NOT_SHOW && !(tm%60))
-    doPrintStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
+    sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
 }

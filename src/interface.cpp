@@ -274,15 +274,17 @@ void interface(){ // функция в которой мф формируем в
 
         jee.page(); // разделитель между страницами
         // Страница "Настройки соединения"
-        if(!jee.connected || jee.param(F("wifi"))==F("AP")){
-            jee.formWifi(); // форма настроек Wi-Fi
-            jee.formMqtt(); // форма настроек MQTT
-        }
+        // if(!jee.connected || jee.param(F("wifi"))==F("AP")){
+        //     jee.formWifi(); // форма настроек Wi-Fi
+        //     jee.formMqtt(); // форма настроек MQTT
+        // }
         jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
         if(isAddSetup){
             jee.option(F("1"), F("Конфигурации"));
             jee.option(F("2"), F("Время/Текст"));
-            jee.option(F("3"), F("Другое"));
+            jee.option(F("3"), F("Будильники"));
+            jee.option(F("4"), F("Wifi & MQTT"));
+            jee.option(F("99"), F("Другое"));
             jee.select(F("addSList"), F("Группа настроек"));
             switch (addSList)
             {
@@ -306,16 +308,32 @@ void interface(){ // функция в которой мф формируем в
                 jee.select(F("perTime"), F("Периодический вывод времени"));
                 break;       
             case 3:
+                jee.option(F("1"), F("Включить лампу"));
+                jee.option(F("2"), F("Выключить лампу"));
+                jee.select(F("evList"), F("Тип события"));
+                jee.time(F("tmAlarm"),F("Время будильника"));
+                jee.checkbox(F("d1"),F("Понедельник"));
+                jee.checkbox(F("d2"),F("Вторник"));
+                jee.checkbox(F("d3"),F("Среда"));
+                jee.checkbox(F("d4"),F("Четверг"));
+                jee.checkbox(F("d5"),F("Пятница"));
+                jee.checkbox(F("d6"),F("Суббота"));
+                jee.checkbox(F("d7"),F("Воскресенье"));
+                jee.button(F("btnAddAlarm"),F("grey"),F("Добавить событие"));
+                break;      
+            case 4:
+                jee.formWifi(); // форма настроек Wi-Fi
+                jee.formMqtt(); // форма настроек MQTT            
+                break;       
+            case 5:
+                break;
+            case 99:
                 jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
                 jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
                 jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
                 jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV")); 
                 jee.button(F("btnOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));   
-                break;       
-            case 4:
-                break;       
-            case 5:
-                break;       
+                break;      
             default:
                 break;
             }
