@@ -1382,12 +1382,12 @@ void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0) {
           zD = x + delta; zF = zD + 1;
         }
         CRGB PixelA = CRGB::Black  ;
-        if ((zD >= 0) && (zD < WIDTH)) PixelA = myLamp.getLeds(myLamp.getPixelNumber(zD, y));
+        if ((zD >= 0) && (zD < WIDTH)) PixelA = myLamp.getLeds(myLamp.getPixelNumber(zD%WIDTH, y%HEIGHT));
         CRGB PixelB = CRGB::Black ;
-        if ((zF >= 0) && (zF < WIDTH)) PixelB = myLamp.getLeds(myLamp.getPixelNumber(zF, y));
+        if ((zF >= 0) && (zF < WIDTH)) PixelB = myLamp.getLeds(myLamp.getPixelNumber(zF%WIDTH, y%HEIGHT));
         //myLamp.setLeds(myLamp.getPixelNumber(x, y), (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction))));   // lerp8by8(PixelA, PixelB, fraction );
         //((CRGB *)GSHMEM.ledsbuff)[myLamp.getPixelNumber(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
-        ledsbuff[myLamp.getPixelNumber(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
+        ledsbuff[myLamp.getPixelNumber(x%WIDTH, y%HEIGHT)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
       }
     }
   // memcpy(leds, GSHMEM.ledsbuff, sizeof(CRGB)* NUM_LEDS);
@@ -1405,19 +1405,19 @@ void MoveFractionalNoiseY(int8_t amplitude = 1, float shift = 0) {
       int16_t amount = ((int16_t)(GSHMEM.noise3d[i][x][0] - 128) * 2 * amplitude + shift * 256);
       int8_t delta = (uint16_t)abs(amount) >> 8 ;
       int8_t fraction = (uint16_t)abs(amount) & 255;
-      for (uint8_t y = 0 ; y < WIDTH; y++) {
+      for (uint8_t y = 0 ; y < HEIGHT; y++) {
         if (amount < 0) {
           zD = y - delta; zF = zD - 1;
         } else {
           zD = y + delta; zF = zD + 1;
         }
         CRGB PixelA = CRGB::Black ;
-        if ((zD >= 0) && (zD < WIDTH)) PixelA = myLamp.getLeds(myLamp.getPixelNumber(x, zD));
+        if ((zD >= 0) && (zD < HEIGHT)) PixelA = myLamp.getLeds(myLamp.getPixelNumber(x%WIDTH, zD%HEIGHT));
         CRGB PixelB = CRGB::Black ;
-        if ((zF >= 0) && (zF < WIDTH)) PixelB = myLamp.getLeds(myLamp.getPixelNumber(x, zF));
+        if ((zF >= 0) && (zF < HEIGHT)) PixelB = myLamp.getLeds(myLamp.getPixelNumber(x%WIDTH, zF%HEIGHT));
         //myLamp.setLeds(myLamp.getPixelNumber(x, y), (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction))));
         //((CRGB *)GSHMEM.ledsbuff)[myLamp.getPixelNumber(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
-        ledsbuff[myLamp.getPixelNumber(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+        ledsbuff[myLamp.getPixelNumber(x%WIDTH, y%HEIGHT)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
       }
     }
   // memcpy(leds, GSHMEM.ledsbuff, sizeof(CRGB)* NUM_LEDS);
@@ -1472,9 +1472,9 @@ void rainbowCometRoutine(CRGB *leds, const char *param)
   myLamp.dimAll(254);            // < -- затухание эффекта для последующего кадра
   CRGB _eNs_color = CRGB::White;
   if (Scale <= 1) {
-    _eNs_color = CHSV(GSHMEM.noise3d[0][0][4] * e_com_3DCOLORSPEED , 255, 255);
+    _eNs_color = CHSV(GSHMEM.noise3d[0][0][0] * e_com_3DCOLORSPEED , 255, 255);
   } else if (Scale < 128) {
-    _eNs_color = CHSV(millis() / (Scale + 1U) * 4 + 10, 255, 255);
+    _eNs_color = CHSV(millis() / ((uint16_t)Scale + 1U) * 4 + 10, 255, 255);
   } else if (Scale < 255) {
     _eNs_color = CHSV((Scale - 128) * 2, 255, 255);
   }
@@ -1531,11 +1531,11 @@ void rainbowComet3Routine(CRGB *leds, const char *param)
   myLamp.dimAll(255-Scale/66);            // < -- затухание эффекта для последующего кадра
   byte xx = 2 + sin8( millis() / 10) / 22;
   byte yy = 2 + cos8( millis() / 9) / 22;
-  myLamp.setLeds(myLamp.getPixelNumber( xx, yy), 0x0000FF);
+  myLamp.setLeds(myLamp.getPixelNumber( xx%WIDTH, yy%HEIGHT), 0x0000FF);
 
   xx = 4 + sin8( millis() / 10) / 32;
   yy = 4 + cos8( millis() / 7) / 32;
-  myLamp.setLeds(myLamp.getPixelNumber( xx, yy), 0xFF0000);
+  myLamp.setLeds(myLamp.getPixelNumber( xx%WIDTH, yy%HEIGHT), 0xFF0000);
   myLamp.setLeds(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00);
 
   uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 30 + 500; //64 + 1000;
