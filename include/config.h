@@ -101,7 +101,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)
 #define LET_WIDTH             (5U)                          // ширина буквы шрифта
 #define LET_HEIGHT            (8U)                          // высота буквы шрифта
-#define LET_SPACE             (1U)                          // пробел
+#define LET_SPACE             (1U)                          // пропуск между символами (кол-во пикселей)
 #define LETTER_COLOR          (CRGB::White)                 // цвет букв по умолчанию
 #define DEFAULT_TEXT_SPEED    (100U)                        // скорость движения текста, в миллисекундах - меньше == быстрее
 // ************* НАСТРОЙКА МАТРИЦЫ *****

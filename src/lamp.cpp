@@ -706,11 +706,11 @@ void LAMP::changePower(bool flag) // плавное включение/выкл�
     {
       if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
       {
-        return ((uint32_t)THIS_Y * _WIDTH + THIS_X);
+        return ((uint32_t)THIS_Y * _WIDTH + THIS_X)%NUM_LEDS;
       }
       else                                                      // если нечётная строка
       {
-        return ((uint32_t)THIS_Y * _WIDTH + _WIDTH - THIS_X - 1);
+        return ((uint32_t)THIS_Y * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
       }
     }
 
@@ -895,7 +895,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode lette
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
           setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),222);
-        //drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
+          //drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
       }
       else
       {
@@ -903,7 +903,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode lette
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
           setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),222);    
-        //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
+          //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }
   }
