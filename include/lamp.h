@@ -52,7 +52,7 @@ typedef enum _LAMPMODE {
   MODE_OTA
 } LAMPMODE;
 
-typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD} EVENT_TYPE;
+typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT} EVENT_TYPE;
 
 const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 
@@ -119,6 +119,10 @@ struct EVENT {
         case EVENT_TYPE::EVENTS_CONFIG_LOAD:
             buffer.concat(F("EVT_GFG"));
             break;
+        case EVENT_TYPE::SEND_TEXT:
+            buffer.concat(F("TEXT"));
+            break;
+            
         default:
             break;
         }
@@ -155,21 +159,21 @@ private:
 
     void check_event(EVENT *event, time_t current_time, int offset){
         if(!event->isEnabled) return;
-        time_t localtime = event->unixtime;// + offset;
+        time_t eventtime = event->unixtime;// + offset;
 
-        //LOG.printf_P(PSTR("%d %d\n"),current_time, localtime);
-        if(localtime>current_time) return;
+        //LOG.printf_P(PSTR("%d %d\n"),current_time, eventtime);
+        if(eventtime>current_time) return;
 
-        if(localtime==current_time) // точно попадает в период времени 1 минута, для однократных событий
+        if(eventtime==current_time) // точно попадает в период времени 1 минута, для однократных событий
         {
             if(cb_func!=nullptr) cb_func(event); // сработало событие
             return;
         }
 
         // если сегодня + периодический
-        if(event->repeat && localtime<=current_time && year(localtime)==year(current_time) && month(localtime)==month(current_time) && day(localtime)==day(current_time)){
+        if(event->repeat && eventtime<=current_time && year(eventtime)==year(current_time) && month(eventtime)==month(current_time) && day(eventtime)==day(current_time)){
             //LOG.printf_P(PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
-            if(!((hour(current_time)*60+minute(current_time))%event->repeat)){
+            if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
                 if(cb_func!=nullptr) cb_func(event); // сработало событие
                 return;
             }
@@ -179,14 +183,14 @@ private:
         if(!cur_day) cur_day = 7; // 7 = Sunday
 
         if((event->raw_data>>cur_day)&1) { // обрабатывать сегодня
-            if(localtime<=current_time){ // время события было раньше/равно текущего
+            if(eventtime<=current_time){ // время события было раньше/равно текущего
                 //LOG.printf_P(PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
-                if(hour(localtime)==hour(current_time) && minute(localtime)==minute(current_time)){ // точное совпадение
+                if(hour(eventtime)==hour(current_time) && minute(eventtime)==minute(current_time)){ // точное совпадение
                     if(cb_func!=nullptr) cb_func(event); // сработало событие
                     return;
                 }
-                if(event->repeat && hour(localtime)<=hour(current_time)){ // периодический в сегодняшний день
-                    if(!((hour(current_time)*60+minute(current_time))%event->repeat)){
+                if(event->repeat && hour(eventtime)<=hour(current_time)){ // периодический в сегодняшний день
+                    if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
                         if(cb_func!=nullptr) cb_func(event); // сработало событие
                         return;
                     }
@@ -294,11 +298,12 @@ public:
                 event.raw_data = item[F("raw")].as<int>();
                 event.unixtime = item[F("ut")].as<unsigned long>();
                 event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
+                event.repeat = item[F("rp")].as<int>();
                 String tmpStr = item[F("msg")].as<String>();
                 event.message = (char *)tmpStr.c_str();
                 addEvent(event);
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("[%u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.message);
+                LOG.printf_P(PSTR("[%u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.message);
 #endif
             }
             // JsonArray::iterator it;
@@ -324,12 +329,12 @@ public:
             EVENT *next=root;
             int i=1;
             while(next!=nullptr){
-                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event,
+                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat,
                     ((next->message!=nullptr)?next->message:(char*)F("")));
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event,
+                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat,
                     ((next->message!=nullptr)?next->message:(char*)F("")));
 #endif
                 i++;

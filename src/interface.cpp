@@ -98,7 +98,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
     case EVENT_TYPE::ALARM :
         break;
     case EVENT_TYPE::DEMO_ON :
-        if(myLamp.getMode()!=MODE_DEMO)
+        if(myLamp.getMode()!=MODE_DEMO || !myLamp.isLampOn())
             myLamp.startDemoMode();
         break;
     case EVENT_TYPE::LAMP_CONFIG_LOAD :
@@ -111,13 +111,26 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         filename=String(F("/cfg/"));
         filename.concat(event->message);
         if(event->message)
-            jee.load(filename.c_str());    
+            myLamp.effects.loadConfig(filename.c_str());    
         break;
     case EVENT_TYPE::EVENTS_CONFIG_LOAD :
         filename=String(F("/evn/"));
         filename.concat(event->message);
         if(event->message)
-            jee.load(filename.c_str());
+            myLamp.events.loadConfig(filename.c_str());
+        break;
+    case EVENT_TYPE::SEND_TEXT :
+        if(!myLamp.isLampOn()){
+            EFF_ENUM eff_nb = myLamp.effects.getEn();
+            myLamp.effects.moveBy(EFF_ENUM::EFF_NONE);
+            myLamp.setOnOff(true);
+            if(event->message) myLamp.sendStringToLamp(event->message,color);
+            myLamp.setOnOff(false);
+            myLamp.effects.moveBy(eff_nb);
+        } else {
+            if(event->message) myLamp.sendStringToLamp(event->message,color);
+        }
+        return;
         break;
 
     default:
@@ -126,7 +139,6 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
     if(event->message) myLamp.sendStringToLamp(event->message,color);
     jee._refresh = true;
 }
-
 
 void bEditEventCallback()
 {
@@ -514,6 +526,7 @@ void interface(){ // функция в которой мф формируем в
                     jee.option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), F("Загрузка конф. лампы"));
                     jee.option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
                     jee.option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
+                    jee.option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
                     jee.select(F("evList"), F("Тип события"));
                     jee.checkbox(F("isEnabled"),F("Разрешено"));
                     jee.datetime(F("tmEvent"),F("Дата/время события"));
