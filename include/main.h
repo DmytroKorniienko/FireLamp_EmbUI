@@ -57,3 +57,4 @@ void interface();
 void create_parameters();
 void updateParm();
 void jeebuttonshandle();
+void event_worker(const EVENT *);

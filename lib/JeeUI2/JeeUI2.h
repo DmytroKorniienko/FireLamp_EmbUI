@@ -96,7 +96,8 @@ class jeeui2
     void button(const String &id, const String &color, const String &label);
     void button(const String &id, const String &color, const String &label, int column);
     void textarea(const String &id, const String &label);
-    void save();
+    void save(const char *_cfg = nullptr);
+    void load(const char *_cfg = nullptr);
     void udp(const String &message);
     void udp();
     void pub(const String &id, const String &label);
@@ -166,7 +167,6 @@ class jeeui2
     void led_on();
     void led_off();
     void led_inv();
-    void load();
     void autosave();
     void pre_autosave();
     void as();

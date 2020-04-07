@@ -182,6 +182,10 @@ void jeeui2::begin() {
         request->send(SPIFFS, F("/config.json"), String(), true);
     });
 
+    server.on(PSTR("/events_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        request->send(SPIFFS, F("/events_config.json"), String(), true);
+    });
+
     server.on(PSTR("/js/maker.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/maker.js.gz"), F("application/javascript"));
         response->addHeader(F("Content-Encoding"), F("gzip"));

@@ -97,6 +97,8 @@ public:
     bool getIsSyncOnline() {return isSyncOnline;}
     void setIsSyncOnline(bool val) {isSyncOnline=val;}
     long getUnixTime() {return (isSynced?unixtime+raw_offset+dst_offset+(millis()-query_last_timer)/1000:dirtytime+raw_offset+dst_offset+(millis()-query_last_dirtytime_timer)/1000);}
+    long getUTCUnixTime() {return (isSynced?unixtime+(millis()-query_last_timer)/1000:dirtytime+(millis()-query_last_dirtytime_timer)/1000);}
+    int getOffset() {return raw_offset+dst_offset;}
     String getFormattedShortTime();
     void handleTime(bool force=false);
     void SetOffset(int val) { if(sync==NTP_SYNC) raw_offset=val;}

@@ -52,6 +52,297 @@ typedef enum _LAMPMODE {
   MODE_OTA
 } LAMPMODE;
 
+typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD} EVENT_TYPE;
+
+const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
+
+struct EVENT {
+    union {
+        struct {
+            bool isEnabled:1;
+            bool d1:1;
+            bool d2:1;
+            bool d3:1;
+            bool d4:1;
+            bool d5:1;
+            bool d6:1;
+            bool d7:1;
+        };
+        uint8_t raw_data;
+    };
+    uint8_t repeat;
+    uint32_t unixtime;
+    EVENT_TYPE event;
+    char *message;
+    EVENT *next = nullptr;
+    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
+    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
+    const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
+    String getDateTime(int offset = 0) {
+        char tmpBuf[]="9999-99-99T99:99";
+        time_t tm = unixtime+offset;
+        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
+        return String(tmpBuf);
+    }
+    
+    String getName(int offset = 0) {
+        String buffer;
+        char tmpBuf[]="9999-99-99T99:99";
+        String day_buf(T_EVENT_DAYS);
+
+        buffer.concat(isEnabled?F(" "):F("!"));
+
+        time_t tm = unixtime+offset;
+        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
+        buffer.concat(tmpBuf); buffer.concat(F(","));
+
+        switch (event)
+        {
+        case EVENT_TYPE::ON:
+            buffer.concat(F("ON"));
+            break;
+        case EVENT_TYPE::OFF:
+            buffer.concat(F("OFF"));
+            break;
+        case EVENT_TYPE::ALARM:
+            buffer.concat(F("ALARM"));
+            break;
+        case EVENT_TYPE::DEMO_ON:
+            buffer.concat(F("DEMO ON"));
+            break;
+        case EVENT_TYPE::LAMP_CONFIG_LOAD:
+            buffer.concat(F("LMP_GFG"));
+            break;
+        case EVENT_TYPE::EFF_CONFIG_LOAD:
+            buffer.concat(F("EFF_GFG"));
+            break;
+        case EVENT_TYPE::EVENTS_CONFIG_LOAD:
+            buffer.concat(F("EVT_GFG"));
+            break;
+        default:
+            break;
+        }
+        buffer.concat(F(","));
+
+        if(repeat) {buffer.concat(repeat); buffer.concat(F(","));}
+
+        uint8_t t_raw_data = raw_data>>1;
+        for(uint8_t i=1;i<8; i++){
+            if(t_raw_data&1){
+                //Serial.println(day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
+                buffer.concat(day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
+                buffer.concat(F(","));
+            }
+            t_raw_data >>= 1;
+        }
+        //return buffer;
+
+        if(message[0]){
+            memcpy(tmpBuf,message,5*2);
+            strcpy_P(tmpBuf+5*2,PSTR("..."));
+        }
+        buffer.concat(tmpBuf);
+        return buffer;
+    }
+};
+
+class EVENT_MANAGER {
+private:
+    EVENT_MANAGER(const EVENT_MANAGER&);  // noncopyable
+    EVENT_MANAGER& operator=(const EVENT_MANAGER&);  // noncopyable
+    EVENT *root = nullptr;
+    void(*cb_func)(const EVENT *) = nullptr; // функция обратного вызова
+
+    void check_event(EVENT *event, time_t current_time, int offset){
+        if(!event->isEnabled) return;
+        time_t localtime = event->unixtime;// + offset;
+
+        //LOG.printf_P(PSTR("%d %d\n"),current_time, localtime);
+        if(localtime>current_time) return;
+
+        if(localtime==current_time) // точно попадает в период времени 1 минута, для однократных событий
+        {
+            if(cb_func!=nullptr) cb_func(event); // сработало событие
+            return;
+        }
+
+        // если сегодня + периодический
+        if(event->repeat && localtime<=current_time && year(localtime)==year(current_time) && month(localtime)==month(current_time) && day(localtime)==day(current_time)){
+            //LOG.printf_P(PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
+            if(!((hour(current_time)*60+minute(current_time))%event->repeat)){
+                if(cb_func!=nullptr) cb_func(event); // сработало событие
+                return;
+            }
+        }
+
+        uint8_t cur_day = dayOfWeek(current_time)-1; // 1 == Sunday
+        if(!cur_day) cur_day = 7; // 7 = Sunday
+
+        if((event->raw_data>>cur_day)&1) { // обрабатывать сегодня
+            if(localtime<=current_time){ // время события было раньше/равно текущего
+                //LOG.printf_P(PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
+                if(hour(localtime)==hour(current_time) && minute(localtime)==minute(current_time)){ // точное совпадение
+                    if(cb_func!=nullptr) cb_func(event); // сработало событие
+                    return;
+                }
+                if(event->repeat && hour(localtime)<=hour(current_time)){ // периодический в сегодняшний день
+                    if(!((hour(current_time)*60+minute(current_time))%event->repeat)){
+                        if(cb_func!=nullptr) cb_func(event); // сработало событие
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+public:
+    EVENT_MANAGER() {}
+    ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
+    void addEvent(const EVENT&event) {
+        EVENT *next=root;
+        EVENT *new_event = new EVENT(event);
+        if(event.message!=nullptr){
+            new_event->message = (char *)malloc(strlen(event.message)+1);
+            strcpy(new_event->message, event.message);
+        }
+        if(next!=nullptr){
+            while(next->next!=nullptr){
+                next=next->next;
+            }
+            next->next = new_event;
+        }
+        else {
+            root = new_event;
+        }
+    }
+    
+    void delEvent(const EVENT&event) {
+        EVENT *next=root;
+        EVENT *prev=root;
+        if(next!=nullptr){
+            while(next){
+                EVENT *tmp_next = next->next;
+                if(*next==event){
+                    if(next->message!=nullptr)
+                        free(next->message);
+                    delete next;
+                    if(next==root) root=tmp_next; else prev->next=tmp_next;
+                } else {
+                    prev = next;
+                }
+                next=tmp_next;
+            }
+        }
+    }
+
+    void setEventCallback(void(*func)(const EVENT *))
+    {
+        cb_func = func;
+    }
+    
+    EVENT *getNextEvent(EVENT *next=nullptr)
+    {
+        if(next==nullptr) return root; else return next->next;
+    }
+
+    void events_handle(time_t current_time, int offset)
+    {
+        EVENT *next = getNextEvent(nullptr);
+        while (next!=nullptr)
+        {
+            check_event(next, current_time, offset);
+            next = getNextEvent(next);
+        }
+    }
+    
+    void loadConfig(const char *cfg = nullptr) {
+        if(SPIFFS.begin()){
+            File configFile;
+            if(cfg == nullptr)
+                configFile = SPIFFS.open(F("/events_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+            else
+                configFile = SPIFFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
+            String cfg_str = configFile.readString();
+
+            if (cfg_str == F("")){
+#ifdef LAMP_DEBUG
+                LOG.println(F("Failed to open events config file"));
+#endif
+                saveConfig();
+                return;
+            }
+
+#ifdef LAMP_DEBUG
+                LOG.println(F("\nStart desialization of events\n\n"));
+#endif
+
+            DynamicJsonDocument doc(8192);
+            DeserializationError error = deserializeJson(doc, cfg_str);
+            if (error) {
+#ifdef LAMP_DEBUG
+                LOG.print(F("deserializeJson error: "));
+                LOG.println(error.code());
+                LOG.println(cfg_str);
+#endif
+                return;
+            }
+
+            JsonArray arr = doc.as<JsonArray>();
+            EVENT event;
+            for (size_t i=0; i<arr.size(); i++) {
+                JsonObject item = arr[i];
+                event.raw_data = item[F("raw")].as<int>();
+                event.unixtime = item[F("ut")].as<unsigned long>();
+                event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
+                String tmpStr = item[F("msg")].as<String>();
+                event.message = (char *)tmpStr.c_str();
+                addEvent(event);
+#ifdef LAMP_DEBUG
+                LOG.printf_P(PSTR("[%u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.message);
+#endif
+            }
+            // JsonArray::iterator it;
+            // for (it=arr.begin(); it!=arr.end(); ++it) {
+            //     const JsonObject& elem = *it;
+            // }
+#ifdef LAMP_DEBUG
+            LOG.println(F("Events config loaded"));
+#endif
+            doc.clear();
+        }
+    }
+
+    void saveConfig(const char *cfg = nullptr) {
+        if(SPIFFS.begin()){
+            File configFile;
+            if(cfg == nullptr)
+                configFile = SPIFFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+            else
+                configFile = SPIFFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+
+            configFile.print("[");
+            EVENT *next=root;
+            int i=1;
+            while(next!=nullptr){
+                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event,
+                    ((next->message!=nullptr)?next->message:(char*)F("")));
+#ifdef LAMP_DEBUG
+                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event,
+                    ((next->message!=nullptr)?next->message:(char*)F("")));
+#endif
+                i++;
+                next=next->next;
+            }     
+            configFile.print("]");
+            configFile.flush();
+            configFile.close();
+            LOG.println(F("\nSave events config"));
+        }
+    }
+};
+
 class LAMP {
 private:
 #pragma pack(push,1)
@@ -135,7 +426,8 @@ private:
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
-    
+    EVENT_MANAGER events; // Объект реализующий доступ к событиям
+
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}

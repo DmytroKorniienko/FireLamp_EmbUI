@@ -63,6 +63,7 @@ void setup() {
     jee.ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
 
     myLamp.effects.loadConfig();
+    myLamp.events.loadConfig();
     myLamp.updateParm(updateParm);
 
     jee.ui(interface); // обратный вызов - интерфейс
@@ -81,6 +82,8 @@ void setup() {
     if(myLamp.timeProcessor.getIsSyncOnline()){
       myLamp.refreshTimeManual(); // принудительное обновление времени
     }
+
+    myLamp.events.setEventCallback(event_worker);
 }
 
 void loop() {

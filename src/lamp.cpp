@@ -130,11 +130,11 @@ void LAMP::handle()
   handleTelnetClient();
 #endif
 
-  // все что ниже, будет выполняться раз в 0.5 секунды
-  static unsigned long half_second_handlers;
-  if (half_second_handlers + 500U > millis())
+  // все что ниже, будет выполняться раз в 0.999 секундy
+  static unsigned long wait_handlers;
+  if (wait_handlers + 999U > millis())
       return;
-  half_second_handlers = millis();
+  wait_handlers = millis();
 
   newYearMessageHandle();
   periodicTimeHandle();
@@ -144,9 +144,9 @@ void LAMP::handle()
 #endif
 
   timeProcessor.handleTime();                         // Обновление времени
-#ifdef USE_NTP
-  timeTick(); // обработчик будильника "рассвет"
-#endif
+
+  if(!second(timeProcessor.getUnixTime())) // только на 0 секунду, т.е. 1 раз в минуту
+    events.events_handle(timeProcessor.getUnixTime(),timeProcessor.getOffset());
 }
 
 #ifdef ESP_USE_BUTTON
@@ -1016,7 +1016,7 @@ void LAMP::newYearMessageHandle()
 
   {
     char strMessage[256]; // буффер
-    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUnixTime(); // unix_diff_time
+    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUTCUnixTime(); // unix_diff_time
 
     if(calc<0) {
       sprintf_P(strMessage, NY_MDG_STRING2, timeProcessor.getYear());

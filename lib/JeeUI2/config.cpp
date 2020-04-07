@@ -1,9 +1,14 @@
 #include "JeeUI2.h"
 
-void jeeui2::save()
+void jeeui2::save(const char *_cfg)
 {
     if(SPIFFS.begin()){
-        File configFile = SPIFFS.open(F("/config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+        File configFile;
+        if(_cfg == nullptr)
+            configFile = SPIFFS.open(F("/config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+        else
+            configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+
         // serializeJson(cfg,configFile);
         // configFile.flush();
         // configFile.close();
@@ -54,10 +59,15 @@ void jeeui2::as(){
     astimer = millis();
 }
 
-void jeeui2::load()
+void jeeui2::load(const char *_cfg)
 {
     if(SPIFFS.begin()){
-        File configFile = SPIFFS.open(F("/config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+        File configFile;
+        if(_cfg == nullptr)
+            configFile = SPIFFS.open(F("/config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+        else
+            configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+
         String cfg_str = configFile.readString();
         if (cfg_str == F("")){
             if(dbg)Serial.println(F("Failed to open config file"));
