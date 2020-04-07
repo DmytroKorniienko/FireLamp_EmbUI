@@ -120,15 +120,20 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
             myLamp.events.loadConfig(filename.c_str());
         break;
     case EVENT_TYPE::SEND_TEXT :
-        if(!myLamp.isLampOn()){
-            EFF_ENUM eff_nb = myLamp.effects.getEn();
-            myLamp.effects.moveBy(EFF_ENUM::EFF_NONE);
-            myLamp.setOnOff(true);
-            if(event->message) myLamp.sendStringToLamp(event->message,color);
-            myLamp.setOnOff(false);
-            myLamp.effects.moveBy(eff_nb);
-        } else {
-            if(event->message) myLamp.sendStringToLamp(event->message,color);
+        if(event->message==nullptr)
+            break;
+        {
+            String toPrint(event->message);
+            toPrint.replace(F("%TM"),myLamp.timeProcessor.getFormattedShortTime());
+
+            if(!myLamp.isLampOn()){
+                myLamp.disableEffectsUntilText();
+                myLamp.setOffAfterText();
+                myLamp.setOnOff(true);
+                myLamp.sendStringToLamp(toPrint.c_str(),color);
+            } else {
+                if(event->message) myLamp.sendStringToLamp(toPrint.c_str(),color);
+            }
         }
         return;
         break;

@@ -136,6 +136,16 @@ void LAMP::handle()
       return;
   wait_handlers = millis();
 
+  // отложенное включение/выключение
+  if(isOffAfterText && !isStringPrinting) {
+    isOffAfterText = false;
+    setOnOff(false);
+  }
+
+  if(isEffectsDisabledUntilText && !isStringPrinting) {
+    isEffectsDisabledUntilText = false;
+  }
+
   newYearMessageHandle();
   periodicTimeHandle();
 
@@ -446,19 +456,20 @@ void LAMP::effectsTick()
   {
     if (ONflag)
     {
-      if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-        startFader(false);
-      }
-
-      faderTick(); // фейдер
-      
-      if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
-        if(effects.getCurrent()->func!=nullptr){
-            effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
+      if(!isEffectsDisabledUntilText){
+        if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
+          startFader(false);
         }
-        effTimer = millis();
-      }
 
+        faderTick(); // фейдер
+        
+        if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
+          if(effects.getCurrent()->func!=nullptr){
+              effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
+          }
+          effTimer = millis();
+        }
+      }
 #ifdef USELEDBUF
       memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
 #endif
@@ -657,6 +668,8 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       scaleDirection = false;
       setDirectionTimeout = false; // флаг: начало отсчета таймаута на смену направления регулировки
       isStringPrinting = false; // печатается ли прямо сейчас строка?
+      isEffectsDisabledUntilText = false;
+      isOffAfterText = false;
     }
 
     void LAMP::startFader(bool isManual=false)

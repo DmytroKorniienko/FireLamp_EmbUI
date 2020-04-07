@@ -369,6 +369,8 @@ private:
     bool scaleDirection:1;
     bool setDirectionTimeout:1; // флаг: начало отсчета таймаута на смену направления регулировки
     bool isStringPrinting:1; // печатается ли прямо сейчас строка?
+    bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
+    bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
  };
  #pragma pack(pop)
     //Button
@@ -457,6 +459,8 @@ public:
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
     void setOnOff(bool flag) {ONflag = flag; changePower(flag);}
+    void disableEffectsUntilText() {isEffectsDisabledUntilText = true;}
+    void setOffAfterText() {isOffAfterText = true;}
     bool isLampOn() {return ONflag;}
     void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
