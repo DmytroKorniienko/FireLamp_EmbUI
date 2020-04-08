@@ -104,6 +104,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 #define LET_SPACE             (1U)                          // пропуск между символами (кол-во пикселей)
 #define LETTER_COLOR          (CRGB::White)                 // цвет букв по умолчанию
 #define DEFAULT_TEXT_SPEED    (100U)                        // скорость движения текста, в миллисекундах - меньше == быстрее
+#define FADETOBLACKVALUE      (222U)                        // степень затенения фона под текстом, до 255, чем больше число - тем больше затенение.
 // ************* НАСТРОЙКА МАТРИЦЫ *****
 #if (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0)
 #define _WIDTH WIDTH

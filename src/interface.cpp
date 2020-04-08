@@ -60,6 +60,12 @@ public:
 
 INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
 
+void bEventsCallback()
+{
+    myLamp.setIsEventsHandled(!myLamp.IsEventsHandled());
+    jee._refresh = true;
+}
+
 void bSetCloseCallback()
 {
     iGLOBAL.isAddSetup = false;
@@ -92,8 +98,11 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
         break;
     case EVENT_TYPE::OFF :
-        myLamp.setOnOff(false);
-        jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+        myLamp.disableEffectsUntilText();
+        myLamp.setOffAfterText();
+        //if(event->message) myLamp.sendStringToLamp(event->message,color);
+        jee.var(F("ONflag"), (F("false")));
+        //return;
         break;
     case EVENT_TYPE::ALARM :
         break;
@@ -122,18 +131,13 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
     case EVENT_TYPE::SEND_TEXT :
         if(event->message==nullptr)
             break;
-        {
-            String toPrint(event->message);
-            toPrint.replace(F("%TM"),myLamp.timeProcessor.getFormattedShortTime());
-
-            if(!myLamp.isLampOn()){
-                myLamp.disableEffectsUntilText();
-                myLamp.setOffAfterText();
-                myLamp.setOnOff(true);
-                myLamp.sendStringToLamp(toPrint.c_str(),color);
-            } else {
-                if(event->message) myLamp.sendStringToLamp(toPrint.c_str(),color);
-            }
+        if(!myLamp.isLampOn()){
+            myLamp.disableEffectsUntilText();
+            myLamp.setOffAfterText();
+            myLamp.setOnOff(true);
+            myLamp.sendStringToLamp(event->message,color);
+        } else {
+            myLamp.sendStringToLamp(event->message,color);
         }
         return;
         break;
@@ -149,9 +153,10 @@ void bEditEventCallback()
 {
     EVENT *next = myLamp.events.getNextEvent(nullptr);
     int index = jee.param(F("evSelList")).toInt();
-    int i = 0;
+    int i = 1;
     while (next!=nullptr)
     {
+        //LOG.printf_P(PSTR("%d %d\n"), i, index);
         if(i==index) break;
         i++;
         next = myLamp.events.getNextEvent(next);
@@ -177,7 +182,7 @@ void bDelEventCallback(bool isRefresh)
 {
     EVENT *next = myLamp.events.getNextEvent(nullptr);
     int index = jee.param(F("evSelList")).toInt();
-    int i = 0;
+    int i = 1;
     while (next!=nullptr)
     {
         if(i==index) break;
@@ -359,6 +364,7 @@ void jeebuttonshandle()
     jee.btnCallback(F("bEditEvent"), bEditEventCallback);
     jee.btnCallback(F("bOwrEvent"), bOwrEventCallback);
     jee.btnCallback(F("bSetClose"), bSetCloseCallback);
+    jee.btnCallback(F("bEvents"), bEventsCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -548,7 +554,7 @@ void interface(){ // функция в которой мф формируем в
                     jee.button(F("bAddEvent"),F("green"),F("Добавить событие"));
                 } else {
                     EVENT *next = myLamp.events.getNextEvent(nullptr);
-                    int i = 0;
+                    int i = 1;
                     while (next!=nullptr)
                     {
                         jee.option(String(i), next->getName());
@@ -607,6 +613,10 @@ void interface(){ // функция в которой мф формируем в
             jee.select(F("fileList"), cfg);
 
             jee.button(F("bFLoad"),F("gray"),F("Считать с ФС"));
+            if(myLamp.IsEventsHandled())
+                jee.button(F("bEvents"),F("red"),F("EVENTS -> OFF"));
+            else
+                jee.button(F("bEvents"),F("green"),F("EVENTS -> ON"));
         }
         jee.page(); // разделитель между страницами
     } else {

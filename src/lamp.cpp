@@ -155,7 +155,7 @@ void LAMP::handle()
 
   timeProcessor.handleTime();                         // Обновление времени
 
-  if(!second(timeProcessor.getUnixTime())) // только на 0 секунду, т.е. 1 раз в минуту
+  if(!second(timeProcessor.getUnixTime()) && isEventsHandled) // только на 0 секунду, т.е. 1 раз в минуту и если обработка разрешена
     events.events_handle(timeProcessor.getUnixTime(),timeProcessor.getOffset());
 }
 
@@ -670,6 +670,7 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       isStringPrinting = false; // печатается ли прямо сейчас строка?
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
+      isEventsHandled = true;
     }
 
     void LAMP::startFader(bool isManual=false)
@@ -907,7 +908,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode lette
         if(!isInverse)
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),222);
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),FADETOBLACKVALUE);
           //drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
       }
       else
@@ -990,10 +991,13 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
 {
   static String toPrint;
   static CRGB::HTMLColorCode _letterColor;
+
   isStringPrinting = true;
 
   if(text!=nullptr && text[0]!='\0'){
     toPrint.concat(text);
+    toPrint.replace(F("%TM"), timeProcessor.getFormattedShortTime());
+    toPrint.replace(F("%IP"), WiFi.localIP().toString());
     _letterColor = letterColor;
   }
 
