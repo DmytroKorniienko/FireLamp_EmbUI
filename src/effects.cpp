@@ -1558,10 +1558,14 @@ void prismataRoutine(CRGB *leds, const char *param)
 { 
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
-  
+
+  EVERY_N_MILLIS(333) {
+    GSHMEM.spirohueoffset += 1;
+  }
+
   myLamp.dimAll(250U - myLamp.effects.getScale()%32*7.5);
   for (uint8_t x = 0; x < WIDTH; x++) {
       uint8_t y = beatsin8(x + 1 * myLamp.effects.getSpeed()/5, 0, HEIGHT);
-      myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, x * 7));
+      myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (x+GSHMEM.spirohueoffset) * 7));
     }
 }
