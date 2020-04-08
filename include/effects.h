@@ -79,7 +79,8 @@ EFF_SINUSOID3,                                // Синусоид 3
 EFF_METABALLS,                                // Метасферы
 EFF_SPIRO,                                    // Спираль
 EFF_RAINBOWCOMET,                             // Радужная комета
-EFF_RAINBOWCOMET3                             // 3 кометы
+EFF_RAINBOWCOMET3,                            // 3 кометы
+EFF_PRIZMATA                                  // Призмата
 } EFF_ENUM;
 
 void sparklesRoutine(CRGB*, const char*);
@@ -111,6 +112,7 @@ void metaBallsRoutine(CRGB*, const char*);
 void spiroRoutine(CRGB*, const char*);
 void rainbowCometRoutine(CRGB*, const char*);
 void rainbowComet3Routine(CRGB*, const char*);
+void prismataRoutine(CRGB*, const char*);
 //-------------------------------------------------
 
 typedef struct _EFFECT {
@@ -156,7 +158,7 @@ const char T_SPIRO[] PROGMEM = "Спираль";
 const char T_RAINBOWCOMET[] PROGMEM = "Радужная комета";
 const char T_RAINBOWCOMET3[] PROGMEM = "Три кометы";
 const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
-
+const char T_PRIZMATA[] PROGMEM = "Призмата";
 
 static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
@@ -191,7 +193,8 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_METABALLS, T_METABALLS, metaBallsRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SPIRO, T_SPIRO, spiroRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAINBOWCOMET, T_RAINBOWCOMET, rainbowCometRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOWCOMET3, T_RAINBOWCOMET3, rainbowComet3Routine, nullptr}
+    {true, true, 127, 127, 127, EFF_RAINBOWCOMET3, T_RAINBOWCOMET3, rainbowComet3Routine, nullptr},
+    {true, true, 127, 127, 127, EFF_PRIZMATA, T_PRIZMATA, prismataRoutine, nullptr}
 };
 
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
