@@ -122,7 +122,9 @@ void whiteColorRoutine(CRGB *leds, const char *param)
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
 void whiteColorStripeRoutine(CRGB *leds, const char *param)
 {
-    // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    // //if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < 200){
+    //   FastLED.show(); // борьба с мерцанием на белом цвете...
     //   return;
     // } else {
     //   myLamp.setEffDelay(millis());
@@ -1136,20 +1138,28 @@ void Sinusoid3Routine (CRGB *leds, const char *param)
     for (uint8_t x = 0; x < WIDTH; x++) {
       CRGB color;
 
-      float cx = y + float(e_s3_size * (sinf (float(e_s3_speed * 0.003 * time_shift)))) - semiHeightMajor;  // the 8 centers the middle on a 16x16
-      float cy = x + float(e_s3_size * (cosf (float(e_s3_speed * 0.0022 * time_shift)))) - semiWidthMajor;
-      float v = 127 * (1 + sinf ( sqrtf ( ((cx * cx) + (cy * cy)) ) ));
+      float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16 (e_s3_speed * 98.301 * time_shift)))/32767.0;  // the 8 centers the middle on a 16x16
+      float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16 (e_s3_speed * 72.0874 * time_shift)))/32767.0;
+      //int8_t v = 127 * (1 + sinf ( sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) ));
+      int8_t v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0); // 32767.0/3 или 32767.0/2 как оригинальный эффект
       color.r = v;
 
-      cx = x + float(e_s3_size * (sinf (e_s3_speed * float(0.0021 * time_shift)))) - semiWidthMajor;
-      cy = y + float(e_s3_size * (cosf (e_s3_speed * float(0.002 * time_shift)))) - semiHeightMajor;
-      v = 127 * (1 + sinf ( sqrtf ( ((cx * cx) + (cy * cy)) ) ));
+      cx = (y - semiHeightMajor) + float(e_s3_size * (sin16 (e_s3_speed * 68.8107 * time_shift)))/32767.0;
+      cy = (x - semiWidthMajor) + float(e_s3_size * (cos16 (e_s3_speed * 65.534 * time_shift)))/32767.0;
+      //v = 127 * (1 + sinf ( sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) ));
+      v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
+      color.g = v;
+
+      cx = (y - semiHeightMajor) + float(e_s3_size * (sin16 (e_s3_speed * 134.3447 * time_shift)))/32767.0;
+      cy = (x - semiWidthMajor) + float(e_s3_size * (cos16 (e_s3_speed * 170.3884 * time_shift)))/32767.0;
+      //v = 127 * (1 + sinf ( sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) ));
+      v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
       color.b = v;
 
-      cx = x + float(e_s3_size * (sinf (e_s3_speed * float(0.0041 * time_shift)))) - semiWidthMajor;
-      cy = y + float(e_s3_size * (cosf (e_s3_speed * float(0.0052 * time_shift)))) - semiHeightMajor;
-      v = 127 * (1 + sinf ( sqrtf ( ((cx * cx) + (cy * cy)) ) ));
-      color.g = v;
+      // EVERY_N_SECONDS(1){
+      //   LOG.printf_P("%f %f %f\n", cx,cy,v);
+      // }
+
       myLamp.drawPixelXY(x, y, color);
     }
   }
@@ -1270,7 +1280,9 @@ void spiroRoutine(CRGB *leds, const char *param)
     uint8_t spirooffset = 256 / GSHMEM.spirocount;
     boolean change = false;
 
-    myLamp.dimAll(250-speed_factor*7);
+    myLamp.blur2d(15);//45/(speed_factor*3));
+    myLamp.dimAll(254U - (32-(myLamp.effects.getScale()%32)));
+    //myLamp.dimAll(250-speed_factor*7);
 
     
     for (int i = 0; i < GSHMEM.spirocount; i++) {
@@ -1293,7 +1305,7 @@ void spiroRoutine(CRGB *leds, const char *param)
 
     GSHMEM.spirotheta2 += 2*speed_factor;
 
-    EVERY_N_MILLIS(12) {
+    EVERY_N_MILLIS(EFFECTS_RUN_TIMER/2) {
       GSHMEM.spirotheta1 += 1*speed_factor;
     }
 
@@ -1559,13 +1571,14 @@ void prismataRoutine(CRGB *leds, const char *param)
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
 
-  EVERY_N_MILLIS(333) {
+  EVERY_N_MILLIS(100) {
     GSHMEM.spirohueoffset += 1;
   }
 
-  myLamp.dimAll(250U - myLamp.effects.getScale()%32*7.5);
+  myLamp.blur2d(15);
+  myLamp.dimAll(254U - (32-(myLamp.effects.getScale()%32))*8);
   for (uint8_t x = 0; x < WIDTH; x++) {
       uint8_t y = beatsin8(x + 1 * myLamp.effects.getSpeed()/5, 0, HEIGHT);
-      myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (x+GSHMEM.spirohueoffset) * 7));
+      myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (x+GSHMEM.spirohueoffset) * 4));
     }
 }

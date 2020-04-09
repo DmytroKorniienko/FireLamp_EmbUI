@@ -115,6 +115,8 @@ void LAMP::init()
 
 void LAMP::handle()
 {
+  effectsTick(); // обработчик эффектов
+
 #ifdef ESP_USE_BUTTON
   static unsigned long button_check;
   if (buttonEnabled && button_check + 30U < millis()) // раз в 30 мс проверяем кнопку
@@ -123,8 +125,6 @@ void LAMP::handle()
     button_check = millis();
   }
 #endif
-
-  effectsTick(); // обработчик эффектов
 
 #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
   handleTelnetClient();
@@ -148,6 +148,7 @@ void LAMP::handle()
 
   newYearMessageHandle();
   periodicTimeHandle();
+  ConfigSaveCheck(); // для взведенного таймера автосохранения настроек
 
 #ifdef OTA
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
@@ -452,48 +453,50 @@ void LAMP::timeTick() // обработчик будильника "рассве
 
 void LAMP::effectsTick()
 {
+  bool showMustGoON = false;
+  bool storeEffect = false;
+  
   if (!dawnFlag) // флаг устанавливается будильником рассвет
   {
     if (ONflag)
     {
-      if(!isEffectsDisabledUntilText){
-        if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-          startFader(false);
+        if(isFaderOn){
+          faderTick(); // фейдер
+          showMustGoON = true;
         }
-
-        faderTick(); // фейдер
-        
         if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
-          if(effects.getCurrent()->func!=nullptr){
-              effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
+          if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
+            startFader(false);
           }
+          if(!isEffectsDisabledUntilText){
+            if(effects.getCurrent()->func!=nullptr){
+                effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
+                showMustGoON = true;
+                storeEffect = true;
+            }
+#ifdef USELEDBUF
+            memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
+#endif
+          }
+          doPrintStringToLamp(); // обработчик печати строки
+#ifdef VERTGAUGE
+          GaugeShow();
+#endif
           effTimer = millis();
         }
-      }
-#ifdef USELEDBUF
-      memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
-#endif
-      
     }
 
-    doPrintStringToLamp(); // обработчик печати строки
-
-#ifdef VERTGAUGE
-      if(ONflag)
-        GaugeShow();
-#endif
-    
-    if(ONflag){
+    if(ONflag && showMustGoON){
       FastLED.show();
+      if(storeEffect){
 #ifdef USELEDBUF
-      memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);                             // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
+        memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);                             // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
 #endif
-    } else {
-      //digitalWrite(BUILTIN_LED, HIGH); // отключить встроенный светодиод
+      }
     }
+    showMustGoON = false;
+    storeEffect = false;
   }
-
-  ConfigSaveCheck(); // для взведенного таймера автосохранения настроек
 }
 
 #ifdef ESP_USE_BUTTON
@@ -908,7 +911,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode lette
         if(!isInverse)
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),FADETOBLACKVALUE);
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
           //drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
       }
       else
@@ -916,7 +919,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode lette
         if(isInverse)
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j),222);    
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);    
           //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }

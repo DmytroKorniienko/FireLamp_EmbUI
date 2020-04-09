@@ -516,7 +516,7 @@ void interface(){ // функция в которой мф формируем в
             case 2:
                 jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
                 jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
-                jee.range(F("txtSpeed"),30,150,10,F("Задержка прокрутки текста"));
+                jee.range(F("txtSpeed"),10,100,10,F("Задержка прокрутки текста"));
                 jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
                 jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
                 jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
