@@ -948,6 +948,8 @@ uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпре�
 
 void LAMP::sendStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
 {
+  if(!isLampOn()) return;
+
   if(text==nullptr){ // текст пустой
     if(!isStringPrinting){ // ничего сейчас не печатается
       if(docArrMessages.isNull()){ // массив пустой
