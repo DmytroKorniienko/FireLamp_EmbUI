@@ -119,9 +119,10 @@ void LAMP::handle()
 
 #ifdef ESP_USE_BUTTON
   static unsigned long button_check;
-  if (buttonEnabled && button_check + 30U < millis()) // раз в 30 мс проверяем кнопку
+  if (buttonEnabled && button_check + 30U < millis()) // раз в 30 мс проверяем кнопку и будильник
   {
     buttonTick(); // обработчик кнопки
+    alarmWorker();
     button_check = millis();
   }
 #endif
@@ -444,12 +445,118 @@ if(touch.isHold() || !touch.isHolded())
 }
 #endif
 
-#ifdef USE_NTP
-void LAMP::timeTick() // обработчик будильника "рассвет"
+void LAMP::alarmWorker() // обработчик будильника "рассвет"
 {
+    static CHSV dawnColor = CHSV(0, 0, 0);                                    // цвет "рассвета"
+    static CHSV dawnColorMinus1 = CHSV(0, 0, 0);                              // для большей плавности назначаем каждый новый цвет только 1/10 всех диодов; каждая следующая 1/10 часть будет "оставать" на 1 шаг
+    static CHSV dawnColorMinus2 = CHSV(0, 0, 0);
+    static CHSV dawnColorMinus3 = CHSV(0, 0, 0);
+    static CHSV dawnColorMinus4 = CHSV(0, 0, 0);
+    static CHSV dawnColorMinus5 = CHSV(0, 0, 0);
+    static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
+    static time_t startmillis;
 
-}
+    // проверка рассвета, первый вход в функцию
+    if (mode == LAMPMODE::MODE_ALARMCLOCK && !dawnFlag){
+      startmillis = millis();
+      manualOff = false;
+      dawnColorMinus1 = CHSV(0, 0, 0);
+      dawnColorMinus2 = CHSV(0, 0, 0);
+      dawnColorMinus3 = CHSV(0, 0, 0);
+      dawnColorMinus4 = CHSV(0, 0, 0);
+      dawnColorMinus5 = CHSV(0, 0, 0);
+      dawnCounter = 0;
+      FastLED.setBrightness(255);
+    }
+
+    if((millis()-startmillis)/1000>(5+DAWN_TIMEOUT)*60 || manualOff){ // рассвет закончился
+      mode = storedMode;
+      // не время будильника (ещё не начался или закончился по времени)
+      if (dawnFlag)
+      {
+        dawnFlag = false;
+        FastLED.clear();
+        delay(2);
+        FastLED.show();
+        changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
+      }
+      // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
+      // digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+      // #endif
+
+      // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
+      // digitalWrite(MOSFET_PIN, ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL);
+      // #endif
+    }
+
+    // проверка рассвета
+    if (mode == LAMPMODE::MODE_ALARMCLOCK)
+    {
+      storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK ) ? storedMode: mode);
+      mode = MODE_ALARMCLOCK;
+      
+      if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
+      {
+        // величина рассвета 0-255
+        int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+
+        EVERY_N_SECONDS(10){
+          dawnCounter++;
+
+        dawnPosition = constrain(dawnPosition, 0, 255);
+        dawnColorMinus5 = dawnCounter > 4 ? dawnColorMinus4 : dawnColorMinus5;
+        dawnColorMinus4 = dawnCounter > 3 ? dawnColorMinus3 : dawnColorMinus4;
+        dawnColorMinus3 = dawnCounter > 2 ? dawnColorMinus2 : dawnColorMinus3;
+        dawnColorMinus2 = dawnCounter > 1 ? dawnColorMinus1 : dawnColorMinus2;
+        dawnColorMinus1 = dawnCounter > 0 ? dawnColor : dawnColorMinus1;
+        dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
+                         map(dawnPosition, 0, 255, 255, 170),
+                         map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
+        }
+        
+        EVERY_N_SECONDS(1){
+          if(!second(timeProcessor.getUnixTime())){
+#ifdef PRINT_ALARM_TIME
+            //textinverse = INVERSE_ALARM_TIME;
+            if(!second(timeProcessor.getUnixTime())){
+              CRGB letterColor;
+              hsv2rgb_rainbow(dawnColor, letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
+              myLamp.sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
+            }
+            //textinverse = false;                                          // отключить инвертирование, если было        
 #endif
+          }
+        }
+
+        // fill_solid(leds, NUM_LEDS, dawnColor);
+        for (uint16_t i = 0U; i < NUM_LEDS; i++)
+        {
+          if (i % 6 == 0) leds[i] = dawnColor;                          // 1я 1/10 диодов: цвет текущего шага
+          if (i % 6 == 1) leds[i] = dawnColorMinus1;                    // 2я 1/10 диодов: -1 шаг
+          if (i % 6 == 2) leds[i] = dawnColorMinus2;                    // 3я 1/10 диодов: -2 шага
+          if (i % 6 == 3) leds[i] = dawnColorMinus3;                    // 3я 1/10 диодов: -3 шага
+          if (i % 6 == 4) leds[i] = dawnColorMinus4;                    // 3я 1/10 диодов: -4 шага
+          if (i % 6 == 5) leds[i] = dawnColorMinus5;                    // 3я 1/10 диодов: -5 шагов
+        }
+        //FastLED.setBrightness(255);
+        //delay(1);
+        //FastLED.show();
+        
+        dawnFlag = true;
+      }
+
+      // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
+      // if (thisTime == alarms[thisDay].Time)                             // установка, только в минуту, на которую заведён будильник
+      // {
+      //   digitalWrite(ALARM_PIN, manualOff ? !ALARM_LEVEL : ALARM_LEVEL);// установка сигнала в зависимости от того, был ли отключен будильник вручную
+      // }
+      // #endif
+
+      // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время работы будильника
+      // digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
+      // #endif
+    }
+}
 
 void LAMP::effectsTick()
 {
@@ -496,6 +603,11 @@ void LAMP::effectsTick()
     }
     showMustGoON = false;
     storeEffect = false;
+  } else {
+    if(!(millis()%11)){
+      doPrintStringToLamp(); // обработчик печати строки
+      FastLED.show();
+    }
   }
 }
 
@@ -796,6 +908,11 @@ void LAMP::showWarning(
   myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
 }
 
+void LAMP::startAlarm()
+{
+  mode = LAMPMODE::MODE_ALARMCLOCK;
+}
+
 void LAMP::startDemoMode()
 {
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
@@ -835,7 +952,7 @@ void LAMP::startOTAUpdate()
   myLamp.sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
 }
 
-bool LAMP::fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, bool stopText, bool isInverse, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
+bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
   static int32_t offset = (MIRR_V ? 0 : WIDTH);
   
@@ -873,7 +990,7 @@ bool LAMP::fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, b
   return false;
 }
 
-void LAMP::drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
 {
   uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
@@ -946,9 +1063,9 @@ uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпре�
   return 0;
 }
 
-void LAMP::sendStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
+void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint)
 {
-  if(!isLampOn()) return;
+  if((!ONflag && !forcePrint) || (dawnFlag && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
 
   if(text==nullptr){ // текст пустой
     if(!isStringPrinting){ // ничего сейчас не печатается
@@ -958,7 +1075,7 @@ void LAMP::sendStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
       else { // есть что печатать
         JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
-        doPrintStringToLamp(var[F("s")], (CRGB::HTMLColorCode)(var[F("c")].as<unsigned long>())); // отправляем
+        doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>())); // отправляем
         arr.remove(0); // удаляем отправленный
 #ifdef LAMP_DEBUG
         //LOG.println(docArrMessages.as<String>());
@@ -981,7 +1098,7 @@ void LAMP::sendStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
       
       JsonObject var = arr.createNestedObject();
       var[F("s")]=text;
-      var[F("c")]=(unsigned long)letterColor;
+      var[F("c")]=(unsigned long)letterColor.r*65536+(unsigned long)letterColor.g*256+(unsigned long)letterColor.b;
 #ifdef LAMP_DEBUG
       LOG.println(docArrMessages.as<String>());
 #endif
@@ -992,10 +1109,10 @@ void LAMP::sendStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
   }
 }
 
-void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor)
+void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor)
 {
   static String toPrint;
-  static CRGB::HTMLColorCode _letterColor;
+  static CRGB _letterColor;
 
   isStringPrinting = true;
 
@@ -1014,7 +1131,7 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, false, 1, txtOffset)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, dawnFlag, 1, txtOffset)){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -1023,7 +1140,7 @@ void LAMP::doPrintStringToLamp(const char* text, CRGB::HTMLColorCode letterColor
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true, false, 1, txtOffset);
+    fillStringManual(toPrint.c_str(), _letterColor, true, dawnFlag, 1, txtOffset);
   }
 }
 

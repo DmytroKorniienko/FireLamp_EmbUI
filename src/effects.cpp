@@ -2080,7 +2080,7 @@ void flockRoutine(CRGB *leds, const char *param) {
         predatorPresent = true;
         predator.maxspeed = 0.385*myLamp.effects.getSpeed()/127.0+0.385/2;
         predator.maxforce = 0.020*myLamp.effects.getSpeed()/127.0+0.020/2;
-        predator.neighbordist = 16.0;
+        predator.neighbordist = 8.0;
         predator.desiredseparation = 0.0;
       }
     }
@@ -2102,7 +2102,7 @@ void flockRoutine(CRGB *leds, const char *param) {
 
         if (predatorPresent) {
           // flee from predator
-          boid->repelForce(predator.location, 10);
+          boid->repelForce(predator.location, 8);
         }
 
         boid->run(boids, boidCount);

@@ -427,10 +427,12 @@ private:
 #endif
     static void showWarning(CRGB::HTMLColorCode color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
 
-    void doPrintStringToLamp(const char* text = nullptr, CRGB::HTMLColorCode letterColor = CRGB::Black);
-    bool fillStringManual(const char* text, CRGB::HTMLColorCode letterColor, bool stopText = false, bool isInverse = false, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT);
-    void drawLetter(uint16_t letter, int16_t offset, CRGB::HTMLColorCode letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
+    void doPrintStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black);
+    bool fillStringManual(const char* text,  const CRGB &letterColor, bool stopText = false, bool isInverse = false, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT);
+    void drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
+
+    void alarmWorker();
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -451,7 +453,7 @@ public:
     TimeProcessor timeProcessor;
     void refreshTimeManual() { timeProcessor.handleTime(true); }
 
-    void sendStringToLamp(const char* text = nullptr, CRGB::HTMLColorCode letterColor = CRGB::Black);
+    void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false);
     
     LAMP();
 
@@ -459,7 +461,7 @@ public:
     void init();
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
-    void setOnOff(bool flag) {ONflag = flag; changePower(flag);}
+    void setOnOff(bool flag) {ONflag = flag; changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
@@ -474,6 +476,7 @@ public:
     void periodicTimeHandle();
 
     void startFader(bool isManual);
+    void startAlarm();
     void startDemoMode();
     void startNormalMode();
     void startOTAUpdate();
