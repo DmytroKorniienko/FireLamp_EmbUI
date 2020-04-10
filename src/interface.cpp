@@ -335,7 +335,7 @@ void bMQTTformCallback()
 
 void bDemoCallback()
 {
-    if(myLamp.getMode()!=MODE_DEMO)
+    if(myLamp.getMode()!=LAMPMODE::MODE_DEMO)
         myLamp.startDemoMode();
     else
         myLamp.startNormalMode();

@@ -456,28 +456,35 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
     static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
     static time_t startmillis;
 
+    if (mode != LAMPMODE::MODE_ALARMCLOCK){
+      dawnFlag = false;
+      manualOff = false;
+      return;
+    }
+    
     // проверка рассвета, первый вход в функцию
     if (mode == LAMPMODE::MODE_ALARMCLOCK && !dawnFlag){
       startmillis = millis();
       manualOff = false;
+      dawnColor = CHSV(0, 0, 0);
       dawnColorMinus1 = CHSV(0, 0, 0);
       dawnColorMinus2 = CHSV(0, 0, 0);
       dawnColorMinus3 = CHSV(0, 0, 0);
       dawnColorMinus4 = CHSV(0, 0, 0);
       dawnColorMinus5 = CHSV(0, 0, 0);
       dawnCounter = 0;
+      FastLED.clear();
       FastLED.setBrightness(255);
     }
 
-    if((millis()-startmillis)/1000>(5+DAWN_TIMEOUT)*60 || manualOff){ // рассвет закончился
+    if(LAMPMODE::MODE_ALARMCLOCK && ((millis()-startmillis)/1000>(5+DAWN_TIMEOUT)*60+30 || manualOff)){ // рассвет закончился
       mode = storedMode;
       // не время будильника (ещё не начался или закончился по времени)
       if (dawnFlag)
       {
         dawnFlag = false;
+        manualOff = false;
         FastLED.clear();
-        delay(2);
-        FastLED.show();
         changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
       }
       // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -916,7 +923,7 @@ void LAMP::startAlarm()
 void LAMP::startDemoMode()
 {
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
-  mode = MODE_DEMO;
+  mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
   effects.moveBy(random(0, MODE_AMOUNT));
   FastLED.setBrightness(getNormalizedLampBrightness());
@@ -933,7 +940,7 @@ void LAMP::startDemoMode()
 
 void LAMP::startNormalMode()
 {
-  mode = MODE_NORMAL;
+  mode = LAMPMODE::MODE_NORMAL;
   if(storedEffect!=EFF_NONE)
     effects.moveBy(storedEffect);
   FastLED.setBrightness(getNormalizedLampBrightness());
