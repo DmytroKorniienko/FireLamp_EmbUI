@@ -26,7 +26,7 @@ void jeeui2::connectToMqtt() {
 }
        
 String jeeui2::id(const String &topic){
-    if(*m_pref) return topic;
+    if(!*m_pref) return topic;
     else {
         String ret;
         ret = m_pref; ret += '/'; ret += topic;
@@ -191,11 +191,14 @@ void jeeui2::onMqttConnect(){
 
 void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
     Serial.println(F("Publish received."));
+    // Serial.println(m_pref); Serial.println(topic);  Serial.println(payload); 
+
+
     String tpc = String(topic);
     if(*m_pref) tpc = tpc.substring(strlen(m_pref) + 1, tpc.length());
-    char buffer[len+1];
-    //memset(buffer,'\0',sizeof(buffer));
-    strncpy(buffer,payload,sizeof(buffer)-1);
+    char buffer[len+2];
+    memset(buffer,'\0',len+2);
+    strncpy(buffer,payload,sizeof(buffer)-2);
     // String msg = F(""); 
     // for (size_t i= 0; i < len; i++) {
     //     msg += (char)payload[i];

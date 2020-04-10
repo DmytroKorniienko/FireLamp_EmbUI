@@ -103,7 +103,6 @@ void loop() {
 
 void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG.printf_P(PSTR("Message [%s - %s]"), topic.c_str() , payload.c_str());
-
 }
 
 void sendData(){
@@ -121,7 +120,5 @@ void sendData(){
 #else
   LOG.printf_P(PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
-  //jee.publish("test","30");
-  //jee.publish("hum", String(hum));
-  //jee.publish("ds18b20", String(ds_tem));
+  //jee.publish(F("jee/get/config"),jee.deb());
 }

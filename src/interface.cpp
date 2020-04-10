@@ -106,6 +106,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         break;
     case EVENT_TYPE::ALARM :
         myLamp.startAlarm();
+        //return; // если не нужен вывод текста - раскомментировать
         break;
     case EVENT_TYPE::DEMO_ON :
         if(myLamp.getMode()!=MODE_DEMO || !myLamp.isLampOn())

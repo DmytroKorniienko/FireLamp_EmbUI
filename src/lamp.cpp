@@ -461,7 +461,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
       manualOff = false;
       return;
     }
-    
+
     // проверка рассвета, первый вход в функцию
     if (mode == LAMPMODE::MODE_ALARMCLOCK && !dawnFlag){
       startmillis = millis();
@@ -499,9 +499,6 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
     // проверка рассвета
     if (mode == LAMPMODE::MODE_ALARMCLOCK)
     {
-      storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK ) ? storedMode: mode);
-      mode = MODE_ALARMCLOCK;
-      
       if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
       {
         // величина рассвета 0-255
@@ -917,6 +914,7 @@ void LAMP::showWarning(
 
 void LAMP::startAlarm()
 {
+  storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK ) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
 }
 
