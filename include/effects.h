@@ -48,6 +48,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <WiFi.h>
 #include "SPIFFS.h"
 #endif
+#include "effects_types.h"
+
 
 typedef enum _EFF_ENUM {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
@@ -205,6 +207,7 @@ static EFFECT _EFFECTS_ARR[] = {
 #define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
 #define LIGHTERS_AM            (100U)               // светлячки
 #define NUM_LAYERS             (1U)                 // The coordinates for 3 16-bit noise spaces.
+#define AVAILABLE_BOID_COUNT   (10U)                // стая, кол-во птиц
 class SHARED_MEM {
 public:
     union {
@@ -240,7 +243,7 @@ public:
             #else
             uint8_t noise[HEIGHT][HEIGHT];
             #endif
-            //CRGBPalette16 currentPalette;
+            char currentPalette[sizeof(CRGBPalette16)];
 		};
         struct {
             int16_t ballColor;
@@ -286,13 +289,23 @@ public:
             uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
             //uint8_t ledsbuff[sizeof(CRGB)* NUM_LEDS];
         };
-
+        struct { // стая
+            bool predatorPresent;
+            uint8_t hueoffset;
+            char predator[sizeof(Boid)];
+            char wind[sizeof(PVector)];
+            char boids[sizeof(Boid)*AVAILABLE_BOID_COUNT];
+		};
+        struct { // будильник "рассвет"
+            uint8_t dawnCounter;                                           // счётчик первых шагов будильника
+            time_t startmillis;
+            CHSV dawnColorMinus[6];
+		};
         struct {
             float test; // dummy_struct %)
 		};
 		//uint8_t raw[1024];
 	};
-    CRGBPalette16 currentPalette; //-- 3D Noise эффектцы --------------
 };
 
 class EffectWorker {

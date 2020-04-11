@@ -82,7 +82,8 @@ void setup() {
     if(myLamp.timeProcessor.getIsSyncOnline()){
       myLamp.refreshTimeManual(); // принудительное обновление времени
     }
-
+    if(myLamp.timeProcessor.isDirtyTime())
+      myLamp.setIsEventsHandled(false);
     myLamp.events.setEventCallback(event_worker);
 }
 
@@ -103,6 +104,7 @@ void loop() {
 
 void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG.printf_P(PSTR("Message [%s - %s]"), topic.c_str() , payload.c_str());
+  jee._refresh = true;
 }
 
 void sendData(){
@@ -120,5 +122,5 @@ void sendData(){
 #else
   LOG.printf_P(PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
-  //jee.publish(F("jee/get/config"),jee.deb());
+  jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
 }

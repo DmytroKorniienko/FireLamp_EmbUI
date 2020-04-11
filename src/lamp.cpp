@@ -447,14 +447,9 @@ if(touch.isHold() || !touch.isHolded())
 
 void LAMP::alarmWorker() // обработчик будильника "рассвет"
 {
-    static CHSV dawnColor = CHSV(0, 0, 0);                                    // цвет "рассвета"
-    static CHSV dawnColorMinus1 = CHSV(0, 0, 0);                              // для большей плавности назначаем каждый новый цвет только 1/10 всех диодов; каждая следующая 1/10 часть будет "оставать" на 1 шаг
-    static CHSV dawnColorMinus2 = CHSV(0, 0, 0);
-    static CHSV dawnColorMinus3 = CHSV(0, 0, 0);
-    static CHSV dawnColorMinus4 = CHSV(0, 0, 0);
-    static CHSV dawnColorMinus5 = CHSV(0, 0, 0);
-    static uint8_t dawnCounter = 0;                                           // счётчик первых 10 шагов будильника
-    static time_t startmillis;
+    // static CHSV GSHMEM.dawnColorMinus[6];                                            // цвет "рассвета"
+    // static uint8_t GSHMEM.dawnCounter = 0;                                           // счётчик первых шагов будильника
+    // static time_t GSHMEM.startmillis;
 
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
       dawnFlag = false;
@@ -464,20 +459,21 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
 
     // проверка рассвета, первый вход в функцию
     if (mode == LAMPMODE::MODE_ALARMCLOCK && !dawnFlag){
-      startmillis = millis();
+      GSHMEM.startmillis = millis();
       manualOff = false;
-      dawnColor = CHSV(0, 0, 0);
-      dawnColorMinus1 = CHSV(0, 0, 0);
-      dawnColorMinus2 = CHSV(0, 0, 0);
-      dawnColorMinus3 = CHSV(0, 0, 0);
-      dawnColorMinus4 = CHSV(0, 0, 0);
-      dawnColorMinus5 = CHSV(0, 0, 0);
-      dawnCounter = 0;
+      memset(GSHMEM.dawnColorMinus,0,sizeof(GSHMEM.dawnColorMinus));
+      GSHMEM.dawnCounter = 0;
       FastLED.clear();
       FastLED.setBrightness(255);
+      // величина рассвета 0-255
+      int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+      dawnPosition = constrain(dawnPosition, 0, 255);
+      GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
+                        map(dawnPosition, 0, 255, 255, 170),
+                        map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
     }
 
-    if(LAMPMODE::MODE_ALARMCLOCK && ((millis()-startmillis)/1000>(5+DAWN_TIMEOUT)*60+30 || manualOff)){ // рассвет закончился
+    if(LAMPMODE::MODE_ALARMCLOCK && ((millis()-GSHMEM.startmillis)/1000>(5+DAWN_TIMEOUT)*60+30 || manualOff)){ // рассвет закончился
       mode = storedMode;
       // не время будильника (ещё не начался или закончился по времени)
       if (dawnFlag)
@@ -496,56 +492,40 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
       // #endif
     }
 
+    //blur2d(25);
+
     // проверка рассвета
     if (mode == LAMPMODE::MODE_ALARMCLOCK)
     {
       if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
       {
-        // величина рассвета 0-255
-        int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
-
         EVERY_N_SECONDS(10){
-          dawnCounter++;
+          // величина рассвета 0-255
+          int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+          dawnPosition = constrain(dawnPosition, 0, 255);
+          GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
+                          map(dawnPosition, 0, 255, 255, 170),
+                          map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
+          GSHMEM.dawnCounter++; //=GSHMEM.dawnCounter%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))+1;
 
-        dawnPosition = constrain(dawnPosition, 0, 255);
-        dawnColorMinus5 = dawnCounter > 4 ? dawnColorMinus4 : dawnColorMinus5;
-        dawnColorMinus4 = dawnCounter > 3 ? dawnColorMinus3 : dawnColorMinus4;
-        dawnColorMinus3 = dawnCounter > 2 ? dawnColorMinus2 : dawnColorMinus3;
-        dawnColorMinus2 = dawnCounter > 1 ? dawnColorMinus1 : dawnColorMinus2;
-        dawnColorMinus1 = dawnCounter > 0 ? dawnColor : dawnColorMinus1;
-        dawnColor = CHSV(map(dawnPosition, 0, 255, 10, 35),
-                         map(dawnPosition, 0, 255, 255, 170),
-                         map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
-        }
-        
-        EVERY_N_SECONDS(1){
-          if(!second(timeProcessor.getUnixTime())){
-#ifdef PRINT_ALARM_TIME
-            //textinverse = INVERSE_ALARM_TIME;
-            if(!second(timeProcessor.getUnixTime())){
-              CRGB letterColor;
-              hsv2rgb_rainbow(dawnColor, letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-              myLamp.sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
-            }
-            //textinverse = false;                                          // отключить инвертирование, если было        
-#endif
+          for(uint8_t i=sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV)-1; i>0U; i--){
+              GSHMEM.dawnColorMinus[i]=((GSHMEM.dawnCounter > i)?GSHMEM.dawnColorMinus[i-1]:GSHMEM.dawnColorMinus[i]);
           }
         }
 
+#ifdef PRINT_ALARM_TIME        
+        EVERY_N_SECONDS(1){
+          if(!second(timeProcessor.getUnixTime())){
+            CRGB letterColor;
+            hsv2rgb_rainbow(GSHMEM.dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
+            myLamp.sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
+          }
+        }
+#endif
+
         // fill_solid(leds, NUM_LEDS, dawnColor);
         for (uint16_t i = 0U; i < NUM_LEDS; i++)
-        {
-          if (i % 6 == 0) leds[i] = dawnColor;                          // 1я 1/10 диодов: цвет текущего шага
-          if (i % 6 == 1) leds[i] = dawnColorMinus1;                    // 2я 1/10 диодов: -1 шаг
-          if (i % 6 == 2) leds[i] = dawnColorMinus2;                    // 3я 1/10 диодов: -2 шага
-          if (i % 6 == 3) leds[i] = dawnColorMinus3;                    // 3я 1/10 диодов: -3 шага
-          if (i % 6 == 4) leds[i] = dawnColorMinus4;                    // 3я 1/10 диодов: -4 шага
-          if (i % 6 == 5) leds[i] = dawnColorMinus5;                    // 3я 1/10 диодов: -5 шагов
-        }
-        //FastLED.setBrightness(255);
-        //delay(1);
-        //FastLED.show();
-        
+            leds[i] = GSHMEM.dawnColorMinus[i%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))];
         dawnFlag = true;
       }
 

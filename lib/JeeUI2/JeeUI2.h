@@ -49,7 +49,7 @@ class jeeui2
     typedef void (*mqttCallback) ();
 
   public:
-    jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(256) {
+    jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(512) {
       *ip='\0'; 
       *mc='\0'; 
       *mac='\0'; 
