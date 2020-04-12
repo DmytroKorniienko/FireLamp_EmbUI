@@ -146,12 +146,12 @@ void jeeui2::button(const String &id, const String &color, const String &label){
 
     jeeui2::buf.concat(buffer);
 
-    if(!btn_id.containsKey(id)){
-        String tmp;
-        btn_id.add(id); //btn_id[btn_num] = String(F("BTN_")) + id;
-        serializeJson(btn_id, tmp);
-        deserializeJson(btn_id, tmp);
-    }
+    // if(!btn_id.containsKey(id)){
+    //     String tmp;
+    //     btn_id.add(id); //btn_id[btn_num] = String(F("BTN_")) + id;
+    //     serializeJson(btn_id, tmp);
+    //     deserializeJson(btn_id, tmp);
+    // }
 }
 
 void jeeui2::button(const String &id, const String &color, const String &label, int column){
@@ -160,12 +160,12 @@ void jeeui2::button(const String &id, const String &color, const String &label, 
 
     jeeui2::buf.concat(buffer);
     
-    if(!btn_id.containsKey(id)){
-        String tmp;
-        btn_id.add(id); //btn_id[btn_num] = String(F("BTN_")) + id;
-        serializeJson(btn_id, tmp);
-        deserializeJson(btn_id, tmp);
-    }
+    // if(!btn_id.containsKey(id)){
+    //     String tmp;
+    //     btn_id.add(id); //btn_id[btn_num] = String(F("BTN_")) + id;
+    //     serializeJson(btn_id, tmp);
+    //     deserializeJson(btn_id, tmp);
+    // }
 }
 
 void jeeui2::textarea(const String &id, const String &label){

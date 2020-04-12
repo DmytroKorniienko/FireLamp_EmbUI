@@ -271,9 +271,16 @@ void jeeui2::subscribeAll(){
     }
     if(dbg)Serial.println(btn_id.as<String>());
     if(dbg)Serial.println( String(F("BTN =>")));
+    // JsonArray arr = btn_id.as<JsonArray>();
+    // for (size_t i=0; i<arr.size(); i++) {
+    //     String item = id(F("jee/set/")) + String(F("BTN_")) + arr[i].as<String>();
+    //     if(dbg)Serial.println(item);
+    //     mqttClient.subscribe(item.c_str(), 0);
+    // }
     JsonArray arr = btn_id.as<JsonArray>();
     for (size_t i=0; i<arr.size(); i++) {
-        String item = id(F("jee/set/")) + String(F("BTN_")) + arr[i].as<String>();
+        JsonObject var=arr[i]; // извлекаем очередной
+        String item = id(F("jee/set/")) + String(F("BTN_")) + var[F("b")].as<String>();
         if(dbg)Serial.println(item);
         mqttClient.subscribe(item.c_str(), 0);
     }

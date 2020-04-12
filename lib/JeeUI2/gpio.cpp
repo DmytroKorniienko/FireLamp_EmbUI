@@ -1,7 +1,5 @@
 #include "JeeUI2.h"
 
-
-
 void jeeui2::led_handle()
 {
     if (LED_PIN == -1) return;
@@ -19,11 +17,11 @@ void jeeui2::btnCallback(const String &name, buttonCallback response)
         response();
         btn();
     }
+#endif
     if(strcmp(btnui, name.c_str())==0){
         *btnui = '\0';
         response();
     }
-#endif
 }
 
 void jeeui2::btn()
@@ -94,4 +92,29 @@ void jeeui2::ui(void (*uiFunction) ())
 
 void testFunction(){
 
+}
+
+void jeeui2::button_handle()
+{
+    if(!*btnui)
+        return;
+    
+    if(!btn_id.containsKey(btnui)){
+        JsonObject var;
+        buttonCallback response = nullptr;
+        JsonArray arr = btn_id.as<JsonArray>(); // используем имеющийся
+        for (size_t i=0; i<arr.size(); i++) {
+            JsonObject var=arr[i]; // извлекаем очередной
+            if(var[F("b")].as<String>()==btnui)
+                response = (buttonCallback)(var[F("f")].as<unsigned long>());
+        }
+
+        if(response!=nullptr)
+            response();
+
+        if(dbg)Serial.print(F("HANDLED: "));
+        if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
+
+    }    
+    *btnui = '\0';
 }

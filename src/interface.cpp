@@ -156,6 +156,7 @@ void bEditEventCallback()
     EVENT *next = myLamp.events.getNextEvent(nullptr);
     int index = jee.param(F("evSelList")).toInt();
     int i = 1;
+    if(!index) index=1;
     while (next!=nullptr)
     {
         //LOG.printf_P(PSTR("%d %d\n"), i, index);
@@ -163,6 +164,9 @@ void bEditEventCallback()
         i++;
         next = myLamp.events.getNextEvent(next);
     }
+    if(next==nullptr)
+        return;
+
     jee.var(F("isEnabled"),(next->isEnabled?F("true"):F("false")));
     jee.var(F("d1"),(next->d1?F("true"):F("false")));
     jee.var(F("d2"),(next->d2?F("true"):F("false")));
@@ -185,6 +189,7 @@ void bDelEventCallback(bool isRefresh)
     EVENT *next = myLamp.events.getNextEvent(nullptr);
     int index = jee.param(F("evSelList")).toInt();
     int i = 1;
+    if(!index) index=1;
     while (next!=nullptr)
     {
         if(i==index) break;
@@ -352,21 +357,21 @@ void bDemoCallback()
 void jeebuttonshandle()
 {
     static unsigned long timer;
-    jee.btnCallback(F("bTmSubm"), bTmSubmCallback);
-    jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
-    jee.btnCallback(F("bDemo"), bDemoCallback);
-    jee.btnCallback(F("bTxtSend"), bTxtSendCallback);
-    jee.btnCallback(F("bFLoad"), bFLoadCallback);
-    jee.btnCallback(F("bFSave"), bFSaveCallback);
-    jee.btnCallback(F("bFDel"), bFDelCallback);
-    jee.btnCallback(F("bRefresh"), bRefreshCallback);
-    jee.btnCallback(F("bOTA"), bOTACallback);
-    jee.btnCallback(F("bAddEvent"), bAddEventCallback);
-    jee.btnCallback(F("bDelEvent"), bDelEventCallback);
-    jee.btnCallback(F("bEditEvent"), bEditEventCallback);
-    jee.btnCallback(F("bOwrEvent"), bOwrEventCallback);
-    jee.btnCallback(F("bSetClose"), bSetCloseCallback);
-    jee.btnCallback(F("bEvents"), bEventsCallback);
+    // jee.btnCallback(F("bTmSubm"), bTmSubmCallback);
+    // jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
+    // jee.btnCallback(F("bDemo"), bDemoCallback);
+    // jee.btnCallback(F("bTxtSend"), bTxtSendCallback);
+    // jee.btnCallback(F("bFLoad"), bFLoadCallback);
+    // jee.btnCallback(F("bFSave"), bFSaveCallback);
+    // jee.btnCallback(F("bFDel"), bFDelCallback);
+    // jee.btnCallback(F("bRefresh"), bRefreshCallback);
+    // jee.btnCallback(F("bOTA"), bOTACallback);
+    // jee.btnCallback(F("bAddEvent"), bAddEventCallback);
+    // jee.btnCallback(F("bDelEvent"), bDelEventCallback);
+    // jee.btnCallback(F("bEditEvent"), bEditEventCallback);
+    // jee.btnCallback(F("bOwrEvent"), bOwrEventCallback);
+    // jee.btnCallback(F("bSetClose"), bSetCloseCallback);
+    // jee.btnCallback(F("bEvents"), bEventsCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -422,7 +427,39 @@ void create_parameters(){
     jee.var_create(F("ny_unix"), F("1609459200"));
 
     jee.var_create(F("addSList"),F("1"));
+    jee.var_create(F("isEdEvent"),F("false"));
+    jee.var_create(F("isEnabled"),F("true"));
+    jee.var_create(F("tmEvent"),F(""));
+    jee.var_create(F("repeat"),F("0"));
+    jee.var_create(F("d1"),F("false"));
+    jee.var_create(F("d2"),F("false"));
+    jee.var_create(F("d3"),F("false"));
+    jee.var_create(F("d4"),F("false"));
+    jee.var_create(F("d5"),F("false"));
+    jee.var_create(F("d6"),F("false"));
+    jee.var_create(F("d7"),F("false"));
+    jee.var_create(F("evSelList"),F("1"));
+    jee.var_create(F("evList"),F("1"));
+    jee.var_create(F("fileList"),F("1"));
 
+    //-----------------------------------------------
+
+
+    jee.btn_create(F("bTmSubm"), bTmSubmCallback);
+    jee.btn_create(F("bMQTTform"), bMQTTformCallback); // MQTT form button
+    jee.btn_create(F("bDemo"), bDemoCallback);
+    jee.btn_create(F("bTxtSend"), bTxtSendCallback);
+    jee.btn_create(F("bFLoad"), bFLoadCallback);
+    jee.btn_create(F("bFSave"), bFSaveCallback);
+    jee.btn_create(F("bFDel"), bFDelCallback);
+    jee.btn_create(F("bRefresh"), bRefreshCallback);
+    jee.btn_create(F("bOTA"), bOTACallback);
+    jee.btn_create(F("bAddEvent"), bAddEventCallback);
+    jee.btn_create(F("bDelEvent"), bDelEventCallback);
+    jee.btn_create(F("bEditEvent"), bEditEventCallback);
+    jee.btn_create(F("bOwrEvent"), bOwrEventCallback);
+    jee.btn_create(F("bSetClose"), bSetCloseCallback);
+    jee.btn_create(F("bEvents"), bEventsCallback);
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс

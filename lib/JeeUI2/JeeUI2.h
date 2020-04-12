@@ -49,7 +49,7 @@ class jeeui2
     typedef void (*mqttCallback) ();
 
   public:
-    jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(512) {
+    jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(1024) {
       *ip='\0'; 
       *mc='\0'; 
       *mac='\0'; 
@@ -68,6 +68,7 @@ class jeeui2
 
     void var(const String &key, const String &value, bool pub = false);
     void var_create(const String &key, const String &value);
+    void btn_create(const String &btn, buttonCallback response);
     String param(const String &key);
     void led(uint8_t pin, bool invert);
     String deb();

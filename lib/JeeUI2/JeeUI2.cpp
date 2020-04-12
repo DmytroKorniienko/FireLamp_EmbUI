@@ -37,6 +37,30 @@ void jeeui2::var_create(const String &key, const String &value)
     }
 }
 
+void jeeui2::btn_create(const String &btn, buttonCallback response) 
+{
+    //return;
+    if(!btn_id.containsKey(btn)){
+        JsonArray arr; // добавляем в очередь
+        String tmp;
+
+        if(!btn_id.isNull())
+            arr = btn_id.as<JsonArray>(); // используем имеющийся
+        else
+            arr = btn_id.to<JsonArray>(); // создаем новый
+        
+        JsonObject var = arr.createNestedObject();
+        var[F("b")]=btn;
+        var[F("f")]=(unsigned long)response;
+
+        if(dbg)Serial.print(F("REGISTER: "));
+        if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btn.c_str(), ESP.getFreeHeap());
+
+        serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON        
+        deserializeJson(btn_id, tmp);
+    }    
+}
+
 String jeeui2::param(const String &key) 
 { 
     //String value = cfg[key];
@@ -351,6 +375,7 @@ void jeeui2::handle()
     timer = millis();
     btn();
     led_handle();
+    button_handle();
     pre_autosave();
     autosave();
 }
