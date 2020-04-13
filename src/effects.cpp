@@ -1141,29 +1141,33 @@ void Sinusoid3Routine (CRGB *leds, const char *param)
   float e_s3_speed = 0.004 * myLamp.effects.getSpeed() + 0.015; // speed of the movement along the Lissajous curves
   float e_s3_size = 3 * (float)myLamp.effects.getScale()/255.0 + 2;    // amplitude of the curves
 
-  float time_shift = float(millis()%(uint32_t)(30000*(1.0/((float)myLamp.effects.getSpeed()/255))));
+  float time_shift = millis(); //float(millis()%(uint32_t)(30000*(1.0/((float)myLamp.effects.getSpeed()/255))));
 
   for (uint8_t y = 0; y < HEIGHT; y++) {
     for (uint8_t x = 0; x < WIDTH; x++) {
       CRGB color;
+      uint8_t scale = map8(255-myLamp.effects.getScale(),50,150);
 
       float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16 (e_s3_speed * 98.301 * time_shift)))/32767.0;  // the 8 centers the middle on a 16x16
       float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16 (e_s3_speed * 72.0874 * time_shift)))/32767.0;
       //int8_t v = 127 * (1 + sinf ( sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) ));
-      int8_t v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0); // 32767.0/3 или 32767.0/2 как оригинальный эффект
-      color.r = v;
+      //int8_t v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0); // 32767.0/3 или 32767.0/2 как оригинальный эффект
+      int8_t v = 127 * (1 + sin16 ( 127*scale*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
+      color.r = ~v;
 
       cx = (y - semiHeightMajor) + float(e_s3_size * (sin16 (e_s3_speed * 68.8107 * time_shift)))/32767.0;
       cy = (x - semiWidthMajor) + float(e_s3_size * (cos16 (e_s3_speed * 65.534 * time_shift)))/32767.0;
       //v = 127 * (1 + sinf ( sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) ));
-      v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
-      color.g = v;
+      //v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
+      v = 127 * (1 + sin16 ( 127*scale*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
+      color.g = ~v;
 
       cx = (y - semiHeightMajor) + float(e_s3_size * (sin16 (e_s3_speed * 134.3447 * time_shift)))/32767.0;
       cy = (x - semiWidthMajor) + float(e_s3_size * (cos16 (e_s3_speed * 170.3884 * time_shift)))/32767.0;
       //v = 127 * (1 + sinf ( sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) ));
-      v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
-      color.b = v;
+      //v = 127 * (1 + sin16 ( 32767.0/3*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
+      v = 127 * (1 + sin16 ( 127*scale*sqrtf ( (((float)cx*cx) + ((float)cy*cy)) ) )/32767.0);
+      color.b = ~v;
 
       // EVERY_N_SECONDS(1){
       //   LOG.printf_P("%f %f %f\n", cx,cy,v);
