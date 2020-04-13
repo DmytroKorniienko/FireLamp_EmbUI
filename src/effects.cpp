@@ -1686,3 +1686,108 @@ void flockRoutine(CRGB *leds, const char *param) {
       memcpy(GSHMEM.wind,&wind,sizeof(PVector));
       memcpy(GSHMEM.boids,boids,sizeof(Boid)*AVAILABLE_BOID_COUNT);
 }
+
+// ============= SWIRL /  ВОДОВОРОТ ===============
+// Prismata Loading Animation
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
+// v1.1 - +dither by PalPalych 12.04.2020
+// Aurora: https://github.com/pixelmatix/aurora
+// Copyright (c) 2014 Jason Coon
+
+#define e_swi_BORDER (1U)  // размытие экрана за активный кадр
+void swirlRoutine(CRGB *leds, const char *param)
+{
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  // Apply some blurring to whatever's already on the matrix
+  // Note that we never actually clear the matrix, we just constantly
+  // blur it repeatedly.  Since the blurring is 'lossy', there's
+  // an automatic trend toward black -- by design.
+#if (WIDTH < 25)
+  myLamp.blur2d(beatsin8(2, 10, 128 + (31-(myLamp.effects.getScale()%32))*3));
+#else
+  // Never mind, on my 64x96 array, the dots are just too small
+   myLamp.blur2d(172);
+#endif
+
+  // Use two out-of-sync sine waves
+  uint8_t i = beatsin8(27*(myLamp.effects.getSpeed()/100.0)+5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
+  uint8_t j = beatsin8(41*(myLamp.effects.getSpeed()/100.0)+5, e_swi_BORDER, WIDTH - e_swi_BORDER);
+  // Also calculate some reflections
+  uint8_t ni = (WIDTH - 1U)-i;
+  uint8_t nj = (WIDTH - 1U)-j;
+
+  // The color of each point shifts over time, each at a different speed.
+  uint16_t ms = millis();
+  myLamp.setLeds(myLamp.getPixelNumber(i, j),CRGB(myLamp.getPixColorXY(i, j)) + ColorFromPalette(*curPalette, ms / 11));
+  myLamp.setLeds(myLamp.getPixelNumber(j, i),CRGB(myLamp.getPixColorXY(j, i)) + ColorFromPalette(*curPalette, ms / 13));
+  myLamp.setLeds(myLamp.getPixelNumber(ni, nj),CRGB(myLamp.getPixColorXY(ni, nj)) + ColorFromPalette(*curPalette, ms / 17));
+  myLamp.setLeds(myLamp.getPixelNumber(nj, ni),CRGB(myLamp.getPixColorXY(nj, ni)) + ColorFromPalette(*curPalette, ms / 29));
+  myLamp.setLeds(myLamp.getPixelNumber(i, nj),CRGB(myLamp.getPixColorXY(i, nj)) + ColorFromPalette(*curPalette, ms / 37));
+  myLamp.setLeds(myLamp.getPixelNumber(ni, j),CRGB(myLamp.getPixColorXY(ni, j)) + ColorFromPalette(*curPalette, ms / 41));
+}
+
+#define CENTER_max  max(WIDTH / 2, HEIGHT / 2) // Наибольшее значение центра
+#define WIDTH_steps  256U / WIDTH   // диапазон значений приходящихся на 1 пиксель ширины матрицы
+#define HEIGHT_steps 256U / HEIGHT // диапазон значений приходящихся на 1 пиксель высоты матрицы
+// ============= DRIFT / ДРИФТ ===============
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
+// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
+// https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
+void incrementalDriftRoutine(CRGB *leds, const char *param)
+{
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+
+  myLamp.blur2d(beatsin8(3U, 5, 10 + (31-(myLamp.effects.getScale()%32))*3));
+  myLamp.dimAll(beatsin8(2U, 246, 252));
+  uint8_t _dri_speed = map8(myLamp.effects.getSpeed(), 1U, 20U);
+  uint8_t _dri_delta = beatsin8(1U);
+  EVERY_N_MILLIS(13){
+  GSHMEM.dri_phase++;
+  }
+  for (uint8_t i = 1; i < WIDTH / 2U; i++) // возможно, стоит здесь использовать const MINLENGTH
+  {
+    int8_t x = beatsin8((CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, 64U + GSHMEM.dri_phase); // используем константы центра матрицы из эффекта Кометы
+    int8_t y = beatsin8((CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, GSHMEM.dri_phase);       // используем константы центра матрицы из эффекта Кометы
+    myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps * 2U + _dri_delta) ); // используем массив палитр из других эффектов выше
+  }
+}
+
+// ============= DRIFT 2 / ДРИФТ 2 ===============
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
+// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
+// https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift2.h
+void incrementalDriftRoutine2(CRGB *leds, const char *param)
+{
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+
+  myLamp.blur2d(beatsin8(3U, 5, 10 + (31-(myLamp.effects.getScale()%32))*3));
+  myLamp.dimAll(beatsin8(2U, 224, 252));
+  uint8_t _dri_speed = map8(myLamp.effects.getSpeed(), 1U, 15U);
+  uint8_t _dri_delta = beatsin8(1U);
+  EVERY_N_MILLIS(13)
+  {
+    GSHMEM.dri_phase++;
+  }
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    int8_t x = 0;
+    int8_t y = 0;
+    CRGB color;
+    if (i < WIDTH / 2U)
+    {
+      x = beatsin8((i + 1) * _dri_speed, i + 1U, WIDTH - 1 - i, 0, 64U + GSHMEM.dri_phase);
+      y = beatsin8((i + 1) * _dri_speed, i + 1U, HEIGHT - 1 - i, 0, GSHMEM.dri_phase);
+      color = ColorFromPalette(*curPalette, i * WIDTH_steps * 2U + _dri_delta);
+    }
+    else
+    {
+      x = beatsin8((WIDTH - i) * _dri_speed, WIDTH - 1 - i, i + 1U, 0, GSHMEM.dri_phase);
+      y = beatsin8((HEIGHT - i) * _dri_speed, HEIGHT - 1 - i, i + 1U, 0, 64U + GSHMEM.dri_phase);
+      color = ColorFromPalette(*curPalette, ~(i * WIDTH_steps * 2U + _dri_delta));
+    }
+    myLamp.setLeds(myLamp.getPixelNumber(x, y), color);
+  }
+}

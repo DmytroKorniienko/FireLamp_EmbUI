@@ -83,7 +83,10 @@ EFF_SPIRO,                                    // Спираль
 EFF_RAINBOWCOMET,                             // Радужная комета
 EFF_RAINBOWCOMET3,                            // 3 кометы
 EFF_PRIZMATA,                                 // Призмата
-EFF_FLOCK                                     // Стая
+EFF_FLOCK,                                    // Стая
+EFF_SWIRL,                                    // Водоворот
+EFF_DRIFT,                                    // Дрифт
+EFF_DRIFT2                                    // Дрифт2
 } EFF_ENUM;
 
 void sparklesRoutine(CRGB*, const char*);
@@ -117,6 +120,9 @@ void rainbowCometRoutine(CRGB*, const char*);
 void rainbowComet3Routine(CRGB*, const char*);
 void prismataRoutine(CRGB*, const char*);
 void flockRoutine(CRGB*, const char*);
+void swirlRoutine(CRGB*, const char*);
+void incrementalDriftRoutine(CRGB*, const char*);
+void incrementalDriftRoutine2(CRGB*, const char*);
 //-------------------------------------------------
 
 typedef struct _EFFECT {
@@ -164,6 +170,9 @@ const char T_RAINBOWCOMET3[] PROGMEM = "Три кометы";
 const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
 const char T_PRIZMATA[] PROGMEM = "Призмата";
 const char T_FLOCK[] PROGMEM = "Стая";
+const char T_SWIRL[] PROGMEM = "Водоворот";
+const char T_DRIFT[] PROGMEM = "Дрифт";
+const char T_DRIFT2[] PROGMEM = "Дрифт 2";
 
 static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
@@ -200,7 +209,10 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_RAINBOWCOMET, T_RAINBOWCOMET, rainbowCometRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAINBOWCOMET3, T_RAINBOWCOMET3, rainbowComet3Routine, nullptr},
     {true, true, 127, 127, 127, EFF_PRIZMATA, T_PRIZMATA, prismataRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FLOCK, T_FLOCK, flockRoutine, nullptr}
+    {true, true, 127, 127, 127, EFF_FLOCK, T_FLOCK, flockRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SWIRL, T_SWIRL, swirlRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, incrementalDriftRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr}
 };
 
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
@@ -301,6 +313,10 @@ public:
             time_t startmillis;
             CHSV dawnColorMinus[6];
 		};
+        struct { // дрифты
+            uint8_t dri_phase;
+		};
+        
         struct {
             float test; // dummy_struct %)
 		};
