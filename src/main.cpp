@@ -57,7 +57,7 @@ void setup() {
     Serial.begin(115200);
 
     //jee.mqtt("m21.cloudmqtt.com", 15486, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
-    jee.mqtt(String(F("")), 15486, String(F("iukuegvk")), String(F("gwo8tlzvGJrR")), mqttCallback, true);
+
     jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
     jee.led(2, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
     jee.ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
@@ -85,6 +85,8 @@ void setup() {
     if(myLamp.timeProcessor.isDirtyTime())
       myLamp.setIsEventsHandled(false);
     myLamp.events.setEventCallback(event_worker);
+
+    jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 }
 
 void loop() {
@@ -122,5 +124,5 @@ void sendData(){
 #else
   LOG.printf_P(PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
-  jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
+  //jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
 }

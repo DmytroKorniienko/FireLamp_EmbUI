@@ -18,7 +18,8 @@ void jeeui2::var(const String &key, const String &value, bool pub)
         if (!pub_key.isNull()) {
             pub_transport[key] = value;
             //if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]\n"), key.c_str(), value.c_str());
-            pub_mqtt(key, value);
+            //pub_mqtt(key, value);
+            publish(String(F("jee/pub/")) + key, value, true);
             return;
         }
     }

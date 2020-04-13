@@ -153,6 +153,7 @@ void jeeui2::mqtt_handle(){
         mqttClient.onPublish(onMqttPublish);
         mqttClient.setCredentials(m_user, m_pass);
         mqttClient.setServer(m_host, m_port);
+        //mqttClient.setMaxTopicLength(48);
     }
 
     if(mqtt_connect) onMqttConnect();
@@ -253,6 +254,7 @@ void jeeui2::subscribeAll(){
     JsonObject root = cfg.as<JsonObject>();
     for (JsonPair kv : root) {
         String key = String(kv.key().c_str());
+        int retry=3;
         if( 
             key != F("wifi" )       &&
             key != F("m_pref")      &&
@@ -266,23 +268,29 @@ void jeeui2::subscribeAll(){
             key != F("m_pass") 
             ){
             if(dbg)Serial.println(id(String(F("jee/set/")) + key));
-            mqttClient.subscribe(id(String(F("jee/set/")) + key).c_str(), 0);
+            delay(33); // задержка на отправку предыдущих пакетов
+            while(!mqttClient.subscribe(id(String(F("jee/set/")) + key).c_str(), 0) && retry--){
+                delay(33); // доп. задержка на отправку предыдущих пакетов
+            }
+            if(dbg && retry<=0)
+                Serial.println(id(String(F("-> jee/set/")) + key + F(" not subscribed!")));
+            retry=3;
         }
     }
-    if(dbg)Serial.println(btn_id.as<String>());
+    //if(dbg)Serial.println(btn_id.as<String>());
     if(dbg)Serial.println( String(F("BTN =>")));
-    // JsonArray arr = btn_id.as<JsonArray>();
-    // for (size_t i=0; i<arr.size(); i++) {
-    //     String item = id(F("jee/set/")) + String(F("BTN_")) + arr[i].as<String>();
-    //     if(dbg)Serial.println(item);
-    //     mqttClient.subscribe(item.c_str(), 0);
-    // }
     JsonArray arr = btn_id.as<JsonArray>();
     for (size_t i=0; i<arr.size(); i++) {
         JsonObject var=arr[i]; // извлекаем очередной
         String item = id(F("jee/set/")) + String(F("BTN_")) + var[F("b")].as<String>();
         if(dbg)Serial.println(item);
-        mqttClient.subscribe(item.c_str(), 0);
+
+        int retry=2;
+        delay(33); // задержка на отправку предыдущих пакетов
+        while(!mqttClient.subscribe(item.c_str(), 0) && retry--){
+            delay(33); // доп. задержка на отправку предыдущих пакетов
+        }
+        if(dbg && retry<=0)Serial.println(String(F("-> ")) + item + F(" not subscribed!"));
     }
     if(dbg)Serial.println(F("Subscribe All"));
 }
