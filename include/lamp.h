@@ -41,8 +41,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "OTA.h"
 #include "timeProcessor.h"
-
 #include <FastLed.h>
+
+#ifdef MIC_EFFECTS
+#include "micFFT.h"
+#endif
 
 typedef enum _LAMPMODE {
   MODE_NORMAL = 0,
@@ -372,6 +375,9 @@ private:
     bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
+#ifdef MIC_EFFECTS
+    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+#endif
  };
  #pragma pack(pop)
     //Button
@@ -392,6 +398,18 @@ private:
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
     void(*updateParmFunc)() = nullptr; // функтор обновления параметров
+
+#ifdef MIC_EFFECTS
+    MICWORKER *mw = nullptr;
+    float mic_noise = 0.0; // уровень шума в ед.
+    float mic_scale = 1.0; // коэф. смещения
+    float last_freq = 0.0; // последняя измеренная часота
+    float samp_freq = 0.0; // часота семплирования
+    uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
+    uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
+    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NONE; // уровень шумодава
+    void micHandler();
+#endif
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
@@ -437,6 +455,19 @@ private:
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
+
+#ifdef MIC_EFFECTS
+    void setMicCalibration() {isCalibrationRequest = true;}
+    bool isMicCalibration() {return isCalibrationRequest;}
+    float getMicScale() {return mic_scale;}
+    void setMicScale(float scale) {mic_scale = scale;}
+    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {mic_noise = lvl;}
+    uint8_t getMicMaxPeak() {return last_max_peak;}
+    uint8_t getMicFreq() {return last_freq;}
+    uint8_t getMicMapMaxPeak() {return map8(last_max_peak,1,255);}
+    uint8_t getMicMapFreq() {return map((last_freq>samp_freq/2)?1:(long)last_freq,1,samp_freq,1,255);}
+#endif
+
 
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}

@@ -46,6 +46,7 @@ public:
     bool isTmSetup:1;
     bool isAddSetup:1;
     bool isEdEvent:1;
+    bool isMicCal:1;
  };
  #pragma pack(pop)
  uint8_t addSList = 1;
@@ -55,10 +56,26 @@ public:
     isTmSetup = false;
     isAddSetup = false;
     isEdEvent = false;
+    isMicCal = false;
 }
 };
 
 INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
+
+void bmicCalCallback()
+{
+    if(!iGLOBAL.isMicCal){
+        myLamp.sendStringToLamp("Калибровка микрофона", CRGB::Red);
+        myLamp.setMicCalibration();
+        iGLOBAL.isMicCal = true;
+    } else if(myLamp.isMicCalibration()){
+        myLamp.sendStringToLamp("... в процессе ...", CRGB::Red);
+    } else {
+        jee.var(F("micScale"), String(myLamp.getMicScale()));
+        iGLOBAL.isMicCal = false;
+    }
+    jee._refresh = true;
+}
 
 void bEventsCallback()
 {
@@ -346,32 +363,12 @@ void bDemoCallback()
     else
         myLamp.startNormalMode();
 
-    // // Отладка
-    // myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::Blue);
-    // myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::Green);
-    // myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::Red);
-
     jee._refresh = true;
 }
 
 void jeebuttonshandle()
 {
     static unsigned long timer;
-    // jee.btnCallback(F("bTmSubm"), bTmSubmCallback);
-    // jee.btnCallback(F("bMQTTform"), bMQTTformCallback); // MQTT form button
-    // jee.btnCallback(F("bDemo"), bDemoCallback);
-    // jee.btnCallback(F("bTxtSend"), bTxtSendCallback);
-    // jee.btnCallback(F("bFLoad"), bFLoadCallback);
-    // jee.btnCallback(F("bFSave"), bFSaveCallback);
-    // jee.btnCallback(F("bFDel"), bFDelCallback);
-    // jee.btnCallback(F("bRefresh"), bRefreshCallback);
-    // jee.btnCallback(F("bOTA"), bOTACallback);
-    // jee.btnCallback(F("bAddEvent"), bAddEventCallback);
-    // jee.btnCallback(F("bDelEvent"), bDelEventCallback);
-    // jee.btnCallback(F("bEditEvent"), bEditEventCallback);
-    // jee.btnCallback(F("bOwrEvent"), bOwrEventCallback);
-    // jee.btnCallback(F("bSetClose"), bSetCloseCallback);
-    // jee.btnCallback(F("bEvents"), bEventsCallback);
 
     //публикация изменяющихся значений
     if (timer + 5*1000 > millis())
@@ -442,8 +439,12 @@ void create_parameters(){
     jee.var_create(F("evList"),F("1"));
     jee.var_create(F("fileList"),F("1"));
 
-    //-----------------------------------------------
+# ifdef MIC_EFFECTS
+    jee.var_create(F("micScale"),F("1.28"));
+    jee.var_create(F("micnRdcLvl"),F("0"));
+#endif
 
+    //-----------------------------------------------
 
     jee.btn_create(F("bTmSubm"), bTmSubmCallback);
     jee.btn_create(F("bMQTTform"), bMQTTformCallback); // MQTT form button
@@ -460,6 +461,9 @@ void create_parameters(){
     jee.btn_create(F("bOwrEvent"), bOwrEventCallback);
     jee.btn_create(F("bSetClose"), bSetCloseCallback);
     jee.btn_create(F("bEvents"), bEventsCallback);
+# ifdef MIC_EFFECTS
+    jee.btn_create(F("bmicCal"), bmicCalCallback);
+#endif
 }
 
 void interface(){ // функция в которой мф формируем веб интерфейс
@@ -543,7 +547,10 @@ void interface(){ // функция в которой мф формируем в
             jee.option(F("2"), F("Время/Текст"));
             jee.option(F("3"), F("События"));
             jee.option(F("4"), F("Wifi & MQTT"));
-            jee.option(F("99"), F("Другое"));
+# ifdef MIC_EFFECTS
+            jee.option(F("8"), F("Микрофон"));
+#endif
+            jee.option(F("9"), F("Другое"));
             jee.select(F("addSList"), F("Группа настроек"));
             switch (iGLOBAL.addSList)
             {
@@ -611,7 +618,19 @@ void interface(){ // функция в которой мф формируем в
                 break;       
             case 5:
                 break;
-            case 99:
+# ifdef MIC_EFFECTS
+            case 8:
+                if(!iGLOBAL.isMicCal){
+                    jee.number(F("micScale"), F("Коэф. коррекции нуля"));
+                    jee.range(F("micnRdcLvl"), 0,2,1, F("Шумодав"));
+                    jee.button(F("bmicCal"),F("red"), F("Калибровка микрофона"));
+                }
+                else {
+                    jee.button(F("bmicCal"),F("grey"),F("Обновить"));
+                }
+                break;
+#endif
+            case 9:
                 jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
                 jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
                 jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
@@ -754,6 +773,11 @@ void update(){ // функция выполняется после ввода д
     myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
     myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
     myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
+
+# ifdef MIC_EFFECTS
+    myLamp.setMicScale(jee.param(F("micScale")).toFloat());
+    myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)jee.param(F("micnRdcLvl")).toInt());
+#endif
 
 
     if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)

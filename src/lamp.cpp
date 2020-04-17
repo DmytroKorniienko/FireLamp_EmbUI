@@ -123,6 +123,9 @@ void LAMP::handle()
   {
     buttonTick(); // обработчик кнопки
     alarmWorker();
+#ifdef MIC_EFFECTS
+    micHandler();
+#endif
     button_check = millis();
   }
 #endif
@@ -770,6 +773,9 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
+#ifdef MIC_EFFECTS
+      isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+#endif
     }
 
     void LAMP::startFader(bool isManual=false)
@@ -819,11 +825,11 @@ void LAMP::changePower(bool flag) // плавное включение/выкл�
     {
       if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
       {
-        return ((uint32_t)THIS_Y * _WIDTH + THIS_X)%NUM_LEDS;
+        return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
       }
       else                                                      // если нечётная строка
       {
-        return ((uint32_t)THIS_Y * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
+        return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
       }
     }
 
@@ -1214,3 +1220,40 @@ void LAMP::periodicTimeHandle()
   if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint!=PERIODICTIME::PT_NOT_SHOW && !(tm%60))
     sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
 }
+
+#ifdef MIC_EFFECTS
+void LAMP::micHandler()
+{
+  static uint8_t counter=0;
+  
+  if(mw==nullptr && !isCalibrationRequest){ // обычный режим
+    //if(millis()%1000) return; // отладка
+    mw = new MICWORKER(mic_scale,mic_noise);
+    samp_freq = mw->process(noise_reduce); // частота семплирования
+    last_min_peak = mw->getMinPeak();
+    last_max_peak = mw->getMaxPeak();
+
+    if(!counter) // раз на 10 измерений берем частоту, т.к. это требует обсчетов
+      last_freq = mw->analyse(); // частота главной гармоники
+    counter = (counter+1)%10;
+    //LOG.println(last_freq);
+    //mw->debug();
+    delete mw;
+    mw = nullptr;
+  } else {
+    if(mw==nullptr){ // калибровка начало
+      mw = new MICWORKER();
+      mw->calibrate();
+    } else { // калибровка продолжение
+      mw->calibrate();
+    }
+    if(!mw->isCaliblation()){ // калибровка конец
+      mic_noise = mw->getNoise();
+      mic_scale = mw->getScale();
+      isCalibrationRequest = false; // завершили
+      delete mw;
+      mw = nullptr;
+    }
+  }
+}
+#endif

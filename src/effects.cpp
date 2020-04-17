@@ -809,23 +809,28 @@ void ballRoutine(CRGB *leds, const char *param)
   }
 }
 
-// Trivial XY function for the SmartMatrix; use a different XY
-// function for different matrix grids. See XYMatrix example for code.
+// // Trivial XY function for the SmartMatrix; use a different XY
+// // function for different matrix grids. See XYMatrix example for code.
+// uint16_t XY(uint8_t x, uint8_t y)
+// {
+//   uint16_t i;
+//   if (y & 0x01)
+//   {
+//     // Odd rows run backwards
+//     uint8_t reverseX = (WIDTH - 1) - x;
+//     i = (y * WIDTH) + reverseX;
+//   }
+//   else
+//   {
+//     // Even rows run forwards
+//     i = (y * WIDTH) + x;
+//   }
+//   return i%(WIDTH*HEIGHT+1);
+// }
+
 uint16_t XY(uint8_t x, uint8_t y)
 {
-  uint16_t i;
-  if (y & 0x01)
-  {
-    // Odd rows run backwards
-    uint8_t reverseX = (WIDTH - 1) - x;
-    i = (y * WIDTH) + reverseX;
-  }
-  else
-  {
-    // Even rows run forwards
-    i = (y * WIDTH) + x;
-  }
-  return i%(WIDTH*HEIGHT+1);
+  return myLamp.getPixelNumber(x,y);
 }
 
 //-- 3D Noise эффектцы --------------
@@ -926,8 +931,8 @@ void madnessNoiseRoutine(CRGB *leds, const char *param)
   if (myLamp.isLoading())
   {
   }
-  GSHMEM.scale = 127UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 127UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillnoise8();
   for (uint8_t i = 0; i < WIDTH; i++)
   {
@@ -944,10 +949,11 @@ void rainbowNoiseRoutine(CRGB *leds, const char *param)
 {
   if (myLamp.isLoading())
   {
+    *(CRGBPalette16 *)(GSHMEM.currentPalette) = RainbowColors_p;
     GSHMEM.colorLoop = 1;
   }
-  GSHMEM.scale = 127UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 127UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 
@@ -958,8 +964,8 @@ void rainbowStripeNoiseRoutine(CRGB *leds, const char *param)
     *(CRGBPalette16 *)(GSHMEM.currentPalette) = RainbowStripeColors_p;
     GSHMEM.colorLoop = 1;
   }
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 
@@ -968,6 +974,7 @@ void zebraNoiseRoutine(CRGB *leds, const char *param)
   if (myLamp.isLoading())
   {
     // 'black out' all 16 palette entries...
+    *(CRGBPalette16 *)(GSHMEM.currentPalette) = RainbowColors_p;
     CRGBPalette16 &cp = *(CRGBPalette16 *)(GSHMEM.currentPalette);
 
 
@@ -979,9 +986,8 @@ void zebraNoiseRoutine(CRGB *leds, const char *param)
     cp[12] = CRGB::White;
     GSHMEM.colorLoop = 1;
   }
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
-  fillNoiseLED();
+  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
 }
 
 void forestNoiseRoutine(CRGB *leds, const char *param)
@@ -991,8 +997,8 @@ void forestNoiseRoutine(CRGB *leds, const char *param)
     *(CRGBPalette16 *)(GSHMEM.currentPalette) = ForestColors_p;
     GSHMEM.colorLoop = 0;
   }
-  GSHMEM.scale = 96UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 96UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 
@@ -1003,8 +1009,8 @@ void oceanNoiseRoutine(CRGB *leds, const char *param)
     *(CRGBPalette16 *)(GSHMEM.currentPalette) = OceanColors_p;
     GSHMEM.colorLoop = 0;
   }
-  GSHMEM.scale = 127UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 127UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 
@@ -1015,8 +1021,8 @@ void plasmaNoiseRoutine(CRGB *leds, const char *param)
     *(CRGBPalette16 *)(GSHMEM.currentPalette) = PartyColors_p;
     GSHMEM.colorLoop = 1;
   }
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 
@@ -1027,8 +1033,8 @@ void cloudsNoiseRoutine(CRGB *leds, const char *param)
     *(CRGBPalette16 *)(GSHMEM.currentPalette) = CloudColors_p;
     GSHMEM.colorLoop = 0;
   }
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 
@@ -1039,8 +1045,8 @@ void lavaNoiseRoutine(CRGB *leds, const char *param)
     *(CRGBPalette16 *)(GSHMEM.currentPalette) = LavaColors_p;
     GSHMEM.colorLoop = 0;
   }
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
+  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(3*myLamp.getMicMapFreq()/255.0);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(5*myLamp.getMicMapMaxPeak()/255.0);
   fillNoiseLED();
 }
 

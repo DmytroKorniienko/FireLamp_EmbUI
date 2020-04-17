@@ -34,8 +34,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
+#ifndef __CONFIG_H
+#define __CONFIG_H
 
-#pragma once
 #include <GyverButton.h>
 
 #define FASTLED_INTERRUPT_RETRY_COUNT   (0)                 // default: 2; // Use this to determine how many times FastLED will attempt to re-transmit a frame if interrupted for too long by interrupts
@@ -49,7 +50,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define DEBUG_TELNET_OUTPUT  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
 //#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
 #define OTA                                                 // Обновление по ОТА
+#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
+typedef enum {NONE,BIT_1,BIT_2} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
+#define MIC_PIN               (A0)                          // ESP8266 Analog Pin ADC0 = A0
 #define LAMP_PIN              (2U)                          // пин ленты                (D4)
 #define BTN_PIN               (4U)                          // пин кнопки               (D2)
 //#define BTN_PIN               (0U)                          // пин кнопки "FLASH" NodeMCU (ОТЛАДКА!!!) , подтяжка должна быть PULL_MODE=HIGH_PULL
@@ -157,5 +161,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 #define THIS_X x
 #define THIS_Y y
 #pragma message "Wrong matrix parameters! Set to default"
+
+#endif
 
 #endif
