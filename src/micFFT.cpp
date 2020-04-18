@@ -113,18 +113,30 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
     vReal[i]*=scale; // нормализация
     switch (level)
     {
+    case MIC_NOISE_REDUCE_LEVEL::NONE:
+      vReal[i] = map(vReal[i], 0, 1023, -128, 127); // без преобразований
+      break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_1:
-      vReal[i] = map((uint16_t)vReal[i]&0xFE, 0, 1023, -127, 127); // маскируем один бит
+      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = abs(vReal[i])&0xFE*(vReal[i]>0?1:-1); // маскируем один бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_2:
-      vReal[i] = map((uint16_t)vReal[i]&0xFC, 0, 1023, -127, 127); // маскируем два бита
+      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = abs(vReal[i])&0xFC*(vReal[i]>0?1:-1); // маскируем два бита
+      break;
+    case MIC_NOISE_REDUCE_LEVEL::BIT_3:
+      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = abs(vReal[i])&0xF8*(vReal[i]>0?1:-1); // маскируем три бита
+      break;
+    case MIC_NOISE_REDUCE_LEVEL::BIT_4:
+      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = abs(vReal[i])&0xF0*(vReal[i]>0?1:-1); // маскируем четыре бита
       break;
     default:
-      vReal[i] = map(vReal[i], 0, 1023, -127, 127); // без преобразований
       break;
     }
-    minVal = min(minVal,abs(vReal[i]));
-    maxVal = max(maxVal,abs(vReal[i]));
+    minVal = min(minVal,abs((int)vReal[i]));
+    maxVal = max(maxVal,abs((int)vReal[i]));
     vImag[i] = 0.0; // обнулить массив предыдущих измерений
   }
   minPeak = minVal; // минимальное амплитудное

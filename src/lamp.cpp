@@ -124,7 +124,8 @@ void LAMP::handle()
     buttonTick(); // обработчик кнопки
     alarmWorker();
 #ifdef MIC_EFFECTS
-    micHandler();
+    if(isMicOn)
+      micHandler();
 #endif
     button_check = millis();
   }
@@ -775,6 +776,7 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       isEventsHandled = true;
 #ifdef MIC_EFFECTS
       isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+      isMicOn = true; // глобальное испльзование микрофона
 #endif
     }
 
@@ -1235,7 +1237,7 @@ void LAMP::micHandler()
 
     if(!counter) // раз на 10 измерений берем частоту, т.к. это требует обсчетов
       last_freq = mw->analyse(); // частота главной гармоники
-    counter = (counter+1)%10;
+    counter = 0;//(counter+1)%10; // пока отключено
     //LOG.println(last_freq);
     //mw->debug();
     delete mw;

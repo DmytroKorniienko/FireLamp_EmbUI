@@ -64,17 +64,22 @@ INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменн�
 
 void bmicCalCallback()
 {
-    if(!iGLOBAL.isMicCal){
-        myLamp.sendStringToLamp("Калибровка микрофона", CRGB::Red);
+  #ifdef MIC_EFFECTS
+    if(!myLamp.isMicOnOff())
+        myLamp.sendStringToLamp(String(F("Включите микрофон")).c_str(), CRGB::Red);
+    else if(!iGLOBAL.isMicCal){
+        myLamp.sendStringToLamp(String(F("Калибровка микрофона")).c_str(), CRGB::Red);
         myLamp.setMicCalibration();
         iGLOBAL.isMicCal = true;
     } else if(myLamp.isMicCalibration()){
-        myLamp.sendStringToLamp("... в процессе ...", CRGB::Red);
+        myLamp.sendStringToLamp(String(F("... в процессе ...")).c_str(), CRGB::Red);
     } else {
         jee.var(F("micScale"), String(myLamp.getMicScale()));
+        jee.var(F("micNoise"), String(myLamp.getMicNoise()));
         iGLOBAL.isMicCal = false;
     }
     jee._refresh = true;
+  #endif
 }
 
 void bEventsCallback()
@@ -441,7 +446,9 @@ void create_parameters(){
 
 # ifdef MIC_EFFECTS
     jee.var_create(F("micScale"),F("1.28"));
+    jee.var_create(F("micNoise"),F("0.00"));
     jee.var_create(F("micnRdcLvl"),F("0"));
+    jee.var_create(F("isMicON"),F("true"));
 #endif
 
     //-----------------------------------------------
@@ -622,7 +629,8 @@ void interface(){ // функция в которой мф формируем в
             case 8:
                 if(!iGLOBAL.isMicCal){
                     jee.number(F("micScale"), F("Коэф. коррекции нуля"));
-                    jee.range(F("micnRdcLvl"), 0,2,1, F("Шумодав"));
+                    jee.number(F("micNoise"), F("Уровень шума, ед"));
+                    jee.range(F("micnRdcLvl"), 0,4,1, F("Шумодав"));
                     jee.button(F("bmicCal"),F("red"), F("Калибровка микрофона"));
                 }
                 else {
@@ -675,6 +683,9 @@ void interface(){ // функция в которой мф формируем в
                 jee.button(F("bEvents"),F("red"),F("EVENTS -> OFF"));
             else
                 jee.button(F("bEvents"),F("green"),F("EVENTS -> ON"));
+# ifdef MIC_EFFECTS
+            jee.checkbox(F("isMicON"), F("Микрофон"));
+#endif
         }
         jee.page(); // разделитель между страницами
     } else {
@@ -776,7 +787,9 @@ void update(){ // функция выполняется после ввода д
 
 # ifdef MIC_EFFECTS
     myLamp.setMicScale(jee.param(F("micScale")).toFloat());
+    myLamp.setMicNoise(jee.param(F("micNoise")).toFloat());
     myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)jee.param(F("micnRdcLvl")).toInt());
+    myLamp.setMicOnOff(jee.param(F("isMicON"))==F("true"));
 #endif
 
 

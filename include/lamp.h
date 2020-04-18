@@ -377,6 +377,7 @@ private:
     bool isEventsHandled:1; // глобальный признак обработки событий
 #ifdef MIC_EFFECTS
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+    bool isMicOn:1; // глобальное включение/выключение микрофона
 #endif
  };
  #pragma pack(pop)
@@ -461,11 +462,15 @@ public:
     bool isMicCalibration() {return isCalibrationRequest;}
     float getMicScale() {return mic_scale;}
     void setMicScale(float scale) {mic_scale = scale;}
-    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {mic_noise = lvl;}
-    uint8_t getMicMaxPeak() {return last_max_peak;}
-    uint8_t getMicFreq() {return last_freq;}
-    uint8_t getMicMapMaxPeak() {return map8(last_max_peak,1,255);}
-    uint8_t getMicMapFreq() {return map((last_freq>samp_freq/2)?1:(long)last_freq,1,samp_freq,1,255);}
+    float getMicNoise() {return mic_noise;}
+    void setMicNoise(float noise) {mic_noise = noise;}
+    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
+    uint8_t getMicMaxPeak() {return isMicOn?last_max_peak:0;}
+    uint8_t getMicMapMaxPeak() {return isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
+    float getMicFreq() {return isMicOn?last_freq:0;}
+    uint8_t getMicMapFreq() {return isMicOn?map((long)last_freq,1,max((long)last_freq,(long)(samp_freq/2)),1,255):0;}
+    void setMicOnOff(bool val) {isMicOn = val;}
+    bool isMicOnOff() {return isMicOn;}
 #endif
 
 
