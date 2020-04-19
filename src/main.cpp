@@ -59,7 +59,7 @@ void setup() {
     //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
     jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
-#ifdef ESP8266 && defined(LED_BUILTIN_AUX)
+#if defined(ESP8266) && defined(LED_BUILTIN_AUX)
     //jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание! Поэтому для индикации использую LED_BUILTIN_AUX
     jee.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
 #endif

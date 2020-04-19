@@ -41,7 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "OTA.h"
 #include "timeProcessor.h"
-#include <FastLed.h>
+//#include <FastLed.h>
 
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
@@ -496,7 +496,7 @@ public:
     LAMP();
 
     void handle(); // главная функция обработки эффектов
-    void init();
+    void lamp_init();
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
     void setOnOff(bool flag) {ONflag = flag; changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник

@@ -41,7 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <string.h>
-#include <FastLed.h>
+//#include <FastLed.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
 #elif defined ESP32

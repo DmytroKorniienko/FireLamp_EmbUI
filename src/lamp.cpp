@@ -39,7 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "misc.h"
 
-void LAMP::init()
+void LAMP::lamp_init()
 {
   FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)  /*.setCorrection(TypicalLEDStrip)*/;
   FastLED.setBrightness(BRIGHTNESS);                          // установка яркости
@@ -47,7 +47,7 @@ void LAMP::init()
     FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
   }
   FastLED.clear();                                            // очистка матрицы
-
+  FastLED.show();
   // ПИНЫ
 #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
   pinMode(MOSFET_PIN, OUTPUT);
@@ -115,6 +115,9 @@ void LAMP::init()
 
 void LAMP::handle()
 {
+// EVERY_N_SECONDS(10){
+//     FastLED.setMaxPowerInVoltsAndMilliamps(5, 100); // установка максимального тока БП
+// }
   effectsTick(); // обработчик эффектов
 
 #ifdef ESP_USE_BUTTON
@@ -753,7 +756,6 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
     {
-      init(); // инициализация и настройка лампы
       MIRR_V = false; // отзрекаливание по V
       MIRR_H = false; // отзрекаливание по H
       dawnFlag = false; // флаг устанавливается будильником "рассвет"
@@ -779,6 +781,9 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       isMicOn = true; // глобальное испльзование микрофона
       micAnalyseDivider = 1; // анализ каждый раз
 #endif
+
+
+      lamp_init(); // инициализация и настройка лампы
     }
 
     void LAMP::startFader(bool isManual=false)
@@ -821,6 +826,10 @@ void LAMP::changePower(bool flag) // плавное включение/выкл�
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
       digitalWrite(MOSFET_PIN, (ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
+
+      if (CURRENT_LIMIT > 0){
+        FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
+      }
     }
 
 
