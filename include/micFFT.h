@@ -51,7 +51,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 class MICWORKER {
 private:
-  static const uint16_t samples = 128; //This value MUST ALWAYS be a power of 2
+  static const uint16_t samples = 64;//128; //This value MUST ALWAYS be a power of 2
   bool useFixedFreq = false; // использовать фиксированное семплирование, либо максимально возможное (false)
   bool _isCaliblation = false;
   float scale = 1.28; // 400 как средняя точка у меня, но надо будет калибравать для каждого случая отдельно калибровкой :)
@@ -62,8 +62,8 @@ private:
   const uint8_t amplitude = 100;
   float *vReal = nullptr;
   float *vImag = nullptr;
-  int8_t minPeak = 0.0;
-  int8_t maxPeak = 0.0;
+  uint8_t minPeak = 0.0;
+  uint8_t maxPeak = 0.0;
   ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
   void PrintVector(float *vData, uint16_t bufferSize, uint8_t scaleType);
   void read_data();
@@ -78,8 +78,9 @@ public:
   float getScale() {return scale;}
   float getNoise() {return noise;}
   float getFreq() {return signalFrequency;}
-  int8_t getMinPeak() {return minPeak;}
-  int8_t getMaxPeak() {return maxPeak;}
+  uint8_t getMinPeak() {return minPeak;}
+  uint8_t getMaxPeak() {return maxPeak;}
+  float fillSizeScaledArray(float *arr, size_t size);
 };
 
 #endif

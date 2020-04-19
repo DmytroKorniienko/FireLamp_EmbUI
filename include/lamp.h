@@ -378,6 +378,7 @@ private:
 #ifdef MIC_EFFECTS
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isMicOn:1; // глобальное включение/выключение микрофона
+    uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
 #endif
  };
  #pragma pack(pop)
@@ -465,6 +466,7 @@ public:
     float getMicNoise() {return mic_noise;}
     void setMicNoise(float noise) {mic_noise = noise;}
     void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
+    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return noise_reduce;}
     uint8_t getMicMaxPeak() {return isMicOn?last_max_peak:0;}
     uint8_t getMicMapMaxPeak() {return isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
     float getMicFreq() {return isMicOn?last_freq:0;}

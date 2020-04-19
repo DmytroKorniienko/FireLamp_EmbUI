@@ -50,7 +50,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define DEBUG_TELNET_OUTPUT  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
 //#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
 #define OTA                                                 // Обновление по ОТА
-//#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
+#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
 typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
 #define MIC_PIN               (A0)                          // ESP8266 Analog Pin ADC0 = A0

@@ -118,19 +118,19 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_1:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs(vReal[i])&0xFE*(vReal[i]>0?1:-1); // маскируем один бита
+      vReal[i] = abs((uint16_t)(vReal[i])&0xFE*(vReal[i]>0?1:-1)); // маскируем один бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_2:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs(vReal[i])&0xFC*(vReal[i]>0?1:-1); // маскируем два бита
+      vReal[i] = abs((uint16_t)(vReal[i])&0xFC*(vReal[i]>0?1:-1)); // маскируем два бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_3:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs(vReal[i])&0xF8*(vReal[i]>0?1:-1); // маскируем три бита
+      vReal[i] = abs((uint16_t)(vReal[i])&0xF8*(vReal[i]>0?1:-1)); // маскируем три бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_4:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs(vReal[i])&0xF0*(vReal[i]>0?1:-1); // маскируем четыре бита
+      vReal[i] = abs((uint16_t)(vReal[i])&0xF0*(vReal[i]>0?1:-1)); // маскируем четыре бита
       break;
     default:
       break;
@@ -151,6 +151,30 @@ double MICWORKER::analyse()
   FFT.complexToMagnitude(); /* Compute magnitudes */
   signalFrequency = FFT.majorPeak();
   return signalFrequency; // измеренная частота главной гармоники
+}
+
+float MICWORKER::fillSizeScaledArray(float *arr, size_t size)
+{
+  FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
+  FFT.compute(FFTDirection::Forward); /* Compute FFT */
+  FFT.complexToMagnitude(); /* Compute magnitudes */  
+  
+  float maxVal=0;
+  for(uint8_t i=0; i<(samples >> 1); i++){
+    maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
+    //LOG.printf_P(PSTR("%5.2f "),(20 * log10(vReal[i])));
+  }
+  //LOG.println(FFT.majorPeak()); 
+
+  float scale = (1.0*(samples >> 1))/size;
+  float avg = vReal[0];
+  for(uint8_t i=0; i<(samples >> 1); i++){
+    avg = (avg + vReal[i])/2.0;
+    float tmp = (float)(20 * log10(avg));
+    arr[(size_t)(i/scale)]=tmp<0?0:tmp;
+  }
+  arr[size] = FFT.majorPeak();
+  return maxVal<0?0:maxVal;
 }
 
 void MICWORKER::debug()
@@ -238,6 +262,8 @@ void MICWORKER::calibrate()
     }
     scale = 512.0*count/sum; // смещение
     noise = (sum2/count2)*scale; //+/- единиц шума
+#ifdef LAMP_DEBUG
     LOG.print(F("AVG="));LOG.print(sum/count);LOG.print(F(", noise="));LOG.println(sum2/count2);
+#endif
   }
 }

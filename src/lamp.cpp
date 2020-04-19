@@ -777,6 +777,7 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
 #ifdef MIC_EFFECTS
       isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       isMicOn = true; // глобальное испльзование микрофона
+      micAnalyseDivider = 1; // анализ каждый раз
 #endif
     }
 
@@ -1237,7 +1238,15 @@ void LAMP::micHandler()
 
     if(!counter) // раз на 10 измерений берем частоту, т.к. это требует обсчетов
       last_freq = mw->analyse(); // частота главной гармоники
-    counter = 0;//(counter+1)%10; // пока отключено
+    if(micAnalyseDivider)
+      counter = (counter+1)%(0x01<<(micAnalyseDivider-1)); // как часто выполнять анализ
+    else
+      counter = 1; // при micAnalyseDivider == 0 - отключено
+
+    // EVERY_N_SECONDS(1){
+    //   LOG.println(counter);
+    // }
+
     //LOG.println(last_freq);
     //mw->debug();
     delete mw;

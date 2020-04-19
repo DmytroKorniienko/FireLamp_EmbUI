@@ -1004,10 +1004,9 @@ void zebraNoiseRoutine(CRGB *leds, const char *param)
   GSHMEM.scale = 127UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1);
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<15 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
 
-EVERY_N_SECONDS(1){
-  LOG.printf_P(PSTR("MF: %5.2f MMF: %d MP:%d MMP: %d\n"), myLamp.getMicFreq(), myLamp.getMicMapFreq(), myLamp.getMicMaxPeak(), myLamp.getMicMapMaxPeak());
-}
-
+// EVERY_N_SECONDS(1){
+//   LOG.printf_P(PSTR("MF: %5.2f MMF: %d MP:%d MMP: %d\n"), myLamp.getMicFreq(), myLamp.getMicMapFreq(), myLamp.getMicMaxPeak(), myLamp.getMicMapMaxPeak());
+// }
 
   #else
   GSHMEM.scale = 127UL*myLamp.effects.getScale()/255;
@@ -1851,4 +1850,42 @@ void incrementalDriftRoutine2(CRGB *leds, const char *param)
     }
     myLamp.setLeds(myLamp.getPixelNumber(x, y), color);
   }
+}
+
+void freqAnalyseRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+    float samp_freq;
+    double last_freq;
+    uint8_t last_min_peak, last_max_peak;
+    float x[WIDTH+1];
+    float maxVal;
+
+    MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
+    samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
+    last_min_peak = mw->getMinPeak();
+    last_max_peak = mw->getMaxPeak()*2;
+
+    maxVal=mw->fillSizeScaledArray(x,WIDTH);
+    float scale = (maxVal==0? 0 : last_max_peak/maxVal) * 3.0 * myLamp.effects.getScale()/255.0;
+
+EVERY_N_SECONDS(1){
+  for(uint8_t i=0; i<WIDTH; i++)
+    LOG.printf_P(PSTR("%5.2f "),x[i]);
+  LOG.printf_P(PSTR("F: %10.2f SC: %5.2f\n"),x[WIDTH], scale); 
+}
+
+
+    for(int xpos=0; xpos<WIDTH; xpos++)
+      for(int ypos=0; ypos<HEIGHT; ypos++){
+        myLamp.setLeds(myLamp.getPixelNumber(xpos,ypos),x[xpos]*scale*(1.0/(ypos*2+1)));
+      }
+
+    samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
+    delete mw;
 }

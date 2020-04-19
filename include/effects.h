@@ -86,7 +86,8 @@ EFF_PRIZMATA,                                 // Призмата
 EFF_FLOCK,                                    // Стая
 EFF_SWIRL,                                    // Водоворот
 EFF_DRIFT,                                    // Дрифт
-EFF_DRIFT2                                    // Дрифт2
+EFF_DRIFT2,                                   // Дрифт2
+EFF_FREQ = (99U)                              // Частотный анализатор (служебный, смещаем в конец)
 } EFF_ENUM;
 
 void sparklesRoutine(CRGB*, const char*);
@@ -123,6 +124,7 @@ void flockRoutine(CRGB*, const char*);
 void swirlRoutine(CRGB*, const char*);
 void incrementalDriftRoutine(CRGB*, const char*);
 void incrementalDriftRoutine2(CRGB*, const char*);
+void freqAnalyseRoutine(CRGB*, const char*);
 //-------------------------------------------------
 
 typedef struct _EFFECT {
@@ -173,6 +175,7 @@ const char T_FLOCK[] PROGMEM = "Стая";
 const char T_SWIRL[] PROGMEM = "Водоворот";
 const char T_DRIFT[] PROGMEM = "Дрифт";
 const char T_DRIFT2[] PROGMEM = "Дрифт 2";
+const char T_FREQ[] PROGMEM = "Частотный анализатор";
 
 static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
@@ -212,7 +215,8 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_FLOCK, T_FLOCK, flockRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SWIRL, T_SWIRL, swirlRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, incrementalDriftRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr}
+    {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr},
+    {true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
 };
 
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
