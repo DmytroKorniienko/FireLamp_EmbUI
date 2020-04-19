@@ -118,19 +118,19 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_1:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs((uint16_t)(vReal[i])&0xFE*(vReal[i]>0?1:-1)); // маскируем один бита
+      vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xFE)*(vReal[i]>0?1:-1); // маскируем один бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_2:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs((uint16_t)(vReal[i])&0xFC*(vReal[i]>0?1:-1)); // маскируем два бита
+      vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xFC)*(vReal[i]>0?1:-1); // маскируем два бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_3:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs((uint16_t)(vReal[i])&0xF8*(vReal[i]>0?1:-1)); // маскируем три бита
+      vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xF8)*(vReal[i]>0?1:-1); // маскируем три бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_4:
       vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
-      vReal[i] = abs((uint16_t)(vReal[i])&0xF0*(vReal[i]>0?1:-1)); // маскируем четыре бита
+      vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xF0)*(vReal[i]>0?1:-1); // маскируем четыре бита
       break;
     default:
       break;
@@ -153,7 +153,7 @@ double MICWORKER::analyse()
   return signalFrequency; // измеренная частота главной гармоники
 }
 
-float MICWORKER::fillSizeScaledArray(float *arr, size_t size)
+float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив должен передаваться на 1 ед. большего размера
 {
   FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
@@ -162,6 +162,7 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size)
   float maxVal=0;
   for(uint8_t i=0; i<(samples >> 1); i++){
     maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
+    //LOG.printf_P(PSTR("%3d "),(uint8_t)vReal[i]);
     //LOG.printf_P(PSTR("%5.2f "),(20 * log10(vReal[i])));
   }
   //LOG.println(FFT.majorPeak()); 
@@ -169,7 +170,8 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size)
   float scale = (1.0*(samples >> 1))/size;
   float avg = vReal[0];
   for(uint8_t i=0; i<(samples >> 1); i++){
-    avg = (avg + vReal[i])/2.0;
+      avg = (avg + vReal[i] + vReal[i!=(samples >> 1)+1?i+1:i])/3.0;
+
     float tmp = (float)(20 * log10(avg));
     arr[(size_t)(i/scale)]=tmp<0?0:tmp;
   }

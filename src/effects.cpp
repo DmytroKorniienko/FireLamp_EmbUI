@@ -1872,14 +1872,15 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
     last_max_peak = mw->getMaxPeak()*2;
 
     maxVal=mw->fillSizeScaledArray(x,WIDTH);
-    float scale = (maxVal==0? 0 : last_max_peak/maxVal) * 3.0 * myLamp.effects.getScale()/255.0;
+
+    float scale = (maxVal==0? 0 : last_max_peak/maxVal);
+    scale = scale * (myLamp.effects.getScale()/255.0);
 
 EVERY_N_SECONDS(1){
   for(uint8_t i=0; i<WIDTH; i++)
     LOG.printf_P(PSTR("%5.2f "),x[i]);
   LOG.printf_P(PSTR("F: %10.2f SC: %5.2f\n"),x[WIDTH], scale); 
 }
-
 
     for(int xpos=0; xpos<WIDTH; xpos++)
       for(int ypos=0; ypos<HEIGHT; ypos++){
