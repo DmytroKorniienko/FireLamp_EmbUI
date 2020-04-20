@@ -1884,7 +1884,15 @@ EVERY_N_SECONDS(1){
 
     for(int xpos=0; xpos<WIDTH; xpos++)
       for(int ypos=0; ypos<HEIGHT; ypos++){
-        myLamp.setLeds(myLamp.getPixelNumber(xpos,ypos),x[xpos]*scale*(1.0/(ypos*2+1)));
+        uint32_t color = (x[xpos]*scale*(1.0/(ypos+1)))>5?255:0;
+        if(ypos>(1.5*HEIGHT/2.0)){
+          color=color<<16;
+        } else if(ypos>(HEIGHT/2.0)){
+          color=(color<<8)|(color<<16);
+        } else {
+          color=color<<8;
+        }
+        myLamp.setLeds(myLamp.getPixelNumber(xpos,ypos), color);
       }
 
     samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
