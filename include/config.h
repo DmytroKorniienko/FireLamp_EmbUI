@@ -91,7 +91,7 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 // настройка кнопки
 #ifdef ESP_USE_BUTTON
 const PROGMEM byte PULL_MODE=HIGH_PULL;                     // подтяжка кнопки к питанию (для механических кнопок НО, на массу)
-//const byte PULL_MODE=LOW_PULL;                            // подтяжка кнопки к нулю (для сенсорных кнопок на TP223)
+//const PROGMEM byte PULL_MODE=LOW_PULL;                      // подтяжка кнопки к нулю (для сенсорных кнопок на TP223)
 #define BUTTON_STEP_TIMEOUT   (75U)                         // каждые BUTTON_STEP_TIMEOUT мс будет генерироваться событие удержания кнопки (для регулировки яркости)
 #define BUTTON_CLICK_TIMEOUT  (500U)                        // максимальное время между нажатиями кнопки в мс, до достижения которого считается серия последовательных нажатий
 #define BUTTON_TIMEOUT        (500U)                        // с какого момента начинает считаться, что кнопка удерживается в мс
@@ -129,7 +129,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 #elif (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 0)
 #define _WIDTH WIDTH
 #define THIS_X (MIRR_V ? (WIDTH - x - 1) : x)
-#define THIS_Y (MIRR_H ?  x : (WIDTH - x - 1))
+#define THIS_Y (MIRR_H ?  y : (HEIGHT - y - 1))
 
 #elif (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3)
 #define _WIDTH HEIGHT
