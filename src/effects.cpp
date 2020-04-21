@@ -838,7 +838,7 @@ void fillNoiseLED()
   {
     dataSmoothing = 200 - (GSHMEM.speed * 4);
   }
-  for (uint8_t i = 0; i < myLamp.getmaxDim(); i++)
+  for (uint8_t i = 0; i < myLamp.getminDim()*2; i++)
   {
     int32_t ioffset = GSHMEM.scale * i;
     for (uint8_t j = 0; j < myLamp.getmaxDim(); j++)
@@ -870,8 +870,8 @@ void fillNoiseLED()
   {
     for (uint8_t j = 0; j < HEIGHT; j++)
     {
-      uint8_t index = GSHMEM.noise[j][i];
-      uint8_t bri =   GSHMEM.noise[i][j];
+      uint8_t index = GSHMEM.noise[j%(myLamp.getminDim()*2)][i];
+      uint8_t bri =   GSHMEM.noise[i%(myLamp.getminDim()*2)][j];
       // if this palette is a 'loop', add a slowly-changing base value
       if ( GSHMEM.colorLoop)
       {
@@ -896,7 +896,7 @@ void fillNoiseLED()
 
 void fillnoise8()
 {
-  for (uint8_t i = 0; i < myLamp.getmaxDim(); i++)
+  for (uint8_t i = 0; i < myLamp.getminDim()*2; i++)
   {
     int32_t ioffset = GSHMEM.scale * i;
     for (uint8_t j = 0; j < myLamp.getmaxDim(); j++)

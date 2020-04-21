@@ -388,7 +388,8 @@ private:
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
-    const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
+    const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
+    const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
 
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
@@ -526,7 +527,8 @@ public:
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}
-    uint8_t getmaxDim() {return maxDim;}
+    uint16_t getmaxDim() {return maxDim;}
+    uint16_t getminDim() {return minDim;}
     void setEffDelay(uint32_t dl) {effDelay=dl;}
 
     void changePower(); // плавное включение/выключение

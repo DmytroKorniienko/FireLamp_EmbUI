@@ -262,9 +262,9 @@ public:
             uint16_t y;
             uint16_t z;
             #if (WIDTH > HEIGHT)
-            uint8_t noise[WIDTH][WIDTH];
+            uint8_t noise[2*HEIGHT][WIDTH];
             #else
-            uint8_t noise[HEIGHT][HEIGHT];
+            uint8_t noise[2*WIDTH][HEIGHT];
             #endif
             char currentPalette[sizeof(CRGBPalette16)];
 		};
