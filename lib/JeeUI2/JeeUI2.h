@@ -47,6 +47,7 @@ class jeeui2
     typedef void (*uiCallback) ();
     typedef void (*updateCallback) ();
     typedef void (*mqttCallback) ();
+    typedef void (*httpCmdCallback) (const char *param, const char *value);
 
   public:
     jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(1024) {
@@ -135,6 +136,8 @@ class jeeui2
     updateCallback upd;
     void update(void (*updateFunction) ());
 
+    void httpCallback(httpCmdCallback func);
+
     char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
     char mac[18]; // "ff:ff:ff:ff:ff:ff"
@@ -156,6 +159,11 @@ class jeeui2
     void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
 
   private:
+
+    bool _isHttpCmd = false;
+    char httpParam[32]; // буфер под параметр
+    char httpValue[32]; // и его значение
+    httpCmdCallback httpfunc = nullptr;
 
     bool loading = true; // признак попытки загрузки начальной страницы index.htm
     unsigned long tm_loading = millis();

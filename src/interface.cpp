@@ -827,3 +827,58 @@ void updateParm() // передача параметров в UI после на
         jee.save(); // Cохранить конфиг
     jee._refresh = true;
 }
+
+void httpCallback(const char *param, const char *value)
+{
+    EFFECT *curEff = myLamp.effects.getCurrent();
+    
+    LOG.printf_P("HTTP: %s - %s\n", param, value);
+    if(!strcmp_P(param,PSTR("on"))){
+        myLamp.setOnOff(true);
+        jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+    } else if(!strcmp_P(param,PSTR("off"))){
+        myLamp.setOnOff(false);
+        jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+    } else if(!strcmp_P(param,PSTR("demo"))){
+        myLamp.startDemoMode();
+    } else if(!strcmp_P(param,PSTR("msg"))){
+        myLamp.sendStringToLamp(value,CRGB::Green);
+    } else if(!strcmp_P(param,PSTR("bright"))){
+        if(atoi(value)>0){
+            if(myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness())
+                jee.var(F("GlobBRI"), value);
+            else
+                myLamp.setGlobalBrightness(atoi(value));
+
+            jee.var(F("bright"), value);
+            FastLED.setBrightness(myLamp.getNormalizedLampBrightness());
+            myLamp.setLoading(true); // перерисовать эффект
+        }
+    } else if(!strcmp_P(param,PSTR("speed"))){
+        if(atoi(value)>0){
+            jee.var(F("speed"), value);
+            curEff->speed = atoi(value);
+            myLamp.setLoading(true); // перерисовать эффект
+        }
+    } else if(!strcmp_P(param,PSTR("scale"))){
+        if(atoi(value)>0){
+            jee.var(F("scale"), value);
+            curEff->scale = atoi(value);
+            myLamp.setLoading(true); // перерисовать эффект
+        }    
+    } else if(!strcmp_P(param,PSTR("effect"))){
+        if(atoi(value)>0){
+            jee.var(F("effList"), value);
+            myLamp.effects.moveBy((EFF_ENUM)atoi(value));
+        }
+    } else if(!strcmp_P(param,PSTR("move_next"))){
+        myLamp.effects.moveNext();
+        myLamp.setLoading(true); // перерисовать эффект
+        myLamp.startFader(true);
+    } else if(!strcmp_P(param,PSTR("move_prev"))){
+        myLamp.effects.movePrev();
+        myLamp.setLoading(true); // перерисовать эффект
+        myLamp.startFader(true);
+    }
+    jee._refresh = true;
+}

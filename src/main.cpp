@@ -71,6 +71,7 @@ void setup() {
 
     jee.ui(interface); // обратный вызов - интерфейс
     jee.update(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
+    jee.httpCallback(httpCallback);
 #ifdef LAMP_DEBUG
     jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
 #else

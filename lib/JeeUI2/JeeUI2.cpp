@@ -141,6 +141,15 @@ void jeeui2::begin() {
         request->send(200, F("text/plain"), pub_transport[p->name()].isNull()?p->value():pub_transport[p->name()].as<String>()); //p->value());
     });
 
+    server.on(PSTR("/cmd"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        AsyncWebParameter *p;
+        p = request->getParam(0);
+        strncpy(httpParam,p->name().c_str(),sizeof(httpParam)-1);
+        strncpy(httpValue,p->value().c_str(),sizeof(httpValue)-1);
+        _isHttpCmd = true;
+        request->send(200, F("text/plain"), F("Ok"));
+    });
+
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
         if(dbg)Serial.println(F("Вызов /echo"));
         foo();
@@ -359,6 +368,13 @@ void jeeui2::led(uint8_t pin, bool invert)
 
 void jeeui2::handle()
 {
+    if(_isHttpCmd){
+        if(httpfunc != nullptr)
+            httpfunc(httpParam, httpValue);
+        _isHttpCmd = false;
+        *httpParam='\0'; *httpValue='\0';
+    }
+    
     if(__shouldReboot){
         Serial.println(F("Rebooting..."));
         delay(100);

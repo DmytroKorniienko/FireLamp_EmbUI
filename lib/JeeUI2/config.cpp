@@ -54,6 +54,11 @@ void jeeui2::update(void (*updateFunction) ())
     upd = updateFunction;
 }
 
+void jeeui2::httpCallback(httpCmdCallback func)
+{
+    httpfunc = func;
+}
+
 void jeeui2::as(){
     sv = true;
     astimer = millis();
