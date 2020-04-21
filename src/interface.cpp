@@ -62,9 +62,9 @@ public:
 
 INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
 
+#ifdef MIC_EFFECTS
 void bmicCalCallback()
 {
-  #ifdef MIC_EFFECTS
     if(!myLamp.isMicOnOff())
         myLamp.sendStringToLamp(String(F("Включите микрофон")).c_str(), CRGB::Red);
     else if(!iGLOBAL.isMicCal){
@@ -79,8 +79,8 @@ void bmicCalCallback()
         iGLOBAL.isMicCal = false;
     }
     jee._refresh = true;
-  #endif
 }
+#endif
 
 void bEventsCallback()
 {

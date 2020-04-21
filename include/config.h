@@ -53,7 +53,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
 typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
+#ifdef ESP8266
 #define MIC_PIN               (A0)                          // ESP8266 Analog Pin ADC0 = A0
+#else
+#define MIC_PIN               (GPIO_NUM_34)                 // ESP32 Analog Pin
+#endif
 #define LAMP_PIN              (2U)                          // пин ленты                (D4)
 #define BTN_PIN               (4U)                          // пин кнопки               (D2)
 //#define BTN_PIN               (0U)                          // пин кнопки "FLASH" NodeMCU (ОТЛАДКА!!!) , подтяжка должна быть PULL_MODE=HIGH_PULL

@@ -86,8 +86,10 @@ EFF_PRIZMATA,                                 // Призмата
 EFF_FLOCK,                                    // Стая
 EFF_SWIRL,                                    // Водоворот
 EFF_DRIFT,                                    // Дрифт
-EFF_DRIFT2,                                   // Дрифт2
-EFF_FREQ = (99U)                              // Частотный анализатор (служебный, смещаем в конец)
+EFF_DRIFT2                                    // Дрифт2
+#ifdef MIC_EFFECTS
+,EFF_FREQ = (99U)                             // Частотный анализатор (служебный, смещаем в конец)
+#endif
 } EFF_ENUM;
 
 void sparklesRoutine(CRGB*, const char*);
@@ -124,7 +126,9 @@ void flockRoutine(CRGB*, const char*);
 void swirlRoutine(CRGB*, const char*);
 void incrementalDriftRoutine(CRGB*, const char*);
 void incrementalDriftRoutine2(CRGB*, const char*);
+#ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB*, const char*);
+#endif
 //-------------------------------------------------
 
 typedef struct _EFFECT {
@@ -175,8 +179,9 @@ const char T_FLOCK[] PROGMEM = "Стая";
 const char T_SWIRL[] PROGMEM = "Водоворот";
 const char T_DRIFT[] PROGMEM = "Дрифт";
 const char T_DRIFT2[] PROGMEM = "Дрифт 2";
+#ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
-
+#endif
 static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
     {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, whiteColorStripeRoutine, nullptr},
@@ -215,8 +220,10 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_FLOCK, T_FLOCK, flockRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SWIRL, T_SWIRL, swirlRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, incrementalDriftRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr},
-    {true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
+    {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr}
+#ifdef MIC_EFFECTS
+    ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
+#endif
 };
 
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб

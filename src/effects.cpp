@@ -809,25 +809,7 @@ void ballRoutine(CRGB *leds, const char *param)
   }
 }
 
-// // Trivial XY function for the SmartMatrix; use a different XY
-// // function for different matrix grids. See XYMatrix example for code.
-// uint16_t XY(uint8_t x, uint8_t y)
-// {
-//   uint16_t i;
-//   if (y & 0x01)
-//   {
-//     // Odd rows run backwards
-//     uint8_t reverseX = (WIDTH - 1) - x;
-//     i = (y * WIDTH) + reverseX;
-//   }
-//   else
-//   {
-//     // Even rows run forwards
-//     i = (y * WIDTH) + x;
-//   }
-//   return i%(WIDTH*HEIGHT+1);
-// }
-
+// для работы FastLed
 uint16_t XY(uint8_t x, uint8_t y)
 {
   return myLamp.getPixelNumber(x,y);
@@ -1852,6 +1834,7 @@ void incrementalDriftRoutine2(CRGB *leds, const char *param)
   }
 }
 
+#ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB *leds, const char *param)
 {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
@@ -1898,3 +1881,4 @@ EVERY_N_SECONDS(1){
     samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     delete mw;
 }
+#endif

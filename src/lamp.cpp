@@ -47,7 +47,7 @@ void LAMP::lamp_init()
     FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
   }
   FastLED.clear();                                            // очистка матрицы
-  FastLED.show();
+  //FastLED.show(); // для ESP32 вызывает перезагрузку циклическую!!!
   // ПИНЫ
 #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
   pinMode(MOSFET_PIN, OUTPUT);

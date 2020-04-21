@@ -55,7 +55,7 @@ LAMP myLamp;
 
 void setup() {
     Serial.begin(115200);
-
+    //Serial.println(F("Starting..."));
     //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
     jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию

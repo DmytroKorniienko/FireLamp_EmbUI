@@ -107,6 +107,12 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
 {
   read_data();
 
+#ifdef ESP8266
+  const uint16_t RESOLUTION = 1023;
+#else
+  const uint16_t RESOLUTION = 4095;
+#endif
+
   int minVal = 255.0;
   int maxVal = 0.0;
   for(uint16_t i=0; i<samples; i++){
@@ -114,22 +120,22 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
     switch (level)
     {
     case MIC_NOISE_REDUCE_LEVEL::NONE:
-      vReal[i] = map(vReal[i], 0, 1023, -128, 127); // без преобразований
+      vReal[i] = map(vReal[i], 0, RESOLUTION, -128, 127); // без преобразований
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_1:
-      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = map((uint16_t)vReal[i], 0, RESOLUTION, -128, 127);
       vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xFE)*(vReal[i]>0?1:-1); // маскируем один бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_2:
-      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = map((uint16_t)vReal[i], 0, RESOLUTION, -128, 127);
       vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xFC)*(vReal[i]>0?1:-1); // маскируем два бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_3:
-      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = map((uint16_t)vReal[i], 0, RESOLUTION, -128, 127);
       vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xF8)*(vReal[i]>0?1:-1); // маскируем три бита
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_4:
-      vReal[i] = map((uint16_t)vReal[i], 0, 1023, -128, 127);
+      vReal[i] = map((uint16_t)vReal[i], 0, RESOLUTION, -128, 127);
       vReal[i] = ((uint16_t)(abs((int16_t)vReal[i]))&0xF0)*(vReal[i]>0?1:-1); // маскируем четыре бита
       break;
     default:
@@ -262,7 +268,11 @@ void MICWORKER::calibrate()
       sum2+=(double)vImag[samples/2+i] * cnt2;
       count2+=cnt2;
     }
+#ifdef ESP8266
     scale = 512.0*count/sum; // смещение
+#else
+    scale = 2048.0*count/sum; // смещение
+#endif
     noise = (sum2/count2)*scale; //+/- единиц шума
 #ifdef LAMP_DEBUG
     LOG.print(F("AVG="));LOG.print(sum/count);LOG.print(F(", noise="));LOG.println(sum2/count2);
