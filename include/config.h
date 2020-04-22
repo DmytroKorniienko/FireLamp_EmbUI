@@ -127,6 +127,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 
 #elif (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 1)
 #define _WIDTH HEIGHT
+#define ROTATED_MATRIX
 #define THIS_X (MIRR_V ? (HEIGHT - y - 1) : y)
 #define THIS_Y (MIRR_H ? (WIDTH - x - 1) : x)
 
@@ -137,6 +138,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 
 #elif (CONNECTION_ANGLE == 1 && STRIP_DIRECTION == 3)
 #define _WIDTH HEIGHT
+#define ROTATED_MATRIX
 #define THIS_X (MIRR_V ? y : (HEIGHT - y - 1))
 #define THIS_Y (MIRR_H ? (WIDTH - x - 1) : x)
 
@@ -147,6 +149,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 
 #elif (CONNECTION_ANGLE == 2 && STRIP_DIRECTION == 3)
 #define _WIDTH HEIGHT
+#define ROTATED_MATRIX
 #define THIS_X (MIRR_V ? y : (HEIGHT - y - 1))
 #define THIS_Y (MIRR_H ?  x : (WIDTH - x - 1))
 
@@ -157,6 +160,7 @@ const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер вр
 
 #elif (CONNECTION_ANGLE == 3 && STRIP_DIRECTION == 1)
 #define _WIDTH HEIGHT
+#define ROTATED_MATRIX
 #define THIS_X (MIRR_V ? (HEIGHT - y - 1) : y)
 #define THIS_Y (MIRR_H ?  x : (WIDTH - x - 1))
 

@@ -845,14 +845,15 @@ void httpCallback(const char *param, const char *value)
         myLamp.sendStringToLamp(value,CRGB::Green);
     } else if(!strcmp_P(param,PSTR("bright"))){
         if(atoi(value)>0){
-            if(myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness())
+            if(myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness()){
                 jee.var(F("GlobBRI"), value);
-            else
-                myLamp.setGlobalBrightness(atoi(value));
-
-            jee.var(F("bright"), value);
+                //myLamp.setGlobalBrightness(atoi(value));
+            } else {
+                jee.var(F("bright"), value);
+            }
+            myLamp.setLampBrightness(atoi(value));
             FastLED.setBrightness(myLamp.getNormalizedLampBrightness());
-            myLamp.setLoading(true); // перерисовать эффект
+            //myLamp.setLoading(true); // перерисовать эффект
         }
     } else if(!strcmp_P(param,PSTR("speed"))){
         if(atoi(value)>0){

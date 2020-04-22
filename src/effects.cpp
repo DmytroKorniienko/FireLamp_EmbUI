@@ -809,12 +809,6 @@ void ballRoutine(CRGB *leds, const char *param)
   }
 }
 
-// для работы FastLed
-uint16_t XY(uint8_t x, uint8_t y)
-{
-  return myLamp.getPixelNumber(x,y);
-}
-
 //-- 3D Noise эффектцы --------------
 // uint16_t GSHMEM.speed = 20;                                        // speed is set dynamically once we've started up
 // uint16_t GSHMEM.scale = 30;                                        // scale is set dynamically once we've started up
@@ -831,6 +825,17 @@ uint16_t XY(uint8_t x, uint8_t y)
 // uint8_t GSHMEM.colorLoop = 1;
 
 // ************* СЛУЖЕБНЫЕ *************
+
+// для работы FastLed (blur2d)
+uint16_t XY(uint8_t x, uint8_t y)
+{
+#ifdef ROTATED_MATRIX  
+  return myLamp.getPixelNumber(y,x); // повернутое на 90 градусов
+#else
+  return myLamp.getPixelNumber(x,y); // обычное подключение
+#endif
+}
+
 void fillNoiseLED()
 {
   uint8_t dataSmoothing = 0;
