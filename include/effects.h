@@ -130,10 +130,10 @@ void incrementalDriftRoutine2(CRGB*, const char*);
 void freqAnalyseRoutine(CRGB*, const char*);
 #endif
 //-------------------------------------------------
-
+#pragma pack(push,1)
 typedef struct _EFFECT {
-    bool canBeSelected;
-    bool isFavorite;
+    bool canBeSelected:1;
+    bool isFavorite:1;
     byte brightness;
     byte speed;
     byte scale;
@@ -143,7 +143,7 @@ typedef struct _EFFECT {
     char *param;
     void setNone(){ eff_nb=EFF_NONE; eff_name=nullptr; brightness=127; speed=127; scale=127; canBeSelected=false; isFavorite=false; func=nullptr; param=nullptr; }
 } EFFECT;
-
+#pragma pack(pop)
 
 const char T_SPARKLES[] PROGMEM = "Конфетти";
 const char T_FIRE[] PROGMEM = "Огненная лампа";

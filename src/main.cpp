@@ -36,7 +36,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 //#define __IDPREFIX F("JeeUI2-")
-
 #include <Arduino.h>
 #include "JeeUI2.h"
 #include "config.h"
@@ -59,9 +58,10 @@ void setup() {
     //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
     jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
-#if defined(ESP8266) && defined(LED_BUILTIN_AUX)
-    //jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание! Поэтому для индикации использую LED_BUILTIN_AUX
+#if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
     jee.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
+#elif defined(__DISABLE_BUTTON0)
+    jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
     jee.ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
 

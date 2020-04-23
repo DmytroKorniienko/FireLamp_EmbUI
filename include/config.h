@@ -58,9 +58,15 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #else
 #define MIC_PIN               (GPIO_NUM_34)                 // ESP32 Analog Pin
 #endif
-#define LAMP_PIN              (2U)                          // пин ленты                (D4)
+
+//#define LAMP_PIN              (2U)                          // пин ленты                (D4)
+#ifdef ESP8266
+#define LAMP_PIN              (D3)                          // пин ленты                (D3)
+#endif
+
 #define BTN_PIN               (4U)                          // пин кнопки               (D2)
 //#define BTN_PIN               (0U)                          // пин кнопки "FLASH" NodeMCU (ОТЛАДКА!!!) , подтяжка должна быть PULL_MODE=HIGH_PULL
+
 #define MOSFET_PIN            (5U)                          // пин MOSFET транзистора   (D1) - может быть использован для управления питанием матрицы/ленты
 #define ALARM_PIN             (16U)                         // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
 #define MOSFET_LEVEL          (HIGH)                        // логический уровень, в который будет установлен пин MOSFET_PIN, когда матрица включена - HIGH или LOW
@@ -94,8 +100,8 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 // настройка кнопки
 #ifdef ESP_USE_BUTTON
-const PROGMEM byte PULL_MODE=HIGH_PULL;                     // подтяжка кнопки к питанию (для механических кнопок НО, на массу)
-//const PROGMEM byte PULL_MODE=LOW_PULL;                      // подтяжка кнопки к нулю (для сенсорных кнопок на TP223)
+//#define PULL_MODE             HIGH_PULL                     // подтяжка кнопки к питанию (для механических кнопок НО, на массу)
+#define PULL_MODE             LOW_PULL                      // подтяжка кнопки к нулю (для сенсорных кнопок на TP223)
 #define BUTTON_STEP_TIMEOUT   (75U)                         // каждые BUTTON_STEP_TIMEOUT мс будет генерироваться событие удержания кнопки (для регулировки яркости)
 #define BUTTON_CLICK_TIMEOUT  (500U)                        // максимальное время между нажатиями кнопки в мс, до достижения которого считается серия последовательных нажатий
 #define BUTTON_TIMEOUT        (500U)                        // с какого момента начинает считаться, что кнопка удерживается в мс

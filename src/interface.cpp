@@ -391,6 +391,11 @@ void create_parameters(){
     jee.var_create(F("ssid"), F("")); // имя точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
     jee.var_create(F("pass"), F("")); // пароль точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
 
+    jee.var_create(F("m_host"), F("")); // Дефолтные настройки для MQTT
+    jee.var_create(F("m_port"), F("1883"));
+    jee.var_create(F("m_user"), F(""));
+    jee.var_create(F("m_pass"), F(""));
+
     // параметры подключения к MQTT
     jee.var_create(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
     
@@ -548,6 +553,10 @@ void interface(){ // функция в которой мф формируем в
         //     jee.formWifi(); // форма настроек Wi-Fi
         //     jee.formMqtt(); // форма настроек MQTT
         // }
+        if(!jee.connected){
+            iGLOBAL.isAddSetup = true;
+            iGLOBAL.addSList = 4;
+        }
         jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
         if(iGLOBAL.isAddSetup){
             jee.option(F("1"), F("Конфигурации"));
