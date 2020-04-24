@@ -1874,8 +1874,8 @@ EVERY_N_SECONDS(1){
   LOG.printf_P(PSTR("F: %10.2f SC: %5.2f\n"),x[WIDTH], scale); 
 }
 
-    for(int xpos=0; xpos<WIDTH; xpos++)
-      for(int ypos=0; ypos<HEIGHT; ypos++){
+    for(uint8_t xpos=0; xpos<WIDTH; xpos++)
+      for(uint8_t ypos=0; ypos<HEIGHT; ypos++){
         uint32_t color = (x[xpos]*scale*(1.0/(ypos+1)))>5?255:0;
         if(ypos>(1.5*HEIGHT/2.0)){
           color=color<<16;

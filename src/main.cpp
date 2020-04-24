@@ -110,7 +110,7 @@ void loop() {
 
 void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG.printf_P(PSTR("Message [%s - %s]"), topic.c_str() , payload.c_str());
-  jee._refresh = true;
+  //jee._refresh = true;
 }
 
 void sendData(){

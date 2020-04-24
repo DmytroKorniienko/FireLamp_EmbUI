@@ -207,7 +207,7 @@ void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessagePro
         
         _t_inc_current = true;
     }
-    else mqt(tpc, String(_t_pld_current)); // msg
+    else mqt(tpc, String(buffer)); // msg
 }
 
 void jeeui2::remControl(){
@@ -249,6 +249,8 @@ void jeeui2::remControl(){
 }
 
 void jeeui2::subscribeAll(){
+    mqttClient.subscribe(id(F("jee/#")).c_str(), 0);
+/*    
     mqttClient.subscribe(id(F("jee/get/")).c_str(), 0);
     mqttClient.subscribe(id(F("jee/get/refresh")).c_str(), 0);
     JsonObject root = cfg.as<JsonObject>();
@@ -292,6 +294,7 @@ void jeeui2::subscribeAll(){
         }
         if(dbg && retry<=0)Serial.println(String(F("-> ")) + item + F(" not subscribed!"));
     }
+*/    
     if(dbg)Serial.println(F("Subscribe All"));
 }
 
