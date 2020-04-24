@@ -88,7 +88,8 @@ EFF_SWIRL,                                    // Водоворот
 EFF_DRIFT,                                    // Дрифт
 EFF_DRIFT2,                                   // Дрифт2
 EFF_TWINKLES,                                 // Мерцание
-EFF_RADAR                                     // Радар
+EFF_RADAR,                                    // Радар
+EFF_WAVES                                     // Волны
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (99U)                             // Частотный анализатор (служебный, смещаем в конец)
 #endif
@@ -130,6 +131,7 @@ void incrementalDriftRoutine(CRGB*, const char*);
 void incrementalDriftRoutine2(CRGB*, const char*);
 void twinklesRoutine(CRGB*, const char*);
 void radarRoutine(CRGB*, const char*);
+void wavesRoutine(CRGB*, const char*);
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB*, const char*);
 #endif
@@ -185,6 +187,7 @@ const char T_DRIFT[] PROGMEM = "Дрифт";
 const char T_DRIFT2[] PROGMEM = "Дрифт 2";
 const char T_TWINKLES[] PROGMEM = "Мерцание";
 const char T_RADAR[] PROGMEM = "Радар";
+const char T_WAVES[] PROGMEM = "Волны";
 
 #ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
@@ -229,8 +232,9 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, incrementalDriftRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr},
     {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, twinklesRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, radarRoutine, nullptr}
-    
+    {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, radarRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, wavesRoutine, nullptr}
+
 #ifdef MIC_EFFECTS
     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
 #endif
@@ -344,6 +348,10 @@ public:
         struct { // радар
             uint8_t eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
             uint8_t eff_theta;         // глобальная переменная угла для работы эффектов
+		};
+        struct { // волны
+            uint8_t whue;
+            uint8_t waveTheta;
 		};
 		//uint8_t raw[1024];
 	};

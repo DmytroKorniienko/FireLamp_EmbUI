@@ -1986,4 +1986,76 @@ void radarRoutine(CRGB *leds, const char *param)
   }
 }
 
+
+// ============= WAVES /  ВОЛНЫ ===============
+// Prismata Loading Animation
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 11.04.2020
+// https://github.com/pixelmatix/aurora/blob/master/PatternWave.h
+// Адаптация от (c) SottNick
+void wavesRoutine(CRGB *leds, const char *param)
+{
+  const uint8_t waveRotation = (31-(myLamp.effects.getScale()%32))/8;
+  const uint8_t waveCount = myLamp.effects.getSpeed() % 2;
+  const uint8_t waveScale = 256 / WIDTH;
+
+  // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+  //   return;
+  // } else {
+  //   myLamp.setEffDelay(millis());
+  // }
+
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+
+
+  myLamp.blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
+  myLamp.dimAll(254);
+
+  int n = 0;
+  switch (waveRotation)
+  {
+  case 0:
+    for (int x = 0; x < WIDTH; x++)
+    {
+      n = quadwave8(x * 2 + GSHMEM.waveTheta) / waveScale;
+      myLamp.drawPixelXY(x, n, ColorFromPalette(*curPalette, GSHMEM.whue + x));
+      if (waveCount != 1)
+        myLamp.drawPixelXY(x, HEIGHT - 1 - n, ColorFromPalette(*curPalette, GSHMEM.whue + x));
+    }
+    break;
+
+  case 1:
+    for (int y = 0; y < HEIGHT; y++)
+    {
+      n = quadwave8(y * 2 + GSHMEM.waveTheta) / waveScale;
+      myLamp.drawPixelXY(n, y, ColorFromPalette(*curPalette, GSHMEM.whue + y));
+      if (waveCount != 1)
+        myLamp.drawPixelXY(WIDTH - 1 - n, y, ColorFromPalette(*curPalette, GSHMEM.whue + y));
+    }
+    break;
+
+  case 2:
+    for (int x = 0; x < WIDTH; x++)
+    {
+      n = quadwave8(x * 2 - GSHMEM.waveTheta) / waveScale;
+      myLamp.drawPixelXY(x, n, ColorFromPalette(*curPalette, GSHMEM.whue + x));
+      if (waveCount != 1)
+        myLamp.drawPixelXY(x, HEIGHT - 1 - n, ColorFromPalette(*curPalette, GSHMEM.whue + x));
+    }
+    break;
+
+  case 3:
+    for (int y = 0; y < HEIGHT; y++)
+    {
+      n = quadwave8(y * 2 - GSHMEM.waveTheta) / waveScale;
+      myLamp.drawPixelXY(n, y, ColorFromPalette(*curPalette, GSHMEM.whue + y));
+      if (waveCount != 1)
+        myLamp.drawPixelXY(WIDTH - 1 - n, y, ColorFromPalette(*curPalette, GSHMEM.whue + y));
+    }
+    break;
+  }
+
+  GSHMEM.waveTheta+=5*(myLamp.effects.getSpeed()/255.0)+1.0;
+  GSHMEM.whue+=myLamp.effects.getSpeed()/10.0+1;
+}
 #endif
