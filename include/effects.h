@@ -87,7 +87,8 @@ EFF_FLOCK,                                    // Стая
 EFF_SWIRL,                                    // Водоворот
 EFF_DRIFT,                                    // Дрифт
 EFF_DRIFT2,                                   // Дрифт2
-EFF_TWINKLES                                  // Мерцание
+EFF_TWINKLES,                                 // Мерцание
+EFF_RADAR                                     // Радар
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (99U)                             // Частотный анализатор (служебный, смещаем в конец)
 #endif
@@ -128,6 +129,7 @@ void swirlRoutine(CRGB*, const char*);
 void incrementalDriftRoutine(CRGB*, const char*);
 void incrementalDriftRoutine2(CRGB*, const char*);
 void twinklesRoutine(CRGB*, const char*);
+void radarRoutine(CRGB*, const char*);
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB*, const char*);
 #endif
@@ -182,6 +184,8 @@ const char T_SWIRL[] PROGMEM = "Водоворот";
 const char T_DRIFT[] PROGMEM = "Дрифт";
 const char T_DRIFT2[] PROGMEM = "Дрифт 2";
 const char T_TWINKLES[] PROGMEM = "Мерцание";
+const char T_RADAR[] PROGMEM = "Радар";
+
 #ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
 #endif
@@ -224,7 +228,8 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_SWIRL, T_SWIRL, swirlRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, incrementalDriftRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr},
-    {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, twinklesRoutine, nullptr}
+    {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, twinklesRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, radarRoutine, nullptr}
     
 #ifdef MIC_EFFECTS
     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
@@ -336,8 +341,9 @@ public:
             uint8_t thue;
             CRGB ledsbuff[NUM_LEDS];
 		};
-        struct {
-            float test; // dummy_struct %)
+        struct { // радар
+            uint8_t eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
+            uint8_t eff_theta;         // глобальная переменная угла для работы эффектов
 		};
 		//uint8_t raw[1024];
 	};

@@ -1897,7 +1897,7 @@ EVERY_N_SECONDS(1){
 #define TWINKLES_SPEEDS 4     // всего 4 варианта скоростей мерцания
 #define TWINKLES_MULTIPLIER 24 // слишком медленно, если на самой медленной просто по единичке добавлять
 
-void twinklesRoutine(CRGB *_leds, const char *param)
+void twinklesRoutine(CRGB *leds, const char *param)
 {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
@@ -1951,6 +1951,39 @@ void twinklesRoutine(CRGB *_leds, const char *param)
       else
         myLamp.setLeds(idx, ColorFromPalette(*curPalette, GSHMEM.ledsbuff[idx].r, GSHMEM.ledsbuff[idx].b));
     }
+}
+
+// ============= RADAR / РАДАР ===============
+// Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternRadar.h
+// Copyright(c) 2014 Jason Coon
+// v1.0 - Updating for GuverLamp v1.7 by Palpalych 14.04.2020
+// v1.1 - +dither, +smoothing
+
+void radarRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+
+  myLamp.blur2d(beatsin8(5U, 3U, 10U));
+  myLamp.dimAll(255U - (0 + (31-(myLamp.effects.getScale()%32))*3));
+
+  for (uint8_t offset = 0U; offset < WIDTH / 2U - 1U; offset++)
+  {
+    myLamp.setLeds(myLamp.getPixelNumber(mapcos8(GSHMEM.eff_theta, offset, (WIDTH - 1U)-offset),
+                   mapsin8(GSHMEM.eff_theta, offset, (WIDTH - 1U)-offset)),
+                   ColorFromPalette(*curPalette, 255U - (offset * 16U + GSHMEM.eff_offset)));
+    EVERY_N_MILLIS(25)
+    {
+      GSHMEM.eff_theta += 2*(myLamp.effects.getSpeed()/255.0)+1;
+      GSHMEM.eff_offset += 1;
+    }
+  }
 }
 
 #endif
