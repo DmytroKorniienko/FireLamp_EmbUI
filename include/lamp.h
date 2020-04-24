@@ -540,8 +540,8 @@ public:
     void fillAll(CRGB color); // залить все
     void drawPixelXY(int16_t x, int16_t y, CRGB color); // функция отрисовки точки по координатам X Y
     CRGB *getUnsafeLedsArray(){return leds;}
-    void setLeds(uint16_t idx, CHSV val) { leds[idx] = val; }
-    void setLeds(uint16_t idx, CRGB val) { leds[idx] = val; }
+    CRGB *setLeds(uint16_t idx, CHSV val) { leds[idx] = val; return &leds[idx]; }
+    CRGB *setLeds(uint16_t idx, CRGB val) { leds[idx] = val; return &leds[idx]; }
     void setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { leds[idx].fadeToBlackBy(val); }
     void setLedsNscale8(uint16_t idx, uint8_t val) { leds[idx].nscale8(val); }
     //fadeToBlackBy

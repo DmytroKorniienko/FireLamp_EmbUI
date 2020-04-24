@@ -359,7 +359,11 @@ void pulseRoutine(CRGB *leds, const char *param) {
 //uint8_t GSHMEM.hue;
 void rainbowHorVertRoutine(bool isVertical)
 {
+#ifdef MIC_EFFECTS
   GSHMEM.hue += (4 * (myLamp.getMicMapMaxPeak()>50?5*(myLamp.getMicMapFreq()/255.0):1));
+#else
+  GSHMEM.hue += 4;
+#endif
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
     CHSV thisColor = CHSV((uint8_t)(GSHMEM.hue + i * myLamp.effects.getScale()%86), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
@@ -374,7 +378,11 @@ void rainbowHorVertRoutine(bool isVertical)
 void rainbowDiagonalRoutine(CRGB *leds, const char *param)
 {
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER)
+#ifdef MIC_EFFECTS
     < (unsigned)(255-myLamp.effects.getSpeed())*((myLamp.getMicMapMaxPeak()>myLamp.effects.getScale()%86+50)?(2.0*(50.0/myLamp.getMicMapMaxPeak())):1) ){
+#else
+    < (unsigned)(255-myLamp.effects.getSpeed())){
+#endif
     return;
   } else {
     myLamp.setEffDelay(millis());
@@ -394,7 +402,9 @@ void rainbowDiagonalRoutine(CRGB *leds, const char *param)
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
       float twirlFactor = 3.0F * (myLamp.effects.getScale() / 30.0F);      // на сколько оборотов будет закручена матрица, [0..3]
+#ifdef MIC_EFFECTS
       twirlFactor *= myLamp.getMicMapMaxPeak()>50?1.5*(myLamp.getMicMapFreq()/255.0):1;
+#endif
       CRGB thisColor = CHSV((uint8_t)(GSHMEM.hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)myLamp.getmaxDim())), 255, 255);
       myLamp.drawPixelXY(i, j, thisColor);
     }
@@ -412,7 +422,11 @@ void colorsRoutine(CRGB *leds, const char *param)
   } else {
     step=(step+1)%(delay+1);
     if(step!=delay) {
+#ifdef MIC_EFFECTS
       myLamp.fillAll(CHSV(GSHMEM.hue+(myLamp.getMicMapMaxPeak()>(myLamp.effects.getScale()/2)+30?myLamp.getMicMapMaxPeak():0), 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+#else
+      myLamp.fillAll(CHSV(GSHMEM.hue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+#endif  
     }
     else {  
       GSHMEM.hue += myLamp.effects.getScale(); // смещаемся на следущий
@@ -1890,6 +1904,7 @@ EVERY_N_SECONDS(1){
     samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     delete mw;
 }
+#endif
 
 // ------------------------------ ЭФФЕКТ МЕРЦАНИЕ ----------------------
 // (c) SottNick
@@ -1961,12 +1976,6 @@ void twinklesRoutine(CRGB *leds, const char *param)
 
 void radarRoutine(CRGB *leds, const char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    return;
-  } else {
-    myLamp.setEffDelay(millis());
-  }
-
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
 
@@ -1978,14 +1987,14 @@ void radarRoutine(CRGB *leds, const char *param)
     myLamp.setLeds(myLamp.getPixelNumber(mapcos8(GSHMEM.eff_theta, offset, (WIDTH - 1U)-offset),
                    mapsin8(GSHMEM.eff_theta, offset, (WIDTH - 1U)-offset)),
                    ColorFromPalette(*curPalette, 255U - (offset * 16U + GSHMEM.eff_offset)));
-    EVERY_N_MILLIS(25)
+    
+    EVERY_N_MILLIS(24)
     {
-      GSHMEM.eff_theta += 2*(myLamp.effects.getSpeed()/255.0)+1;
-      GSHMEM.eff_offset += 1;
+      GSHMEM.eff_theta += 5.5*((myLamp.effects.getSpeed())/255.0)+1;
+      GSHMEM.eff_offset += 3.5*((255-myLamp.effects.getSpeed())/255.0)+1;
     }
   }
 }
-
 
 // ============= WAVES /  ВОЛНЫ ===============
 // Prismata Loading Animation
@@ -1998,12 +2007,6 @@ void wavesRoutine(CRGB *leds, const char *param)
   const uint8_t waveCount = myLamp.effects.getSpeed() % 2;
   const uint8_t waveScale = 256 / WIDTH;
 
-  // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-  //   return;
-  // } else {
-  //   myLamp.setEffDelay(millis());
-  // }
-
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
 
@@ -2015,7 +2018,7 @@ void wavesRoutine(CRGB *leds, const char *param)
   switch (waveRotation)
   {
   case 0:
-    for (int x = 0; x < WIDTH; x++)
+    for (uint8_t x = 0; x < WIDTH; x++)
     {
       n = quadwave8(x * 2 + GSHMEM.waveTheta) / waveScale;
       myLamp.drawPixelXY(x, n, ColorFromPalette(*curPalette, GSHMEM.whue + x));
@@ -2025,7 +2028,7 @@ void wavesRoutine(CRGB *leds, const char *param)
     break;
 
   case 1:
-    for (int y = 0; y < HEIGHT; y++)
+    for (uint8_t y = 0; y < HEIGHT; y++)
     {
       n = quadwave8(y * 2 + GSHMEM.waveTheta) / waveScale;
       myLamp.drawPixelXY(n, y, ColorFromPalette(*curPalette, GSHMEM.whue + y));
@@ -2035,7 +2038,7 @@ void wavesRoutine(CRGB *leds, const char *param)
     break;
 
   case 2:
-    for (int x = 0; x < WIDTH; x++)
+    for (uint8_t x = 0; x < WIDTH; x++)
     {
       n = quadwave8(x * 2 - GSHMEM.waveTheta) / waveScale;
       myLamp.drawPixelXY(x, n, ColorFromPalette(*curPalette, GSHMEM.whue + x));
@@ -2045,7 +2048,7 @@ void wavesRoutine(CRGB *leds, const char *param)
     break;
 
   case 3:
-    for (int y = 0; y < HEIGHT; y++)
+    for (uint8_t y = 0; y < HEIGHT; y++)
     {
       n = quadwave8(y * 2 - GSHMEM.waveTheta) / waveScale;
       myLamp.drawPixelXY(n, y, ColorFromPalette(*curPalette, GSHMEM.whue + y));
@@ -2058,4 +2061,264 @@ void wavesRoutine(CRGB *leds, const char *param)
   GSHMEM.waveTheta+=5*(myLamp.effects.getSpeed()/255.0)+1.0;
   GSHMEM.whue+=myLamp.effects.getSpeed()/10.0+1;
 }
+
+// ============= FIRE 2012 /  ОГОНЬ 2012 ===============
+// based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+uint8_t wrapX(int8_t x)
+{
+  return (x + WIDTH) % WIDTH;
+}
+uint8_t wrapY(int8_t y)
+{
+  return (y + HEIGHT) % HEIGHT;
+}
+
+bool fire2012Routine(CRGB *leds, const char *param)
+{
+const CRGBPalette16 HeatColors2_p = CRGBPalette16(    0x000000,
+    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
+    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
+    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF);
+
+const CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold);             //* Orange
+const CRGBPalette16 NormalFire_p = CRGBPalette16(CRGB::Black, CRGB::Red, 0xff3c00, 0xff7800);                             // пытаюсь сделать что-то более приличное
+const CRGBPalette16 NormalFire2_p = CRGBPalette16(CRGB::Black, CRGB::FireBrick, 0xff3c00, 0xff7800);                      // пытаюсь сделать что-то более приличное
+const CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod);           //* Yellow
+const CRGBPalette16 CopperFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen);     //* Green
+const CRGBPalette16 AlcoholFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue);  //* Blue
+const CRGBPalette16 RubidiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue);        //* Indigo
+const CRGBPalette16 PotassiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink); //* Violet
+const CRGBPalette16 LithiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink);        //* Red
+const CRGBPalette16 *firePalettes[] = {
+    &HeatColors2_p,
+    &WoodFireColors_p,
+    &NormalFire_p,
+    &NormalFire2_p,
+    &LithiumFireColors_p,
+    &SodiumFireColors_p,
+    &CopperFireColors_p,
+    &AlcoholFireColors_p,
+    &RubidiumFireColors_p,
+    &PotassiumFireColors_p};
+CRGBPalette16 fire_p;
+
+  const CRGBPalette16 *curPalette = firePalettes[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(firePalettes)/sizeof(CRGBPalette16 *))-1))];
+  
+#if HEIGHT / 6 > 6
+#define FIRE_BASE 6
+#else
+#define FIRE_BASE HEIGHT / 6 + 1
 #endif
+  // COOLING: How much does the air cool as it rises?
+  // Less cooling = taller flames.  More cooling = shorter flames.
+  uint8_t cooling = 70;
+  // SPARKING: What chance (out of 255) is there that a new spark will be lit?
+  // Higher chance = more roaring fire.  Lower chance = more flickery fire.
+  uint8_t sparking = 130;
+  // SMOOTHING; How much blending should be done between frames
+  // Lower = more blending and smoother flames. Higher = less blending and flickery flames
+  const uint8_t fireSmoothing = 80;
+  // Add entropy to random number generator; we use a lot of it.
+  random16_add_entropy(random(256));
+
+  // Loop for each column individually
+  for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    // Step 1.  Cool down every cell a little
+    for (uint8_t i = 0; i < HEIGHT; i++)
+    {
+      GSHMEM.noise3d[0][x][i] = qsub8(GSHMEM.noise3d[0][x][i], random(0, ((cooling * 10) / HEIGHT) + 2));
+    }
+
+    // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+    for (uint8_t k = HEIGHT; k > 1; k--)
+    {
+      GSHMEM.noise3d[0][x][wrapY(k)] = (GSHMEM.noise3d[0][x][k - 1] + GSHMEM.noise3d[0][x][wrapY(k - 2)] + GSHMEM.noise3d[0][x][wrapY(k - 2)]) / 3;
+    }
+
+    // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+    if (random(255) < sparking)
+    {
+      int j = random(FIRE_BASE);
+      GSHMEM.noise3d[0][x][j] = qadd8(GSHMEM.noise3d[0][x][j], random(160, 255));
+    }
+
+    // Step 4.  Map from heat cells to LED colors
+    /*if (Scale > 50)
+      for (int y = 0; y < HEIGHT; y++)
+      {
+        // Blend new data with previous frame. Average data between neighbouring pixels
+        nblend(leds[getPixelNumber(x, y)], ColorFromPalette(fire_p, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
+      }
+    else*/
+      for (uint8_t y = 0; y < HEIGHT; y++)
+      {
+        // Blend new data with previous frame. Average data between neighbouring pixels
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
+        //nblend(leds[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
+      }
+  }
+}
+/*
+// ============= RAINS/LEDS/THUNDERS IN THE CAN /  ОСАДКИ/ТУЧКА/ГРОЗА В БАНКЕ ===============
+// https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+// там по ссылке ещё остались эффекты с 3 по 9 (в SimplePatternList перечислены)
+
+//прикольная процедура добавляет блеск почти к любому эффекту после его отрисовки https://www.youtube.com/watch?v=aobtR1gIyIo
+//void addGlitter( uint8_t chanceOfGlitter){
+//  if ( random8() < chanceOfGlitter) leds[ random16(NUM_LEDS) ] += CRGB::White;
+//static uint8_t intensity = 42;  // будет бегунок масштаба
+// Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
+// uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
+// uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
+
+CRGB solidRainColor = CRGB(60, 80, 90);
+
+void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm)
+{
+  static uint16_t noiseX = random16();
+  static uint16_t noiseY = random16();
+  static uint16_t noiseZ = random16();
+
+  CRGB lightningColor = CRGB(72, 72, 80);
+  CRGBPalette16 rain_p(CRGB::Black, rainColor);
+#ifdef SMARTMATRIX
+  CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(75, 84, 84), CRGB(49, 75, 75), CRGB::Black);
+#else
+  CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(15, 24, 24), CRGB(9, 15, 15), CRGB::Black);
+#endif
+
+  fadeToBlackBy(leds, NUM_LEDS, 255 - tailLength);
+
+  // Loop for each column individually
+  for (int x = 0; x < WIDTH; x++)
+  {
+    // Step 1.  Move each dot down one cell
+    for (int i = 0; i < HEIGHT; i++)
+    {
+      if (noise3d[0][x][i] >= backgroundDepth)
+      { // Don't move empty cells
+        if (i > 0)
+          noise3d[0][x][wrapY(i - 1)] = noise3d[0][x][i];
+        noise3d[0][x][i] = 0;
+      }
+    }
+
+    // Step 2.  Randomly spawn new dots at top
+    if (random(255) < spawnFreq)
+    {
+      noise3d[0][x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
+    }
+
+    // Step 3. Map from tempMatrix cells to LED colors
+    for (int y = 0; y < HEIGHT; y++)
+    {
+      if (noise3d[0][x][y] >= backgroundDepth)
+      { // Don't write out empty cells
+        drawPixel(x, y, ColorFromPalette(rain_p, noise3d[0][x][y]));
+      }
+    }
+
+    // Step 4. Add splash if called for
+    if (splashes)
+    {
+      // FIXME, this is broken
+      byte j = line[x];
+      byte v = noise3d[0][x][0];
+
+      if (j >= backgroundDepth)
+      {
+        drawPixel(wrapX(x - 2), 0, ColorFromPalette(rain_p, j / 3));
+        drawPixel(wrapX(x + 2), 0, ColorFromPalette(rain_p, j / 3));
+        line[x] = 0; // Reset splash
+      }
+
+      if (v >= backgroundDepth)
+      {
+        drawPixel(wrapX(x - 1), 1, ColorFromPalette(rain_p, v / 2));
+        drawPixel(wrapX(x + 1), 1, ColorFromPalette(rain_p, v / 2));
+        line[x] = v; // Prep splash for next frame
+      }
+    }
+
+    // Step 5. Add lightning if called for
+    if (storm)
+    {
+      //uint8_t lightning[WIDTH][HEIGHT];
+      // ESP32 does not like static arrays  https://github.com/espressif/arduino-esp32/issues/2567
+      uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);
+      while (lightning == NULL)
+      {
+        Serial.println("lightning malloc failed");
+      }
+
+      if (random16() < 72)
+      {                                                                       // Odds of a lightning bolt
+        lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
+        for (int ly = HEIGHT - 1; ly > 1; ly--)
+        {
+          for (int lx = 1; lx < WIDTH - 1; lx++)
+          {
+            if (lightning[lx + ly * WIDTH] == 255)
+            {
+              lightning[lx + ly * WIDTH] = 0;
+              uint8_t dir = random8(4);
+              switch (dir)
+              {
+              case 0:
+                drawPixel(lx + 1, ly - 1, lightningColor);
+                lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // move down and right
+                break;
+              case 1:
+                drawPixel(lx, ly - 1, CRGB(128, 128, 128)); // я без понятия, почему у верхней молнии один оттенок, а у остальных - другой
+                lightning[lx + (ly - 1) * WIDTH] = 255;     // move down
+                break;
+              case 2:
+                drawPixel(lx - 1, ly - 1, CRGB(128, 128, 128));
+                lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // move down and left
+                break;
+              case 3:
+                drawPixel(lx - 1, ly - 1, CRGB(128, 128, 128));
+                lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // fork down and left
+                drawPixel(lx - 1, ly - 1, CRGB(128, 128, 128));
+                lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // fork down and right
+                break;
+              }
+            }
+          }
+        }
+      }
+      free(lightning);
+    }
+
+    // Step 6. Add clouds if called for
+    if (clouds)
+    {
+      uint16_t noiseScale = 250; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
+      const uint16_t cloudHeight = (HEIGHT * 0.2) + 1;
+
+      // This is the array that we keep our computed noise values in
+      //static uint8_t noise[WIDTH][cloudHeight];
+      static uint8_t *noise = (uint8_t *)malloc(WIDTH * cloudHeight);
+      while (noise == NULL)
+      {
+        Serial.println("noise malloc failed");
+      }
+      int xoffset = noiseScale * x + hue;
+
+      for (int z = 0; z < cloudHeight; z++)
+      {
+        int yoffset = noiseScale * z - hue;
+        uint8_t dataSmoothing = 192;
+        uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
+        noiseData = qadd8(noiseData, scale8(noiseData, 39));
+        noise[x * cloudHeight + z] = scale8(noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
+        nblend(leds[getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (cloudHeight - z) * (250 / cloudHeight));
+      }
+      noiseZ++;
+    }
+  }
+}
+*/
