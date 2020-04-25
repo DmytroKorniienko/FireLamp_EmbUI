@@ -88,7 +88,7 @@ void jeeui2::begin(bool debug) {
 }
 
 void notFound(AsyncWebServerRequest *request) {
-    request->send(404, F("text/plain"), F("Not found"));
+    request->send(404, FPSTR(PGmimetxt), F("Not found"));
 }
 
 void jeeui2::begin() { 
@@ -126,7 +126,7 @@ void jeeui2::begin() {
             as();
           }
         }
-        request->send(200, F("text/plain"), F("OK"));
+        request->send(200, FPSTR(PGmimetxt), F("OK"));
     });
 
     server.on(PSTR("/pub"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -138,7 +138,7 @@ void jeeui2::begin() {
             value = pub_transport[p->name()].as<String>();
             if(dbg)Serial.printf_P(PSTR("pub: [%s - %s - %s]\n"),p->name().c_str(), p->value().c_str(), value.c_str());
         }
-        request->send(200, F("text/plain"), pub_transport[p->name()].isNull()?p->value():pub_transport[p->name()].as<String>()); //p->value());
+        request->send(200, FPSTR(PGmimetxt), pub_transport[p->name()].isNull()?p->value():pub_transport[p->name()].as<String>()); //p->value());
     });
 
     server.on(PSTR("/cmd"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -147,7 +147,7 @@ void jeeui2::begin() {
         strncpy(httpParam,p->name().c_str(),sizeof(httpParam)-1);
         strncpy(httpValue,p->value().c_str(),sizeof(httpValue)-1);
         _isHttpCmd = true;
-        request->send(200, F("text/plain"), F("Ok"));
+        request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
@@ -155,18 +155,18 @@ void jeeui2::begin() {
         foo();
 
         String res = buf;
-        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), res);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), res);
 
-        response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
         //response->addHeader(F("Pragma"),F("no-cache"));
         //response->addHeader(F("Expires"),F("0"));
         request->send(response);
-        //request->send(200, F("text/plain"), buf);
+        //request->send(200, FPSTR(PGmimetxt), buf);
 
         // AsyncJsonResponse * response = new AsyncJsonResponse();
 
         // response->addHeader(F("Server"),F("ESP Async Web Server"));
-        // response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        // response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
 
         // DynamicJsonDocument doc(4096);
         // serializeJson(doc,buf);
@@ -189,9 +189,9 @@ void jeeui2::begin() {
             echoTm = millis();
         }
         sprintf_P(buffer,PSTR("{\"_refresh\":%d}"), _refresh);
-        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), buffer);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), buffer);
 
-        response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
         //response->addHeader(F("Pragma"),F("no-cache"));
         //response->addHeader(F("Expires"),F("0"));
         request->send(response);
@@ -199,9 +199,9 @@ void jeeui2::begin() {
 
     server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
         String config = deb();
-        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), config);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), config);
 
-        response->addHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
         //response->addHeader(F("Pragma"),F("no-cache"));
         //response->addHeader(F("Expires"),F("0"));
         request->send(response);
@@ -220,79 +220,53 @@ void jeeui2::begin() {
         request->send(SPIFFS, F("/events_config.json"), String(), true);
     });
 
-    server.on(PSTR("/js/maker.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/maker.js.gz"), F("application/javascript"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
-        request->send(response);
-    });
-
     server.on(PSTR("/"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         if(loading) {
-            request->send(500, F("text/plain"), F("Server busy... Try again later"));
+            request->send(500, FPSTR(PGmimetxt), F("Server busy... Try again later"));
             return;
         }
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/index.html.gz"), F("text/html"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
+        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/index.html.gz"), FPSTR(PGmimehtml));
+        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
         request->send(response);
         //if(dbg) Serial.println(F("LOADING BLOCK: index.htm"));
         tm_loading = millis();
         loading = true;
     });
 
-    server.on(PSTR("/css/pure-min.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/pure-min.css.gz"), F("text/css"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
+    server.on(PSTR("/css/all.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/all.css.gz"), FPSTR(PGmimecss));
+        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
         request->send(response);
     });
 
-    server.on(PSTR("/css/side-menu.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/side-menu.css.gz"), F("text/css"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
-        request->send(response);
-    });
-
-    server.on(PSTR("/css/range.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/range.css.gz"), F("text/css"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
-        request->send(response);
-    });
-
-    server.on(PSTR("/css/grids.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/grids.css.gz"), F("text/css"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
-        request->send(response);
-    });
-
-    server.on(PSTR("/css/chk.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/chk.css.gz"), F("text/css"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
-        request->send(response);
-    });
-
-    server.on(PSTR("/js/ui.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/ui.js.gz"), F("application/javascript"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
+    server.on(PSTR("/js/all.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/all.js.gz"), FPSTR(PGmimejson));
+        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
         request->send(response);
     });
 
     server.on(PSTR("/favicon.ico"), HTTP_GET, [](AsyncWebServerRequest *request) {
         AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/favicon.ico.gz"), F("image/x-icon"));
-        response->addHeader(F("Content-Encoding"), F("gzip"));
+        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
+        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
         request->send(response);
     });
 
     server.on(PSTR("/heap"), HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, F("text/plain"), String(ESP.getFreeHeap()));
+        request->send(200, FPSTR(PGmimetxt), String(ESP.getFreeHeap()));
     });
 
     // Simple Firmware Update Form
     server.on(PSTR("/update"), HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, F("text/html"), F("<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>"));
+        request->send(200, FPSTR(PGmimehtml), F("<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>"));
     });
 
     server.on(PSTR("/update"), HTTP_POST, [](AsyncWebServerRequest *request){
         __shouldReboot = !Update.hasError();
-        AsyncWebServerResponse *response = request->beginResponse(200, F("text/plain"), (__shouldReboot?F("OK"):F("FAIL")));
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), (__shouldReboot?F("OK"):F("FAIL")));
         response->addHeader(F("Connection"), F("close"));
         request->send(response);
     },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
@@ -346,7 +320,7 @@ void jeeui2::begin() {
         }
     }
     json += F("]");
-    request->send(200, F("application/json"), json);
+    request->send(200, FPSTR(PGmimejson), json);
     json = String();
     });
 
