@@ -36,6 +36,17 @@
 #define __IDPREFIX F("JeeUI2-")
 #endif
 
+static const char PGmimetxt[] PROGMEM  = "text/plain";
+static const char PGmimecss[] PROGMEM  = "text/css";
+static const char PGmimehtml[] PROGMEM = "text/html";
+static const char PGmimejson[] PROGMEM = "application/json";
+static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
+static const char PGhdrcachec[] PROGMEM = "Cache-Control";
+static const char PGgzip[] PROGMEM = "gzip";
+static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";    // 10 days cache
+static const char PGpmaxage[] PROGMEM = "public, max-age=864000";    // 10 days cache
+
+
 class jeeui2
 {
     DynamicJsonDocument cfg;
