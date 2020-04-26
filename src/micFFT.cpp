@@ -36,11 +36,20 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "micFFT.h"
+#ifdef ESP8266
+#include "user_interface.h"
+ADC_MODE(ADC_TOUT);
+#endif
+
 
 void MICWORKER::read_data()
 {
-  unsigned long m=micros(), _m=m;
+  //uint16_t adc_addr[samples]; // point to the address of ADC continuously fast sampling output
+  uint16_t adc_addr[1]; // point to the address of ADC continuously fast sampling output
+  //uint16_t adc_num = samples; // sampling number of ADC continuously fast sampling, range [1, 65535]
+  const uint8_t adc_clk_div = 8; // ADC working clock = 80M/adc_clk_div, range [1, 23], the recommended value is 8
 
+  unsigned long m=micros(), _m=m;
   // /* Build raw data */
   // double cycles = (((samples-1) * signalFrequency) / samplingFrequency); //Number of signal cycles that the sampling will read
   // for (uint16_t i = 0; i < samples; i++)
@@ -50,9 +59,21 @@ void MICWORKER::read_data()
   //   vImag[i] = 0.0; //Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows
   // }
 
+// #ifdef ESP8266  
+//   system_adc_read_fast(adc_addr, samples, adc_clk_div);
+//   if(!useFixedFreq)
+//     samplingFrequency = ((1000UL*1000UL)/(micros()-_m))*(samples)*1;
+//   // EVERY_N_SECONDS(3) {
+//   //   LOG.println(samplingFrequency);
+//   // }
+// #endif
   for(uint16_t i=0; i<samples; i++){
+#if defined(ESP8266) && defined(FAST_ADC_READ)
+    system_adc_read_fast(adc_addr, 1, adc_clk_div);
+    vReal[i] = adc_addr[0]; // использую system_adc_read_fast для бОльшей скорости
+#else
     vReal[i] = analogRead(MIC_PIN); // ESP8266 Analog Pin ADC0 = A0
-
+#endif
     if(useFixedFreq){ // используется фиксированное семплирование, организуем задержку
       while((micros() - m < sampling_period_us)){
         //empty loop
@@ -62,7 +83,9 @@ void MICWORKER::read_data()
   }
   if(!useFixedFreq)
     samplingFrequency = ((1000UL*1000UL)/(micros()-_m))*(samples);
-  //LOG.println(samplingFrequency);
+  // EVERY_N_SECONDS(3) {
+  //   LOG.println(samplingFrequency);
+  // }
   FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency);
 }
 
@@ -165,23 +188,28 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
   FFT.complexToMagnitude(); /* Compute magnitudes */  
   
-  float maxVal=0;
-  for(uint8_t i=0; i<(samples >> 1); i++){
-    maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
-    //LOG.printf_P(PSTR("%3d "),(uint8_t)vReal[i]);
-    //LOG.printf_P(PSTR("%5.2f "),(20 * log10(vReal[i])));
-  }
-  //LOG.println(FFT.majorPeak()); 
+  // for(uint8_t i=0; i<(samples >> 1); i++){
+  //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
+  //   //LOG.printf_P(PSTR("%3d "),(uint8_t)vReal[i]);
+  //   //LOG.printf_P(PSTR("%5.2f "),(20 * log10(vReal[i])));
+  // }
+  // //LOG.println(FFT.majorPeak()); 
 
-  float scale = (1.0*(samples >> 1))/size;
-  float avg = vReal[0];
-  for(uint8_t i=0; i<(samples >> 1); i++){
-      avg = (avg + vReal[i] + vReal[i!=(samples >> 1)+1?i+1:i])/3.0;
+  float minFreq=(log((float)samplingFrequency*2/samples));
+  float scale = size/(log(20000.0)-minFreq);
+  //log(125) = 4,8283137373023011238022779996786 (0)
+  //log(20000) = 9,9034875525361280454891979401956 (15)  9.90 / 16 = x / 1
+  for(uint8_t i=0; i<(samples>>1); i++){
+    float idx_freq=(((float)samplingFrequency/samples)*(i+1));
+    uint8_t idx=(log(idx_freq)-minFreq)*scale;
 
-    float tmp = (float)(20 * log10(avg));
-    arr[(size_t)(i/scale)]=tmp<0?0:tmp;
+    float tmp = (float)(20 * log10(vReal[i]));
+    arr[idx]=(tmp<0?0:tmp+arr[idx])/2.0; // усредняем
   }
-  arr[size] = FFT.majorPeak();
+  float maxVal=0; // ищем максимум
+  for(uint8_t i=0;i<size;i++)
+    maxVal=max(maxVal,arr[i]);
+  arr[size] = FFT.majorPeak(); // сюда запишем частоту главной гармоники
   return maxVal<0?0:maxVal;
 }
 

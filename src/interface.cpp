@@ -809,6 +809,11 @@ void update(){ // функция выполняется после ввода д
     jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 
     jee.setDelayedSave(30000); // отложенное сохранение конфига, раз в 30 секунд относительно последнего изменения
+
+#ifdef MIC_EFFECTS
+    myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
+#endif
+
     jee._refresh = isRefresh; // устанавливать в самом конце!
 }
 

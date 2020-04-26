@@ -1860,27 +1860,33 @@ void incrementalDriftRoutine2(CRGB *leds, const char *param)
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB *leds, const char *param)
 {
+  myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
+
+  if(myLamp.isLoading()){
+    memset(GSHMEM.peakX,0,sizeof(GSHMEM.peakX));
+  }
+  
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
   } else {
     myLamp.setEffDelay(millis());
   }
 
-    float samp_freq;
-    double last_freq;
-    uint8_t last_min_peak, last_max_peak;
-    float x[WIDTH+1];
-    float maxVal;
+  float samp_freq;
+  double last_freq;
+  uint8_t last_min_peak, last_max_peak;
+  float x[WIDTH+1]; memset(x,0,sizeof(x));
+  float maxVal;
 
-    MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
-    samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
-    last_min_peak = mw->getMinPeak();
-    last_max_peak = mw->getMaxPeak()*2;
+  MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
+  samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
+  last_min_peak = mw->getMinPeak();
+  last_max_peak = mw->getMaxPeak()*2;
 
-    maxVal=mw->fillSizeScaledArray(x,WIDTH);
+  maxVal=mw->fillSizeScaledArray(x,WIDTH);
 
-    float scale = (maxVal==0? 0 : last_max_peak/maxVal);
-    scale = scale * (myLamp.effects.getScale()/255.0);
+  float scale = (maxVal==0? 0 : last_max_peak/maxVal);
+  scale = scale * (myLamp.effects.getScale()/255.0);
 
 EVERY_N_SECONDS(1){
   for(uint8_t i=0; i<WIDTH; i++)
@@ -1888,21 +1894,49 @@ EVERY_N_SECONDS(1){
   LOG.printf_P(PSTR("F: %10.2f SC: %5.2f\n"),x[WIDTH], scale); 
 }
 
-    for(uint8_t xpos=0; xpos<WIDTH; xpos++)
-      for(uint8_t ypos=0; ypos<HEIGHT; ypos++){
-        uint32_t color = (x[xpos]*scale*(1.0/(ypos+1)))>5?255:0;
-        if(ypos>(1.5*HEIGHT/2.0)){
-          color=color<<16;
-        } else if(ypos>(HEIGHT/2.0)){
-          color=(color<<8)|(color<<16);
-        } else {
-          color=color<<8;
-        }
-        myLamp.setLeds(myLamp.getPixelNumber(xpos,ypos), color);
+  for(uint8_t xpos=0; xpos<WIDTH; xpos++){
+    for(uint8_t ypos=0; ypos<HEIGHT; ypos++){
+      uint32_t color = (x[xpos]*scale*(1.0/(ypos+1)))>5?255:0;
+      if(color==255 && GSHMEM.peakX[1][xpos] < ypos){
+        GSHMEM.peakX[1][xpos]=ypos;
+        GSHMEM.peakX[0][xpos]=10;
       }
+      if(ypos>(1.5*HEIGHT/2.0)){
+        color=color<<16;
+      } else if(ypos>(HEIGHT/2.0)){
+        color=(color<<8)|(color<<16);
+      } else {
+        color=color<<8;
+      }
+      myLamp.setLeds(myLamp.getPixelNumber(xpos,ypos), color);
+    }
+  }
 
-    samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
-    delete mw;
+  bool isfall=false;
+  EVERY_N_MILLISECONDS(70){
+    isfall = true;
+  }
+
+  for (size_t i = 0; i < WIDTH; i++)
+  {
+    uint32_t color = 255;
+    int8_t &ypos=GSHMEM.peakX[1][i];
+    if(GSHMEM.peakX[0][i])
+      GSHMEM.peakX[0][i]--;
+    if(isfall && ypos>0 && !GSHMEM.peakX[0][i]) ypos--;
+
+    if(ypos>(1.5*HEIGHT/2.0)){
+      color=color<<16;
+    } else if(ypos>(HEIGHT/2.0)){
+      color=(color<<8)|(color<<16);
+    } else {
+      color=color<<8;
+    }
+    myLamp.setLeds(myLamp.getPixelNumber(i,ypos), color);
+  }
+
+  samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
+  delete mw;
 }
 #endif
 

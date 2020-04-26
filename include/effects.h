@@ -353,6 +353,9 @@ public:
             uint8_t whue;
             uint8_t waveTheta;
 		};
+        struct {
+            int8_t peakX[2][WIDTH];
+        };
 		//uint8_t raw[1024];
 	};
 };

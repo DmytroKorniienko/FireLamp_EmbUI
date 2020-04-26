@@ -474,6 +474,7 @@ public:
     uint8_t getMicMapFreq() {return isMicOn?map((long)last_freq,1,max((long)last_freq,(long)(samp_freq/2)),1,255):0;}
     void setMicOnOff(bool val) {isMicOn = val;}
     bool isMicOnOff() {return isMicOn;}
+    void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
 #endif
 
 

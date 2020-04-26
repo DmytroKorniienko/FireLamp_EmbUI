@@ -51,13 +51,20 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 class MICWORKER {
 private:
-  static const uint16_t samples = 64;//128; //This value MUST ALWAYS be a power of 2
+#ifdef FAST_ADC_READ
+#define samples (256U)     //This value MUST ALWAYS be a power of 2
+  double samplingFrequency = 32000; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500 если чтение через analogRead(MIC_PIN);
+  bool useFixedFreq = true; // использовать фиксированное семплирование, либо максимально возможное (false)
+#else
+#define samples (64U)      //This value MUST ALWAYS be a power of 2
+  double samplingFrequency = 9000; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500 если чтение через analogRead(MIC_PIN);
   bool useFixedFreq = false; // использовать фиксированное семплирование, либо максимально возможное (false)
+#endif
   bool _isCaliblation = false;
-  float scale = 1.28; // 400 как средняя точка у меня, но надо будет калибравать для каждого случая отдельно калибровкой :)
+  float scale = 1.27; // 400 как средняя точка у меня, но надо будет калибравать для каждого случая отдельно калибровкой :)
   float noise = 0; // заполняется калибровкой, это уровень шума микрофона
   double signalFrequency = 700;
-  double samplingFrequency = 9000; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500... иначе расчет будет неправильным
+
   const unsigned int sampling_period_us = round(1000000*(1.0/samplingFrequency));
   const uint8_t amplitude = 100;
   float *vReal = nullptr;

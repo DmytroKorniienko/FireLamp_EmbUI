@@ -51,6 +51,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
 #define OTA                                                 // Обновление по ОТА
 #define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
+#define FAST_ADC_READ // использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
 typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
 #ifdef ESP8266
