@@ -943,7 +943,7 @@ void LAMP::startNormalMode()
   loadingFlag = true;
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
 }
-
+#ifdef OTA
 void LAMP::startOTAUpdate()
 {        
   mode = MODE_OTA;
@@ -954,7 +954,7 @@ void LAMP::startOTAUpdate()
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
   myLamp.sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
 }
-
+#endif
 bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
   static int32_t offset = (MIRR_V ? 0 : WIDTH);

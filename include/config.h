@@ -36,6 +36,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 #ifndef __CONFIG_H
 #define __CONFIG_H
+#include "user_config.h" // <- пользовательские настройки, пожалуйста меняйте все что требуется там, ЭТОТ ФАЙЛ (config.h) НЕ МЕНЯЙТЕ
 
 #include <GyverButton.h>
 
@@ -45,86 +46,165 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <FastLED.h>
 
 //-----------------------------------
-#define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
+//#define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
-//#define DEBUG_TELNET_OUTPUT  (true)                       // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
+//#define DEBUG_TELNET_OUTPUT  (true)                         // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
 //#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
-#define OTA                                                 // Обновление по ОТА
-#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
-#define FAST_ADC_READ // использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
+//#define OTA                                                 // Обновление по ОТА
+//#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
+
 typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
+
+#ifndef MIC_PIN
 #ifdef ESP8266
 #define MIC_PIN               (A0)                          // ESP8266 Analog Pin ADC0 = A0
 #else
 #define MIC_PIN               (GPIO_NUM_34)                 // ESP32 Analog Pin
 #endif
+#define FAST_ADC_READ                                       // использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
+#endif
 
+#ifndef LAMP_PIN
 //#define LAMP_PIN              (2U)                          // пин ленты                (D4)
 #ifdef ESP8266
 #define LAMP_PIN              (D3)                          // пин ленты                (D3)
 #endif
+#endif
 
+#ifndef BTN_PIN
 #define BTN_PIN               (4U)                          // пин кнопки               (D2)
 //#define BTN_PIN               (0U)                          // пин кнопки "FLASH" NodeMCU (ОТЛАДКА!!!) , подтяжка должна быть PULL_MODE=HIGH_PULL
+#endif
 
+#ifndef MOSFET_PIN
 #define MOSFET_PIN            (5U)                          // пин MOSFET транзистора   (D1) - может быть использован для управления питанием матрицы/ленты
+#endif
+#ifndef ALARM_PIN
 #define ALARM_PIN             (16U)                         // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
+#endif
+#ifndef MOSFET_LEVEL
 #define MOSFET_LEVEL          (HIGH)                        // логический уровень, в который будет установлен пин MOSFET_PIN, когда матрица включена - HIGH или LOW
+#endif
+#ifndef ALARM_LEVEL
 #define ALARM_LEVEL           (HIGH)                        // логический уровень, в который будет установлен пин ALARM_PIN, когда "рассвет"/будильник включен
+#endif
 
+#ifndef WIDTH
 #define WIDTH                 (16U)                         // ширина матрицы
+#endif
+#ifndef HEIGHT
 #define HEIGHT                (16U)                         // высота матрицы
+#endif
 
+#ifndef COLOR_ORDER
 #define COLOR_ORDER           (GRB)                         // порядок цветов на ленте. Если цвет отображается некорректно - меняйте. Начать можно с RGB
+#endif
 
+#ifndef MATRIX_TYPE
 #define MATRIX_TYPE           (0U)                          // тип матрицы: 0 - зигзаг, 1 - параллельная
+#endif
+#ifndef CONNECTION_ANGLE
 #define CONNECTION_ANGLE      (1U)                          // угол подключения: 0 - левый нижний, 1 - левый верхний, 2 - правый верхний, 3 - правый нижний
+#endif
+#ifndef STRIP_DIRECTION
 #define STRIP_DIRECTION       (3U)                          // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
                                                             // при неправильной настройке матрицы вы получите предупреждение "Wrong matrix parameters! Set to default"
                                                             // шпаргалка по настройке матрицы здесь! https://alexgyver.ru/matrix_guide/
-#define NUM_LEDS              (uint16_t)(WIDTH * HEIGHT)
-#define SEGMENTS              (1U)                          // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
-#define VERTGAUGE             (1U)                          // вертикальный/горизонтальный(1/0) индикатор, закомментировано - отключен
-#define NUMHOLD_TIME          (3000U)                       // время запоминания последней комбинации яркости/скорости/масштаба в мс
-
-#define BRIGHTNESS            (255U)                        // стандартная максимальная яркость (0-255)
-#define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
-
-#define FADERTIMEOUT 1000                                   // длительность всего фейдера в мс
-#define FADERSTEPTIME 50                                    // длительность шага фейдера, мс
-
-#define RANDOM_DEMO           (1)                           // 0,1 - последовательный (0)/рандомный (1) выбор режима демо
-#define DEMO_TIMEOUT          (33)                          // время в секундах для смены режима DEMO
-#define USELEDBUF                                           // буфер под эффекты, можно закомментировать, в случае если нужно сэкономить память, но будут артефакты обработки
-#define EFFECTS_RUN_TIMER     (16U)                         // период обработки эффектов - при 10 это 10мс, т.е. 1000/10 = 100 раз в секунду, при 20 = 50 раз в секунду, желательно использовать диапазон 10...40
-
-// настройка кнопки
-#ifdef ESP_USE_BUTTON
-//#define PULL_MODE             HIGH_PULL                     // подтяжка кнопки к питанию (для механических кнопок НО, на массу)
-#define PULL_MODE             LOW_PULL                      // подтяжка кнопки к нулю (для сенсорных кнопок на TP223)
-#define BUTTON_STEP_TIMEOUT   (75U)                         // каждые BUTTON_STEP_TIMEOUT мс будет генерироваться событие удержания кнопки (для регулировки яркости)
-#define BUTTON_CLICK_TIMEOUT  (500U)                        // максимальное время между нажатиями кнопки в мс, до достижения которого считается серия последовательных нажатий
-#define BUTTON_TIMEOUT        (500U)                        // с какого момента начинает считаться, что кнопка удерживается в мс
 #endif
 
+#define NUM_LEDS              (uint16_t)(WIDTH * HEIGHT)    // не менять и не переопределять, служебный!
+
+#ifndef SEGMENTS
+#define SEGMENTS              (1U)                          // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
+#endif
+
+//#define VERTGAUGE             (1U)                          // вертикальный/горизонтальный(1/0) индикатор, закомментировано - отключен
+#ifndef NUMHOLD_TIME
+#define NUMHOLD_TIME          (3000U)                       // время запоминания последней комбинации яркости/скорости/масштаба в мс
+#endif
+
+#ifndef BRIGHTNESS
+#define BRIGHTNESS            (255U)                        // стандартная максимальная яркость (0-255)
+#endif
+#ifndef CURRENT_LIMIT
+#define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
+#endif
+
+#ifndef FADERTIMEOUT
+#define FADERTIMEOUT          (1000U)                       // длительность всего фейдера в мс (плавное затухание эффекта при смене в DEMO)
+#endif
+#ifndef FADERSTEPTIME
+#define FADERSTEPTIME         (50U)                         // длительность шага фейдера, мс
+#endif
+
+#ifndef RANDOM_DEMO
+#define RANDOM_DEMO           (1)                           // 0,1 - последовательный (0)/рандомный (1) выбор режима демо
+#endif
+#ifndef DEMO_TIMEOUT
+#define DEMO_TIMEOUT          (33)                          // время в секундах для смены режима DEMO
+#endif
+#ifndef USELEDBUF
+#define USELEDBUF                                           // буфер под эффекты, можно закомментировать, в случае если нужно сэкономить память, но будут артефакты обработки
+#endif
+#ifndef EFFECTS_RUN_TIMER
+#define EFFECTS_RUN_TIMER     (16U)                         // период обработки эффектов - при 10 это 10мс, т.е. 1000/10 = 100 раз в секунду, при 20 = 50 раз в секунду, желательно использовать диапазон 10...40
+#endif
+
+// настройка кнопки, если разрешена
+#ifdef ESP_USE_BUTTON
+#ifndef PULL_MODE
+#define PULL_MODE             (LOW_PULL)                    // подтяжка кнопки к нулю (для сенсорных кнопок на TP223) - LOW_PULL, подтяжка кнопки к питанию (для механических кнопок НО, на массу) - HIGH_PULL
+#endif
+#ifndef BUTTON_STEP_TIMEOUT
+#define BUTTON_STEP_TIMEOUT   (75U)                         // каждые BUTTON_STEP_TIMEOUT мс будет генерироваться событие удержания кнопки (для регулировки яркости)
+#endif
+#ifndef BUTTON_CLICK_TIMEOUT
+#define BUTTON_CLICK_TIMEOUT  (500U)                        // максимальное время между нажатиями кнопки в мс, до достижения которого считается серия последовательных нажатий
+#endif
+#ifndef BUTTON_TIMEOUT
+#define BUTTON_TIMEOUT        (500U)                        // с какого момента начинает считаться, что кнопка удерживается в мс
+#endif
+#endif
+
+#ifndef TIME_SYNC_INTERVAL
 #define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
+#endif
+#ifndef NTPADDRESS
+#define NTPADDRESS            ("ntp2.colocall.net")         // сервер времени для NTP (альтернативный метод), можно также попробовать "ntp2.colocall.net, pool.ntp.org, europe.pool.ntp.org" и т.д.
+#endif
+const char NTP_ADDRESS[] PROGMEM = NTPADDRESS;
 
-//#define NTP_ADDRESS           "pool.ntp.org"              // сервер времени
-const char NTP_ADDRESS[] PROGMEM = "ntp2.colocall.net";     // сервер времени, можно также попробовать "ntp2.colocall.net"
-
+#ifndef TEXT_OFFSET
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)
+#endif
+#ifndef LET_WIDTH
 #define LET_WIDTH             (5U)                          // ширина буквы шрифта
+#endif
+#ifndef LET_HEIGHT
 #define LET_HEIGHT            (8U)                          // высота буквы шрифта
+#endif
+#ifndef LET_SPACE
 #define LET_SPACE             (1U)                          // пропуск между символами (кол-во пикселей)
+#endif
+#ifndef LETTER_COLOR
 #define LETTER_COLOR          (CRGB::White)                 // цвет букв по умолчанию
+#endif
+#ifndef DEFAULT_TEXT_SPEED
 #define DEFAULT_TEXT_SPEED    (100U)                        // скорость движения текста, в миллисекундах - меньше == быстрее
+#endif
+#ifndef FADETOBLACKVALUE
 #define FADETOBLACKVALUE      (222U)                        // степень затенения фона под текстом, до 255, чем больше число - тем больше затенение.
+#endif
 
 // --- РАССВЕТ -------------------------
+#ifndef DAWN_BRIGHT
 #define DAWN_BRIGHT           (200U)                        // максимальная яркость рассвета (0-255)
+#endif
+#ifndef DAWN_TIMEOUT
 #define DAWN_TIMEOUT          (1U)                          // сколько рассвет светит после времени будильника, минут
-#define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника
+#endif
+//#define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника
 
 // ************* НАСТРОЙКА МАТРИЦЫ *****
 #if (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0)

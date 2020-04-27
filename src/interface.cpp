@@ -268,10 +268,12 @@ void bAddEventCallback()
     jee._refresh = true;
 }
 
+#ifdef OTA
 void bOTACallback()
 {
     myLamp.startOTA();
 }
+#endif
 
 void bRefreshCallback()
 {
@@ -466,7 +468,9 @@ void create_parameters(){
     jee.btn_create(F("bFSave"), bFSaveCallback);
     jee.btn_create(F("bFDel"), bFDelCallback);
     jee.btn_create(F("bRefresh"), bRefreshCallback);
+#ifdef OTA
     jee.btn_create(F("bOTA"), bOTACallback);
+#endif
     jee.btn_create(F("bAddEvent"), bAddEventCallback);
     jee.btn_create(F("bDelEvent"), bDelEventCallback);
     jee.btn_create(F("bEditEvent"), bEditEventCallback);
@@ -651,8 +655,10 @@ void interface(){ // функция в которой мф формируем в
                 jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
                 jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
                 jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-                jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV")); 
+                jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
+#ifdef OTA
                 jee.button(F("bOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));   
+#endif
                 break;      
             default:
                 break;
