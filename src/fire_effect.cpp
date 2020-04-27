@@ -424,6 +424,8 @@ void fireRoutine(CRGB *leds, const char *param)
     myLamp.setEffDelay(millis());
   }
 
+  int speed_scale = 90.0*myLamp.effects.getSpeed()/255.0+5;
+
   if (myLamp.isLoading()) {
     // лень обнулять :)
     // GSHMEM.line[WIDTH];
@@ -434,14 +436,14 @@ void fireRoutine(CRGB *leds, const char *param)
     
     generateLine();
   }
-  if (GSHMEM.pcnt >= 30) {                                         // внутренний делитель кадров для поднимающегося пламени
+  if (GSHMEM.pcnt >= speed_scale+5) {                       // внутренний делитель кадров для поднимающегося пламени
     shiftUp();                                              // смещение кадра вверх
     generateLine();                                         // перерисовать новую нижнюю линию случайным образом
     GSHMEM.pcnt = 0;
   }
   //  drawFrame(GSHMEM.pcnt, (strcmp(isColored, "C") == 0));           // прорисовка экрана
   drawFrame(GSHMEM.pcnt, true);                              // для прошивки где стоит логический параметр
-  GSHMEM.pcnt += 25;  // делитель кадров: задает скорость подъема пламени 25/100 = 1/4
+  GSHMEM.pcnt += speed_scale;  // делитель кадров: задает скорость подъема пламени 25/100 = 1/4
 }
 
 // Randomly generate the next line (matrix row)

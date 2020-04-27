@@ -1652,7 +1652,7 @@ void prismataRoutine(CRGB *leds, const char *param)
   myLamp.blur2d(15);
   myLamp.dimAll(254U - (31-(myLamp.effects.getScale()%32))*8);
   for (uint8_t x = 0; x < WIDTH; x++) {
-      uint8_t y = beatsin8(x + 1 * myLamp.effects.getSpeed()/5, 0, HEIGHT);
+      uint8_t y = beatsin8(x + 1 * myLamp.effects.getSpeed()/5, 0, HEIGHT-1);
       myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (x+GSHMEM.spirohueoffset) * 4));
     }
 }
@@ -2108,7 +2108,7 @@ uint8_t wrapY(int8_t y)
   return (y + HEIGHT) % HEIGHT;
 }
 
-bool fire2012Routine(CRGB *leds, const char *param)
+void fire2012Routine(CRGB *leds, const char *param)
 {
 const CRGBPalette16 HeatColors2_p = CRGBPalette16(    0x000000,
     0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
@@ -2152,7 +2152,7 @@ CRGBPalette16 fire_p;
   uint8_t sparking = 130;
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-  const uint8_t fireSmoothing = 80;
+  const uint8_t fireSmoothing = 80*2.0*myLamp.effects.getSpeed()/255.0+10;
   // Add entropy to random number generator; we use a lot of it.
   random16_add_entropy(random(256));
 
@@ -2194,7 +2194,7 @@ CRGBPalette16 fire_p;
       }
   }
 }
-/*
+
 // ============= RAINS/LEDS/THUNDERS IN THE CAN /  ОСАДКИ/ТУЧКА/ГРОЗА В БАНКЕ ===============
 // https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
@@ -2208,13 +2208,12 @@ CRGBPalette16 fire_p;
 // uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
 // uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
 
-CRGB solidRainColor = CRGB(60, 80, 90);
-
 void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm)
 {
-  static uint16_t noiseX = random16();
-  static uint16_t noiseY = random16();
-  static uint16_t noiseZ = random16();
+  // static uint16_t GSHMEM.noiseX = random16();
+  // static uint16_t GSHMEM.noiseY = random16();
+  // static uint16_t GSHMEM.noiseZ = random16();
+  // CRGB solidRainColor = CRGB(60, 80, 90);
 
   CRGB lightningColor = CRGB(72, 72, 80);
   CRGBPalette16 rain_p(CRGB::Black, rainColor);
@@ -2224,34 +2223,36 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
   CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(15, 24, 24), CRGB(9, 15, 15), CRGB::Black);
 #endif
 
-  fadeToBlackBy(leds, NUM_LEDS, 255 - tailLength);
+  
+  //fadeToBlackBy(leds, NUM_LEDS, 255 - tailLength);
+  nscale8(myLamp.getUnsafeLedsArray(), NUM_LEDS, tailLength);
 
   // Loop for each column individually
-  for (int x = 0; x < WIDTH; x++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
     // Step 1.  Move each dot down one cell
-    for (int i = 0; i < HEIGHT; i++)
+    for (uint8_t i = 0; i < HEIGHT; i++)
     {
-      if (noise3d[0][x][i] >= backgroundDepth)
+      if (GSHMEM.noise3d[0][x][i] >= backgroundDepth)
       { // Don't move empty cells
         if (i > 0)
-          noise3d[0][x][wrapY(i - 1)] = noise3d[0][x][i];
-        noise3d[0][x][i] = 0;
+          GSHMEM.noise3d[0][x][wrapY(i - 1)] = GSHMEM.noise3d[0][x][i];
+        GSHMEM.noise3d[0][x][i] = 0;
       }
     }
 
     // Step 2.  Randomly spawn new dots at top
     if (random(255) < spawnFreq)
     {
-      noise3d[0][x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
+      GSHMEM.noise3d[0][x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
     }
 
     // Step 3. Map from tempMatrix cells to LED colors
-    for (int y = 0; y < HEIGHT; y++)
+    for (uint8_t y = 0; y < HEIGHT; y++)
     {
-      if (noise3d[0][x][y] >= backgroundDepth)
+      if (GSHMEM.noise3d[0][x][y] >= backgroundDepth)
       { // Don't write out empty cells
-        drawPixel(x, y, ColorFromPalette(rain_p, noise3d[0][x][y]));
+        myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, GSHMEM.noise3d[0][x][y]));
       }
     }
 
@@ -2259,21 +2260,21 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
     if (splashes)
     {
       // FIXME, this is broken
-      byte j = line[x];
-      byte v = noise3d[0][x][0];
+      byte j = GSHMEM.nline[x];
+      byte v = GSHMEM.noise3d[0][x][0];
 
       if (j >= backgroundDepth)
       {
-        drawPixel(wrapX(x - 2), 0, ColorFromPalette(rain_p, j / 3));
-        drawPixel(wrapX(x + 2), 0, ColorFromPalette(rain_p, j / 3));
-        line[x] = 0; // Reset splash
+        myLamp.setLeds(myLamp.getPixelNumber(wrapX(x - 2), 0), ColorFromPalette(rain_p, j / 3));
+        myLamp.setLeds(myLamp.getPixelNumber(wrapX(x + 2), 0), ColorFromPalette(rain_p, j / 3));
+        GSHMEM.nline[x] = 0; // Reset splash
       }
 
       if (v >= backgroundDepth)
       {
-        drawPixel(wrapX(x - 1), 1, ColorFromPalette(rain_p, v / 2));
-        drawPixel(wrapX(x + 1), 1, ColorFromPalette(rain_p, v / 2));
-        line[x] = v; // Prep splash for next frame
+        myLamp.setLeds(myLamp.getPixelNumber(wrapX(x - 1), 1), ColorFromPalette(rain_p, v / 2));
+        myLamp.setLeds(myLamp.getPixelNumber(wrapX(x + 1), 1), ColorFromPalette(rain_p, v / 2));
+        GSHMEM.nline[x] = v; // Prep splash for next frame
       }
     }
 
@@ -2291,9 +2292,9 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
       if (random16() < 72)
       {                                                                       // Odds of a lightning bolt
         lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
-        for (int ly = HEIGHT - 1; ly > 1; ly--)
+        for (uint8_t ly = HEIGHT - 1; ly > 1; ly--)
         {
-          for (int lx = 1; lx < WIDTH - 1; lx++)
+          for (uint8_t lx = 1; lx < WIDTH - 1; lx++)
           {
             if (lightning[lx + ly * WIDTH] == 255)
             {
@@ -2302,21 +2303,21 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
               switch (dir)
               {
               case 0:
-                drawPixel(lx + 1, ly - 1, lightningColor);
+                myLamp.setLeds(myLamp.getPixelNumber(lx + 1, ly - 1), lightningColor);
                 lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // move down and right
                 break;
               case 1:
-                drawPixel(lx, ly - 1, CRGB(128, 128, 128)); // я без понятия, почему у верхней молнии один оттенок, а у остальных - другой
+                myLamp.setLeds(myLamp.getPixelNumber(lx, ly - 1), CRGB(128, 128, 128)); // я без понятия, почему у верхней молнии один оттенок, а у остальных - другой
                 lightning[lx + (ly - 1) * WIDTH] = 255;     // move down
                 break;
               case 2:
-                drawPixel(lx - 1, ly - 1, CRGB(128, 128, 128));
+                myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
                 lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // move down and left
                 break;
               case 3:
-                drawPixel(lx - 1, ly - 1, CRGB(128, 128, 128));
+                myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
                 lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // fork down and left
-                drawPixel(lx - 1, ly - 1, CRGB(128, 128, 128));
+                myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
                 lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // fork down and right
                 break;
               }
@@ -2340,19 +2341,83 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
       {
         Serial.println("noise malloc failed");
       }
-      int xoffset = noiseScale * x + hue;
+      int xoffset = noiseScale * x + GSHMEM.rhue;
 
       for (int z = 0; z < cloudHeight; z++)
       {
-        int yoffset = noiseScale * z - hue;
+        int yoffset = noiseScale * z - GSHMEM.rhue;
         uint8_t dataSmoothing = 192;
-        uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
+        uint8_t noiseData = qsub8(inoise8(GSHMEM.noiseX + xoffset, GSHMEM.noiseY + yoffset, GSHMEM.noiseZ), 16);
         noiseData = qadd8(noiseData, scale8(noiseData, 39));
         noise[x * cloudHeight + z] = scale8(noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
-        nblend(leds[getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (cloudHeight - z) * (250 / cloudHeight));
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (cloudHeight - z) * (250 / cloudHeight));
       }
-      noiseZ++;
+      GSHMEM.noiseZ++;
     }
   }
 }
-*/
+
+uint8_t myScale8(uint8_t x)
+{ // даёт масштабировать каждые 8 градаций (от 0 до 7) бегунка Масштаб в значения от 0 до 255 по типа синусоиде
+  uint8_t x8 = x % 8U;
+  uint8_t x4 = x8 % 4U;
+  if (x4 == 0U)
+    if (x8 == 0U)
+      return 0U;
+    else
+      return 255U;
+  else if (x8 < 4U)
+    return (1U + x4 * 72U); // всего 7шт по 36U + 3U лишних = 255U (чтобы восхождение по синусоиде не было зеркально спуску)
+                            //else
+  return (253U - x4 * 72U); // 253U = 255U - 2U
+}
+
+void coloredRainRoutine(CRGB *leds, const char *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  CRGB solidRainColor = CRGB(60, 80, 90);
+  // я хз, как прикрутить а 1 регулятор и длину хвостов и цвет капель
+  // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
+  //rain(60, 200, map8(intensity,5,100), 195, CRGB::Green, false, false, false); // было CRGB::Green
+  uint8_t Scale = myLamp.effects.getScale();
+  
+  if (Scale > 247U)
+    rain(60, 200, map8(42, 5, 100), myScale8(Scale), solidRainColor, false, false, false);
+  else
+    rain(60, 200, map8(42, 5, 100), myScale8(Scale), CHSV(Scale, 255U, 255U), false, false, false);
+}
+
+void simpleRainRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }  
+  
+  CRGB solidRainColor = CRGB(60, 80, 90);
+  uint8_t Scale = myLamp.effects.getScale();
+  // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
+  //rain(60, 200, map8(intensity,2,60), 10, solidRainColor, true, true, false);
+  rain(60, 180, Scale, 30, solidRainColor, true, true, false);
+}
+
+void stormyRainRoutine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
+
+  CRGB solidRainColor = CRGB(60, 80, 90);
+  uint8_t Scale = myLamp.effects.getScale();  
+  // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
+  //rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
+  rain(60, 160, Scale, 30, solidRainColor, true, true, true);
+}

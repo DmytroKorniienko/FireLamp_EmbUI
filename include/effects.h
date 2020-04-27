@@ -89,7 +89,11 @@ EFF_DRIFT,                                    // Дрифт
 EFF_DRIFT2,                                   // Дрифт2
 EFF_TWINKLES,                                 // Мерцание
 EFF_RADAR,                                    // Радар
-EFF_WAVES                                     // Волны
+EFF_WAVES,                                    // Волны
+EFF_FIRE2012,                                 // Огонь 2012
+EFF_RAIN,                                     // Дождь
+EFF_COLORRAIN,                                // Цветной дождь
+EFF_STORMYRAIN                                // Тучка в банке
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (99U)                             // Частотный анализатор (служебный, смещаем в конец)
 #endif
@@ -132,6 +136,10 @@ void incrementalDriftRoutine2(CRGB*, const char*);
 void twinklesRoutine(CRGB*, const char*);
 void radarRoutine(CRGB*, const char*);
 void wavesRoutine(CRGB*, const char*);
+void fire2012Routine(CRGB*, const char*);
+void coloredRainRoutine(CRGB*, const char*);
+void simpleRainRoutine(CRGB*, const char*);
+void stormyRainRoutine(CRGB*, const char*);
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB*, const char*);
 #endif
@@ -188,6 +196,10 @@ const char T_DRIFT2[] PROGMEM = "Дрифт 2";
 const char T_TWINKLES[] PROGMEM = "Мерцание";
 const char T_RADAR[] PROGMEM = "Радар";
 const char T_WAVES[] PROGMEM = "Волны";
+const char T_FIRE2012[] PROGMEM = "Огонь 2012";
+const char T_RAIN[] PROGMEM = "Дождь";
+const char T_COLORRAIN[] PROGMEM = "Цветной дождь";
+const char T_STORMYRAIN[] PROGMEM = "Тучка в банке";
 
 #ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
@@ -233,8 +245,11 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr},
     {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, twinklesRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, radarRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, wavesRoutine, nullptr}
-
+    {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, wavesRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, fire2012Routine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAIN, T_RAIN, simpleRainRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_COLORRAIN, T_COLORRAIN, coloredRainRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_STORMYRAIN, T_STORMYRAIN, stormyRainRoutine, nullptr}
 #ifdef MIC_EFFECTS
     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
 #endif
@@ -317,6 +332,11 @@ public:
 		};
         struct { // радужная комета
             uint8_t eNs_noisesmooth;
+            uint8_t rhue;
+            uint16_t noiseX;
+            uint16_t noiseY;
+            uint16_t noiseZ;
+            uint8_t nline[WIDTH];
 
             uint32_t e_x[NUM_LAYERS];
             uint32_t e_y[NUM_LAYERS];
