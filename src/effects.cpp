@@ -59,6 +59,21 @@ extern const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
   CRGB::RoyalBlue
 };
 
+const TProgmemRGBPalette16 HeatColors2_p FL_PROGMEM = {    0x000000,
+    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
+    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
+    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF};
+
+const TProgmemRGBPalette16 WoodFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold};             //* Orange
+const TProgmemRGBPalette16 NormalFire_p FL_PROGMEM = {CRGB::Black, CRGB::Red, 0xff3c00, 0xff7800};                             // пытаюсь сделать что-то более приличное
+const TProgmemRGBPalette16 NormalFire2_p FL_PROGMEM = {CRGB::Black, CRGB::FireBrick, 0xff3c00, 0xff7800};                      // пытаюсь сделать что-то более приличное
+const TProgmemRGBPalette16 SodiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod};           //* Yellow
+const TProgmemRGBPalette16 CopperFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen};     //* Green
+const TProgmemRGBPalette16 AlcoholFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue};  //* Blue
+const TProgmemRGBPalette16 RubidiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue};        //* Indigo
+const TProgmemRGBPalette16 PotassiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink}; //* Violet
+const TProgmemRGBPalette16 LithiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink};        //* Red
+
 //----------------------------------------------------
 void fadePixel(uint8_t i, uint8_t j, uint8_t step)          // новый фейдер
 {
@@ -942,8 +957,10 @@ void madnessNoiseRoutine(CRGB *leds, const char *param)
   {
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+32UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+32UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+32UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -968,8 +985,10 @@ void rainbowNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 1;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+32UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+32UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+32UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -985,8 +1004,10 @@ void rainbowStripeNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 1;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 32UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+8UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (32UL*myLamp.effects.getScale()/255+8UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 32UL*myLamp.effects.getScale()/255+8UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1011,8 +1032,10 @@ void zebraNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 1;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+8UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+8UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>35?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+8L;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1028,8 +1051,10 @@ void forestNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 0;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+32UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+32UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+32UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1045,8 +1070,10 @@ void oceanNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 0;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 32UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+8UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (32UL*myLamp.effects.getScale()/255+8UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 32UL*myLamp.effects.getScale()/255+8UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1062,8 +1089,10 @@ void plasmaNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 1;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+32UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+32UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+32UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1079,8 +1108,10 @@ void cloudsNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 0;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+32UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+32UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+32UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1096,8 +1127,10 @@ void lavaNoiseRoutine(CRGB *leds, const char *param)
     GSHMEM.colorLoop = 0;
   }
   #ifdef MIC_EFFECTS
-  GSHMEM.scale = 64UL*myLamp.effects.getScale()/255*(5.0*myLamp.getMicMapFreq()/255.0+1)+32UL;
-  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(myLamp.getMicMapFreq()<10 && myLamp.getMicMapMaxPeak()>35?10:2.5*myLamp.getMicMapMaxPeak()/255.0+1);
+  uint8_t mmf = myLamp.getMicMapFreq();
+  uint8_t mmp = myLamp.getMicMapFreq();
+  GSHMEM.scale = (64UL*myLamp.effects.getScale()/255+32UL)*(mmf>0?(1.5*mmf/255.0):1);
+  GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
   GSHMEM.scale = 64UL*myLamp.effects.getScale()/255+32UL;
   GSHMEM.speed = 64UL*myLamp.effects.getSpeed()/255;
@@ -1891,7 +1924,7 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
 EVERY_N_SECONDS(1){
   for(uint8_t i=0; i<WIDTH; i++)
     LOG.printf_P(PSTR("%5.2f "),x[i]);
-  LOG.printf_P(PSTR("F: %10.2f SC: %5.2f\n"),x[WIDTH], scale); 
+  LOG.printf_P(PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH], scale); 
 }
 
   for(uint8_t xpos=0; xpos<WIDTH; xpos++){
@@ -2110,21 +2143,7 @@ uint8_t wrapY(int8_t y)
 
 void fire2012Routine(CRGB *leds, const char *param)
 {
-const CRGBPalette16 HeatColors2_p = CRGBPalette16(    0x000000,
-    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
-    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
-    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF);
-
-const CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold);             //* Orange
-const CRGBPalette16 NormalFire_p = CRGBPalette16(CRGB::Black, CRGB::Red, 0xff3c00, 0xff7800);                             // пытаюсь сделать что-то более приличное
-const CRGBPalette16 NormalFire2_p = CRGBPalette16(CRGB::Black, CRGB::FireBrick, 0xff3c00, 0xff7800);                      // пытаюсь сделать что-то более приличное
-const CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod);           //* Yellow
-const CRGBPalette16 CopperFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen);     //* Green
-const CRGBPalette16 AlcoholFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue);  //* Blue
-const CRGBPalette16 RubidiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue);        //* Indigo
-const CRGBPalette16 PotassiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink); //* Violet
-const CRGBPalette16 LithiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink);        //* Red
-const CRGBPalette16 *firePalettes[] = {
+const TProgmemRGBPalette16 *firePalettes[] = {
     &HeatColors2_p,
     &WoodFireColors_p,
     &NormalFire_p,
@@ -2135,9 +2154,8 @@ const CRGBPalette16 *firePalettes[] = {
     &AlcoholFireColors_p,
     &RubidiumFireColors_p,
     &PotassiumFireColors_p};
-CRGBPalette16 fire_p;
 
-  const CRGBPalette16 *curPalette = firePalettes[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(firePalettes)/sizeof(CRGBPalette16 *))-1))];
+  const TProgmemRGBPalette16 *curPalette = firePalettes[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(firePalettes)/sizeof(TProgmemRGBPalette16 *))-1))];
   
 #if HEIGHT / 6 > 6
 #define FIRE_BASE 6
@@ -2179,19 +2197,11 @@ CRGBPalette16 fire_p;
     }
 
     // Step 4.  Map from heat cells to LED colors
-    /*if (Scale > 50)
-      for (int y = 0; y < HEIGHT; y++)
-      {
-        // Blend new data with previous frame. Average data between neighbouring pixels
-        nblend(leds[getPixelNumber(x, y)], ColorFromPalette(fire_p, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
-      }
-    else*/
-      for (uint8_t y = 0; y < HEIGHT; y++)
-      {
-        // Blend new data with previous frame. Average data between neighbouring pixels
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
-        //nblend(leds[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
-      }
+    for (uint8_t y = 0; y < HEIGHT; y++)
+    {
+      // Blend new data with previous frame. Average data between neighbouring pixels
+      nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
+    }
   }
 }
 

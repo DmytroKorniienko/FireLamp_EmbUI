@@ -65,6 +65,24 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define FAST_ADC_READ                                       // использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
 #endif
 
+#ifdef FAST_ADC_READ
+#define SAMPLING_FREQ         (18000U*2U)
+#else
+#define SAMPLING_FREQ         (5000U*2U)
+#endif
+
+#ifndef LOW_FREQ_MAP_VAL
+#define LOW_FREQ_MAP_VAL      (35U)                         // Граница логарифмически приведенных значений выше которой уже идут средние частоты (микрофон) ~150Гц
+#endif
+
+#ifndef HI_FREQ_MAP_VAL
+#define HI_FREQ_MAP_VAL       (188U)                        // Граница логарифмически приведенных значени выше которой уже идут высокие частоты (микрофон) ~4.5кГц
+#endif
+
+#ifndef MIN_PEAK_LEVEL
+#define MIN_PEAK_LEVEL        (35U)                         // Минимальный амплитудный уровень, для эффектов зависящих от микрофона
+#endif
+
 #ifndef LAMP_PIN
 //#define LAMP_PIN              (2U)                          // пин ленты                (D4)
 #ifdef ESP8266
