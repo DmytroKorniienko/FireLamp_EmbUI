@@ -93,7 +93,8 @@ EFF_WAVES,                                    // Волны
 EFF_FIRE2012,                                 // Огонь 2012
 EFF_RAIN,                                     // Дождь
 EFF_COLORRAIN,                                // Цветной дождь
-EFF_STORMYRAIN                                // Тучка в банке
+EFF_STORMYRAIN,                               // Тучка в банке
+EFF_FIRE2018                                  // Огонь 2018
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (99U)                             // Частотный анализатор (служебный, смещаем в конец)
 #endif
@@ -140,6 +141,7 @@ void fire2012Routine(CRGB*, const char*);
 void coloredRainRoutine(CRGB*, const char*);
 void simpleRainRoutine(CRGB*, const char*);
 void stormyRainRoutine(CRGB*, const char*);
+void fire2018Routine(CRGB*, const char*);
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB*, const char*);
 #endif
@@ -200,6 +202,7 @@ const char T_FIRE2012[] PROGMEM = "Огонь 2012";
 const char T_RAIN[] PROGMEM = "Дождь";
 const char T_COLORRAIN[] PROGMEM = "Цветной дождь";
 const char T_STORMYRAIN[] PROGMEM = "Тучка в банке";
+const char T_FIRE2018[] PROGMEM = "Огонь 2018";
 
 #ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
@@ -249,7 +252,8 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, fire2012Routine, nullptr},
     {true, true, 127, 127, 127, EFF_RAIN, T_RAIN, simpleRainRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_COLORRAIN, T_COLORRAIN, coloredRainRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_STORMYRAIN, T_STORMYRAIN, stormyRainRoutine, nullptr}
+    {true, true, 127, 127, 127, EFF_STORMYRAIN, T_STORMYRAIN, stormyRainRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_FIRE2018, T_FIRE2018, fire2018Routine, nullptr}
 #ifdef MIC_EFFECTS
     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
 #endif
@@ -259,6 +263,7 @@ static EFFECT _EFFECTS_ARR[] = {
 #define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
 #define LIGHTERS_AM            (100U)               // светлячки
 #define NUM_LAYERS             (1U)                 // The coordinates for 3 16-bit noise spaces.
+#define NUM_LAYERS2            (2U)                 // The coordinates for 3 16-bit noise spaces.
 #define AVAILABLE_BOID_COUNT   (10U)                // стая, кол-во птиц
 class SHARED_MEM {
 public:
@@ -375,6 +380,15 @@ public:
 		};
         struct {
             int8_t peakX[2][WIDTH];
+        };
+        struct { // огонь2018
+            uint32_t noise32_x[NUM_LAYERS2];
+            uint32_t noise32_y[NUM_LAYERS2];
+            uint32_t noise32_z[NUM_LAYERS2];
+            uint32_t scale32_x[NUM_LAYERS2];
+            uint32_t scale32_y[NUM_LAYERS2];
+            uint8_t fire18heat[NUM_LEDS];
+            uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
         };
 		//uint8_t raw[1024];
 	};

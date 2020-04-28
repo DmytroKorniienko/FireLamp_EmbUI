@@ -2431,3 +2431,120 @@ void stormyRainRoutine(CRGB *leds, const char *param)
   //rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
   rain(60, 160, Scale, 30, solidRainColor, true, true, true);
 }
+
+// ============= FIRE 2018 /  ОГОНЬ 201 ===============
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+// https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
+// https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
+
+void fire2018Routine(CRGB *leds, const char *param)
+{
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }  
+
+  uint8_t Scale = myLamp.effects.getScale()/2.3;
+  //uint8_t Speed = myLamp.effects.getSpeed();
+
+  const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
+  const uint8_t CentreX = WIDTH / 2 + (WIDTH % 2);
+
+  // some changing values
+  uint16_t ctrl1 = inoise16(11 * millis(), 0, 0);
+  uint16_t ctrl2 = inoise16(13 * millis(), 100000, 100000);
+  uint16_t ctrl = ((ctrl1 + ctrl2) / 2);
+
+  // parameters for the heatmap
+  uint16_t speed = 25;
+  GSHMEM.noise32_x[0] = 3 * ctrl * speed;
+  GSHMEM.noise32_y[0] = 20 * millis() * speed;
+  GSHMEM.noise32_z[0] = 5 * millis() * speed;
+  GSHMEM.scale32_x[0] = ctrl1 / 2;
+  GSHMEM.scale32_y[0] = ctrl2 / 2;
+
+  //calculate the noise data
+  uint8_t layer = 0;
+
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    uint32_t ioffset = GSHMEM.scale32_x[layer] * (i - CentreX);
+    for (uint8_t j = 0; j < HEIGHT; j++)
+    {
+      uint32_t joffset = GSHMEM.scale32_y[layer] * (j - CentreY);
+      uint16_t data = ((inoise16(GSHMEM.noise32_x[layer] + ioffset, GSHMEM.noise32_y[layer] + joffset, GSHMEM.noise32_z[layer])) + 1);
+      GSHMEM.noise3dx[layer][i][j] = data >> 8;
+    }
+  }
+
+  // parameters for te brightness mask
+  speed = 20;
+  GSHMEM.noise32_x[1] = 3 * ctrl * speed;
+  GSHMEM.noise32_y[1] = 20 * millis() * speed;
+  GSHMEM.noise32_z[1] = 5 * millis() * speed;
+  GSHMEM.scale32_x[1] = ctrl1 / 2;
+  GSHMEM.scale32_y[1] = ctrl2 / 2;
+
+  //calculate the noise data
+  layer = 1;
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    uint32_t ioffset = GSHMEM.scale32_x[layer] * (i - CentreX);
+    for (uint8_t j = 0; j < HEIGHT; j++)
+    {
+      uint32_t joffset = GSHMEM.scale32_y[layer] * (j - CentreY);
+      uint16_t data = ((inoise16(GSHMEM.noise32_x[layer] + ioffset, GSHMEM.noise32_y[layer] + joffset, GSHMEM.noise32_z[layer])) + 1);
+      GSHMEM.noise3dx[layer][i][j] = data >> 8;
+    }
+  }
+
+  // draw lowest line - seed the fire
+  for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    GSHMEM.fire18heat[myLamp.getPixelNumber(x, HEIGHT - 1)] = GSHMEM.noise3dx[0][WIDTH - 1 - x][CentreY - 1]; // хз, почему взято с середины. вожможно, нужно просто с 7 строки вне зависимости от высоты матрицы
+  }
+
+  //copy everything one line up
+  for (uint8_t y = 0; y < HEIGHT - 1; y++)
+  {
+    for (uint8_t x = 0; x < WIDTH; x++)
+    {
+      GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] = GSHMEM.fire18heat[myLamp.getPixelNumber(x, y + 1)];
+    }
+  }
+
+  //dim
+  for (uint8_t y = 0; y < HEIGHT - 1; y++)
+  {
+    for (uint8_t x = 0; x < WIDTH; x++)
+    {
+      uint8_t dim = GSHMEM.noise3dx[0][x][y];
+      // high value = high flames
+      dim = dim / 1.7;
+      dim = 255 - dim;
+      GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] = scale8(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], dim);
+    }
+  }
+
+  for (uint8_t y = 0; y < HEIGHT; y++)
+  {
+    for (uint8_t x = 0; x < WIDTH; x++)
+    {
+      // map the colors based on heatmap
+      //leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], 1 , 0);
+      //leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], fire18heat[XY(x, y)] * 0.153, 0);// * 0.153 - лучший оттенок
+      myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CRGB(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], (float)GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] * Scale * 0.01, 0));
+
+      //пытался понять, как регулировать оттенок пламени...
+      //  if (modes[currentMode].Scale > 50)
+      //    leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], fire18heat[XY(x, y)] * (modes[currentMode].Scale % 50)  * 0.051, 0);
+      //  else
+      //    leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], 1 , fire18heat[XY(x, y)] * modes[currentMode].Scale * 0.051);
+      //примерно понял
+
+      // dim the result based on 2nd noise layer
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - 1 - y)].nscale8(GSHMEM.noise3dx[1][x][y]);
+    }
+  }
+}
