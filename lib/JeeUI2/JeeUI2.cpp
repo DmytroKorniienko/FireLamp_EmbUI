@@ -158,21 +158,7 @@ void jeeui2::begin() {
         AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), res);
 
         response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-        //response->addHeader(F("Pragma"),F("no-cache"));
-        //response->addHeader(F("Expires"),F("0"));
         request->send(response);
-        //request->send(200, FPSTR(PGmimetxt), buf);
-
-        // AsyncJsonResponse * response = new AsyncJsonResponse();
-
-        // response->addHeader(F("Server"),F("ESP Async Web Server"));
-        // response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-
-        // DynamicJsonDocument doc(4096);
-        // serializeJson(doc,buf);
-        // response->getRoot().set(doc.to<JsonVariant>());
-        // response->setLength();
-        // request->send(response);
 
         if(dbg)Serial.println(buf);
         buf = F("");
