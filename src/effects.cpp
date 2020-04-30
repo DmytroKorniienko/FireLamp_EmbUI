@@ -207,12 +207,16 @@ void fire2012WithPalette(CRGB*leds, const char *param) {
   } else {
     myLamp.setEffDelay(millis());
   }
-
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
 
   uint8_t scale = myLamp.effects.getScale();
-  uint8_t COOLINGNEW = constrain((uint16_t)(scale % 16) * 32 / HEIGHT + 16, 1, 255) ;
+  uint8_t COOLINGNEW = constrain((uint16_t)(scale % 32) * 8 / HEIGHT + 7, 1, 255) ;
   // Array of temperature readings at each simulation cell
   // static byte GSHMEM.heat[WIDTH][HEIGHT];
+
+  myLamp.blur2d(20);
+  myLamp.dimAll(254U - ((myLamp.effects.getScale()%32))*8);
 
   for (uint8_t x = 0; x < WIDTH; x++) {
     // Step 1.  Cool down every cell a little
@@ -237,21 +241,7 @@ void fire2012WithPalette(CRGB*leds, const char *param) {
       // Scale the GSHMEM.heat value from 0-255 down to 0-240
       // for best results with color palettes.
       byte colorindex = scale8(GSHMEM.heat[x][j], 240);
-      if  (scale < 16) {            // Lavafall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(LavaColors_p, colorindex));
-      } else if (scale < 32) {      // Firefall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(HeatColors_p, colorindex));
-      } else if (scale < 48) {      // Waterfall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(WaterfallColors_p, colorindex)); // PartyColors_p
-      } else if (scale < 64) {      // Skyfall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(CloudColors_p, colorindex));
-      } else if (scale < 80) {      // Forestfall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(ForestColors_p, colorindex));
-      } else if (scale < 96) {      // Rainbowfall
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(RainbowColors_p, colorindex));        
-      } else {                      // Aurora
-        myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(RainbowStripeColors_p, colorindex));
-      }
+      myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(*curPalette, colorindex));
     }
   }
 }
@@ -2200,6 +2190,9 @@ const TProgmemRGBPalette16 *firePalettes[] = {
     for (uint8_t y = 0; y < HEIGHT; y++)
     {
       // Blend new data with previous frame. Average data between neighbouring pixels
+      if(curPalette!=firePalettes[0]){
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(HeatColors2_p, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
+      }
       nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((GSHMEM.noise3d[0][x][y] * 0.7) + (GSHMEM.noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
     }
   }
