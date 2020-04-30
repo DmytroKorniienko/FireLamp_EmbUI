@@ -261,7 +261,7 @@ static EFFECT _EFFECTS_ARR[] = {
 
 #define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
 #define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
-#define LIGHTERS_AM            (100U)               // светлячки
+#define LIGHTERS_AM            (64U)                // светлячки
 #define NUM_LAYERS             (1U)                 // The coordinates for 3 16-bit noise spaces.
 #define NUM_LAYERS2            (2U)                 // The coordinates for 3 16-bit noise spaces.
 #define AVAILABLE_BOID_COUNT   (10U)                // стая, кол-во птиц
@@ -309,13 +309,13 @@ public:
 		};
         struct {
             int8_t vector[BALLS_AMOUNT][2U];
-            int16_t coord[BALLS_AMOUNT][2U];
+            float coord[BALLS_AMOUNT][2U];
 		};
         struct {
-            uint8_t loopCounter;
+            uint16_t lightersIdx;
             int8_t lightersSpeed[2U][LIGHTERS_AM];
-            int16_t lightersPos[2U][LIGHTERS_AM];
-            uint16_t lightersColor[LIGHTERS_AM];
+            uint8_t lightersColor[LIGHTERS_AM];
+            float lightersPos[2U][LIGHTERS_AM];
 		};
         struct { // радуги
             uint8_t hue;

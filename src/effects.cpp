@@ -594,63 +594,60 @@ void snowStormStarfallRoutine(CRGB *leds, const char *param)
 //#define LIGHTERS_AM           (100U)
 void lightersRoutine(CRGB *leds, const char *param)
 {
-  // static int32_t GSHMEM.lightersPos[2U][LIGHTERS_AM];
-  // static int8_t GSHMEM.lightersSpeed[2U][LIGHTERS_AM];
-  // static uint16_t GSHMEM.lightersColor[LIGHTERS_AM];
-  // static uint8_t GSHMEM.loopCounter;
-  //int32_t angle[LIGHTERS_AM];
-  //int32_t speedV[LIGHTERS_AM];
-  //int8_t angleSpeed[LIGHTERS_AM];
-
   if (myLamp.isLoading())
   {
     randomSeed(millis());
-	GSHMEM.loopCounter = 0U;
     for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
     {
-      GSHMEM.lightersPos[0U][i] = random(0, WIDTH * 10);
-      GSHMEM.lightersPos[1U][i] = random(0, HEIGHT * 10);
-      GSHMEM.lightersSpeed[0U][i] = random(-10, 10);
-      GSHMEM.lightersSpeed[1U][i] = random(-10, 10);
+      GSHMEM.lightersIdx=0;
+      GSHMEM.lightersPos[0U][i] = random(0, WIDTH);
+      GSHMEM.lightersPos[1U][i] = random(0, HEIGHT);
+      GSHMEM.lightersSpeed[0U][i] = random(-20, 20);
+      GSHMEM.lightersSpeed[1U][i] = random(-20, 20);
       GSHMEM.lightersColor[i] = random(0U, 255U);
     }
   }
 
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    return;
-  } else {
-    myLamp.setEffDelay(millis());
-  }
+  float speedfactor = myLamp.effects.getSpeed()/4096.0+0.001;
 
-  FastLED.clear();
-  if (++GSHMEM.loopCounter > 20U) GSHMEM.loopCounter = 0U;
-  for (uint8_t i = 0U; i < (uint8_t)((LIGHTERS_AM/255.0)*myLamp.effects.getScale())+1; i++) // масштабируем на LIGHTERS_AM, чтобі не было выхода за диапазон
+  myLamp.blur2d(myLamp.effects.getSpeed()/10);
+  myLamp.dimAll(50+myLamp.effects.getSpeed()/10);
+
+  for (uint8_t i = 0U; i < (uint8_t)((LIGHTERS_AM/255.0)*myLamp.effects.getScale())+1; i++) // масштабируем на LIGHTERS_AM, чтобы не было выхода за диапазон
   {
-    if (GSHMEM.loopCounter == 0U)                                  // меняем скорость каждые 255 отрисовок
+    // EVERY_N_SECONDS(1)
+    // {
+    //   LOG.printf_P("S0:%d S1:%d P0:%3.2f P1:%3.2f, scale:%3.2f\n", GSHMEM.lightersSpeed[0U][i], GSHMEM.lightersSpeed[1U][i],GSHMEM.lightersPos[0U][i],GSHMEM.lightersPos[1U][i],speedfactor);
+    // }
+
+    EVERY_N_MILLIS(1000)
     {
-      GSHMEM.lightersSpeed[0U][i] += random(-3, 4);
-      GSHMEM.lightersSpeed[1U][i] += random(-3, 4);
-      GSHMEM.lightersSpeed[0U][i] = constrain(GSHMEM.lightersSpeed[0U][i], -20, 20);
-      GSHMEM.lightersSpeed[1U][i] = constrain(GSHMEM.lightersSpeed[1U][i], -20, 20);
+      GSHMEM.lightersIdx = (GSHMEM.lightersIdx+1)%(uint8_t)(((LIGHTERS_AM/255.0)*myLamp.effects.getScale())+1);
+      GSHMEM.lightersSpeed[0U][GSHMEM.lightersIdx] += random(-10, 10);
+      GSHMEM.lightersSpeed[1U][GSHMEM.lightersIdx] += random(-10, 10);
+      GSHMEM.lightersSpeed[0U][GSHMEM.lightersIdx] %= 21;
+      GSHMEM.lightersSpeed[1U][GSHMEM.lightersIdx] %= 21;
     }
 
-    GSHMEM.lightersPos[0U][i] += GSHMEM.lightersSpeed[0U][i];
-    GSHMEM.lightersPos[1U][i] += GSHMEM.lightersSpeed[1U][i];
+    GSHMEM.lightersPos[0U][i] += GSHMEM.lightersSpeed[0U][i]*speedfactor;
+    GSHMEM.lightersPos[1U][i] += GSHMEM.lightersSpeed[1U][i]*speedfactor;
 
-    if (GSHMEM.lightersPos[0U][i] < 0) GSHMEM.lightersPos[0U][i] = (WIDTH - 1) * 10;
-    if (GSHMEM.lightersPos[0U][i] >= (int32_t)(WIDTH * 10)) GSHMEM.lightersPos[0U][i] = 0;
+    if (GSHMEM.lightersPos[0U][i] < 0) GSHMEM.lightersPos[0U][i] = (WIDTH - 1);
+    if (GSHMEM.lightersPos[0U][i] >= (int32_t)WIDTH) GSHMEM.lightersPos[0U][i] = 0;
 
-    if (GSHMEM.lightersPos[1U][i] < 0)
+    if (GSHMEM.lightersPos[1U][i] <= 0)
     {
       GSHMEM.lightersPos[1U][i] = 0;
       GSHMEM.lightersSpeed[1U][i] = -GSHMEM.lightersSpeed[1U][i];
+      GSHMEM.lightersSpeed[0U][i] = -GSHMEM.lightersSpeed[0U][i];
     }
-    if (GSHMEM.lightersPos[1U][i] >= (int32_t)(HEIGHT - 1) * 10)
+    if (GSHMEM.lightersPos[1U][i] >= (int32_t)(HEIGHT - 1))
     {
-      GSHMEM.lightersPos[1U][i] = (HEIGHT - 1U) * 10;
+      GSHMEM.lightersPos[1U][i] = (HEIGHT - 1U);
       GSHMEM.lightersSpeed[1U][i] = -GSHMEM.lightersSpeed[1U][i];
+      GSHMEM.lightersSpeed[0U][i] = -GSHMEM.lightersSpeed[0U][i];
     }
-    myLamp.drawPixelXY(GSHMEM.lightersPos[0U][i] / 10, GSHMEM.lightersPos[1U][i] / 10, CHSV(GSHMEM.lightersColor[i], 255U, 255U));
+    myLamp.drawPixelXY(GSHMEM.lightersPos[0U][i], GSHMEM.lightersPos[1U][i], CHSV(GSHMEM.lightersColor[i], 255U, 255U));
   }
 }
 
@@ -671,21 +668,23 @@ void ballsRoutine(CRGB *leds, const char *param)
     {
       int8_t sign;
       // забиваем случайными данными
-      GSHMEM.coord[j][0U] = WIDTH / 2 * 10;
+      GSHMEM.coord[j][0U] = WIDTH / 2;
       random(0, 2) ? sign = 1 : sign = -1;
       GSHMEM.vector[j][0U] = random(4, 15) * sign;
-      GSHMEM.coord[j][1U] = HEIGHT / 2 * 10;
+      GSHMEM.coord[j][1U] = HEIGHT / 2;
       random(0, 2) ? sign = 1 : sign = -1;
       GSHMEM.vector[j][1U] = random(4, 15) * sign;
       //ballColors[j] = random(0, 9) * 28;
     }
   }
 
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    return;
-  } else {
-    myLamp.setEffDelay(millis());
-  }
+  // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+  //   return;
+  // } else {
+  //   myLamp.setEffDelay(millis());
+  // }
+
+  float speedfactor = myLamp.effects.getSpeed()/2048.0+0.01;
 
   if (!BALL_TRACK)                                          // режим без следов шариков
   {
@@ -693,6 +692,7 @@ void ballsRoutine(CRGB *leds, const char *param)
   }
   else                                                      // режим со следами
   {
+    myLamp.blur2d(myLamp.effects.getSpeed()/10);
     fader(TRACK_STEP);
   }
 
@@ -706,7 +706,7 @@ void ballsRoutine(CRGB *leds, const char *param)
     // движение шариков
     for (uint8_t i = 0U; i < 2U; i++)
     {
-      GSHMEM.coord[j][i] += GSHMEM.vector[j][i];
+      GSHMEM.coord[j][i] += GSHMEM.vector[j][i]*speedfactor;
       if (GSHMEM.coord[j][i] < 0)
       {
         GSHMEM.coord[j][i] = 0;
@@ -714,17 +714,17 @@ void ballsRoutine(CRGB *leds, const char *param)
       }
     }
 
-    if (GSHMEM.coord[j][0U] > (int16_t)((WIDTH - 1) * 10))
+    if (GSHMEM.coord[j][0U] > (int16_t)((WIDTH - 1)))
     {
-      GSHMEM.coord[j][0U] = (WIDTH - 1) * 10;
+      GSHMEM.coord[j][0U] = (WIDTH - 1);
       GSHMEM.vector[j][0U] = -GSHMEM.vector[j][0U];
     }
-    if (GSHMEM.coord[j][1U] > (int16_t)((HEIGHT - 1) * 10))
+    if (GSHMEM.coord[j][1U] > (int16_t)((HEIGHT - 1)))
     {
-      GSHMEM.coord[j][1U] = (HEIGHT - 1) * 10;
+      GSHMEM.coord[j][1U] = (HEIGHT - 1);
       GSHMEM.vector[j][1U] = -GSHMEM.vector[j][1U];
     }
-    myLamp.setLeds(myLamp.getPixelNumber(GSHMEM.coord[j][0U] / 10, GSHMEM.coord[j][1U] / 10), CHSV(ballColors[j], 255U, 255U));
+    myLamp.setLeds(myLamp.getPixelNumber(GSHMEM.coord[j][0U], GSHMEM.coord[j][1U]), CHSV(ballColors[j], 255U, 255U));
   }
 }
 
