@@ -81,7 +81,7 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifndef MIN_PEAK_LEVEL
-#define MIN_PEAK_LEVEL        (35U)                         // Минимальный амплитудный уровень, для эффектов зависящих от микрофона
+#define MIN_PEAK_LEVEL        (50U)                         // Минимальный амплитудный уровень, для эффектов зависящих от микрофона
 #endif
 
 #ifndef LAMP_PIN

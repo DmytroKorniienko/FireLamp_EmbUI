@@ -127,7 +127,7 @@ void LAMP::handle()
     buttonTick(); // обработчик кнопки
     alarmWorker();
 #ifdef MIC_EFFECTS
-    if(isMicOn)
+    if(isMicOn && ONflag)
       micHandler();
 #endif
     button_check = millis();
@@ -1241,12 +1241,12 @@ void LAMP::micHandler()
   if(mw==nullptr && !isCalibrationRequest){ // обычный режим
     //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
-    samp_freq = mw->process(noise_reduce); // частота семплирования
+    samp_freq = mw->process(noise_reduce); // возвращаемое значение - частота семплирования
     last_min_peak = mw->getMinPeak();
     last_max_peak = mw->getMaxPeak();
 
-    if(!counter) // раз на 10 измерений берем частоту, т.к. это требует обсчетов
-      last_freq = mw->analyse(); // частота главной гармоники
+    if(!counter) // раз на N измерений берем частоту, т.к. это требует обсчетов
+      last_freq = mw->analyse(); // возвращаемое значение - частота главной гармоники
     if(micAnalyseDivider)
       counter = (counter+1)%(0x01<<(micAnalyseDivider-1)); // как часто выполнять анализ
     else
