@@ -85,11 +85,6 @@ void jeeui2::led_inv(){
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
 }
 
-void jeeui2::ui(void (*uiFunction) ())
-{
-    foo = uiFunction;
-}
-
 void testFunction(){
 
 }

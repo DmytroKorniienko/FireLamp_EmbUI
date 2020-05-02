@@ -90,3 +90,8 @@ void jeeui2::load(const char *_cfg)
         sv = false;
     }
 }
+
+void jeeui2::ui(void (*uiFunction) ())
+{
+    foo = uiFunction;
+}
