@@ -121,7 +121,7 @@ void sparklesRoutine(CRGB *leds, const char *param)
 // #endif
 #else
   GSHMEM.scale = myLamp.effects.getScale();
-  GSHMEM.speed = yLamp.effects.getSpeed();
+  GSHMEM.speed = myLamp.effects.getSpeed();
 #endif
 
   fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)GSHMEM.scale)/255)+1);
@@ -436,22 +436,56 @@ void rainbowDiagonalRoutine(CRGB *leds, const char *param)
 void colorsRoutine(CRGB *leds, const char *param)
 {
   static unsigned int step = 0; // доп. задержка
-  unsigned int delay = (myLamp.effects.getSpeed()==1)?4294967294:255-myLamp.effects.getSpeed(); // на скорости 1 будет очень долгое ожидание)))
+  unsigned int delay = (myLamp.effects.getSpeed()==1)?4294967294:255-myLamp.effects.getSpeed()+1; // на скорости 1 будет очень долгое ожидание)))
   
   if (myLamp.isLoading()){ // начальная установка цвета
-    GSHMEM.hue = myLamp.effects.getScale();
+    GSHMEM.ihue = myLamp.effects.getScale();
+    myLamp.fillAll(CHSV(GSHMEM.ihue, 255U, 55U)); // еще не наступила смена цвета, поэтому выводим текущий
   } else {
     step=(step+1)%(delay+1);
     if(step!=delay) {
+
 #ifdef MIC_EFFECTS
-      myLamp.fillAll(CHSV(GSHMEM.hue+(myLamp.getMicMapMaxPeak()>(myLamp.effects.getScale()/2)+30?myLamp.getMicMapMaxPeak():0), 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+  uint16_t mmf = myLamp.getMicMapFreq();
+  uint16_t mmp = myLamp.getMicMapMaxPeak();
+  GSHMEM.scale = myLamp.effects.getScale();
+  GSHMEM.speed = myLamp.effects.getSpeed();
+
+#if defined(LAMP_DEBUG) && defined(MIC_EFFECTS)
+EVERY_N_SECONDS(1){
+  LOG.printf_P(PSTR("MF: %5.2f MMF: %d MMP: %d GSHMEM.scale %d GSHMEM.speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, GSHMEM.scale, GSHMEM.speed);
+}
+#endif
+      if(myLamp.isMicOnOff()){
+        // включен микрофон
+        if(GSHMEM.scale>127){
+          uint8_t pos = (round(3.0*(mmf+(25.0*GSHMEM.speed/255.0))/255.0))*HEIGHT/8; // двигаем частоты по диапазону в зависимости от скорости и делим на 4 части 0...3
+          for(uint8_t y=pos;y<pos+HEIGHT/8;y++){
+            for(uint8_t x=0; x<WIDTH; x++){
+              //if(mmp>MIN_PEAK_LEVEL/2 || pos==3){ // в половину минимальной амплитуды уже пропускаем :)
+                myLamp.setLeds(myLamp.getPixelNumber(x,y),CHSV(mmf/1.5, 255U, constrain(mmp*(2.0*(GSHMEM.scale>>1)/127.0+0.33),1,255)));
+                myLamp.setLeds(myLamp.getPixelNumber(x,HEIGHT-1-y),CHSV(mmf/1.5, 255U, constrain(mmp*(2.0*(GSHMEM.scale>>1)/127.0+0.33),1,255)));
+                //myLamp.SetLeds(myLamp.getPixelXY(x,y+HIGHT/4-1),CHSV(mmf, 255U, 255));
+              //}
+            }
+          }
+          myLamp.dimAll(254); // плавно гасим 
+        } else {
+          if(mmp>GSHMEM.scale) // если амплитуда превышает масштаб
+            myLamp.fillAll(CHSV(constrain(mmf*(2.0*GSHMEM.speed/255.0),1,255), 255U, constrain(mmp*(2.0*GSHMEM.scale/127.0+1.5),1,255))); // превышает минимаьный уровень громкости, значит выводим текущую частоту
+          else
+            myLamp.dimAll(252); // плавно гасим
+        }
+      } else {
+        // выключен микрофон
+        myLamp.fillAll(CHSV(GSHMEM.ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+      }
 #else
-      myLamp.fillAll(CHSV(GSHMEM.hue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+      myLamp.fillAll(CHSV(GSHMEM.ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
 #endif  
     }
     else {  
-      GSHMEM.hue += myLamp.effects.getScale(); // смещаемся на следущий
-      myLamp.fillAll(CHSV(GSHMEM.hue, 255U, 255U)); // и выводим
+      GSHMEM.ihue += myLamp.effects.getScale(); // смещаемся на следущий
     }
   }
 }
@@ -2227,7 +2261,7 @@ const TProgmemRGBPalette16 *firePalettes[] = {
 // uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
 // uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
 
-void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm)
+void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC = false)
 {
   // static uint16_t GSHMEM.noiseX = random16();
   // static uint16_t GSHMEM.noiseY = random16();
@@ -2267,13 +2301,26 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
     }
 
     // Step 3. Map from tempMatrix cells to LED colors
-    for (uint8_t y = 0; y < HEIGHT; y++)
+    //uint32_t color = CRGB::Black;
+    for (int16_t y = HEIGHT-1; y >= 0; y--)
     {
+      // if(color == CRGB::Black && myLamp.getPixColor(myLamp.getPixelNumber(x, y)) && y!=(HEIGHT-1))
+      //   color = myLamp.getPixColor(myLamp.getPixelNumber(x, y));
+      // else if(!myLamp.getPixColor(myLamp.getPixelNumber(x, y)) && y!=(HEIGHT-1))
+      //    color = CRGB::Black;
+
       if (GSHMEM.noise3d[0][x][y] >= backgroundDepth)
       { // Don't write out empty cells
-        myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, GSHMEM.noise3d[0][x][y]));
+        // if(fixRC && color!=CRGB::Black){
+        //   myLamp.setLeds(myLamp.getPixelNumber(x, y), color);
+        // }
+        // else if(fixRC && y==(HEIGHT-1) && color==CRGB::Black)
+        //   myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, GSHMEM.noise3d[0][x][y]));
+        // else if(!fixRC)
+          myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, GSHMEM.noise3d[0][x][y]));
       }
     }
+    //color = CRGB::Black;
 
     // Step 4. Add splash if called for
     if (splashes)
@@ -2400,15 +2447,18 @@ void coloredRainRoutine(CRGB *leds, const char *param) // внимание! эт
   }
 
   CRGB solidRainColor = CRGB(60, 80, 90);
+  CRGB randomRainColor = CHSV(random(1,255), 255U, 255U);
   // я хз, как прикрутить а 1 регулятор и длину хвостов и цвет капель
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
   //rain(60, 200, map8(intensity,5,100), 195, CRGB::Green, false, false, false); // было CRGB::Green
   uint8_t Scale = myLamp.effects.getScale();
-  
-  if (Scale > 247U)
-    rain(60, 200, map8(42, 5, 100), myScale8(Scale), solidRainColor, false, false, false);
+
+  if (Scale > 255U-8U)
+    rain(60, 200, map8(42, 5, 100), (31*(Scale%8)), solidRainColor, false, false, false);  
+  else if (Scale > 255U-16U)
+    rain(60, 200, map8(42, 5, 100), (31*(Scale%8)), randomRainColor, false, false, false, true);
   else
-    rain(60, 200, map8(42, 5, 100), myScale8(Scale), CHSV(Scale, 255U, 255U), false, false, false);
+    rain(60, 200, map8(42, 5, 100), (31*(Scale%8)), CHSV(Scale, 255U, 255U), false, false, false);
 }
 
 void simpleRainRoutine(CRGB *leds, const char *param)

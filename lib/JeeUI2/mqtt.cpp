@@ -198,7 +198,7 @@ void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessagePro
     if(*m_pref) tpc = tpc.substring(strlen(m_pref) + 1, tpc.length());
     char buffer[len+2];
     memset(buffer,'\0',len+2);
-    strncpy(buffer,payload,sizeof(buffer)-2);
+    strncpy(buffer,payload,len);
     
     if(tpc.startsWith(F("jee/get/")) || tpc.startsWith(F("jee/set/"))){
         tpc = tpc.substring(4, tpc.length());
