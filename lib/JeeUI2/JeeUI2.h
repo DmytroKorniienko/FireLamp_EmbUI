@@ -123,6 +123,7 @@ class jeeui2
 
     uiCallback foo;
     void ui(void (*uiFunction) ());
+    void uiPush();   // высвобождение буфера
 
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol);
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload));
@@ -258,6 +259,7 @@ class jeeui2
     static char _t_pld_current[128]; // сообщение
     static bool _t_inc_current;
     static bool _t_remotecontrol;
+    AsyncResponseStream *httpstream=nullptr;  // указатель на http-поток
     String op; // опции для выпадающего списка <-- весьма желательно очищать сразу же...
 public:
     String buf; // борьба с фрагментацией кучи, буффер должен быть объявлен последним <-- весьма желательно очищать сразу же...

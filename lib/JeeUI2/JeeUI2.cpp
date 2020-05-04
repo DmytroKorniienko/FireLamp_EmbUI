@@ -152,16 +152,22 @@ void jeeui2::begin() {
 
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
         if(dbg)Serial.println(F("Вызов /echo"));
-        foo();
 
-        String res = buf;
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), res);
+        if (httpstream != nullptr) {
+            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));  // already preparing stream
+            return;
+        }
 
-        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-        request->send(response);
+        httpstream = request->beginResponseStream(FPSTR(PGmimejson));
 
-        if(dbg)Serial.println(buf);
-        buf = F("");
+        httpstream->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
+
+        foo();   // stream http responce body to the Async's server buffer
+        if (buf.length()) uiPush();
+        request->send(httpstream);
+        httpstream = nullptr;   // release pointer
+
+        //if(dbg)Serial.println(buf); // buffer has been corrupted already :)
     });
 
     server.on(PSTR("/_refresh"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -313,7 +319,7 @@ void jeeui2::begin() {
     server.onNotFound(notFound);
 
     server.begin();
-    foo();
+    //foo();    //WHY???
     //upd();
     mqtt_update();
 }
@@ -376,4 +382,12 @@ void jeeui2::getAPmac(){
     String _mac(WiFi.softAPmacAddress());
     _mac.replace(F(":"), F(""));
     strncpy(mc, _mac.c_str(), sizeof(mc)-1);
+}
+
+// push data to http-responce buffer
+void jeeui2::uiPush(){
+    if (httpstream == nullptr) return;  // nowhere to push
+
+    httpstream->print(buf);
+    buf = "";
 }

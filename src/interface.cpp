@@ -503,8 +503,8 @@ void interface(){ // функция в которой мф формируем в
 
         EFFECT enEff; enEff.setNone();
         jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
-        //char nameBuffer[64]; // Exception (3) при обращении к PROGMEM, поэтому ход конем - копируем во временный буффер
-        
+        jee.uiPush();       // не сбрасывать буфер перед page() после option(), это портит джейсон
+
         if(!iGLOBAL.isAddSetup){
             do {
                 enEff = *myLamp.effects.enumNextEffect(&enEff);
@@ -520,6 +520,8 @@ void interface(){ // функция в которой мф формируем в
             jee.select(F("effList"), F("Эффект"));
             jee.button(F("bSetClose"), F("gray"), F("Выйти из настроек"));
         }
+        jee.uiPush();
+
         jee.range(F("bright"),1,255,1,F("Яркость"));
         jee.range(F("speed"),1,255,1,F("Скорость"));
         jee.range(F("scale"),1,255,1,F("Масштаб"));
@@ -530,6 +532,7 @@ void interface(){ // функция в которой мф формируем в
         else
             jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
         //jee.button(F("btn3"),F("gray"),F(">"), 3);
+        jee.uiPush();
 
         if(iGLOBAL.isSetup){
             jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
@@ -538,6 +541,8 @@ void interface(){ // функция в которой мф формируем в
         jee.checkbox(F("isSetup"),F("Конфигурирование"));
 
         jee.page(); // разделитель между страницами
+        jee.uiPush();
+
         //Страница "Управление лампой"
         if(iGLOBAL.isTmSetup){
             jee.time(F("time"),F("Время"));
@@ -555,6 +560,8 @@ void interface(){ // функция в которой мф формируем в
         jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
 
         jee.page(); // разделитель между страницами
+        jee.uiPush();
+
         // Страница "Настройки соединения"
         // if(!jee.connected || jee.param(F("wifi"))==F("AP")){
         //     jee.formWifi(); // форма настроек Wi-Fi
@@ -575,6 +582,8 @@ void interface(){ // функция в которой мф формируем в
 #endif
             jee.option(F("9"), F("Другое"));
             jee.select(F("addSList"), F("Группа настроек"));
+            jee.uiPush();
+
             switch (iGLOBAL.addSList)
             {
             case 1:
@@ -706,6 +715,7 @@ void interface(){ // функция в которой мф формируем в
 #endif
         }
         jee.page(); // разделитель между страницами
+        jee.uiPush();
     } else {
 #ifdef LAMP_DEBUG
         LOG.println(F("Внимание: Загрузка минимального интерфейса, т.к. обнаружен вызов index.htm"));
