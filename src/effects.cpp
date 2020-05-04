@@ -133,11 +133,11 @@ void sparklesRoutine(CRGB *leds, const char *param)
   }
 
   //EVERY_N_MILLIS(500){
-  for (uint8_t i = 0; i < (uint8_t)round(2.0*(GSHMEM.speed/255.0)+1); i++){
+  for (uint8_t i = 0; i < (uint8_t)round(2.5*(GSHMEM.speed/255.0)+1); i++){
       uint8_t x = random(0U, WIDTH);
       uint8_t y = random(0U, HEIGHT);
       if (myLamp.getPixColorXY(x, y) == 0U){
-        myLamp.setLeds(myLamp.getPixelNumber(x, y),CHSV(random(1U, 255U), random(127U, 255U), random(127U, 255U)));
+        myLamp.setLeds(myLamp.getPixelNumber(x, y),CHSV(random(1U, 255U), random(192U, 255U), random(192U, 255U)));
       }
   }
 }
@@ -2026,15 +2026,23 @@ void twinklesRoutine(CRGB *leds, const char *param)
   } else {
     myLamp.setEffDelay(millis());
   }
+
   uint scale = TWINKLES_MULTIPLIER*myLamp.effects.getSpeed()/255.0;
-  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
-    
+  TProgmemRGBPalette16 const *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  TProgmemRGBPalette16 const *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  uint8_t tnum = 32-myLamp.effects.getScale() % 32U;
+
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    curPalette = palette_arr[(int)((float)var.toInt()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))]; // выбираем из доп. регулятора
+    tnum = 50-49*(myLamp.effects.getScale()/255.0);
+  }  
+
     if (myLamp.isLoading())
     {
       GSHMEM.thue = 0U;
       for (uint32_t idx=0; idx < NUM_LEDS; idx++) {
-        if (random8(32-myLamp.effects.getScale() % 32U) == 0){
+        if (random8(tnum) == 0){
           GSHMEM.ledsbuff[idx].r = random8();                          // оттенок пикселя
           GSHMEM.ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 +1); // скорость и направление (нарастает 1-4 или угасает 5-8)
           GSHMEM.ledsbuff[idx].b = random8();                          // яркость
@@ -2045,7 +2053,7 @@ void twinklesRoutine(CRGB *leds, const char *param)
     }
     for (uint32_t idx=0; idx < NUM_LEDS; idx++) {
       if (GSHMEM.ledsbuff[idx].b == 0){
-        if (random8(32-myLamp.effects.getScale() % 32U) == 0 && GSHMEM.thue > 0){  // если пиксель ещё не горит, зажигаем каждый ХЗй
+        if (random8(tnum) == 0 && GSHMEM.thue > 0){  // если пиксель ещё не горит, зажигаем каждый ХЗй
           GSHMEM.ledsbuff[idx].r = random8();                          // оттенок пикселя
           GSHMEM.ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS +1);     // скорость и направление (нарастает 1-4, но не угасает 5-8)
           GSHMEM.ledsbuff[idx].b = GSHMEM.ledsbuff[idx].g;                    // яркость

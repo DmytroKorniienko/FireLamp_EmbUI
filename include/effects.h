@@ -146,6 +146,8 @@ void fire2018Routine(CRGB*, const char*);
 void freqAnalyseRoutine(CRGB*, const char*);
 #endif
 //-------------------------------------------------
+const char _R255[] PROGMEM = "[{'R':'127'}]";
+
 #pragma pack(push,1)
 typedef struct _EFFECT {
     bool canBeSelected:1;
@@ -158,6 +160,45 @@ typedef struct _EFFECT {
     void (*func)(CRGB*,const char*);
     char *param;
     void setNone(){ eff_nb=EFF_NONE; eff_name=nullptr; brightness=127; speed=127; scale=127; canBeSelected=false; isFavorite=false; func=nullptr; param=nullptr; }
+    void updateParam(const char *str) {
+        if(param!=nullptr && param!=_R255) // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
+            delete [] param;
+        param = new char[strlen(str)+1];
+        strcpy(param, str);
+    }
+    String getValue(const char *src, const _PTR type){
+        if(src==nullptr)
+            return String(); // empty
+        //LOG.printf_P(PSTR("TEST: %s\n"),src);
+        DynamicJsonDocument doc(128);
+        String tmp(FPSTR(src));
+        tmp.replace("'","\""); // так делать не красиво, но шопаделаешь...
+        deserializeJson(doc,tmp);
+        JsonArray arr = doc.as<JsonArray>();
+        for (size_t i=0; i<arr.size(); i++) {
+            JsonObject item = arr[i];
+            if(item.containsKey(FPSTR(type))){
+                return item[FPSTR(type)].as<String>();
+            }
+        }
+        return String(); // empty
+    }
+    void setValue(const char *src, const _PTR type, const _PTR val){
+        DynamicJsonDocument doc(128);
+        deserializeJson(doc,String(FPSTR(src)));
+        JsonArray arr = doc.as<JsonArray>();
+        for (size_t i=0; i<arr.size(); i++) {
+            JsonObject item = arr[i];
+            if(item.containsKey(FPSTR(type))){
+                item[FPSTR(type)]=FPSTR(val);
+            }
+        }
+        String tmp;
+        serializeJson(doc,tmp);
+        tmp.replace("\"","'"); // так делать не красиво, но шопаделаешь...
+        //LOG.println(tmp);
+        updateParam(tmp.c_str());
+    }
 } EFFECT;
 #pragma pack(pop)
 
@@ -207,6 +248,7 @@ const char T_FIRE2018[] PROGMEM = "Огонь 2018";
 #ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
 #endif
+
 static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
     {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, whiteColorStripeRoutine, nullptr},
@@ -246,7 +288,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_SWIRL, T_SWIRL, swirlRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, incrementalDriftRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, incrementalDriftRoutine2, nullptr},
-    {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, twinklesRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, twinklesRoutine, ((char *)_R255)}, // очень хреновое приведение типов, но дальше это разрулим :)
     {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, radarRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, wavesRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, fire2012Routine, nullptr},
@@ -457,9 +499,14 @@ public:
                     eff->scale = item[F("sc")].as<int>();
                     eff->isFavorite = (bool)(item[F("isF")].as<int>());
                     eff->canBeSelected = (bool)(item[F("cbS")].as<int>());
+                    String tmp = item[F("prm")];
+                    if(eff->param!=nullptr && cfg != nullptr) // так некрасиво, но сойдет пока что... (т.е. не освобождаем память, если читаем основной конфиг, чтобы не грохнуть PROGMEM указатели)
+                        delete [] eff->param;
+                    eff->param = new char[tmp.length()+1];
+                    strcpy(eff->param, tmp.c_str());
                 }
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("(%d - %d - %d - %d - %d - %d)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected);
+                LOG.printf_P(PSTR("(%d - %d - %d - %d - %d - %d - %s)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected, eff->param!=nullptr?FPSTR(eff->param):FPSTR(F("")));
 #endif
             }
             // JsonArray::iterator it;
@@ -487,11 +534,11 @@ public:
                 cur_eff = &(effects[i]);
                 configFile.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
-                    ((cur_eff->param!=nullptr)?cur_eff->param:(char*)F("")));
+                    ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
 #ifdef LAMP_DEBUG
                 LOG.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
-                    ((cur_eff->param!=nullptr)?cur_eff->param:(char*)F("")));
+                    ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
 #endif
             }     
             configFile.print("]");
