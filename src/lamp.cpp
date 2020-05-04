@@ -42,7 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 void LAMP::lamp_init()
 {
   FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)  /*.setCorrection(TypicalLEDStrip)*/;
-  FastLED.setBrightness(BRIGHTNESS);                          // установка яркости
+  brightness(0, false);                          // начинаем с полностью потушеной матрицы 0-й яркости
   if (CURRENT_LIMIT > 0){
     FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
   }
@@ -210,7 +210,7 @@ void LAMP::buttonTick()
         effects.moveBy(EFF_WHITE_COLOR);
         effects.setBrightness(1);
       }
-      FastLED.setBrightness(getNormalizedLampBrightness());
+      //FastLED.setBrightness(getNormalizedLampBrightness());   // реальную яркость меняем в методе changePower()
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
@@ -289,7 +289,7 @@ void LAMP::buttonTick()
     switch (numHold) {
       case 1:
          setLampBrightness(constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255));
-         FastLED.setBrightness(getNormalizedLampBrightness());
+         setBrightness(getNormalizedLampBrightness());
          break;
 
       case 2:
@@ -361,7 +361,7 @@ if(touch.isHold() || !touch.isHolded())
       {
         manualOff = true;
         dawnFlag = false;
-        FastLED.setBrightness(getNormalizedLampBrightness());
+        //FastLED.setBrightness(getNormalizedLampBrightness());   // LED яркость меняется в changePower()
         changePower();
       }
       else
@@ -379,7 +379,7 @@ if(touch.isHold() || !touch.isHolded())
         LOG.printf_P(PSTR("Даблклик, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
   #endif
       effects.moveNext();
-      FastLED.setBrightness(getNormalizedLampBrightness());
+      setBrightness(getNormalizedLampBrightness());
       loadingFlag = true;
     }
 
@@ -387,7 +387,7 @@ if(touch.isHold() || !touch.isHolded())
     if (ONflag && clickCount == 3U)
     {
       effects.movePrev();
-      FastLED.setBrightness(getNormalizedLampBrightness());
+      setBrightness(getNormalizedLampBrightness());
       loadingFlag = true;
     }
 
@@ -471,7 +471,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
       memset(GSHMEM.dawnColorMinus,0,sizeof(GSHMEM.dawnColorMinus));
       GSHMEM.dawnCounter = 0;
       FastLED.clear();
-      FastLED.setBrightness(255);
+      brightness(255, false);   // зачем на яркость больше чем hardcoded BRIGHTNESS? :)
       // величина рассвета 0-255
       int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
@@ -551,25 +551,27 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
 
 void LAMP::effectsTick()
 {
-  bool showMustGoON = false;
+  //bool showMustGoON = false;
   bool storeEffect = false;
   
   if (!dawnFlag) // флаг устанавливается будильником рассвет
   {
-    if (ONflag)
+    if (ONflag || _fadeTicker.active())   // временный костыль, продолжаем обрабаьывать эффект пока работает фейдер
     {
+      /*
         if(isFaderOn){
           faderTick(); // фейдер
-          showMustGoON = true;
+          showMustGoON = true;    // для чего это?
         }
-        if(millis() - effTimer >= EFFECTS_RUN_TIMER && !isFaderOn){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
+      */
+        if(millis() - effTimer >= EFFECTS_RUN_TIMER){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
           if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-            startFader(false);
+            fadeeffect();
           }
           if(!isEffectsDisabledUntilText){
             if(effects.getCurrent()->func!=nullptr){
                 effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
-                showMustGoON = true;
+                //showMustGoON = true;
                 storeEffect = true;
             }
 #ifdef USELEDBUF
@@ -584,7 +586,7 @@ void LAMP::effectsTick()
         }
     }
 
-    if(ONflag && showMustGoON){
+    if(ONflag || _fadeTicker.active()){
       FastLED.show();
       if(storeEffect){
 #ifdef USELEDBUF
@@ -592,7 +594,7 @@ void LAMP::effectsTick()
 #endif
       }
     }
-    showMustGoON = false;
+    //showMustGoON = false;
     storeEffect = false;
   } else {
     if(!(millis()%11)){
@@ -701,53 +703,44 @@ void LAMP::effectsTick()
     }
 #endif
 
-bool LAMP::faderTick(){
-      static byte faderStep = 1;
+/*
+ * менялка эффектов через фейдер
+ * первый раз вызывается методами на смену эффекта,
+ * второй раз вызывает саму себя через планировщик
+ * TODO: переделать второй вызов на коллбэк из самого федера
+ */
+void LAMP::fadeeffect(bool stage){
 
-      if(!tmFaderTimeout.isReady()){
-        if(isFaderOn && tmFaderStepTime.isReady()) {
+  // первая стадия - запускаем фейдер яркости в ноль, перезапускаем себя к моменту окончания затухания
+  // тут есть некритичная бага - время затухания может быть короче дефолтового значения
+  if (stage) {
+    fadelight(FADE_MINCHANGEBRT);
+    _fadeeffectTicker.once_ms_scheduled(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false));
+  } else {  // вторая стадия - меняем эффект, запускаем плавное разгорание лампы
+
+    loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
+    if(mode==MODE_DEMO){
+      if(RANDOM_DEMO)
+        effects.moveBy(random(0, effects.getModeAmount()));
+      else
+        effects.moveNext();
 #ifdef LAMP_DEBUG
-//LOG.printf_P(PSTR("leds[1]=%d %d %d\n"),leds[1].red,leds[1].green,leds[1].blue);
+        LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
 #endif
-          faderStep++;
-          float chVal = ((float)globalBrightness*FADERSTEPTIME)/FADERTIMEOUT;
-          for(int led = 0 ; led < NUM_LEDS ; led++ ) {
-            //leds[led]/=((faderStep>5)?2:1);
-            leds[led].subtractFromRGB((uint8_t)(chVal*faderStep*0.33));
-          }
-        }
-      } else {
-        tmFaderTimeout.setInterval(0); // отключить до следующего раза, также переключаем эффект на новый, заодно запоминаем яркость текущего эффекта
-        //storeEffBrightness = modes[lamp mode].Brightness;
-        loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
-        isFaderOn = false;
-        faderStep = 1;
-
-        if(!manualFader){
-          if(mode==MODE_DEMO){
-            if(RANDOM_DEMO)
-              effects.moveBy(random(0, effects.getModeAmount()));
-            else
-              effects.moveNext();
-
-#ifdef LAMP_DEBUG
-          LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
-#endif
-            if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
-            setLoading();
-          }
-        }
-        EFFECT *currentEffect = effects.getCurrent();
-        if(currentEffect->func!=nullptr)
-          currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
-        manualFader = false;
-      }
-
-      return isFaderOn;
+        if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+          setLoading();
     }
 
-LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEPTIME), tmDemoTimer(DEMO_TIMEOUT*1000)
-    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
+    EFFECT *currentEffect = effects.getCurrent();
+    if(currentEffect->func!=nullptr)
+      currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+
+    fadelight(getNormalizedLampBrightness()); 
+  }
+}
+
+LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
+    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
 #ifdef ESP_USE_BUTTON    
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
@@ -762,7 +755,7 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       ONflag = false; // флаг включения/выключения
       manualOff = false;
       loadingFlag = true; // флаг для начальной инициализации эффекта
-      isFaderOn = false; // признак того, что выполняется фейдер текущего эффекта
+      //isFaderOn = false; // признак того, что выполняется фейдер текущего эффекта
       manualFader = false; // ручной или автоматический фейдер
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
       isFirstHoldingPress = false; // флаг: только начали удерживать?
@@ -776,6 +769,8 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
+      _brt, _steps = 0;
+      _brtincrement = 0;
 #ifdef MIC_EFFECTS
       isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       isMicOn = true; // глобальное испльзование микрофона
@@ -786,6 +781,8 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
       lamp_init(); // инициализация и настройка лампы
     }
 
+//    фейдер теперь запускается сам при вызове функции смены яркости
+/*
     void LAMP::startFader(bool isManual=false)
     {
         tmFaderTimeout.setInterval(FADERTIMEOUT); // взводим таймер фейдера
@@ -793,34 +790,20 @@ LAMP::LAMP() : docArrMessages(512), tmFaderTimeout(0), tmFaderStepTime(FADERSTEP
         isFaderOn = true;
         manualFader = isManual;
     }
+*/
 
 void LAMP::changePower() {changePower(ONflag);}
 
 void LAMP::changePower(bool flag) // плавное включение/выключение
     {
       if (flag){
-        for (uint8_t i = 0U; i < getNormalizedLampBrightness(); i = constrain(i + 8, 0, getNormalizedLampBrightness()))
-        {
-          FastLED.setBrightness(i);
-          delay(1);
-          FastLED.show();
-        }
-
-        FastLED.setBrightness(getNormalizedLampBrightness());
-        delay(2);
-        FastLED.show();
+        // включение
+        fadelight(getNormalizedLampBrightness());
       }
       else
       {
-        for (uint8_t i = getNormalizedLampBrightness(); i > 0; i = constrain(i - 8, 0, getNormalizedLampBrightness()))
-        {
-          FastLED.setBrightness(i);
-          delay(1);
-          FastLED.show();
-        }
-        FastLED.clear();
-        delay(2);
-        FastLED.show();
+        // Выключение
+        fadelight(0);
       }
 
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
@@ -879,7 +862,7 @@ void LAMP::showWarning(
 {
   uint32_t blinkTimer = millis();
   enum BlinkState { OFF = 0, ON = 1 } blinkState = BlinkState::OFF;
-  FastLED.setBrightness(myLamp.getLampBrightness());                // установка яркости для предупреждения
+  myLamp.fadelight(myLamp.getLampBrightness());    // установка яркости для предупреждения
   FastLED.clear();
   delay(2);
   FastLED.show();
@@ -896,7 +879,7 @@ void LAMP::showWarning(
     {
       blinkTimer = millis();
       blinkState = (BlinkState)!blinkState;
-      FastLED.setBrightness(blinkState == BlinkState::OFF ? 0 : myLamp.getLampBrightness());
+      myLamp.brightness(blinkState == BlinkState::OFF ? 0 : myLamp.getLampBrightness());
       delay(1);
       FastLED.show();
     }
@@ -904,7 +887,7 @@ void LAMP::showWarning(
   }
 
   FastLED.clear();
-  FastLED.setBrightness(myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
+  myLamp.fadelight(myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
   delay(1);
   FastLED.show();
   myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
@@ -922,7 +905,7 @@ void LAMP::startDemoMode()
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
   effects.moveBy(random(0, MODE_AMOUNT));
-  FastLED.setBrightness(getNormalizedLampBrightness());
+  //FastLED.setBrightness(getNormalizedLampBrightness());   // уходим в changePower()
   ONflag = true;
   loadingFlag = true;
   tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
@@ -939,7 +922,7 @@ void LAMP::startNormalMode()
   mode = LAMPMODE::MODE_NORMAL;
   if(storedEffect!=EFF_NONE)
     effects.moveBy(storedEffect);
-  FastLED.setBrightness(getNormalizedLampBrightness());
+  fadelight(getNormalizedLampBrightness());
   loadingFlag = true;
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
 }
@@ -1277,3 +1260,81 @@ void LAMP::micHandler()
   }
 }
 #endif
+
+void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration) {
+    _fadeTicker.detach();
+
+    uint8_t _maxsteps = _duration / FADE_STEPTIME;
+    _brt = getBrightness();
+    uint8_t _brtdiff = abs(_targetbrightness - _brt);
+
+    if (_brtdiff > FADE_MININCREMENT * _maxsteps) {
+        _steps = _maxsteps;
+    } else {
+        _steps = _brtdiff/FADE_MININCREMENT;
+    }
+
+    if (_steps < 3) {
+        brightness(_targetbrightness);
+        return;
+    }
+
+    _brtincrement = (_targetbrightness - _brt) / _steps;
+
+    //_SPTO(Serial.printf_P(F_fadeinfo, _brt, _targetbrightness, _steps, _brtincrement)); _SPLN("");
+    _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness));
+}
+
+/*
+ * Change global brightness with or without fade effect
+ * fade applied in non-blocking way
+ * FastLED dim8 function applied internaly for natural brightness controll
+ * @param uint8_t _brt - target brigtness level 0-255
+ * @param bool fade - use fade effect on brightness change
+ */
+void LAMP::setBrightness(const uint8_t _brt, const bool fade, const bool natural){
+    //_SP(F("Set brightness: ")); _SPLN(_brt);
+    if (fade) {
+        fadelight(_brt);
+    } else {
+        brightness(_brt, natural);
+    }
+}
+
+/*
+ * Get current brightness
+ * FastLED brighten8 function applied internaly for natural brightness compensation
+ * @param bool natural - return compensated or absolute brightness
+ */
+uint8_t LAMP::getBrightness(const bool natural){
+    return (natural ? brighten8_raw(FastLED.getBrightness()) : FastLED.getBrightness());
+}
+
+
+/*
+ * Set global brightness
+ * @param bool natural 
+ */
+void LAMP::brightness(const uint8_t _brt, bool natural){
+    uint8_t _cur = natural ? brighten8_raw(FastLED.getBrightness()) : FastLED.getBrightness();
+    if ( _cur == _brt) return;
+
+    FastLED.setBrightness(natural ? dim8_raw(_brt) : _brt);
+    FastLED.show();
+}
+
+/*
+ * Fade light callback
+ * @param bool natural 
+ */
+void LAMP::fader(const uint8_t _tgtbrt){
+  --_steps;
+  if (! _steps) {   // on last step
+      _fadeTicker.detach();
+      _brt = _tgtbrt;
+  } else {
+      _brt += _brtincrement;
+  }
+
+  brightness(_brt);
+}

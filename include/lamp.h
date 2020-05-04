@@ -41,7 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "OTA.h"
 #include "timeProcessor.h"
-//#include <FastLed.h>
+#include <Ticker.h>
 
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
@@ -58,6 +58,12 @@ typedef enum _LAMPMODE {
 typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT} EVENT_TYPE;
 
 const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
+
+#define FADE              true      // fade by default on brightness change
+#define FADE_STEPTIME       50      // default time between fade steps, ms (2 seconds with max steps)
+#define FADE_TIME         2000      // Default fade time, ms
+#define FADE_MININCREMENT    3      // Minimal increment for brightness fade
+#define FADE_MINCHANGEBRT   30      // Minimal brightness for effects changer
 
 struct EVENT {
     union {
@@ -361,7 +367,7 @@ private:
     bool ONflag:1; // флаг включения/выключения
     bool manualOff:1;
     bool loadingFlag:1; // флаг для начальной инициализации эффекта
-    bool isFaderOn:1; // признак того, что выполняется фейдер текущего эффекта
+    //bool isFaderOn:1; // признак того, что выполняется фейдер текущего эффекта
     bool manualFader:1; // ручной или автоматический фейдер
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
     bool isFirstHoldingPress:1; // флаг: только начали удерживать?
@@ -416,8 +422,8 @@ private:
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
-    timerMinim tmFaderTimeout;
-    timerMinim tmFaderStepTime;
+    //timerMinim tmFaderTimeout;
+    //timerMinim tmFaderStepTime;
     timerMinim tmDemoTimer;         // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
@@ -425,6 +431,14 @@ private:
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
     
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
+
+    // async fader and brightness control vars and methods
+    uint8_t _brt, _steps;
+    int8_t _brtincrement;
+    Ticker _fadeTicker;             // планировщик асинхронного фейдера
+    Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
+    void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
+    void fader(const uint8_t _tgtbrt);          // обработчик затуания, вызывается планировщиком
 
 
 #ifdef ESP_USE_BUTTON
@@ -441,7 +455,6 @@ private:
     void GaugeShow();
 #endif
     void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) {if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
-    bool faderTick();
 
 #ifdef OTA
     OtaManager otaManager;
@@ -484,12 +497,15 @@ public:
 
     bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
     void setLoading(bool flag=true) {loadingFlag = flag;}
+
+    // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
     void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) setGlobalBrightness(brg); else effects.setBrightness(brg);}
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
+
     void restartDemoTimer() {tmDemoTimer.reset();}
     LAMPMODE getMode() {return mode;}
     void updateParm(void(*f)()) { updateParmFunc=f; }
@@ -519,7 +535,7 @@ public:
 
     void periodicTimeHandle();
 
-    void startFader(bool isManual);
+    void fadeeffect(bool stage=1);       // сменщик эффектов через затухание
     void startAlarm();
     void startDemoMode();
     void startNormalMode();
@@ -555,6 +571,34 @@ public:
     CRGB getLeds(uint16_t idx) { return leds[idx]; }
     CRGB *getLeds() { return leds; }
     void blur2d(uint8_t val) {::blur2d(leds,WIDTH,HEIGHT,val);}
+
+    /*
+     * Change global brightness with or without fade effect
+     * fade applied in non-blocking way
+     * FastLED dim8 function applied internaly for natural brightness controll
+     * @param uint8_t _tgtbrt - target brigtness level 0-255
+     * @param bool fade - use fade effect on brightness change
+     * @param bool natural - apply dim8 function for natural brightness controll
+     */
+    void setBrightness(const uint8_t _tgtbrt, const bool fade=FADE, const bool natural=true);
+
+    /*
+     * Get current brightness
+     * FastLED brighten8 function applied internaly for natural brightness compensation
+     * @param bool natural - return compensated or absolute brightness
+     */
+    uint8_t getBrightness(const bool natural=true);
+
+    /*
+     * Non-blocking light fader, uses system ticker to globaly fade FastLED brighness
+     * within specified duration
+     * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
+     *                                   function applied internaly for natiral dimming
+     * @param uint32_t _duration - fade effect duraion, ms
+     */
+    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME);
+
+
     ~LAMP() {}
 private:
     LAMP(const LAMP&);  // noncopyable
