@@ -787,7 +787,7 @@ void update(){ // функция выполняется после ввода д
             jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 
             isRefresh = true;
-            myLamp.startFader(true);
+            myLamp.fadeeffect();
         } else {
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
@@ -910,7 +910,7 @@ void httpCallback(const char *param, const char *value)
                 jee.var(F("bright"), value);
             }
             myLamp.setLampBrightness(atoi(value));
-            FastLED.setBrightness(myLamp.getNormalizedLampBrightness());
+            myLamp.fadelight(myLamp.getNormalizedLampBrightness());
             //myLamp.setLoading(true); // перерисовать эффект
         }
     } else if(!strcmp_P(param,PSTR("speed"))){
@@ -933,11 +933,11 @@ void httpCallback(const char *param, const char *value)
     } else if(!strcmp_P(param,PSTR("move_next"))){
         myLamp.effects.moveNext();
         myLamp.setLoading(true); // перерисовать эффект
-        myLamp.startFader(true);
+        //myLamp.fadeeffect();       // код эффекта меняется сразу, а фейдер асинхроный, нужно чинить
     } else if(!strcmp_P(param,PSTR("move_prev"))){
         myLamp.effects.movePrev();
         myLamp.setLoading(true); // перерисовать эффект
-        myLamp.startFader(true);
+        //myLamp.fadeeffect();       // код эффекта меняется сразу, а фейдер асинхроный, нужно чинить
     }
     jee._refresh = true;
 }
