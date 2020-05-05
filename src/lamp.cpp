@@ -551,7 +551,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
 
 void LAMP::effectsTick()
 {
-  //bool showMustGoON = false;
+  bool showMustGoON = false; // это фикс мерцания на малой яркости, особенно критично для белой лампы, т.е. вывод в FastLed ТОЛЬКО если перерисовывался эффект (62.5 кадров)
   bool storeEffect = false;
   
   if (!dawnFlag) // флаг устанавливается будильником рассвет
@@ -571,7 +571,7 @@ void LAMP::effectsTick()
           if(!isEffectsDisabledUntilText){
             if(effects.getCurrent()->func!=nullptr){
                 effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
-                //showMustGoON = true;
+                showMustGoON = true;
                 storeEffect = true;
             }
 #ifdef USELEDBUF
@@ -586,7 +586,7 @@ void LAMP::effectsTick()
         }
     }
 
-    if(ONflag || _fadeTicker.active()){
+    if((ONflag || _fadeTicker.active()) && showMustGoON){
       FastLED.show();
       if(storeEffect){
 #ifdef USELEDBUF
@@ -594,7 +594,7 @@ void LAMP::effectsTick()
 #endif
       }
     }
-    //showMustGoON = false;
+    showMustGoON = false;
     storeEffect = false;
   } else {
     if(!(millis()%11)){
@@ -715,7 +715,11 @@ void LAMP::fadeeffect(bool stage){
   // тут есть некритичная бага - время затухания может быть короче дефолтового значения
   if (stage) {
     fadelight(FADE_MINCHANGEBRT);
+#ifdef ESP32
+    //_fadeeffectTicker.once_ms(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false)); // разобраться с приведением типов, пока что - заглушка
+#else
     _fadeeffectTicker.once_ms_scheduled(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false));
+#endif
   } else {  // вторая стадия - меняем эффект, запускаем плавное разгорание лампы
 
     loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
@@ -769,7 +773,8 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
-      _brt, _steps = 0;
+      _brt =0;
+      _steps = 0;
       _brtincrement = 0;
 #ifdef MIC_EFFECTS
       isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
@@ -1282,7 +1287,11 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration) 
     _brtincrement = (_targetbrightness - _brt) / _steps;
 
     //_SPTO(Serial.printf_P(F_fadeinfo, _brt, _targetbrightness, _steps, _brtincrement)); _SPLN("");
+#ifdef ESP32
+    //_fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness)); // разобраться с приведением типов, пока что - заглушка
+#else
     _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness));
+#endif
 }
 
 /*

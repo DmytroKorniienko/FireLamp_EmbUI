@@ -535,7 +535,7 @@ public:
 
     void periodicTimeHandle();
 
-    void fadeeffect(bool stage=1);       // сменщик эффектов через затухание
+    void fadeeffect(bool stage = true);         // сменщик эффектов через затухание
     void startAlarm();
     void startDemoMode();
     void startNormalMode();

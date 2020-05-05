@@ -41,7 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #include "lamp.h"
 #include "main.h"
-#ifdef LAMP_DEBUG
+#ifdef USE_FTP
 #include "ftpServer.h"
 #endif
 

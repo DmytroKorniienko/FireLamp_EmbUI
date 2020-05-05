@@ -525,7 +525,7 @@ void interface(){ // функция в которой мф формируем в
         jee.range(F("speed"),1,255,1,F("Скорость"));
         jee.range(F("scale"),1,255,1,F("Масштаб"));
         String v=myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param,F("R"));
-        LOG.printf_P(PSTR("\nJsonObject: %s\n"),v.c_str());
+        //LOG.printf_P(PSTR("\nJsonObject: %s\n"),v.c_str());
         if(!v.isEmpty())
             jee.range(F("extraR"),1,255,1,F("Доп. регулятор"));
 
@@ -778,7 +778,7 @@ void update(){ // функция выполняется после ввода д
             jee.var(F("bright"),String(myLamp.getLampBrightness()));
             jee.var(F("speed"),String(curEff->speed));
             jee.var(F("scale"),String(curEff->scale));
-            LOG.println(FPSTR(curEff->param));
+            //LOG.println(FPSTR(curEff->param));
 
             size_t slen = strlen_P(curEff->param)+1;
             char buffer[slen];
