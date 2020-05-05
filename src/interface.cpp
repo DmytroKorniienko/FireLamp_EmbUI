@@ -787,7 +787,8 @@ void update(){ // функция выполняется после ввода д
             jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 
             isRefresh = true;
-            myLamp.fadeeffect();
+            myLamp.fadeeffect(true, true); // не перевыбираем эффект :)
+            updateParm(); // но обновляем параметры
         } else {
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
@@ -795,7 +796,7 @@ void update(){ // функция выполняется после ввода д
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
 
-
+            // Если руками правили строковый параметр - то обновляем его в эффекте, а дальше синхронизируем (нужно для возможности очистки)
             if(strcmp_P((jee.param(F("param"))).c_str(), curEff->param)){ // различаются  || (curEff->param==nullptr && (jee.param(F("param"))).length()!=0)
                 curEff->updateParam((jee.param(F("param"))).c_str());
             }

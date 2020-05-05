@@ -210,7 +210,7 @@ void LAMP::buttonTick()
         effects.moveBy(EFF_WHITE_COLOR);
         effects.setBrightness(1);
       }
-      //FastLED.setBrightness(getNormalizedLampBrightness());   // реальную яркость меняем в методе changePower()
+      FastLED.setBrightness(getNormalizedLampBrightness());   // оставляем для включения с кнопки, тут так задумано, в обход фейдера :)
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
@@ -289,7 +289,7 @@ void LAMP::buttonTick()
     switch (numHold) {
       case 1:
          setLampBrightness(constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255));
-         setBrightness(getNormalizedLampBrightness());
+         FastLED.setBrightness(getNormalizedLampBrightness()); // регулируем в обход фейдера, важно!
          break;
 
       case 2:
@@ -471,7 +471,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
       memset(GSHMEM.dawnColorMinus,0,sizeof(GSHMEM.dawnColorMinus));
       GSHMEM.dawnCounter = 0;
       FastLED.clear();
-      brightness(255, false);   // зачем на яркость больше чем hardcoded BRIGHTNESS? :)
+      brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
       // величина рассвета 0-255
       int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
@@ -709,7 +709,7 @@ void LAMP::effectsTick()
  * второй раз вызывает саму себя через планировщик
  * TODO: переделать второй вызов на коллбэк из самого федера
  */
-void LAMP::fadeeffect(bool stage){
+void LAMP::fadeeffect(bool stage, bool skipchange){
 
   // первая стадия - запускаем фейдер яркости в ноль, перезапускаем себя к моменту окончания затухания
   // тут есть некритичная бага - время затухания может быть короче дефолтового значения
@@ -718,9 +718,9 @@ void LAMP::fadeeffect(bool stage){
 #ifdef ESP32
     //_fadeeffectTicker.once_ms(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false)); // разобраться с приведением типов, пока что - заглушка
 #else
-    _fadeeffectTicker.once_ms_scheduled(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false));
+    _fadeeffectTicker.once_ms_scheduled(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false, skipchange));
 #endif
-  } else {  // вторая стадия - меняем эффект, запускаем плавное разгорание лампы
+  } else if(!skipchange){  // вторая стадия - меняем эффект, запускаем плавное разгорание лампы
 
     loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
     if(mode==MODE_DEMO){
@@ -733,11 +733,11 @@ void LAMP::fadeeffect(bool stage){
 #endif
         if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
           setLoading();
-    }
 
-    EFFECT *currentEffect = effects.getCurrent();
-    if(currentEffect->func!=nullptr)
-      currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+      EFFECT *currentEffect = effects.getCurrent();
+      if(currentEffect->func!=nullptr)
+        currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+    }
 
     fadelight(getNormalizedLampBrightness()); 
   }
@@ -1329,7 +1329,7 @@ void LAMP::brightness(const uint8_t _brt, bool natural){
     if ( _cur == _brt) return;
 
     FastLED.setBrightness(natural ? dim8_raw(_brt) : _brt);
-    FastLED.show();
+    //FastLED.show(); -- убираю, перерисуется в главном цикле
 }
 
 /*
