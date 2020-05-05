@@ -938,6 +938,10 @@ void httpCallback(const char *param, const char *value)
         myLamp.effects.movePrev();
         myLamp.setLoading(true); // перерисовать эффект
         //myLamp.fadeeffect();       // код эффекта меняется сразу, а фейдер асинхроный, нужно чинить
+    } else if(!strcmp_P(param,PSTR("reboot"))){
+        ESP.reset();
+    } else if(!strcmp_P(param,PSTR("OTA"))){
+        myLamp.startOTA();
     }
     jee._refresh = true;
 }
