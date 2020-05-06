@@ -1362,6 +1362,7 @@ void LAMP::fader(const uint8_t _tgtbrt){
  * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
  * чтобы не он забыл зачем живет :)
  */
+#ifdef ESP_USE_BUTTON
 void LAMP::buttonPress(bool state){
   if (state) {
 #ifdef LAMP_DEBUG
@@ -1377,5 +1378,5 @@ void LAMP::buttonPress(bool state){
 
   buttonTick();   // обрабатываем текущее нажатие вне очереди
 }
-
+#endif
 
