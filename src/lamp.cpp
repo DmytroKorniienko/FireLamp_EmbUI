@@ -168,7 +168,7 @@ void LAMP::handle()
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonTick()
 {
-  /*    // не нашел мест где блокируется кнопка
+  /*    // TODO: добавить UI блокировку кнопки :)
   if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
   {
     return;
@@ -198,14 +198,16 @@ void LAMP::buttonTick()
         brightDirection = 1;
         mode = MODE_WHITELAMP;
         effects.moveBy(EFF_WHITE_COLOR);
-        effects.setBrightness(BRIGHTNESS);
+        setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
+        // Ну и тут с моментом плавного разгорания я в общем-то согласен - выглядит неплохо, но вот для ночника - плавно угасать не нужно, сразу стартуем с 1, а удержанием будем наращивать яркость
       }
       if(clicks==1){
         // Включаем белую лампу в минимальную яркость
         brightDirection = 0;
         mode = MODE_WHITELAMP;
         effects.moveBy(EFF_WHITE_COLOR);
-        effects.setBrightness(1);
+        setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
+        FastLED.setBrightness(getNormalizedLampBrightness());   // оставляем для включения с кнопки, тут так задумано, в обход фейдера :)
       }
       // setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки, тут так задумано, в обход фейдера (поправлено)
 #ifdef LAMP_DEBUG
@@ -766,6 +768,7 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
       isFirstHoldingPress = false; // флаг: только начали удерживать?
       startButtonHolding = false; // кнопка удерживается
+      buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
       brightDirection = false;
       speedDirection = false;
       scaleDirection = false;
