@@ -122,9 +122,9 @@ void LAMP::handle()
   static unsigned long mic_check;
 
 #ifdef MIC_EFFECTS
-  if(isMicOn && ONflag && mic_check + MIC_POLLRATE < millis())
+  if(isMicOn && ONflag && mic_check + MIC_POLLRATE < millis()){
     micHandler();
-    mick_check = millis();
+    mic_check = millis();
   }
 #endif
 
