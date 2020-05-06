@@ -65,6 +65,12 @@ const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 #define FADE_MININCREMENT    3      // Minimal increment for brightness fade
 #define FADE_MINCHANGEBRT   30      // Minimal brightness for effects changer
 
+#define BUTTON_DEBOUNCE     30      // Button debounce time, ms
+
+#define MIC_POLLRATE        50      // как часто опрашиваем микрофон, мс
+// Ticker constants
+
+
 struct EVENT {
     union {
         struct {
@@ -437,6 +443,7 @@ private:
     int8_t _brtincrement;
     Ticker _fadeTicker;             // планировщик асинхронного фейдера
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
+    Ticker _buttonTicker;           // планировщик кнопки
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt);          // обработчик затуания, вызывается планировщиком
 
@@ -467,6 +474,7 @@ private:
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
+    void buttonPress(bool state);                 // обертка для обработчика прерываний
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -598,6 +606,10 @@ public:
      */
     void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME);
 
+    /*
+     *   хук обработчика прерываний для кнопки
+     */ 
+    ICACHE_RAM_ATTR void buttonisr(bool state){ _buttonTicker.once_ms_scheduled(0, std::bind(&LAMP::buttonPress, this, state)); } // "нажатие", запускаем обертку
 
     ~LAMP() {}
 private:

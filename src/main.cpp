@@ -50,7 +50,7 @@ SHARED_MEM GSHMEM; // глобальная общая память эффект�
 int mqtt_int; // интервал отправки данных по MQTT в секундах 
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
-
+bool pinTransition = 1;  // ловим "нажатие" кнопки
 
 void setup() {
     Serial.begin(115200);
@@ -91,6 +91,9 @@ void setup() {
     myLamp.events.setEventCallback(event_worker);
 
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+#ifdef ESP_USE_BUTTON
+    attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
+#endif
 }
 
 void loop() {
@@ -129,4 +132,14 @@ void sendData(){
   LOG.printf_P(PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
   //jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
+}
+
+/*
+ *  Button pin interrupt handler
+ */
+ICACHE_RAM_ATTR void buttonpinisr(){
+  detachInterrupt(BTN_PIN);
+  myLamp.buttonisr(pinTransition);   // дергаем хук в лампе
+  pinTransition = !pinTransition;
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
 }

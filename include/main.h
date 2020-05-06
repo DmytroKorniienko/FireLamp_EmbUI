@@ -41,13 +41,22 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #include "lamp.h"
 
+#if (PULL_MODE == LOW_PULL)
+#define BUTTON_PRESS_TRANSITION RISING
+#define BUTTON_RELEASE_TRANSITION FALLING
+#else
+#define BUTTON_PRESS_TRANSITION FALLING
+#define BUTTON_RELEASE_TRANSITION RISING
+#endif
+
+
 // глобальные переменные для работы с ними в программе
 extern SHARED_MEM GSHMEM; // Глобальная разделяемая память эффектов
 extern int mqtt_int; // интервал отправки данных по MQTT в секундах 
 extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 extern LAMP myLamp; // Объект лампы
 #ifdef ESP_USE_BUTTON
-extern GButton touch;               
+extern GButton touch;
 #endif
 
 void mqttCallback(const String &topic, const String &payload);
@@ -59,3 +68,4 @@ void updateParm();
 void jeebuttonshandle();
 void event_worker(const EVENT *);
 void httpCallback(const char *param, const char *value);
+ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки

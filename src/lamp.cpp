@@ -75,11 +75,13 @@ void LAMP::lamp_init()
 #endif
 
 #ifdef ESP_USE_BUTTON
+  touch.setTickMode(MANUAL);    // мы сами говорим когда опрашивать пин
   touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
   touch.setTimeout(BUTTON_TIMEOUT);
-  //touch.setDebounce(250);
+  touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
   //touch.setTickMode(true);
+  _buttonTicker.attach_scheduled(1, std::bind(&LAMP::buttonTick, this));   // "ленивый" опрос 1 раз в сек
 #endif
 
 #ifdef VERTGAUGE
@@ -115,22 +117,14 @@ void LAMP::lamp_init()
 
 void LAMP::handle()
 {
-// EVERY_N_SECONDS(10){
-//     FastLED.setMaxPowerInVoltsAndMilliamps(5, 100); // установка максимального тока БП
-// }
   effectsTick(); // обработчик эффектов
 
-#ifdef ESP_USE_BUTTON
-  static unsigned long button_check;
-  if (buttonEnabled && button_check + 30U < millis()) // раз в 30 мс проверяем кнопку и будильник
-  {
-    buttonTick(); // обработчик кнопки
-    alarmWorker();
+  static unsigned long mic_check;
+
 #ifdef MIC_EFFECTS
-    if(isMicOn && ONflag)
-      micHandler();
-#endif
-    button_check = millis();
+  if(isMicOn && ONflag && mic_check + MIC_POLLRATE < millis())
+    micHandler();
+    mick_check = millis();
   }
 #endif
 
@@ -143,6 +137,9 @@ void LAMP::handle()
   if (wait_handlers + 999U > millis())
       return;
   wait_handlers = millis();
+
+  // будильник обрабатываем раз в секунду
+  alarmWorker();
 
   // отложенное включение/выключение
   if(isOffAfterText && !isStringPrinting) {
@@ -171,12 +168,12 @@ void LAMP::handle()
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonTick()
 {
-  if (!buttonEnabled)                                       // события кнопки не обрабатываются, если она заблокирована
+  /*    // не нашел мест где блокируется кнопка
+  if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
   {
     return;
   }
-
-  //ONflag = true; // Отладка
+  */
 
   touch.tick();
 
@@ -201,7 +198,7 @@ void LAMP::buttonTick()
         brightDirection = 1;
         mode = MODE_WHITELAMP;
         effects.moveBy(EFF_WHITE_COLOR);
-        effects.setBrightness(255);
+        effects.setBrightness(BRIGHTNESS);
       }
       if(clicks==1){
         // Включаем белую лампу в минимальную яркость
@@ -210,7 +207,7 @@ void LAMP::buttonTick()
         effects.moveBy(EFF_WHITE_COLOR);
         effects.setBrightness(1);
       }
-      FastLED.setBrightness(getNormalizedLampBrightness());   // оставляем для включения с кнопки, тут так задумано, в обход фейдера :)
+      // setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки, тут так задумано, в обход фейдера (поправлено)
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
@@ -260,7 +257,7 @@ void LAMP::buttonTick()
   // кнопка нажата и удерживается
   if (ONflag && touch.isStep())
   {
-    if(!isFirstHoldingPress && (((getLampBrightness() == 255 || getLampBrightness() <= 1) && numHold == 1)
+    if(!isFirstHoldingPress && (((getLampBrightness() == BRIGHTNESS || getLampBrightness() <= 1) && numHold == 1)
     || ((effects.getSpeed() == 255 || effects.getSpeed() <= 1) && numHold == 2)
     || ((effects.getScale() == 255 || effects.getScale() <= 1) && numHold == 3))){
       if(!setDirectionTimeout){
@@ -285,11 +282,16 @@ void LAMP::buttonTick()
       tmNumHoldTimer.reset();
       tmDemoTimer.reset(); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
     }
-    
+
+    uint8_t newval;
     switch (numHold) {
       case 1:
-         setLampBrightness(constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255));
-         FastLED.setBrightness(getNormalizedLampBrightness()); // регулируем в обход фейдера, важно!
+         newval = constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255);
+         // не мелькаем яркостью там где не надо
+         if (getNormalizedLampBrightness() != newval) {
+           setLampBrightness(newval);
+           setBrightness(getNormalizedLampBrightness(), false); // используем общий метод, но без эффекта фейда
+         }
          break;
 
       case 2:
@@ -764,7 +766,6 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
       isFirstHoldingPress = false; // флаг: только начали удерживать?
       startButtonHolding = false; // кнопка удерживается
-      buttonEnabled = true; // кнопка обрабатывается если true
       brightDirection = false;
       speedDirection = false;
       scaleDirection = false;
@@ -1325,11 +1326,15 @@ uint8_t LAMP::getBrightness(const bool natural){
  * @param bool natural 
  */
 void LAMP::brightness(const uint8_t _brt, bool natural){
-    uint8_t _cur = natural ? brighten8_raw(FastLED.getBrightness()) : FastLED.getBrightness();
+    uint8_t _cur = natural ? brighten8_video(FastLED.getBrightness()) : FastLED.getBrightness();
     if ( _cur == _brt) return;
 
-    FastLED.setBrightness(natural ? dim8_raw(_brt) : _brt);
-    //FastLED.show(); -- убираю, перерисуется в главном цикле
+    if (_brt) {
+      FastLED.setBrightness(natural ? dim8_video(_brt) : _brt);
+    } else {
+      FastLED.setBrightness(0); // полностью гасим лапу если нужна 0-я яркость
+      FastLED.show();
+    }
 }
 
 /*
@@ -1347,3 +1352,29 @@ void LAMP::fader(const uint8_t _tgtbrt){
 
   brightness(_brt);
 }
+
+/*
+ * buttonPress - управление планировщиком опроса кнопки
+ * оберка нужна т.к. touch.tick() нельзя положить в ICACHE_RAM
+ * по наступлению прерывания "нажато" врубаем опрос событий кнопки не реже чем BUTTON_STEP_TIMEOUT/2 чтобы отловить "удержание"
+ * 
+ * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
+ * чтобы не он забыл зачем живет :)
+ */
+void LAMP::buttonPress(bool state){
+  if (state) {
+#ifdef LAMP_DEBUG
+    LOG.printf_P(PSTR("Button press: %u\n"), millis());
+#endif
+    _buttonTicker.attach_ms_scheduled(BUTTON_STEP_TIMEOUT/2, std::bind(&LAMP::buttonTick, this));
+  } else {
+#ifdef LAMP_DEBUG
+    LOG.printf_P(PSTR("Button release: %u\n"), millis());
+#endif
+    _buttonTicker.attach_scheduled(1, std::bind(&LAMP::buttonTick, this));   // если планировщик активен, значит кнопку "отпустили", обрабатываем последние событие
+  }
+
+  buttonTick();   // обрабатываем текущее нажатие вне очереди
+}
+
+
