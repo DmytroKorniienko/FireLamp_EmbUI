@@ -459,6 +459,10 @@ void create_parameters(){
 #endif
     jee.var_create(F("param"),F(""));
     jee.var_create(F("extraR"),F("127"));
+
+#ifdef ESP_USE_BUTTON
+    jee.var_create(F("isBtnOn"), F("true"));
+#endif
     //-----------------------------------------------
 
     jee.btn_create(F("bTmSubm"), bTmSubmCallback);
@@ -669,6 +673,9 @@ void interface(){ // функция в которой мф формируем в
                     jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
                     jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
                     jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
+#ifdef ESP_USE_BUTTON
+                    jee.checkbox(F("isBtnOn"), F("Кнопка&nbspактивна"));
+#endif
 #ifdef OTA
                     jee.button(F("bOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));   
 #endif
@@ -834,6 +841,10 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
+#ifdef ESP_USE_BUTTON
+    myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));
+#endif
+
     myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
     myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
     myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
@@ -940,7 +951,7 @@ void httpCallback(const char *param, const char *value)
         myLamp.setLoading(true); // перерисовать эффект
         //myLamp.fadeeffect();       // код эффекта меняется сразу, а фейдер асинхроный, нужно чинить
     } else if(!strcmp_P(param,PSTR("reboot"))){
-        ESP.reset();
+        ESP.restart(); // так лучше :)
     } else if(!strcmp_P(param,PSTR("OTA"))){
         myLamp.startOTA();
     }

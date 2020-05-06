@@ -168,12 +168,10 @@ void LAMP::handle()
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonTick()
 {
-  /*    // TODO: добавить UI блокировку кнопки :)
   if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
   {
     return;
   }
-  */
 
   touch.tick();
 
@@ -207,7 +205,7 @@ void LAMP::buttonTick()
         mode = MODE_WHITELAMP;
         effects.moveBy(EFF_WHITE_COLOR);
         setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
-        FastLED.setBrightness(getNormalizedLampBrightness());   // оставляем для включения с кнопки, тут так задумано, в обход фейдера :)
+        FastLED.setBrightness(getNormalizedLampBrightness());   // оставляем для включения с кнопки c минимальной яркости, тут так задумано, в обход фейдера :)
       }
       // setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки, тут так задумано, в обход фейдера (поправлено)
 #ifdef LAMP_DEBUG

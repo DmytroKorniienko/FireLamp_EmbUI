@@ -529,6 +529,7 @@ public:
     void lamp_init();
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
+    void setButtonOn(bool flag) {buttonEnabled = flag;}
     void setOnOff(bool flag) {ONflag = flag; changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
