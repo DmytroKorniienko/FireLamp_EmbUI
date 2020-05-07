@@ -174,7 +174,7 @@ typedef struct _EFFECT {
         //LOG.printf_P(PSTR("TEST: %s\n"),src);
         DynamicJsonDocument doc(128);
         String tmp(FPSTR(src));
-        tmp.replace("'","\""); // так делать не красиво, но шопаделаешь...
+        tmp.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
         deserializeJson(doc,tmp);
         JsonArray arr = doc.as<JsonArray>();
         for (size_t i=0; i<arr.size(); i++) {
@@ -197,7 +197,7 @@ typedef struct _EFFECT {
         }
         String tmp;
         serializeJson(doc,tmp);
-        tmp.replace("\"","'"); // так делать не красиво, но шопаделаешь...
+        tmp.replace(F("\""),F("'")); // так делать не красиво, но шопаделаешь...
         //LOG.println(tmp);
         updateParam(tmp.c_str());
     }
