@@ -168,10 +168,6 @@ void LAMP::handle()
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonTick()
 {
-  if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
-  {
-    return;
-  }
 
   touch.tick();
 
@@ -205,7 +201,7 @@ void LAMP::buttonTick()
         mode = MODE_WHITELAMP;
         effects.moveBy(EFF_WHITE_COLOR);
         setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
-        FastLED.setBrightness(getNormalizedLampBrightness());   // оставляем для включения с кнопки c минимальной яркости, тут так задумано, в обход фейдера :)
+        setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки c минимальной яркости, тут так задумано, в обход фейдера :)
       }
       // setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки, тут так задумано, в обход фейдера (поправлено)
 #ifdef LAMP_DEBUG
@@ -351,7 +347,7 @@ if(touch.isHold() || !touch.isHolded())
       } else {
         storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
       }
-      
+
   #ifdef LAMP_DEBUG
       if(ONflag)
         LOG.printf_P(PSTR("Лампа выключена, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
@@ -374,7 +370,7 @@ if(touch.isHold() || !touch.isHolded())
       loadingFlag = true;
     }
 
-    // двухкратное нажатие
+    // двухкратное нажатие  - следующий эффект
     if (ONflag && clickCount == 2U)
     {
   #ifdef LAMP_DEBUG
@@ -385,7 +381,7 @@ if(touch.isHold() || !touch.isHolded())
       loadingFlag = true;
     }
 
-    // трёхкратное нажатие
+    // трёхкратное нажатие - предыдущий эффект
     if (ONflag && clickCount == 3U)
     {
       effects.movePrev();
@@ -393,7 +389,7 @@ if(touch.isHold() || !touch.isHolded())
       loadingFlag = true;
     }
 
-    // четырёхкратное нажатие
+    // четырёхкратное нажатие - запуск сервиса ОТА
     if (clickCount == 4U)
     {
       #ifdef OTA
@@ -560,13 +556,7 @@ void LAMP::effectsTick()
   {
     if (ONflag || _fadeTicker.active())   // временный костыль, продолжаем обрабаьывать эффект пока работает фейдер
     {
-      /*
-        if(isFaderOn){
-          faderTick(); // фейдер
-          showMustGoON = true;    // для чего это?
-        }
-      */
-        if(millis() - effTimer >= EFFECTS_RUN_TIMER){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
+        if(millis() - effTimer >= EFFECTS_RUN_TIMER){
           if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
             fadeeffect();
           }
@@ -605,6 +595,7 @@ void LAMP::effectsTick()
     }
   }
 }
+// end of void LAMP::effectsTick()
 
 #ifdef ESP_USE_BUTTON
     void LAMP::changeDirection(byte numHold){
@@ -1364,6 +1355,13 @@ void LAMP::fader(const uint8_t _tgtbrt){
  */
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonPress(bool state){
+
+  if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
+  {
+    _buttonTicker.detach();
+    return;
+  }
+
   if (state) {
 #ifdef LAMP_DEBUG
     LOG.printf_P(PSTR("Button press: %u\n"), millis());

@@ -428,8 +428,6 @@ private:
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
-    //timerMinim tmFaderTimeout;
-    //timerMinim tmFaderStepTime;
     timerMinim tmDemoTimer;         // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
@@ -444,6 +442,7 @@ private:
     Ticker _fadeTicker;             // планировщик асинхронного фейдера
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
     Ticker _buttonTicker;           // планировщик кнопки
+    Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt);          // обработчик затуания, вызывается планировщиком
 
@@ -474,7 +473,7 @@ private:
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
-    void buttonPress(bool state);                 // обертка для обработчика прерываний
+    void buttonPress(bool state);                 // обертка для обработчика прерываний от кнопки
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
