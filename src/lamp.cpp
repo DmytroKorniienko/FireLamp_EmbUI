@@ -714,8 +714,7 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
       ONflag = false; // флаг включения/выключения
       manualOff = false;
       loadingFlag = true; // флаг для начальной инициализации эффекта
-      //isFaderOn = false; // признак того, что выполняется фейдер текущего эффекта
-      manualFader = false; // ручной или автоматический фейдер
+      isFaderON = true; // признак того, что используется фейдер для смены эффектов
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
       isFirstHoldingPress = false; // флаг: только начали удерживать?
       startButtonHolding = false; // кнопка удерживается
@@ -737,20 +736,8 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
       micAnalyseDivider = 1; // анализ каждый раз
 #endif
 
-
       lamp_init(); // инициализация и настройка лампы
     }
-
-//    фейдер теперь запускается сам при вызове функции смены яркости
-/*
-    void LAMP::startFader(bool isManual=false)
-    {
-        tmFaderTimeout.setInterval(FADERTIMEOUT); // взводим таймер фейдера
-        tmFaderTimeout.reset();
-        isFaderOn = true;
-        manualFader = isManual;
-    }
-*/
 
 void LAMP::changePower() {changePower(ONflag);}
 

@@ -383,16 +383,16 @@ private:
     bool MIRR_H:1; // отзрекаливание по H
     bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
     bool ONflag:1; // флаг включения/выключения
-    bool manualOff:1;
+    bool manualOff:1; // будильник, разпознавание действия пользователя во время работы будильника, либо факта окончания действия рассвета
     bool loadingFlag:1; // флаг для начальной инициализации эффекта
-    bool manualFader:1; // ручной или автоматический фейдер
+    bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
     bool isFirstHoldingPress:1; // флаг: только начали удерживать?
     bool startButtonHolding:1; // кнопка удерживается
     bool buttonEnabled:1; // кнопка обрабатывается если true
-    bool brightDirection:1;
-    bool speedDirection:1;
-    bool scaleDirection:1;
+    bool brightDirection:1; // направление изменения яркости для кнопки
+    bool speedDirection:1; // направление изменения скорости для кнопки
+    bool scaleDirection:1; // направление изменения масштаба для кнопки
     bool setDirectionTimeout:1; // флаг: начало отсчета таймаута на смену направления регулировки
     bool isStringPrinting:1; // печатается ли прямо сейчас строка?
     bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
@@ -540,6 +540,7 @@ public:
     void lamp_init();
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
+    void setFaderFlag(bool flag) {isFaderON = flag;}
     void setButtonOn(bool flag) {buttonEnabled = flag;}
     void setOnOff(bool flag) {ONflag = flag; changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}

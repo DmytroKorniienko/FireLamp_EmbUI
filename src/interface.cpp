@@ -493,6 +493,7 @@ void create_parameters(){
 #endif
     jee.var_create(F("param"),F(""));
     jee.var_create(F("extraR"),F("127"));
+    jee.var_create(F("isFaderON"),F("true"));
 
 #ifdef ESP_USE_BUTTON
     jee.var_create(F("isBtnOn"), F("true"));
@@ -708,6 +709,7 @@ void interface(){ // функция в которой мф формируем в
                     jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
                     jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
                     jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
+                    jee.checkbox(F("isFaderON"),F("Плавное&nbspпереключение&nbspэффектов"));
 #ifdef ESP_USE_BUTTON
                     jee.checkbox(F("isBtnOn"), F("Кнопка&nbspактивна"));
 #endif
@@ -877,6 +879,8 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
+    myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
+
 #ifdef ESP_USE_BUTTON
     myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));
 #endif
