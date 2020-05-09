@@ -829,7 +829,8 @@ void update(){ // функция выполняется после ввода д
             jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 
             isRefresh = true;
-            myLamp.fadeeffect(true, true); // не перевыбираем эффект :)
+            //myLamp.fadeeffect(true, true); // не перевыбираем эффект :)
+            // нужно реализовать метор переключения на эффект по индексу
             updateParm(); // но обновляем параметры
         } else {
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
@@ -978,13 +979,11 @@ void httpCallback(const char *param, const char *value)
             myLamp.effects.moveBy((EFF_ENUM)atoi(value));
         }
     } else if(!strcmp_P(param,PSTR("move_next"))){
-        myLamp.effects.moveNext();
-        myLamp.setLoading(true); // перерисовать эффект
-        //myLamp.fadeeffect();       // код эффекта меняется сразу, а фейдер асинхроный, нужно чинить
+        myLamp.switcheffect(SW_NEXT);
     } else if(!strcmp_P(param,PSTR("move_prev"))){
-        myLamp.effects.movePrev();
-        myLamp.setLoading(true); // перерисовать эффект
-        //myLamp.fadeeffect();       // код эффекта меняется сразу, а фейдер асинхроный, нужно чинить
+        myLamp.switcheffect(SW_PREV);
+    } else if(!strcmp_P(param,PSTR("move_rnd"))){
+        myLamp.switcheffect(SW_RND);
     } else if(!strcmp_P(param,PSTR("reboot"))){
         ESP.restart(); // так лучше :)
     } else if(!strcmp_P(param,PSTR("OTA"))){

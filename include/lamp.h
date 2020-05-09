@@ -59,6 +59,16 @@ typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_
 
 const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 
+// смена эффекта
+typedef enum _EFFSWITCH {
+    SW_NONE = 0,    // пустой
+    SW_NEXT,        // следующий
+    SW_PREV,        // предыдущий
+    SW_RND,         // случайный
+    SW_DELAY,       // сохраненный (для фейдера)
+    SW_SPECIFIC     // TODO: переход на конкретный эффект по индексу/имени
+} EFFSWITCH;
+
 #define FADE              true      // fade by default on brightness change
 #define FADE_STEPTIME       50      // default time between fade steps, ms (2 seconds with max steps)
 #define FADE_TIME         2000      // Default fade time, ms
@@ -375,7 +385,6 @@ private:
     bool ONflag:1; // флаг включения/выключения
     bool manualOff:1;
     bool loadingFlag:1; // флаг для начальной инициализации эффекта
-    //bool isFaderOn:1; // признак того, что выполняется фейдер текущего эффекта
     bool manualFader:1; // ручной или автоматический фейдер
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
     bool isFirstHoldingPress:1; // флаг: только начали удерживать?
@@ -408,6 +417,7 @@ private:
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     EFF_ENUM storedEffect = EFF_NONE;
+    EFFSWITCH _postponedSW = SW_NONE;       // отложенное действие смены ээфекта для федера
 
     uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
     uint32_t effDelay; // доп. задержка для эффектов
@@ -430,8 +440,6 @@ private:
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
-    //timerMinim tmFaderTimeout;
-    //timerMinim tmFaderStepTime;
     timerMinim tmDemoTimer;         // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
@@ -446,8 +454,9 @@ private:
     Ticker _fadeTicker;             // планировщик асинхронного фейдера
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
     Ticker _buttonTicker;           // планировщик кнопки
+    Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
-    void fader(const uint8_t _tgtbrt);          // обработчик затуания, вызывается планировщиком
+    void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 
 
 #ifdef ESP_USE_BUTTON
@@ -476,7 +485,7 @@ private:
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
-    void buttonPress(bool state);                 // обертка для обработчика прерываний
+    void buttonPress(bool state);                 // обертка для обработчика прерываний от кнопки
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -546,7 +555,6 @@ public:
 
     void periodicTimeHandle();
 
-    void fadeeffect(bool stage = true, bool skipchange = false);         // сменщик эффектов через затухание
     void startAlarm();
     void startDemoMode();
     void startNormalMode();
@@ -606,13 +614,23 @@ public:
      * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
      *                                   function applied internaly for natiral dimming
      * @param uint32_t _duration - fade effect duraion, ms
+     * @param callback  -  callback-функция, которая будет выполнена после окончания затухания (без блокировки)
      */
-    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME);
+    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void(void)> callback=nullptr);
 
     /*
      *   хук обработчика прерываний для кнопки
      */ 
     ICACHE_RAM_ATTR void buttonisr(bool state){ _buttonTicker.once_ms_scheduled(0, std::bind(&LAMP::buttonPress, this, state)); } // "нажатие", запускаем обертку
+
+
+    /*
+     * переключатель эффектов для других методов,
+     * может использовать фейдер, выбирать случайный эффект для демо
+     * @param EFFSWITCH action - вид переключения (пред, след, случ.)
+     * @param fade - переключаться через фейдер или сразу
+     */
+    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=true);
 
     ~LAMP() {}
 private:
