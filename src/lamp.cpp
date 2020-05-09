@@ -193,7 +193,6 @@ void LAMP::buttonTick()
         mode = MODE_WHITELAMP;
         effects.moveBy(EFF_WHITE_COLOR);
         setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
-        // Ну и тут с моментом плавного разгорания я в общем-то согласен - выглядит неплохо, но вот для ночника - плавно угасать не нужно, сразу стартуем с 1, а удержанием будем наращивать яркость
       }
       if(clicks==1){
         // Включаем белую лампу в минимальную яркость
@@ -203,7 +202,6 @@ void LAMP::buttonTick()
         setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
         setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки c минимальной яркости, тут так задумано, в обход фейдера :)
       }
-      // setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки, тут так задумано, в обход фейдера (поправлено)
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
@@ -376,17 +374,13 @@ if(touch.isHold() || !touch.isHolded())
   #ifdef LAMP_DEBUG
         LOG.printf_P(PSTR("Даблклик, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
   #endif
-      effects.moveNext();
-      setBrightness(getNormalizedLampBrightness());
-      loadingFlag = true;
+      switcheffect(SW_NEXT);
     }
 
     // трёхкратное нажатие - предыдущий эффект
     if (ONflag && clickCount == 3U)
     {
-      effects.movePrev();
-      setBrightness(getNormalizedLampBrightness());
-      loadingFlag = true;
+      switcheffect(SW_PREV);
     }
 
     // четырёхкратное нажатие - запуск сервиса ОТА
@@ -558,7 +552,10 @@ void LAMP::effectsTick()
     {
         if(millis() - effTimer >= EFFECTS_RUN_TIMER){
           if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-            fadeeffect();
+            if(RANDOM_DEMO)
+              switcheffect(SW_RND);
+            else
+              switcheffect(SW_NEXT);
           }
           if(!isEffectsDisabledUntilText){
             if(effects.getCurrent()->func!=nullptr){
@@ -696,45 +693,6 @@ void LAMP::effectsTick()
     }
 #endif
 
-/*
- * менялка эффектов через фейдер
- * первый раз вызывается методами на смену эффекта,
- * второй раз вызывает саму себя через планировщик
- * TODO: переделать второй вызов на коллбэк из самого федера
- */
-void LAMP::fadeeffect(bool stage, bool skipchange){
-
-  // первая стадия - запускаем фейдер яркости в ноль, перезапускаем себя к моменту окончания затухания
-  // тут есть некритичная бага - время затухания может быть короче дефолтового значения
-  if (stage) {
-    fadelight(FADE_MINCHANGEBRT);
-#ifdef ESP32
-    //_fadeeffectTicker.once_ms(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false)); // разобраться с приведением типов, пока что - заглушка
-#else
-    _fadeeffectTicker.once_ms_scheduled(FADE_TIME, std::bind(&LAMP::fadeeffect, this, false, skipchange));
-#endif
-  } else if(!skipchange){  // вторая стадия - меняем эффект, запускаем плавное разгорание лампы
-
-    loadingFlag = true; // некоторые эффекты требуют начальной иницализации, поэтому делаем так...
-    if(mode==MODE_DEMO){
-      if(RANDOM_DEMO)
-        effects.moveBy(random(0, effects.getModeAmount()));
-      else
-        effects.moveNext();
-#ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
-#endif
-        if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
-          setLoading();
-
-      EFFECT *currentEffect = effects.getCurrent();
-      if(currentEffect->func!=nullptr)
-        currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
-    }
-
-    fadelight(getNormalizedLampBrightness()); 
-  }
-}
 
 LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
     , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
@@ -1259,7 +1217,7 @@ void LAMP::micHandler()
 }
 #endif
 
-void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration) {
+void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback) {
     _fadeTicker.detach();
 
     uint8_t _maxsteps = _duration / FADE_STEPTIME;
@@ -1283,7 +1241,7 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration) 
 #ifdef ESP32
     //_fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness)); // разобраться с приведением типов, пока что - заглушка
 #else
-    _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness));
+    _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness, callback));
 #endif
 }
 
@@ -1331,12 +1289,14 @@ void LAMP::brightness(const uint8_t _brt, bool natural){
 
 /*
  * Fade light callback
- * @param bool natural 
+ * @param uint8_t _tgtbrt - last step brightness
  */
-void LAMP::fader(const uint8_t _tgtbrt){
+void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
   --_steps;
   if (! _steps) {   // on last step
-      _fadeTicker.detach();
+      if (callback != nullptr) {
+        _fadeTicker.once_ms_scheduled(0, callback);
+      } else { _fadeTicker.detach(); }
       _brt = _tgtbrt;
   } else {
       _brt += _brtincrement;
@@ -1378,3 +1338,54 @@ void LAMP::buttonPress(bool state){
 }
 #endif
 
+/*
+ * переключатель эффектов для других методов,
+ * может использовать фейдер, выбирать случайный эффект для демо
+ * @param EFFSWITCH action - вид переключения (пред, след, случ.)
+ * @param fade - переключаться через фейдер или сразу
+ */
+void LAMP::switcheffect(EFFSWITCH action, bool fade) {
+  if (action == SW_DELAY ) {
+    action = _postponedSW;
+    _postponedSW = EFFSWITCH::SW_NONE;  // сбрасываем отложенный эффект
+  } else if (fade) {
+    _postponedSW = action;  // откладывает смену эффекта на следующий вызов через коллбек от фейдера
+    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, EFFSWITCH::SW_DELAY, fade));
+    return;
+  }
+
+  switch (action)
+  {
+  case EFFSWITCH::SW_NEXT :
+      effects.moveNext();
+      break;
+  case EFFSWITCH::SW_PREV :
+      effects.movePrev();
+      break;
+  case EFFSWITCH::SW_RND :
+      effects.moveBy(random(0, effects.getModeAmount()));
+      break;
+  default:
+      return;
+      break;
+  }
+
+#ifdef LAMP_DEBUG
+  LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
+#endif
+
+  loadingFlag = true;   // флаг загрузки данных эффектов
+
+  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+  setLoading();
+
+  EFFECT *currentEffect = effects.getCurrent();
+  if(currentEffect->func!=nullptr)
+    currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+
+  if (fade) {
+    fadelight(getNormalizedLampBrightness());
+  } else {
+    setBrightness(getNormalizedLampBrightness());
+  }
+}
