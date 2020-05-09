@@ -141,14 +141,15 @@ void LAMP::handle()
   // будильник обрабатываем раз в секунду
   alarmWorker();
 
+  if(isEffectsDisabledUntilText && !isStringPrinting) {
+    setBrightness(0,false,false); // напечатали, можно гасить матрицу :)
+    isEffectsDisabledUntilText = false;
+  }
+
   // отложенное включение/выключение
   if(isOffAfterText && !isStringPrinting) {
     isOffAfterText = false;
     setOnOff(false);
-  }
-
-  if(isEffectsDisabledUntilText && !isStringPrinting) {
-    isEffectsDisabledUntilText = false;
   }
 
   newYearMessageHandle();
@@ -550,7 +551,10 @@ void LAMP::effectsTick()
   {
     if (ONflag || _fadeTicker.active())   // временный костыль, продолжаем обрабаьывать эффект пока работает фейдер
     {
-        if(millis() - effTimer >= EFFECTS_RUN_TIMER){
+      if(isEffectsDisabledUntilText)
+          showMustGoON = true; // запланирован вывод текста, при отключенной матрице
+
+        if(millis() - effTimer >= EFFECTS_RUN_TIMER){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
           if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
             if(RANDOM_DEMO)
               switcheffect(SW_RND);

@@ -156,16 +156,50 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         if(event->message==nullptr)
             break;
         if(!myLamp.isLampOn()){
-            myLamp.disableEffectsUntilText();
+            myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
             myLamp.setOffAfterText();
             myLamp.setOnOff(true);
+            myLamp.setBrightness(1,false,false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
             myLamp.sendStringToLamp(event->message,color);
         } else {
             myLamp.sendStringToLamp(event->message,color);
         }
         return;
+    case EVENT_TYPE::PIN_STATE : {
+            if(event->message==nullptr)
+                break;
+            //LOG.printf_P(PSTR("TEST: %s\n"),src);
+            String tmpS(event->message);
+            tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
+            DynamicJsonDocument doc(128);
+            deserializeJson(doc,tmpS);
+            JsonArray arr = doc.as<JsonArray>();
+            for (size_t i=0; i<arr.size(); i++) {
+                JsonObject item = arr[i];
+                uint8_t pin = item[F("pin")].as<int>();
+                String action = item[F("act")].as<String>();
+                //LOG.printf_P(PSTR("text: %s, pin: %d - %s\n"), tmpS.c_str(), pin, action.c_str());
+                pinMode(pin, OUTPUT);
+                switch(action.c_str()[0]){
+                    case 'H':
+                        digitalWrite(pin, HIGH); // LOW
+                        break;
+                    case 'L':
+                        digitalWrite(pin, LOW); // LOW
+                        break;
+                    case 'T':
+                        digitalWrite(pin, !digitalRead(pin)); // inverse
+                        break;
+                    default:
+                        break;
+                }
+                char tmpbuffer[32];
+                sprintf_P(tmpbuffer, PSTR("Set PIN: %d to %s"), pin, action.c_str());
+                myLamp.sendStringToLamp(tmpbuffer,color);
+                return;
+            }
+        }
         break;
-
     default:
         break;
     }
@@ -621,11 +655,12 @@ void interface(){ // функция в которой мф формируем в
                         jee.option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
                         jee.option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
                         jee.option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
+                        jee.option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
                         jee.select(F("evList"), F("Тип события"));
                         jee.checkbox(F("isEnabled"),F("Разрешено"));
                         jee.datetime(F("tmEvent"),F("Дата/время события"));
                         jee.number(F("repeat"),F("Повтор, мин"));
-                        jee.text(F("msg"),F("Текст для вывода на матрицу"));
+                        jee.text(F("msg"),F("Параметр (текст)"));
                         jee.checkbox(F("d1"),F("Понедельник"));
                         jee.checkbox(F("d2"),F("Вторник"));
                         jee.checkbox(F("d3"),F("Среда"));
