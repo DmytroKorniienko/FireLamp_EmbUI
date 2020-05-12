@@ -41,6 +41,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "OTA.h"
 #include "timeProcessor.h"
+// Task Scheduler lib   https://github.com/arkhipenko/TaskScheduler
+//#define _TASK_SLEEP_ON_IDLE_RUN
+#define _TASK_STD_FUNCTION
+#include <TaskSchedulerDeclarations.h>
 #include <Ticker.h>
 
 #ifdef MIC_EFFECTS
@@ -445,24 +449,22 @@ private:
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
-    
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
 
     // async fader and brightness control vars and methods
     uint8_t _brt, _steps;
     int8_t _brtincrement;
-    Ticker _fadeTicker;             // планировщик асинхронного фейдера
-    Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
-    Ticker _buttonTicker;           // планировщик кнопки
-    Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 
+    Scheduler ts;                   // TaskScheduler
+    Task _fadeTicker;               // планировщик асинхронного фейдера
 
 #ifdef ESP_USE_BUTTON
     GButton touch;               
     void buttonTick(); // обработчик кнопки
     timerMinim tmChangeDirectionTimer;     // таймаут смены направления увеличение-уменьшение при удержании кнопки
+    Task _buttonTicker;             // Button poll scheduled task
     void changeDirection(byte numHold);
     void debugPrint();
 #endif
@@ -485,7 +487,6 @@ private:
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
-    void buttonPress(bool state);                 // обертка для обработчика прерываний от кнопки
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -621,9 +622,8 @@ public:
 
     /*
      *   хук обработчика прерываний для кнопки
-     */ 
-    ICACHE_RAM_ATTR void buttonisr(bool state){ _buttonTicker.once_ms_scheduled(0, std::bind(&LAMP::buttonPress, this, state)); } // "нажатие", запускаем обертку
-
+     */
+    void buttonPress(bool state);
 
     /*
      * переключатель эффектов для других методов,

@@ -51,11 +51,11 @@ int mqtt_int; // интервал отправки данных по MQTT в с�
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
 bool pinTransition = 1;  // ловим "нажатие" кнопки
+Ticker _isrHelper;       // планировщик Смены эффектов в ДЕМО
+
 
 void setup() {
     Serial.begin(115200);
-    //Serial.println(F("Starting..."));
-    //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
     jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
 #if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
@@ -139,7 +139,16 @@ void sendData(){
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
   detachInterrupt(BTN_PIN);
-  myLamp.buttonisr(pinTransition);   // дергаем хук в лампе
+  _isrHelper.once_ms(0, buttonhelper, pinTransition);   // вместо флага используем тикер :)
   pinTransition = !pinTransition;
   attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+}
+
+/*
+ * Используем обертку и тикер ибо:
+ * 1) TaskScheduler нельзя положить в ICACHE
+ * 2) Тикер не может дернуть нестатический метод класса
+ */
+void buttonhelper(bool state){
+  myLamp.buttonPress(state);
 }

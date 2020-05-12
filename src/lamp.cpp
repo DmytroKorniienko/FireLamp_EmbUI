@@ -70,18 +70,25 @@ void LAMP::lamp_init()
   {
     handleTelnetClient();
     delay(100);
-    ESP.wdtFeed();
   }
 #endif
 
 #ifdef ESP_USE_BUTTON
+  #if (PULL_MODE == LOW_PULL)
+    pinMode(BTN_PIN, INPUT_PULLDOWN);
+  #else
+    pinMode(BTN_PIN, INPUT_PULLUP);
+  #endif
   touch.setTickMode(MANUAL);    // мы сами говорим когда опрашивать пин
   touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
   touch.setTimeout(BUTTON_TIMEOUT);
   touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
   //touch.setTickMode(true);
-  _buttonTicker.attach_scheduled(1, std::bind(&LAMP::buttonTick, this));   // "ленивый" опрос 1 раз в сек
+
+  //_buttonTicker.set(1000, TASK_FOREVER, std::bind(&LAMP::buttonTick, this));    // "ленивый" опрос 1 раз в сек
+  //ts.addTask(_buttonTicker);
+  //_buttonTicker.enable();
 #endif
 
 #ifdef VERTGAUGE
@@ -117,6 +124,7 @@ void LAMP::lamp_init()
 
 void LAMP::handle()
 {
+  ts.execute();   // run task scheduler
   effectsTick(); // обработчик эффектов
 
   static unsigned long mic_check;
@@ -138,6 +146,14 @@ void LAMP::handle()
       return;
   wait_handlers = millis();
 
+/*
+  // TaskScheduler bug
+  if (_buttonTicker.isEnabled()) {
+    LOG.printf("_butT interval: %u, run: %u, iterations: %i\n", _buttonTicker.getInterval(), _buttonTicker.getRunCounter(), _buttonTicker.getIterations());
+  } else {
+    LOG.println("_butT not enabled");
+  }
+*/
   // будильник обрабатываем раз в секунду
   alarmWorker();
 
@@ -171,6 +187,7 @@ void LAMP::buttonTick()
 {
 
   touch.tick();
+  //LOG.printf_P(PSTR("ButtonTick - %u\n"), millis());
 
   if (tmNumHoldTimer.isReady() && !startButtonHolding) { // сброс текущей комбинации в обычном режиме, если уже не нажата
       numHold = 0;
@@ -549,7 +566,7 @@ void LAMP::effectsTick()
   
   if (!dawnFlag) // флаг устанавливается будильником рассвет
   {
-    if (ONflag || _fadeTicker.active())   // временный костыль, продолжаем обрабаьывать эффект пока работает фейдер
+    if (ONflag || _fadeTicker.isEnabled())   // временный костыль, продолжаем обрабаьывать эффект пока работает фейдер
     {
       if(isEffectsDisabledUntilText)
           showMustGoON = true; // запланирован вывод текста, при отключенной матрице
@@ -579,7 +596,7 @@ void LAMP::effectsTick()
         }
     }
 
-    if((ONflag || _fadeTicker.active()) && showMustGoON){
+    if((ONflag || _fadeTicker.isEnabled()) && showMustGoON){
       FastLED.show();
       if(storeEffect){
 #ifdef USELEDBUF
@@ -699,7 +716,7 @@ void LAMP::effectsTick()
 
 
 LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
-    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef ESP_USE_BUTTON    
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
@@ -1209,7 +1226,7 @@ void LAMP::micHandler()
 #endif
 
 void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback) {
-    _fadeTicker.detach();
+    ts.deleteTask(_fadeTicker);
 
     uint8_t _maxsteps = _duration / FADE_STEPTIME;
     _brt = getBrightness();
@@ -1228,12 +1245,9 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, 
 
     _brtincrement = (_targetbrightness - _brt) / _steps;
 
-    //_SPTO(Serial.printf_P(F_fadeinfo, _brt, _targetbrightness, _steps, _brtincrement)); _SPLN("");
-#ifdef ESP32
-    //_fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness)); // разобраться с приведением типов, пока что - заглушка
-#else
-    _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness, callback));
-#endif
+    _fadeTicker.set(FADE_STEPTIME, TASK_FOREVER, std::bind(&LAMP::fader, this, _targetbrightness, callback));
+    ts.addTask(_fadeTicker);
+    _fadeTicker.enable();
 }
 
 /*
@@ -1286,8 +1300,8 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
   --_steps;
   if (! _steps) {   // on last step
       if (callback != nullptr) {
-        _fadeTicker.once_ms_scheduled(0, callback);
-      } else { _fadeTicker.detach(); }
+        _fadeTicker.set(TASK_IMMEDIATE, TASK_ONCE, callback);
+      } else { ts.deleteTask(_fadeTicker); }
       _brt = _tgtbrt;
   } else {
       _brt += _brtincrement;
@@ -1306,10 +1320,10 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
  */
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonPress(bool state){
-
+  ts.deleteTask(_buttonTicker);
   if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
   {
-    _buttonTicker.detach();
+    //_buttonTicker.disable();
     return;
   }
 
@@ -1317,15 +1331,15 @@ void LAMP::buttonPress(bool state){
 #ifdef LAMP_DEBUG
     LOG.printf_P(PSTR("Button press: %u\n"), millis());
 #endif
-    _buttonTicker.attach_ms_scheduled(BUTTON_STEP_TIMEOUT/2, std::bind(&LAMP::buttonTick, this));
+    _buttonTicker.set(BUTTON_STEP_TIMEOUT/2, TASK_FOREVER, std::bind(&LAMP::buttonTick, this));
   } else {
 #ifdef LAMP_DEBUG
     LOG.printf_P(PSTR("Button release: %u\n"), millis());
 #endif
-    _buttonTicker.attach_scheduled(1, std::bind(&LAMP::buttonTick, this));   // если планировщик активен, значит кнопку "отпустили", обрабатываем последние событие
+    _buttonTicker.set(TASK_SECOND, TASK_FOREVER, std::bind(&LAMP::buttonTick, this));    // если планировщик активен, значит кнопку "отпустили", переходим на "ленивый" опрос
   }
-
-  buttonTick();   // обрабатываем текущее нажатие вне очереди
+  ts.addTask(_buttonTicker);
+  _buttonTicker.enable();
 }
 #endif
 
