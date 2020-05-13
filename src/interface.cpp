@@ -804,8 +804,8 @@ void update(){ // функция выполняется после ввода д
         //LOG.printf_P(PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
         if((curEff!=iGLOBAL.prevEffect || isRefresh) && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             if(curEff!=iGLOBAL.prevEffect){
-                setEffectParams(curEff); // просто обновляем значения для текущего эффекта
-                myLamp.switcheffect(SW_SPECIFIC, false, curEff->eff_nb); // <- тут ставлю false, т.к. отложенный вараиант поломан
+                //setEffectParams(curEff); // значения обновит свитчер
+                myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
             }
             isRefresh = true;
         } else { // эффект не менялся, либо обновление UI не требуется, либо первый вход - обновляем текущий эффект значениями из UI
@@ -964,7 +964,7 @@ void httpCallback(const char *param, const char *value)
     } else if(!strcmp_P(param,PSTR("effect"))){
         if(atoi(value)>0){
             jee.var(F("effList"), value);
-            myLamp.effects.moveBy((EFF_ENUM)atoi(value));
+            myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), (EFF_ENUM)atoi(value));
         }
     } else if(!strcmp_P(param,PSTR("move_next"))){
         myLamp.switcheffect(SW_NEXT);
