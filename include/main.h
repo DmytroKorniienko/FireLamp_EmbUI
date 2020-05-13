@@ -92,4 +92,5 @@ void updateParm();
 void jeebuttonshandle();
 void event_worker(const EVENT *);
 void httpCallback(const char *param, const char *value);
+void setEffectParams(EFFECT *curEff);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
