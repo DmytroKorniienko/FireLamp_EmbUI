@@ -47,10 +47,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // глобальные переменные для работы с ними в программе
 SHARED_MEM GSHMEM; // глобальная общая память эффектов
-int mqtt_int; // интервал отправки данных по MQTT в секундах 
+INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
-bool pinTransition = 1;  // ловим "нажатие" кнопки
 
 void setup() {
     Serial.begin(115200);
@@ -120,9 +119,9 @@ void sendData(){
   static unsigned long i;
   static unsigned int in;
 
-  if(i + (in * 1000) > millis() || mqtt_int == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
+  if(i + (in * 1000) > millis() || iGLOBAL.mqtt_int == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
   i = millis();
-  in = mqtt_int;
+  in = iGLOBAL.mqtt_int;
   // всё, что ниже будет выполняться через интервалы
 
 
@@ -139,7 +138,7 @@ void sendData(){
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
   detachInterrupt(BTN_PIN);
-  myLamp.buttonisr(pinTransition);   // дергаем хук в лампе
-  pinTransition = !pinTransition;
-  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+  myLamp.buttonisr(iGLOBAL.pinTransition);   // дергаем хук в лампе
+  iGLOBAL.pinTransition = !iGLOBAL.pinTransition;
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, iGLOBAL.pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
 }

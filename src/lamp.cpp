@@ -395,25 +395,11 @@ if(touch.isHold() || !touch.isHolded())
       #endif
     }
 
-
     // пятикратное нажатие
     if (clickCount == 5U)                                     // вывод IP на лампу
     {
-        // loadingFlag = true;
-        
-        // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время вывода текста
-        // digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
-        // #endif
-
-        // while(!fillString(WiFi.localIP().toString().c_str(), CRGB::White)) { delay(1); ESP.wdtFeed(); }
-
-        // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)      // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы или будильника
-        // digitalWrite(MOSFET_PIN, ONflag || (dawnFlag && !manualOff) ? MOSFET_LEVEL : !MOSFET_LEVEL);
-        // #endif
-
         sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
     }
-
 
     // шестикратное нажатие
     if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
@@ -421,21 +407,10 @@ if(touch.isHold() || !touch.isHolded())
       myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
     }
 
-
     // семикратное нажатие
     if (ONflag && clickCount == 7U)                           // смена рабочего режима лампы: с WiFi точки доступа на WiFi клиент или наоборот
     {
-      // espMode = (espMode == 0U) ? 1U : 0U;
-      // EepromManager::SaveEspMode(&espMode);
-
-      // #ifdef LAMP_DEBUG
-      // LOG.printf_P(PSTR("Рабочий режим лампы изменён и сохранён в энергонезависимую память\nНовый рабочий режим: ESP_MODE = %d, %s\nРестарт...\n"),
-      //   espMode, espMode == 0U ? F("WiFi точка доступа") : F("WiFi клиент (подключение к роутеру)"));
-      // delay(1000);
-      // #endif
-
-      // showWarning(CRGB::Red, 3000U, 500U);                    // мигание красным цветом 3 секунды - смена рабочего режима лампы, перезагрузка
-      // ESP.restart();
+      // нет необходимости в этом... т.к. если нет возомжности подключиться к роутеру, то точка доступа будет создана автоматически
     }
 
     if(clickCount>0){
