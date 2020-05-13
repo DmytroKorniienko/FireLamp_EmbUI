@@ -66,7 +66,7 @@ typedef enum _EFFSWITCH {
     SW_PREV,        // предыдущий
     SW_RND,         // случайный
     SW_DELAY,       // сохраненный (для фейдера)
-    SW_SPECIFIC     // TODO: переход на конкретный эффект по индексу/имени
+    SW_SPECIFIC     // переход на конкретный эффект по индексу/имени
 } EFFSWITCH;
 
 #define FADE              true      // fade by default on brightness change
@@ -617,7 +617,7 @@ public:
      * @param uint32_t _duration - fade effect duraion, ms
      * @param callback  -  callback-функция, которая будет выполнена после окончания затухания (без блокировки)
      */
-    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void(void)> callback=nullptr);
+    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
 
     /*
      *   хук обработчика прерываний для кнопки
@@ -631,7 +631,7 @@ public:
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
      * @param fade - переключаться через фейдер или сразу
      */
-    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=true);
+    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=true, EFF_ENUM effnb = EFF_ENUM::EFF_NONE);
 
     ~LAMP() {}
 private:

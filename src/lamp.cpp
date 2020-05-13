@@ -1310,15 +1310,19 @@ void LAMP::buttonPress(bool state){
  * @param EFFSWITCH action - вид переключения (пред, след, случ.)
  * @param fade - переключаться через фейдер или сразу
  */
-void LAMP::switcheffect(EFFSWITCH action, bool fade) {
+void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   if (action == SW_DELAY ) {
     action = _postponedSW;
     _postponedSW = EFFSWITCH::SW_NONE;  // сбрасываем отложенный эффект
   } else if (fade) {
     _postponedSW = action;  // откладывает смену эффекта на следующий вызов через коллбек от фейдера
-    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, EFFSWITCH::SW_DELAY, fade));
+    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, EFFSWITCH::SW_DELAY, fade, effnb));
     return;
   }
+
+#ifdef LAMP_DEBUG
+  LOG.printf_P(PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
+#endif
 
   switch (action)
   {
@@ -1328,24 +1332,24 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade) {
   case EFFSWITCH::SW_PREV :
       effects.movePrev();
       break;
+  case EFFSWITCH::SW_SPECIFIC :
+      effects.moveBy(effnb);
+      break;
   case EFFSWITCH::SW_RND :
       effects.moveBy(random(0, effects.getModeAmount()));
+#ifdef LAMP_DEBUG
+      LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
+#endif
       break;
   default:
       return;
       break;
   }
 
-#ifdef LAMP_DEBUG
-  LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
-#endif
-
-  loadingFlag = true;   // флаг загрузки данных эффектов
-
-  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+  EFFECT *currentEffect = effects.getCurrent();
+  setEffectParams(currentEffect); // обновить параметры UI
   setLoading();
 
-  EFFECT *currentEffect = effects.getCurrent();
   if(currentEffect->func!=nullptr)
     currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
 
