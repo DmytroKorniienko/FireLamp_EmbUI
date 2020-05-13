@@ -38,30 +38,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "effects.h"
 
-class INTRFACE_GLOBALS{
-public:
-#pragma pack(push,1)
- struct {
-    bool isSetup:1;
-    bool isTmSetup:1;
-    bool isAddSetup:1;
-    bool isEdEvent:1;
-    bool isMicCal:1;
- };
- #pragma pack(pop)
- uint8_t addSList = 1;
- EFFECT *prevEffect = nullptr;
- INTRFACE_GLOBALS() {   
-    isSetup = false;
-    isTmSetup = false;
-    isAddSetup = false;
-    isEdEvent = false;
-    isMicCal = false;
-}
-};
-
-INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
-
 #ifdef MIC_EFFECTS
 void bmicCalCallback()
 {
@@ -780,14 +756,19 @@ void interface(){ // функция в которой мф формируем в
 #endif
 }
 
+void setEffectParams();
+
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные
 #ifdef LAMP_DEBUG
     LOG.println(F("In update..."));
 #endif
     // получаем данные в переменную в ОЗУ для дальнейшей работы
     bool isRefresh = jee._refresh;
-    EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt());
-    mqtt_int = jee.param(F("mqtt_int")).toInt();
+    EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt()); // если эффект поменялся, то строкой ниже - переход на него, если не менялся - то там же и останемся
+    myLamp.effects.moveBy(curEff->eff_nb); // переходим на выбранный эффект, либо если он не менялся - останемся там же
+    myLamp.restartDemoTimer(); // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
+
+    iGLOBAL.mqtt_int = jee.param(F("mqtt_int")).toInt();
     bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
     myLamp.setIsGlobalBrightness(isGlobalBrightness);
 
@@ -811,30 +792,21 @@ void update(){ // функция выполняется после ввода д
         if(iGLOBAL.prevEffect!=nullptr)
             isRefresh = true;
     }
+ 
+    uint8_t cur_addSList = jee.param(F("addSList")).toInt();
+    if(iGLOBAL.addSList!=cur_addSList){
+        iGLOBAL.addSList = cur_addSList;
+        isRefresh = true;
+    }
 
-    myLamp.effects.moveBy(curEff->eff_nb);
-    myLamp.restartDemoTimer();
-
-    if(curEff->eff_nb!=EFF_NONE){
-        if((curEff!=iGLOBAL.prevEffect  || isRefresh) && iGLOBAL.prevEffect!=nullptr){
-            jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
-            jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
-            jee.var(F("bright"),String(myLamp.getLampBrightness()));
-            jee.var(F("speed"),String(curEff->speed));
-            jee.var(F("scale"),String(curEff->scale));
-            //LOG.println(FPSTR(curEff->param));
-
-            size_t slen = strlen_P(curEff->param)+1;
-            char buffer[slen];
-            strcpy_P(buffer, curEff->param); // Обход Exeption 3, это шаманство из-за корявого использования указателя, он одновременно может быть и на PROGMEM, и на RAM
-            jee.var(F("param"), buffer);     // но надо будет подумать о более красивом решении
-            jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
-
-            isRefresh = true;
+    if(curEff->eff_nb!=EFF_NONE){ // для служебного "пустого" эффекта EFF_NONE вообще ничего не делаем
+        if((curEff!=iGLOBAL.prevEffect || isRefresh) && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             //myLamp.fadeeffect(true, true); // не перевыбираем эффект :)
             // нужно реализовать метор переключения на эффект по индексу
-            updateParm(); // но обновляем параметры
-        } else {
+            if(curEff!=iGLOBAL.prevEffect)
+                setEffectParams(); // просто обновляем значения для текущего эффекта
+            isRefresh = true;
+        } else { // эффект не менялся, либо обновление UI не требуется, либо первый вход - обновляем текущий эффект значениями из UI
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
@@ -865,12 +837,6 @@ void update(){ // функция выполняется после ввода д
     }
 
     iGLOBAL.prevEffect = curEff;
-
-    uint8_t cur_addSList = jee.param(F("addSList")).toInt();
-    if(iGLOBAL.addSList!=cur_addSList){
-        iGLOBAL.addSList = cur_addSList;
-        isRefresh = true;
-    }
 
     myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
     myLamp.setTextOffset(jee.param(F("txtOf")).toInt());
@@ -912,30 +878,43 @@ void update(){ // функция выполняется после ввода д
     jee._refresh = isRefresh; // устанавливать в самом конце!
 }
 
-void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
+void setEffectParams()
 {
-#ifdef LAMP_DEBUG
-    LOG.println(F("Обновляем параметры после нажатия кнопки..."));
-#endif
     EFFECT *curEff = myLamp.effects.getCurrent();
+
+    jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
+    jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
+    jee.var(F("bright"),String(myLamp.getLampBrightness()));
+    jee.var(F("speed"),String(curEff->speed));
+    jee.var(F("scale"),String(curEff->scale));
+    //LOG.println(FPSTR(curEff->param));
+
+    size_t slen = strlen_P(curEff->param)+1;
+    char buffer[slen];
+    strcpy_P(buffer, curEff->param); // Обход Exeption 3, это шаманство из-за корявого использования указателя, он одновременно может быть и на PROGMEM, и на RAM
+    jee.var(F("param"), buffer);     // но надо будет подумать о более красивом решении
+    jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+
+    jee.var(F("effList"),String(curEff->eff_nb));
 
     if(myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness())
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
     else
         myLamp.setGlobalBrightness(jee.param(F("GlobBRI")).toInt());
-
-    jee.var(F("bright"),String(myLamp.getLampBrightness()));
-    jee.var(F("speed"),String(curEff->speed));
-    jee.var(F("scale"),String(curEff->scale));
-    jee.var(F("param"),String(curEff->param));
-    jee.var(F("effList"),String(curEff->eff_nb));
-    jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
-
     myLamp.setLoading(); // обновить эффект
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
+}
+
+void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
+{
+#ifdef LAMP_DEBUG
+    LOG.println(F("Обновляем параметры после нажатия кнопки..."));
+#endif
+    setEffectParams();
+
     if(myLamp.getMode()!=MODE_DEMO)
         jee.save(); // Cохранить конфиг
-    jee._refresh = true;
+    jee._refresh = true; // форсировать перерисовку интерфейсов клиентов
 }
 
 void httpCallback(const char *param, const char *value)
