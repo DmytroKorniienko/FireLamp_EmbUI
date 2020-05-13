@@ -75,6 +75,11 @@ void LAMP::lamp_init()
 #endif
 
 #ifdef ESP_USE_BUTTON
+  #if (PULL_MODE == LOW_PULL)
+    pinMode(BTN_PIN, INPUT);
+  #else
+    pinMode(BTN_PIN, INPUT_PULLUP);
+  #endif
   touch.setTickMode(MANUAL);    // мы сами говорим когда опрашивать пин
   touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
   touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
@@ -206,7 +211,6 @@ void LAMP::buttonTick()
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 #endif
-      ONflag = true;
 
       startButtonHolding = true;
       setDirectionTimeout = false;
@@ -214,7 +218,7 @@ void LAMP::buttonTick()
       tmNumHoldTimer.reset();
       tmChangeDirectionTimer.reset();
 
-      changePower();
+      changePower(true);
       if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
       return;
     }
@@ -363,8 +367,7 @@ if(touch.isHold() || !touch.isHolded())
       }
       else
       {
-        ONflag = !ONflag;
-        changePower();
+        changePower(!ONflag);
       }
       loadingFlag = true;
     }
@@ -375,13 +378,13 @@ if(touch.isHold() || !touch.isHolded())
   #ifdef LAMP_DEBUG
         LOG.printf_P(PSTR("Даблклик, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
   #endif
-      switcheffect(SW_NEXT);
+      switcheffect(SW_NEXT, isFaderON);
     }
 
     // трёхкратное нажатие - предыдущий эффект
     if (ONflag && clickCount == 3U)
     {
-      switcheffect(SW_PREV);
+      switcheffect(SW_PREV, isFaderON);
     }
 
     // четырёхкратное нажатие - запуск сервиса ОТА
@@ -532,9 +535,9 @@ void LAMP::effectsTick()
         if(millis() - effTimer >= EFFECTS_RUN_TIMER){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
           if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
             if(RANDOM_DEMO)
-              switcheffect(SW_RND);
+              switcheffect(SW_RND, isFaderON);
             else
-              switcheffect(SW_NEXT);
+              switcheffect(SW_NEXT, isFaderON);
           }
           if(!isEffectsDisabledUntilText){
             if(effects.getCurrent()->func!=nullptr){
@@ -714,10 +717,12 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
       lamp_init(); // инициализация и настройка лампы
     }
 
-void LAMP::changePower() {changePower(ONflag);}
+void LAMP::changePower() {changePower(!ONflag);}
 
-void LAMP::changePower(bool flag) // плавное включение/выключение
+void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
     {
+      if ( flag == ONflag) return;  // пропускаем холостые вызовы
+      ONflag = flag;
       if (flag){
         // включение
         fadelight(getNormalizedLampBrightness());
@@ -826,12 +831,10 @@ void LAMP::startDemoMode()
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
-  effects.moveBy(random(0, MODE_AMOUNT));
-  //FastLED.setBrightness(getNormalizedLampBrightness());   // уходим в changePower()
-  ONflag = true;
+  switcheffect(SW_RND, false);  // яркость и фейд выполнится в changePower()
   loadingFlag = true;
   tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
-  changePower();
+  changePower(true);
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
 #ifdef LAMP_DEBUG
   LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
@@ -843,8 +846,7 @@ void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
   if(storedEffect!=EFF_NONE)
-    effects.moveBy(storedEffect);
-  fadelight(getNormalizedLampBrightness());
+    switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
   loadingFlag = true;
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
 }
@@ -854,7 +856,6 @@ void LAMP::startOTAUpdate()
   mode = MODE_OTA;
   effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
-  ONflag = true;
   changePower(true);
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
   myLamp.sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
@@ -1184,6 +1185,7 @@ void LAMP::micHandler()
 #endif
 
 void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback) {
+    LOG.printf("Fading to: %d\n", _targetbrightness);
     _fadeTicker.detach();
 
     uint8_t _maxsteps = _duration / FADE_STEPTIME;
@@ -1311,6 +1313,9 @@ void LAMP::buttonPress(bool state){
  * @param fade - переключаться через фейдер или сразу
  */
 void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
+#ifdef LAMP_DEBUG
+  LOG.printf_P(PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
+#endif
   if (action == SW_DELAY ) {
     action = _postponedSW;
     _postponedSW = EFFSWITCH::SW_NONE;  // сбрасываем отложенный эффект
@@ -1319,10 +1324,6 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
     fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, EFFSWITCH::SW_DELAY, fade, effnb));
     return;
   }
-
-#ifdef LAMP_DEBUG
-  LOG.printf_P(PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
-#endif
 
   switch (action)
   {

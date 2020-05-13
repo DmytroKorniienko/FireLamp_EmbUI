@@ -541,8 +541,9 @@ public:
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
     void setFaderFlag(bool flag) {isFaderON = flag;}
+    bool getFaderFlag() {return isFaderON;}
     void setButtonOn(bool flag) {buttonEnabled = flag;}
-    void setOnOff(bool flag) {ONflag = flag; changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
+    void setOnOff(bool flag) {changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
@@ -630,8 +631,9 @@ public:
      * может использовать фейдер, выбирать случайный эффект для демо
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
      * @param fade - переключаться через фейдер или сразу
+     * @param effnb - номер эффекта
      */
-    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=true, EFF_ENUM effnb = EFF_ENUM::EFF_NONE);
+    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=FADE, EFF_ENUM effnb = EFF_ENUM::EFF_NONE);
 
     ~LAMP() {}
 private:
