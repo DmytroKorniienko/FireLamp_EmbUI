@@ -760,7 +760,8 @@ void interface(){ // функция в которой мф формируем в
 #endif
 }
 
-void setEffectParams(EFFECT *curEff);
+// ??
+//void setEffectParams(EFFECT *curEff);
 
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные
 #ifdef LAMP_DEBUG
@@ -808,14 +809,16 @@ void update(){ // функция выполняется после ввода д
         //LOG.printf_P(PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
         if((curEff!=iGLOBAL.prevEffect || isRefresh) && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             if(curEff!=iGLOBAL.prevEffect){
-                setEffectParams(curEff); // пока не понял почему, но без этой строки иногда не переключает эффекты...
+                //setEffectParams(curEff); // пока не понял почему, но без этой строки иногда не переключает эффекты...
                 myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
+            } else {
+                isRefresh = true;
             }
-            isRefresh = true;
         } else { // эффект не менялся, либо обновление UI не требуется, либо первый вход - обновляем текущий эффект значениями из UI
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
+            myLamp.setBrightness(jee.param(F("bright")).toInt(), myLamp.getFaderFlag());    // два вызова выглядят коряво, но встраивать setBrightness в setLampBrightness нельзя, т.к. это корежит фэйдер и отложенную смену эфектов, можно попробовать наоборот сделать setBrightness будет менять яркость в конфиге эффекта
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
 
