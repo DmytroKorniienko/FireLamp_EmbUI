@@ -68,6 +68,10 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define FAST_ADC_READ                                       // использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
 #endif
 
+#ifndef MIC_POLLRATE
+#define MIC_POLLRATE          (50U)                         // как часто опрашиваем микрофон, мс
+#endif
+
 #ifdef FAST_ADC_READ
 #define SAMPLING_FREQ         (18000U*2U)
 #else
@@ -152,11 +156,20 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 #endif
 
-#ifndef FADERTIMEOUT
-#define FADERTIMEOUT          (1000U)                       // длительность всего фейдера в мс (плавное затухание эффекта при смене в DEMO)
+#ifndef FADE
+#define FADE                  true                          // fade by default on brightness change
 #endif
-#ifndef FADERSTEPTIME
-#define FADERSTEPTIME         (50U)                         // длительность шага фейдера, мс
+#ifndef FADE_STEPTIME
+#define FADE_STEPTIME         (50U)                         // default time between fade steps, ms (2 seconds with max steps)
+#endif
+#ifndef FADE_TIME
+#define FADE_TIME             (2000U)                       // Default fade time, ms
+#endif
+#ifndef FADE_MININCREMENT
+#define FADE_MININCREMENT     (3U)                          // Minimal increment for brightness fade
+#endif
+#ifndef FADE_MINCHANGEBRT
+#define FADE_MINCHANGEBRT     (30U)                         // Minimal brightness for effects changer
 #endif
 
 #ifndef RANDOM_DEMO
@@ -174,6 +187,9 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 // настройка кнопки, если разрешена
 #ifdef ESP_USE_BUTTON
+#ifndef BUTTON_DEBOUNCE
+#define BUTTON_DEBOUNCE       (30U)                         // Button debounce time, ms
+#endif
 #ifndef PULL_MODE
 #define PULL_MODE             (LOW_PULL)                    // подтяжка кнопки к нулю (для сенсорных кнопок на TP223) - LOW_PULL, подтяжка кнопки к питанию (для механических кнопок НО, на массу) - HIGH_PULL
 #endif
