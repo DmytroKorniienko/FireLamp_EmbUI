@@ -69,18 +69,6 @@ typedef enum _EFFSWITCH {
     SW_SPECIFIC     // переход на конкретный эффект по индексу/имени
 } EFFSWITCH;
 
-#define FADE              true      // fade by default on brightness change
-#define FADE_STEPTIME       50      // default time between fade steps, ms (2 seconds with max steps)
-#define FADE_TIME         2000      // Default fade time, ms
-#define FADE_MININCREMENT    3      // Minimal increment for brightness fade
-#define FADE_MINCHANGEBRT   30      // Minimal brightness for effects changer
-
-#define BUTTON_DEBOUNCE     30      // Button debounce time, ms
-
-#define MIC_POLLRATE        50      // как часто опрашиваем микрофон, мс
-// Ticker constants
-
-
 struct EVENT {
     union {
         struct {
@@ -520,7 +508,7 @@ public:
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
-    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) setGlobalBrightness(brg); else effects.setBrightness(brg);}
+    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightness(brg);} setBrightness(getNormalizedLampBrightness(), isFaderON);}
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}

@@ -469,7 +469,7 @@ void create_parameters(){
 #endif
     jee.var_create(F("param"),F(""));
     jee.var_create(F("extraR"),F("127"));
-    jee.var_create(F("isFaderON"),F("true"));
+    jee.var_create(F("isFaderON"),(FADE==true?F("true"):F("false")));
 
 #ifdef ESP_USE_BUTTON
     jee.var_create(F("isBtnOn"), F("true"));
@@ -804,7 +804,7 @@ void update(){ // функция выполняется после ввода д
         //LOG.printf_P(PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
         if((curEff!=iGLOBAL.prevEffect || isRefresh) && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             if(curEff!=iGLOBAL.prevEffect){
-                //setEffectParams(curEff); // значения обновит свитчер
+                setEffectParams(curEff); // пока не понял почему, но без этой строки иногда не переключает эффекты...
                 myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
             }
             isRefresh = true;
