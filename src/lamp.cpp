@@ -355,14 +355,17 @@ if(touch.isHold() || !touch.isHolded())
       if(!ONflag){    // лампа была выключена
         numHold = 0;
         mode = MODE_NORMAL;
-        if(storedEffect!=EFF_NONE)
+        if(storedEffect!=EFF_NONE) {    // опять не понял, если storedEffect пустой, то куда мы включаемся?
           switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
+        } else {
+          changePower(true);
+          loadingFlag = true;
+        }
       } else {        // лампа была включена
         storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+        changePower(false);
       }
 
-      changePower();
-      loadingFlag = true;
 
 #ifdef LAMP_DEBUG
       LOG.printf_P(PSTR("Лампа %s, lamp mode: %d, storedEffect: %d\n"), ONflag ? F("включена") : F("выключена") , mode, storedEffect);
