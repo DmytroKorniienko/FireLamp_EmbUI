@@ -340,7 +340,7 @@ if(touch.isHold() || !touch.isHolded())
     if (clickCount == 1U)
     {
   #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Одиночное нажатие, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
+      LOG.printf_P(PSTR("Одиночное нажатие, current: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
   #endif
 
       // а не должна тут "кнопка" просто отключать будильник и выходить не меняя статус лампы?
@@ -355,8 +355,8 @@ if(touch.isHold() || !touch.isHolded())
       if(!ONflag){    // лампа была выключена
         numHold = 0;
         mode = MODE_NORMAL;
-        if(storedEffect!=EFF_NONE) {    // опять не понял, если storedEffect пустой, то куда мы включаемся?
-          switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
+        if(storedEffect!=EFF_NONE) {    // переключение на ПРЕДЫДУЩИЙ эффект только если он был запомнен, иначе используется ТЕКУЩИЙ из конфига
+          switcheffect(SW_SPECIFIC, isFaderON, storedEffect); // ПРЕДЫДУЩИЙ будет запоминаться для случая включения белой лампы
         } else {
           changePower(true);
           loadingFlag = true;
@@ -366,9 +366,8 @@ if(touch.isHold() || !touch.isHolded())
         changePower(false);
       }
 
-
 #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Лампа %s, lamp mode: %d, storedEffect: %d\n"), ONflag ? F("включена") : F("выключена") , mode, storedEffect);
+      LOG.printf_P(PSTR("Лампа %s, lamp mode: %d, current: %d, storedEffect: %d\n"), ONflag ? F("включена") : F("выключена") , mode, effects.getEn(), storedEffect);
 #endif
     }
 
@@ -376,7 +375,7 @@ if(touch.isHold() || !touch.isHolded())
     if (ONflag && clickCount == 2U)
     {
   #ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("Даблклик, lamp mode: %d, storedEffect: %d\n"), mode, storedEffect);
+        LOG.printf_P(PSTR("Даблклик, lamp mode: %d, current: %d, storedEffect: %d\n"), mode, effects.getEn(), storedEffect);
   #endif
       switcheffect(SW_NEXT, isFaderON);
     }
@@ -730,11 +729,10 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
       digitalWrite(MOSFET_PIN, (ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
-      /* не актуально?
+
       if (CURRENT_LIMIT > 0){
-        FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
+        FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
       }
-      */
     }
 
 
@@ -830,24 +828,18 @@ void LAMP::startDemoMode()
   tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
 #ifdef LAMP_DEBUG
-  LOG.printf_P(PSTR("Demo mode: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
+  LOG.printf_P(PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
 #endif
-  // уже есть в switcheffect
-  // loadingFlag = true;
-  // if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
 }
 
 void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
-  if(storedEffect!=EFF_NONE) {    // а что должно произойти если сторед_эффект пустой?
+  if(storedEffect!=EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
-  } else {
-    switcheffect(SW_RND, isFaderON);
+  } else if(effects.getEn()==EFF_NONE){ // если по каким-то причинам текущий пустой, то выбираем рандомный
+    switcheffect(SW_RND, isFaderON); 
   }
-  // уже есть в switcheffect
-  //loadingFlag = true;
-  //if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
@@ -1337,7 +1329,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   case EFFSWITCH::SW_RND :
       effects.moveBy(random(0, effects.getModeAmount()));
 #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("%s Demo mode: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
+      LOG.printf_P(PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
 #endif
       break;
   default:

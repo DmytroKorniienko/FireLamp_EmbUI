@@ -84,12 +84,13 @@ struct EVENT {
         uint8_t raw_data;
     };
     uint8_t repeat;
+    uint8_t stopat;
     uint32_t unixtime;
     EVENT_TYPE event;
     char *message;
     EVENT *next = nullptr;
-    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
-    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
+    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
+    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
     const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
     String getDateTime(int offset = 0) {
         char tmpBuf[]="9999-99-99T99:99";
@@ -144,6 +145,7 @@ struct EVENT {
         buffer.concat(F(","));
 
         if(repeat) {buffer.concat(repeat); buffer.concat(F(","));}
+        if(repeat && stopat) {buffer.concat(stopat); buffer.concat(F(","));}
 
         uint8_t t_raw_data = raw_data>>1;
         for(uint8_t i=1;i<8; i++){
@@ -189,8 +191,10 @@ private:
         if(event->repeat && eventtime<=current_time && year(eventtime)==year(current_time) && month(eventtime)==month(current_time) && day(eventtime)==day(current_time)){
             //LOG.printf_P(PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
             if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
-                if(cb_func!=nullptr) cb_func(event); // сработало событие
-                return;
+                if(((hour(current_time)*60+minute(current_time))<(hour(eventtime)*60+minute(eventtime)+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
+                    if(cb_func!=nullptr) cb_func(event); // сработало событие
+                    return;
+                }
             }
         }
 
@@ -206,8 +210,10 @@ private:
                 }
                 if(event->repeat && hour(eventtime)<=hour(current_time)){ // периодический в сегодняшний день
                     if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
-                        if(cb_func!=nullptr) cb_func(event); // сработало событие
-                        return;
+                        if(((hour(current_time)*60+minute(current_time))<(hour(eventtime)*60+minute(eventtime)+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
+                            if(cb_func!=nullptr) cb_func(event); // сработало событие
+                            return;
+                        }
                     }
                 }
             }
@@ -314,11 +320,12 @@ public:
                 event.unixtime = item[F("ut")].as<unsigned long>();
                 event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
                 event.repeat = item[F("rp")].as<int>();
+                event.stopat = item[F("sa")].as<int>();
                 String tmpStr = item[F("msg")].as<String>();
                 event.message = (char *)tmpStr.c_str();
                 addEvent(event);
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("[%u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.message);
+                LOG.printf_P(PSTR("[%u - %u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
 #endif
             }
             // JsonArray::iterator it;
@@ -344,12 +351,12 @@ public:
             EVENT *next=root;
             int i=1;
             while(next!=nullptr){
-                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat,
+                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                     ((next->message!=nullptr)?next->message:(char*)F("")));
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat,
+                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                     ((next->message!=nullptr)?next->message:(char*)F("")));
 #endif
                 i++;

@@ -209,6 +209,7 @@ void bEditEventCallback()
     jee.var(F("d7"),(next->d7?F("true"):F("false")));
     jee.var(F("evList"),String(next->event));
     jee.var(F("repeat"),String(next->repeat));
+    jee.var(F("stopat"),String(next->stopat));
     jee.var(F("msg"),String(next->message));
     jee.var(F("tmEvent"), next->getDateTime());
     iGLOBAL.isEdEvent = true;
@@ -253,6 +254,7 @@ void bAddEventCallback()
     event.d7=(jee.param(F("d7"))==F("true"));
     event.event=(EVENT_TYPE)jee.param(F("evList")).toInt();
     event.repeat=jee.param(F("repeat")).toInt();
+    event.stopat=jee.param(F("stopat")).toInt();
     String tmEvent = jee.param(F("tmEvent"));
     time_t unixtime;
     tmElements_t tm;
@@ -450,6 +452,7 @@ void create_parameters(){
     jee.var_create(F("isEnabled"),F("true"));
     jee.var_create(F("tmEvent"),F(""));
     jee.var_create(F("repeat"),F("0"));
+    jee.var_create(F("stopat"),F("0"));
     jee.var_create(F("d1"),F("false"));
     jee.var_create(F("d2"),F("false"));
     jee.var_create(F("d3"),F("false"));
@@ -637,6 +640,7 @@ void interface(){ // функция в которой мф формируем в
                         jee.checkbox(F("isEnabled"),F("Разрешено"));
                         jee.datetime(F("tmEvent"),F("Дата/время события"));
                         jee.number(F("repeat"),F("Повтор, мин"));
+                        jee.number(F("stopat"),F("Остановить через, мин"));
                         jee.text(F("msg"),F("Параметр (текст)"));
                         jee.checkbox(F("d1"),F("Понедельник"));
                         jee.checkbox(F("d2"),F("Вторник"));
@@ -805,10 +809,8 @@ void update(){ // функция выполняется после ввода д
         //LOG.printf_P(PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
         if((curEff!=iGLOBAL.prevEffect || isRefresh) && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             if(curEff!=iGLOBAL.prevEffect){
-                //setEffectParams(curEff); // пока не понял почему, но без этой строки иногда не переключает эффекты...
                 myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
-            } else {
-                isRefresh = true;
+                isRefresh = true; // рефрешим UI если поменялся эффект, иначе все ползунки будут неправильными
             }
         } else { // эффект не менялся, либо обновление UI не требуется, либо первый вход - обновляем текущий эффект значениями из UI
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
@@ -885,6 +887,11 @@ void update(){ // функция выполняется после ввода д
 
 void setEffectParams(EFFECT *curEff)
 {
+    if(curEff==nullptr){
+        LOG.println(F("!!! Обнаружена передача нулевого указалетя эффекта !!!")); // ловим подлый баг :)
+        return;
+    }
+    
     jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
     jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
@@ -910,6 +917,9 @@ void setEffectParams(EFFECT *curEff)
         myLamp.setGlobalBrightness(jee.param(F("GlobBRI")).toInt());
     myLamp.setLoading(); // обновить эффект
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
+
+    if(myLamp.getMode()==LAMPMODE::MODE_DEMO)
+        jee._refresh = true; // форсировать перерисовку интерфейсов клиентов
 }
 
 void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
