@@ -820,9 +820,13 @@ void update(){ // функция выполняется после ввода д
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
 
+            //LOG.printf_P(PSTR("curEff->param=%p\n"),curEff->param);
             // Если руками правили строковый параметр - то обновляем его в эффекте, а дальше синхронизируем (нужно для возможности очистки)
-            if(strcmp_P((jee.param(F("param"))).c_str(), curEff->param)){ // различаются  || (curEff->param==nullptr && (jee.param(F("param"))).length()!=0)
-                curEff->updateParam((jee.param(F("param"))).c_str());
+            if(curEff->param==nullptr || strcmp_P(curEff->param, (jee.param(F("param"))).c_str())){ // различаются
+                if(curEff->param==nullptr)
+                    curEff->updateParam(("")); // для вновь добавленного эффекта сделаем очистку, а не копирование с предыдущего эффекта
+                else
+                    curEff->updateParam((jee.param(F("param"))).c_str());
             }
             String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
             if(!var.isEmpty()){
@@ -897,7 +901,7 @@ void setEffectParams(EFFECT *curEff)
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
     jee.var(F("speed"),String(curEff->speed));
     jee.var(F("scale"),String(curEff->scale));
-    //LOG.println(FPSTR(curEff->param));
+    //LOG.print(F("param: ")); LOG.println(FPSTR(curEff->param));
 
     if(curEff->param!=nullptr){
         size_t slen = strlen_P(curEff->param)+1;
