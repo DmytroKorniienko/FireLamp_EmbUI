@@ -49,10 +49,34 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define BUTTON_RELEASE_TRANSITION RISING
 #endif
 
+class INTRFACE_GLOBALS{
+public:
+#pragma pack(push,1)
+ struct { // набор глобальных флагов
+    bool isSetup:1;
+    bool isTmSetup:1;
+    bool isAddSetup:1;
+    bool isEdEvent:1;
+    bool isMicCal:1;
+    bool pinTransition:1;  // ловим "нажатие" кнопки
+ };
+ #pragma pack(pop)
+ uint8_t addSList = 1;
+ EFFECT *prevEffect = nullptr;
+ int mqtt_int; // интервал отправки данных по MQTT в секундах 
+ INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
+    isSetup = false;
+    isTmSetup = false;
+    isAddSetup = false;
+    isEdEvent = false;
+    isMicCal = false;
+    pinTransition = true;
+}
+};
 
 // глобальные переменные для работы с ними в программе
 extern SHARED_MEM GSHMEM; // Глобальная разделяемая память эффектов
-extern int mqtt_int; // интервал отправки данных по MQTT в секундах 
+extern INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
 extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 extern LAMP myLamp; // Объект лампы
 #ifdef ESP_USE_BUTTON
@@ -68,5 +92,6 @@ void updateParm();
 void jeebuttonshandle();
 void event_worker(const EVENT *);
 void httpCallback(const char *param, const char *value);
+void setEffectParams(EFFECT *curEff);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
 void buttonhelper(bool state);

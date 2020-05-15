@@ -70,20 +70,8 @@ typedef enum _EFFSWITCH {
     SW_PREV,        // предыдущий
     SW_RND,         // случайный
     SW_DELAY,       // сохраненный (для фейдера)
-    SW_SPECIFIC     // TODO: переход на конкретный эффект по индексу/имени
+    SW_SPECIFIC     // переход на конкретный эффект по индексу/имени
 } EFFSWITCH;
-
-#define FADE              true      // fade by default on brightness change
-#define FADE_STEPTIME       50      // default time between fade steps, ms (2 seconds with max steps)
-#define FADE_TIME         2000      // Default fade time, ms
-#define FADE_MININCREMENT    3      // Minimal increment for brightness fade
-#define FADE_MINCHANGEBRT   30      // Minimal brightness for effects changer
-
-#define BUTTON_DEBOUNCE     30      // Button debounce time, ms
-
-#define MIC_POLLRATE        50      // как часто опрашиваем микрофон, мс
-// Ticker constants
-
 
 struct EVENT {
     union {
@@ -100,12 +88,13 @@ struct EVENT {
         uint8_t raw_data;
     };
     uint8_t repeat;
+    uint8_t stopat;
     uint32_t unixtime;
     EVENT_TYPE event;
     char *message;
     EVENT *next = nullptr;
-    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
-    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
+    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
+    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
     const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
     String getDateTime(int offset = 0) {
         char tmpBuf[]="9999-99-99T99:99";
@@ -160,6 +149,7 @@ struct EVENT {
         buffer.concat(F(","));
 
         if(repeat) {buffer.concat(repeat); buffer.concat(F(","));}
+        if(repeat && stopat) {buffer.concat(stopat); buffer.concat(F(","));}
 
         uint8_t t_raw_data = raw_data>>1;
         for(uint8_t i=1;i<8; i++){
@@ -205,8 +195,10 @@ private:
         if(event->repeat && eventtime<=current_time && year(eventtime)==year(current_time) && month(eventtime)==month(current_time) && day(eventtime)==day(current_time)){
             //LOG.printf_P(PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
             if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
-                if(cb_func!=nullptr) cb_func(event); // сработало событие
-                return;
+                if(((hour(current_time)*60+minute(current_time))<(hour(eventtime)*60+minute(eventtime)+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
+                    if(cb_func!=nullptr) cb_func(event); // сработало событие
+                    return;
+                }
             }
         }
 
@@ -222,8 +214,10 @@ private:
                 }
                 if(event->repeat && hour(eventtime)<=hour(current_time)){ // периодический в сегодняшний день
                     if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
-                        if(cb_func!=nullptr) cb_func(event); // сработало событие
-                        return;
+                        if(((hour(current_time)*60+minute(current_time))<(hour(eventtime)*60+minute(eventtime)+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
+                            if(cb_func!=nullptr) cb_func(event); // сработало событие
+                            return;
+                        }
                     }
                 }
             }
@@ -330,11 +324,12 @@ public:
                 event.unixtime = item[F("ut")].as<unsigned long>();
                 event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
                 event.repeat = item[F("rp")].as<int>();
+                event.stopat = item[F("sa")].as<int>();
                 String tmpStr = item[F("msg")].as<String>();
                 event.message = (char *)tmpStr.c_str();
                 addEvent(event);
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("[%u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.message);
+                LOG.printf_P(PSTR("[%u - %u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
 #endif
             }
             // JsonArray::iterator it;
@@ -360,12 +355,12 @@ public:
             EVENT *next=root;
             int i=1;
             while(next!=nullptr){
-                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat,
+                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                     ((next->message!=nullptr)?next->message:(char*)F("")));
 #ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat,
+                LOG.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                     ((next->message!=nullptr)?next->message:(char*)F("")));
 #endif
                 i++;
@@ -521,7 +516,7 @@ public:
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
-    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) setGlobalBrightness(brg); else effects.setBrightness(brg);}
+    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightness(brg);} }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
@@ -542,8 +537,9 @@ public:
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
     void setFaderFlag(bool flag) {isFaderON = flag;}
+    bool getFaderFlag() {return isFaderON;}
     void setButtonOn(bool flag) {buttonEnabled = flag;}
-    void setOnOff(bool flag) {ONflag = flag; changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
+    void setOnOff(bool flag) {changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
@@ -618,7 +614,7 @@ public:
      * @param uint32_t _duration - fade effect duraion, ms
      * @param callback  -  callback-функция, которая будет выполнена после окончания затухания (без блокировки)
      */
-    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void(void)> callback=nullptr);
+    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
 
     /*
      *   хук обработчика прерываний для кнопки
@@ -630,8 +626,9 @@ public:
      * может использовать фейдер, выбирать случайный эффект для демо
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
      * @param fade - переключаться через фейдер или сразу
+     * @param effnb - номер эффекта
      */
-    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=true);
+    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=FADE, EFF_ENUM effnb = EFF_ENUM::EFF_NONE);
 
     ~LAMP() {}
 private:
