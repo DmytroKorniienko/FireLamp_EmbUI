@@ -991,7 +991,9 @@ void httpCallback(const char *param, const char *value)
     } else if(!strcmp_P(param,PSTR("reboot"))){
         ESP.restart(); // так лучше :)
     } else if(!strcmp_P(param,PSTR("OTA"))){
-        myLamp.startOTA();
+        #ifdef OTA
+            myLamp.startOTA();
+        #endif
     }
     jee._refresh = true;
 }
