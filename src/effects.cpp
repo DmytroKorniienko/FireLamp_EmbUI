@@ -2720,3 +2720,283 @@ void ringsRoutine(CRGB *leds, const char *param)
         }
     }
 }
+
+// ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
+// (c) SottNick
+
+#define PAUSE_MAX 7
+
+//uint8_t GSHMEM.storage[WIDTH][HEIGHT];
+//uint8_t GSHMEM.pauseSteps; // осталось шагов паузы
+//uint8_t GSHMEM.currentStep; // текущий шаг сдвига (от 0 до GSHMEM.shiftSteps-1)
+//uint8_t GSHMEM.shiftSteps; // всего шагов сдвига (от 3 до 4)
+//uint8_t GSHMEM.gX, GSHMEM.gY; // глобальный X и глобальный Y нашего "кубика"
+// int8_t GSHMEM.globalShiftX, GSHMEM.globalShiftY; // нужно ли сдвинуть всё поле по окончаии цикла и в каком из направлений (-1, 0, +1)
+// bool GSHMEM.direction; // направление вращения в данный момент
+
+void cube2dRoutine(CRGB *leds, const char *param)
+{
+  uint8_t x, y;
+	uint8_t sizeX, sizeY; // размеры ячеек по горизонтали / вертикали
+  uint8_t anim0; // будем считать тут начальный пиксель для анимации сдвига строки/колонки
+  int8_t shift, shiftAll; // какое-то расчётное направление сдвига (-1, 0, +1)
+	uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
+	uint8_t fieldX, fieldY; // размер всего поля по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
+  CRGB color, color2;
+	bool seamlessX; // получилось ли сделать поле по Х бесшовным
+
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+
+
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }  
+
+	sizeY = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
+	sizeX = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
+	if (myLamp.effects.getSpeed() & 0x01) // по идее, ячейки не обязательно должны быть квадратными, поэтому можно тут поизвращаться
+		sizeY = (sizeY << 1U) + 1U;
+    cntY = HEIGHT / (sizeY + 1U);
+	if (cntY < 2U)
+		cntY = 2U;
+	y = HEIGHT / cntY - 1U;
+	if (sizeY > y)
+		sizeY = y;
+	fieldY = (sizeY + 1U) * cntY;
+	cntX = WIDTH / (sizeX + 1U);
+	if (cntX < 2U)
+		cntX = 2U;
+	x = WIDTH / cntX - 1U;
+	if (sizeX > x)
+		sizeX = x;
+	fieldX = (sizeX + 1U) * cntX;
+	seamlessX = (fieldX == WIDTH);
+	  
+    if (myLamp.isLoading())
+    {
+      FastLED.clear();
+
+      GSHMEM.gX = 0U;
+      GSHMEM.gY = 0U;
+      GSHMEM.globalShiftX = 0;
+      GSHMEM.globalShiftY = 0;
+
+      for (uint8_t j = 0U; j < cntY; j++)
+      {
+        y = j * (sizeY + 1U); // + GSHMEM.gY т.к. оно =0U
+        for (uint8_t i = 0U; i < cntX; i++)
+        {
+          x = i * (sizeX + 1U); // + GSHMEM.gX т.к. оно =0U
+          if (myLamp.effects.getScale() == 255U)
+            color = CHSV(45U, 0U, 128U + random8(128U));
+          else 
+            color = ColorFromPalette(*curPalette, random8());
+          for (uint8_t k = 0U; k < sizeY; k++)
+            for (uint8_t m = 0U; m < sizeX; m++)
+              myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
+        }
+      }
+      GSHMEM.currentStep = 4U; // текущий шаг сдвига первоначально с перебором (от 0 до GSHMEM.shiftSteps-1)
+      GSHMEM.shiftSteps = 4U; // всего шагов сдвига (от 3 до 4)
+      GSHMEM.pauseSteps = 0U; // осталось шагов паузы
+    }
+
+  //двигаем, что получилось...
+  if (GSHMEM.pauseSteps == 0 && GSHMEM.currentStep < GSHMEM.shiftSteps) // если пауза закончилась, а цикл вращения ещё не завершён
+  {
+    GSHMEM.currentStep++;
+    if (GSHMEM.direction)
+    {
+      for (uint8_t i = 0U; i < cntX; i++)
+      {
+        x = (GSHMEM.gX + i * (sizeX + 1U)) % WIDTH;
+        if (GSHMEM.storage[i][0] > 0) // в нулевой ячейке храним оставшееся количество ходов прокрутки
+        {
+          GSHMEM.storage[i][0]--;
+          shift = GSHMEM.storage[i][1] - 1; // в первой ячейке храним направление прокрутки
+
+          if (GSHMEM.globalShiftY == 0)
+            anim0 = (GSHMEM.gY == 0U) ? 0U : GSHMEM.gY - 1U;
+          else if (GSHMEM.globalShiftY > 0)
+            anim0 = GSHMEM.gY;
+          else
+            anim0 = GSHMEM.gY - 1U;
+         
+          if (shift < 0) // если крутим столбец вниз
+          {
+            color = myLamp.getPixColorXY(x, anim0);                                   // берём цвет от нижней строчки
+            for (uint8_t k = anim0; k < anim0+fieldY-1; k++)
+            {
+              color2 = myLamp.getPixColorXY(x,k+1);                                   // берём цвет от строчки над нашей
+              for (uint8_t m = x; m < x + sizeX; m++)
+                myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH,k), color2);                           // копируем его на всю нашу строку
+            }
+            for   (uint8_t m = x; m < x + sizeX; m++)
+              myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH,anim0+fieldY-1), color);                  // цвет нижней строчки копируем на всю верхнюю
+          }
+          else if (shift > 0) // если крутим столбец вверх
+          {
+            color = myLamp.getPixColorXY(x,anim0+fieldY-1);                            // берём цвет от верхней строчки
+            for (uint8_t k = anim0+fieldY-1; k > anim0 ; k--)
+            {
+              color2 = myLamp.getPixColorXY(x,k-1);                                   // берём цвет от строчки под нашей
+              for (uint8_t m = x; m < x + sizeX; m++)
+                myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH,k), color2);                           // копируем его на всю нашу строку
+            }
+            for   (uint8_t m = x; m < x + sizeX; m++)
+              myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH, anim0), color);                         // цвет верхней строчки копируем на всю нижнюю
+          }
+        }
+      }
+    }
+    else
+    {
+      for (uint8_t j = 0U; j < cntY; j++)
+      {
+        y = GSHMEM.gY + j * (sizeY + 1U);
+        if (GSHMEM.storage[0][j] > 0) // в нулевой ячейке храним оставшееся количество ходов прокрутки
+        {
+          GSHMEM.storage[0][j]--;
+          shift = GSHMEM.storage[1][j] - 1; // в первой ячейке храним направление прокрутки
+     
+          if (seamlessX)
+            anim0 = 0U;
+          else if (GSHMEM.globalShiftX == 0)
+            anim0 = (GSHMEM.gX == 0U) ? 0U : GSHMEM.gX - 1U;
+          else if (GSHMEM.globalShiftX > 0)
+            anim0 = GSHMEM.gX;
+          else
+            anim0 = GSHMEM.gX - 1U;
+         
+          if (shift < 0) // если крутим строку влево
+          {
+            color = myLamp.getPixColorXY(anim0, y);                            // берём цвет от левой колонки (левого пикселя)
+            for (uint8_t k = anim0; k < anim0+fieldX-1; k++)
+            {
+              color2 = myLamp.getPixColorXY(k+1, y);                           // берём цвет от колонки (пикселя) правее
+              for (uint8_t m = y; m < y + sizeY; m++)
+                myLamp.setLeds(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+            }
+            for   (uint8_t m = y; m < y + sizeY; m++)
+              myLamp.setLeds(myLamp.getPixelNumber(anim0+fieldX-1, m), color);                  // цвет левой колонки копируем на всю правую
+          }
+          else if (shift > 0) // если крутим столбец вверх
+          {
+            color = myLamp.getPixColorXY(anim0+fieldX-1, y);                    // берём цвет от правой колонки
+            for (uint8_t k = anim0+fieldX-1; k > anim0 ; k--)
+            {
+              color2 = myLamp.getPixColorXY(k-1, y);                           // берём цвет от колонки левее
+              for (uint8_t m = y; m < y + sizeY; m++)
+                myLamp.setLeds(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+            }
+            for   (uint8_t m = y; m < y + sizeY; m++)
+              myLamp.setLeds(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
+          }
+        }
+      }
+    }
+  
+  }
+  else if (GSHMEM.pauseSteps != 0U) // пропускаем кадры после прокрутки кубика (делаем паузу)
+    GSHMEM.pauseSteps--;
+
+  if (GSHMEM.currentStep >= GSHMEM.shiftSteps) // если цикл вращения завершён, меняем местами соотвествующие ячейки (цвет в них) и точку первой ячейки
+    {
+      GSHMEM.currentStep = 0U;
+      GSHMEM.pauseSteps = PAUSE_MAX;
+      //если часть ячеек двигалась на 1 пиксель, пододвигаем глобальные координаты начала
+      GSHMEM.gY = GSHMEM.gY + GSHMEM.globalShiftY; //+= GSHMEM.globalShiftY;
+      GSHMEM.globalShiftY = 0;
+      //GSHMEM.gX += GSHMEM.globalShiftX; для бесшовной не годится
+      GSHMEM.gX = (WIDTH + GSHMEM.gX + GSHMEM.globalShiftX) % WIDTH;
+      GSHMEM.globalShiftX = 0;
+
+      //пришла пора выбрать следующие параметры вращения
+      shiftAll = 0;
+      GSHMEM.direction = random8(2U);
+      if (GSHMEM.direction) // идём по горизонтали, крутим по вертикали (столбцы двигаются)
+      {
+        for (uint8_t i = 0U; i < cntX; i++)
+        {
+          GSHMEM.storage[i][1] = random8(3);
+          shift = GSHMEM.storage[i][1] - 1; // в первой ячейке храним направление прокрутки
+          if (shiftAll == 0)
+            shiftAll = shift;
+          else if (shift != 0 && shiftAll != shift)
+            shiftAll = 50;
+        }
+        GSHMEM.shiftSteps = sizeY + ((GSHMEM.gY - shiftAll >= 0 && GSHMEM.gY - shiftAll + fieldY < (int)HEIGHT) ? random8(2U) : 1U);
+
+/*        if (shiftAll == 0) // пытался сделать, чтобы при совпадении "весь кубик стоит" сдвинуть его весь на пиксель, но заколебался
+        {
+          GSHMEM.shiftSteps = sizeY;
+          shiftAll = (random8(2)) ? 1 : -1;
+          if (GSHMEM.gY - shiftAll < 0 || GSHMEM.gY - shiftAll + fieldY >= (int)HEIGHT)
+            shiftAll = 0 - shiftAll;
+        }
+*/
+        if (GSHMEM.shiftSteps == sizeY) // значит полюбому shiftAll было = (-1, 0, +1) - и для нуля в том числе мы двигаем весь куб на 1 пиксель
+        {
+          GSHMEM.globalShiftY = 1 - shiftAll; //временно на единичку больше, чем надо
+          for (uint8_t i = 0U; i < cntX; i++)
+            if (GSHMEM.storage[i][1] == 1U) // если ячейка никуда не планировала двигаться
+            {
+              GSHMEM.storage[i][1] = GSHMEM.globalShiftY;
+              GSHMEM.storage[i][0] = 1U; // в нулевой ячейке храним количество ходов сдвига
+            }
+            else
+              GSHMEM.storage[i][0] = GSHMEM.shiftSteps; // в нулевой ячейке храним количество ходов сдвига
+          GSHMEM.globalShiftY--;
+        }
+        else
+          for (uint8_t i = 0U; i < cntX; i++)
+            if (GSHMEM.storage[i][1] != 1U)
+              GSHMEM.storage[i][0] = GSHMEM.shiftSteps; // в нулевой ячейке храним количество ходов сдвига
+      }
+      else // идём по вертикали, крутим по горизонтали (строки двигаются)
+      {
+        for (uint8_t j = 0U; j < cntY; j++)
+        {
+          GSHMEM.storage[1][j] = random8(3);
+          shift = GSHMEM.storage[1][j] - 1; // в первой ячейке храним направление прокрутки
+          if (shiftAll == 0)
+            shiftAll = shift;
+          else if (shift != 0 && shiftAll != shift)
+            shiftAll = 50;
+        }
+        if (seamlessX)
+          GSHMEM.shiftSteps = sizeX + ((shiftAll < 50) ? random8(2U) : 1U);
+        else 
+          GSHMEM.shiftSteps = sizeX + ((GSHMEM.gX - shiftAll >= 0 && GSHMEM.gX - shiftAll + fieldX < (int)WIDTH) ? random8(2U) : 1U);
+       
+/*        if (shiftAll == 0) // пытался сделать, чтобы при совпадении "весь кубик стоит" сдвинуть его весь на пиксель, но заколебался
+        {
+          GSHMEM.shiftSteps = sizeX;
+          shiftAll = (random8(2)) ? 1 : -1;
+          if (GSHMEM.gX - shiftAll < 0 || GSHMEM.gX - shiftAll + fieldX >= (int)WIDTH)
+            shiftAll = 0 - shiftAll;
+        }
+*/         
+        if (GSHMEM.shiftSteps == sizeX) // значит полюбому shiftAll было = (-1, 0, +1) - и для нуля в том числе мы двигаем весь куб на 1 пиксель
+        {
+          GSHMEM.globalShiftX = 1 - shiftAll; //временно на единичку больше, чем надо
+          for (uint8_t j = 0U; j < cntY; j++)
+            if (GSHMEM.storage[1][j] == 1U) // если ячейка никуда не планировала двигаться
+            {
+              GSHMEM.storage[1][j] = GSHMEM.globalShiftX;
+              GSHMEM.storage[0][j] = 1U; // в нулевой ячейке храним количество ходов сдвига
+            }
+            else
+              GSHMEM.storage[0][j] = GSHMEM.shiftSteps; // в нулевой ячейке храним количество ходов сдвига
+          GSHMEM.globalShiftX--;
+        }
+        else
+          for (uint8_t j = 0U; j < cntY; j++)
+            if (GSHMEM.storage[1][j] != 1U)
+              GSHMEM.storage[0][j] = GSHMEM.shiftSteps; // в нулевой ячейке храним количество ходов сдвига
+      }
+   }
+}
