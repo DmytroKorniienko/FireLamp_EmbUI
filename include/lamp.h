@@ -480,7 +480,6 @@ private:
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
-    void buttonPress(bool state);                 // обертка для обработчика прерываний от кнопки
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -616,10 +615,11 @@ public:
     void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
 
     /*
-     *   хук обработчика прерываний для кнопки
-     */ 
-    ICACHE_RAM_ATTR void buttonisr(bool state){ _buttonTicker.once_ms_scheduled(0, std::bind(&LAMP::buttonPress, this, state)); } // "нажатие", запускаем обертку
-
+     * крючёк для обработки нажатия кнопки по прерываниям
+     * вызов метода, готоврит о том что состояние пина изменилось, нужно его перечитать
+     * @param bool state - true, кнопку "нажали", false - "отпустили"
+     */
+    void buttonPress(bool state);
 
     /*
      * переключатель эффектов для других методов,
