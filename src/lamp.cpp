@@ -400,16 +400,32 @@ if(touch.isHold() || !touch.isHolded())
     // пятикратное нажатие
     if (clickCount == 5U)                                     // вывод IP на лампу
     {
-        sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
+        if(!myLamp.isLampOn()){
+            myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
+            myLamp.setOffAfterText();
+            myLamp.setOnOff(true);
+            myLamp.setBrightness(1,false,false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
+            myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
+        } else {
+            myLamp.sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
+        }
     }
 
     // шестикратное нажатие
     if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
     {
-      myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
+        if(!myLamp.isLampOn()){
+            myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
+            myLamp.setOffAfterText();
+            myLamp.setOnOff(true);
+            myLamp.setBrightness(1,false,false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
+            myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
+        } else {
+            myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
+        }
     }
 
-    if(clickCount>0){
+    if(clickCount>0 && !isOffAfterText){ // для случая ВРЕМЕННО включенной лампы не дергаем обновления параметров (вывод IP/времени при выключенной)
       if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
     }
   }
