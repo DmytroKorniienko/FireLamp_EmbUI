@@ -23,10 +23,10 @@ void jeeui2::var(const String &key, const String &value, bool pub)
             return;
         }
     }
-    if(rc)publish(String(F("jee/set/")) + key, value, true);
     if(dbg)Serial.print(F("WRITE: "));
     if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
     cfg[key] = value;
+    if(rc)publish(String(F("jee/set/")) + key, value, true);
 } 
 
 void jeeui2::var_create(const String &key, const String &value) 
