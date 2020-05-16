@@ -3000,3 +3000,33 @@ void cube2dRoutine(CRGB *leds, const char *param)
       }
    }
 }
+
+//--------------
+void timePrintRoutine(CRGB *leds, const char *param)
+{
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+
+  if(myLamp.isLoading()){
+    FastLED.clear();
+  }
+
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed()))){
+    myLamp.dimAll(254);
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+    if (myLamp.isPrintingNow())
+      return;
+  }
+
+  EVERY_N_SECONDS(5){
+    FastLED.clear();
+    uint8_t xPos = random(LET_WIDTH*2,WIDTH); //WIDTH-random8(WIDTH)+LET_WIDTH*2;
+    String tmp = myLamp.timeProcessor.getFormattedShortTime();
+    //if(GSHMEM.timeStep)
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-(LET_HEIGHT*2), xPos);
+    //GSHMEM.timeStep = !GSHMEM.timeStep;
+  }
+}
