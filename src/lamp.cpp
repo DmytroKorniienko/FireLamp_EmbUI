@@ -868,9 +868,12 @@ void LAMP::startOTAUpdate()
   myLamp.sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
 }
 #endif
-bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
+bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int32_t pos, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
   static int32_t offset = (MIRR_V ? 0 : WIDTH);
+
+  if(pos)
+    offset = (MIRR_V ? 0 + pos : WIDTH - pos);
   
   if (!text || !strlen(text))
   {
@@ -898,6 +901,11 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   if(!stopText)
     (MIRR_V ? offset++ : offset--);
   if ((!MIRR_V && offset < (int32_t)(-j * (letWidth + letSpace))) || (MIRR_V && offset > (int32_t)(j * (letWidth + letSpace))+(signed)WIDTH))       // строка убежала
+  {
+    offset = (MIRR_V ? 0 : WIDTH);
+    return true;
+  }
+  if(pos) // если задана позиция, то считаем что уже отобразили
   {
     offset = (MIRR_V ? 0 : WIDTH);
     return true;
@@ -979,9 +987,10 @@ uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпре�
   return 0;
 }
 
-void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint)
+void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
 {
   if((!ONflag && !forcePrint) || (dawnFlag && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
+  if(textOffset==-128) textOffset=this->txtOffset;
 
   if(text==nullptr){ // текст пустой
     if(!isStringPrinting){ // ничего сейчас не печатается
@@ -991,7 +1000,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       else { // есть что печатать
         JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
-        doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>())); // отправляем
+        doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
         arr.remove(0); // удаляем отправленный
 #ifdef LAMP_DEBUG
         //LOG.println(docArrMessages.as<String>());
@@ -1003,7 +1012,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
     }
   } else { // текст не пустой
     if(!isStringPrinting){ // ничего сейчас не печатается
-      doPrintStringToLamp(text, letterColor); // отправляем
+      doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
       
@@ -1014,7 +1023,9 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       
       JsonObject var = arr.createNestedObject();
       var[F("s")]=text;
-      var[F("c")]=(unsigned long)letterColor.r*65536+(unsigned long)letterColor.g*256+(unsigned long)letterColor.b;
+      var[F("c")]=((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b;
+      var[F("o")]=textOffset;
+      var[F("f")]=fixedPos;
 #ifdef LAMP_DEBUG
       LOG.println(docArrMessages.as<String>());
 #endif
@@ -1025,12 +1036,13 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
   }
 }
 
-void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor)
+void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const int8_t textOffset, const int16_t fixedPos)
 {
   static String toPrint;
   static CRGB _letterColor;
 
   isStringPrinting = true;
+  int8_t offs=(textOffset==-128?txtOffset:textOffset);
 
   if(text!=nullptr && text[0]!='\0'){
     toPrint.concat(text);
@@ -1047,7 +1059,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor)
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, dawnFlag, 1, txtOffset)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, dawnFlag, fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -1056,7 +1068,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor)
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true, dawnFlag, 1, txtOffset);
+    fillStringManual(toPrint.c_str(), _letterColor, true, dawnFlag, fixedPos, (fixedPos? 0 : LET_SPACE), offs);
   }
 }
 

@@ -810,7 +810,7 @@ void update(){ // функция выполняется после ввода д
         if(curEff!=iGLOBAL.prevEffect && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
             isRefresh = true; // рефрешим UI если поменялся эффект, иначе все ползунки будут неправильными
-        } else { // эффект не менялся, либо обновление UI не требуется, либо первый вход - обновляем текущий эффект значениями из UI
+        } else { // эффект не менялся, либо MQTT, либо первый вход - обновляем текущий эффект значениями из UI/MQTT
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
@@ -890,11 +890,6 @@ void update(){ // функция выполняется после ввода д
 
 void setEffectParams(EFFECT *curEff)
 {
-    if(curEff==nullptr){
-        LOG.println(F("!!! Обнаружена передача нулевого указалетя эффекта !!!")); // ловим подлый баг :)
-        return;
-    }
-    
     jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
     jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
@@ -921,8 +916,10 @@ void setEffectParams(EFFECT *curEff)
     myLamp.setLoading(); // обновить эффект
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
 
-    if(myLamp.getMode()==LAMPMODE::MODE_DEMO)
+    if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
+        jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
         jee._refresh = true; // форсировать перерисовку интерфейсов клиентов
+    }
 }
 
 void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
