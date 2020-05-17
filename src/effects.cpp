@@ -3007,8 +3007,15 @@ void timePrintRoutine(CRGB *leds, const char *param)
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
 
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed()))){
-    myLamp.dimAll(254);
+  if(myLamp.isLoading() && ((GSHMEM.curTimePos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (GSHMEM.curTimePos>=(signed)WIDTH+(LET_WIDTH/2))) )
+  {
+    GSHMEM.curTimePos = random(LET_WIDTH*2,WIDTH);
+  }
+
+  uint8_t speed = myLamp.effects.getSpeed();
+
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())) && (speed==1 || speed==255)){
+      myLamp.dimAll(254);
     return;
   } else {
     myLamp.setEffDelay(millis());
@@ -3016,13 +3023,32 @@ void timePrintRoutine(CRGB *leds, const char *param)
       return;
   }
 
-  EVERY_N_SECONDS(5){
-    FastLED.clear();
-    uint8_t xPos = random(LET_WIDTH*2,WIDTH); //WIDTH-random8(WIDTH)+LET_WIDTH*2;
-    String tmp = myLamp.timeProcessor.getFormattedShortTime();
-    //if(GSHMEM.timeStep)
+  if (speed==1 || speed==255){
+    EVERY_N_SECONDS(5){
+      FastLED.clear();
+      uint8_t xPos = random(LET_WIDTH*2,WIDTH);
+      String tmp = myLamp.timeProcessor.getFormattedShortTime();
       myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
       myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-(LET_HEIGHT*2), xPos);
-    //GSHMEM.timeStep = !GSHMEM.timeStep;
+    }
+  } else {
+    //FastLED.clear();
+    myLamp.dimAll(255-speed/3); // неболь
+    int16_t xPos = GSHMEM.curTimePos;
+    if((xPos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (xPos>=(signed)WIDTH+(LET_WIDTH/2))){
+      if(xPos<=(signed)LET_WIDTH*2){
+        GSHMEM.timeShiftDir = false;
+        xPos=LET_WIDTH*2-(LET_WIDTH/2); // будет на полсимвола выходить за пределы, так задумано :)
+      } else {
+        GSHMEM.timeShiftDir = true;
+        xPos=WIDTH+(LET_WIDTH/2); // будет на полсимвола выходить за пределы, так задумано :)
+      }
+      GSHMEM.hColor[0] = ColorFromPalette(*curPalette, random8());
+      GSHMEM.mColor[0] = ColorFromPalette(*curPalette, random8());
+    }
+    String tmp = myLamp.timeProcessor.getFormattedShortTime();
+    myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), GSHMEM.hColor[0], false, HEIGHT-LET_HEIGHT, xPos);
+    myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), GSHMEM.mColor[0], false, HEIGHT-(LET_HEIGHT*2), xPos);
+    GSHMEM.curTimePos=GSHMEM.curTimePos+(0.23*(speed/255.0))*(GSHMEM.timeShiftDir?-1:1); // смещаем
   }
 }

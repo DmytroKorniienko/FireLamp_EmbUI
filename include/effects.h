@@ -464,7 +464,10 @@ public:
             uint8_t storage[WIDTH][HEIGHT];
         };
         struct { // time
-            bool timeStep;
+            bool timeShiftDir; // направление сдвига
+            float curTimePos; // текущая позиция вывода
+            CRGB hColor[1]; // цвет часов и минут
+            CRGB mColor[1]; // цвет часов и минут
         };
 		//uint8_t raw[1024];
 	};
