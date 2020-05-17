@@ -772,7 +772,21 @@ void update(){ // функция выполняется после ввода д
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt()); // если эффект поменялся, то строкой ниже - переход на него, если не менялся - то там же и останемся
     if(iGLOBAL.prevEffect==nullptr)
         myLamp.effects.moveBy(curEff->eff_nb); // переходим на выбранный эффект для начальной инициализации
-    myLamp.restartDemoTimer(); // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
+
+    // сперва обрабатываем "включатель"
+    bool newpower = jee.param(F("ONflag")) ==F("true") ? true : false;
+    if ( newpower != myLamp.isLampOn() ) {
+        if (newpower) {         // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
+            myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
+        } else myLamp.setOnOff(newpower);
+
+        isRefresh = true;
+        return;                 // если менялся "выключатель" то остальное даже не смотрим
+    }
+
+    if (!myLamp.isLampOn()) return;      // при выключенной лампе ничего не обрабатываем и не портим настройки?
+
+    myLamp.restartDemoTimer();  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
 
     iGLOBAL.mqtt_int = jee.param(F("mqtt_int")).toInt();
     bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
@@ -854,7 +868,6 @@ void update(){ // функция выполняется после ввода д
 
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
-    myLamp.setOnOff(jee.param(F("ONflag"))==F("true"));
     myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
 
 #ifdef ESP_USE_BUTTON
@@ -988,7 +1001,9 @@ void httpCallback(const char *param, const char *value)
     } else if(!strcmp_P(param,PSTR("reboot"))){
         ESP.restart(); // так лучше :)
     } else if(!strcmp_P(param,PSTR("OTA"))){
-        myLamp.startOTA();
+        #ifdef OTA
+            myLamp.startOTA();
+        #endif
     }
     jee._refresh = true;
 }
