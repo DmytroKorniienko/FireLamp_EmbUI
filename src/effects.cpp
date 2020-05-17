@@ -3010,6 +3010,8 @@ void timePrintRoutine(CRGB *leds, const char *param)
   if(myLamp.isLoading() && ((GSHMEM.curTimePos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (GSHMEM.curTimePos>=(signed)WIDTH+(LET_WIDTH/2))) )
   {
     GSHMEM.curTimePos = random(LET_WIDTH*2,WIDTH);
+    GSHMEM.hColor[0] = ColorFromPalette(*curPalette, random8());
+    GSHMEM.mColor[0] = ColorFromPalette(*curPalette, random8());
   }
 
   uint8_t speed = myLamp.effects.getSpeed();
@@ -3033,7 +3035,7 @@ void timePrintRoutine(CRGB *leds, const char *param)
     }
   } else {
     //FastLED.clear();
-    myLamp.dimAll(255-speed/3); // неболь
+    myLamp.dimAll(255-speed/3); // небольшой шлейф, чисто как визуальный эффект :)
     int16_t xPos = GSHMEM.curTimePos;
     if((xPos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (xPos>=(signed)WIDTH+(LET_WIDTH/2))){
       if(xPos<=(signed)LET_WIDTH*2){
