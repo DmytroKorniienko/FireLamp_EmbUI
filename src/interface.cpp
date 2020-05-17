@@ -784,7 +784,7 @@ void update(){ // функция выполняется после ввода д
         return;                 // если менялся "выключатель" то остальное даже не смотрим
     }
 
-    if (!myLamp.isLampOn()) return;      // при выключенной лампе ничего не обрабатываем и не портим настройки?
+    //if (!myLamp.isLampOn()) return;      // Модифицировать настройки можно и при выключенной лампе, как из UI, так и из других источников (исключение - кнопка, т.к. не видно, что меняется, так что обрабатываются только перечисленные действия)
 
     myLamp.restartDemoTimer();  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
 
@@ -868,6 +868,7 @@ void update(){ // функция выполняется после ввода д
 
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
+    //myLamp.setOnOff(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
     myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
 
 #ifdef ESP_USE_BUTTON
