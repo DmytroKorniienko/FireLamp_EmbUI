@@ -822,7 +822,12 @@ void update(){ // функция выполняется после ввода д
     if(curEff->eff_nb!=EFF_NONE){ // для служебного "пустого" эффекта EFF_NONE вообще ничего не делаем
         //LOG.printf_P(PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
         if(curEff!=iGLOBAL.prevEffect && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
-            myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
+            if(myLamp.isLampOn())
+                myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
+            else {
+                myLamp.effects.moveBy(curEff->eff_nb); // если лампа выключена, то переключаем втихую
+                setEffectParams(curEff);
+            }
             isRefresh = true; // рефрешим UI если поменялся эффект, иначе все ползунки будут неправильными
         } else { // эффект не менялся, либо MQTT, либо первый вход - обновляем текущий эффект значениями из UI/MQTT
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
