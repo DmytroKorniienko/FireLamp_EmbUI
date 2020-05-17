@@ -3007,10 +3007,6 @@ void timePrintRoutine(CRGB *leds, const char *param)
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
 
-  if(myLamp.isLoading()){
-    FastLED.clear();
-  }
-
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed()))){
     myLamp.dimAll(254);
     return;
