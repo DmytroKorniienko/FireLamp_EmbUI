@@ -775,7 +775,7 @@ void update(){ // функция выполняется после ввода д
         myLamp.setGlobalBrightness(jee.param(F("bright")).toInt()); // глобальную ставим как последняя запомненная
     }
 
-    myLamp.restartDemoTimer();  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
+    myLamp.demoTimer(T_RESET);  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
 
     iGLOBAL.mqtt_int = jee.param(F("mqtt_int")).toInt();
     bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
@@ -786,7 +786,6 @@ void update(){ // функция выполняется после ввода д
     bool newpower = jee.param(F("ONflag"))==F("true");
     if ( newpower != myLamp.isLampOn() ) {
         if (newpower) {         // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
-            //myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), myLamp.getFaderFlag()); // нужно как минимум для первого включения лампы
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         } else myLamp.setOnOff(newpower);
 

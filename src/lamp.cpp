@@ -280,7 +280,7 @@ void LAMP::buttonTick()
     #endif
     if (numHold != 0) {
       tmNumHoldTimer.reset();
-      tmDemoTimer.reset(); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
+      demoTimer(T_RESET); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
     }
 
     uint8_t newval;
@@ -543,12 +543,6 @@ void LAMP::effectsTick()
           showMustGoON = true; // запланирован вывод текста, при отключенной матрице
 
         if(millis() - effTimer >= EFFECTS_RUN_TIMER){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
-          if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-            if(RANDOM_DEMO)
-              switcheffect(SW_RND, isFaderON);
-            else
-              switcheffect(SW_NEXT, isFaderON);
-          }
           if(!isEffectsDisabledUntilText){
             if(effects.getCurrent()->func!=nullptr){
                 effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
@@ -686,8 +680,7 @@ void LAMP::effectsTick()
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
-    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
 #ifdef ESP_USE_BUTTON    
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
@@ -740,6 +733,8 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       if (!flag){
         // Выключение всегда идет в "ноль"
         fadelight(0);
+        // гасим Демо-таймер
+        demoTimer(T_DISABLE);
       }
 
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
@@ -835,14 +830,17 @@ void LAMP::startAlarm()
   mode = LAMPMODE::MODE_ALARMCLOCK;
 }
 
+/*
+ * запускаем режим "ДЕМО"
+ */
 void LAMP::startDemoMode()
 {
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
-  switcheffect(SW_RND, isFaderON);
-  tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
+  demoNext();
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
+  demoTimer(T_ENABLE);
 #ifdef LAMP_DEBUG
   LOG.printf_P(PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
 #endif
@@ -851,6 +849,7 @@ void LAMP::startDemoMode()
 void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
+  demoTimer(T_DISABLE);
   if(storedEffect!=EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
   } else if(effects.getEn()==EFF_NONE){ // если по каким-то причинам текущий пустой, то выбираем рандомный
@@ -1378,4 +1377,26 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   }
 
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+}
+
+/*
+ * включает/выключает режим "демо", возвращает установленный статус
+ * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
+ */
+void LAMP::demoTimer(SCHEDULER action){
+  switch (action)
+  {
+  case SCHEDULER::T_DISABLE :
+    _demoTicker.detach();
+    break;
+  case SCHEDULER::T_ENABLE :
+    _demoTicker.attach_scheduled(DEMO_TIMEOUT, std::bind(&LAMP::demoNext, this));
+    break;
+  case SCHEDULER::T_RESET :
+    if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); }// тут же сбросим и будильник
+    if (_demoTicker.active() ) demoTimer(T_ENABLE);
+    break;
+  default:
+    return;
+  }
 }
