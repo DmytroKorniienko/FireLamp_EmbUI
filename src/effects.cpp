@@ -2599,9 +2599,12 @@ void fire2018Routine(CRGB *leds, const char *param)
     for (uint8_t x = 0; x < WIDTH; x++)
     {
       // map the colors based on heatmap
-      //leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], 1 , 0);
-      //leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], fire18heat[XY(x, y)] * 0.153, 0);// * 0.153 - лучший оттенок
-      myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CHSV(Scale, 255, constrain(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)]*10,1,255)));
+      //myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CRGB( GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], 1 , 0));
+      //myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CRGB( GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] * 0.153, 0));
+      //myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CHSV(Scale, 255-GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], constrain(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)]*10,1,255)));
+      //nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - 1 - y)], CRGB( GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] * 0.153, 0), 200);
+      CRGB color = CRGB(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], (float)GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] * (Scale/5.0) * 0.01, 0); color*=Scale/100.0+3;
+      myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), color);
 
       // dim the result based on 2nd noise layer
       myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - 1 - y)].nscale8(GSHMEM.noise3dx[1][x][y]);
