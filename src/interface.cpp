@@ -770,13 +770,23 @@ void update(){ // функция выполняется после ввода д
     // получаем данные в переменную в ОЗУ для дальнейшей работы
     bool isRefresh = jee._refresh;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt()); // если эффект поменялся, то строкой ниже - переход на него, если не менялся - то там же и останемся
-    if(iGLOBAL.prevEffect==nullptr)
+    if(iGLOBAL.prevEffect==nullptr){
         myLamp.effects.moveBy(curEff->eff_nb); // переходим на выбранный эффект для начальной инициализации
+        myLamp.setGlobalBrightness(jee.param(F("bright")).toInt()); // глобальную ставим как последняя запомненная
+    }
+
+    myLamp.restartDemoTimer();  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
+
+    iGLOBAL.mqtt_int = jee.param(F("mqtt_int")).toInt();
+    bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
+    myLamp.setIsGlobalBrightness(isGlobalBrightness);
+    myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
 
     // сперва обрабатываем "включатель"
-    bool newpower = jee.param(F("ONflag")) ==F("true") ? true : false;
+    bool newpower = jee.param(F("ONflag"))==F("true");
     if ( newpower != myLamp.isLampOn() ) {
         if (newpower) {         // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
+            //myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), myLamp.getFaderFlag()); // нужно как минимум для первого включения лампы
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         } else myLamp.setOnOff(newpower);
 
@@ -785,12 +795,6 @@ void update(){ // функция выполняется после ввода д
     }
 
     //if (!myLamp.isLampOn()) return;      // Модифицировать настройки можно и при выключенной лампе, как из UI, так и из других источников (исключение - кнопка, т.к. не видно, что меняется, так что обрабатываются только перечисленные действия)
-
-    myLamp.restartDemoTimer();  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
-
-    iGLOBAL.mqtt_int = jee.param(F("mqtt_int")).toInt();
-    bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
-    myLamp.setIsGlobalBrightness(isGlobalBrightness);
 
     if(iGLOBAL.isEdEvent!=(jee.param(F("isEdEvent"))==F("true"))){
         iGLOBAL.isEdEvent = !iGLOBAL.isEdEvent;
@@ -825,7 +829,7 @@ void update(){ // функция выполняется после ввода д
             if(myLamp.isLampOn())
                 myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
             else {
-                myLamp.effects.moveBy(curEff->eff_nb); // если лампа выключена, то переключаем втихую
+                myLamp.effects.moveBy(curEff->eff_nb); // если лампа выключена, то переключаем втихую :)
                 setEffectParams(curEff);
             }
             isRefresh = true; // рефрешим UI если поменялся эффект, иначе все ползунки будут неправильными
@@ -834,7 +838,7 @@ void update(){ // функция выполняется после ввода д
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
             if(myLamp.isLampOn()) // только если включена, поскольку этот вызов при перезагрузке зажжет лампу, даже если она выключена в конфиге
-                myLamp.setBrightness(jee.param(F("bright")).toInt(), myLamp.getFaderFlag());    // два вызова выглядят коряво, но встраивать setBrightness в setLampBrightness нельзя, т.к. это корежит фэйдер и отложенную смену эфектов, можно попробовать наоборот сделать setBrightness будет менять яркость в конфиге эффекта
+                myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), myLamp.getFaderFlag());    // два вызова выглядят коряво, но встраивать setBrightness в setLampBrightness нельзя, т.к. это корежит фэйдер и отложенную смену эфектов, можно попробовать наоборот сделать setBrightness будет менять яркость в конфиге эффекта
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
 
@@ -874,7 +878,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
     //myLamp.setOnOff(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
-    myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
+    //myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
 
 #ifdef ESP_USE_BUTTON
     myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));

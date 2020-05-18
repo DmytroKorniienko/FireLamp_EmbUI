@@ -343,12 +343,13 @@ if(touch.isHold() || !touch.isHolded())
       LOG.printf_P(PSTR("Одиночное нажатие, current: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
   #endif
 
-      // а не должна тут "кнопка" просто отключать будильник и выходить не меняя статус лампы?
-      if (dawnFlag)
+      if (dawnFlag) // нажатие во время будильника
       {
         manualOff = true;
         dawnFlag = false;
-        if (ONflag) setBrightness(getNormalizedLampBrightness());
+        setBrightness(getNormalizedLampBrightness());
+        mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
+        if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
         return;
       }
 
@@ -461,15 +462,14 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
     }
 
     if(LAMPMODE::MODE_ALARMCLOCK && ((millis()-GSHMEM.startmillis)/1000>(5+DAWN_TIMEOUT)*60+30 || manualOff)){ // рассвет закончился
-      mode = storedMode;
+      mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL);
       // не время будильника (ещё не начался или закончился по времени)
       if (dawnFlag)
       {
         dawnFlag = false;
         manualOff = false;
         FastLED.clear();
-        // актуально?
-        //changePower();                                                  // выключение матрицы или установка яркости текущего эффекта в засисимости от того, была ли включена лампа до срабатывания будильника
+        FastLED.show();
       }
       // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
       // digitalWrite(ALARM_PIN, !ALARM_LEVEL);
