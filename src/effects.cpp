@@ -3035,9 +3035,9 @@ void timePrintRoutine(CRGB *leds, const char *param)
     }
   } else {
     //FastLED.clear();
-    myLamp.dimAll(255-speed/3); // небольшой шлейф, чисто как визуальный эффект :)
+    myLamp.dimAll(250-speed/3); // небольшой шлейф, чисто как визуальный эффект :)
     int16_t xPos = GSHMEM.curTimePos;
-    if((xPos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (xPos>=(signed)WIDTH+(LET_WIDTH/2))){
+    if((xPos<=(signed)LET_WIDTH*2-((signed)LET_WIDTH/2)) || (xPos>=(signed)WIDTH+((signed)LET_WIDTH/2))){
       if(xPos<=(signed)LET_WIDTH*2){
         GSHMEM.timeShiftDir = false;
         xPos=LET_WIDTH*2-(LET_WIDTH/2); // будет на полсимвола выходить за пределы, так задумано :)
@@ -3049,8 +3049,9 @@ void timePrintRoutine(CRGB *leds, const char *param)
       GSHMEM.mColor[0] = ColorFromPalette(*curPalette, random8());
     }
     String tmp = myLamp.timeProcessor.getFormattedShortTime();
-    myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), GSHMEM.hColor[0], false, HEIGHT-LET_HEIGHT, xPos);
-    myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), GSHMEM.mColor[0], false, HEIGHT-(LET_HEIGHT*2), xPos);
+    uint8_t shift = beatsin8(myLamp.effects.getSpeed()/5, -1, 1);
+    myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), GSHMEM.hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+    myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), GSHMEM.mColor[0], false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
     GSHMEM.curTimePos=GSHMEM.curTimePos+(0.23*(speed/255.0))*(GSHMEM.timeShiftDir?-1:1); // смещаем
   }
 }

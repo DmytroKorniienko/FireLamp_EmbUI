@@ -519,7 +519,7 @@ public:
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
 
-    void restartDemoTimer() {tmDemoTimer.reset();}
+    void restartDemoTimer() {tmDemoTimer.reset(); if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); } } // тут же сбросим и будильник
     LAMPMODE getMode() {return mode;}
     void updateParm(void(*f)()) { updateParmFunc=f; }
 
