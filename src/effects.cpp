@@ -2499,7 +2499,7 @@ void stormyRainRoutine(CRGB *leds, const char *param)
   rain(60, 160, Scale, 30, solidRainColor, true, true, true);
 }
 
-// ============= FIRE 2018 /  ОГОНЬ 201 ===============
+// ============= FIRE 2018 /  ОГОНЬ 2018 ===============
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
@@ -2512,7 +2512,7 @@ void fire2018Routine(CRGB *leds, const char *param)
     myLamp.setEffDelay(millis());
   }  
 
-  uint8_t Scale = myLamp.effects.getScale()/2.3;
+  uint8_t Scale = myLamp.effects.getScale();
   //uint8_t Speed = myLamp.effects.getSpeed();
 
   const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
@@ -2601,14 +2601,7 @@ void fire2018Routine(CRGB *leds, const char *param)
       // map the colors based on heatmap
       //leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], 1 , 0);
       //leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], fire18heat[XY(x, y)] * 0.153, 0);// * 0.153 - лучший оттенок
-      myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CRGB(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], (float)GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] * Scale * 0.01, 0));
-
-      //пытался понять, как регулировать оттенок пламени...
-      //  if (modes[currentMode].Scale > 50)
-      //    leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], fire18heat[XY(x, y)] * (modes[currentMode].Scale % 50)  * 0.051, 0);
-      //  else
-      //    leds[XY(x, HEIGHT - 1 - y)] = CRGB( fire18heat[XY(x, y)], 1 , fire18heat[XY(x, y)] * modes[currentMode].Scale * 0.051);
-      //примерно понял
+      myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CHSV(Scale, 255, constrain(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)]*10,1,255)));
 
       // dim the result based on 2nd noise layer
       myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - 1 - y)].nscale8(GSHMEM.noise3dx[1][x][y]);
