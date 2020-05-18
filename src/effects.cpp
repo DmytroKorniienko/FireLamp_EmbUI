@@ -2588,7 +2588,7 @@ void fire2018Routine(CRGB *leds, const char *param)
     {
       uint8_t dim = GSHMEM.noise3dx[0][x][y];
       // high value = high flames
-      dim = dim / 1.7;
+      dim = dim / 1.7*(constrain(myLamp.getNormalizedLampBrightness()/255.0+0.33,0.15,1.0));
       dim = 255 - dim;
       GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)] = scale8(GSHMEM.fire18heat[myLamp.getPixelNumber(x, y)], dim);
     }
