@@ -347,7 +347,9 @@ if(touch.isHold() || !touch.isHolded())
       {
         manualOff = true;
         dawnFlag = false;
-        setBrightness(getNormalizedLampBrightness());
+        //setBrightness(getNormalizedLampBrightness());
+        FastLED.clear();
+        FastLED.show();
         mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
         if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
         return;
