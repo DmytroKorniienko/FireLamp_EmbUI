@@ -3051,3 +3051,89 @@ void timePrintRoutine(CRGB *leds, const char *param)
     GSHMEM.curTimePos=GSHMEM.curTimePos+(0.23*(speed/255.0))*(GSHMEM.timeShiftDir?-1:1); // смещаем
   }
 }
+
+// ------------------------------ ЭФФЕКТ ДЫМ ----------------------
+// (c) SottNick
+
+void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
+{
+  if (myLamp.isLoading())
+  {
+    GSHMEM.smokeHue = 0U;
+  }
+  bool isColored = myLamp.effects.getScale()<250;
+
+  myLamp.dimAll(254); //(255U - modes[currentMode].Scale * 2);
+
+  GSHMEM.smokeDeltaHue++;
+  CRGB color;
+  if (isColored)
+  {
+    if (GSHMEM.smokeHue == myLamp.effects.getScale() )
+      {
+        GSHMEM.smokeHue = 0U;
+        GSHMEM.rhue = random8();
+      }
+    color = CHSV(GSHMEM.rhue, 255U, 255U);
+    if (GSHMEM.smokeDeltaHue & 0x01)//((GSHMEM.smokeDeltaHue >> 2U) == 0U) // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
+      GSHMEM.smokeHue++;
+  }
+  else
+    color = CHSV((myLamp.effects.getScale() - 1U) * 2.6, (myLamp.effects.getScale() >= 250) ? 0U : 255U, 255U);
+
+if (myLamp.effects.getScale()  & 0x01)
+  if (myLamp.effects.getSpeed() & 0x01)
+  {
+    GSHMEM.smokeDeltaHue2--;
+    if (random8(WIDTH) == 0U)
+      GSHMEM.smokeDeltaHue2--;
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((GSHMEM.smokeDeltaHue2 + HEIGHT - y)%WIDTH, y)] += color;
+    }
+  }
+  else
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+GSHMEM.smokeDeltaHue)%WIDTH, y)] += color;
+    }
+else
+  if (myLamp.effects.getSpeed() & 0x01)
+  {
+    GSHMEM.smokeDeltaHue2--;
+    if (random8(WIDTH) == 0U)
+      GSHMEM.smokeDeltaHue2--;
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((GSHMEM.smokeDeltaHue2 + HEIGHT - y)%WIDTH, HEIGHT - y)] += color;
+    }
+  }
+  else
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+GSHMEM.smokeDeltaHue)%WIDTH, HEIGHT - y)] += color;
+  }
+
+  // Noise
+    uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 10 + 500;
+    // скорость движения по массиву noise
+    //uint32_t mult = 500U * ((modes[currentMode].Scale - 1U) % 10U);
+    GSHMEM.e_x[0] += sc;
+    GSHMEM.e_y[0] += sc;
+    GSHMEM.e_z[0] += sc;
+
+    // хрен знает что
+    //mult = 1000U * ((modes[currentMode].Speed - 1U) % 10U);
+    GSHMEM.e_scaleX[0] = sc;
+    GSHMEM.e_scaleY[0] = sc;
+    FillNoise(0);
+    //MoveX(3);
+    //MoveY(3);
+
+  // допустимый отлёт зажжённого пикселя от изначально присвоенного местоположения (от 0 до указанного значения. дробное)
+  //mult = (modes[currentMode].Brightness - 1U) % 10U;
+  MoveFractionalNoiseX(3);//4
+  MoveFractionalNoiseY(3);//4
+
+  myLamp.blur2d(20); // без размытия как-то пиксельно, наверное...
+}
