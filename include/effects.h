@@ -399,8 +399,8 @@ public:
             uint8_t eNs_noisesmooth;
             uint8_t rhue;
             uint8_t smokeHue;
-            uint16_t smokeDeltaHue;
-            uint16_t smokeDeltaHue2;
+            float xSmokePos;
+            float xSmokePos2;
             uint16_t noiseX;
             uint16_t noiseY;
             uint16_t noiseZ;
