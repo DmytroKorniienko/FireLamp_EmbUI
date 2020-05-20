@@ -3065,7 +3065,9 @@ void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
 
   myLamp.dimAll(254); //(255U - modes[currentMode].Scale * 2);
 
-  GSHMEM.smokeDeltaHue++;
+  float ssc = +myLamp.effects.getSpeed()/255.0;
+
+  GSHMEM.xSmokePos=GSHMEM.xSmokePos+ssc;
   CRGB color;
   if (isColored)
   {
@@ -3075,7 +3077,7 @@ void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
         GSHMEM.rhue = random8();
       }
     color = CHSV(GSHMEM.rhue, 255U, 255U);
-    if (GSHMEM.smokeDeltaHue & 0x01)//((GSHMEM.smokeDeltaHue >> 2U) == 0U) // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
+    if ((int)GSHMEM.xSmokePos & 0x01)//((GSHMEM.smokeDeltaHue >> 2U) == 0U) // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
       GSHMEM.smokeHue++;
   }
   else
@@ -3084,38 +3086,39 @@ void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
 if (myLamp.effects.getScale()  & 0x01)
   if (myLamp.effects.getSpeed() & 0x01)
   {
-    GSHMEM.smokeDeltaHue2--;
+    GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
     if (random8(WIDTH) == 0U)
-      GSHMEM.smokeDeltaHue2--;
+      GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((GSHMEM.smokeDeltaHue2 + HEIGHT - y)%WIDTH, y)] += color;
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)GSHMEM.xSmokePos2 + HEIGHT - y)%WIDTH, y)] += color;
     }
   }
   else
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+GSHMEM.smokeDeltaHue)%WIDTH, y)] += color;
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+(int)GSHMEM.xSmokePos)%WIDTH, y)] += color;
     }
 else
   if (myLamp.effects.getSpeed() & 0x01)
   {
-    GSHMEM.smokeDeltaHue2--;
+    GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
     if (random8(WIDTH) == 0U)
-      GSHMEM.smokeDeltaHue2--;
+      GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((GSHMEM.smokeDeltaHue2 + HEIGHT - y)%WIDTH, HEIGHT - y)] += color;
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)GSHMEM.xSmokePos2 + HEIGHT - y)%WIDTH, HEIGHT - y)] += color;
     }
   }
   else
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+GSHMEM.smokeDeltaHue)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+GSHMEM.smokeDeltaHue)%WIDTH, HEIGHT - y)] += color;
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+(int)GSHMEM.xSmokePos)%WIDTH, HEIGHT - y)] += color;
   }
 
   // Noise
-    uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 10 + 500;
+    uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 5 + 500;
+    uint16_t sc2 = (uint16_t)myLamp.effects.getSpeed()/255.0 + 1.5;
     // скорость движения по массиву noise
     //uint32_t mult = 500U * ((modes[currentMode].Scale - 1U) % 10U);
     GSHMEM.e_x[0] += sc;
@@ -3124,8 +3127,8 @@ else
 
     // хрен знает что
     //mult = 1000U * ((modes[currentMode].Speed - 1U) % 10U);
-    GSHMEM.e_scaleX[0] = sc;
-    GSHMEM.e_scaleY[0] = sc;
+    GSHMEM.e_scaleX[0] = sc2;
+    GSHMEM.e_scaleY[0] = sc2;
     FillNoise(0);
     //MoveX(3);
     //MoveY(3);
