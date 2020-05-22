@@ -781,6 +781,25 @@ void update(){ // функция выполняется после ввода д
     bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
     myLamp.setIsGlobalBrightness(isGlobalBrightness);
     myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
+    myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
+    myLamp.setTextOffset(jee.param(F("txtOf")).toInt());
+    myLamp.setPeriodicTimePrint((PERIODICTIME)jee.param(F("perTime")).toInt());
+    myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
+    myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
+    //myLamp.setOnOff(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
+    //myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
+#ifdef ESP_USE_BUTTON
+    myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));
+#endif
+    myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
+    myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
+    myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
+# ifdef MIC_EFFECTS
+    myLamp.setMicScale(jee.param(F("micScale")).toFloat());
+    myLamp.setMicNoise(jee.param(F("micNoise")).toFloat());
+    myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)jee.param(F("micnRdcLvl")).toInt());
+    myLamp.setMicOnOff(jee.param(F("isMicON"))==F("true"));
+#endif
 
     // сперва обрабатываем "включатель"
     bool newpower = jee.param(F("ONflag"))==F("true");
@@ -793,8 +812,6 @@ void update(){ // функция выполняется после ввода д
         isRefresh = true;
         return;                 // если менялся "выключатель" то остальное даже не смотрим
     }
-
-    //if (!myLamp.isLampOn()) return;      // Модифицировать настройки можно и при выключенной лампе, как из UI, так и из других источников (исключение - кнопка, т.к. не видно, что меняется, так что обрабатываются только перечисленные действия)
 
     if(iGLOBAL.isEdEvent!=(jee.param(F("isEdEvent"))==F("true"))){
         iGLOBAL.isEdEvent = !iGLOBAL.isEdEvent;
@@ -869,45 +886,17 @@ void update(){ // функция выполняется после ввода д
         }
     }
 
-    iGLOBAL.prevEffect = curEff;
-
-    myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
-    myLamp.setTextOffset(jee.param(F("txtOf")).toInt());
-    myLamp.setPeriodicTimePrint((PERIODICTIME)jee.param(F("perTime")).toInt());
-
-    myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
-    myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
-    //myLamp.setOnOff(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
-    //myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
-
-#ifdef ESP_USE_BUTTON
-    myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));
-#endif
-
-    myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
-    myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
-    myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
-
-# ifdef MIC_EFFECTS
-    myLamp.setMicScale(jee.param(F("micScale")).toFloat());
-    myLamp.setMicNoise(jee.param(F("micNoise")).toFloat());
-    myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)jee.param(F("micnRdcLvl")).toInt());
-    myLamp.setMicOnOff(jee.param(F("isMicON"))==F("true"));
-#endif
-
-
     if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
     myLamp.timeProcessor.setIsSyncOnline(jee.param(F("isTmSync"))==F("true"));
     //jee.param(F("effList"))=String(0);
     jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 
+    iGLOBAL.prevEffect = curEff;
     jee.setDelayedSave(30000); // отложенное сохранение конфига, раз в 30 секунд относительно последнего изменения
-
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
 #endif
-
     jee._refresh = isRefresh; // устанавливать в самом конце!
 }
 

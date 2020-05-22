@@ -8,3 +8,4 @@ data/config.json
 data/eff_config.json
 data/events_config.json
 include/user_config.h
+user_*.ini
