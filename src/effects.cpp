@@ -547,32 +547,48 @@ void matrixRoutine(CRGB *leds, const char *param)
 }
 
 // ------------- снегопад ----------
+#define SNOW_SCALE (1.25) //0.25...5.0
 void snowRoutine(CRGB *leds, const char *param)
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-    return;
-  } else {
-    myLamp.setEffDelay(millis());
+  // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
+  //   return;
+  // } else {
+  //   myLamp.setEffDelay(millis());
+  // }
+
+  if(myLamp.isLoading()){
+    GSHMEM.snowShift = 0.0;
   }
 
-  // сдвигаем всё вниз
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    for (uint8_t y = 0U; y < HEIGHT - 1; y++)
+  GSHMEM.snowShift = GSHMEM.snowShift + myLamp.effects.getSpeed()/255.0;
+
+  if(SNOW_SCALE*GSHMEM.snowShift>1.0){ // будет смещение
+
+  EVERY_N_SECONDS(1){
+    LOG.printf_P(PSTR("%5.2f : %5.2f\n"),GSHMEM.snowShift, SNOW_SCALE*GSHMEM.snowShift );
+  }
+
+    // сдвигаем всё вниз
+    for (uint8_t x = 0U; x < WIDTH; x++)
     {
-      myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x, y + 1U));
+      for (uint8_t y = 0U; y < HEIGHT - 1; y++)
+      {
+        myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x, y + SNOW_SCALE*GSHMEM.snowShift));
+      }
+    }
+
+    for (uint8_t x = 0U; x < WIDTH && SNOW_SCALE*GSHMEM.snowShift>1.0; x++)
+    {
+      // заполняем случайно верхнюю строку
+      // а также не даём двум блокам по вертикали вместе быть
+      if (myLamp.getPixColorXY(x, HEIGHT - 2U) == 0U && (random(0, 255 - myLamp.effects.getScale()) == 0U))
+        myLamp.drawPixelXY(x, HEIGHT - 1U, 0xE0FFFF - 0x101010 * random(0, 4));
+      else
+        myLamp.drawPixelXY(x, HEIGHT - 1U, 0x000000);
     }
   }
-
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    // заполняем случайно верхнюю строку
-    // а также не даём двум блокам по вертикали вместе быть
-    if (myLamp.getPixColorXY(x, HEIGHT - 2U) == 0U && (random(0, 255 - myLamp.effects.getScale()) == 0U))
-      myLamp.drawPixelXY(x, HEIGHT - 1U, 0xE0FFFF - 0x101010 * random(0, 4));
-    else
-      myLamp.drawPixelXY(x, HEIGHT - 1U, 0x000000);
-  }
+  // т.к. не храним позицию, то смещаем все синхронно, но в идеале - хранить позиции
+  GSHMEM.snowShift = (SNOW_SCALE*GSHMEM.snowShift > 1.0 ? (SNOW_SCALE*GSHMEM.snowShift - (int)(GSHMEM.snowShift*SNOW_SCALE)) : (GSHMEM.snowShift));
 }
 
 // ------------- метель -------------
@@ -3054,24 +3070,24 @@ void timePrintRoutine(CRGB *leds, const char *param)
 
 // ------------------------------ ЭФФЕКТ ДЫМ ----------------------
 // (c) SottNick
-
+// Относительно стартовой версии - переписан 20200521
 void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
 {
+  CRGB color;
+
   if (myLamp.isLoading())
   {
     GSHMEM.smokeHue = 0U;
   }
-  bool isColored = myLamp.effects.getScale()<250;
+  myLamp.dimAll(254);
 
-  myLamp.dimAll(254); //(255U - modes[currentMode].Scale * 2);
+  GSHMEM.xSmokePos=GSHMEM.xSmokePos+myLamp.effects.getSpeed()/255.0+0.01;
+  GSHMEM.xSmokePos2=GSHMEM.xSmokePos2+myLamp.effects.getSpeed()/512.0+0.01;
 
-  float ssc = +myLamp.effects.getSpeed()/255.0;
-
-  GSHMEM.xSmokePos=GSHMEM.xSmokePos+ssc;
-  CRGB color;
+  bool isColored = myLamp.effects.getScale()<250; // 250...255, т.е. 6 штук закладываю на заполнения
   if (isColored)
   {
-    if (GSHMEM.smokeHue == myLamp.effects.getScale() )
+    if (GSHMEM.smokeHue == myLamp.effects.getScale())
       {
         GSHMEM.smokeHue = 0U;
         GSHMEM.rhue = random8();
@@ -3081,62 +3097,71 @@ void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
       GSHMEM.smokeHue++;
   }
   else
-    color = CHSV((myLamp.effects.getScale() - 1U) * 2.6, (myLamp.effects.getScale() >= 250) ? 0U : 255U, 255U);
+    color = CHSV((myLamp.effects.getScale() - 1U) * 2.6, !isColored ? 0U : 255U, 255U);
 
-if (myLamp.effects.getScale()  & 0x01)
-  if (myLamp.effects.getSpeed() & 0x01)
-  {
-    GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
-    if (random8(WIDTH) == 0U)
-      GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)GSHMEM.xSmokePos2 + HEIGHT - y)%WIDTH, y)] += color;
-    }
-  }
-  else
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+(int)GSHMEM.xSmokePos)%WIDTH, y)] += color;
-    }
-else
-  if (myLamp.effects.getSpeed() & 0x01)
-  {
-    GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
-    if (random8(WIDTH) == 0U)
-      GSHMEM.xSmokePos2=GSHMEM.xSmokePos2-ssc;
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)GSHMEM.xSmokePos2 + HEIGHT - y)%WIDTH, HEIGHT - y)] += color;
-    }
-  }
-  else
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((y+(int)GSHMEM.xSmokePos)%WIDTH, HEIGHT - y)] += color; //+= ColorFromPalette(*curPalette, (x * y) / 2);
-      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH/2+1U+y+(int)GSHMEM.xSmokePos)%WIDTH, HEIGHT - y)] += color;
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  int val = myLamp.effects.getScale()%6;
+  if(!var.isEmpty()){
+    val = ((int)(6*var.toInt()/255.1))%6;
+  }  
+
+  switch(val){
+    case 0:
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)GSHMEM.xSmokePos-y)%WIDTH-(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-((int)GSHMEM.xSmokePos-y)-1)%WIDTH-(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color;
+      }
+      break;
+    case 1:
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)(GSHMEM.xSmokePos-y)%WIDTH+(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)(GSHMEM.xSmokePos-y)-1)%WIDTH+(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color;
+      }
+      break;    
+    case 2:
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)((GSHMEM.xSmokePos-y)*1.5)%WIDTH-(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)((GSHMEM.xSmokePos-y)*1.5)-1)%WIDTH-(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color; // увеличим частоту в 1.5
+      }
+      break;    
+    case 3:
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)((GSHMEM.xSmokePos-y)*1.5)%WIDTH+(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)((GSHMEM.xSmokePos-y)*1.5)-1)%WIDTH+(int)(GSHMEM.xSmokePos2)%WIDTH, y)] += color; // увеличим частоту в 1.5
+      }
+      break;
+    case 4:
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)GSHMEM.xSmokePos-y)%WIDTH*y/(HEIGHT-1)+WIDTH/2, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-((int)GSHMEM.xSmokePos-y)-1)%WIDTH*y/(HEIGHT-1)+WIDTH/2, y)] += color;
+      }
+      break;   
+    case 5:
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((GSHMEM.xSmokePos-y)*y/(HEIGHT-1)+WIDTH/2, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(GSHMEM.xSmokePos-y)-1)*y/(HEIGHT-1)+WIDTH/2, y)] += color;
+      }
+      break;   
+    default:
+      break;    
   }
 
   // Noise
-    uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 5 + 500;
-    uint16_t sc2 = (uint16_t)myLamp.effects.getSpeed()/255.0 + 1.5;
-    // скорость движения по массиву noise
-    //uint32_t mult = 500U * ((modes[currentMode].Scale - 1U) % 10U);
+    uint16_t sc = (uint16_t)myLamp.effects.getSpeed() * 6 + 500;
+    uint16_t sc2 = (float)myLamp.effects.getSpeed()/127.0 + 1.5;
+
     GSHMEM.e_x[0] += sc;
     GSHMEM.e_y[0] += sc;
     GSHMEM.e_z[0] += sc;
 
-    // хрен знает что
-    //mult = 1000U * ((modes[currentMode].Speed - 1U) % 10U);
     GSHMEM.e_scaleX[0] = sc2;
     GSHMEM.e_scaleY[0] = sc2;
     FillNoise(0);
     //MoveX(3);
     //MoveY(3);
 
-  // допустимый отлёт зажжённого пикселя от изначально присвоенного местоположения (от 0 до указанного значения. дробное)
-  //mult = (modes[currentMode].Brightness - 1U) % 10U;
   MoveFractionalNoiseX(3);//4
   MoveFractionalNoiseY(3);//4
 
-  myLamp.blur2d(20); // без размытия как-то пиксельно, наверное...
+  myLamp.blur2d(25); // без размытия как-то пиксельно, наверное...
 }
