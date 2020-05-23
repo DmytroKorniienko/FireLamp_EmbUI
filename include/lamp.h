@@ -69,6 +69,28 @@ typedef enum _EFFSWITCH {
     SW_SPECIFIC     // переход на конкретный эффект по индексу/имени
 } EFFSWITCH;
 
+// управление Тикером
+typedef enum _SCHEDULER {
+    T_DISABLE = 0,    // Выкл
+    T_ENABLE,         // Вкл
+    T_RESET,          // сброс
+} SCHEDULER;
+
+// Timings from FastLED chipsets.h
+// WS2812@800kHz - 250ns, 625ns, 375ns
+// время "отправки" кадра в матрицу, мс. где 1.5 эмпирический коэффициент
+//#define FastLED_SHOW_TIME = WIDTH * HEIGHT * 24 * (0.250 + 0.625) / 1000 * 1.5
+
+/*
+ минимальная задержка между обсчетом и выводом кадра, мс
+ нужна для обработки других задач в loop() между длинными вызовами
+ калькулятора эффектов и его отрисовки. С другой стороны это время будет
+ потеряно в любом случае, даже если остальные таски будут обработаны быстрее
+ пока оставим тут, это крутилка не для общего конфига
+ */
+#define LED_SHOW_DELAY 2
+
+
 struct EVENT {
     union {
         struct {
@@ -392,7 +414,9 @@ private:
     byte numHold = 0; // режим удержания
     byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
-
+#ifdef LAMP_DEBUG
+    uint8_t fps = 0;    // fps counter
+#endif
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
@@ -423,7 +447,6 @@ private:
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
-    timerMinim tmDemoTimer;         // смена эффекта в демо режиме по дабл-клику из выключенного состояния, таймаут N секунд
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
@@ -438,6 +461,8 @@ private:
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
     Ticker _buttonTicker;           // планировщик кнопки
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
+    Ticker _effectsTicker;          // планировщик планировщик обработки эффектов
+    //Ticker _nextLoop;               // планировщик для тасок на ближайший луп
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 
@@ -468,6 +493,18 @@ private:
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
+
+    /*
+     * Смена эффекта в демо по таймеру
+     */
+    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT, isFaderON);}
+
+    /*
+     * вывод готового кадра на матрицу,
+     * и перезапуск эффект-процессора
+     */
+    void frameShow(const uint32_t ticktime);
+
 
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -507,7 +544,6 @@ public:
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
 
-    void restartDemoTimer() {tmDemoTimer.reset(); if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); } } // тут же сбросим и будильник
     LAMPMODE getMode() {return mode;}
     void updateParm(void(*f)()) { updateParmFunc=f; }
 
@@ -618,13 +654,27 @@ public:
      */
     void switcheffect(EFFSWITCH action = SW_NONE, bool fade=FADE, EFF_ENUM effnb = EFF_ENUM::EFF_NONE);
 
+    /*
+     * включает/выключает "демо"-таймер
+     * @param TICKER action - enable/disable/reset
+     */
+    void demoTimer(SCHEDULER action);
+
+    /*
+     * включает/выключает "эффект"-таймер
+     * @param TICKER action - enable/disable/reset
+     */
+    void effectsTimer(SCHEDULER action);
+
+
     ~LAMP() {}
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
     CRGB leds[NUM_LEDS];
 #ifdef USELEDBUF
-    CRGB ledsbuff[NUM_LEDS]; // буфер под эффекты
+    //CRGB ledsbuff[NUM_LEDS]; // буфер под эффекты
+    std::vector<CRGB> ledsbuff;
 #endif
 };
 

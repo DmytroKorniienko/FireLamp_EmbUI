@@ -122,7 +122,7 @@ void LAMP::lamp_init()
 
 void LAMP::handle()
 {
-  effectsTick(); // обработчик эффектов
+  //effectsTick(); // уехало в тикер
 
   static unsigned long mic_check;
 
@@ -142,6 +142,12 @@ void LAMP::handle()
   if (wait_handlers + 999U > millis())
       return;
   wait_handlers = millis();
+
+#ifdef LAMP_DEBUG
+  // fps counter
+  LOG(printf, "Eff:%d FPS: %u\n", effects.getEn(), fps);
+  fps = 0;
+#endif
 
   // будильник обрабатываем раз в секунду
   alarmWorker();
@@ -174,6 +180,7 @@ void LAMP::handle()
 #ifdef ESP_USE_BUTTON
 void LAMP::buttonTick()
 {
+  //LOG.printf("Key: %u\n", millis());
 
   touch.tick();
 
@@ -270,7 +277,7 @@ void LAMP::buttonTick()
     debugPrint(); // отладка
     if (numHold != 0) {
       tmNumHoldTimer.reset();
-      tmDemoTimer.reset(); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
+      demoTimer(T_RESET); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
     }
 
     uint8_t newval;
@@ -501,6 +508,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
         for (uint16_t i = 0U; i < NUM_LEDS; i++)
             leds[i] = GSHMEM.dawnColorMinus[i%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))];
         dawnFlag = true;
+        if (!ONflag) effectsTimer(T_ENABLE);  // наверное нужен для печати какой-то строки, todo: вопрос где его потом выключить (не обязательно)
       }
 
       // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -518,59 +526,73 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
 
 void LAMP::effectsTick()
 {
-  bool showMustGoON = false; // это фикс мерцания на малой яркости, особенно критично для белой лампы, т.е. вывод в FastLed ТОЛЬКО если перерисовывался эффект (62.5 кадров)
-  bool storeEffect = false;
-  
-  if (!dawnFlag) // флаг устанавливается будильником рассвет
-  {
-    if (ONflag || _fadeTicker.active())   // временный костыль, продолжаем обрабаьывать эффект пока работает фейдер
-    {
-      if(isEffectsDisabledUntilText)
-          showMustGoON = true; // запланирован вывод текста, при отключенной матрице
+  uint32_t _begin = millis();
+  if(dawnFlag){
+    doPrintStringToLamp(); // обработчик печати строки
+    //FastLED.show();
+    _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
+    return;
+  }
 
-        if(millis() - effTimer >= EFFECTS_RUN_TIMER){ // effects.getSpeed() - теперь эта обработка будет внутри эффектов
-          if(tmDemoTimer.isReady() && (mode == MODE_DEMO)){
-            if(RANDOM_DEMO)
-              switcheffect(SW_RND, isFaderON);
-            else
-              switcheffect(SW_NEXT, isFaderON);
-          }
-          if(!isEffectsDisabledUntilText){
-            if(effects.getCurrent()->func!=nullptr){
-                effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param); // отрисовать текущий эффект
-                showMustGoON = true;
-                storeEffect = true;
-            }
+  if(!isEffectsDisabledUntilText){
+    // отрисовать текущий эффект (если есть) 
+    if(effects.getCurrent()->func!=nullptr){
+      effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param);
 #ifdef USELEDBUF
-            memcpy(ledsbuff, leds, sizeof(CRGB)* NUM_LEDS);                             // сохранение сформированной картинки эффекта в буфер (для медленных или зависящих от предыдущей)
+      ledsbuff.resize(NUM_LEDS);
+      std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
 #endif
-          }
-          doPrintStringToLamp(); // обработчик печати строки
-#ifdef VERTGAUGE
-          GaugeShow();
-#endif
-          effTimer = millis();
-        }
-    }
-
-    if((ONflag || _fadeTicker.active()) && showMustGoON){
-      FastLED.show();
-      if(storeEffect){
-#ifdef USELEDBUF
-        memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);                             // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
-#endif
-      }
-    }
-    showMustGoON = false;
-    storeEffect = false;
-  } else {
-    if(!(millis()%11)){
-      doPrintStringToLamp(); // обработчик печати строки
-      FastLED.show();
     }
   }
+
+  doPrintStringToLamp(); // обработчик печати строки
+#ifdef VERTGAUGE
+  GaugeShow();
+#endif
+
+  if (isEffectsDisabledUntilText || effects.getCurrent()->func!=nullptr) {
+    // выводим кадр только если есть текст или эффект
+    _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
+  } else {
+    // иначе возвращаемся к началу обсчета следующего кадра
+    _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+  }
+
 }
 // end of void LAMP::effectsTick()
+
+/*
+ * вывод готового кадра на матрицу,
+ * и перезапуск эффект-процессора
+ */
+void LAMP::frameShow(const uint32_t ticktime){
+  /*
+   * Здесь имеет место странная специфика тикера,
+   * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
+   * функция все равно будет запущена в loop(), она просто ждет своей очереди
+   */
+  if (!_effectsTicker.active() ) return;
+
+  FastLED.show();
+// восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
+#ifdef USELEDBUF
+  if (!ledsbuff.empty()) {
+    std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
+    ledsbuff.resize(0);
+    ledsbuff.shrink_to_fit();
+  }
+#endif
+
+  // откладываем пересчет эффекта на время для желаемого FPS, либо
+  // на минимальный интервал в следующем loop()
+  int32_t delay = EFFECTS_RUN_TIMER + ticktime - millis();
+  if (delay < LED_SHOW_DELAY) delay = LED_SHOW_DELAY;
+  _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
+#ifdef LAMP_DEBUG
+  ++fps;
+#endif
+}
+
 
 #ifdef ESP_USE_BUTTON
     void LAMP::changeDirection(byte numHold){
@@ -670,8 +692,7 @@ void LAMP::effectsTick()
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
-    , tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
 #ifdef ESP_USE_BUTTON    
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
@@ -714,15 +735,17 @@ LAMP::LAMP() : docArrMessages(512), tmDemoTimer(DEMO_TIMEOUT*1000)
 void LAMP::changePower() {changePower(!ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
-    {
-      if ( flag == ONflag) return;  // пропускаем холостые вызовы
-      LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
-      ONflag = flag;
-      // из включения убераем фейдер, т.к. "включаться" разные методы хотят на разную яркость
-      if (!flag){
-        // Выключение всегда идет в "ноль"
-        fadelight(0);
-      }
+{
+  if ( flag == ONflag) return;  // пропускаем холостые вызовы
+  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
+  ONflag = flag;
+
+  if (flag){
+    effectsTimer(T_ENABLE);
+  } else  {
+    fadelight(0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE));  // гасим эффект-процессор
+    demoTimer(T_DISABLE);     // гасим Демо-таймер
+  }
 
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
       digitalWrite(MOSFET_PIN, (ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
@@ -731,7 +754,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       if (CURRENT_LIMIT > 0){
         FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
       }
-    }
+}
 
 
     uint32_t LAMP::getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
@@ -817,19 +840,23 @@ void LAMP::startAlarm()
   mode = LAMPMODE::MODE_ALARMCLOCK;
 }
 
+/*
+ * запускаем режим "ДЕМО"
+ */
 void LAMP::startDemoMode()
 {
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
-  switcheffect(SW_RND, isFaderON);
-  tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
+  demoNext();
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
+  demoTimer(T_ENABLE);
 }
 
 void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
+  demoTimer(T_DISABLE);
   if(storedEffect!=EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
   } else if(effects.getEn()==EFF_NONE){ // если по каким-то причинам текущий пустой, то выбираем рандомный
@@ -1340,4 +1367,45 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   }
 
   if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+}
+
+/*
+ * включает/выключает режим "демо", возвращает установленный статус
+ * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
+ */
+void LAMP::demoTimer(SCHEDULER action){
+//  LOG.printf_P(PSTR("demoTimer: %u\n"), action);
+  switch (action)
+  {
+  case SCHEDULER::T_DISABLE :
+    _demoTicker.detach();
+    break;
+  case SCHEDULER::T_ENABLE :
+    _demoTicker.attach_scheduled(DEMO_TIMEOUT, std::bind(&LAMP::demoNext, this));
+    break;
+  case SCHEDULER::T_RESET :
+    if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); }// тут же сбросим и будильник
+    if (_demoTicker.active() ) demoTimer(T_ENABLE);
+    break;
+  default:
+    return;
+  }
+}
+
+void LAMP::effectsTimer(SCHEDULER action) {
+//  LOG.printf_P(PSTR("effectsTimer: %u\n"), action);
+  switch (action)
+  {
+  case SCHEDULER::T_DISABLE :
+    _effectsTicker.detach();
+    break;
+  case SCHEDULER::T_ENABLE :
+    _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+    break;
+  case SCHEDULER::T_RESET :
+    if (_effectsTicker.active() ) effectsTimer(T_ENABLE);
+    break;
+  default:
+    return;
+  }
 }
