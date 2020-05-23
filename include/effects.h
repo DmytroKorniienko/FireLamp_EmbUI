@@ -477,6 +477,9 @@ public:
             CRGB hColor[1]; // цвет часов и минут
             CRGB mColor[1]; // цвет часов и минут
         };
+        struct { // snow
+            float snowShift; // сдвиг снега
+        };
 		//uint8_t raw[1024];
 	};
 };
