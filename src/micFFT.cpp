@@ -64,7 +64,7 @@ void MICWORKER::read_data()
 //   if(!useFixedFreq)
 //     samplingFrequency = ((1000UL*1000UL)/(micros()-_m))*(samples)*1;
 //   // EVERY_N_SECONDS(3) {
-//   //   LOG.println(samplingFrequency);
+//   //   LOG(println, samplingFrequency);
 //   // }
 // #endif
   for(uint16_t i=0; i<samples; i++){
@@ -84,7 +84,7 @@ void MICWORKER::read_data()
   if(!useFixedFreq)
     samplingFrequency = ((1000UL*1000UL)/(micros()-_m))*(samples);
   // EVERY_N_SECONDS(3) {
-  //   LOG.println(samplingFrequency);
+  //   LOG(println, samplingFrequency);
   // }
   FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency);
 }
@@ -117,13 +117,13 @@ void MICWORKER::PrintVector(float *vData, uint16_t bufferSize, uint8_t scaleType
         abscissa = (i * 1.0);
         break;
     }
-    LOG.print(abscissa, 6);
+    LOG(print, abscissa, 6);
     if(scaleType==SCL_FREQUENCY)
-      LOG.print(F("Hz"));
-    LOG.print(F(" "));
-    LOG.println(vData[i], 4);
+      LOG(print, F("Hz"));
+    LOG(print, F(" "));
+    LOG(println, vData[i], 4);
   }
-  LOG.println();
+  LOG(println, );
 }
 
 double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
@@ -190,10 +190,10 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
   
   // for(uint8_t i=0; i<(samples >> 1); i++){
   //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
-  //   //LOG.printf_P(PSTR("%3d "),(uint8_t)vReal[i]);
-  //   //LOG.printf_P(PSTR("%5.2f "),(20 * log10(vReal[i])));
+  //   //LOG(printf_P, PSTR("%3d "),(uint8_t)vReal[i]);
+  //   //LOG(printf_P, PSTR("%5.2f "),(20 * log10(vReal[i])));
   // }
-  // //LOG.println(FFT.majorPeak()); 
+  // //LOG(println, FFT.majorPeak()); 
 
   float minFreq=(log((float)samplingFrequency*2/samples));
   float scale = size/(log(20000.0)-minFreq);
@@ -216,26 +216,26 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
 void MICWORKER::debug()
 {
   /* Print the results of the simulated sampling according to time */
-  // LOG.println(F("Data:"));
+  // LOG(println, F("Data:"));
   // PrintVector(data, samples, SCL_TIME);
 
   FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
-  // LOG.println(F("Weighed data:"));
+  // LOG(println, F("Weighed data:"));
   // PrintVector(data, samples, SCL_TIME);
 
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
-  // LOG.println(F("Computed Real values:"));
+  // LOG(println, F("Computed Real values:"));
   // PrintVector(data, samples, SCL_INDEX);
 
-  // LOG.println(F("Computed Imaginary values:"));
+  // LOG(println, F("Computed Imaginary values:"));
   // PrintVector(vImag, samples, SCL_INDEX);
   
   FFT.complexToMagnitude(); /* Compute magnitudes */
-  LOG.println(F("Computed magnitudes:"));
+  LOG(println, F("Computed magnitudes:"));
   // PrintVector(vReal, (samples >> 1), SCL_FREQUENCY);
 
   double x = FFT.majorPeak();
-  LOG.println(x, 6);
+  LOG(println, x, 6);
 }
 
 void MICWORKER::calibrate()
@@ -259,7 +259,7 @@ void MICWORKER::calibrate()
     sum+=(double)vReal[i] * cnt;
     count+=cnt;
   }
-  //LOG.print(F("dbgAVG Count="));LOG.print(count);LOG.print(F(", sum="));LOG.print(sum);LOG.print(F(", sum/count="));LOG.println(sum/count);
+  //LOG(print(F("dbgAVG Count="));LOG(print(count);LOG(print(F(", sum="));LOG(print(sum);LOG(print(F(", sum/count="));LOG(println, sum/count);
 
   double average = sum/count;
   double sumSq=0;
@@ -273,7 +273,7 @@ void MICWORKER::calibrate()
   double D = sumSq / count; // dispersion
   if(D>500) return; // слишком большой разброс, не включаем данный замер...
   //sqrt(D); // standard error
-  //LOG.print(F("dispersion="));LOG.print(D);LOG.print(F(", standard error="));LOG.println(sqrt(D));
+  //LOG(print(F("dispersion="));LOG(print(D);LOG(print(F(", standard error="));LOG(println, sqrt(D));
 
   uint16_t step; // где мы сейчас
   for(step=0; step<samples/2; step++){ // делим на 2 диапазона AVG+stderr
@@ -302,8 +302,6 @@ void MICWORKER::calibrate()
     scale = 2048.0*count/sum; // смещение
 #endif
     noise = (sum2/count2)*scale; //+/- единиц шума
-#ifdef LAMP_DEBUG
-    LOG.print(F("AVG="));LOG.print(sum/count);LOG.print(F(", noise="));LOG.println(sum2/count2);
-#endif
+    LOG(print, F("AVG=")); LOG(print, sum/count); LOG(print, F(", noise=")); LOG(println, sum2/count2);
   }
 }

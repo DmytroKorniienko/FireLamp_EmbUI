@@ -188,9 +188,7 @@ void LAMP::buttonTick()
     }
     
     if (touch.isHolded()) {
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Удержание кнопки из выключенного состояния\n"));
-#endif
+      LOG(printf_P, PSTR("Удержание кнопки из выключенного состояния\n"));
       numHold = 1;
       int clicks = touch.getHoldClicks();
       if(!clicks) {
@@ -209,9 +207,7 @@ void LAMP::buttonTick()
         setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
         setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки c минимальной яркости, тут так задумано, в обход фейдера :)
       }
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
-#endif
+      LOG(printf_P, PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 
       startButtonHolding = true;
       setDirectionTimeout = false;
@@ -228,9 +224,7 @@ void LAMP::buttonTick()
   // кнопка только начала удерживаться
   if (ONflag && (touch.isHolded())){
     int clicks = touch.getHoldClicks();
-#ifdef LAMP_DEBUG
-    LOG.printf_P(PSTR("touch.getHoldClicks()=%d\n"), clicks);
-#endif
+    LOG( printf_P, PSTR("touch.getHoldClicks()=%d\n"), clicks);
     startButtonHolding = true;
     setDirectionTimeout = false;
     isFirstHoldingPress = true;
@@ -261,9 +255,7 @@ void LAMP::buttonTick()
     || ((effects.getSpeed() == 255 || effects.getSpeed() <= 1) && numHold == 2)
     || ((effects.getScale() == 255 || effects.getScale() <= 1) && numHold == 3))){
       if(!setDirectionTimeout){
-#ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("Граничное значение! numHold: %d brightness: %d speed: %d scale: %d\n"), numHold,getLampBrightness(), effects.getSpeed(), effects.getScale());
-#endif
+        LOG(printf_P, PSTR("Граничное значение! numHold: %d brightness: %d speed: %d scale: %d\n"), numHold,getLampBrightness(), effects.getSpeed(), effects.getScale());
         tmChangeDirectionTimer.reset(); // пауза на смену направления
         setDirectionTimeout = true;
       }
@@ -275,9 +267,7 @@ void LAMP::buttonTick()
     // Для второго входа, сбрасываем флаг
     isFirstHoldingPress = false;
     
-    #ifdef LAMP_DEBUG
     debugPrint(); // отладка
-    #endif
     if (numHold != 0) {
       tmNumHoldTimer.reset();
       tmDemoTimer.reset(); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
@@ -315,13 +305,13 @@ void LAMP::buttonTick()
 #ifdef LAMP_DEBUG
     switch (numHold) {
       case 1:
-        LOG.printf_P(PSTR("Новое значение яркости: %d\n"), getLampBrightness());
+        LOG(printf_P, PSTR("Новое значение яркости: %d\n"), getLampBrightness());
         break;
       case 2:
-        LOG.printf_P(PSTR("Новое значение скорости: %d\n"), effects.getSpeed());
+        LOG(printf_P, PSTR("Новое значение скорости: %d\n"), effects.getSpeed());
         break;
       case 3:
-        LOG.printf_P(PSTR("Новое значение масштаба: %d\n"), effects.getScale());
+        LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), effects.getScale());
         break;
     }
 #endif
@@ -339,9 +329,7 @@ if(touch.isHold() || !touch.isHolded())
     // однократное нажатие
     if (clickCount == 1U)
     {
-  #ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Одиночное нажатие, current: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
-  #endif
+      LOG(printf_P, PSTR("Одиночное нажатие, current: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
 
       if (dawnFlag) // нажатие во время будильника
       {
@@ -369,17 +357,13 @@ if(touch.isHold() || !touch.isHolded())
         changePower(false);
       }
 
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Лампа %s, lamp mode: %d, current: %d, storedEffect: %d\n"), ONflag ? F("включена") : F("выключена") , mode, effects.getEn(), storedEffect);
-#endif
+      LOG(printf_P, PSTR("Лампа %s, lamp mode: %d, current: %d, storedEffect: %d\n"), ONflag ? F("включена") : F("выключена") , mode, effects.getEn(), storedEffect);
     }
 
     // двухкратное нажатие  - следующий эффект
     if (ONflag && clickCount == 2U)
     {
-  #ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("Даблклик, lamp mode: %d, current: %d, storedEffect: %d\n"), mode, effects.getEn(), storedEffect);
-  #endif
+        LOG(printf_P, PSTR("Даблклик, lamp mode: %d, current: %d, storedEffect: %d\n"), mode, effects.getEn(), storedEffect);
       switcheffect(SW_NEXT, isFaderON);
     }
 
@@ -598,13 +582,11 @@ void LAMP::effectsTick()
         }
         setDirectionTimeout = false;
       }
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("changeDirection %d, %d, %d\n"), brightDirection, speedDirection, scaleDirection);
-#endif
+      LOG(printf_P, PSTR("changeDirection %d, %d, %d\n"), brightDirection, speedDirection, scaleDirection);
     }
 
   void LAMP::debugPrint(){
-      LOG.printf_P(PSTR("lampMode: %d numHold: %d currentMode: %d brightness: %d speed: %d scale: %d\n"), mode, numHold, effects.getEn(), getLampBrightness(), effects.getSpeed(), effects.getScale());
+      LOG(printf_P, PSTR("lampMode: %d numHold: %d currentMode: %d brightness: %d speed: %d scale: %d\n"), mode, numHold, effects.getEn(), getLampBrightness(), effects.getSpeed(), effects.getScale());
   }
 #endif
 
@@ -734,9 +716,7 @@ void LAMP::changePower() {changePower(!ONflag);}
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
     {
       if ( flag == ONflag) return;  // пропускаем холостые вызовы
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
-#endif
+      LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
       ONflag = flag;
       // из включения убераем фейдер, т.к. "включаться" разные методы хотят на разную яркость
       if (!flag){
@@ -845,9 +825,6 @@ void LAMP::startDemoMode()
   switcheffect(SW_RND, isFaderON);
   tmDemoTimer.reset(); // момент включения для таймаута в DEMOTIME
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
-#ifdef LAMP_DEBUG
-  LOG.printf_P(PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
-#endif
 }
 
 void LAMP::startNormalMode()
@@ -1004,9 +981,6 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         JsonObject var=arr[0]; // извлекаем очередной
         doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
         arr.remove(0); // удаляем отправленный
-#ifdef LAMP_DEBUG
-        //LOG.println(docArrMessages.as<String>());
-#endif
       }
     } else {
         // текст на входе пустой, идет печать
@@ -1028,9 +1002,9 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       var[F("c")]=((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b;
       var[F("o")]=textOffset;
       var[F("f")]=fixedPos;
-#ifdef LAMP_DEBUG
-      LOG.println(docArrMessages.as<String>());
-#endif
+
+      LOG(println, docArrMessages.as<String>());
+
       String tmp; // Тут шаманство, чтобы не ломало JSON
       serializeJson(docArrMessages, tmp);
       deserializeJson(docArrMessages, tmp);
@@ -1107,9 +1081,7 @@ void LAMP::newYearMessageHandle()
       sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60*24)), str.c_str());
     }
 
-#ifdef LAMP_DEBUG
-    LOG.printf_P(PSTR("Prepared message: %s\n"), strMessage);
-#endif
+    LOG(printf_P, PSTR("Prepared message: %s\n"), strMessage);
     sendStringToLamp(strMessage, LETTER_COLOR);
   }
 }
@@ -1119,7 +1091,7 @@ void LAMP::periodicTimeHandle()
   static bool cancel = false;
   
   time_t tm = timeProcessor.getUnixTime();
-  //LOG.println(tm);
+  //LOG(println, tm);
   if(second(tm)) {cancel=false; return;}
   if(cancel) return;
 
@@ -1180,10 +1152,10 @@ void LAMP::micHandler()
       counter = 1; // при micAnalyseDivider == 0 - отключено
 
     // EVERY_N_SECONDS(1){
-    //   LOG.println(counter);
+    //   LOG(println, counter);
     // }
 
-    //LOG.println(last_freq);
+    //LOG(println, last_freq);
     //mw->debug();
     delete mw;
     mw = nullptr;
@@ -1206,7 +1178,7 @@ void LAMP::micHandler()
 #endif
 
 void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback) {
-    LOG.printf("Fading to: %d\n", _targetbrightness);
+    LOG(printf, PSTR("Fading to: %d\n"), _targetbrightness);
     _fadeTicker.detach();
 
     uint8_t _maxsteps = _duration / FADE_STEPTIME;
@@ -1227,7 +1199,7 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, 
 
     _brtincrement = (_targetbrightness - _brt) / _steps;
 
-    //_SPTO(Serial.printf_P(F_fadeinfo, _brt, _targetbrightness, _steps, _brtincrement)); _SPLN("");
+    //_SPTO(Serial.printf_P, F_fadeinfo, _brt, _targetbrightness, _steps, _brtincrement)); _SPLN("");
     _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness, callback));
 }
 
@@ -1239,7 +1211,7 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, 
  * @param bool fade - use fade effect on brightness change
  */
 void LAMP::setBrightness(const uint8_t _brt, const bool fade, const bool natural){
-    LOG.printf_P(PSTR("Set brightness: %u\n"), _brt);
+    LOG(printf_P, PSTR("Set brightness: %u\n"), _brt);
     if (fade) {
         fadelight(_brt);
     } else {
@@ -1308,17 +1280,9 @@ void LAMP::buttonPress(bool state){
     return;
   }
 
-  if (state) {
-#ifdef LAMP_DEBUG
-    LOG.printf_P(PSTR("Button press: %u\n"), millis());
-#endif
-    _buttonTicker.attach_ms_scheduled(BUTTON_STEP_TIMEOUT/2, std::bind(&LAMP::buttonTick, this));
-  } else {
-#ifdef LAMP_DEBUG
-    LOG.printf_P(PSTR("Button release: %u\n"), millis());
-#endif
-    _buttonTicker.attach_scheduled(1, std::bind(&LAMP::buttonTick, this));   // если планировщик активен, значит кнопку "отпустили", обрабатываем последние событие
-  }
+  LOG(printf_P, PSTR("Button %s: %lu\n"), state ? PSTR("press") : PSTR("release"), millis());
+
+  _buttonTicker.attach_ms_scheduled(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&LAMP::buttonTick, this));
 
   buttonTick();   // обрабатываем текущее нажатие вне очереди
 }
@@ -1331,9 +1295,7 @@ void LAMP::buttonPress(bool state){
  * @param fade - переключаться через фейдер или сразу
  */
 void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
-#ifdef LAMP_DEBUG
-  LOG.printf_P(PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
-#endif
+  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
   if (action == SW_DELAY ) {
     action = _postponedSW;
     _postponedSW = EFFSWITCH::SW_NONE;  // сбрасываем отложенный эффект
@@ -1358,9 +1320,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
       break;
   case EFFSWITCH::SW_RND :
       effects.moveBy(random(0, effects.getModeAmount()));
-#ifdef LAMP_DEBUG
-      LOG.printf_P(PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
-#endif
+      LOG(printf_P, PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
       break;
   default:
       return;
