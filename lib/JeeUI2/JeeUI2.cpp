@@ -173,32 +173,27 @@ void jeeui2::begin() {
 
     server.on(PSTR("/_refresh"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         static unsigned long echoTm; // сброс только через секунду
-        char buffer[20];
+        char buffer[40];
 
-        if(!_refresh)
-            {echoTm = millis();}
-        else if(echoTm+1500<millis()){ // 1.5 секунды при цикле опроса в 1 секунду
-            _refresh = false;
+        if (_refresh){
             echoTm = millis();
+            _refresh = false;
         }
-        sprintf_P(buffer,PSTR("{\"_refresh\":%d}"), _refresh);
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), buffer);
+
+        // держим флаг одну секунду для совместимости со старым js
+        sprintf_P(buffer,PSTR("{\"_refresh\":%d,\"_tstamp\":%lu}"), echoTm+1000>millis() ? true : false, echoTm);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimejson), buffer);
 
         response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-        //response->addHeader(F("Pragma"),F("no-cache"));
-        //response->addHeader(F("Expires"),F("0"));
         request->send(response);
     });
 
     server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
         String config = deb();
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), config);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimejson), config);
 
         response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-        //response->addHeader(F("Pragma"),F("no-cache"));
-        //response->addHeader(F("Expires"),F("0"));
         request->send(response);
-        //config = F("");
     });
 
     server.on(PSTR("/eff_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
@@ -235,7 +230,7 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/js/all.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/all.js.gz"), FPSTR(PGmimejson));
+        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/all.js.gz"), FPSTR(PGmimejs));
         response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
         response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
         request->send(response);
