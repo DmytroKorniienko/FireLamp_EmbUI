@@ -453,7 +453,7 @@ void colorsRoutine(CRGB *leds, const char *param)
 
 #if defined(LAMP_DEBUG) && defined(MIC_EFFECTS)
 EVERY_N_SECONDS(1){
-  LOG.printf_P(PSTR("MF: %5.2f MMF: %d MMP: %d GSHMEM.scale %d GSHMEM.speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, GSHMEM.scale, GSHMEM.speed);
+  LOG(printf_P,PSTR("MF: %5.2f MMF: %d MMP: %d GSHMEM.scale %d GSHMEM.speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, GSHMEM.scale, GSHMEM.speed);
 }
 #endif
       if(myLamp.isMicOnOff()){
@@ -1979,8 +1979,8 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
 
 EVERY_N_SECONDS(1){
   for(uint8_t i=0; i<WIDTH; i++)
-    LOG.printf_P(PSTR("%5.2f "),x[i]);
-  LOG.printf_P(PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH], scale); 
+    LOG(printf_P,PSTR("%5.2f "),x[i]);
+  LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH], scale); 
 }
 
   for(uint8_t xpos=0; xpos<WIDTH; xpos++){
@@ -3081,8 +3081,18 @@ void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
   }
   myLamp.dimAll(254);
 
-  GSHMEM.xSmokePos=GSHMEM.xSmokePos+myLamp.effects.getSpeed()/255.0+0.01;
-  GSHMEM.xSmokePos2=GSHMEM.xSmokePos2+myLamp.effects.getSpeed()/512.0+0.01;
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+
+  int val;
+  if(!var.isEmpty()){
+    val = ((int)(6*var.toInt()/255.1))%6;
+    GSHMEM.xSmokePos=GSHMEM.xSmokePos+(var.toInt()%43)/42.0+0.01;
+    GSHMEM.xSmokePos2=GSHMEM.xSmokePos2+(var.toInt()%43)/84.0+0.01;
+  } else {
+    val = myLamp.effects.getScale()%6;
+    GSHMEM.xSmokePos=GSHMEM.xSmokePos+myLamp.effects.getSpeed()/255.0+0.01;
+    GSHMEM.xSmokePos2=GSHMEM.xSmokePos2+myLamp.effects.getSpeed()/512.0+0.01;
+  }
 
   bool isColored = myLamp.effects.getScale()<250; // 250...255, т.е. 6 штук закладываю на заполнения
   if (isColored)
@@ -3098,12 +3108,6 @@ void multipleStreamSmokeRoutine(CRGB *leds, const char *param)
   }
   else
     color = CHSV((myLamp.effects.getScale() - 1U) * 2.6, !isColored ? 0U : 255U, 255U);
-
-  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
-  int val = myLamp.effects.getScale()%6;
-  if(!var.isEmpty()){
-    val = ((int)(6*var.toInt()/255.1))%6;
-  }  
 
   switch(val){
     case 0:

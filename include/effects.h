@@ -310,7 +310,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_FIRE2018, T_FIRE2018, fire2018Routine, nullptr},
     {true, true, 127, 127, 127, EFF_RINGS, T_RINGS, ringsRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_CUBE2, T_CUBE2, cube2dRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, multipleStreamSmokeRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, multipleStreamSmokeRoutine, ((char *)_R255)},  // очень хреновое приведение типов, но дальше это разрулим :)
     
 
     {true, true, 127, 127, 127, EFF_TIME, T_TIME, timePrintRoutine, nullptr}
