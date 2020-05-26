@@ -208,10 +208,7 @@ void jeeui2::begin() {
         request->send(SPIFFS, F("/events_config.json"), String(), true);
     });
 
-    // server all files from SPIFFS root
-    server.serveStatic("/", SPIFFS, "/")
-        .setDefaultFile("index.html")
-        .setCacheControl("max-age=864000");
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
     server.on(PSTR("/heap"), HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(200, FPSTR(PGmimetxt), String(ESP.getFreeHeap()));

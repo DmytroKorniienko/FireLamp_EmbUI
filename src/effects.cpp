@@ -1946,6 +1946,7 @@ void incrementalDriftRoutine2(CRGB *leds, const char *param)
   }
 }
 
+// Частотный (спектральный) анализатор
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB *leds, const char *param)
 {
@@ -1966,24 +1967,27 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
   uint8_t last_min_peak, last_max_peak;
   float x[WIDTH+1]; memset(x,0,sizeof(x));
   float maxVal;
+  uint8_t freqDiv = 2U-myLamp.effects.getScale()/128; //1...2
 
   MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
   samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
   last_min_peak = mw->getMinPeak();
   last_max_peak = mw->getMaxPeak()*2;
 
-  maxVal=mw->fillSizeScaledArray(x,WIDTH);
+  maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv);
 
   float scale = (maxVal==0? 0 : last_max_peak/maxVal);
-  scale = scale * (myLamp.effects.getScale()/255.0);
+  scale = scale * ((myLamp.effects.getScale()%128)/127.0);
 
+#ifdef LAMP_DEBUG
 EVERY_N_SECONDS(1){
-  for(uint8_t i=0; i<WIDTH; i++)
+  for(uint8_t i=0; i<WIDTH/freqDiv; i++)
     LOG(printf_P,PSTR("%5.2f "),x[i]);
-  LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH], scale); 
+  LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv], scale); 
 }
+#endif
 
-  for(uint8_t xpos=0; xpos<WIDTH; xpos++){
+  for(uint8_t xpos=0; xpos<WIDTH/freqDiv; xpos++){
     for(uint8_t ypos=0; ypos<HEIGHT; ypos++){
       uint32_t color = (x[xpos]*scale*(1.0/(ypos+1)))>5?255:0;
       if(color==255 && GSHMEM.peakX[1][xpos] < ypos){
@@ -1997,7 +2001,9 @@ EVERY_N_SECONDS(1){
       } else {
         color=color<<8;
       }
-      myLamp.setLeds(myLamp.getPixelNumber(xpos,ypos), color);
+      myLamp.setLeds(myLamp.getPixelNumber(freqDiv*xpos,ypos), color);
+      if(freqDiv>1)
+        myLamp.setLeds(myLamp.getPixelNumber(freqDiv*xpos+1,ypos), color);
     }
   }
 
@@ -2006,7 +2012,7 @@ EVERY_N_SECONDS(1){
     isfall = true;
   }
 
-  for (size_t i = 0; i < WIDTH; i++)
+  for (size_t i = 0; i < WIDTH/freqDiv; i++)
   {
     uint32_t color = 255;
     int8_t &ypos=GSHMEM.peakX[1][i];
@@ -2021,7 +2027,9 @@ EVERY_N_SECONDS(1){
     } else {
       color=color<<8;
     }
-    myLamp.setLeds(myLamp.getPixelNumber(i,ypos), color);
+    myLamp.setLeds(myLamp.getPixelNumber(freqDiv*i,ypos), color);
+    if(freqDiv>1)
+      myLamp.setLeds(myLamp.getPixelNumber(freqDiv*i+1,ypos), color);
   }
 
   samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
