@@ -40,9 +40,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 String TimeProcessor::getHttpData(const char *url)
 {
   String payload(256);
-#ifdef LAMP_DEBUG
-  Serial.println(F("Time updating via HTTP..."));
-#endif
+  LOG(println, F("Time updating via HTTP..."));
   http.begin(client, url);
   
   int httpCode = http.GET();
@@ -50,10 +48,8 @@ String TimeProcessor::getHttpData(const char *url)
     if (httpCode == HTTP_CODE_OK){
       payload = http.getString(); 
     } else {
-#ifdef LAMP_DEBUG
-        LOG.printf_P(PSTR("HTTPCode=%d\n"), httpCode);
-        LOG.println(F("Forcing getString"));
-#endif
+        LOG(printf_P, PSTR("HTTPCode=%d\n"), httpCode);
+        LOG(println, F("Forcing getString"));
 		delay(1000);
 		payload = http.getString(); 
 	}
@@ -128,16 +124,14 @@ bool TimeProcessor::getTimeJson(unsigned long timer)
     query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
     DynamicJsonDocument doc(768);
     DeserializationError error = deserializeJson(doc, result);
-#ifdef LAMP_DEBUG
-    LOG.println(result);
-#endif
+    LOG(println, result);
+
     if (error) {
-#ifdef LAMP_DEBUG
-        LOG.print(F("deserializeJson error: "));
-        LOG.println(error.code());
-#endif
+        LOG(print, F("deserializeJson error: "));
+        LOG(println, error.code());
         return false;
     }
+
     if(!doc[F("error")].size()){
         week_number=doc[F("week_number")];
         day_of_week=doc[F("day_of_week")];
@@ -161,9 +155,7 @@ bool TimeProcessor::getTimeNTP(unsigned long timer)
     strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
     NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
     //NTPClient timeClient(wifiUdp, String(FPSTR(NTP_ADDRESS)).c_str(), 0); // utcOffsetInSeconds
-#ifdef LAMP_DEBUG
-  Serial.println(F("Time updating via NTP..."));
-#endif
+    Serial.println(F("Time updating via NTP..."));
 
     timeClient.begin();
     //delay(300);
@@ -175,9 +167,7 @@ bool TimeProcessor::getTimeNTP(unsigned long timer)
         timeClient.update();
     }
 
-#ifdef LAMP_DEBUG
-    LOG.println(timeClient.getEpochTime());
-#endif
+    LOG(println, timeClient.getEpochTime());
 
     if(timeClient.getEpochTime()>9999999){
         unixtime = timeClient.getEpochTime();
