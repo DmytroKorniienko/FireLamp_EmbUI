@@ -3,8 +3,8 @@
 AsyncWebServer server(80);
 bool __shouldReboot; // OTA update reboot flag
 
-void jeeui2::var(const String &key, const String &value, bool pub) 
-{ 
+void jeeui2::var(const String &key, const String &value, bool pub)
+{
     if(pub_transport.containsKey(key) || pub){
         String tmp;
         pub_transport[key] = value;
@@ -27,9 +27,9 @@ void jeeui2::var(const String &key, const String &value, bool pub)
     if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
     cfg[key] = value;
     if(rc)publish(String(F("jee/set/")) + key, value, true);
-} 
+}
 
-void jeeui2::var_create(const String &key, const String &value) 
+void jeeui2::var_create(const String &key, const String &value)
 {
     if(cfg[key].isNull()){
         cfg[key] = value;
@@ -38,7 +38,7 @@ void jeeui2::var_create(const String &key, const String &value)
     }
 }
 
-void jeeui2::btn_create(const String &btn, buttonCallback response) 
+void jeeui2::btn_create(const String &btn, buttonCallback response)
 {
     //return;
     if(!btn_id.containsKey(btn)){
@@ -49,7 +49,7 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
             arr = btn_id.as<JsonArray>(); // используем имеющийся
         else
             arr = btn_id.to<JsonArray>(); // создаем новый
-        
+
         JsonObject var = arr.createNestedObject();
         var[F("b")]=btn;
         var[F("f")]=(unsigned long)response;
@@ -57,25 +57,25 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
         if(dbg)Serial.print(F("REGISTER: "));
         if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btn.c_str(), ESP.getFreeHeap());
 
-        serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON        
+        serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON
         deserializeJson(btn_id, tmp);
-    }    
+    }
 }
 
-String jeeui2::param(const String &key) 
-{ 
+String jeeui2::param(const String &key)
+{
     //String value = cfg[key];
     if(dbg)Serial.print(F("READ: "));
     if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), cfg[key].as<String>().c_str(), ESP.getFreeHeap());
     return cfg[key];
-} 
+}
 
-String jeeui2::deb() 
-{ 
+String jeeui2::deb()
+{
     String cfg_str;
     serializeJson(cfg, cfg_str);
     deserializeJson(cfg, cfg_str); // сильное колдунство #%@%#@$ (пытаемся починить ломающийся json если долго не было сохранений)
-    return cfg_str;  
+    return cfg_str;
 }
 
 void jeeui2::begin(bool debug) {
@@ -92,12 +92,12 @@ void notFound(AsyncWebServerRequest *request) {
     request->send(404, FPSTR(PGmimetxt), F("Not found"));
 }
 
-void jeeui2::begin() { 
+void jeeui2::begin() {
     wifi_connect();
 
     /*use mdns for host name resolution*/
     char tmpbuf[32];
-    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);    
+    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);
     if (!MDNS.begin(tmpbuf)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
@@ -121,7 +121,7 @@ void jeeui2::begin() {
                     save();
                     ESP.restart();
                 }
-          } 
+          }
           else {
             var(String(p->name()), String(p->value()));
             as();
@@ -151,7 +151,7 @@ void jeeui2::begin() {
         request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
-    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         if(dbg)Serial.println(F("Вызов /echo"));
 
         if (httpstream != nullptr) {
@@ -173,75 +173,47 @@ void jeeui2::begin() {
 
     server.on(PSTR("/_refresh"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         static unsigned long echoTm; // сброс только через секунду
-        char buffer[40];
+        char buffer[20];
 
-        if (_refresh){
-            echoTm = millis();
+        if(!_refresh)
+            {echoTm = millis();}
+        else if(echoTm+1500<millis()){ // 1.5 секунды при цикле опроса в 1 секунду
             _refresh = false;
+            echoTm = millis();
         }
-
-        // держим флаг одну секунду для совместимости со старым js
-        sprintf_P(buffer,PSTR("{\"_refresh\":%d,\"_tstamp\":%lu}"), echoTm+1000>millis() ? true : false, echoTm);
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimejson), buffer);
+        sprintf_P(buffer,PSTR("{\"_refresh\":%d}"), _refresh);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), buffer);
 
         response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
+        //response->addHeader(F("Pragma"),F("no-cache"));
+        //response->addHeader(F("Expires"),F("0"));
         request->send(response);
     });
 
-    server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         String config = deb();
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimejson), config);
+        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), config);
 
         response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
+        //response->addHeader(F("Pragma"),F("no-cache"));
+        //response->addHeader(F("Expires"),F("0"));
         request->send(response);
+        //config = F("");
     });
 
-    server.on(PSTR("/eff_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/eff_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         request->send(SPIFFS, F("/eff_config.json"), String(), true);
     });
 
-    server.on(PSTR("/config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         request->send(SPIFFS, F("/config.json"), String(), true);
     });
 
-    server.on(PSTR("/events_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/events_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         request->send(SPIFFS, F("/events_config.json"), String(), true);
     });
 
-    server.on(PSTR("/"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        if(loading) {
-            request->send(500, FPSTR(PGmimetxt), F("Server busy... Try again later"));
-            return;
-        }
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/index.html.gz"), FPSTR(PGmimehtml));
-        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
-        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
-        request->send(response);
-        //if(dbg) Serial.println(F("LOADING BLOCK: index.htm"));
-        tm_loading = millis();
-        loading = true;
-    });
-
-    server.on(PSTR("/css/all.css"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/css/all.css.gz"), FPSTR(PGmimecss));
-        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
-        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
-        request->send(response);
-    });
-
-    server.on(PSTR("/js/all.js"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/js/all.js.gz"), FPSTR(PGmimejs));
-        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
-        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
-        request->send(response);
-    });
-
-    server.on(PSTR("/favicon.ico"), HTTP_GET, [](AsyncWebServerRequest *request) {
-        AsyncWebServerResponse* response = request->beginResponse(SPIFFS, F("/favicon.ico.gz"), F("image/x-icon"));
-        response->addHeader(FPSTR(PGhdrcontentenc), FPSTR(PGgzip));
-        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGpmaxage));
-        request->send(response);
-    });
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
     server.on(PSTR("/heap"), HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(200, FPSTR(PGmimetxt), String(ESP.getFreeHeap()));
@@ -280,7 +252,7 @@ void jeeui2::begin() {
             }
         }
     });
-    
+
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
     //Do not request more often than 3-5 seconds
     server.on(PSTR("/scan"), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -336,13 +308,13 @@ void jeeui2::handle()
         _isHttpCmd = false;
         *httpParam='\0'; *httpValue='\0';
     }
-    
+
     if(__shouldReboot){
         Serial.println(F("Rebooting..."));
         delay(100);
         ESP.restart();
     }
-#ifdef ESP8266    
+#ifdef ESP8266
     MDNS.update();
 #endif
     _connected();
