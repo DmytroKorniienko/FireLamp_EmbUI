@@ -40,6 +40,7 @@ static const char PGmimetxt[] PROGMEM  = "text/plain";
 static const char PGmimecss[] PROGMEM  = "text/css";
 static const char PGmimehtml[] PROGMEM = "text/html";
 static const char PGmimejson[] PROGMEM = "application/json";
+static const char PGmimejs[] PROGMEM = "application/javascript";
 static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
 static const char PGhdrcachec[] PROGMEM = "Cache-Control";
 static const char PGgzip[] PROGMEM = "gzip";

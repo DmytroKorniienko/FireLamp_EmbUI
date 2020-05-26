@@ -55,7 +55,7 @@ void ftp_setup(void){
 #elif defined ESP8266
   if (SPIFFS.begin()) {
 #endif
-      LOG.println(F("SPIFFS opened!"));
+      LOG(println, F("SPIFFS opened!"));
       ftpSrv.begin(F("esp8266"),F("esp8266"));    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
   }    
 }

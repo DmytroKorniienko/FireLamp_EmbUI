@@ -82,7 +82,7 @@ void bOwrEventCallback()
 
 void event_worker(const EVENT *event) // обработка эвентов лампы
 {
-    LOG.printf_P(PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), myLamp.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 
     String filename;
     String tmpStr = jee.param(F("txtColor"));
@@ -144,7 +144,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
     case EVENT_TYPE::PIN_STATE : {
             if(event->message==nullptr)
                 break;
-            //LOG.printf_P(PSTR("TEST: %s\n"),src);
+            //LOG(printf_P, PSTR("TEST: %s\n"),src);
             String tmpS(event->message);
             tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
             DynamicJsonDocument doc(128);
@@ -154,7 +154,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
                 JsonObject item = arr[i];
                 uint8_t pin = item[F("pin")].as<int>();
                 String action = item[F("act")].as<String>();
-                //LOG.printf_P(PSTR("text: %s, pin: %d - %s\n"), tmpS.c_str(), pin, action.c_str());
+                //LOG(printf_P, PSTR("text: %s, pin: %d - %s\n"), tmpS.c_str(), pin, action.c_str());
                 pinMode(pin, OUTPUT);
                 switch(action.c_str()[0]){
                     case 'H':
@@ -191,7 +191,7 @@ void bEditEventCallback()
     if(!index) index=1;
     while (next!=nullptr)
     {
-        //LOG.printf_P(PSTR("%d %d\n"), i, index);
+        //LOG(printf_P, PSTR("%d %d\n"), i, index);
         if(i==index) break;
         i++;
         next = myLamp.events.getNextEvent(next);
@@ -258,8 +258,8 @@ void bAddEventCallback()
     String tmEvent = jee.param(F("tmEvent"));
     time_t unixtime;
     tmElements_t tm;
-    // Serial.println(tmEvent);
-    // Serial.println(tmEvent.substring(0,4).c_str());
+    // Serial.println, tmEvent);
+    // Serial.println, tmEvent.substring(0,4).c_str());
     tm.Year=atoi(tmEvent.substring(0,4).c_str())-1970;
     tm.Month=atoi(tmEvent.substring(5,7).c_str());
     tm.Day=atoi(tmEvent.substring(8,10).c_str());
@@ -267,7 +267,7 @@ void bAddEventCallback()
     tm.Minute=atoi(tmEvent.substring(14,16).c_str());
     tm.Second=0;
 
-    Serial.printf_P(PSTR("%d %d %d %d %d\n"), tm.Year, tm.Month, tm.Day, tm.Hour, tm.Minute);
+    LOG(printf_P, PSTR("%d %d %d %d %d\n"), tm.Year, tm.Month, tm.Day, tm.Hour, tm.Minute);
 
     unixtime = makeTime(tm);
     event.unixtime = unixtime;
@@ -348,15 +348,13 @@ void bTxtSendCallback()
 {
     String tmpStr = jee.param(F("txtColor"));
     tmpStr.replace(F("#"),F("0x"));
-    //LOG.printf("%s %d\n", tmpStr.c_str(), strtol(tmpStr.c_str(),NULL,0));
+    //LOG(printf("%s %d\n", tmpStr.c_str(), strtol(tmpStr.c_str(),NULL,0));
     myLamp.sendStringToLamp(jee.param(F("msg")).c_str(), (CRGB::HTMLColorCode)strtol(tmpStr.c_str(),NULL,0)); // вывести текст на лампу
 }
 
 void bTmSubmCallback()
 {
-#ifdef LAMP_DEBUG
-    LOG.println(F("bTmSubmCallback pressed"));
-#endif
+    LOG(println, F("bTmSubmCallback pressed"));
     myLamp.timeProcessor.setTimezone(jee.param(F("timezone")).c_str());
     myLamp.timeProcessor.setTime(jee.param(F("time")).c_str());
 
@@ -397,9 +395,7 @@ void jeebuttonshandle()
 }
 
 void create_parameters(){
-#ifdef LAMP_DEBUG
-    LOG.println(F("Создание дефолтных параметров"));
-#endif
+    LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
     jee.var_create(F("wifi"), F("STA")); // режим работы WiFi по умолчанию ("STA" или "AP")  (параметр в энергонезависимой памяти)
     jee.var_create(F("ssid"), F("")); // имя точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
@@ -506,9 +502,7 @@ void interface(){ // функция в которой мф формируем в
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
 #endif
     if(!jee.isLoading()){
-#ifdef LAMP_DEBUG
-        LOG.println(F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
-#endif
+        LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
         jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
         // создаем меню
@@ -543,7 +537,7 @@ void interface(){ // функция в которой мф формируем в
         jee.range(F("speed"),1,255,1,F("Скорость"));
         jee.range(F("scale"),1,255,1,F("Масштаб"));
         String v=myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param,F("R"));
-        //LOG.printf_P(PSTR("\nJsonObject: %s\n"),v.c_str());
+        //LOG(printf_P, PSTR("\nJsonObject: %s\n"),v.c_str());
         if(!v.isEmpty())
             jee.range(F("extraR"),1,255,1,F("Доп. регулятор"));
 
@@ -719,7 +713,7 @@ void interface(){ // функция в которой мф формируем в
 #endif
 
                             fn.replace(F("/cfg/"),F(""));
-                            //LOG.println(fn);
+                            //LOG(println, fn);
                             jee.option(fn, fn);
 #ifdef ESP32
                             file = root.openNextFile();
@@ -743,9 +737,7 @@ void interface(){ // функция в которой мф формируем в
             jee.uiPush();
         }
     } else {
-#ifdef LAMP_DEBUG
-        LOG.println(F("Внимание: Загрузка минимального интерфейса, т.к. обнаружен вызов index.htm"));
-#endif
+        LOG(println, F("Внимание: Загрузка минимального интерфейса, т.к. обнаружен вызов index.htm"));
         jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
         // создаем меню
@@ -764,9 +756,7 @@ void interface(){ // функция в которой мф формируем в
 //void setEffectParams(EFFECT *curEff);
 
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные
-#ifdef LAMP_DEBUG
-    LOG.println(F("In update..."));
-#endif
+    LOG(println, F("In update..."));
     // получаем данные в переменную в ОЗУ для дальнейшей работы
     bool isRefresh = jee._refresh;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt()); // если эффект поменялся, то строкой ниже - переход на него, если не менялся - то там же и останемся
@@ -775,7 +765,7 @@ void update(){ // функция выполняется после ввода д
         myLamp.setGlobalBrightness(jee.param(F("bright")).toInt()); // глобальную ставим как последняя запомненная
     }
 
-    myLamp.restartDemoTimer();  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
+    myLamp.demoTimer(T_RESET);  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
 
     iGLOBAL.mqtt_int = jee.param(F("mqtt_int")).toInt();
     bool isGlobalBrightness = jee.param(F("isGLBbr"))==F("true");
@@ -805,7 +795,6 @@ void update(){ // функция выполняется после ввода д
     bool newpower = jee.param(F("ONflag"))==F("true");
     if ( newpower != myLamp.isLampOn() ) {
         if (newpower) {         // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
-            //myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), myLamp.getFaderFlag()); // нужно как минимум для первого включения лампы
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         } else myLamp.setOnOff(newpower);
 
@@ -841,7 +830,7 @@ void update(){ // функция выполняется после ввода д
     }
 
     if(curEff->eff_nb!=EFF_NONE){ // для служебного "пустого" эффекта EFF_NONE вообще ничего не делаем
-        //LOG.printf_P(PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
+        //LOG(printf_P, PSTR("curEff: %p iGLOBAL.prevEffect: %p\n"), curEff, iGLOBAL.prevEffect);
         if(curEff!=iGLOBAL.prevEffect && iGLOBAL.prevEffect!=nullptr){ // Если эффект поменялся или требуется обновление UI, при этом не первый вход в процедуру после перезагрузки
             if(myLamp.isLampOn())
                 myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
@@ -859,7 +848,7 @@ void update(){ // функция выполняется после ввода д
             curEff->speed = jee.param(F("speed")).toInt();
             curEff->scale = jee.param(F("scale")).toInt();
 
-            //LOG.printf_P(PSTR("curEff->param=%p\n"),curEff->param);
+            //LOG(printf_P, PSTR("curEff->param=%p\n"),curEff->param);
             // Если руками правили строковый параметр - то обновляем его в эффекте, а дальше синхронизируем (нужно для возможности очистки)
             if(curEff->param==nullptr || strcmp_P(curEff->param, (jee.param(F("param"))).c_str())){ // различаются
                 if(curEff->param==nullptr)
@@ -907,7 +896,7 @@ void setEffectParams(EFFECT *curEff)
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
     jee.var(F("speed"),String(curEff->speed));
     jee.var(F("scale"),String(curEff->scale));
-    //LOG.print(F("param: ")); LOG.println(FPSTR(curEff->param));
+    //LOG(print(F("param: ")); LOG(println, FPSTR(curEff->param));
 
     if(curEff->param!=nullptr){
         size_t slen = strlen_P(curEff->param)+1;
@@ -936,9 +925,7 @@ void setEffectParams(EFFECT *curEff)
 
 void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
 {
-#ifdef LAMP_DEBUG
-    LOG.println(F("Обновляем параметры после нажатия кнопки..."));
-#endif
+    LOG(println, F("Обновляем параметры после нажатия кнопки..."));
     EFFECT *curEff = myLamp.effects.getCurrent();
     setEffectParams(curEff);
 
@@ -951,7 +938,7 @@ void httpCallback(const char *param, const char *value)
 {
     EFFECT *curEff = myLamp.effects.getCurrent();
     
-    LOG.printf_P("HTTP: %s - %s\n", param, value);
+    LOG(printf_P, "HTTP: %s - %s\n", param, value);
     if(!strcmp_P(param,PSTR("on"))){
         myLamp.setOnOff(true);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));

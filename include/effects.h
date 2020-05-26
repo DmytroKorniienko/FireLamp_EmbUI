@@ -177,7 +177,7 @@ typedef struct _EFFECT {
     String getValue(const char *src, const _PTR type){
         if(src==nullptr)
             return String(); // empty
-        //LOG.printf_P(PSTR("TEST: %s\n"),src);
+        //LOG(printf_P, PSTR("TEST: %s\n"),src);
         DynamicJsonDocument doc(128);
         String tmp(FPSTR(src));
         tmp.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
@@ -204,7 +204,7 @@ typedef struct _EFFECT {
         String tmp;
         serializeJson(doc,tmp);
         tmp.replace(F("\""),F("'")); // так делать не красиво, но шопаделаешь...
-        //LOG.println(tmp);
+        //LOG(println, tmp);
         updateParam(tmp.c_str());
     }
 } EFFECT;
@@ -310,7 +310,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_FIRE2018, T_FIRE2018, fire2018Routine, nullptr},
     {true, true, 127, 127, 127, EFF_RINGS, T_RINGS, ringsRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_CUBE2, T_CUBE2, cube2dRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, multipleStreamSmokeRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, multipleStreamSmokeRoutine, ((char *)_R255)},  // очень хреновое приведение типов, но дальше это разрулим :)
     
 
     {true, true, 127, 127, 127, EFF_TIME, T_TIME, timePrintRoutine, nullptr}
@@ -513,24 +513,18 @@ public:
             String cfg_str = configFile.readString();
 
             if (cfg_str == F("")){
-#ifdef LAMP_DEBUG
-                LOG.println(F("Failed to open effects config file"));
-#endif
+                LOG(println, F("Failed to open effects config file"));
                 saveConfig();
                 return;
             }
 
-#ifdef LAMP_DEBUG
-                LOG.println(F("\nStart desialization of effects\n\n"));
-#endif
+            LOG(println, F("\nStart desialization of effects\n\n"));
 
             DynamicJsonDocument doc(8192);
             DeserializationError error = deserializeJson(doc, cfg_str);
             if (error) {
-#ifdef LAMP_DEBUG
-                LOG.print(F("deserializeJson error: "));
-                LOG.println(error.code());
-#endif
+                LOG(print, F("deserializeJson error: "));
+                LOG(println, error.code());
                 return;
             }
 
@@ -553,17 +547,13 @@ public:
                     eff->param = new char[tmp.length()+1];
                     strcpy(eff->param, tmp.c_str());
                 }
-#ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("(%d - %d - %d - %d - %d - %d - %s)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected, eff->param!=nullptr?FPSTR(eff->param):FPSTR(F("")));
-#endif
+                LOG(printf_P, PSTR("(%d - %d - %d - %d - %d - %d - %s)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected, eff->param!=nullptr?FPSTR(eff->param):FPSTR(F("")));
             }
             // JsonArray::iterator it;
             // for (it=arr.begin(); it!=arr.end(); ++it) {
             //     const JsonObject& elem = *it;
             // }
-#ifdef LAMP_DEBUG
-            LOG.println(F("Effects config loaded"));
-#endif
+            LOG(println, F("Effects config loaded"));
             doc.clear();
         }
     }
@@ -580,19 +570,17 @@ public:
             configFile.print("[");
             for(int i=1; i<MODE_AMOUNT; i++){ // EFF_NONE не сохраняем
                 cur_eff = &(effects[i]);
-                configFile.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
+                configFile.printf_P( PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
-#ifdef LAMP_DEBUG
-                LOG.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
+                LOG(printf_P, PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
-#endif
             }     
             configFile.print("]");
             configFile.flush();
             configFile.close();
-            LOG.println(F("\nSave effects config"));
+            LOG(println, F("\nSave effects config"));
         }
     }
 

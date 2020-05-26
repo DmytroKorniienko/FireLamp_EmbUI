@@ -322,9 +322,13 @@ class timerMinim
 
 //----------------------------------------------------
 #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-#define LOG                   telnet
+	//#define LOG                   telnet
+	#define LOG(func, ...) telnet.func(__VA_ARGS__)
+#elif defined(LAMP_DEBUG)
+	//#define LOG                   Serial
+	#define LOG(func, ...) Serial.func(__VA_ARGS__)
 #else
-#define LOG                   Serial
+	#define LOG(func, ...) ;
 #endif
 
 #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT

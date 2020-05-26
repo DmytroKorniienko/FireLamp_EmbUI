@@ -112,7 +112,7 @@ void loop() {
 }
 
 void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
-  LOG.printf_P(PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
+  LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
   //jee._refresh = true;
 }
 
@@ -127,9 +127,9 @@ void sendData(){
 
 
 #ifdef ESP8266
-  LOG.printf_P(PSTR("MQTT send data, MEM: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
+  LOG(printf_P, PSTR("MQTT send data, MEM: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #else
-  LOG.printf_P(PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
+  LOG(printf_P, PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
   //jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
 }
