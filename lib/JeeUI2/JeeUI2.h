@@ -38,7 +38,7 @@
 
 static const char PGmimetxt[] PROGMEM  = "text/plain";
 static const char PGmimecss[] PROGMEM  = "text/css";
-static const char PGmimehtml[] PROGMEM = "text/html";
+static const char PGmimehtml[] PROGMEM = "text/html; charset=utf-8";
 static const char PGmimejson[] PROGMEM = "application/json";
 static const char PGmimejs[] PROGMEM = "application/javascript";
 static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
@@ -63,10 +63,10 @@ class jeeui2
 
   public:
     jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(1024) {
-      *ip='\0'; 
-      *mc='\0'; 
-      *mac='\0'; 
-      *m_pref='\0'; 
+      *ip='\0';
+      *mc='\0';
+      *mac='\0';
+      *m_pref='\0';
       *m_host='\0';
       *m_user='\0';
       *m_pass='\0';
@@ -151,24 +151,18 @@ class jeeui2
 
     void httpCallback(httpCmdCallback func);
 
+    void refresh();
+    void post(const String &key, const String &value);
+
     char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
     char mac[18]; // "ff:ff:ff:ff:ff:ff"
-    bool _refresh = false;
-    bool connected = false;
 
-    bool isLoading() {
-      if(loading && tm_loading+5000<millis()){
-        loading = false;
-        if(dbg) Serial.println(F("LOADING UNBLOCK"));
-        _refresh = true;
-      }
-      return loading;
-    }
+    bool connected = false;
 
     String id(const String &tpoic);
     static char m_pref[16]; // префикс MQTT
-    
+
     void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
 
   private:
@@ -177,9 +171,6 @@ class jeeui2
     char httpParam[32]; // буфер под параметр
     char httpValue[32]; // и его значение
     httpCmdCallback httpfunc = nullptr;
-
-    bool loading = true; // признак попытки загрузки начальной страницы index.htm
-    unsigned long tm_loading = millis();
 
     void arr(const String &key, const String &value);
     void wifi_connect();
@@ -208,7 +199,7 @@ class jeeui2
 
     void _connected();
     void subscribeAll();
-   
+
     char m_host[256]; // MQTT
     int m_port = 0;
     char m_user[64];
@@ -230,7 +221,7 @@ class jeeui2
     bool sv = false;
     bool isConfSaved = true; // признак сохраненного конфига
     unsigned long astimer;
-    
+
     uint8_t wifi_mode;
     int LED_PIN = -1;
     bool LED_INVERT = false;
@@ -240,7 +231,7 @@ class jeeui2
     uint8_t pg = 0;
     char btnui[32]; // Последняя нажатая кнопка (аппаратная или UI), после обработки - сброс значения
     char udpMessage[65]; // Обмен по UDP
-    
+
     bool dbg = false;
     bool rc;
 

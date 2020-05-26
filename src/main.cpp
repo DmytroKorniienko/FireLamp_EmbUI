@@ -97,23 +97,21 @@ void setup() {
 }
 
 void loop() {
-    if(!jee.isLoading()){
-      jee.handle(); // цикл, необходимый фреймворку
-      
-      // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
-      myLamp.handle(); // цикл, обработка лампы
-      jeebuttonshandle();
+    jee.handle(); // цикл, необходимый фреймворку
 
-      sendData(); // цикл отправки данных по MQTT
+    // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
+    myLamp.handle(); // цикл, обработка лампы
+    jeebuttonshandle();
+
+    sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
-      ftp_loop(); // цикл обработки событий фтп-сервера
+    ftp_loop(); // цикл обработки событий фтп-сервера
 #endif
-    }
 }
 
 void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
-  //jee._refresh = true;
+  //jee.refresh();
 }
 
 void sendData(){
