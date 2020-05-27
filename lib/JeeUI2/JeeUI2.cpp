@@ -1,7 +1,67 @@
 #include "JeeUI2.h"
 
-AsyncWebServer server(80);
 bool __shouldReboot; // OTA update reboot flag
+
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+
+extern jeeui2 jee;
+
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
+    if(type == WS_EVT_CONNECT){
+        jee.refresh();
+    } else
+    if(type == WS_EVT_DISCONNECT){
+        Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
+    } else
+    if(type == WS_EVT_ERROR){
+        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+    } else
+    if(type == WS_EVT_PONG){
+        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+    } else
+    if(type == WS_EVT_DATA){
+        AwsFrameInfo *info = (AwsFrameInfo*)arg;
+        if(info->final && info->index == 0 && info->len == len){
+            DynamicJsonDocument doc(200);
+            deserializeJson(doc, data, info->len);
+
+            const char *pkg = doc["pkg"];
+            if (!pkg) return;
+            if (!strcmp(pkg, "post")) {
+                JsonArray arr = doc["data"];
+                for (size_t i=0; i < arr.size(); i++) {
+                    JsonObject item = arr[i];
+                    jee.post(item["key"], item["val"]);
+                }
+            }
+        }
+  }
+}
+
+void jeeui2::post(const String &key, const String &value){
+    if (!key || !value) return;
+    if (key.indexOf(F("BTN_")) != -1){
+        strncpy(btnui, key. substring(4, key.length()).c_str(), sizeof(btnui)-1);
+        if(dbg) Serial.printf_P(PSTR("BUTTON PRESS: %s\n"), btnui);
+        if(strcmp_P(btnui, PSTR("_sysReset")) == 0){
+            var(F("wifi"), F("STA"));
+            save();
+            ESP.restart();
+        }
+    } else {
+        var(String(key), String(value));
+        as();
+    }
+}
+
+void jeeui2::refresh()
+{
+    foo();
+    if (buf.length()) ws.textAll(buf);
+    buf = "";
+    // ws.textAll("{\"pkg\":\"refrash\"}");
+}
 
 void jeeui2::var(const String &key, const String &value, bool pub) 
 { 
@@ -107,25 +167,14 @@ void jeeui2::begin() {
     MDNS.addService(F("http"), F("tcp"), 80);
     Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
 
+    ws.onEvent(onWsEvent);
+    server.addHandler(&ws);
+
     server.on(PSTR("/post"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         uint8_t params = request->params();
-        AsyncWebParameter *p;
-        for (uint8_t i = 0; i < params; i++)
-        {
-          p = request->getParam(i);
-          if (p->name().indexOf(F("BTN_")) != -1){
-                strncpy(btnui,p->name().substring(4, p->name().length()).c_str(),sizeof(btnui)-1); // btnui = p->name().substring(4, p->name().length());
-                if(dbg) Serial.printf_P(PSTR("BUTTON PRESS: %s\n"),btnui);
-                if(strcmp_P(btnui, PSTR("_sysReset"))==0){
-                    var(F("wifi"), F("STA"));
-                    save();
-                    ESP.restart();
-                }
-          } 
-          else {
-            var(String(p->name()), String(p->value()));
-            as();
-          }
+        for (uint8_t i = 0; i < params; i++) {
+            AsyncWebParameter *p = request->getParam(i);
+            post(p->name(), p->value());
         }
         request->send(200, FPSTR(PGmimetxt), F("OK"));
     });
@@ -151,44 +200,7 @@ void jeeui2::begin() {
         request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
-    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
-        if(dbg)Serial.println(F("Вызов /echo"));
-
-        if (httpstream != nullptr) {
-            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));  // already preparing stream
-            return;
-        }
-
-        httpstream = request->beginResponseStream(FPSTR(PGmimejson));
-
-        httpstream->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-
-        foo();   // stream http responce body to the Async's server buffer
-        if (buf.length()) uiPush();
-        request->send(httpstream);
-        httpstream = nullptr;   // release pointer
-
-        //if(dbg)Serial.println(buf); // buffer has been corrupted already :)
-    });
-
-    server.on(PSTR("/_refresh"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        static unsigned long echoTm; // сброс только через секунду
-        char buffer[40];
-
-        if (_refresh){
-            echoTm = millis();
-            _refresh = false;
-        }
-
-        // держим флаг одну секунду для совместимости со старым js
-        sprintf_P(buffer,PSTR("{\"_refresh\":%d,\"_tstamp\":%lu}"), echoTm+1000>millis() ? true : false, echoTm);
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimejson), buffer);
-
-        response->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-        request->send(response);
-    });
-
-    server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/config"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         String config = deb();
         AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimejson), config);
 
@@ -250,7 +262,7 @@ void jeeui2::begin() {
             }
         }
     });
-    
+
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
     //Do not request more often than 3-5 seconds
     server.on(PSTR("/scan"), HTTP_GET, [](AsyncWebServerRequest *request){
@@ -306,13 +318,13 @@ void jeeui2::handle()
         _isHttpCmd = false;
         *httpParam='\0'; *httpValue='\0';
     }
-    
+
     if(__shouldReboot){
         Serial.println(F("Rebooting..."));
         delay(100);
         ESP.restart();
     }
-#ifdef ESP8266    
+#ifdef ESP8266
     MDNS.update();
 #endif
     _connected();
@@ -327,6 +339,7 @@ void jeeui2::handle()
     button_handle();
     pre_autosave();
     autosave();
+    ws.cleanupClients();
 }
 
 void jeeui2::nonWifiVar(){

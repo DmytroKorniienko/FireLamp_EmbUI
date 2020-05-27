@@ -54,21 +54,21 @@ void bmicCalCallback()
         jee.var(F("micNoise"), String(myLamp.getMicNoise()));
         iGLOBAL.isMicCal = false;
     }
-    jee._refresh = true;
+    jee.refresh();
 }
 #endif
 
 void bEventsCallback()
 {
     myLamp.setIsEventsHandled(!myLamp.IsEventsHandled());
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bSetCloseCallback()
 {
     iGLOBAL.isAddSetup = false;
     jee.var("isAddSetup", "false");
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bDelEventCallback(bool);
@@ -180,7 +180,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         break;
     }
     if(event->message) myLamp.sendStringToLamp(event->message,color);
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bEditEventCallback()
@@ -214,7 +214,7 @@ void bEditEventCallback()
     jee.var(F("tmEvent"), next->getDateTime());
     iGLOBAL.isEdEvent = true;
     jee.var(F("isEdEvent"),F("true"));
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bDelEventCallback(bool isRefresh)
@@ -232,7 +232,7 @@ void bDelEventCallback(bool isRefresh)
     if(next!=nullptr)
         myLamp.events.delEvent(*next);
     myLamp.events.saveConfig();
-    jee._refresh = isRefresh;
+    if (isRefresh) jee.refresh();
 }
 
 void bDelEventCallback()
@@ -277,7 +277,7 @@ void bAddEventCallback()
     myLamp.events.saveConfig();
     iGLOBAL.isEdEvent = false;
     jee.var(F("isEdEvent"),F("false"));
-    jee._refresh = true;
+    jee.refresh();
 }
 
 #ifdef OTA
@@ -289,7 +289,7 @@ void bOTACallback()
 
 void bRefreshCallback()
 {
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bFDelCallback()
@@ -313,7 +313,7 @@ void bFDelCallback()
     iGLOBAL.isAddSetup = false;
     jee.var(F("isAddSetup"), F("false"));
     jee.var(F("fileName"),F(""));
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bFLoadCallback()
@@ -322,7 +322,7 @@ void bFLoadCallback()
     String fn = jee.param(F("fileList"));
     myLamp.effects.loadConfig(fn.c_str());
     jee.var(F("fileName"),fn);
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bFSaveCallback()
@@ -341,7 +341,7 @@ void bFSaveCallback()
         }
     iGLOBAL.isAddSetup = false;
     jee.var(F("isAddSetup"), F("false"));
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bTxtSendCallback()
@@ -364,7 +364,7 @@ void bTmSubmCallback()
     iGLOBAL.isTmSetup = false;
     jee.var(F("isTmSetup"), F("false"));
     myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void bMQTTformCallback()
@@ -380,7 +380,7 @@ void bDemoCallback()
     else
         myLamp.startNormalMode();
 
-    jee._refresh = true;
+    jee.refresh();
 }
 
 void jeebuttonshandle()
@@ -501,7 +501,7 @@ void interface(){ // функция в которой мф формируем в
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
 #endif
-    if(!jee.isLoading()){
+    if(1){
         LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
         jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
@@ -758,7 +758,7 @@ void interface(){ // функция в которой мф формируем в
 void update(){ // функция выполняется после ввода данных в веб интерфейсе. получение параметров из веб интерфейса в переменные
     LOG(println, F("In update..."));
     // получаем данные в переменную в ОЗУ для дальнейшей работы
-    bool isRefresh = jee._refresh;
+    bool isRefresh = false;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt()); // если эффект поменялся, то строкой ниже - переход на него, если не менялся - то там же и останемся
     if(iGLOBAL.prevEffect==nullptr){
         myLamp.effects.moveBy(curEff->eff_nb); // переходим на выбранный эффект для начальной инициализации
@@ -886,7 +886,7 @@ void update(){ // функция выполняется после ввода д
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
 #endif
-    jee._refresh = isRefresh; // устанавливать в самом конце!
+    if (isRefresh) jee.refresh(); // устанавливать в самом конце!
 }
 
 void setEffectParams(EFFECT *curEff)
@@ -919,7 +919,7 @@ void setEffectParams(EFFECT *curEff)
 
     if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
         jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
-        jee._refresh = true; // форсировать перерисовку интерфейсов клиентов
+        jee.refresh(); // форсировать перерисовку интерфейсов клиентов
     }
 }
 
@@ -931,7 +931,7 @@ void updateParm() // передача параметров в UI после на
 
     if(myLamp.getMode()!=MODE_DEMO)
         jee.save(); // Cохранить конфиг
-    jee._refresh = true; // форсировать перерисовку интерфейсов клиентов
+    jee.refresh(); // форсировать перерисовку интерфейсов клиентов
 }
 
 void httpCallback(const char *param, const char *value)
@@ -991,5 +991,5 @@ void httpCallback(const char *param, const char *value)
             myLamp.startOTA();
         #endif
     }
-    jee._refresh = true;
+    jee.refresh();
 }

@@ -49,7 +49,7 @@ void jeeui2::app(const String &name){
     op = F("");
     buf = F("");
     //buf.reserve(512); // резервируем сразу большой кусок
-    buf.concat(F("{\"app\":\"")); buf.concat(name); buf.concat(F("\","));
+    buf.concat(F("{\"pkg\":\"interface\",\"app\":\"")); buf.concat(name); buf.concat(F("\","));
     buf.concat(F("\"ID\":\"")); buf.concat(mc); buf.concat(F("\","));
 }
 
