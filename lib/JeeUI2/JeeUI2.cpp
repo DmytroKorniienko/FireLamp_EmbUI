@@ -68,7 +68,7 @@ String jeeui2::get_interface(){
 void jeeui2::refresh()
 {
     String b = get_interface();
-    if (b.length()) ws.textAll(b);
+    // if (b.length()) ws.textAll(b);
     if (ws.count()) {
         ws.getClients().front()->text(b);
     }
