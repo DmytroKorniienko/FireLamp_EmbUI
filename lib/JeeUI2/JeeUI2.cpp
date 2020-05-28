@@ -13,7 +13,7 @@ extern jeeui2 jee;
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
-        jee.refresh();
+       client->text(jee.get_interface());
     } else
     if(type == WS_EVT_DISCONNECT){
         Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
@@ -59,21 +59,32 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
+String jeeui2::get_interface(){
+    if (buf.length()) buf = "";
+    foo();
+    return buf;
+}
+
 void jeeui2::refresh()
 {
-    foo();
-    if (buf.length()) ws.textAll(buf);
-    buf = "";
-    // ws.textAll("{\"pkg\":\"refrash\"}");
+    String b = get_interface();
+    if (b.length()) ws.textAll(b);
+    if (ws.count()) {
+        ws.getClients().front()->text(b);
+    }
+    // LinkedList<AsyncWebSocketClient *> clients = ws.getClients();
+    // for(const auto& c: clients){
+    //     c->text(b);
+    // }
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
 {
     if(pub_transport.containsKey(key) || pub){
-        String tmp;
+        // String tmp;
         pub_transport[key] = value;
-        serializeJson(pub_transport, tmp);
-        deserializeJson(pub_transport, tmp);
+        // serializeJson(pub_transport, tmp);
+        // deserializeJson(pub_transport, tmp);
         //if(dbg)Serial.printf_P(PSTR("serializeJson: [%s]: %s\n"), key.c_str(), pub_transport.as<String>().c_str());
         if(pub) return;
     }
@@ -107,7 +118,7 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
     //return;
     if(!btn_id.containsKey(btn)){
         JsonArray arr; // добавляем в очередь
-        String tmp;
+        // String tmp;
 
         if(!btn_id.isNull())
             arr = btn_id.as<JsonArray>(); // используем имеющийся
@@ -121,8 +132,8 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
         if(dbg)Serial.print(F("REGISTER: "));
         if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btn.c_str(), ESP.getFreeHeap());
 
-        serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON
-        deserializeJson(btn_id, tmp);
+        // serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON
+        // deserializeJson(btn_id, tmp);
     }
 }
 
@@ -138,7 +149,7 @@ String jeeui2::deb()
 {
     String cfg_str;
     serializeJson(cfg, cfg_str);
-    deserializeJson(cfg, cfg_str); // сильное колдунство #%@%#@$ (пытаемся починить ломающийся json если долго не было сохранений)
+    // deserializeJson(cfg, cfg_str); // сильное колдунство #%@%#@$ (пытаемся починить ломающийся json если долго не было сохранений)
     return cfg_str;
 }
 
@@ -160,16 +171,17 @@ void jeeui2::begin() {
     wifi_connect();
 
     /*use mdns for host name resolution*/
-    char tmpbuf[32];
-    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);
-    if (!MDNS.begin(tmpbuf)) {
+    // в локальной сети будет jee.local
+    const char *hostname = "jee";
+    if (!MDNS.begin(hostname)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
         delay(1000);
         }
     }
     MDNS.addService(F("http"), F("tcp"), 80);
-    Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
+    // MDNS.setHostname();
+    // Serial.printf_P(PSTR("mDNS responder started: %s.local\n"), hostname);
 
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
@@ -229,10 +241,17 @@ void jeeui2::begin() {
         .setDefaultFile("index.html")
         .setCacheControl("max-age=864000");
 
+    server.on(PSTR("/restart"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        request->redirect("/heap");
+        delay(1000);
+        ESP.restart();
+    });
+
     server.on(PSTR("/heap"), HTTP_GET, [](AsyncWebServerRequest *request){
         String out = "Heap: "+String(ESP.getFreeHeap());
 #ifdef LAMP_DEBUG
         out += "\nFrac: " + String(getFragmentation());
+        out += "\nClient: " + String(ws.count());
 #endif
         request->send(200, FPSTR(PGmimetxt), out);
     });
@@ -347,7 +366,7 @@ void jeeui2::handle()
     button_handle();
     pre_autosave();
     autosave();
-    ws.cleanupClients();
+    ws.cleanupClients(1);
 }
 
 void jeeui2::nonWifiVar(){
