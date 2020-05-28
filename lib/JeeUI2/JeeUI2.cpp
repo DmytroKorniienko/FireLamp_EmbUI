@@ -171,15 +171,16 @@ void jeeui2::begin() {
     wifi_connect();
 
     /*use mdns for host name resolution*/
-    // в локальной сети будет jee.local
-    const char *hostname = "jee";
-    if (!MDNS.begin(hostname)) {
+    char tmpbuf[32];
+    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);    
+    if (!MDNS.begin(tmpbuf)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
         delay(1000);
         }
     }
     MDNS.addService(F("http"), F("tcp"), 80);
+    Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
     // MDNS.setHostname();
     // Serial.printf_P(PSTR("mDNS responder started: %s.local\n"), hostname);
 
