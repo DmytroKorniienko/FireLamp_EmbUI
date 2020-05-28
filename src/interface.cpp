@@ -380,7 +380,7 @@ void bDemoCallback()
     else
         myLamp.startNormalMode();
 
-    jee.refresh();
+    //jee.refresh();
 }
 
 void jeebuttonshandle()
@@ -799,6 +799,7 @@ void update(){ // функция выполняется после ввода д
         } else myLamp.setOnOff(newpower);
 
         isRefresh = true;
+        jee.refresh(); // устанавливать в самом конце!
         return;                 // если менялся "выключатель" то остальное даже не смотрим
     }
 
@@ -837,8 +838,8 @@ void update(){ // функция выполняется после ввода д
             else {
                 myLamp.effects.moveBy(curEff->eff_nb); // если лампа выключена, то переключаем втихую :)
                 setEffectParams(curEff);
+                isRefresh = true; // рефрешим UI если поменялся эффект, иначе все ползунки будут неправильными
             }
-            isRefresh = true; // рефрешим UI если поменялся эффект, иначе все ползунки будут неправильными
         } else { // эффект не менялся, либо MQTT, либо первый вход - обновляем текущий эффект значениями из UI/MQTT
             curEff->isFavorite = (jee.param(F("isFavorite"))==F("true"));
             curEff->canBeSelected = (jee.param(F("canBeSelected"))==F("true"));
@@ -917,10 +918,10 @@ void setEffectParams(EFFECT *curEff)
     myLamp.setLoading(); // обновить эффект
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
 
-    if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
-        jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
-        jee.refresh(); // форсировать перерисовку интерфейсов клиентов
-    }
+    // if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
+    //     jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
+    //     jee.refresh(); // форсировать перерисовку интерфейсов клиентов
+    // }
 }
 
 void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
