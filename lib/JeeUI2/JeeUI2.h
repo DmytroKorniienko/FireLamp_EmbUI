@@ -160,6 +160,7 @@ class jeeui2
     char mac[18]; // "ff:ff:ff:ff:ff:ff"
 
     bool connected = false;
+    bool dbg = false;
 
     String id(const String &tpoic);
     static char m_pref[16]; // префикс MQTT
@@ -232,8 +233,6 @@ class jeeui2
     uint8_t pg = 0;
     char btnui[32]; // Последняя нажатая кнопка (аппаратная или UI), после обработки - сброс значения
     char udpMessage[65]; // Обмен по UDP
-
-    bool dbg = false;
     bool rc;
 
     void connectToMqtt();

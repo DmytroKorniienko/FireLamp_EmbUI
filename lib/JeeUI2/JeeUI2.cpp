@@ -13,16 +13,17 @@ extern jeeui2 jee;
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
+       if(jee.dbg) Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
        client->text(jee.get_interface());
     } else
     if(type == WS_EVT_DISCONNECT){
-        Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
+        if(jee.dbg) Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
     } else
     if(type == WS_EVT_ERROR){
-        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        if(jee.dbg) Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
     } else
     if(type == WS_EVT_PONG){
-        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        if(jee.dbg) Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
     } else
     if(type == WS_EVT_DATA){
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -67,15 +68,12 @@ String jeeui2::get_interface(){
 
 void jeeui2::refresh()
 {
+    if (!ws.count()) return;
+
     String b = get_interface();
-    // if (b.length()) ws.textAll(b);
-    if (ws.count()) {
-        ws.getClients().front()->text(b);
-    }
-    // LinkedList<AsyncWebSocketClient *> clients = ws.getClients();
-    // for(const auto& c: clients){
-    //     c->text(b);
-    // }
+    if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]: %f\n"), ESP.getFreeHeap(), getFragmentation());
+    if (b.length()) ws.textAll(b);
+    if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]: %f\n"), ESP.getFreeHeap(), getFragmentation());
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
@@ -370,7 +368,7 @@ void jeeui2::handle()
     button_handle();
     pre_autosave();
     autosave();
-    ws.cleanupClients(1);
+    ws.cleanupClients(4);
 }
 
 void jeeui2::nonWifiVar(){
