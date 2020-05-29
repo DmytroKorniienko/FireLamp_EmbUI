@@ -2673,7 +2673,7 @@ void ringsRoutine(CRGB *leds, const char *param)
     {
       for (uint8_t i = 0; i < ringNb; i++)
       {
-        GSHMEM.ringColor[i] = random8(255U - WIDTH / 2U); // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
+        GSHMEM.ringColor[i] = random8(255U - WIDTH / 8U); // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
         GSHMEM.shiftHueDir[i] = random8();
         GSHMEM.huePos[i] = 0U; //random8(WIDTH); само прокрутится постепенно
         GSHMEM.stepCount = 0U;
@@ -2725,7 +2725,7 @@ void ringsRoutine(CRGB *leds, const char *param)
         for (uint8_t j = 0U; j < ((i == 0U) ? downRingHue : ((i == ringNb - 1U) ? upRingHue : ringWidth)); j++) // от 0 до (толщина кольца - 1)
         {
           y = i * ringWidth + j - ((i == 0U) ? 0U : ringWidth - downRingHue);
-          for (uint8_t k = 0; k < WIDTH / 2U; k++) // полукольцо
+          for (uint8_t k = 0; k < WIDTH / 4U; k++) // Четверть кольца
             {
               x = (GSHMEM.huePos[i] + k) % WIDTH; // первая половина кольца
               myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(*curPalette, GSHMEM.ringColor[i] + k * h));

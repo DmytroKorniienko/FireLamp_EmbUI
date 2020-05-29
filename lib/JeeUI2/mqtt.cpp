@@ -217,7 +217,7 @@ void jeeui2::remControl(){
     if(dbg)Serial.printf_P(PSTR("RC [%s - %s]\n"), _t_tpc_current, _t_pld_current);
     if(strcmp_P(_t_tpc_current, PSTR("get/refresh"))==0){
         //publish(F("jee/get/refresh"), F("true"), false);
-        _refresh = true;
+        refresh();
     }
     else if(strcmp_P(_t_tpc_current, PSTR("get/"))==0)
         publish(F("jee/get/cfg"), deb(), false);
