@@ -6,20 +6,20 @@ bool _wifi_connected = false;
 #ifdef ESP8266
 void onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
-    Serial.printf("Connected to %s\r\n", ipInfo.ssid.c_str());
+    Serial.printf_P(PSTR("Connected to %s\r\n"), ipInfo.ssid.c_str());
 }
 
 void onSTAGotIP(WiFiEventStationModeGotIP ipInfo)
 {
-    Serial.printf("Got IP: %s\r\n", ipInfo.ip.toString().c_str());
-    Serial.printf("Connected: %s\r\n", WiFi.status() == WL_CONNECTED ? "yes" : "no");
+    Serial.printf_P(PSTR("Got IP: %s\r\n"), ipInfo.ip.toString().c_str());
+    Serial.printf_P(PSTR("Connected: %s\r\n"), WiFi.status() == WL_CONNECTED ? F("yes") : F("no"));
     _wifi_connected = true;
 }
 
 void onSTADisconnected(WiFiEventStationModeDisconnected event_info)
 {
-    Serial.printf("Disconnected from SSID: %s\n", event_info.ssid.c_str());
-    Serial.printf("Reason: %d\n", event_info.reason);
+    Serial.printf_P(PSTR("Disconnected from SSID: %s\n"), event_info.ssid.c_str());
+    Serial.printf_P(PSTR("Reason: %d\n"), event_info.reason);
     _wifi_connected = false;
 }
 #else
@@ -55,15 +55,15 @@ void jeeui2::wifi_connect()
 {
     bool wf = false;
     String wifi = param(F("wifi"));
-    if (wifi == "AP") wifi_mode = 1;
-    if (wifi == "STA") wifi_mode = 2;
+    if (wifi == F("AP")) wifi_mode = 1;
+    if (wifi == F("STA")) wifi_mode = 2;
     switch (wifi_mode)
     {
         case 1:
         {
             WiFi.disconnect();
             WiFi.mode(WIFI_AP);
-            WiFi.softAP(param("ap_ssid").c_str(), param("ap_pass").c_str(), 6, 0, 4);
+            WiFi.softAP(param(F("ap_ssid")).c_str(), param(F("ap_pass")).c_str(), 6, 0, 4);
             if(dbg)Serial.println(F("Start Wi-Fi AP mode!"));
             save();
             _wifi_connected = false;
@@ -124,8 +124,8 @@ void jeeui2::wifi_connect()
         }
     }
     if (wf){
-        if(dbg)Serial.println("RECONNECT AP");
-        var("wifi", "AP");
+        if(dbg)Serial.println(F("RECONNECT AP"));
+        var(F("wifi"), F("AP"));
         wifi_connect();
     } 
     WiFi.scanNetworks(true);

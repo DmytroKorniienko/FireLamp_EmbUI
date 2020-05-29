@@ -660,6 +660,7 @@ void interface(){ // функция в которой мф формируем в
                     }
                     break;      
                 case 4:
+                    jee.text(F("ap_ssid"), F("AP/mDns name"));
                     jee.formWifi(); // форма настроек Wi-Fi
                     jee.formMqtt(); // форма настроек MQTT            
                     break;       
@@ -796,10 +797,11 @@ void update(){ // функция выполняется после ввода д
     if ( newpower != myLamp.isLampOn() ) {
         if (newpower) {         // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
-        } else myLamp.setOnOff(newpower);
-
-        isRefresh = true;
-        jee.refresh(); // устанавливать в самом конце!
+        } else {
+            myLamp.setOnOff(newpower);
+            //isRefresh = true;
+            jee.refresh(); // устанавливать в самом конце!
+        }
         return;                 // если менялся "выключатель" то остальное даже не смотрим
     }
 
@@ -919,7 +921,7 @@ void setEffectParams(EFFECT *curEff)
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
 
     // if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
-    //     jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
+        jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
     //     jee.refresh(); // форсировать перерисовку интерфейсов клиентов
     // }
 }

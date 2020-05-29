@@ -81,10 +81,10 @@ void jeeui2::refresh()
 void jeeui2::var(const String &key, const String &value, bool pub)
 {
     if(pub_transport.containsKey(key) || pub){
-        // String tmp;
+        String tmp;
         pub_transport[key] = value;
-        // serializeJson(pub_transport, tmp);
-        // deserializeJson(pub_transport, tmp);
+        serializeJson(pub_transport, tmp);
+        deserializeJson(pub_transport, tmp);
         //if(dbg)Serial.printf_P(PSTR("serializeJson: [%s]: %s\n"), key.c_str(), pub_transport.as<String>().c_str());
         if(pub) return;
     }
@@ -118,7 +118,7 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
     //return;
     if(!btn_id.containsKey(btn)){
         JsonArray arr; // добавляем в очередь
-        // String tmp;
+        String tmp;
 
         if(!btn_id.isNull())
             arr = btn_id.as<JsonArray>(); // используем имеющийся
@@ -132,8 +132,8 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
         if(dbg)Serial.print(F("REGISTER: "));
         if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btn.c_str(), ESP.getFreeHeap());
 
-        // serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON
-        // deserializeJson(btn_id, tmp);
+        serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON
+        deserializeJson(btn_id, tmp);
     }
 }
 
@@ -171,8 +171,11 @@ void jeeui2::begin() {
     wifi_connect();
 
     /*use mdns for host name resolution*/
-    char tmpbuf[32];
-    sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);    
+    char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
+    if(param(F("ap_ssid")).length()>0)
+        strncpy_P(tmpbuf,param(F("ap_ssid")).c_str(),sizeof(tmpbuf)-1);
+    else
+        sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);    
     if (!MDNS.begin(tmpbuf)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
