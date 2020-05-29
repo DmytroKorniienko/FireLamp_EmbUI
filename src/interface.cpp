@@ -660,7 +660,7 @@ void interface(){ // функция в которой мф формируем в
                     }
                     break;      
                 case 4:
-                    jee.text(F("ap_ssid"), F("AP/mDns name"));
+                    jee.text(F("ap_ssid"), F("AP/mDNS"));
                     jee.formWifi(); // форма настроек Wi-Fi
                     jee.formMqtt(); // форма настроек MQTT            
                     break;       
