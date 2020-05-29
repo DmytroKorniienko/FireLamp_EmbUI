@@ -147,7 +147,7 @@ String jeeui2::deb()
 {
     String cfg_str;
     serializeJson(cfg, cfg_str);
-    // deserializeJson(cfg, cfg_str); // сильное колдунство #%@%#@$ (пытаемся починить ломающийся json если долго не было сохранений)
+    deserializeJson(cfg, cfg_str); // сильное колдунство #%@%#@$ (пытаемся починить ломающийся json если долго не было сохранений)
     return cfg_str;
 }
 

@@ -896,6 +896,12 @@ void update(){ // функция выполняется после ввода д
 
 void setEffectParams(EFFECT *curEff)
 {
+    if(curEff==0 || curEff==nullptr || curEff==NULL) // все еще ломается по неведомому закону... попробую обойти так
+    {
+        LOG(println, F("Обнаружен нулевой указатель!"));
+        ESP.restart();
+        return;
+    }
     jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
     jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
