@@ -71,9 +71,9 @@ void jeeui2::refresh()
     if (!ws.count()) return;
 
     String b = get_interface();
-    if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]: %f\n"), ESP.getFreeHeap(), getFragmentation());
+    if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]\n"), ESP.getFreeHeap());
     if (b.length()) ws.textAll(b);
-    if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]: %f\n"), ESP.getFreeHeap(), getFragmentation());
+    if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]\n"), ESP.getFreeHeap());
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
@@ -173,7 +173,7 @@ void jeeui2::begin() {
     if(param(F("ap_ssid")).length()>0)
         strncpy_P(tmpbuf,param(F("ap_ssid")).c_str(),sizeof(tmpbuf)-1);
     else
-        sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);    
+        sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);
     if (!MDNS.begin(tmpbuf)) {
         Serial.println(F("Error setting up MDNS responder!"));
         while (1) {
