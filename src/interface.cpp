@@ -88,12 +88,14 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
     String tmpStr = jee.param(F("txtColor"));
     tmpStr.replace(F("#"),F("0x"));
     CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(),NULL,0);
+    EFFECT *curEff = myLamp.effects.getCurrent();
 
     switch (event->event)
     {
     case EVENT_TYPE::ON :
         myLamp.setOnOff(true);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+        myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         break;
     case EVENT_TYPE::OFF :
         myLamp.disableEffectsUntilText();
@@ -945,6 +947,7 @@ void httpCallback(const char *param, const char *value)
     if(!strcmp_P(param,PSTR("on"))){
         myLamp.setOnOff(true);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+        myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
     } else if(!strcmp_P(param,PSTR("off"))){
         myLamp.setOnOff(false);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
