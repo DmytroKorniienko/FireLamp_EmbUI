@@ -52,7 +52,7 @@ void AUX_toggle(bool key)
         digitalWrite(AUX_PIN, !AUX_LEVEL);
         jee.var(F("AUX"), (F("false")));
     }
-    myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
+    // myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
 }
 #endif
 
@@ -622,11 +622,11 @@ void interface()
         else
             jee.button(F("bDemo"), F("gray"), F("Включить DEMO"));
         //jee.button(F("btn3"),F("gray"),F(">"), 3);
-        jee.checkbox(F("isSetup"), F("В&nbspсписке"));
+        jee.checkbox(F("isSetup"), F("Добавить&nbspв&nbspсписок..."));
         if (iGLOBAL.isSetup)
         {
-            jee.checkbox(F("canBeSelected"), F("В&nbspсписке&nbspвыбора"));
-            jee.checkbox(F("isFavorite"), F("В&nbspсписке&nbspдемо"));
+            jee.checkbox(F("canBeSelected"), F("выбора&nbspэффектов"));
+            jee.checkbox(F("isFavorite"), F("DEMO"));
             jee.text(F("param"), F("Доп. параметры"));
             jee.page(); // разделитель между страницами
             jee.uiPush();
@@ -636,7 +636,8 @@ void interface()
         {
             jee.page(); // разделитель между страницами
             jee.uiPush();
-            //Страница "Управление лампой"
+            
+            //Страница "Время\Текст"
             if (iGLOBAL.isTmSetup)
             {
                 jee.time(F("time"), F("Время"));
@@ -714,9 +715,11 @@ void interface()
                         jee.option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
                         jee.option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
                         jee.option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
+#ifdef AUX_PIN
                         jee.option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
                         jee.option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
                         jee.option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
+#endif
                         jee.select(F("evList"), F("Тип события"));
                         jee.checkbox(F("isEnabled"), F("Разрешено"));
                         jee.datetime(F("tmEvent"), F("Дата/время события"));
@@ -827,9 +830,9 @@ void interface()
 
                 jee.button(F("bFLoad"), F("gray"), F("Считать с ФС"));
                 if (myLamp.IsEventsHandled())
-                    jee.button(F("bEvents"), F("red"), F("EVENTS -> OFF"));
+                    jee.button(F("bEvents"), F("red"), F("Откл. События/Будильники"));
                 else
-                    jee.button(F("bEvents"), F("green"), F("EVENTS -> ON"));
+                    jee.button(F("bEvents"), F("green"), F("Вкл. События/Будильники"));
 #ifdef MIC_EFFECTS
                 jee.checkbox(F("isMicON"), F("Микрофон"));
 #endif
@@ -1047,9 +1050,9 @@ void setEffectParams(EFFECT *curEff)
         jee.var(F("param"), F("")); // но надо будет подумать о более красивом решении
     }
     jee.var(F("ONflag"), (myLamp.isLampOn() ? F("true") : F("false")));
-
+#ifdef AUX_PIN
     jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
-
+#endif
     jee.var(F("effList"), String(curEff->eff_nb));
 
     if (myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness())
@@ -1166,5 +1169,19 @@ void httpCallback(const char *param, const char *value)
         myLamp.startOTA();
 #endif
     }
+#ifdef AUX_PIN
+    else if (!strcmp_P(param, PSTR("aux_on")))
+    {
+        AUX_toggle(true);
+    }
+    else if (!strcmp_P(param, PSTR("aux_off")))
+    {
+        AUX_toggle(false);
+    }
+    else if (!strcmp_P(param, PSTR("aux_toggle"))) 
+    {
+        AUX_toggle(!digitalRead(AUX_PIN));
+    }
+#endif
     jee.refresh();
 }
