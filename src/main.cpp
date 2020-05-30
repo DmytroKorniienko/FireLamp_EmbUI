@@ -46,83 +46,91 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 // глобальные переменные для работы с ними в программе
-SHARED_MEM GSHMEM; // глобальная общая память эффектов
+SHARED_MEM GSHMEM;        // глобальная общая память эффектов
 INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
-jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
+jeeui2 jee;               // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
-Ticker _isrHelper;       // планировщик для обработки прерываний
+Ticker _isrHelper; // планировщик для обработки прерываний
 
-void setup() {
-    Serial.begin(115200);
-    //Serial.println(F("Starting..."));
-    //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
+void setup()
+{
+  Serial.begin(115200);
+#ifdef AUX_PIN
+  pinMode(AUX_PIN, OUTPUT);
+#endif
+  //Serial.println(F("Starting..."));
+  //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
-    jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
+  jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
 #if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
-    jee.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
+  jee.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
 #elif defined(__DISABLE_BUTTON0)
-    jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
+  jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
-    jee.ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
+  jee.ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
 
-    myLamp.effects.loadConfig();
-    myLamp.events.loadConfig();
-    myLamp.updateParm(updateParm);
+  myLamp.effects.loadConfig();
+  myLamp.events.loadConfig();
+  myLamp.updateParm(updateParm);
 
-    jee.ui(interface); // обратный вызов - интерфейс
-    jee.update(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
-    jee.httpCallback(httpCallback);
+  jee.ui(interface);  // обратный вызов - интерфейс
+  jee.update(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
+  jee.httpCallback(httpCallback);
 #ifdef LAMP_DEBUG
-    jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
+  jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
 #else
-    jee.begin(false); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
+  jee.begin(false);            // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
 #endif
 #ifdef USE_FTP
-    ftp_setup(); // запуск ftp-сервера
+  ftp_setup(); // запуск ftp-сервера
 #endif
-    create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-    update(); // этой функцией получаем значения параметров в переменные (обратный вызов UI)
-    updateParm(); // вызвать обновление параметров UI (синхронизация с конфигом эффектов и кнопкой)
-    if(myLamp.timeProcessor.getIsSyncOnline()){
-      myLamp.refreshTimeManual(); // принудительное обновление времени
-    }
-    if(myLamp.timeProcessor.isDirtyTime())
-      myLamp.setIsEventsHandled(false);
-    myLamp.events.setEventCallback(event_worker);
+  create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
+  update();            // этой функцией получаем значения параметров в переменные (обратный вызов UI)
+  updateParm();        // вызвать обновление параметров UI (синхронизация с конфигом эффектов и кнопкой)
+  if (myLamp.timeProcessor.getIsSyncOnline())
+  {
+    myLamp.refreshTimeManual(); // принудительное обновление времени
+  }
+  if (myLamp.timeProcessor.isDirtyTime())
+    myLamp.setIsEventsHandled(false);
+  myLamp.events.setEventCallback(event_worker);
 
-    jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+  jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 #ifdef ESP_USE_BUTTON
-    attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION); // цепляем прерывание на кнопку
 #endif
 }
 
-void loop() {
-    jee.handle(); // цикл, необходимый фреймворку
+void loop()
+{
+  jee.handle(); // цикл, необходимый фреймворку
 
-    // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
-    myLamp.handle(); // цикл, обработка лампы
-    jeebuttonshandle();
+  // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
+  myLamp.handle(); // цикл, обработка лампы
+  jeebuttonshandle();
 
-    sendData(); // цикл отправки данных по MQTT
+  sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
-    ftp_loop(); // цикл обработки событий фтп-сервера
+  ftp_loop(); // цикл обработки событий фтп-сервера
 #endif
 }
 
-void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
-  LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
+void mqttCallback(const String &topic, const String &payload)
+{ // функция вызывается, когда приходят данные MQTT
+  LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str(), payload.c_str());
   //jee.refresh();
 }
 
-void sendData(){
+void sendData()
+{
   static unsigned long i;
   static unsigned int in;
 
-  if(i + (in * 1000) > millis() || iGLOBAL.mqtt_int == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
+  if (i + (in * 1000) > millis() || iGLOBAL.mqtt_int == 0)
+    return; // если не пришло время, или интервал = 0 - выходим из функции
   i = millis();
   in = iGLOBAL.mqtt_int;
   // всё, что ниже будет выполняться через интервалы
-
 
 #ifdef ESP8266
   LOG(printf_P, PSTR("MQTT send data, MEM: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
@@ -135,11 +143,12 @@ void sendData(){
 /*
  *  Button pin interrupt handler
  */
-ICACHE_RAM_ATTR void buttonpinisr(){
+ICACHE_RAM_ATTR void buttonpinisr()
+{
   detachInterrupt(BTN_PIN);
-  _isrHelper.once_ms(0, buttonhelper, iGLOBAL.pinTransition);   // вместо флага используем тикер :)
+  _isrHelper.once_ms(0, buttonhelper, iGLOBAL.pinTransition); // вместо флага используем тикер :)
   iGLOBAL.pinTransition = !iGLOBAL.pinTransition;
-  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, iGLOBAL.pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, iGLOBAL.pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION); // меням прерывание
 }
 
 /*
@@ -147,6 +156,7 @@ ICACHE_RAM_ATTR void buttonpinisr(){
  * 1) убираем функции с ICACHE из класса лампы
  * 2) Тикер не может дернуть нестатический метод класса
  */
-void buttonhelper(bool state){
+void buttonhelper(bool state)
+{
   myLamp.buttonPress(state);
 }
