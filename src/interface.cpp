@@ -52,7 +52,7 @@ void AUX_toggle(bool key)
         digitalWrite(AUX_PIN, !AUX_LEVEL);
         jee.var(F("AUX"), (F("false")));
     }
-    myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
+    //myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
 }
 #endif
 
