@@ -52,7 +52,7 @@ void AUX_toggle(bool key)
         digitalWrite(AUX_PIN, !AUX_LEVEL);
         jee.var(F("AUX"), (F("false")));
     }
-    // myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
+    myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
 }
 #endif
 
@@ -583,12 +583,13 @@ void interface()
         EFFECT enEff;
         enEff.setNone();
         jee.checkbox(F("ONflag"), F("Включение&nbspлампы"));
-        
 #ifdef AUX_PIN
         jee.checkbox(F("AUX"), F("Включение&nbspAUX"));
 #endif
 
+
         jee.uiPush(); // не сбрасывать буфер перед page() после option(), это портит джейсон
+
         if (!iGLOBAL.isAddSetup)
         {
             do
@@ -884,9 +885,7 @@ void update()
     myLamp.setPeriodicTimePrint((PERIODICTIME)jee.param(F("perTime")).toInt());
     myLamp.setMIRR_H(jee.param(F("MIRR_H")) == F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V")) == F("true"));
-#ifdef AUX_PIN
-    AUX_toggle(jee.param(F("AUX")) == F("true"));
-#endif
+
     //myLamp.setOnOff(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
     //myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
 #ifdef ESP_USE_BUTTON
@@ -943,7 +942,13 @@ void update()
         if (iGLOBAL.prevEffect != nullptr)
             isRefresh = true;
     }
-
+#ifdef AUX_PIN 
+    if ((jee.param(F("AUX")) == F("true")) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false))
+    {
+        AUX_toggle(!(digitalRead(AUX_PIN) == AUX_LEVEL ? true : false));
+            isRefresh = true;
+    }
+#endif
     uint8_t cur_addSList = jee.param(F("addSList")).toInt();
     if (iGLOBAL.addSList != cur_addSList)
     {
