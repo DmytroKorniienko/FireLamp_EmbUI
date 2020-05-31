@@ -949,6 +949,26 @@ void update()
             isRefresh = true;
     }
 #endif
+// попытка сделать синхронизацию ползунков (kostyamat)
+    if (curEff->brightness != jee.param(F("bright")).toInt())
+    {
+        curEff->brightness = jee.param(F("bright")).toInt();
+        isRefresh = true;
+    }
+
+    if (curEff->speed != jee.param(F("speed")).toInt())
+    {
+        curEff->speed = jee.param(F("speed")).toInt();
+        isRefresh = true;
+    }
+
+    if (curEff->scale != jee.param(F("scale")).toInt())
+    {
+        curEff->scale = jee.param(F("scale")).toInt();
+        isRefresh = true;
+    }
+// end of fragment
+
     uint8_t cur_addSList = jee.param(F("addSList")).toInt();
     if (iGLOBAL.addSList != cur_addSList)
     {
