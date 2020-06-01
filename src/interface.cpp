@@ -947,12 +947,14 @@ void setEffectParams(EFFECT *curEff)
         ESP.restart();
         return;
     }
+    LOG(println,F("Обновление через setEffectParams"));
     jee.var(F("isFavorite"), (curEff->isFavorite?F("true"):F("false")));
     jee.var(F("canBeSelected"), (curEff->canBeSelected?F("true"):F("false")));
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
     jee.var(F("speed"),String(curEff->speed));
     jee.var(F("scale"),String(curEff->scale));
     jee.var(F("param"), curEff->getParam());
+    jee.var(F("extraR"), curEff->getValue(curEff->param, F("R")));
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 	
 #ifdef AUX_PIN
