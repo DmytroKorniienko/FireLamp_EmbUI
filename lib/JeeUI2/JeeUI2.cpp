@@ -137,10 +137,10 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
 
 String jeeui2::param(const String &key)
 {
-    //String value = cfg[key];
+    String value = cfg[key].as<String>();
     if(dbg)Serial.print(F("READ: "));
-    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), cfg[key].as<String>().c_str(), ESP.getFreeHeap());
-    return cfg[key];
+    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
+    return value;
 }
 
 String jeeui2::deb()

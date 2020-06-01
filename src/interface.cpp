@@ -898,19 +898,21 @@ void update(){ // функция выполняется после ввода д
 
             //LOG(printf_P, PSTR("curEff->param=%p\n"),curEff->param);
             // Если руками правили строковый параметр - то обновляем его в эффекте, а дальше синхронизируем (нужно для возможности очистки)
-            if(curEff->param==nullptr || strcmp_P(curEff->param, (jee.param(F("param"))).c_str())){ // различаются
+            String tmpParam = jee.param(F("param"));
+            if(curEff->param==nullptr || strcmp_P(curEff->param, tmpParam.c_str())){ // различаются
                 if(curEff->param==nullptr)
                     curEff->updateParam(("")); // для вновь добавленного эффекта сделаем очистку, а не копирование с предыдущего эффекта
                 else
-                    curEff->updateParam((jee.param(F("param"))).c_str());
+                    curEff->updateParam(tmpParam.c_str());
             }
             String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
             if(!var.isEmpty()){
                 myLamp.effects.getCurrent()->setValue(myLamp.effects.getCurrent()->param, F("R"), (jee.param(F("extraR"))).c_str());
-                jee.var(F("param"),String(FPSTR(curEff->param)));
+                String tmp = FPSTR(curEff->param);
+                jee.var(F("param"), tmp);
             }
-            if(strcmp_P((jee.param(F("param"))).c_str(), curEff->param)){ // различаются  || (curEff->param==nullptr && (jee.param(F("param"))).length()!=0)
-                curEff->updateParam((jee.param(F("param"))).c_str());
+            if(strcmp_P(tmpParam.c_str(), curEff->param)){ // различаются  || (curEff->param==nullptr && (jee.param(F("param"))).length()!=0)
+                curEff->updateParam(tmpParam.c_str());
             }
 
             myLamp.setLoading(true); // перерисовать эффект
@@ -950,16 +952,7 @@ void setEffectParams(EFFECT *curEff)
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
     jee.var(F("speed"),String(curEff->speed));
     jee.var(F("scale"),String(curEff->scale));
-    //LOG(print(F("param: ")); LOG(println, FPSTR(curEff->param));
-
-    if(curEff->param!=nullptr){
-        size_t slen = strlen_P(curEff->param)+1;
-        char buffer[slen]; buffer[0]='\0';
-        strncpy_P(buffer, curEff->param, slen-1); // Обход Exeption 3, это шаманство из-за корявого использования указателя, он одновременно может быть и на PROGMEM, и на RAM
-        jee.var(F("param"), buffer);     // но надо будет подумать о более красивом решении
-    } else {
-        jee.var(F("param"), F(""));     // но надо будет подумать о более красивом решении
-    }
+    jee.var(F("param"), curEff->getParam());
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 	
 #ifdef AUX_PIN
