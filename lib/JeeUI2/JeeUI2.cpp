@@ -70,9 +70,11 @@ void jeeui2::refresh()
 {
     if (!ws.count()) return;
 
-    String b = get_interface();
+    //String b = get_interface(); // то есть мы перепысываем огромный буффер в новую переменную?
     if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]\n"), ESP.getFreeHeap());
-    if (b.length()) ws.textAll(b);
+    //if (b.length()) ws.textAll(b);
+    get_interface();
+    if (buf.length()) ws.textAll(buf); // get_interface переписывает переменную buf, ИМХО ее можно использовать на прямую
     if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]\n"), ESP.getFreeHeap());
 }
 
