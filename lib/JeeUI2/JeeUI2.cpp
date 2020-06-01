@@ -188,6 +188,30 @@ void jeeui2::begin() {
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
 
+    // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
+    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        if (httpstream != nullptr) {
+            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));  // already preparing stream
+            return;
+        }
+
+        httpstream = request->beginResponseStream(FPSTR(PGmimejson));
+        httpstream->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
+
+        foo();   // stream http responce body to the Async's server buffer
+        if (buf.length()) uiPush();
+        request->send(httpstream);
+        httpstream = nullptr;   // release pointer
+    });
+
+    server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        String buf;
+        buf = F("VERSION: "); buf+=F(VERSION);
+        buf += F("\nGIT: "); buf+=F(PIO_SRC_REV);
+        buf += F("\nOK\n");
+        request->send(200, FPSTR(PGmimetxt), buf.c_str());
+    });
+
     server.on(PSTR("/post"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         uint8_t params = request->params();
         for (uint8_t i = 0; i < params; i++) {
