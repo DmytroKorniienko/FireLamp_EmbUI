@@ -868,10 +868,12 @@ void update()
     // получаем данные в переменную в ОЗУ для дальнейшей работы
     bool isRefresh = false;
     EFFECT *curEff = myLamp.effects.getEffectBy((EFF_ENUM)jee.param(F("effList")).toInt()); // если эффект поменялся, то строкой ниже - переход на него, если не менялся - то там же и останемся
+    bool effChanged;
     if (iGLOBAL.prevEffect == nullptr)
     {
         myLamp.effects.moveBy(curEff->eff_nb);                      // переходим на выбранный эффект для начальной инициализации
         myLamp.setGlobalBrightness(jee.param(F("bright")).toInt()); // глобальную ставим как последняя запомненная
+        effChanged = true;
     }
 
     myLamp.demoTimer(T_RESET); // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
@@ -950,22 +952,25 @@ void update()
     }
 #endif
 // попытка сделать синхронизацию ползунков (kostyamat)
-    if (curEff->brightness != jee.param(F("bright")).toInt())
+    if (!effChanged)
     {
-        curEff->brightness = jee.param(F("bright")).toInt();
-        isRefresh = true;
-    }
+        if (curEff->brightness != jee.param(F("bright")).toInt())
+        {
+            curEff->brightness = jee.param(F("bright")).toInt();
+            isRefresh = true;
+        }
 
-    if (curEff->speed != jee.param(F("speed")).toInt())
-    {
-        curEff->speed = jee.param(F("speed")).toInt();
-        isRefresh = true;
-    }
+        if (curEff->speed != jee.param(F("speed")).toInt())
+        {
+            curEff->speed = jee.param(F("speed")).toInt();
+            isRefresh = true;
+        }
 
-    if (curEff->scale != jee.param(F("scale")).toInt())
-    {
-        curEff->scale = jee.param(F("scale")).toInt();
-        isRefresh = true;
+        if (curEff->scale != jee.param(F("scale")).toInt())
+        {
+            curEff->scale = jee.param(F("scale")).toInt();
+            isRefresh = true;
+        }
     }
 // end of fragment
 
