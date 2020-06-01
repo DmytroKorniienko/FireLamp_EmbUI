@@ -38,6 +38,23 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "effects.h"
 
+#ifdef AUX_PIN
+void AUX_toggle(bool key)
+{
+    if (key)
+    {
+        digitalWrite(AUX_PIN, AUX_LEVEL);
+        jee.var(F("AUX"), (F("true")));
+    }
+    else
+    {
+        digitalWrite(AUX_PIN, !AUX_LEVEL);
+        jee.var(F("AUX"), (F("false")));
+    }
+    //myLamp.sendStringToLamp(String(digitalRead(AUX_PIN) == AUX_LEVEL ? F("AUX ON") : F("AUX OFF")).c_str(), CRGB::White);
+}
+#endif
+
 #ifdef MIC_EFFECTS
 void bmicCalCallback()
 {
@@ -67,7 +84,7 @@ void bEventsCallback()
 void bSetCloseCallback()
 {
     iGLOBAL.isAddSetup = false;
-    jee.var("isAddSetup", "false");
+    jee.var(F("isAddSetup"), (F("false")));
     jee.refresh();
 }
 
@@ -178,6 +195,21 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
             }
         }
         break;
+#ifdef AUX_PIN
+    case EVENT_TYPE::AUX_ON:
+        AUX_toggle(true);
+
+        break;
+    case EVENT_TYPE::AUX_OFF:
+        AUX_toggle(false);
+
+        break;
+    case EVENT_TYPE::AUX_TOGGLE:
+        digitalWrite(AUX_PIN, !digitalRead(AUX_PIN));
+        jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
+        //return;
+        break;
+#endif
     default:
         break;
     }
@@ -423,6 +455,9 @@ void create_parameters(){
     jee.var_create(F("ONflag"), F("true"));
     jee.var_create(F("MIRR_H"), F("false"));
     jee.var_create(F("MIRR_V"), F("false"));
+#ifdef AUX_PIN
+    jee.var_create(F("AUX"), F("false"));
+#endif
     jee.var_create(F("msg"), F(""));
     jee.var_create(F("txtColor"), F("#ffffff"));
     jee.var_create(F("txtSpeed"), F("100"));
@@ -520,6 +555,9 @@ void interface(){ // функция в которой мф формируем в
 
         EFFECT enEff; enEff.setNone();
         jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
+#ifdef AUX_PIN
+        jee.checkbox(F("AUX"), F("Включение&nbspAUX"));
+#endif
         jee.uiPush();       // не сбрасывать буфер перед page() после option(), это портит джейсон
         if(!iGLOBAL.isAddSetup){
             do {
@@ -632,6 +670,11 @@ void interface(){ // функция в которой мф формируем в
                         jee.option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
                         jee.option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
                         jee.option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
+#ifdef AUX_PIN
+                        jee.option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
+                        jee.option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
+                        jee.option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
+#endif
                         jee.select(F("evList"), F("Тип события"));
                         jee.checkbox(F("isEnabled"),F("Разрешено"));
                         jee.datetime(F("tmEvent"),F("Дата/время события"));
@@ -918,6 +961,10 @@ void setEffectParams(EFFECT *curEff)
         jee.var(F("param"), F(""));     // но надо будет подумать о более красивом решении
     }
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+	
+#ifdef AUX_PIN
+    jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
+#endif
 
     jee.var(F("effList"),String(curEff->eff_nb));
 
@@ -1003,5 +1050,19 @@ void httpCallback(const char *param, const char *value)
             myLamp.startOTA();
         #endif
     }
+#ifdef AUX_PIN
+    else if (!strcmp_P(param, PSTR("aux_on")))
+    {
+        AUX_toggle(true);
+    }
+    else if (!strcmp_P(param, PSTR("aux_off")))
+    {
+        AUX_toggle(false);
+    }
+    else if (!strcmp_P(param, PSTR("aux_toggle"))) 
+    {
+        AUX_toggle(!digitalRead(AUX_PIN));
+    }
+#endif
     jee.refresh();
 }
