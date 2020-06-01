@@ -836,6 +836,13 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)jee.param(F("micnRdcLvl")).toInt());
     myLamp.setMicOnOff(jee.param(F("isMicON"))==F("true"));
 #endif
+#ifdef AUX_PIN 
+    if ((jee.param(F("AUX")) == F("true")) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false))
+    {
+        AUX_toggle(!(digitalRead(AUX_PIN) == AUX_LEVEL ? true : false));
+            isRefresh = true;
+    }
+#endif
 
     // сперва обрабатываем "включатель"
     bool newpower = jee.param(F("ONflag"))==F("true");
