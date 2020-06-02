@@ -70,7 +70,8 @@ typedef enum _EFFSWITCH {
     SW_PREV,        // предыдущий
     SW_RND,         // случайный
     SW_DELAY,       // сохраненный (для фейдера)
-    SW_SPECIFIC     // переход на конкретный эффект по индексу/имени
+    SW_SPECIFIC,    // переход на конкретный эффект по индексу/имени
+    SW_NEXT_DEMO    // следующий для ДЕМО, исключая отключенные
 } EFFSWITCH;
 
 // управление Тикером
@@ -512,7 +513,7 @@ private:
     /*
      * Смена эффекта в демо по таймеру
      */
-    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT, isFaderON);}
+    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT_DEMO, isFaderON);}
 
     /*
      * вывод готового кадра на матрицу,

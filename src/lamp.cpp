@@ -1313,6 +1313,9 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   case EFFSWITCH::SW_NEXT :
       effects.moveNext();
       break;
+  case EFFSWITCH::SW_NEXT_DEMO :
+      effects.moveBy(1);
+      break;
   case EFFSWITCH::SW_PREV :
       effects.movePrev();
       break;
