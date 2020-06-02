@@ -910,6 +910,7 @@ void update(){ // функция выполняется после ввода д
                 myLamp.effects.getCurrent()->setValue(myLamp.effects.getCurrent()->param, F("R"), (jee.param(F("extraR"))).c_str());
                 String tmp = FPSTR(curEff->param);
                 jee.var(F("param"), tmp);
+                tmpParam = tmp;
             }
             if(strcmp_P(tmpParam.c_str(), curEff->param)){ // различаются  || (curEff->param==nullptr && (jee.param(F("param"))).length()!=0)
                 curEff->updateParam(tmpParam.c_str());
