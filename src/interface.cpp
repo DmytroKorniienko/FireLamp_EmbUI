@@ -84,6 +84,7 @@ void bEventsCallback()
 void bSetCloseCallback()
 {
     iGLOBAL.isAddSetup = false;
+    iGLOBAL.isAPMODE = true;
     jee.var(F("isAddSetup"), (F("false")));
     jee.refresh();
 }
@@ -616,12 +617,7 @@ void interface(){ // функция в которой мф формируем в
 
             jee.page(); // разделитель между страницами
             jee.uiPush();
-            // Страница "Настройки соединения"
-            // if(!jee.connected || jee.param(F("wifi"))==F("AP")){
-            //     jee.formWifi(); // форма настроек Wi-Fi
-            //     jee.formMqtt(); // форма настроек MQTT
-            // }
-            if(!jee.connected){
+            if(!jee.connected && !iGLOBAL.isAPMODE){ // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
                 iGLOBAL.isAddSetup = true;
                 iGLOBAL.addSList = 4;
             }
