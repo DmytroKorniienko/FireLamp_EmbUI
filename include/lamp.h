@@ -55,7 +55,11 @@ typedef enum _LAMPMODE {
   MODE_OTA
 } LAMPMODE;
 
+#ifdef AUX_PIN
+typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE, AUX_ON, AUX_OFF, AUX_TOGGLE} EVENT_TYPE;
+#else
 typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE} EVENT_TYPE;
+#endif
 
 const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 
@@ -161,6 +165,17 @@ struct EVENT {
         case EVENT_TYPE::PIN_STATE:
             buffer.concat(F("PIN"));
             break; 
+#ifdef AUX_PIN
+        case EVENT_TYPE::AUX_ON:
+            buffer.concat(F("AUX ON"));
+            break; 
+        case EVENT_TYPE::AUX_OFF:
+            buffer.concat(F("AUX OFF"));
+            break; 
+        case EVENT_TYPE::AUX_TOGGLE:
+            buffer.concat(F("AUX TOGGLE"));
+            break; 
+#endif
         default:
             break;
         }

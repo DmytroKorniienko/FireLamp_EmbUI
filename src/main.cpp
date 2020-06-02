@@ -54,6 +54,9 @@ Ticker _isrHelper;       // планировщик для обработки п�
 
 void setup() {
     Serial.begin(115200);
+#ifdef AUX_PIN
+	pinMode(AUX_PIN, OUTPUT);
+#endif
     //Serial.println(F("Starting..."));
     //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
