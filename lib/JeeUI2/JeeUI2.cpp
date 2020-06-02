@@ -60,7 +60,7 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
-String jeeui2::get_interface(){
+const String &jeeui2::get_interface(){
     if (buf.length()) buf = "";
     foo();
     return buf;

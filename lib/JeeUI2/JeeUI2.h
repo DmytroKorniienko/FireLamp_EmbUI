@@ -153,7 +153,7 @@ class jeeui2
 
     void refresh();
     void post(const String &key, const String &value);
-    String get_interface();
+    const String &get_interface();
 
     char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
