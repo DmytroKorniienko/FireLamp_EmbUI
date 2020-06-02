@@ -357,7 +357,9 @@ if(touch.isHold() || !touch.isHolded())
         if(storedEffect!=EFF_NONE) {    // переключение на ПРЕДЫДУЩИЙ эффект только если он был запомнен, иначе используется ТЕКУЩИЙ из конфига
           switcheffect(SW_SPECIFIC, isFaderON, storedEffect); // ПРЕДЫДУЩИЙ будет запоминаться для случая включения белой лампы
         } else {
-          changePower(true);
+          //changePower(true);
+          setOnOff(true);
+          switcheffect(SW_SPECIFIC, getFaderFlag(), effects.getEn());
           loadingFlag = true;
         }
       } else {        // лампа была включена
