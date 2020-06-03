@@ -14,7 +14,8 @@ extern jeeui2 jee;
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
        if(jee.dbg) Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-       client->text(jee.get_interface());
+       jee.refresh();
+    //    client->text(jee.get_interface());
     } else
     if(type == WS_EVT_DISCONNECT){
         if(jee.dbg) Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
@@ -60,22 +61,17 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
-const String &jeeui2::get_interface(){
+void jeeui2::frame_send(){
     if (buf.length()) buf = "";
-    foo();
-    return buf;
+    serializeJson(json, buf);
+    Serial.println(buf);
+    if (buf.length()) ws.textAll(buf);
+    buf = "";
 }
 
-void jeeui2::refresh()
-{
+void jeeui2::refresh(){
     if (!ws.count()) return;
-
-    //String b = get_interface(); // то есть мы перепысываем огромный буффер в новую переменную?
-    if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]\n"), ESP.getFreeHeap());
-    //if (b.length()) ws.textAll(b);
-    get_interface();
-    if (buf.length()) ws.textAll(buf); // get_interface переписывает переменную buf, ИМХО ее можно использовать на прямую
-    if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]\n"), ESP.getFreeHeap());
+    foo();
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
@@ -191,22 +187,17 @@ void jeeui2::begin() {
     server.addHandler(&ws);
 
     // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
-    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
-        if (httpstream != nullptr) {
-            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));  // already preparing stream
+    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        if (httpstream) {
+            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));
             return;
         }
-
-        httpstream = request->beginResponseStream(FPSTR(PGmimejson));
-        httpstream->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-
-        foo();   // stream http responce body to the Async's server buffer
-        if (buf.length()) uiPush();
-        request->send(httpstream);
-        httpstream = nullptr;   // release pointer
+        httpstream = true;
+        // request->send(200, FPSTR(PGmimejson), get_interface());
+        httpstream = false;
     });
 
-    server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         String buf;
         buf = F("VERSION: "); buf+=F(VERSION);
         buf += F("\nGIT: "); buf+=F(PIO_SRC_REV);
@@ -416,12 +407,4 @@ void jeeui2::getAPmac(){
     String _mac(WiFi.softAPmacAddress());
     _mac.replace(F(":"), F(""));
     strncpy(mc, _mac.c_str(), sizeof(mc)-1);
-}
-
-// push data to http-responce buffer
-void jeeui2::uiPush(){
-    if (httpstream == nullptr) return;  // nowhere to push
-
-    httpstream->print(buf);
-    buf = "";
 }

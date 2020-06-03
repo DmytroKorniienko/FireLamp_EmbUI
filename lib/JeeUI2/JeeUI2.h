@@ -26,7 +26,7 @@
 #endif
 
 #include <AsyncMqttClient.h>
-//#include "AsyncJson.h"
+#include "../../include/LList.h"
 
 #ifndef __DISABLE_BUTTON0
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
@@ -47,6 +47,10 @@ static const char PGgzip[] PROGMEM = "gzip";
 static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";    // 10 days cache
 static const char PGpmaxage[] PROGMEM = "public, max-age=864000";    // 10 days cache
 
+typedef struct section_t{
+  JsonArray block;
+  String section;
+} section_t;
 
 class jeeui2
 {
@@ -62,7 +66,7 @@ class jeeui2
     typedef void (*httpCmdCallback) (const char *param, const char *value);
 
   public:
-    jeeui2() : cfg(4096), pub_transport(256), btn_transport(128), btn_id(1024) {
+    jeeui2() : cfg(4096), pub_transport(256), btn_transport(256), btn_id(1024), section_list(), json(2048) {
       *ip='\0';
       *mc='\0';
       *mac='\0';
@@ -92,8 +96,12 @@ class jeeui2
     void btnCallback(const String &name ,buttonCallback response);
 
     void app(const String &name);
-    void menu(const String &name);
-    void page();
+    void secbegin(const String &name);
+    void secend();
+    void frame_next();
+    void frame_clear();
+    int frame_add(JsonObject obj);
+    void flush();
 
     void text(const String &id, const String &label);
     void password(const String &id, const String &label);
@@ -124,7 +132,6 @@ class jeeui2
 
     uiCallback foo;
     void ui(void (*uiFunction) ());
-    void uiPush();   // высвобождение буфера
 
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol);
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload));
@@ -151,9 +158,9 @@ class jeeui2
 
     void httpCallback(httpCmdCallback func);
 
+    void frame_send();
     void refresh();
     void post(const String &key, const String &value);
-    const String &get_interface();
 
     char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
@@ -235,6 +242,8 @@ class jeeui2
     char udpMessage[65]; // Обмен по UDP
     bool rc;
 
+    LList<section_t*> section_list;
+
     void connectToMqtt();
     void onMqttConnect();
     static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
@@ -251,9 +260,10 @@ class jeeui2
     static char _t_pld_current[128]; // сообщение
     static bool _t_inc_current;
     static bool _t_remotecontrol;
-    AsyncResponseStream *httpstream=nullptr;  // указатель на http-поток
+    bool httpstream = false;
     String op; // опции для выпадающего списка <-- весьма желательно очищать сразу же...
 public:
+    DynamicJsonDocument json;
     String buf; // борьба с фрагментацией кучи, буффер должен быть объявлен последним <-- весьма желательно очищать сразу же...
 };
 

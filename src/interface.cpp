@@ -140,7 +140,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         filename=String(F("/cfg/"));
         filename.concat(event->message);
         if(event->message)
-            myLamp.effects.loadConfig(filename.c_str());    
+            myLamp.effects.loadConfig(filename.c_str());
         break;
     case EVENT_TYPE::EVENTS_CONFIG_LOAD :
         filename=String(F("/evn/"));
@@ -443,7 +443,7 @@ void create_parameters(){
 
     // параметры подключения к MQTT
     jee.var_create(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
-    
+
     jee.var_create(F("effList"), F("1"));
     jee.var_create(F("isSetup"), F("false"));
 
@@ -539,256 +539,256 @@ void interface(){ // функция в которой мф формируем в
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
 #endif
-    if(1){
-        LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
-        jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
-        // создаем меню
-        jee.menu(F("Эффекты"));
-        if(!iGLOBAL.isSetup){
-            jee.menu(F("Лампа"));
-            jee.menu(F("Настройки"));
-        }
-        // создаем контент для каждого пункта меню
+    LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
+    jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
-        jee.page(); // разделитель между страницами
-        // Страница "Управление эффектами"
+    // создаем меню
+    jee.secbegin(F("menu"));
+    jee.option(F("Эффекты"), F("effects"));
+    if(!iGLOBAL.isSetup){
+        jee.option(F("Лампа"), F("lamp"));
+        jee.option(F("Настройки"), F("settings"));
+    }
+    jee.secend();
 
-        EFFECT enEff; enEff.setNone();
-        jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
+    // Страница "Управление эффектами"
+        jee.secbegin(F("effects"));
+
+    EFFECT enEff; enEff.setNone();
+    jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
 #ifdef AUX_PIN
-        jee.checkbox(F("AUX"), F("Включение&nbspAUX"));
+    jee.checkbox(F("AUX"), F("Включение&nbspAUX"));
 #endif
-        jee.uiPush();       // не сбрасывать буфер перед page() после option(), это портит джейсон
-        if(!iGLOBAL.isAddSetup){
-            do {
-                enEff = *myLamp.effects.enumNextEffect(&enEff);
-                if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || iGLOBAL.isSetup)){
-                    jee.option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
-                }
-            } while((enEff.eff_nb!=EFF_NONE));
-            jee.select(F("effList"), F("Эффект"));
+
+    if(!iGLOBAL.isAddSetup){
+        jee.select(F("effList"), F("Эффект"));
+        do {
+            enEff = *myLamp.effects.enumNextEffect(&enEff);
+            if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || iGLOBAL.isSetup)){
+                jee.option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
+            }
+        } while((enEff.eff_nb!=EFF_NONE));
+        jee.secend();
+    } else {
+        jee.select(F("effList"), F("Эффект"));
+        jee.option(jee.param(F("effList")), F("Список эффектов отключен, выйдите из режима настройки!"));
+        jee.secend();
+
+        jee.button(F("bSetClose"), F("gray"), F("Выйти из настроек"));
+    }
+
+    jee.range(F("bright"),1,255,1,F("Яркость"));
+    jee.range(F("speed"),1,255,1,F("Скорость"));
+    jee.range(F("scale"),1,255,1,F("Масштаб"));
+    String v=myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param,F("R"));
+    //LOG(printf_P, PSTR("\nJsonObject: %s\n"),v.c_str());
+    if(!v.isEmpty())
+        jee.range(F("extraR"),1,255,1,F("Доп. регулятор"));
+
+    //jee.button(F("btn1"),F("gray"),F("<"), 1);
+    if(myLamp.getMode()==MODE_DEMO)
+        jee.button(F("bDemo"),F("green"),F("DEMO -> OFF"));
+    else
+        jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
+    //jee.button(F("btn3"),F("gray"),F(">"), 3);
+    jee.checkbox(F("isSetup"),F("Конфигурирование"));
+    if(iGLOBAL.isSetup){
+        jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
+        jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));
+        jee.text(F("param"),F("Доп. параметры"));
+    }
+    jee.secend();
+
+    if(!iGLOBAL.isSetup){
+        //Страница "Управление лампой"
+        jee.secbegin(F("lamp"));
+        if(iGLOBAL.isTmSetup){
+            jee.time(F("time"),F("Время"));
+            jee.number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
+            jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
+            jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
+            jee.button(F("bTmSubm"),F("gray"),F("Сохранить"));
         } else {
-            jee.option(jee.param(F("effList")), F("Список эффектов отключен, выйдите из режима настройки!"));
-            jee.select(F("effList"), F("Эффект"));
-            jee.button(F("bSetClose"), F("gray"), F("Выйти из настроек"));
+            // jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
+            jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+            jee.text(F("msg"),F("Текст для вывода на матрицу"));
+            jee.color(F("txtColor"), F("Цвет сообщения"));
+            jee.button(F("bTxtSend"),F("gray"),F("Отправить"));
         }
-        jee.uiPush();
-        jee.range(F("bright"),1,255,1,F("Яркость"));
-        jee.range(F("speed"),1,255,1,F("Скорость"));
-        jee.range(F("scale"),1,255,1,F("Масштаб"));
-        String v=myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param,F("R"));
-        //LOG(printf_P, PSTR("\nJsonObject: %s\n"),v.c_str());
-        if(!v.isEmpty())
-            jee.range(F("extraR"),1,255,1,F("Доп. регулятор"));
+        jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
 
-        //jee.button(F("btn1"),F("gray"),F("<"), 1);
-        if(myLamp.getMode()==MODE_DEMO)
-            jee.button(F("bDemo"),F("green"),F("DEMO -> OFF"));
-        else
-            jee.button(F("bDemo"),F("gray"),F("DEMO -> ON"));
-        //jee.button(F("btn3"),F("gray"),F(">"), 3);
-        jee.checkbox(F("isSetup"),F("Конфигурирование"));
-        if(iGLOBAL.isSetup){
-            jee.checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
-            jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));  
-            jee.text(F("param"),F("Доп. параметры"));
-            jee.page(); // разделитель между страницами
-            jee.uiPush();
+        if(!jee.connected && !iGLOBAL.isAPMODE){ // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
+            iGLOBAL.isAddSetup = true;
+            iGLOBAL.addSList = 4;
         }
-        if(!iGLOBAL.isSetup){
-            jee.page(); // разделитель между страницами
-            jee.uiPush();
-            //Страница "Управление лампой"
-            if(iGLOBAL.isTmSetup){
-                jee.time(F("time"),F("Время"));
-                jee.number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
-                jee.text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
-                jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
-                jee.button(F("bTmSubm"),F("gray"),F("Сохранить"));
-            } else {
-                jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
-                jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
-                jee.text(F("msg"),F("Текст для вывода на матрицу"));
-                jee.color(F("txtColor"), F("Цвет сообщения"));
-                jee.button(F("bTxtSend"),F("gray"),F("Отправить"));
-            }
-            jee.checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
-
-            jee.page(); // разделитель между страницами
-            jee.uiPush();
-            if(!jee.connected && !iGLOBAL.isAPMODE){ // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
-                iGLOBAL.isAddSetup = true;
-                iGLOBAL.addSList = 4;
-            }
-            jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
-            if(iGLOBAL.isAddSetup){
-                jee.option(F("1"), F("Конфигурации"));
-                jee.option(F("2"), F("Время/Текст"));
-                jee.option(F("3"), F("События"));
-                jee.option(F("4"), F("Wifi & MQTT"));
+        // Страница настройки
+        jee.secbegin(F("settings"));
+        jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
+        if(iGLOBAL.isAddSetup){
+            jee.select(F("addSList"), F("Группа настроек"));
+            jee.option(F("1"), F("Конфигурации"));
+            jee.option(F("2"), F("Время/Текст"));
+            jee.option(F("3"), F("События"));
+            jee.option(F("4"), F("Wifi & MQTT"));
 # ifdef MIC_EFFECTS
-                jee.option(F("8"), F("Микрофон"));
+            jee.option(F("8"), F("Микрофон"));
 #endif
-                jee.option(F("9"), F("Другое"));
-                jee.select(F("addSList"), F("Группа настроек"));
-                jee.uiPush();
-                switch (iGLOBAL.addSList)
-                {
-                case 1:
-                    jee.text(F("fileName"),F("Конфигурация"));
-                    jee.button(F("bFSave"),F("green"),F("Записать в ФС"));
-                    jee.button(F("bFDel"),F("red"),F("Удалить из ФС"));
-                    break;
-                case 2:
-                    jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
-                    jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
-                    jee.range(F("txtSpeed"),10,100,10,F("Задержка прокрутки текста"));
-                    jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
-                    jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
-                    jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
-                    jee.option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
-                    jee.option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
-                    jee.option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
-                    jee.option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
-                    jee.option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
-                    jee.select(F("perTime"), F("Периодический вывод времени"));
-                    break;       
-                case 3:
-                    jee.checkbox(F("isEdEvent"),F("Новое&nbspсобытие"));
-                    if(jee.param(F("isEdEvent"))==F("true")){ // редактируем параметры событий
-                        jee.option(String(EVENT_TYPE::ON), F("Включить лампу"));
-                        jee.option(String(EVENT_TYPE::OFF), F("Выключить лампу"));
-                        jee.option(String(EVENT_TYPE::DEMO_ON), F("Включить DEMO"));
-                        jee.option(String(EVENT_TYPE::ALARM), F("Будильник"));
-                        jee.option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), F("Загрузка конф. лампы"));
-                        jee.option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
-                        jee.option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
-                        jee.option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
-                        jee.option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
+            jee.option(F("9"), F("Другое"));
+            jee.secend();
+
+            switch (iGLOBAL.addSList)
+            {
+            case 1:
+                jee.text(F("fileName"),F("Конфигурация"));
+                jee.button(F("bFSave"),F("green"),F("Записать в ФС"));
+                jee.button(F("bFDel"),F("red"),F("Удалить из ФС"));
+                break;
+            case 2:
+                jee.number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
+                jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
+                jee.range(F("txtSpeed"),10,100,10,F("Задержка прокрутки текста"));
+                jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
+                jee.select(F("perTime"), F("Периодический вывод времени"));
+                jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
+                jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
+                jee.option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
+                jee.option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
+                jee.option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
+                jee.option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
+                jee.option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
+                jee.secend();
+                break;
+            case 3:
+                jee.checkbox(F("isEdEvent"),F("Новое&nbspсобытие"));
+                if(jee.param(F("isEdEvent"))==F("true")){ // редактируем параметры событий
+                    jee.select(F("evList"), F("Тип события"));
+                    jee.option(String(EVENT_TYPE::ON), F("Включить лампу"));
+                    jee.option(String(EVENT_TYPE::OFF), F("Выключить лампу"));
+                    jee.option(String(EVENT_TYPE::DEMO_ON), F("Включить DEMO"));
+                    jee.option(String(EVENT_TYPE::ALARM), F("Будильник"));
+                    jee.option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), F("Загрузка конф. лампы"));
+                    jee.option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
+                    jee.option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
+                    jee.option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
+                    jee.option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
 #ifdef AUX_PIN
-                        jee.option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
-                        jee.option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
-                        jee.option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
+                    jee.option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
+                    jee.option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
+                    jee.option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
 #endif
-                        jee.select(F("evList"), F("Тип события"));
-                        jee.checkbox(F("isEnabled"),F("Разрешено"));
-                        jee.datetime(F("tmEvent"),F("Дата/время события"));
-                        jee.number(F("repeat"),F("Повтор, мин"));
-                        jee.number(F("stopat"),F("Остановить через, мин"));
-                        jee.text(F("msg"),F("Параметр (текст)"));
-                        jee.checkbox(F("d1"),F("Понедельник"));
-                        jee.checkbox(F("d2"),F("Вторник"));
-                        jee.checkbox(F("d3"),F("Среда"));
-                        jee.checkbox(F("d4"),F("Четверг"));
-                        jee.checkbox(F("d5"),F("Пятница"));
-                        jee.checkbox(F("d6"),F("Суббота"));
-                        jee.checkbox(F("d7"),F("Воскресенье"));
-                        jee.button(F("bOwrEvent"),F("grey"),F("Обновить событие"));
-                        jee.button(F("bAddEvent"),F("green"),F("Добавить событие"));
-                    } else {
-                        EVENT *next = myLamp.events.getNextEvent(nullptr);
-                        int i = 1;
-                        while (next!=nullptr)
-                        {
-                            jee.option(String(i), next->getName());
-                            i++;
-                            next = myLamp.events.getNextEvent(next);
-                        }
-                        jee.select(F("evSelList"), F("Событие"));
-                        jee.button(F("bEditEvent"),F("green"),F("Редактировать событие"));
-                        jee.button(F("bDelEvent"),F("red"),F("Удалить событие"));
+                    jee.secend();
+
+                    jee.checkbox(F("isEnabled"),F("Разрешено"));
+                    jee.datetime(F("tmEvent"),F("Дата/время события"));
+                    jee.number(F("repeat"),F("Повтор, мин"));
+                    jee.number(F("stopat"),F("Остановить через, мин"));
+                    jee.text(F("msg"),F("Параметр (текст)"));
+                    jee.checkbox(F("d1"),F("Понедельник"));
+                    jee.checkbox(F("d2"),F("Вторник"));
+                    jee.checkbox(F("d3"),F("Среда"));
+                    jee.checkbox(F("d4"),F("Четверг"));
+                    jee.checkbox(F("d5"),F("Пятница"));
+                    jee.checkbox(F("d6"),F("Суббота"));
+                    jee.checkbox(F("d7"),F("Воскресенье"));
+                    jee.button(F("bOwrEvent"),F("grey"),F("Обновить событие"));
+                    jee.button(F("bAddEvent"),F("green"),F("Добавить событие"));
+                } else {
+                    jee.select(F("evSelList"), F("Событие"));
+                    EVENT *next = myLamp.events.getNextEvent(nullptr);
+                    int i = 1;
+                    while (next!=nullptr) {
+                        jee.option(String(i), next->getName());
+                        i++;
+                        next = myLamp.events.getNextEvent(next);
                     }
-                    break;      
-                case 4:
-                    jee.text(F("ap_ssid"), F("AP/mDNS"));
-                    jee.formWifi(); // форма настроек Wi-Fi
-                    jee.formMqtt(); // форма настроек MQTT            
-                    break;       
-                case 5:
-                    break;
+                    jee.secend();
+
+                    jee.button(F("bEditEvent"),F("green"),F("Редактировать событие"));
+                    jee.button(F("bDelEvent"),F("red"),F("Удалить событие"));
+                }
+                break;
+            case 4:
+                jee.text(F("ap_ssid"), F("AP/mDNS"));
+                jee.formWifi(); // форма настроек Wi-Fi
+                jee.formMqtt(); // форма настроек MQTT
+                break;
+            case 5:
+                break;
 # ifdef MIC_EFFECTS
-                case 8:
-                    if(!iGLOBAL.isMicCal){
-                        jee.number(F("micScale"), F("Коэф. коррекции нуля"));
-                        jee.number(F("micNoise"), F("Уровень шума, ед"));
-                        jee.range(F("micnRdcLvl"), 0,4,1, F("Шумодав"));
-                        jee.button(F("bmicCal"),F("red"), F("Калибровка микрофона"));
-                    }
-                    else {
-                        jee.button(F("bmicCal"),F("grey"),F("Обновить"));
-                    }
-                    break;
+            case 8:
+                if(!iGLOBAL.isMicCal){
+                    jee.number(F("micScale"), F("Коэф. коррекции нуля"));
+                    jee.number(F("micNoise"), F("Уровень шума, ед"));
+                    jee.range(F("micnRdcLvl"), 0,4,1, F("Шумодав"));
+                    jee.button(F("bmicCal"),F("red"), F("Калибровка микрофона"));
+                }
+                else {
+                    jee.button(F("bmicCal"),F("grey"),F("Обновить"));
+                }
+                break;
 #endif
-                case 9:
-                    jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
-                    jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-                    jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-                    jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
-                    jee.checkbox(F("isFaderON"),F("Плавное&nbspпереключение&nbspэффектов"));
+            case 9:
+                jee.number(F("mqtt_int"), F("Интервал mqtt сек."));
+                jee.checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
+                jee.checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
+                jee.checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
+                jee.checkbox(F("isFaderON"),F("Плавное&nbspпереключение&nbspэффектов"));
 #ifdef ESP_USE_BUTTON
-                    jee.checkbox(F("isBtnOn"), F("Кнопка&nbspактивна"));
+                jee.checkbox(F("isBtnOn"), F("Кнопка&nbspактивна"));
 #endif
 #ifdef OTA
-                    jee.button(F("bOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));   
+                jee.button(F("bOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));
 #endif
-                    break;      
-                default:
-                    break;
-                }
-            } else {
-                if(SPIFFS.begin()){
-#ifdef ESP32
-                    File root = SPIFFS.open("/cfg");
-                    File file = root.openNextFile();
-#else
-                    Dir dir = SPIFFS.openDir(F("/cfg"));
-#endif
-                    String fn;
-#ifdef ESP32
-                    while (file) {
-                        fn=file.name();
-                        if(!file.isDirectory()){
-#else                    
-                    while (dir.next()) {
-                        fn=dir.fileName();
-#endif
-
-                            fn.replace(F("/cfg/"),F(""));
-                            //LOG(println, fn);
-                            jee.option(fn, fn);
-#ifdef ESP32
-                            file = root.openNextFile();
-                        }
-#endif
-                    }
-                }
-                String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
-                jee.select(F("fileList"), cfg);
-
-                jee.button(F("bFLoad"),F("gray"),F("Считать с ФС"));
-                if(myLamp.IsEventsHandled())
-                    jee.button(F("bEvents"),F("red"),F("EVENTS -> OFF"));
-                else
-                    jee.button(F("bEvents"),F("green"),F("EVENTS -> ON"));
-# ifdef MIC_EFFECTS
-                jee.checkbox(F("isMicON"), F("Микрофон"));
-#endif
+                break;
+            default:
+                break;
             }
-            jee.page(); // разделитель между страницами
-            jee.uiPush();
+        } else {
+            if(SPIFFS.begin()){
+#ifdef ESP32
+                File root = SPIFFS.open("/cfg");
+                File file = root.openNextFile();
+#else
+                Dir dir = SPIFFS.openDir(F("/cfg"));
+#endif
+                String fn;
+#ifdef ESP32
+                while (file) {
+                    fn=file.name();
+                    if(!file.isDirectory()){
+#else
+                while (dir.next()) {
+                    fn=dir.fileName();
+#endif
+
+                    fn.replace(F("/cfg/"),F(""));
+                    //LOG(println, fn);
+                    jee.option(fn, fn);
+#ifdef ESP32
+                        file = root.openNextFile();
+                    }
+#endif
+                }
+            }
+            String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
+            jee.select(F("fileList"), cfg);
+
+            jee.button(F("bFLoad"),F("gray"),F("Считать с ФС"));
+            if(myLamp.IsEventsHandled())
+                jee.button(F("bEvents"),F("red"),F("EVENTS -> OFF"));
+            else
+                jee.button(F("bEvents"),F("green"),F("EVENTS -> ON"));
+# ifdef MIC_EFFECTS
+            jee.checkbox(F("isMicON"), F("Микрофон"));
+#endif
         }
-    } else {
-        LOG(println, F("Внимание: Загрузка минимального интерфейса, т.к. обнаружен вызов index.htm"));
-        jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
-        // создаем меню
-        jee.menu(F("Эффекты"));
-
-        jee.page(); // разделитель между страницами
-        jee.button(F("bRefresh"),F("gray"),F("Обновить интерфейс"));
-        jee.page(); // разделитель между страницами
+        jee.secend();
+        jee.frame_send();
+        jee.frame_clear();
     }
+
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
 #endif
@@ -832,7 +832,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)jee.param(F("micnRdcLvl")).toInt());
     myLamp.setMicOnOff(jee.param(F("isMicON"))==F("true"));
 #endif
-#ifdef AUX_PIN 
+#ifdef AUX_PIN
     if ((jee.param(F("AUX")) == F("true")) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false))
     {
         AUX_toggle(!(digitalRead(AUX_PIN) == AUX_LEVEL ? true : false));
@@ -857,7 +857,7 @@ void update(){ // функция выполняется после ввода д
         iGLOBAL.isEdEvent = !iGLOBAL.isEdEvent;
         isRefresh = true;
     }
-    
+
     if(iGLOBAL.isTmSetup!=(jee.param(F("isTmSetup"))==F("true"))){
         iGLOBAL.isTmSetup = !iGLOBAL.isTmSetup;
         isRefresh = true;
@@ -873,7 +873,7 @@ void update(){ // функция выполняется после ввода д
         if(iGLOBAL.prevEffect!=nullptr)
             isRefresh = true;
     }
- 
+
     uint8_t cur_addSList = jee.param(F("addSList")).toInt();
     if(iGLOBAL.addSList!=cur_addSList){
         iGLOBAL.addSList = cur_addSList;
@@ -922,7 +922,7 @@ void update(){ // функция выполняется после ввода д
             myLamp.setLoading(true); // перерисовать эффект
 
             if(iGLOBAL.prevEffect!=nullptr){
-                if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+                if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
                     myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
                 }
             }
@@ -961,7 +961,7 @@ void setEffectParams(EFFECT *curEff)
     jee.var(F("param"), curEff->getParam());
     jee.var(F("extraR"), curEff->getValue(curEff->param, F("R")));
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
-	
+
 #ifdef AUX_PIN
     jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
 #endif
@@ -995,7 +995,7 @@ void updateParm() // передача параметров в UI после на
 void httpCallback(const char *param, const char *value)
 {
     EFFECT *curEff = myLamp.effects.getCurrent();
-    
+
     LOG(printf_P, "HTTP: %s - %s\n", param, value);
     if(!strcmp_P(param,PSTR("on"))){
         myLamp.setOnOff(true);
@@ -1031,7 +1031,7 @@ void httpCallback(const char *param, const char *value)
             jee.var(F("scale"), value);
             curEff->scale = atoi(value);
             myLamp.setLoading(true); // перерисовать эффект
-        }    
+        }
     } else if(!strcmp_P(param,PSTR("effect"))){
         if(atoi(value)>0){
             jee.var(F("effList"), value);
@@ -1059,7 +1059,7 @@ void httpCallback(const char *param, const char *value)
     {
         AUX_toggle(false);
     }
-    else if (!strcmp_P(param, PSTR("aux_toggle"))) 
+    else if (!strcmp_P(param, PSTR("aux_toggle")))
     {
         AUX_toggle(!digitalRead(AUX_PIN));
     }
