@@ -351,11 +351,12 @@ public:
             uint8_t bballsCOLOR[bballsMaxNUM_BALLS] ;                   // прикручено при адаптации для разноцветных мячиков
             uint8_t bballsX[bballsMaxNUM_BALLS] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
             int   bballsPos[bballsMaxNUM_BALLS] ;                       // The integer position of the dot on the strip (LED index)
-            float bballsH[bballsMaxNUM_BALLS] ;                         // An array of heights
+            float bballsHi ;                         // An array of heights
             float bballsVImpact[bballsMaxNUM_BALLS] ;                   // As time goes on the impact velocity will change, so make an array to store those values
-            float bballsTCycle[bballsMaxNUM_BALLS] ;                    // The time since the last time the ball struck the ground
+            float bballsTCycle ;                    // The time since the last time the ball struck the ground
             float bballsCOR[bballsMaxNUM_BALLS] ;                       // Coefficient of Restitution (bounce damping)
             long  bballsTLast[bballsMaxNUM_BALLS] ;                     // The clock time of the last ground strike
+            float bballsShift[bballsMaxNUM_BALLS];
 		};
         struct {
             //-- 3D Noise эффектцы --------------
