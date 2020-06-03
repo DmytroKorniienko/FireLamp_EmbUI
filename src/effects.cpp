@@ -1201,79 +1201,66 @@ void lavaNoiseRoutine(CRGB *leds, const char *param)
 //  https://github.com/githubcdr/Arduino/blob/master/bouncingballs/bouncingballs.ino
 //  With BIG thanks to the FastLED community!
 //  адаптация от SottNick
-#define bballsGRAVITY           (-9.81)              // Downward (negative) acceleration of gravity in m/s^2
-#define bballsH0                (1)                  // Starting height, in meters, of the ball (strip length)
+#define bballsGRAVITY           (-10)              // Downward (negative) acceleration of gravity in m/s^2
+#define bballsH0                (2)                  // Starting height, in meters, of the ball (strip length)
+#define bballsVImpact0          (sqrt(-2 * bballsGRAVITY * bballsH0))
 //#define bballsMaxNUM_BALLS      (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
 void BBallsRoutine(CRGB *leds, const char *param)
 {
   uint8_t bballsNUM_BALLS;                             // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-
-  // static uint8_t GSHMEM.bballsCOLOR[bballsMaxNUM_BALLS] ;                   // прикручено при адаптации для разноцветных мячиков
-  // static uint8_t GSHMEM.bballsX[bballsMaxNUM_BALLS] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
-  // static int   GSHMEM.bballsPos[bballsMaxNUM_BALLS] ;                       // The integer position of the dot on the strip (LED index)
-  // static float GSHMEM.bballsH[bballsMaxNUM_BALLS] ;                         // An array of heights
-  // static float GSHMEM.bballsVImpact[bballsMaxNUM_BALLS] ;                   // As time goes on the impact velocity will change, so make an array to store those values
-  // static float GSHMEM.bballsTCycle[bballsMaxNUM_BALLS] ;                    // The time since the last time the ball struck the ground
-  // static float GSHMEM.bballsCOR[bballsMaxNUM_BALLS] ;                       // Coefficient of Restitution (bounce damping)
-  // static long  GSHMEM.bballsTLast[bballsMaxNUM_BALLS] ;                     // The clock time of the last ground strike
-  float bballsVImpact0 = sqrt( -2 * bballsGRAVITY * bballsH0 );      // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
-
-  bballsNUM_BALLS = (uint8_t)((bballsMaxNUM_BALLS * myLamp.effects.getScale())/256+1);
-  for (int i = 0 ; i < bballsNUM_BALLS ; i++)
-    GSHMEM.bballsCOR[i] = 0.90 - float(i)/(255-myLamp.effects.getSpeed()); // это, видимо, прыгучесть. для каждого мячика уникальная изначально
+  bballsNUM_BALLS =  map(myLamp.effects.getScale(), 0, 255, 1, bballsMaxNUM_BALLS);
+  byte speed_t = myLamp.effects.getSpeed();
 
   if (myLamp.isLoading()){
     FastLED.clear();
-
+    randomSeed((unsigned)time(NULL) );
     for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
-      GSHMEM.bballsCOLOR[i] = random(0U, 256U);
-      GSHMEM.bballsX[i] = random(0U, WIDTH);
+      GSHMEM.bballsCOLOR[i] = random8();
+      GSHMEM.bballsX[i] = random8(1U, WIDTH);
       GSHMEM.bballsTLast[i] = millis();
-      GSHMEM.bballsH[i] = bballsH0;
       GSHMEM.bballsPos[i] = 0;                                    // Balls start on the ground
       GSHMEM.bballsVImpact[i] = bballsVImpact0;                   // And "pop" up at vImpact0
-      GSHMEM.bballsTCycle[i] = 0;
+      GSHMEM.bballsCOR[i] = 0.90 - float(i) / pow(bballsNUM_BALLS, 2);
+      GSHMEM.bballsShift[i] = false;
     }
   }
   
-
+  GSHMEM.bballsTCycle = 0;
+  GSHMEM.bballsHi = 0.0;
+  myLamp.dimAll(50);
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
-    myLamp.setLeds(myLamp.getPixelNumber(GSHMEM.bballsX[i], GSHMEM.bballsPos[i]), CRGB::Black); // off for the next loop around
+    //myLamp.setLeds(myLamp.getPixelNumber(GSHMEM.bballsX[i], GSHMEM.bballsPos[i]), CRGB::Black); // off for the next loop around
 
-    GSHMEM.bballsTCycle[i] =  millis() - GSHMEM.bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
+    GSHMEM.bballsTCycle =  millis() - GSHMEM.bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
 
     // A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
-    GSHMEM.bballsH[i] = 0.5 * bballsGRAVITY * pow( GSHMEM.bballsTCycle[i]/1000 , 2.0 ) + GSHMEM.bballsVImpact[i] * GSHMEM.bballsTCycle[i]/1000;
+    GSHMEM.bballsHi = 0.5 * bballsGRAVITY * pow( GSHMEM.bballsTCycle/(1150 - speed_t * 3) , 2.0 ) + GSHMEM.bballsVImpact[i] * GSHMEM.bballsTCycle/(1150 - speed_t * 3);
 
-    if ( GSHMEM.bballsH[i] < 0 ) {                      
-      GSHMEM.bballsH[i] = 0;                            // If the ball crossed the threshold of the "ground," put it back on the ground
+    if ( GSHMEM.bballsHi < 0 ) {  
+      GSHMEM.bballsTLast[i] = millis();                    
+      GSHMEM.bballsHi = 0;                            // If the ball crossed the threshold of the "ground," put it back on the ground
       GSHMEM.bballsVImpact[i] = GSHMEM.bballsCOR[i] * GSHMEM.bballsVImpact[i] ;   // and recalculate its new upward velocity as it's old velocity * COR
-      GSHMEM.bballsTLast[i] = millis();
 
-//      if ( GSHMEM.bballsVImpact[i] < 0.01 ) GSHMEM.bballsVImpact[i] = GSHMEM.bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
-      if ( GSHMEM.bballsVImpact[i] < 0.01 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
-        {
-          switch (random(3U)) // этот свитч двигает мячики влево-вправо иногда
-            {
-              case 0U:
-              {
-                if (GSHMEM.bballsX[i] == 0U) GSHMEM.bballsX[i] = WIDTH - 1U;
-                  else --GSHMEM.bballsX[i];
-                break;
-              }
-              case 2U:
-              {
-                if (GSHMEM.bballsX[i] == WIDTH - 1U) GSHMEM.bballsX[i] = 0U;
-                  else ++GSHMEM.bballsX[i];
-                break;
-              }
-            }
-          GSHMEM.bballsCOR[i] = 0.90 - float(random(0U,5U))/pow(random(1U,6U),2); // а это прыгучесть меняется. кажется, не очень удачно сделано
-          GSHMEM.bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
-        }
+
+      //if ( GSHMEM.bballsVImpact[i] < 0.01 ) GSHMEM.bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
+      if ( GSHMEM.bballsVImpact[i] < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
+      {
+        GSHMEM.bballsCOR[i] = 0.90 - float(random(0U, 9U)) / pow(random(4U, 9U), 2); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
+        GSHMEM.bballsShift[i] = GSHMEM.bballsCOR[i] >= 0.89;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
+        GSHMEM.bballsVImpact[i] = bballsVImpact0;
+      } 
     }
-    GSHMEM.bballsPos[i] = round( GSHMEM.bballsH[i] * (HEIGHT - 1) / bballsH0);       // Map "h" to a "pos" integer index position on the LED strip
-
+    GSHMEM.bballsPos[i] = round( GSHMEM.bballsHi * (HEIGHT - 1) / bballsH0);       // Map "h" to a "pos" integer index position on the LED strip
+    if (GSHMEM.bballsShift[i] && (GSHMEM.bballsPos[i] == HEIGHT - 1)) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+      GSHMEM.bballsShift[i] = false;
+      if (GSHMEM.bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
+        if (GSHMEM.bballsX[i] == 0U) GSHMEM.bballsX[i] = WIDTH - 1U;
+        else --GSHMEM.bballsX[i];
+      } else {
+        if (GSHMEM.bballsX[i] == WIDTH - 1U) GSHMEM.bballsX[i] = 0U;
+        else ++GSHMEM.bballsX[i];
+      }
+    }
     myLamp.setLeds(myLamp.getPixelNumber(GSHMEM.bballsX[i], GSHMEM.bballsPos[i]), CHSV(GSHMEM.bballsCOLOR[i], 255, 255));
   }
 }
