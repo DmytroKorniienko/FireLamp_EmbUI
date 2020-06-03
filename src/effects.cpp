@@ -1357,7 +1357,7 @@ void metaBallsRoutine(CRGB *leds, const char *param)
       dist += sqrt((dx * dx) + (dy * dy));
 
       // inverse result
-      byte color = myLamp.effects.getScale()*4 / dist;
+      byte color = myLamp.effects.getScale()*4 / (dist==0?1:dist);
 
       // map color between thresholds
       if (color > 0 and color < 60) {
@@ -1529,7 +1529,7 @@ void FillNoise(int8_t layer) {
 void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0) {
   uint8_t zD;
   uint8_t zF;
-  CRGB *leds = myLamp.getLeds(); // unsafe
+  CRGB *leds = myLamp.getUnsafeLedsArray(); // unsafe
   CRGB ledsbuff[NUM_LEDS];
 
   for(uint8_t i=0; i<NUM_LAYERS; i++)
@@ -1559,7 +1559,7 @@ void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0) {
 void MoveFractionalNoiseY(int8_t amplitude = 1, float shift = 0) {
   uint8_t zD;
   uint8_t zF;
-  CRGB *leds = myLamp.getLeds(); // unsafe
+  CRGB *leds = myLamp.getUnsafeLedsArray(); // unsafe
   CRGB ledsbuff[NUM_LEDS];
 
   for(uint8_t i=0; i<NUM_LAYERS; i++)
@@ -1937,18 +1937,34 @@ void incrementalDriftRoutine2(CRGB *leds, const char *param)
 #ifdef MIC_EFFECTS
 void freqAnalyseRoutine(CRGB *leds, const char *param)
 {
-  myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
-
-  if(myLamp.isLoading()){
-    memset(GSHMEM.peakX,0,sizeof(GSHMEM.peakX));
-  }
-  
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
     return;
   } else {
     myLamp.setEffDelay(millis());
   }
 
+  myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
+
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+
+  if(myLamp.isLoading()){
+    memset(GSHMEM.peakX,0,sizeof(GSHMEM.peakX));
+  }
+  
   float samp_freq;
   double last_freq;
   uint8_t last_min_peak, last_max_peak;
@@ -1966,13 +1982,13 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
   float scale = (maxVal==0? 0 : last_max_peak/maxVal);
   scale = scale * ((myLamp.effects.getScale()%128)/127.0);
 
-#ifdef LAMP_DEBUG
-EVERY_N_SECONDS(1){
-  for(uint8_t i=0; i<WIDTH/freqDiv; i++)
-    LOG(printf_P,PSTR("%5.2f "),x[i]);
-  LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv], scale); 
-}
-#endif
+// #ifdef LAMP_DEBUG
+// EVERY_N_SECONDS(1){
+//   for(uint8_t i=0; i<WIDTH/freqDiv; i++)
+//     LOG(printf_P,PSTR("%5.2f "),x[i]);
+//   LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv], scale); 
+// }
+// #endif
 
   for(uint8_t xpos=0; xpos<WIDTH/freqDiv; xpos++){
     for(uint8_t ypos=0; ypos<HEIGHT; ypos++){
@@ -1986,7 +2002,15 @@ EVERY_N_SECONDS(1){
       } else if(ypos>(HEIGHT/2.0)){
         color=(color<<8)|(color<<16);
       } else {
-        color=color<<8;
+        //color=color<<8;
+        if(color){
+          CRGB tColor;
+          if(!(curVal%(uint8_t)ptPallete)) // для крайней точки рандом, иначе возьмем по индексу/2
+            tColor = ColorFromPalette(*curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+          else
+            tColor = ColorFromPalette(*curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+          color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
+        }
       }
       myLamp.setLeds(myLamp.getPixelNumber(freqDiv*xpos,ypos), color);
       if(freqDiv>1)
@@ -2012,7 +2036,15 @@ EVERY_N_SECONDS(1){
     } else if(ypos>(HEIGHT/2.0)){
       color=(color<<8)|(color<<16);
     } else {
-      color=color<<8;
+      //color=color<<8;
+      if(color){
+          CRGB tColor;
+          if(!(curVal%(uint8_t)ptPallete)) // для крайней точки рандом, иначе возьмем по индексу/2
+            tColor = ColorFromPalette(*curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+          else
+            tColor = ColorFromPalette(*curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+          color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
+      }
     }
     myLamp.setLeds(myLamp.getPixelNumber(freqDiv*i,ypos), color);
     if(freqDiv>1)
