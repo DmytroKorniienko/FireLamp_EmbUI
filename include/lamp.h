@@ -444,7 +444,7 @@ private:
 
     uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
     uint32_t effDelay; // доп. задержка для эффектов
-
+    uint32_t effDelay_uS; // доп. задержка для эффектов микросекунді
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
     void(*updateParmFunc)() = nullptr; // функтор обновления параметров
@@ -604,9 +604,11 @@ public:
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}
+    uint32_t getEffDelay_uS() {return effDelay_uS;}
     uint16_t getmaxDim() {return maxDim;}
     uint16_t getminDim() {return minDim;}
     void setEffDelay(uint32_t dl) {effDelay=dl;}
+    void setEffDelay_uS(uint32_t dl) {effDelay_uS=dl;}
 
     void changePower(); // плавное включение/выключение
     void changePower(bool);
