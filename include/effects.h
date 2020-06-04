@@ -326,7 +326,7 @@ static EFFECT _EFFECTS_ARR[] = {
 
     {true, true, 127, 127, 127, EFF_TIME, T_TIME, timePrintRoutine, nullptr}
 #ifdef MIC_EFFECTS
-    ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, nullptr}
+    ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
 #endif
 };
 

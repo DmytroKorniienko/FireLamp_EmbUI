@@ -903,14 +903,18 @@ void update(){ // функция выполняется после ввода д
             // Если руками правили строковый параметр - то обновляем его в эффекте, а дальше синхронизируем (нужно для возможности очистки)
             String tmpParam = jee.param(F("param"));
             if(curEff->param==nullptr || strcmp_P(curEff->param, tmpParam.c_str())){ // различаются
-                if(curEff->param==nullptr)
+                if(curEff->param==nullptr){
                     curEff->updateParam(("")); // для вновь добавленного эффекта сделаем очистку, а не копирование с предыдущего эффекта
-                else
+                    jee.var(F("extraR"), F(""));
+                }
+                else {
                     curEff->updateParam(tmpParam.c_str());
+                    jee.var(F("extraR"), curEff->getValue(curEff->param, F("R")));
+                }
             }
             String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
             if(!var.isEmpty()){
-                myLamp.effects.getCurrent()->setValue(myLamp.effects.getCurrent()->param, F("R"), (jee.param(F("extraR"))).c_str());
+                curEff->setValue(curEff->param, F("R"), (jee.param(F("extraR"))).c_str());
                 String tmp = FPSTR(curEff->param);
                 jee.var(F("param"), tmp);
                 tmpParam = tmp;
