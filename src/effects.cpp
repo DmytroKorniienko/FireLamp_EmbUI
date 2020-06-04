@@ -2991,7 +2991,7 @@ void cube2dRoutine(CRGB *leds, const char *param)
   CRGB color, color2;
 	bool seamlessX; // получилось ли сделать поле по Х бесшовным
 
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
+  if ((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed()) / 3)) {
     return;
   } else {
     myLamp.setEffDelay(millis());
@@ -3016,11 +3016,24 @@ void cube2dRoutine(CRGB *leds, const char *param)
   curPalette = palette_arr[pos]; // выбираем из доп. регулятора
   uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-	sizeY = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
-	sizeX = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
-	if (myLamp.effects.getSpeed() & 0x01) // по идее, ячейки не обязательно должны быть квадратными, поэтому можно тут поизвращаться
-		sizeY = (sizeY << 1U) + 1U;
-    cntY = HEIGHT / (sizeY + 1U);
+	if (curVal) {
+    sizeY = (map(myLamp.effects.getScale(), 1, 254, 2, 14) / 2);
+  } else {
+    sizeY = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
+	}
+
+	sizeX = sizeY;
+
+  if (curVal) {  
+    // ------ По мере передвижения ползунка по шкале масштаба, попеременно увеличиваем одну из сторон сегмента
+    if (map(myLamp.effects.getScale(), 1, 254, 2, 14) % 2 > 0) sizeY = sizeY + 1;
+    // ---------
+  } else {
+    if (myLamp.effects.getSpeed() & 0x01) // по идее, ячейки не обязательно должны быть квадратными, поэтому можно тут поизвращаться
+	    sizeY = (sizeY << 1U) + 1U;
+  }
+
+  cntY = HEIGHT / (sizeY + 1U);
 	if (cntY < 2U)
 		cntY = 2U;
 	y = HEIGHT / cntY - 1U;
