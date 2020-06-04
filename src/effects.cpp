@@ -2235,19 +2235,26 @@ uint8_t wrapY(int8_t y)
 void fire2012Routine(CRGB *leds, const char *param)
 {
 const TProgmemRGBPalette16 *firePalettes[] = {
-    &HeatColors2_p,
+    &SodiumFireColors_p,
     &WoodFireColors_p,
     &NormalFire_p,
+    &HeatColors_p,
     &NormalFire2_p,
-    &LithiumFireColors_p,
-    &SodiumFireColors_p,
+    &HeatColors2_p,
     &CopperFireColors_p,
+    &LithiumFireColors_p,   
     &AlcoholFireColors_p,
     &RubidiumFireColors_p,
     &PotassiumFireColors_p};
 
-  const TProgmemRGBPalette16 *curPalette = firePalettes[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(firePalettes)/sizeof(TProgmemRGBPalette16 *))-1))];
+  const TProgmemRGBPalette16 *curPalette = firePalettes[ map(myLamp.effects.getScale(), 1, 255, 0, (int)(sizeof(firePalettes) / sizeof(TProgmemRGBPalette16 *))  - 1) ];
   
+  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(35 - map(myLamp.effects.getSpeed(), 1, 255, 1, 35)))
+  {
+    return;
+  } else {
+    myLamp.setEffDelay(millis());
+  }
 #if HEIGHT / 6 > 6
 #define FIRE_BASE 6
 #else
@@ -2261,7 +2268,7 @@ const TProgmemRGBPalette16 *firePalettes[] = {
   uint8_t sparking = 130;
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-  const uint8_t fireSmoothing = 80*2.0*myLamp.effects.getSpeed()/255.0+10;
+  const uint8_t fireSmoothing =90; // random8(50, 120); //map(myLamp.effects.getSpeed(), 1, 255, 20, 100);
   // Add entropy to random number generator; we use a lot of it.
   random16_add_entropy(random(256));
 
@@ -2281,9 +2288,9 @@ const TProgmemRGBPalette16 *firePalettes[] = {
     }
 
     // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-    if (random(255) < sparking)
+    if (random8() < sparking)
     {
-      int j = random(FIRE_BASE);
+      int j = random8(FIRE_BASE);
       GSHMEM.noise3d[0][x][j] = qadd8(GSHMEM.noise3d[0][x][j], random(160, 255));
     }
 
