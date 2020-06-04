@@ -1948,16 +1948,18 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
   TProgmemRGBPalette16 const *curPalette;
   uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
-  float ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
   uint8_t pos; // позиция в массиве указателей паллитр
   uint8_t curVal; // curVal == либо var как есть, либо getScale
   String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
   if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
     pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
     curVal = var.toInt();
   } else {
-    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
-    curVal = myLamp.effects.getScale();
+    ptPallete = 127.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)(myLamp.effects.getScale()%128)/ptPallete);
+    curVal = myLamp.effects.getScale()%128;
   }
   curPalette = palette_arr[pos]; // выбираем из доп. регулятора
 
@@ -2005,7 +2007,7 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
         //color=color<<8;
         if(color){
           CRGB tColor;
-          if(!(curVal%(uint8_t)ptPallete)) // для крайней точки рандом, иначе возьмем по индексу/2
+          if(!(curVal%(uint8_t)(ptPallete*(pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
             tColor = ColorFromPalette(*curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
           else
             tColor = ColorFromPalette(*curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
@@ -2039,7 +2041,7 @@ void freqAnalyseRoutine(CRGB *leds, const char *param)
       //color=color<<8;
       if(color){
           CRGB tColor;
-          if(!(curVal%(uint8_t)ptPallete)) // для крайней точки рандом, иначе возьмем по индексу/2
+          if(!(curVal%(uint8_t)(ptPallete*(pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
             tColor = ColorFromPalette(*curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
           else
             tColor = ColorFromPalette(*curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
