@@ -224,15 +224,30 @@ void fire2012WithPalette(CRGB*leds, const char *param) {
     myLamp.setEffDelay(millis());
   }
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-  uint8_t scale = myLamp.effects.getScale();
-  uint8_t COOLINGNEW = constrain((uint16_t)(scale % 32) * 8 / HEIGHT + 7, 1, 255) ;
+  uint8_t COOLINGNEW = constrain((uint16_t)scale * palleteCnt / HEIGHT + 7, 1, 255) ;
   // Array of temperature readings at each simulation cell
   // static byte GSHMEM.heat[WIDTH][HEIGHT];
 
   myLamp.blur2d(20);
-  myLamp.dimAll(254U - ((myLamp.effects.getScale()%32))*8);
+  myLamp.dimAll(254U - scale * (palleteCnt-1));
 
   for (uint8_t x = 0; x < WIDTH; x++) {
     // Step 1.  Cool down every cell a little
@@ -1425,13 +1440,34 @@ void spiroRoutine(CRGB *leds, const char *param)
     const uint8_t spiromaxy = spirocenterY + spiroradiusy + 1;
   
     const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-    const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+    TProgmemRGBPalette16 const *curPalette;
+    uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+    float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    uint8_t pos; // позиция в массиве указателей паллитр
+    uint8_t curVal; // curVal == либо var как есть, либо getScale
+    String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+    if(!var.isEmpty()){
+      ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+      pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+      curVal = var.toInt();
+    } else {
+      ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+      pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+      curVal = myLamp.effects.getScale();
+    }
+    curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+    uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
+
+// EVERY_N_SECONDS(1){
+//   LOG(printf_P,PSTR("curPalette=%d, curVal=%d, scale=%d\n"), pos, curVal, scale);
+// }
+
     const float speed_factor = (float)myLamp.effects.getSpeed()/127+1;
     uint8_t spirooffset = 256 / GSHMEM.spirocount;
     boolean change = false;
 
     myLamp.blur2d(15);//45/(speed_factor*3));
-    myLamp.dimAll(254U - (32-(myLamp.effects.getScale()%32)));
+    myLamp.dimAll(254U - scale);
     //myLamp.dimAll(250-speed_factor*7);
 
     
@@ -1719,14 +1755,30 @@ void rainbowComet3Routine(CRGB *leds, const char *param)
 void prismataRoutine(CRGB *leds, const char *param)
 { 
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
   EVERY_N_MILLIS(100) {
     GSHMEM.spirohueoffset += 1;
   }
 
   myLamp.blur2d(15);
-  myLamp.dimAll(254U - (31-(myLamp.effects.getScale()%32))*8);
+  myLamp.dimAll(254U - scale);
   for (uint8_t x = 0; x < WIDTH; x++) {
       uint8_t y = beatsin8(x + 1 * myLamp.effects.getSpeed()/5, 0, HEIGHT-1);
       myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (x+GSHMEM.spirohueoffset) * 4));
@@ -1742,7 +1794,24 @@ void prismataRoutine(CRGB *leds, const char *param)
 
 void flockRoutine(CRGB *leds, const char *param) {
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
+
   Boid boids[AVAILABLE_BOID_COUNT];
   Boid predator;
   PVector wind;
@@ -1771,7 +1840,7 @@ void flockRoutine(CRGB *leds, const char *param) {
     }
     
       myLamp.blur2d(15);
-      myLamp.dimAll(254U - (31-(myLamp.effects.getScale()%32))*8);
+      myLamp.dimAll(254U - scale);
 
       bool applyWind = random(0, 255) > 240;
       if (applyWind) {
@@ -1839,13 +1908,30 @@ void flockRoutine(CRGB *leds, const char *param) {
 void swirlRoutine(CRGB *leds, const char *param)
 {
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
+
   // Apply some blurring to whatever's already on the matrix
   // Note that we never actually clear the matrix, we just constantly
   // blur it repeatedly.  Since the blurring is 'lossy', there's
   // an automatic trend toward black -- by design.
 #if (WIDTH < 25)
-  myLamp.blur2d(beatsin8(2, 10, 128 + (31-(myLamp.effects.getScale()%32))*3));
+  myLamp.blur2d(beatsin8(2, 10, 128 + scale*3));
 #else
   // Never mind, on my 64x96 array, the dots are just too small
    myLamp.blur2d(172);
@@ -1878,9 +1964,25 @@ void swirlRoutine(CRGB *leds, const char *param)
 void incrementalDriftRoutine(CRGB *leds, const char *param)
 {
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-  myLamp.blur2d(beatsin8(3U, 5, 10 + (31-(myLamp.effects.getScale()%32))*3));
+  myLamp.blur2d(beatsin8(3U, 5, 10 + scale*3));
   myLamp.dimAll(beatsin8(2U, 246, 252));
   uint8_t _dri_speed = map8(myLamp.effects.getSpeed(), 1U, 20U);
   uint8_t _dri_delta = beatsin8(1U);
@@ -1902,9 +2004,25 @@ void incrementalDriftRoutine(CRGB *leds, const char *param)
 void incrementalDriftRoutine2(CRGB *leds, const char *param)
 {
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-  myLamp.blur2d(beatsin8(3U, 5, 10 + (31-(myLamp.effects.getScale()%32))*3));
+  myLamp.blur2d(beatsin8(3U, 5, 10 + scale*3));
   myLamp.dimAll(beatsin8(2U, 224, 252));
   uint8_t _dri_speed = map8(myLamp.effects.getSpeed(), 1U, 15U);
   uint8_t _dri_delta = beatsin8(1U);
@@ -2073,13 +2191,27 @@ void twinklesRoutine(CRGB *leds, const char *param)
   }
 
   uint scale = TWINKLES_MULTIPLIER*myLamp.effects.getSpeed()/255.0;
-  TProgmemRGBPalette16 const *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  TProgmemRGBPalette16 const *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
-  uint8_t tnum = 32-myLamp.effects.getScale() % 32U;
-
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
   String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
   if(!var.isEmpty()){
-    curPalette = palette_arr[(int)((float)var.toInt()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))]; // выбираем из доп. регулятора
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t sscale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
+
+  uint8_t tnum = sscale;
+  if(!var.isEmpty()){
     tnum = 50-49*(myLamp.effects.getScale()/255.0);
   }  
 
@@ -2137,10 +2269,26 @@ void twinklesRoutine(CRGB *leds, const char *param)
 void radarRoutine(CRGB *leds, const char *param)
 {
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
   myLamp.blur2d(beatsin8(5U, 3U, 10U));
-  myLamp.dimAll(255U - (0 + (31-(myLamp.effects.getScale()%32))*3));
+  myLamp.dimAll(255U - (0 + scale*3));
 
   for (uint8_t offset = 0U; offset < WIDTH / 2U - 1U; offset++)
   {
@@ -2163,13 +2311,29 @@ void radarRoutine(CRGB *leds, const char *param)
 // Адаптация от (c) SottNick
 void wavesRoutine(CRGB *leds, const char *param)
 {
-  const uint8_t waveRotation = (31-(myLamp.effects.getScale()%32))/8;
   const uint8_t waveCount = myLamp.effects.getSpeed() % 2;
   const uint8_t waveScale = 256 / WIDTH;
 
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
+  const uint8_t waveRotation = scale/8;
 
   myLamp.blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
   myLamp.dimAll(254);
@@ -2249,7 +2413,25 @@ const TProgmemRGBPalette16 *firePalettes[] = {
     &RubidiumFireColors_p,
     &PotassiumFireColors_p};
 
-  const TProgmemRGBPalette16 *curPalette = firePalettes[ map(myLamp.effects.getScale(), 1, 255, 0, (int)(sizeof(firePalettes) / sizeof(TProgmemRGBPalette16 *))  - 1) ];
+  //const TProgmemRGBPalette16 *firePalettes[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(firePalettes)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = firePalettes[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
+
   
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(35 - map(myLamp.effects.getSpeed(), 1, 255, 1, 35)))
   {
@@ -2689,8 +2871,24 @@ void ringsRoutine(CRGB *leds, const char *param)
     uint8_t ringNb; // количество колец от 2 до height
     uint8_t downRingHue, upRingHue; // количество пикселей в нижнем (downRingHue) и верхнем (upRingHue) кольцах
 
-    const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-    const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
     ringWidth = myLamp.effects.getScale()%11U + 1U; // толщина кольца от 1 до 11 для каждой из палитр
     ringNb = (float)HEIGHT / ringWidth + ((HEIGHT % ringWidth == 0U) ? 0U : 1U)%HEIGHT; // количество колец
@@ -2793,15 +2991,30 @@ void cube2dRoutine(CRGB *leds, const char *param)
   CRGB color, color2;
 	bool seamlessX; // получилось ли сделать поле по Х бесшовным
 
-  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
-
-
   if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-myLamp.effects.getSpeed())/3)){
     return;
   } else {
     myLamp.setEffDelay(millis());
-  }  
+  }
+
+  const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
 	sizeY = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
 	sizeX = (myLamp.effects.getScale() - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
@@ -3053,7 +3266,23 @@ void cube2dRoutine(CRGB *leds, const char *param)
 void timePrintRoutine(CRGB *leds, const char *param)
 {
   const TProgmemRGBPalette16 *palette_arr[] = {&PartyColors_p, &OceanColors_p, &LavaColors_p, &HeatColors_p, &WaterfallColors_p, &CloudColors_p, &ForestColors_p, &RainbowColors_p, &RainbowStripeColors_p};
-  const TProgmemRGBPalette16 *curPalette = palette_arr[(int)((float)myLamp.effects.getScale()/255.1*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-1))];
+  TProgmemRGBPalette16 const *curPalette;
+  uint8_t palleteCnt = sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *); // кол-во палитр
+  float ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t pos; // позиция в массиве указателей паллитр
+  uint8_t curVal; // curVal == либо var как есть, либо getScale
+  String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+  if(!var.isEmpty()){
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)(var.toFloat()/ptPallete); // для 9 палитр будет 255.1/9==28.34, как следствие ползунок/28.34, при 1...28 будет давать 0, 227...255 -> 8
+    curVal = var.toInt();
+  } else {
+    ptPallete = 255.1/palleteCnt; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    pos = (uint8_t)((float)myLamp.effects.getScale()/ptPallete);
+    curVal = myLamp.effects.getScale();
+  }
+  curPalette = palette_arr[pos]; // выбираем из доп. регулятора
+  uint8_t scale = curVal-ptPallete*pos; // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
   if(myLamp.isLoading() && ((GSHMEM.curTimePos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (GSHMEM.curTimePos>=(signed)WIDTH+(LET_WIDTH/2))) )
   {
