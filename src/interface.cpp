@@ -541,19 +541,19 @@ void interface(){ // функция в которой мф формируем в
 #endif
 
     LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
-    jee.app(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
+    jee.json_frame_open(F(("Огненная лампа"))); // название программы (отображается в веб интерфейсе)
 
     // создаем меню
-    jee.secbegin(F("menu"));
+    jee.json_section_begin(F("menu"));
     jee.option(F("Эффекты"), F("effects"));
     if(!iGLOBAL.isSetup){
         jee.option(F("Лампа"), F("lamp"));
         jee.option(F("Настройки"), F("settings"));
     }
-    jee.secend();
+    jee.json_section_end();
 
     // Страница "Управление эффектами"
-        jee.secbegin(F("effects"));
+        jee.json_section_begin(F("effects"));
 
     EFFECT enEff; enEff.setNone();
     jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
@@ -569,11 +569,11 @@ void interface(){ // функция в которой мф формируем в
                 jee.option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
             }
         } while((enEff.eff_nb!=EFF_NONE));
-        jee.secend();
+        jee.json_section_end();
     } else {
         jee.select(F("effList"), F("Эффект"));
         jee.option(jee.param(F("effList")), F("Список эффектов отключен, выйдите из режима настройки!"));
-        jee.secend();
+        jee.json_section_end();
 
         jee.button(F("bSetClose"), F("gray"), F("Выйти из настроек"));
     }
@@ -598,11 +598,11 @@ void interface(){ // функция в которой мф формируем в
         jee.checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));
         jee.text(F("param"),F("Доп. параметры"));
     }
-    jee.secend();
+    jee.json_section_end();
 
     if(!iGLOBAL.isSetup){
         //Страница "Управление лампой"
-        jee.secbegin(F("lamp"));
+        jee.json_section_begin(F("lamp"));
         if(iGLOBAL.isTmSetup){
             jee.time(F("time"),F("Время"));
             jee.number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
@@ -623,7 +623,7 @@ void interface(){ // функция в которой мф формируем в
             iGLOBAL.addSList = 4;
         }
         // Страница настройки
-        jee.secbegin(F("settings"));
+        jee.json_section_begin(F("settings"));
         jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
         if(iGLOBAL.isAddSetup){
             jee.select(F("addSList"), F("Группа настроек"));
@@ -635,7 +635,7 @@ void interface(){ // функция в которой мф формируем в
             jee.option(F("8"), F("Микрофон"));
 #endif
             jee.option(F("9"), F("Другое"));
-            jee.secend();
+            jee.json_section_end();
 
             switch (iGLOBAL.addSList)
             {
@@ -657,7 +657,7 @@ void interface(){ // функция в которой мф формируем в
                 jee.option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
                 jee.option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
                 jee.option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
-                jee.secend();
+                jee.json_section_end();
                 break;
             case 3:
                 jee.checkbox(F("isEdEvent"),F("Новое&nbspсобытие"));
@@ -677,7 +677,7 @@ void interface(){ // функция в которой мф формируем в
                     jee.option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
                     jee.option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
 #endif
-                    jee.secend();
+                    jee.json_section_end();
 
                     jee.checkbox(F("isEnabled"),F("Разрешено"));
                     jee.datetime(F("tmEvent"),F("Дата/время события"));
@@ -702,7 +702,7 @@ void interface(){ // функция в которой мф формируем в
                         i++;
                         next = myLamp.events.getNextEvent(next);
                     }
-                    jee.secend();
+                    jee.json_section_end();
 
                     jee.button(F("bEditEvent"),F("green"),F("Редактировать событие"));
                     jee.button(F("bDelEvent"),F("red"),F("Удалить событие"));
@@ -784,9 +784,8 @@ void interface(){ // функция в которой мф формируем в
 #endif
         }
 
-        jee.secend();
-        jee.frame_send();
-        jee.frame_clear();
+        jee.json_frame_flush();
+
     }
 
 #ifdef MIC_EFFECTS

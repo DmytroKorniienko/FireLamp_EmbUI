@@ -11,11 +11,20 @@ AsyncWebSocket ws("/ws");
 
 extern jeeui2 jee;
 
+void send_ws_all(const String &data){
+    if (jee.buf.length()) ws.textAll(jee.buf);
+}
+
+void send_ws_client(const String &data){
+    if (jee.buf.length() && jee.client) {
+        jee.client->text(jee.buf);
+    }
+}
+
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
        if(jee.dbg) Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-       jee.refresh();
-    //    client->text(jee.get_interface());
+       jee.send(send_ws_client, client);
     } else
     if(type == WS_EVT_DISCONNECT){
         if(jee.dbg) Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
@@ -61,17 +70,25 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
-void jeeui2::frame_send(){
-    if (buf.length()) buf = "";
-    serializeJson(json, buf);
-    Serial.println(buf);
-    if (buf.length()) ws.textAll(buf);
-    buf = "";
+void jeeui2::send(sendCallback func){
+    jeeui2::sendCallback prev = sendCallbackHndl();
+    sendCallbackHndl(func);
+    fcallback_ui();
+    sendCallbackHndl(prev);
+}
+
+void jeeui2::send(sendCallback func, AsyncWebSocketClient *clnt){
+    client = clnt;
+    jeeui2::sendCallback prev = sendCallbackHndl();
+    sendCallbackHndl(func);
+    fcallback_ui();
+    sendCallbackHndl(prev);
+    client = nullptr;
 }
 
 void jeeui2::refresh(){
     if (!ws.count()) return;
-    foo();
+    send(send_ws_all);
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
@@ -343,8 +360,8 @@ void jeeui2::begin() {
     server.onNotFound(notFound);
 
     server.begin();
-    //foo();    //WHY???
-    //upd();
+    //fcallback_ui();    //WHY???
+    //fcallback_upd();
     mqtt_update();
 }
 
@@ -359,8 +376,8 @@ void jeeui2::led(uint8_t pin, bool invert)
 void jeeui2::handle()
 {
     if(_isHttpCmd){
-        if(httpfunc != nullptr)
-            httpfunc(httpParam, httpValue);
+        if(fcallback_http != nullptr)
+            fcallback_http(httpParam, httpValue);
         _isHttpCmd = false;
         *httpParam='\0'; *httpValue='\0';
     }

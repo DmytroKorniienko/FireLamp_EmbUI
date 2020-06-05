@@ -49,7 +49,8 @@ static const char PGpmaxage[] PROGMEM = "public, max-age=864000";    // 10 days 
 
 typedef struct section_t{
   JsonArray block;
-  String section;
+  String name;
+  int idx;
 } section_t;
 
 class jeeui2
@@ -59,14 +60,20 @@ class jeeui2
     DynamicJsonDocument btn_transport;
     AsyncMqttClient mqttClient;
 
+    DynamicJsonDocument btn_id; // json с ид кнопок (для подписки через MQQT)
+
+    DynamicJsonDocument json;
+    LList<section_t*> section_list;
+
     typedef void (*buttonCallback) ();
     typedef void (*uiCallback) ();
+    typedef void (*sendCallback) (const String &data);
     typedef void (*updateCallback) ();
     typedef void (*mqttCallback) ();
-    typedef void (*httpCmdCallback) (const char *param, const char *value);
+    typedef void (*httpCallback) (const char *param, const char *value);
 
   public:
-    jeeui2() : cfg(4096), pub_transport(256), btn_transport(256), btn_id(1024), section_list(), json(2048) {
+    jeeui2() : cfg(4096), pub_transport(256), btn_transport(256), btn_id(1024), json(2048), section_list() {
       *ip='\0';
       *mc='\0';
       *mac='\0';
@@ -95,13 +102,14 @@ class jeeui2
     void handle();
     void btnCallback(const String &name ,buttonCallback response);
 
-    void app(const String &name);
-    void secbegin(const String &name);
-    void secend();
-    void frame_next();
-    void frame_clear();
-    int frame_add(JsonObject obj);
-    void flush();
+    void json_frame_open(const String &name);
+    bool json_frame_add(JsonObject obj);
+    void json_frame_next();
+    void json_frame_clear();
+    void json_frame_flush();
+    void json_frame_send();
+    void json_section_begin(const String &name);
+    void json_section_end();
 
     void text(const String &id, const String &label);
     void password(const String &id, const String &label);
@@ -130,9 +138,6 @@ class jeeui2
     void formWifi();
     void formMqtt();
 
-    uiCallback foo;
-    void ui(void (*uiFunction) ());
-
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol);
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload));
     void mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload));
@@ -153,14 +158,22 @@ class jeeui2
 
     void remControl();
 
-    updateCallback upd;
-    void update(void (*updateFunction) ());
+    updateCallback updateCallbackHndl();
+    void updateCallbackHndl(updateCallback func);
 
-    void httpCallback(httpCmdCallback func);
+    uiCallback uiCallbackHndl();
+    void uiCallbackHndl(uiCallback func);
 
-    void frame_send();
+    httpCallback httpCallbackHndl();
+    void httpCallbackHndl(httpCallback func);
+
+    sendCallback sendCallbackHndl();
+    void sendCallbackHndl(sendCallback func);
+
     void refresh();
     void post(const String &key, const String &value);
+    void send(sendCallback func);
+    void send(sendCallback func, AsyncWebSocketClient *clnt);
 
     char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
@@ -179,7 +192,11 @@ class jeeui2
     bool _isHttpCmd = false;
     char httpParam[32]; // буфер под параметр
     char httpValue[32]; // и его значение
-    httpCmdCallback httpfunc = nullptr;
+
+    httpCallback fcallback_http = nullptr;
+    sendCallback fcallback_send = nullptr;
+    uiCallback fcallback_ui = nullptr;
+    updateCallback fcallback_update = nullptr;
 
     void arr(const String &key, const String &value);
     void wifi_connect();
@@ -219,9 +236,6 @@ class jeeui2
 
     bool pub_enable;
 
-    //int btn_num = 0;
-    DynamicJsonDocument btn_id; // json с ид кнопок (для подписки через MQQT)
-
     char udpRemoteIP[16];
     unsigned int localUdpPort = 4243;
     char incomingPacket[64];
@@ -242,8 +256,6 @@ class jeeui2
     char udpMessage[65]; // Обмен по UDP
     bool rc;
 
-    LList<section_t*> section_list;
-
     void connectToMqtt();
     void onMqttConnect();
     static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
@@ -263,8 +275,8 @@ class jeeui2
     bool httpstream = false;
     String op; // опции для выпадающего списка <-- весьма желательно очищать сразу же...
 public:
-    DynamicJsonDocument json;
     String buf; // борьба с фрагментацией кучи, буффер должен быть объявлен последним <-- весьма желательно очищать сразу же...
+    AsyncWebSocketClient *client = nullptr;
 };
 
 #endif
