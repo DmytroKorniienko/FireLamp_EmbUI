@@ -11,20 +11,10 @@ AsyncWebSocket ws("/ws");
 
 extern jeeui2 jee;
 
-void send_ws_all(const String &data){
-    if (jee.buf.length()) ws.textAll(jee.buf);
-}
-
-void send_ws_client(const String &data){
-    if (jee.buf.length() && jee.client) {
-        jee.client->text(jee.buf);
-    }
-}
-
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
        if(jee.dbg) Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-       jee.send(send_ws_client, client);
+       jee.send(client);
     } else
     if(type == WS_EVT_DISCONNECT){
         if(jee.dbg) Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
@@ -70,25 +60,39 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
-void jeeui2::send(sendCallback func){
-    jeeui2::sendCallback prev = sendCallbackHndl();
-    sendCallbackHndl(func);
+void jeeui2::send(AsyncWebSocket *server){
+    frameSend *prev = send_hndl;
+    send_hndl = new frameSendAll(server);
+
     fcallback_ui();
-    sendCallbackHndl(prev);
+
+    delete send_hndl;
+    send_hndl = prev;
 }
 
-void jeeui2::send(sendCallback func, AsyncWebSocketClient *clnt){
-    client = clnt;
-    jeeui2::sendCallback prev = sendCallbackHndl();
-    sendCallbackHndl(func);
+void jeeui2::send(AsyncWebSocketClient *client){
+    frameSend *prev = send_hndl;
+    send_hndl = new frameSendClient(client);
+
     fcallback_ui();
-    sendCallbackHndl(prev);
-    client = nullptr;
+
+    delete send_hndl;
+    send_hndl = prev;
+}
+
+void jeeui2::send(AsyncWebServerRequest *request){
+    frameSend *prev = send_hndl;
+    send_hndl = new frameSendHttp(request);
+
+    fcallback_ui();
+
+    delete send_hndl;
+    send_hndl = prev;
 }
 
 void jeeui2::refresh(){
     if (!ws.count()) return;
-    send(send_ws_all);
+    send(&ws);
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
@@ -205,13 +209,7 @@ void jeeui2::begin() {
 
     // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        if (httpstream) {
-            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));
-            return;
-        }
-        httpstream = true;
-        // request->send(200, FPSTR(PGmimejson), get_interface());
-        httpstream = false;
+        jee.send(request);
     });
 
     server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) {

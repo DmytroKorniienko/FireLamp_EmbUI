@@ -28,6 +28,8 @@
 #include <AsyncMqttClient.h>
 #include "../../include/LList.h"
 
+#include "ui.h"
+
 #ifndef __DISABLE_BUTTON0
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
 #endif
@@ -67,7 +69,6 @@ class jeeui2
 
     typedef void (*buttonCallback) ();
     typedef void (*uiCallback) ();
-    typedef void (*sendCallback) (const String &data);
     typedef void (*updateCallback) ();
     typedef void (*mqttCallback) ();
     typedef void (*httpCallback) (const char *param, const char *value);
@@ -167,13 +168,13 @@ class jeeui2
     httpCallback httpCallbackHndl();
     void httpCallbackHndl(httpCallback func);
 
-    sendCallback sendCallbackHndl();
-    void sendCallbackHndl(sendCallback func);
-
     void refresh();
     void post(const String &key, const String &value);
-    void send(sendCallback func);
-    void send(sendCallback func, AsyncWebSocketClient *clnt);
+
+    frameSend *send_hndl;
+    void send(AsyncWebSocket *server);
+    void send(AsyncWebSocketClient *client);
+    void send(AsyncWebServerRequest *request);
 
     char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
@@ -188,13 +189,11 @@ class jeeui2
     void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
 
   private:
-
     bool _isHttpCmd = false;
     char httpParam[32]; // буфер под параметр
     char httpValue[32]; // и его значение
 
     httpCallback fcallback_http = nullptr;
-    sendCallback fcallback_send = nullptr;
     uiCallback fcallback_ui = nullptr;
     updateCallback fcallback_update = nullptr;
 
@@ -272,11 +271,10 @@ class jeeui2
     static char _t_pld_current[128]; // сообщение
     static bool _t_inc_current;
     static bool _t_remotecontrol;
-    bool httpstream = false;
+    // bool httpstream = false;
     String op; // опции для выпадающего списка <-- весьма желательно очищать сразу же...
 public:
     String buf; // борьба с фрагментацией кучи, буффер должен быть объявлен последним <-- весьма желательно очищать сразу же...
-    AsyncWebSocketClient *client = nullptr;
 };
 
 #endif

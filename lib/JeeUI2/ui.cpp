@@ -291,7 +291,7 @@ void jeeui2::json_frame_send(){
     if (buf.length()) buf = "";
     serializeJson(json, buf);
     if (dbg)Serial.println(buf);
-    fcallback_send(buf);
+    if (send_hndl) send_hndl->send(buf);
     buf = "";
 }
 

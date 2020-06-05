@@ -73,15 +73,6 @@ void jeeui2::uiCallbackHndl(uiCallback func){
     fcallback_ui = func;
 }
 
-jeeui2::sendCallback jeeui2::sendCallbackHndl(){
-    return fcallback_send;
-}
-
-void jeeui2::sendCallbackHndl(sendCallback func)
-{
-    fcallback_send = func;
-}
-
 void jeeui2::as(){
     sv = true;
     astimer = millis();
