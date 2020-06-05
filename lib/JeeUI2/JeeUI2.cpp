@@ -60,7 +60,7 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
-String jeeui2::get_interface(){
+const String &jeeui2::get_interface(){
     if (buf.length()) buf = "";
     foo();
     return buf;
@@ -70,9 +70,11 @@ void jeeui2::refresh()
 {
     if (!ws.count()) return;
 
-    String b = get_interface();
+    //String b = get_interface(); // то есть мы перепысываем огромный буффер в новую переменную?
     if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]\n"), ESP.getFreeHeap());
-    if (b.length()) ws.textAll(b);
+    //if (b.length()) ws.textAll(b);
+    get_interface();
+    if (buf.length()) ws.textAll(buf); // get_interface переписывает переменную buf, ИМХО ее можно использовать на прямую
     if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]\n"), ESP.getFreeHeap());
 }
 
@@ -137,10 +139,10 @@ void jeeui2::btn_create(const String &btn, buttonCallback response)
 
 String jeeui2::param(const String &key)
 {
-    //String value = cfg[key];
+    String value = cfg[key].as<String>();
     if(dbg)Serial.print(F("READ: "));
-    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), cfg[key].as<String>().c_str(), ESP.getFreeHeap());
-    return cfg[key];
+    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
+    return value;
 }
 
 String jeeui2::deb()
@@ -187,6 +189,30 @@ void jeeui2::begin() {
 
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
+
+    // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
+    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        if (httpstream != nullptr) {
+            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));  // already preparing stream
+            return;
+        }
+
+        httpstream = request->beginResponseStream(FPSTR(PGmimejson));
+        httpstream->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
+
+        foo();   // stream http responce body to the Async's server buffer
+        if (buf.length()) uiPush();
+        request->send(httpstream);
+        httpstream = nullptr;   // release pointer
+    });
+
+    server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+        String buf;
+        buf = F("VERSION: "); buf+=F(VERSION);
+        buf += F("\nGIT: "); buf+=F(PIO_SRC_REV);
+        buf += F("\nOK\n");
+        request->send(200, FPSTR(PGmimetxt), buf.c_str());
+    });
 
     server.on(PSTR("/post"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         uint8_t params = request->params();

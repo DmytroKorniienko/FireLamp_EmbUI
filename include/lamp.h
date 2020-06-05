@@ -55,7 +55,11 @@ typedef enum _LAMPMODE {
   MODE_OTA
 } LAMPMODE;
 
+#ifdef AUX_PIN
+typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE, AUX_ON, AUX_OFF, AUX_TOGGLE} EVENT_TYPE;
+#else
 typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE} EVENT_TYPE;
+#endif
 
 const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 
@@ -66,7 +70,8 @@ typedef enum _EFFSWITCH {
     SW_PREV,        // предыдущий
     SW_RND,         // случайный
     SW_DELAY,       // сохраненный (для фейдера)
-    SW_SPECIFIC     // переход на конкретный эффект по индексу/имени
+    SW_SPECIFIC,    // переход на конкретный эффект по индексу/имени
+    SW_NEXT_DEMO    // следующий для ДЕМО, исключая отключенные
 } EFFSWITCH;
 
 // управление Тикером
@@ -161,6 +166,17 @@ struct EVENT {
         case EVENT_TYPE::PIN_STATE:
             buffer.concat(F("PIN"));
             break; 
+#ifdef AUX_PIN
+        case EVENT_TYPE::AUX_ON:
+            buffer.concat(F("AUX ON"));
+            break; 
+        case EVENT_TYPE::AUX_OFF:
+            buffer.concat(F("AUX OFF"));
+            break; 
+        case EVENT_TYPE::AUX_TOGGLE:
+            buffer.concat(F("AUX TOGGLE"));
+            break; 
+#endif
         default:
             break;
         }
@@ -428,7 +444,7 @@ private:
 
     uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
     uint32_t effDelay; // доп. задержка для эффектов
-
+    uint32_t effDelay_uS; // доп. задержка для эффектов микросекунді
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
     void(*updateParmFunc)() = nullptr; // функтор обновления параметров
@@ -497,7 +513,7 @@ private:
     /*
      * Смена эффекта в демо по таймеру
      */
-    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT, isFaderON);}
+    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT_DEMO, isFaderON);}
 
     /*
      * вывод готового кадра на матрицу,
@@ -588,9 +604,11 @@ public:
 
     // ---------- служебные функции -------------
     uint32_t getEffDelay() {return effDelay;}
+    uint32_t getEffDelay_uS() {return effDelay_uS;}
     uint16_t getmaxDim() {return maxDim;}
     uint16_t getminDim() {return minDim;}
     void setEffDelay(uint32_t dl) {effDelay=dl;}
+    void setEffDelay_uS(uint32_t dl) {effDelay_uS=dl;}
 
     void changePower(); // плавное включение/выключение
     void changePower(bool);
@@ -608,7 +626,7 @@ public:
     //fadeToBlackBy
     void dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(value); } }
     CRGB getLeds(uint16_t idx) { return leds[idx]; }
-    CRGB *getLeds() { return leds; }
+    //CRGB *getLeds() { return leds; }
     void blur2d(uint8_t val) {::blur2d(leds,WIDTH,HEIGHT,val);}
 
     /*
