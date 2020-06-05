@@ -57,6 +57,7 @@ void setup() {
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
+    // randomSeed(analogRead(A0)); // А0 не трогаем, да и лучше инициализировать если нужно внутрях эффектов, примеры можно поиском найти, там их есть
     //Serial.println(F("Starting..."));
     //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
