@@ -243,7 +243,7 @@ void jeeui2::json_frame_open(const String &name){
     json[F("mc")] = mc;
     json[F("final")] = false;
 
-    json_section_begin(F("root"));
+    json_section_begin("root" + String(rand()));
 }
 
 bool jeeui2::json_frame_add(JsonObject obj) {
