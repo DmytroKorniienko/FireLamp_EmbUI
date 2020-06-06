@@ -250,7 +250,7 @@ bool jeeui2::json_frame_add(JsonObject obj) {
     if (dbg) Serial.printf(PSTR("json_frame_add: %u = %u "), obj.memoryUsage(), json.capacity() - json.memoryUsage());
     if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 20 && section_list.end()->block.add(obj)) {
         section_list.end()->idx++;
-        if (dbg) Serial.printf("OK  MEM: %u\n", ESP.getFreeHeap());
+        if (dbg) Serial.printf("OK [%u]  MEM: %u\n", section_list.end()->idx, ESP.getFreeHeap());
         return true;
     }
     if (dbg) Serial.printf("BAD  MEM: %u\n", ESP.getFreeHeap());
@@ -267,6 +267,7 @@ void jeeui2::json_frame_next(){
         if (i) obj = section_list[i - 1]->block.createNestedObject();
         obj[F("section")] = section_list[i]->name;
         obj[F("idx")] = section_list[i]->idx;
+        if (dbg) Serial.printf("section %u %s %u\n", i, section_list[i]->name.c_str(), section_list[i]->idx);
         section_list[i]->block = obj.createNestedArray(F("block"));
     }
     if (dbg) Serial.printf(PSTR("json_frame_next: [%u] %u = %u\n"), section_list.size(), obj.memoryUsage(), json.capacity() - json.memoryUsage());
@@ -309,6 +310,7 @@ void jeeui2::json_section_begin(const String &name){
     section->block = obj.createNestedArray(F("block"));
     section->idx = 0;
     section_list.add(section);
+    if (dbg) Serial.printf("section begin %s\n", name.c_str());
 }
 
 void jeeui2::json_section_end(){
@@ -316,4 +318,8 @@ void jeeui2::json_section_end(){
 
     section_t *section = section_list.pop();
     delete section;
+    if (section_list.size()) {
+        section_list.end()->idx++;
+    }
+    if (dbg) Serial.println("section end");
 }
