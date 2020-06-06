@@ -5,6 +5,7 @@ class frameSend {
     public:
         virtual ~frameSend(){};
         virtual void send(const String &data){};
+        virtual void flush(){}
 };
 
 class frameSendAll: public frameSend {
@@ -30,13 +31,17 @@ class frameSendHttp: public frameSend {
         AsyncWebServerRequest *req;
         AsyncResponseStream *stream;
     public:
-        frameSendHttp(AsyncWebServerRequest *request){ req = request; }
-        ~frameSendHttp() { delete stream; req = nullptr; }
-        void send(const String &data){
-            if (!data.length()) return;
+        frameSendHttp(AsyncWebServerRequest *request){
+            req = request;
             stream = req->beginResponseStream(FPSTR("application/json"));
             stream->addHeader(FPSTR("Cache-Control"), FPSTR("no-cache, no-store, must-revalidate"));
+        }
+        ~frameSendHttp() { /* delete stream; */ req = nullptr; }
+        void send(const String &data){
+            if (!data.length()) return;
             stream->print(data);
+        };
+        void flush(){
             req->send(stream);
         };
 };

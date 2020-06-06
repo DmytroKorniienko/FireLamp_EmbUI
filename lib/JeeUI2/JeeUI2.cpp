@@ -85,6 +85,7 @@ void jeeui2::send(AsyncWebServerRequest *request){
     send_hndl = new frameSendHttp(request);
 
     fcallback_ui();
+    send_hndl->flush();
 
     delete send_hndl;
     send_hndl = prev;
