@@ -103,7 +103,7 @@ class jeeui2
     void handle();
     void btnCallback(const String &name ,buttonCallback response);
 
-    void json_frame_open(const String &name);
+    void json_frame_interface(const String &name);
     bool json_frame_add(JsonObject obj);
     void json_frame_next();
     void json_frame_clear();

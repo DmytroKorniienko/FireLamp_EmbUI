@@ -237,7 +237,7 @@ void jeeui2::textarea(const String &id, const String &label){
 }
 
 ///////////////////////////////////////
-void jeeui2::json_frame_open(const String &name){
+void jeeui2::json_frame_interface(const String &name){
     json[F("pkg")] = F("interface");
     json[F("app")] = name;
     json[F("mc")] = mc;
