@@ -250,10 +250,10 @@ bool jeeui2::json_frame_add(JsonObject obj) {
     if (dbg) Serial.printf(PSTR("json_frame_add: %u = %u "), obj.memoryUsage(), json.capacity() - json.memoryUsage());
     if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 20 && section_list.end()->block.add(obj)) {
         section_list.end()->idx++;
-        if (dbg) Serial.printf("OK [%u]  MEM: %u\n", section_list.end()->idx, ESP.getFreeHeap());
+        if (dbg) Serial.printf(PSTR("OK [%u]  MEM: %u\n"), section_list.end()->idx, ESP.getFreeHeap());
         return true;
     }
-    if (dbg) Serial.printf("BAD  MEM: %u\n", ESP.getFreeHeap());
+    if (dbg) Serial.printf(PSTR("BAD  MEM: %u\n"), ESP.getFreeHeap());
 
     json_frame_send();
     json_frame_next();
@@ -267,7 +267,7 @@ void jeeui2::json_frame_next(){
         if (i) obj = section_list[i - 1]->block.createNestedObject();
         obj[F("section")] = section_list[i]->name;
         obj[F("idx")] = section_list[i]->idx;
-        if (dbg) Serial.printf("section %u %s %u\n", i, section_list[i]->name.c_str(), section_list[i]->idx);
+        if (dbg) Serial.printf(PSTR("section %u %s %u\n"), i, section_list[i]->name.c_str(), section_list[i]->idx);
         section_list[i]->block = obj.createNestedArray(F("block"));
     }
     if (dbg) Serial.printf(PSTR("json_frame_next: [%u] %u = %u\n"), section_list.size(), obj.memoryUsage(), json.capacity() - json.memoryUsage());
@@ -282,7 +282,7 @@ void jeeui2::json_frame_clear(){
 }
 
 void jeeui2::json_frame_flush(){
-    if (dbg) Serial.println("json_frame_flush");
+    if (dbg) Serial.println(F("json_frame_flush"));
     json[F("final")] = true;
     json_section_end();
     json_frame_send();
@@ -315,7 +315,7 @@ void jeeui2::json_section_begin(const String &name, JsonObject obj){
     section->block = obj.createNestedArray(F("block"));
     section->idx = 0;
     section_list.add(section);
-    if (dbg) Serial.printf("section begin %s [%u]\n", name.c_str(), section_list.size());
+    if (dbg) Serial.printf(PSTR("section begin %s [%u]\n"), name.c_str(), section_list.size());
 }
 
 void jeeui2::json_section_end(){
@@ -325,6 +325,6 @@ void jeeui2::json_section_end(){
     if (section_list.size()) {
         section_list.end()->idx++;
     }
-    if (dbg) Serial.printf("section end %s [%u]\n", section->name.c_str(), section_list.size());
+    if (dbg) Serial.printf(PSTR("section end %s [%u]\n"), section->name.c_str(), section_list.size());
      delete section;
 }
