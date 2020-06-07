@@ -282,6 +282,7 @@ void jeeui2::json_frame_clear(){
 }
 
 void jeeui2::json_frame_flush(){
+    if (dbg) Serial.println("json_frame_flush");
     json[F("final")] = true;
     json_section_end();
     json_frame_send();
@@ -314,16 +315,16 @@ void jeeui2::json_section_begin(const String &name, JsonObject obj){
     section->block = obj.createNestedArray(F("block"));
     section->idx = 0;
     section_list.add(section);
-    if (dbg) Serial.printf("section begin %s\n", name.c_str());
+    if (dbg) Serial.printf("section begin %s [%u]\n", name.c_str(), section_list.size());
 }
 
 void jeeui2::json_section_end(){
     if (!section_list.size()) return;
 
     section_t *section = section_list.pop();
-    delete section;
     if (section_list.size()) {
         section_list.end()->idx++;
     }
-    if (dbg) Serial.println("section end");
+    if (dbg) Serial.printf("section end %s [%u]\n", section->name.c_str(), section_list.size());
+     delete section;
 }

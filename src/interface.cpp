@@ -650,6 +650,7 @@ void interface(){ // функция в которой мф формируем в
                 jee.number(F("ny_unix"), F("UNIX дата/время нового года"));
                 jee.range(F("txtSpeed"),10,100,10,F("Задержка прокрутки текста"));
                 jee.range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
+
                 jee.select(F("perTime"), F("Периодический вывод времени"));
                 jee.option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
                 jee.option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
@@ -745,7 +746,12 @@ void interface(){ // функция в которой мф формируем в
             default:
                 break;
             }
+            jee.json_section_end();
         } else {
+            jee.json_section_begin(F("settings"));
+            String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
+            jee.select(F("fileList"), cfg);
+
             if(SPIFFS.begin()){
 #ifdef ESP32
                 File root = SPIFFS.open("/cfg");
@@ -772,8 +778,7 @@ void interface(){ // функция в которой мф формируем в
 #endif
                 }
             }
-            String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
-            jee.select(F("fileList"), cfg);
+            jee.json_section_end();
 
             jee.button(F("bFLoad"),F("gray"),F("Считать с ФС"));
             if(myLamp.IsEventsHandled())
@@ -783,12 +788,11 @@ void interface(){ // функция в которой мф формируем в
 # ifdef MIC_EFFECTS
             jee.checkbox(F("isMicON"), F("Микрофон"));
 #endif
+            jee.json_section_end();
         }
-        jee.json_section_end();
-
-        jee.json_frame_flush();
-
     }
+
+    jee.json_frame_flush();
 
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
