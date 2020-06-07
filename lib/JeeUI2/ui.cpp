@@ -172,7 +172,7 @@ void jeeui2::select(const String &id, const String &label){
         return;
     }
 
-    json_section_begin(F("options"));
+    json_section_begin(F("options"), section_list.end()->block.getElement(section_list.end()->idx - 1));
 }
 
 void jeeui2::checkbox(const String &id, const String &label){
@@ -303,6 +303,10 @@ void jeeui2::json_section_begin(const String &name){
     } else {
         obj = json.as<JsonObject>();
     }
+    json_section_begin(name, obj);
+}
+
+void jeeui2::json_section_begin(const String &name, JsonObject obj){
     obj[F("section")] = name;
 
     section_t *section = new section_t;

@@ -110,6 +110,7 @@ class jeeui2
     void json_frame_flush();
     void json_frame_send();
     void json_section_begin(const String &name);
+    void json_section_begin(const String &name, JsonObject obj);
     void json_section_end();
 
     void text(const String &id, const String &label);

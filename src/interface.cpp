@@ -545,15 +545,15 @@ void interface(){ // функция в которой мф формируем в
 
     // создаем меню
     jee.json_section_begin(F("menu"));
-    jee.option(F("Эффекты"), F("effects"));
+    jee.option(F("effects"), F("Эффекты"));
     if(!iGLOBAL.isSetup){
-        jee.option(F("Лампа"), F("lamp"));
-        jee.option(F("Настройки"), F("settings"));
+        jee.option(F("lamp"), F("Лампа"));
+        jee.option(F("settings"), F("Настройки"));
     }
     jee.json_section_end();
 
     // Страница "Управление эффектами"
-        jee.json_section_begin(F("effects"));
+    jee.json_section_begin(F("effects"));
 
     EFFECT enEff; enEff.setNone();
     jee.checkbox(F("ONflag"),F("Включение&nbspлампы"));
@@ -622,6 +622,7 @@ void interface(){ // функция в которой мф формируем в
             iGLOBAL.isAddSetup = true;
             iGLOBAL.addSList = 4;
         }
+        jee.json_section_end();
         // Страница настройки
         jee.json_section_begin(F("settings"));
         jee.checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
@@ -783,6 +784,7 @@ void interface(){ // функция в которой мф формируем в
             jee.checkbox(F("isMicON"), F("Микрофон"));
 #endif
         }
+        jee.json_section_end();
 
         jee.json_frame_flush();
 
