@@ -20,7 +20,7 @@
 
 	</div>
 	<script type="text/html" id="tmpl_menu">
-		<div class="pure-menu"><a class="pure-menu-heading" href="#">{{app}}</a>
+		<div class="pure-menu"><div class="pure-menu-heading">{{app}}</div>
 			<ul class="pure-menu-list">
 			{{#menu}}
 				<li class="pure-menu-item {{#if value == _this.menu_id}}menu-item-divided pure-menu-selected{{/if}}" {{onevent "click", "on_page", value}}>
@@ -28,8 +28,14 @@
 				</li>
 			{{/menu}}
 			</ul>
-			<br><br>
-			<p>&nbsp&nbspID:&nbsp<b>{{mc}}</b><p>
+		</div>
+		<div class="left-block">
+			<div>
+				<span class="menu-title">ID:</span><span class="menu-value">{{mc}}</span>
+			</div>
+			<div>
+				<span class="menu-title">Time:</span><span id="pTime" class="menu-value"></span>
+			</div>
 		</div>
 	</script>
 	<script type="text/html" id="tmpl_main">

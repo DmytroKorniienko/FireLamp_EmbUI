@@ -418,15 +418,10 @@ void bDemoCallback()
     //jee.refresh();
 }
 
-void jeebuttonshandle()
-{
-    static unsigned long timer;
-
-    //публикация изменяющихся значений
-    if (timer + 5*1000 > millis())
-        return;
-    timer = millis();
-    jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime(), true); // обновить опубликованное значение
+void pubCallback(){
+    jee.json_frame_value();
+    jee.value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime());
+    jee.json_frame_flush();
 }
 
 void create_parameters(){
@@ -606,7 +601,6 @@ void block_lamp(){
         jee.checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
         jee.button(F("bTmSubm"),F("gray"),F("Сохранить"));
     } else {
-        // jee.pub(F("pTime"),F("Текущее время на ESP"),F("--:--"));
         jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
         jee.text(F("msg"),F("Текст для вывода на матрицу"));
         jee.color(F("txtColor"), F("Цвет сообщения"));
@@ -1006,11 +1000,6 @@ void setEffectParams(EFFECT *curEff)
         myLamp.setGlobalBrightness(jee.param(F("GlobBRI")).toInt());
     myLamp.setLoading(); // обновить эффект
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
-
-    // if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
-        jee.deb(); // с какого-то хрена через время ломается json и все параметры обнавляемые здесь превращаются в null, после чего MQTT срывает крышу... значит будем шаманить с бубном
-    //     jee.refresh(); // форсировать перерисовку интерфейсов клиентов
-    // }
 }
 
 void updateParm() // передача параметров в UI после нажатия сенсорной или мех. кнопки
@@ -1019,8 +1008,7 @@ void updateParm() // передача параметров в UI после на
     EFFECT *curEff = myLamp.effects.getCurrent();
     setEffectParams(curEff);
 
-    if(myLamp.getMode()!=MODE_DEMO)
-        jee.save(); // Cохранить конфиг
+    if(myLamp.getMode()!=MODE_DEMO) jee.save(); // Cохранить конфиг
     jee.refresh(); // форсировать перерисовку интерфейсов клиентов
 }
 
@@ -1096,7 +1084,5 @@ void httpCallback(const char *param, const char *value)
         AUX_toggle(!digitalRead(AUX_PIN));
     }
 #endif
-    jee.json_frame_value();
-    jee.value(param, value);
-    jee.json_frame_flush();
+    jee.refresh();
 }

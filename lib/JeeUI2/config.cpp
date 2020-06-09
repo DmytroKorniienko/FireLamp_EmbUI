@@ -9,23 +9,18 @@ void jeeui2::save(const char *_cfg)
         else
             configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
 
-        // serializeJson(cfg,configFile);
-        // configFile.flush();
-        // configFile.close();
-
         String cfg_str;
         serializeJson(cfg, cfg_str);
-        deserializeJson(cfg, cfg_str);
         configFile.print(cfg_str);
         configFile.flush();
         configFile.close();
+        cfg.garbageCollect();
 
         if(dbg)Serial.println(F("Save Config"));
     }
 }
 
 void jeeui2::autosave(){
-
     if (isConfSaved) return;
     if (!isConfSaved && astimer + asave < millis()){
         save();
@@ -33,7 +28,6 @@ void jeeui2::autosave(){
         astimer = millis();
         isConfSaved = true; // сохранились
         //sv = false;
-        //fcallback_update();
         //mqtt_update();
     }
 }
@@ -41,6 +35,7 @@ void jeeui2::autosave(){
 void jeeui2::pre_autosave(){
     if (!sv) return;
     if (sv && astimer + 1000 < millis()){
+        if(dbg)Serial.println(F("pre_autosave"));
         fcallback_update();
         mqtt_update();
         sv = false;
@@ -55,6 +50,14 @@ jeeui2::updateCallback jeeui2::updateCallbackHndl(){
 
 void jeeui2::updateCallbackHndl(updateCallback func){
     fcallback_update = func;
+}
+
+jeeui2::pubCallback jeeui2::pubCallbackHndl(){
+    return fcallback_pub;
+}
+
+void jeeui2::pubCallbackHndl(pubCallback func){
+    fcallback_pub = func;
 }
 
 jeeui2::httpCallback jeeui2::httpCallbackHndl(){

@@ -64,7 +64,7 @@ public:
  #pragma pack(pop)
  uint8_t addSList = 1;
  EFFECT *prevEffect = nullptr;
- int mqtt_int; // интервал отправки данных по MQTT в секундах 
+ int mqtt_int; // интервал отправки данных по MQTT в секундах
  INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
     isSetup = false;
     isTmSetup = false;
@@ -94,6 +94,7 @@ void updateParm();
 void jeebuttonshandle();
 void event_worker(const EVENT *);
 void httpCallback(const char *param, const char *value);
+void pubCallback();
 void setEffectParams(EFFECT *curEff);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
 void buttonhelper(bool state);

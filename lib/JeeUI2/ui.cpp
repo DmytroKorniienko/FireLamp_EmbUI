@@ -1,33 +1,5 @@
 #include "JeeUI2.h"
 
-
-void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color, const String &text_color){
-    char buffer[256];
-    sprintf_P(buffer,PSTR("{\"id\":\"%s\",\"type\":\"pub\",\"value\":\"%s\",\"bg_color\":\"%s\",\"text_color\":\"%s\",\"label\":\"%s\",\"unit\":\"%s\"},")
-      ,id.c_str(), value.c_str(), bg_color.c_str(), text_color.c_str(), label.c_str(), unit.c_str());
-
-    jeeui2::buf.concat(buffer);
-
-    pub_enable = true;
-    pub_transport[id] = value;
-}
-
-void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color){
-    pub(id, label, value, unit, bg_color, F("#ffffff"));
-}
-
-void jeeui2::pub(const String &id, const String &label, const String &value, const String &unit){
-    pub(id, label, value, unit, F("#6060ff"), F("#ffffff"));
-}
-
-void jeeui2::pub(const String &id, const String &label, const String &value){
-    pub(id, label, value, F(""), F("#6060ff"), F("#ffffff"));
-}
-
-void jeeui2::pub(const String &id, const String &label){
-    pub(id, label, F(""), F(""), F("#6060ff"), F("#ffffff"));
-}
-
 void jeeui2::formMqtt(){
     text(F("m_host"), F("MQTT host"));
     number(F("m_port"), F("MQTT port"));

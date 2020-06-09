@@ -75,6 +75,7 @@ void setup() {
 
     jee.uiCallbackHndl(interface); // обратный вызов - интерфейс
     jee.updateCallbackHndl(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
+    jee.pubCallbackHndl(pubCallback);
     jee.httpCallbackHndl(httpCallback);
 #ifdef LAMP_DEBUG
     jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
@@ -105,7 +106,6 @@ void loop() {
 
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
-    jeebuttonshandle();
 
     sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP

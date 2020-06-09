@@ -58,7 +58,6 @@ typedef struct section_t{
 class jeeui2
 {
     DynamicJsonDocument cfg;
-    DynamicJsonDocument pub_transport;
     DynamicJsonDocument btn_transport;
     AsyncMqttClient mqttClient;
 
@@ -70,11 +69,12 @@ class jeeui2
     typedef void (*buttonCallback) ();
     typedef void (*uiCallback) ();
     typedef void (*updateCallback) ();
+    typedef void (*pubCallback) ();
     typedef void (*mqttCallback) ();
     typedef void (*httpCallback) (const char *param, const char *value);
 
   public:
-    jeeui2() : cfg(4096), pub_transport(256), btn_transport(256), btn_id(1024), json(2048), section_list() {
+    jeeui2() : cfg(4096), btn_transport(256), btn_id(1024), json(2048), section_list() {
       *ip='\0';
       *mc='\0';
       *mac='\0';
@@ -91,7 +91,7 @@ class jeeui2
       *_t_pld_current='\0';
     }
 
-    void var(const String &key, const String &value, bool pub = false);
+    void var(const String &key, const String &value);
     void var_create(const String &key, const String &value);
     void btn_create(const String &btn, buttonCallback response);
     String param(const String &key);
@@ -134,11 +134,7 @@ class jeeui2
     void load(const char *_cfg = nullptr);
     void udp(const String &message);
     void udp();
-    void pub(const String &id, const String &label);
-    void pub(const String &id, const String &label, const String &value);
-    void pub(const String &id, const String &label, const String &value, const String &unit);
-    void pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color);
-    void pub(const String &id, const String &label, const String &value, const String &unit, const String &bg_color, const String &text_color);
+
     void formWifi();
     void formMqtt();
 
@@ -165,6 +161,9 @@ class jeeui2
     updateCallback updateCallbackHndl();
     void updateCallbackHndl(updateCallback func);
 
+    updateCallback pubCallbackHndl();
+    void pubCallbackHndl(updateCallback func);
+
     uiCallback uiCallbackHndl();
     void uiCallbackHndl(uiCallback func);
 
@@ -172,7 +171,8 @@ class jeeui2
     void httpCallbackHndl(httpCallback func);
 
     void refresh();
-    void post(const String &key, const String &value);
+    void post(const String &key, const String &val);
+    void send_pub();
 
     frameSend *send_hndl;
     void send(AsyncWebSocket *server);
@@ -199,6 +199,7 @@ class jeeui2
     httpCallback fcallback_http = nullptr;
     uiCallback fcallback_ui = nullptr;
     updateCallback fcallback_update = nullptr;
+    updateCallback fcallback_pub = nullptr;
 
     void arr(const String &key, const String &value);
     void wifi_connect();
@@ -236,8 +237,6 @@ class jeeui2
 
     int sendConfig = 0;
 
-    bool pub_enable;
-
     char udpRemoteIP[16];
     unsigned int localUdpPort = 4243;
     char incomingPacket[64];
@@ -256,7 +255,6 @@ class jeeui2
     uint8_t pg = 0;
     char btnui[32]; // Последняя нажатая кнопка (аппаратная или UI), после обработки - сброс значения
     char udpMessage[65]; // Обмен по UDP
-    bool rc;
 
     void connectToMqtt();
     void onMqttConnect();
