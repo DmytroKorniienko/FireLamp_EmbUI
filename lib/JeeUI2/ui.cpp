@@ -171,8 +171,8 @@ void jeeui2::select(const String &id, const String &label){
         select(id, label);
         return;
     }
-
-    json_section_begin(F("options"), section_list.end()->block.getElement(section_list.end()->idx - 1));
+    section_list.end()->idx--;
+    json_section_begin(F("options"), section_list.end()->block.getElement(section_list.end()->idx));
 }
 
 void jeeui2::checkbox(const String &id, const String &label){
