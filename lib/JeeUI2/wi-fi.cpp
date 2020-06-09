@@ -82,6 +82,7 @@ void jeeui2::wifi_connect()
             WiFi.disconnect();
             WiFi.mode(WIFI_OFF);
             WiFi.mode(WIFI_STA);
+            WiFi.hostname(param(F("ap_ssid")).c_str());
             WiFi.begin(param(F("ssid")).c_str(), param(F("pass")).c_str());
             if(dbg)Serial.println(F("Connecting STA"));
             save();
