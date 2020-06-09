@@ -34,11 +34,20 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             const char *pkg = doc["pkg"];
             if (!pkg) return;
             if (!strcmp(pkg, "post")) {
+                frameSend *prev = jee.send_hndl;
+                jee.send_hndl = new frameSendAll(&ws);
+                jee.json_frame_value();
+
                 JsonArray arr = doc["data"];
                 for (size_t i=0; i < arr.size(); i++) {
                     JsonObject item = arr[i];
                     jee.post(item["key"], item["val"]);
+                    jee.value(item["key"], item["val"]);
                 }
+
+                jee.json_frame_flush();
+                delete jee.send_hndl;
+                jee.send_hndl = prev;
             }
         }
   }

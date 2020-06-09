@@ -236,7 +236,24 @@ void jeeui2::textarea(const String &id, const String &label){
     }
 }
 
+void jeeui2::value(const String &id, const String &val){
+    StaticJsonDocument<256> obj;
+    obj[F("id")] = id;
+    obj[F("value")] = val;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        value(id, val);
+    }
+}
+
 ///////////////////////////////////////
+void jeeui2::json_frame_value(){
+    json[F("pkg")] = F("value");
+    json[F("final")] = false;
+
+    json_section_begin("root" + String(rand()));
+}
+
 void jeeui2::json_frame_interface(const String &name){
     json[F("pkg")] = F("interface");
     json[F("app")] = name;

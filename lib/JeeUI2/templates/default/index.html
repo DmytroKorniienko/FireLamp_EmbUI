@@ -76,7 +76,8 @@
 			<input type="{{type}}" id="{{id}}" name="{{name}}" class="pure-u-5-5"
 				min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" placeholder="{{placeholder}}"
 				{{#if2 type == "color"}}style="height: 50px"{{/if2}}
-				{{onevent "change", "on_change", id, label, _index}}
+				{{onevent "change", "on_change", id}}
+				{{onevent "input", "on_input", id, label}}
 			>
 		{{/if}}
 		</div>

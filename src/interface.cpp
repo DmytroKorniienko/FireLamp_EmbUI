@@ -876,7 +876,6 @@ void update(){ // функция выполняется после ввода д
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         } else {
             myLamp.setOnOff(newpower);
-            //isRefresh = true;
             jee.refresh(); // устанавливать в самом конце!
         }
         return;                 // если менялся "выключатель" то остальное даже не смотрим
@@ -959,7 +958,7 @@ void update(){ // функция выполняется после ввода д
                     myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
                 }
             }
-			isRefresh = true;
+			// isRefresh = true;
         }
     }
 
@@ -1097,5 +1096,7 @@ void httpCallback(const char *param, const char *value)
         AUX_toggle(!digitalRead(AUX_PIN));
     }
 #endif
-    jee.refresh();
+    jee.json_frame_value();
+    jee.value(param, value);
+    jee.json_frame_flush();
 }
