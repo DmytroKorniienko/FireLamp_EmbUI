@@ -14,7 +14,7 @@ extern jeeui2 jee;
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
        if(jee.dbg) Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-       client->text(jee.get_interface());
+       jee.send(client);
     } else
     if(type == WS_EVT_DISCONNECT){
         if(jee.dbg) Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
@@ -34,11 +34,20 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             const char *pkg = doc["pkg"];
             if (!pkg) return;
             if (!strcmp(pkg, "post")) {
+                frameSend *prev = jee.send_hndl;
+                jee.send_hndl = new frameSendAll(&ws);
+                jee.json_frame_value();
+
                 JsonArray arr = doc["data"];
                 for (size_t i=0; i < arr.size(); i++) {
                     JsonObject item = arr[i];
                     jee.post(item["key"], item["val"]);
+                    jee.value(item["key"], item["val"]);
                 }
+
+                jee.json_frame_flush();
+                delete jee.send_hndl;
+                jee.send_hndl = prev;
             }
         }
   }
@@ -60,22 +69,40 @@ void jeeui2::post(const String &key, const String &value){
     }
 }
 
-const String &jeeui2::get_interface(){
-    if (buf.length()) buf = "";
-    foo();
-    return buf;
+void jeeui2::send(AsyncWebSocket *server){
+    frameSend *prev = send_hndl;
+    send_hndl = new frameSendAll(server);
+
+    fcallback_ui();
+
+    delete send_hndl;
+    send_hndl = prev;
 }
 
-void jeeui2::refresh()
-{
-    if (!ws.count()) return;
+void jeeui2::send(AsyncWebSocketClient *client){
+    frameSend *prev = send_hndl;
+    send_hndl = new frameSendClient(client);
 
-    //String b = get_interface(); // то есть мы перепысываем огромный буффер в новую переменную?
-    if(dbg)Serial.printf_P(PSTR("WS BEFORE: [%u]\n"), ESP.getFreeHeap());
-    //if (b.length()) ws.textAll(b);
-    get_interface();
-    if (buf.length()) ws.textAll(buf); // get_interface переписывает переменную buf, ИМХО ее можно использовать на прямую
-    if(dbg)Serial.printf_P(PSTR("WS AFTER: [%u]\n"), ESP.getFreeHeap());
+    fcallback_ui();
+
+    delete send_hndl;
+    send_hndl = prev;
+}
+
+void jeeui2::send(AsyncWebServerRequest *request){
+    frameSend *prev = send_hndl;
+    send_hndl = new frameSendHttp(request);
+
+    fcallback_ui();
+    send_hndl->flush();
+
+    delete send_hndl;
+    send_hndl = prev;
+}
+
+void jeeui2::refresh(){
+    if (!ws.count()) return;
+    send(&ws);
 }
 
 void jeeui2::var(const String &key, const String &value, bool pub)
@@ -191,22 +218,11 @@ void jeeui2::begin() {
     server.addHandler(&ws);
 
     // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
-    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
-        if (httpstream != nullptr) {
-            request->send(429, FPSTR(PGmimetxt), F("Server busy..."));  // already preparing stream
-            return;
-        }
-
-        httpstream = request->beginResponseStream(FPSTR(PGmimejson));
-        httpstream->addHeader(FPSTR(PGhdrcachec), FPSTR(PGnocache));
-
-        foo();   // stream http responce body to the Async's server buffer
-        if (buf.length()) uiPush();
-        request->send(httpstream);
-        httpstream = nullptr;   // release pointer
+    server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
+        jee.send(request);
     });
 
-    server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) { 
+    server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         String buf;
         buf = F("VERSION: "); buf+=F(VERSION);
         buf += F("\nGIT: "); buf+=F(PIO_SRC_REV);
@@ -352,8 +368,8 @@ void jeeui2::begin() {
     server.onNotFound(notFound);
 
     server.begin();
-    //foo();    //WHY???
-    //upd();
+    //fcallback_ui();    //WHY???
+    //fcallback_upd();
     mqtt_update();
 }
 
@@ -368,8 +384,8 @@ void jeeui2::led(uint8_t pin, bool invert)
 void jeeui2::handle()
 {
     if(_isHttpCmd){
-        if(httpfunc != nullptr)
-            httpfunc(httpParam, httpValue);
+        if(fcallback_http != nullptr)
+            fcallback_http(httpParam, httpValue);
         _isHttpCmd = false;
         *httpParam='\0'; *httpValue='\0';
     }
@@ -416,12 +432,4 @@ void jeeui2::getAPmac(){
     String _mac(WiFi.softAPmacAddress());
     _mac.replace(F(":"), F(""));
     strncpy(mc, _mac.c_str(), sizeof(mc)-1);
-}
-
-// push data to http-responce buffer
-void jeeui2::uiPush(){
-    if (httpstream == nullptr) return;  // nowhere to push
-
-    httpstream->print(buf);
-    buf = "";
 }

@@ -25,7 +25,7 @@ void jeeui2::save(const char *_cfg)
 }
 
 void jeeui2::autosave(){
-    
+
     if (isConfSaved) return;
     if (!isConfSaved && astimer + asave < millis()){
         save();
@@ -33,30 +33,44 @@ void jeeui2::autosave(){
         astimer = millis();
         isConfSaved = true; // сохранились
         //sv = false;
-        //upd();
+        //fcallback_update();
         //mqtt_update();
-    } 
+    }
 }
 
 void jeeui2::pre_autosave(){
     if (!sv) return;
     if (sv && astimer + 1000 < millis()){
-        upd();
+        fcallback_update();
         mqtt_update();
         sv = false;
         isConfSaved = false;
         astimer = millis(); // обновляем счетчик после последнего изменения UI
-    } 
+    }
 }
 
-void jeeui2::update(void (*updateFunction) ())
-{
-    upd = updateFunction;
+jeeui2::updateCallback jeeui2::updateCallbackHndl(){
+    return fcallback_update;
 }
 
-void jeeui2::httpCallback(httpCmdCallback func)
-{
-    httpfunc = func;
+void jeeui2::updateCallbackHndl(updateCallback func){
+    fcallback_update = func;
+}
+
+jeeui2::httpCallback jeeui2::httpCallbackHndl(){
+    return fcallback_http;
+}
+
+void jeeui2::httpCallbackHndl(httpCallback func){
+    fcallback_http = func;
+}
+
+jeeui2::uiCallback jeeui2::uiCallbackHndl(){
+    return fcallback_ui;
+}
+
+void jeeui2::uiCallbackHndl(uiCallback func){
+    fcallback_ui = func;
 }
 
 void jeeui2::as(){
@@ -89,9 +103,4 @@ void jeeui2::load(const char *_cfg)
         configFile.close();
         sv = false;
     }
-}
-
-void jeeui2::ui(void (*uiFunction) ())
-{
-    foo = uiFunction;
 }

@@ -9,16 +9,79 @@
 	<link rel="stylesheet" href="css/all.css">
 </head>
 <body>
-    <div id="layout">
-        <a href="#menu" id="menuLink" class="menu-link">
-            <span></span>
-        </a>
-        <div id="menu"></div>
-        <div id="main"></div>
-        <div id="content"></div>
-        <div id="debug"></div>
+	<div id="layout">
+		<a href="#menu" id="menuLink" class="menu-link">
+			<span></span>
+		</a>
+		<div id="menu"></div>
+		<div id="main"></div>
+		<div id="content"></div>
+		<div id="debug"></div>
 
-    </div>
-<script src="js/all.js"></script>
+	</div>
+	<script type="text/html" id="tmpl_menu">
+		<div class="pure-menu"><a class="pure-menu-heading" href="#">{{app}}</a>
+			<ul class="pure-menu-list">
+			{{#menu}}
+				<li class="pure-menu-item {{#if value == _this.menu_id}}menu-item-divided pure-menu-selected{{/if}}" {{onevent "click", "on_page", value}}>
+					<a href="#" class="pure-menu-link">{{label}}</a>
+				</li>
+			{{/menu}}
+			</ul>
+			<br><br>
+			<p>&nbsp&nbspID:&nbsp<b>{{mc}}</b><p>
+		</div>
+	</script>
+	<script type="text/html" id="tmpl_main">
+		<div id="{{section}}" style="display:{{#if selected}}block{{/if}}{{#if !selected}}none{{/if}};">
+			<div class="header"><h1>"{{menu}}"</h1></div>
+			<div class="content">
+				<form class="pure-form pure-form-stacked">
+				<fieldset>
+				<div class="pure-g">
+				{{#block}}
+					{{>tmpl_content _this}}
+				{{/block}}
+				</div>
+				</fieldset>
+				</form>
+			</div>
+		</div>
+	</script>
+	<script type="text/html" id="tmpl_content">
+		<div class="pure-u-1">
+		{{#if html == "button"}}
+			<br><input type="button" id="{{id}}" style="background-color: {{color}}" value="{{label}}" class="pure-u-5-5 pure-button pure-button-primary" {{onevent "click", "on_change", 'BTN_'+id, label, _index}}>
+		{{/if}}
+		{{#if html == "textarea"}}
+			<textarea class="pure-u-24-24" maxlength="255" id="{{id}}" {{onevent "change", "on_change", id, label, _index}}></textarea>
+		{{/if}}
+		{{#if html == "select"}}
+			<label id="{{id}}-val">{{label}}</label>
+			<select id="{{id}}" name="{{name}}" value="{{value}}" class="pure-u-5-5" {{onevent "change", "on_change", id, label, _index}}>
+			{{#block}}
+				<option value="{{value}}" {{#if2 value == _this.value}}selected{{/if2}}>{{label}}</option>
+			{{/block}}
+			</select>
+		{{/if}}
+		{{#if type == "checkbox"}}
+			<br><div style=\"height: 40px;\">
+				<input type="checkbox" id="{{id}}" class='checkbox' {{onevent "change", "on_change", id, label, _index}} {{#if2 value == 'true'}}checked{{/if2}}>
+					<label class="switch" for="{{id}}">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp{{label}}</label>
+				</input>
+			</div>
+		{{/if}}
+		{{#if html == "input" && type != "checkbox"}}
+			<label id="{{id}}-val">{{label}}{{#if2 type == 'range' || type == 'color'}}: {{value}}{{/if2}}</label>
+			<input type="{{type}}" id="{{id}}" name="{{name}}" class="pure-u-5-5"
+				min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" placeholder="{{placeholder}}"
+				{{#if2 type == "color"}}style="height: 50px"{{/if2}}
+				{{onevent "change", "on_change", id}}
+				{{onevent "input", "on_input", id, label}}
+			>
+		{{/if}}
+		</div>
+	</script>
+	<script src="js/all.js"></script>
 </body>
 </html>

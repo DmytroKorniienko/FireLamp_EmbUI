@@ -15,6 +15,9 @@
         "initializer_list": "cpp",
         "tuple": "cpp",
         "atomic": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     }
 }
