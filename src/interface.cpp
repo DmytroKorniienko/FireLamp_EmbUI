@@ -1096,7 +1096,5 @@ void httpCallback(const char *param, const char *value)
         AUX_toggle(!digitalRead(AUX_PIN));
     }
 #endif
-    jee.json_frame_value();
-    jee.value(param, value);
-    jee.json_frame_flush();
+    jee.refresh();
 }
