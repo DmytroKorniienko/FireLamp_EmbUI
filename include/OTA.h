@@ -168,12 +168,12 @@ class OtaManager
         {
           strcpy_P(type, PSTR("sketch"));
         }
-        else // U_SPIFFS
+        else // U_LittleFS
         {
           strcpy_P(type, PSTR("filesystem"));
         }
 
-        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+        // NOTE: if updating LittleFS this would be the place to unmount LittleFS using LittleFS.end()
 
         LOG(printf_P,PSTR("Start updating %s\n"), type);
       });

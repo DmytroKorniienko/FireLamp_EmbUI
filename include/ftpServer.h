@@ -39,7 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <ESP8266WiFi.h>
 #elif defined ESP32
 #include <WiFi.h>
-#include "SPIFFS.h"
+#include "LittleFS.h"
 #endif
 
 #include <ESP8266FtpServer.h>

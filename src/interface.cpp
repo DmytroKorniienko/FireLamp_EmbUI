@@ -332,18 +332,18 @@ void bFDelCallback()
     // Удаление конфигурации из ФС
     String filename = String(F("/cfg/"))+jee.param(F("fileName"));
     if(filename.length()>4)
-        if(SPIFFS.begin()){
-            SPIFFS.remove(filename);
+        if(LittleFS.begin()){
+            LittleFS.remove(filename);
         }
     filename = String(F("/glb/"))+jee.param(F("fileName"));
     if(filename.length()>4)
-        if(SPIFFS.begin()){
-            SPIFFS.remove(filename);
+        if(LittleFS.begin()){
+            LittleFS.remove(filename);
         }
     filename = String(F("/evn/"))+jee.param(F("fileName"));
     if(filename.length()>4)
-        if(SPIFFS.begin()){
-            SPIFFS.remove(filename);
+        if(LittleFS.begin()){
+            LittleFS.remove(filename);
         }
     iGLOBAL.isAddSetup = false;
     jee.var(F("isAddSetup"), F("false"));
@@ -365,9 +365,9 @@ void bFSaveCallback()
     // Сохранение текущей конфигурации эффектов в ФС
     String filename = String(F("/cfg/"))+jee.param(F("fileName"));
     if(filename.length()>4)
-        if(SPIFFS.begin()){
-            // if(!SPIFFS.exists(F("/cfg")))
-            //     SPIFFS.mkdir(F("/cfg"));
+        if(LittleFS.begin()){
+            // if(!LittleFS.exists(F("/cfg")))
+            //     LittleFS.mkdir(F("/cfg"));
             myLamp.effects.saveConfig(filename.c_str());
             filename = String(F("/glb/"))+jee.param(F("fileName"));
             jee.save(filename.c_str());
@@ -755,12 +755,12 @@ void block_settings2(){
     String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
     jee.select(F("fileList"), cfg);
 
-    if(SPIFFS.begin()){
+    if(LittleFS.begin()){
 #ifdef ESP32
-        File root = SPIFFS.open("/cfg");
+        File root = LittleFS.open("/cfg");
         File file = root.openNextFile();
 #else
-        Dir dir = SPIFFS.openDir(F("/cfg"));
+        Dir dir = LittleFS.openDir(F("/cfg"));
 #endif
         String fn;
 #ifdef ESP32

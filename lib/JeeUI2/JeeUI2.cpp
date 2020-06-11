@@ -269,19 +269,19 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/eff_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        request->send(SPIFFS, F("/eff_config.json"), String(), true);
+        request->send(LittleFS, F("/eff_config.json"), String(), true);
     });
 
     server.on(PSTR("/config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        request->send(SPIFFS, F("/config.json"), String(), true);
+        request->send(LittleFS, F("/config.json"), String(), true);
     });
 
     server.on(PSTR("/events_config.json"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        request->send(SPIFFS, F("/events_config.json"), String(), true);
+        request->send(LittleFS, F("/events_config.json"), String(), true);
     });
 
-    // server all files from SPIFFS root
-    server.serveStatic("/", SPIFFS, "/")
+    // server all files from LittleFS root
+    server.serveStatic("/", LittleFS, "/")
         .setDefaultFile("index.html")
         .setCacheControl("max-age=864000");
 

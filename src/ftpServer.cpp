@@ -37,9 +37,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include "LittleFS.h"
 #elif defined ESP32
 #include <WiFi.h>
-#include "SPIFFS.h"
+#include "LittleFS.h"
 #endif
 #define FTP_DEBUG
 #include <ESP8266FtpServer.h>
@@ -49,13 +50,13 @@ FtpServer ftpSrv;   //set #define FTP_DEBUG in ESP8266FtpServer.h to see ftp ver
 
 void ftp_setup(void){
  
-  /////FTP Setup, ensure SPIFFS is started before ftp;  /////////
-#ifdef ESP32       //esp32 we send true to format spiffs if cannot mount
-  if (SPIFFS.begin(true)) {
+  /////FTP Setup, ensure LittleFS is started before ftp;  /////////
+#ifdef ESP32       //esp32 we send true to format LittleFS if cannot mount
+  if (LittleFS.begin(true)) {
 #elif defined ESP8266
-  if (SPIFFS.begin()) {
+  if (LittleFS.begin()) {
 #endif
-      LOG(println, F("SPIFFS opened!"));
+      LOG(println, F("LittleFS opened!"));
       ftpSrv.begin(F("esp8266"),F("esp8266"));    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
   }    
 }

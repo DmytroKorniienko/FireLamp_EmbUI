@@ -319,12 +319,12 @@ public:
     }
     
     void loadConfig(const char *cfg = nullptr) {
-        if(SPIFFS.begin()){
+        if(LittleFS.begin()){
             File configFile;
             if(cfg == nullptr)
-                configFile = SPIFFS.open(F("/events_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(F("/events_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
             else
-                configFile = SPIFFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
             String cfg_str = configFile.readString();
 
             if (cfg_str == F("")){
@@ -368,12 +368,12 @@ public:
     }
 
     void saveConfig(const char *cfg = nullptr) {
-        if(SPIFFS.begin()){
+        if(LittleFS.begin()){
             File configFile;
             if(cfg == nullptr)
-                configFile = SPIFFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
             else
-                configFile = SPIFFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
 
             configFile.print("[");
             EVENT *next=root;

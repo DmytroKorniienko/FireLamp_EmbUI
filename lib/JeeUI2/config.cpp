@@ -2,12 +2,12 @@
 
 void jeeui2::save(const char *_cfg)
 {
-    if(SPIFFS.begin()){
+    if(LittleFS.begin()){
         File configFile;
         if(_cfg == nullptr)
-            configFile = SPIFFS.open(F("/config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+            configFile = LittleFS.open(F("/config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
         else
-            configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+            configFile = LittleFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
 
         // serializeJson(cfg,configFile);
         // configFile.flush();
@@ -80,12 +80,12 @@ void jeeui2::as(){
 
 void jeeui2::load(const char *_cfg)
 {
-    if(SPIFFS.begin()){
+    if(LittleFS.begin()){
         File configFile;
         if(_cfg == nullptr)
-            configFile = SPIFFS.open(F("/config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+            configFile = LittleFS.open(F("/config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
         else
-            configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+            configFile = LittleFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
 
         String cfg_str = configFile.readString();
         if (cfg_str == F("")){

@@ -41,13 +41,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <string.h>
-//#include <FastLed.h>
-#ifdef ESP8266
 #include <ESP8266WiFi.h>
-#elif defined ESP32
-#include <WiFi.h>
-#include "SPIFFS.h"
-#endif
+#include "LittleFS.h"
 #include "effects_types.h"
 
 
@@ -516,12 +511,12 @@ public:
     ~EffectWorker() {}
 
     void loadConfig(const char *cfg = nullptr) {
-        if(SPIFFS.begin()){
+        if(LittleFS.begin()){
             File configFile;
             if(cfg == nullptr)
-                configFile = SPIFFS.open(F("/eff_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(F("/eff_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
             else
-                configFile = SPIFFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
             String cfg_str = configFile.readString();
 
             if (cfg_str == F("")){
@@ -571,12 +566,12 @@ public:
     }
 
     void saveConfig(const char *cfg = nullptr) {
-        if(SPIFFS.begin()){
+        if(LittleFS.begin()){
             File configFile;
             if(cfg == nullptr)
-                configFile = SPIFFS.open(F("/eff_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(F("/eff_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
             else
-                configFile = SPIFFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+                configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
             EFFECT *cur_eff;
 
             configFile.print("[");

@@ -57,7 +57,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
 //#define DEBUG_TELNET_OUTPUT  (true)                         // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
-//#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
+//#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
 //#define OTA                                                 // Обновление по ОТА
 //#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
 
