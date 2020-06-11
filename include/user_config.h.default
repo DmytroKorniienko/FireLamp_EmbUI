@@ -70,7 +70,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define AUX_PIN (D7)                                        // пин дополнительного реле общего назначения AUX. Может быть установлен любой из "безопасных" 
 //#define AUX_LEVEL (HIGH)                                    // логический уровень AUX_PIN, для активации реле - HIGH или LOW (зависит от типа используемого реле)
 
-Команды http
 #define WIDTH                 (16U)                         // ширина матрицы
 #define HEIGHT                (16U)                         // высота матрицы
 
