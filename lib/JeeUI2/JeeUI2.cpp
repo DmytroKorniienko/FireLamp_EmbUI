@@ -22,7 +22,7 @@ static const char PGpmaxage[] PROGMEM = "public, max-age=864000";    // 10 days 
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
-        LOG(printf, "ws[%s][%u] connect\n", server->url(), client->id());
+        LOG(printf, "ws[%s][%u] connect MEM: %u\n", server->url(), client->id(), ESP.getFreeHeap());
 
         Interface interf(&jee, client);
         block_main_frame(&interf);
@@ -132,8 +132,8 @@ void jeeui2::var_create(const String &key, const String &value)
 {
     if(cfg[key].isNull()){
         cfg[key] = value;
-        if(dbg)Serial.print(F("CREATE: "));
-        if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
+        LOG(print, F("CREATE: "));
+        LOG(printf_P, PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
     }
 }
 
@@ -144,15 +144,15 @@ void jeeui2::section_handle_add(const String &name, buttonCallback response)
     section->callback = response;
     section_handle.add(section);
 
-    if(dbg)Serial.print(F("REGISTER: "));
-    if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), name.c_str(), ESP.getFreeHeap());
+    LOG(print, F("REGISTER: "));
+    LOG(printf_P, PSTR("BTN (%s) RAM: %d\n"), name.c_str(), ESP.getFreeHeap());
 }
 
 String jeeui2::param(const String &key)
 {
     String value = cfg[key].as<String>();
-    if(dbg)Serial.print(F("READ: "));
-    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
+    LOG(print, F("READ: "));
+    LOG(printf_P, PSTR("key (%s) value (%s) MEM: %u\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
     return value;
 }
 
@@ -167,10 +167,10 @@ void jeeui2::begin(bool debug) {
     dbg = debug;
     nonWifiVar();
     load();
-    if(dbg)Serial.println(String(F("CONFIG: ")) + deb());
+    LOG(println, String(F("CONFIG: ")) + deb());
     begin();
-    if(dbg)Serial.println(String(F("RAM: ")) + String(ESP.getFreeHeap()));
-    if(dbg)Serial.println(String(F("MAC: ")) + mac);
+    LOG(println, String(F("RAM: ")) + String(ESP.getFreeHeap()));
+    LOG(println, String(F("MAC: ")) + mac);
 }
 
 void notFound(AsyncWebServerRequest *request) {

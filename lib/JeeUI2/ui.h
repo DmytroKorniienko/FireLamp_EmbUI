@@ -62,7 +62,6 @@ class Interface {
     DynamicJsonDocument json;
     LList<section_stack_t*> section_stack;
     frameSend *send_hndl;
-    String buf;
     jeeui2 *jee;
 
     public:

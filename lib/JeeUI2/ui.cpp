@@ -280,11 +280,10 @@ void Interface::json_frame_flush(){
 }
 
 void Interface::json_frame_send(){
-    if (buf.length()) buf = "";
-    serializeJson(json, buf);
-    LOG(println, buf);
-    if (send_hndl) send_hndl->send(buf);
-    buf = "";
+    String buff;
+    serializeJson(json, buff);
+    LOG(println, buff.c_str());
+    if (send_hndl) send_hndl->send(buff);
 }
 
 void Interface::json_section_begin(const String &name, const String &label){
@@ -306,7 +305,7 @@ void Interface::json_section_begin(const String &name, const String &label, Json
     section->block = obj.createNestedArray(F("block"));
     section->idx = 0;
     section_stack.add(section);
-    LOG(printf, PSTR("section begin %s [%u]\n"), name.c_str(), section_stack.size());
+    LOG(printf, PSTR("section begin %s [%u] MEM: %u\n"), name.c_str(), section_stack.size(), ESP.getFreeHeap());
 }
 
 void Interface::json_section_end(){
@@ -316,6 +315,6 @@ void Interface::json_section_end(){
     if (section_stack.size()) {
         section_stack.end()->idx++;
     }
-    LOG(printf, PSTR("section end %s [%u]\n"), section->name.c_str(), section_stack.size());
+    LOG(printf, PSTR("section end %s [%u] MEM: %u\n"), section->name.c_str(), section_stack.size(), ESP.getFreeHeap());
     delete section;
 }
