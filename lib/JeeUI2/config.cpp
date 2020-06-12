@@ -68,13 +68,6 @@ void jeeui2::httpCallbackHndl(httpCallback func){
     fcallback_http = func;
 }
 
-jeeui2::uiCallback jeeui2::uiCallbackHndl(){
-    return fcallback_ui;
-}
-
-void jeeui2::uiCallbackHndl(uiCallback func){
-    fcallback_ui = func;
-}
 
 void jeeui2::as(){
     sv = true;

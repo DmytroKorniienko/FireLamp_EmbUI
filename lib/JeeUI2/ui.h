@@ -1,6 +1,12 @@
 #ifndef ui_h
 #define ui_h
 
+// #include "Arduino.h"
+#include <ESPAsyncWebServer.h>
+#include "ArduinoJson.h"
+#include "JeeUI2.h"
+#include "../../include/LList.h"
+
 class frameSend {
     public:
         virtual ~frameSend(){};
@@ -45,5 +51,72 @@ class frameSendHttp: public frameSend {
             req->send(stream);
         };
 };
+
+class Interface {
+    typedef struct section_stack_t{
+      JsonArray block;
+      String name;
+      int idx;
+    } section_stack_t;
+
+    DynamicJsonDocument json;
+    LList<section_stack_t*> section_stack;
+    frameSend *send_hndl;
+    String buf;
+    jeeui2 *jee;
+
+    public:
+        Interface(jeeui2 *j, AsyncWebSocket *server): json(2048), section_stack(){
+            jee = j;
+            send_hndl = new frameSendAll(server);
+        }
+        Interface(jeeui2 *j, AsyncWebSocketClient *client): json(2048), section_stack(){
+            jee = j;
+            send_hndl = new frameSendClient(client);
+        }
+        Interface(jeeui2 *j, AsyncWebServerRequest *request): json(2048), section_stack(){
+            jee = j;
+            send_hndl = new frameSendHttp(request);
+        }
+        ~Interface(){
+            delete send_hndl;
+            send_hndl = nullptr;
+            jee = nullptr;
+        }
+
+        void json_frame_value();
+        void json_frame_interface(const String &name);
+        bool json_frame_add(JsonObject obj);
+        void json_frame_next();
+        void json_frame_clear();
+        void json_frame_flush();
+        void json_frame_send();
+
+        void json_section_begin(const String &name, const String &label = "");
+        void json_section_begin(const String &name, const String &label, JsonObject obj);
+        void json_section_end();
+
+        void value(const String &id, const String &val);
+        void text(const String &id, const String &label);
+        void password(const String &id, const String &label);
+        void number(const String &id, const String &label);
+        void time(const String &id, const String &label);
+        void date(const String &id, const String &label);
+        void datetime(const String &id, const String &label);
+        void email(const String &id, const String &label);
+        void range(const String &id, int min, int max, float step, const String &label);
+        void select(const String &id, const String &label);
+        void option(const String &value, const String &label);
+        void checkbox(const String &id, const String &label);
+        void color(const String &id, const String &label);
+        void button(const String &id, const String &color, const String &label);
+        void button(const String &id, const String &color, const String &label, int column);
+        void textarea(const String &id, const String &label);
+
+        void formWifi();
+        void formMqtt();
+};
+
+void block_main_frame(Interface *interf);
 
 #endif

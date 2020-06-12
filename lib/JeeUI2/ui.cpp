@@ -1,6 +1,7 @@
-#include "JeeUI2.h"
+#include "ui.h"
+#include "../../include/misc.h"
 
-void jeeui2::formMqtt(){
+void Interface::formMqtt(){
     text(F("m_host"), F("MQTT host"));
     number(F("m_port"), F("MQTT port"));
     text(F("m_user"), F("User"));
@@ -8,18 +9,18 @@ void jeeui2::formMqtt(){
     button(F("bMQTTform"), F("gray"), F("Reconnect"));
 }
 
-void jeeui2::formWifi(){
+void Interface::formWifi(){
     text(F("ssid"), F("SSID"));
     password(F("pass"), F("Password"));
-    button(F("_sysReset"), F("gray"), F("Connect"));
+    button(F("sysReset"), F("gray"), F("Connect"));
 }
 
-void jeeui2::text(const String &id, const String &label){
+void Interface::text(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("text");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -27,12 +28,12 @@ void jeeui2::text(const String &id, const String &label){
     }
 }
 
-void jeeui2::number(const String &id, const String &label){
+void Interface::number(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("number");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -40,12 +41,12 @@ void jeeui2::number(const String &id, const String &label){
     }
 }
 
-void jeeui2::time(const String &id, const String &label){
+void Interface::time(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("time");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -53,12 +54,12 @@ void jeeui2::time(const String &id, const String &label){
     }
 }
 
-void jeeui2::date(const String &id, const String &label){
+void Interface::date(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("date");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -66,12 +67,12 @@ void jeeui2::date(const String &id, const String &label){
     }
 }
 
-void jeeui2::datetime(const String &id, const String &label){
+void Interface::datetime(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("datetime-local");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -79,12 +80,12 @@ void jeeui2::datetime(const String &id, const String &label){
     }
 }
 
-void jeeui2::range(const String &id, int min, int max, float step, const String &label){
+void Interface::range(const String &id, int min, int max, float step, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("range");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     obj[F("min")] = min;
@@ -96,12 +97,12 @@ void jeeui2::range(const String &id, int min, int max, float step, const String 
     }
 }
 
-void jeeui2::email(const String &id, const String &label){
+void Interface::email(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("email");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -109,12 +110,12 @@ void jeeui2::email(const String &id, const String &label){
     }
 }
 
-void jeeui2::password(const String &id, const String &label){
+void Interface::password(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("password");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -122,7 +123,7 @@ void jeeui2::password(const String &id, const String &label){
     }
 }
 
-void jeeui2::option(const String &value, const String &label){
+void Interface::option(const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("label")] = label;
     obj[F("value")] = value;
@@ -132,46 +133,46 @@ void jeeui2::option(const String &value, const String &label){
     }
 }
 
-void jeeui2::select(const String &id, const String &label){
+void Interface::select(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("select");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         select(id, label);
         return;
     }
-    section_list.end()->idx--;
-    json_section_begin(F("options"), section_list.end()->block.getElement(section_list.end()->idx));
+    section_stack.end()->idx--;
+    json_section_begin(F("options"), F(""), section_stack.end()->block.getElement(section_stack.end()->idx));
 }
 
-void jeeui2::checkbox(const String &id, const String &label){
+void Interface::checkbox(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("checkbox");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         checkbox(id, label);
     }
 }
-void jeeui2::color(const String &id, const String &label){
+void Interface::color(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("color");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         color(id, label);
     }
 }
-void jeeui2::button(const String &id, const String &color, const String &label){
+void Interface::button(const String &id, const String &color, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("button");
     obj[F("id")] = id;
@@ -183,7 +184,7 @@ void jeeui2::button(const String &id, const String &color, const String &label){
     }
 }
 
-void jeeui2::button(const String &id, const String &color, const String &label, int column){
+void Interface::button(const String &id, const String &color, const String &label, int column){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("button");
     obj[F("id")] = id;
@@ -196,11 +197,11 @@ void jeeui2::button(const String &id, const String &color, const String &label, 
     }
 }
 
-void jeeui2::textarea(const String &id, const String &label){
+void Interface::textarea(const String &id, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("textarea");
     obj[F("id")] = id;
-    obj[F("value")] = param(id);
+    obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -208,7 +209,7 @@ void jeeui2::textarea(const String &id, const String &label){
     }
 }
 
-void jeeui2::value(const String &id, const String &val){
+void Interface::value(const String &id, const String &val){
     StaticJsonDocument<256> obj;
     obj[F("id")] = id;
     obj[F("value")] = val;
@@ -219,101 +220,102 @@ void jeeui2::value(const String &id, const String &val){
 }
 
 ///////////////////////////////////////
-void jeeui2::json_frame_value(){
+void Interface::json_frame_value(){
     json[F("pkg")] = F("value");
     json[F("final")] = false;
 
     json_section_begin("root" + String(rand()));
 }
 
-void jeeui2::json_frame_interface(const String &name){
+void Interface::json_frame_interface(const String &name){
     json[F("pkg")] = F("interface");
     json[F("app")] = name;
-    json[F("mc")] = mc;
+    json[F("mc")] = jee->mc;
     json[F("final")] = false;
 
     json_section_begin("root" + String(rand()));
 }
 
-bool jeeui2::json_frame_add(JsonObject obj) {
-    if (dbg) Serial.printf(PSTR("json_frame_add: %u = %u "), obj.memoryUsage(), json.capacity() - json.memoryUsage());
-    if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 20 && section_list.end()->block.add(obj)) {
-        section_list.end()->idx++;
-        if (dbg) Serial.printf(PSTR("OK [%u]  MEM: %u\n"), section_list.end()->idx, ESP.getFreeHeap());
+bool Interface::json_frame_add(JsonObject obj) {
+    LOG(printf_P, PSTR("json_frame_add: %u = %u "), obj.memoryUsage(), json.capacity() - json.memoryUsage());
+    if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 20 && section_stack.end()->block.add(obj)) {
+        section_stack.end()->idx++;
+        LOG(printf, PSTR("OK [%u]  MEM: %u\n"), section_stack.end()->idx, ESP.getFreeHeap());
         return true;
     }
-    if (dbg) Serial.printf(PSTR("BAD  MEM: %u\n"), ESP.getFreeHeap());
+    LOG(printf_P, PSTR("BAD  MEM: %u\n"), ESP.getFreeHeap());
 
     json_frame_send();
     json_frame_next();
     return false;
 }
 
-void jeeui2::json_frame_next(){
+void Interface::json_frame_next(){
     json.clear();
     JsonObject obj = json.to<JsonObject>();
-    for (int i = 0; i < section_list.size(); i++) {
-        if (i) obj = section_list[i - 1]->block.createNestedObject();
-        obj[F("section")] = section_list[i]->name;
-        obj[F("idx")] = section_list[i]->idx;
-        if (dbg) Serial.printf(PSTR("section %u %s %u\n"), i, section_list[i]->name.c_str(), section_list[i]->idx);
-        section_list[i]->block = obj.createNestedArray(F("block"));
+    for (int i = 0; i < section_stack.size(); i++) {
+        if (i) obj = section_stack[i - 1]->block.createNestedObject();
+        obj[F("section")] = section_stack[i]->name;
+        obj[F("idx")] = section_stack[i]->idx;
+        LOG(printf_P, PSTR("section %u %s %u\n"), i, section_stack[i]->name.c_str(), section_stack[i]->idx);
+        section_stack[i]->block = obj.createNestedArray(F("block"));
     }
-    if (dbg) Serial.printf(PSTR("json_frame_next: [%u] %u = %u\n"), section_list.size(), obj.memoryUsage(), json.capacity() - json.memoryUsage());
+    LOG(printf_P, PSTR("json_frame_next: [%u] %u = %u\n"), section_stack.size(), obj.memoryUsage(), json.capacity() - json.memoryUsage());
 }
 
-void jeeui2::json_frame_clear(){
-    while(section_list.size()) {
-        section_t *section = section_list.shift();
+void Interface::json_frame_clear(){
+    while(section_stack.size()) {
+        section_stack_t *section = section_stack.shift();
         delete section;
     }
     json.clear();
 }
 
-void jeeui2::json_frame_flush(){
-    if (dbg) Serial.println(F("json_frame_flush"));
+void Interface::json_frame_flush(){
+    LOG(println, F("json_frame_flush"));
     json[F("final")] = true;
     json_section_end();
     json_frame_send();
     json_frame_clear();
 }
 
-void jeeui2::json_frame_send(){
+void Interface::json_frame_send(){
     if (buf.length()) buf = "";
     serializeJson(json, buf);
-    if (dbg)Serial.println(buf);
+    LOG(println, buf);
     if (send_hndl) send_hndl->send(buf);
     buf = "";
 }
 
-void jeeui2::json_section_begin(const String &name){
+void Interface::json_section_begin(const String &name, const String &label){
     JsonObject obj;
-    if (section_list.size()) {
-        obj = section_list.end()->block.createNestedObject();
+    if (section_stack.size()) {
+        obj = section_stack.end()->block.createNestedObject();
     } else {
         obj = json.as<JsonObject>();
     }
-    json_section_begin(name, obj);
+    json_section_begin(name, label, obj);
 }
 
-void jeeui2::json_section_begin(const String &name, JsonObject obj){
+void Interface::json_section_begin(const String &name, const String &label, JsonObject obj){
     obj[F("section")] = name;
+    if (label != "") obj[F("label")] = label;
 
-    section_t *section = new section_t;
+    section_stack_t *section = new section_stack_t;
     section->name = name;
     section->block = obj.createNestedArray(F("block"));
     section->idx = 0;
-    section_list.add(section);
-    if (dbg) Serial.printf(PSTR("section begin %s [%u]\n"), name.c_str(), section_list.size());
+    section_stack.add(section);
+    LOG(printf, PSTR("section begin %s [%u]\n"), name.c_str(), section_stack.size());
 }
 
-void jeeui2::json_section_end(){
-    if (!section_list.size()) return;
+void Interface::json_section_end(){
+    if (!section_stack.size()) return;
 
-    section_t *section = section_list.pop();
-    if (section_list.size()) {
-        section_list.end()->idx++;
+    section_stack_t *section = section_stack.pop();
+    if (section_stack.size()) {
+        section_stack.end()->idx++;
     }
-    if (dbg) Serial.printf(PSTR("section end %s [%u]\n"), section->name.c_str(), section_list.size());
-     delete section;
+    LOG(printf, PSTR("section end %s [%u]\n"), section->name.c_str(), section_stack.size());
+    delete section;
 }

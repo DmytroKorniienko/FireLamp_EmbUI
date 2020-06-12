@@ -9,21 +9,6 @@ void jeeui2::led_handle()
         digitalWrite(LED_PIN, LOW + LED_INVERT);
 }
 
-
-void jeeui2::btnCallback(const String &name, buttonCallback response)
-{
-#ifdef __BUTTON
-    if (name == F("GPIO0") && !digitalRead(__BUTTON)){
-        response();
-        btn();
-    }
-#endif
-    if(strcmp(btnui, name.c_str())==0){
-        *btnui = '\0';
-        response();
-    }
-}
-
 void jeeui2::btn()
 {
 #ifdef __BUTTON
@@ -40,7 +25,6 @@ void jeeui2::btn()
         delay(1);
         if (t + 5000 < millis()) // Нажатие 5 секунд
         {
-            
             if(!i){
                 led_inv();
                 i = true;
@@ -91,25 +75,21 @@ void testFunction(){
 
 void jeeui2::button_handle()
 {
-    if(!*btnui)
-        return;
-    
-    if(!btn_id.containsKey(btnui)){
-        JsonObject var;
-        buttonCallback response = nullptr;
-        JsonArray arr = btn_id.as<JsonArray>(); // используем имеющийся
-        for (size_t i=0; i<arr.size(); i++) {
-            JsonObject var=arr[i]; // извлекаем очередной
-            if(var[F("b")].as<String>()==btnui)
-                response = (buttonCallback)(var[F("f")].as<unsigned long>());
+    if(!*btnui) return;
+
+    section_handle_t *section = nullptr;
+    for (int i = 0; i < section_handle.size(); i++) {
+        if (section_handle[i]->name == btnui) {
+            section = section_handle[i];
+            break;
         }
+    };
 
-        if(response!=nullptr)
-            response();
-
+    if(section){
         if(dbg)Serial.print(F("HANDLED: "));
         if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
 
-    }    
+        section->callback(nullptr);
+    }
     *btnui = '\0';
 }

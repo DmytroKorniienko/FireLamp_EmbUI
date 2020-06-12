@@ -73,7 +73,6 @@ void setup() {
     myLamp.events.loadConfig();
     myLamp.updateParm(updateParm);
 
-    jee.uiCallbackHndl(interface); // обратный вызов - интерфейс
     jee.updateCallbackHndl(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
     jee.pubCallbackHndl(pubCallback);
     jee.httpCallbackHndl(httpCallback);

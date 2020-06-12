@@ -88,10 +88,9 @@ extern GButton touch;
 void mqttCallback(const String &topic, const String &payload);
 void sendData();
 void update();
-void interface();
+
 void create_parameters();
 void updateParm();
-void jeebuttonshandle();
 void event_worker(const EVENT *);
 void httpCallback(const char *param, const char *value);
 void pubCallback();
