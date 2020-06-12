@@ -1,2 +1,5 @@
-.left-block{margin-top: 20px; }
-.left-block div {display: flex; padding: 5px 5px 5px 10px; justify-content: space-between;}
+.left-block{margin-top: 25px; padding-top: 25px; border-top: 1px solid #777; font-weight: bold;}
+.left-block div {display: flex; padding: 5px 10px 5px 5px; justify-content: space-between;}
+.menu-value {color: #fff;}
+.checkbox-label{margin-left: 60px; position: relative; top: -2px;}
+.mr {margin: 30px 0px 0px 0px !important;}

@@ -52,14 +52,6 @@ void jeeui2::updateCallbackHndl(updateCallback func){
     fcallback_update = func;
 }
 
-jeeui2::pubCallback jeeui2::pubCallbackHndl(){
-    return fcallback_pub;
-}
-
-void jeeui2::pubCallbackHndl(pubCallback func){
-    fcallback_pub = func;
-}
-
 jeeui2::httpCallback jeeui2::httpCallbackHndl(){
     return fcallback_http;
 }

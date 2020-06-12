@@ -74,7 +74,6 @@ void setup() {
     myLamp.updateParm(updateParm);
 
     jee.updateCallbackHndl(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
-    jee.pubCallbackHndl(pubCallback);
     jee.httpCallbackHndl(httpCallback);
 #ifdef LAMP_DEBUG
     jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)

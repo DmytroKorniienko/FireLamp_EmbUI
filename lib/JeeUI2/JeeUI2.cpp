@@ -46,43 +46,47 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             const char *pkg = doc["pkg"];
             if (!pkg) return;
             if (!strcmp(pkg, "post")) {
-                // frameSend *prev = jee.send_hndl;
-                // jee.send_hndl = new frameSendAll(&ws);
-                // jee.json_frame_value();
-
                 JsonArray arr = doc["data"];
-                for (size_t i=0; i < arr.size(); i++) {
-                    JsonObject item = arr[i];
-                    jee.post(item["key"], item["val"]);
-                    // jee.value(item["key"], item["val"]);
-                }
-
-                // jee.json_frame_flush();
-                // delete jee.send_hndl;
-                // jee.send_hndl = prev;
+                jee.post(arr);
             }
         }
   }
 }
 
-void jeeui2::post(const String &key, const String &val){
-    if (!key || !val) return;
+void jeeui2::post(JsonArray data){
+    // В передаваемых параметрах может быть только один с обработчиком
     section_handle_t *section = nullptr;
-    for (int i = 0; i < section_handle.size(); i++) {
-        if (section_handle[i]->name == key) {
-            section = section_handle[i];
-            break;
-        }
-    };
-    if (section) {
-        LOG(printf_P, PSTR("post section: %s\n"), key.c_str());
+    bool hide = false;
 
-        Interface interf(&jee, &jee.ws);
-        section->callback(&interf);
-    } else {
-        var(String(key), String(val));
-        as();
+    Interface *interf = new Interface(this, &ws, 1024);
+    interf->json_frame_value();
+
+    for (size_t i=0; i < data.size(); i++) {
+        JsonObject item = data[i];
+        String key = item["key"], val = item["val"];
+
+        for (int i = 0; !section && i < section_handle.size(); i++) {
+            if (section_handle[i]->name == key) {
+                hide = true;
+                section = section_handle[i];
+                LOG(printf_P, PSTR("post section: %s\n"), key.c_str());
+            }
+            var(key, val);
+        };
+
+        if (!hide) interf->value(key, val);
+        hide = false;
     }
+    interf->json_frame_flush();
+    delete interf;
+
+    jee.save();
+
+    if (section) {
+        Interface interf(this, &ws);
+        section->callback(&interf);
+    }
+    // as();
 }
 
 void jeeui2::refresh(){
@@ -91,14 +95,8 @@ void jeeui2::refresh(){
 }
 
 void jeeui2::send_pub(){
-    // if (!ws.count()) return;
-    // frameSend *prev = send_hndl;
-    // send_hndl = new frameSendAll(&ws);
-
-    // fcallback_pub();
-
-    // delete send_hndl;
-    // send_hndl = prev;
+    Interface interf(this, &ws, 512);
+    pubCallback(&interf);
 }
 
 void jeeui2::var(const String &key, const String &value)

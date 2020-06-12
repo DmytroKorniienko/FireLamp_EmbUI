@@ -426,10 +426,11 @@ void bDemoCallback(Interface *interf)
     //jee.refresh();
 }
 
-void pubCallback(){
-    // jee.json_frame_value();
-    // jee.value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime());
-    // jee.json_frame_flush();
+void pubCallback(Interface *interf){
+    interf->json_frame_value();
+    interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime());
+    interf->value(F("pMem"), String(ESP.getFreeHeap()));
+    interf->json_frame_flush();
 }
 
 void block_menu(Interface *interf){
@@ -443,16 +444,10 @@ void block_menu(Interface *interf){
     interf->json_section_end();
 }
 
-void block_effects(Interface *interf){
-    // Страница "Управление эффектами"
-    interf->json_section_begin(F("effects"), F("Эффекты"));
-
+void block_eff_list(Interface *interf){
     EFFECT enEff; enEff.setNone();
-    interf->checkbox(F("ONflag"),F("Включение&nbspлампы"));
-#ifdef AUX_PIN
-    interf->checkbox(F("AUX"), F("Включение&nbspAUX"));
-#endif
 
+    interf->json_section_begin(F("eff_list"));
     if(!iGLOBAL.isAddSetup){
         interf->select(F("effList"), F("Эффект"));
         do {
@@ -463,16 +458,36 @@ void block_effects(Interface *interf){
         } while((enEff.eff_nb!=EFF_NONE));
         interf->json_section_end();
     } else {
-        interf->select(F("effList"), F("Эффект"));
-        interf->option(jee.param(F("effList")), F("Список эффектов отключен, выйдите из режима настройки!"));
-        interf->json_section_end();
-
         interf->button(F("bSetClose"), F("gray"), F("Выйти из настроек"));
     }
 
     interf->range(F("bright"),1,255,1,F("Яркость"));
     interf->range(F("speed"),1,255,1,F("Скорость"));
     interf->range(F("scale"),1,255,1,F("Масштаб"));
+    interf->json_section_end();
+}
+
+void block_eff_conf(Interface *interf){
+    interf->json_section_begin(F("eff_conf"));
+    interf->checkbox(F("isSetup"),F("Конфигурирование"));
+    if (iGLOBAL.isSetup){
+        interf->checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
+        interf->checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));
+        interf->text(F("param"),F("Доп. параметры"));
+    }
+     interf->json_section_end();
+}
+
+void block_effects(Interface *interf){
+    // Страница "Управление эффектами"
+    interf->json_section_main(F("effects"), F("Эффекты"));
+
+    interf->checkbox(F("ONflag"),F("Включение&nbspлампы"));
+#ifdef AUX_PIN
+    interf->checkbox(F("AUX"), F("Включение&nbspAUX"));
+#endif
+
+    block_eff_list(interf);
 
     String v = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param,F("R"));
     if (!v.isEmpty()) {
@@ -485,42 +500,47 @@ void block_effects(Interface *interf){
         interf->button(F("bDemo"),F("gray"),F("DEMO -> ON"));
     }
 
-    interf->checkbox(F("isSetup"),F("Конфигурирование"));
-    if (iGLOBAL.isSetup){
-        interf->checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
-        interf->checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));
-        interf->text(F("param"),F("Доп. параметры"));
-    }
+    block_eff_conf(interf);
+
+    interf->json_section_end();
+}
+
+void block_lamp_tmsetup(Interface *interf){
+    interf->json_section_hidden(F("tmsetup"), F("Настройка времени"));
+
+    interf->time(F("time"), F("Время"));
+    interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
+    interf->text(F("timezone"), F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
+    interf->checkbox(F("isTmSync"), F("Включить&nbspсинхронизацию"));
+    interf->button_submit(F("tmsetup"), F("gray"), F("Сохранить"));
+
+    interf->json_section_end();
+}
+
+void block_lamp_textsend(Interface *interf){
+    interf->json_section_begin(F("textsend"));
+
+    jee.var(F("pTime"), myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
+    interf->text(F("msg"),F("Текст для вывода на матрицу"));
+    interf->color(F("txtColor"), F("Цвет сообщения"));
+    interf->button_submit(F("textsend"), F("gray"), F("Отправить"));
+
     interf->json_section_end();
 }
 
 void block_lamp(Interface *interf){
     //Страница "Управление лампой"
-    interf->json_section_begin(F("lamp"), F("Лампа"));
-    if(iGLOBAL.isTmSetup){
-        interf->time(F("time"),F("Время"));
-        interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
-        interf->text(F("timezone"),F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
-        interf->checkbox(F("isTmSync"),F("Включить&nbspсинхронизацию"));
-        interf->button(F("bTmSubm"),F("gray"),F("Сохранить"));
-    } else {
-        jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
-        interf->text(F("msg"),F("Текст для вывода на матрицу"));
-        interf->color(F("txtColor"), F("Цвет сообщения"));
-        interf->button(F("bTxtSend"),F("gray"),F("Отправить"));
-    }
-    interf->checkbox(F("isTmSetup"),F("Настройка&nbspвремени"));
+    interf->json_section_main(F("lamp"), F("Лампа"));
 
-    if(!jee.connected && !iGLOBAL.isAPMODE){ // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
-        iGLOBAL.isAddSetup = true;
-        iGLOBAL.addSList = 4;
-    }
+    block_lamp_textsend(interf);
+    block_lamp_tmsetup(interf);
+
     interf->json_section_end();
 }
 
 void block_settings1(Interface *interf){
     // Страница настройки
-    interf->json_section_begin(F("settings"), F("Настройки 1"));
+    interf->json_section_main(F("settings"), F("Настройки 1"));
     interf->checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
 
     interf->select(F("addSList"), F("Группа настроек"));
@@ -647,8 +667,10 @@ void block_settings1(Interface *interf){
 }
 
 void block_settings2(Interface *interf){
-    interf->json_section_begin(F("settings"), F("Настройки 2"));
+    interf->json_section_main(F("settings"), F("Настройки 2"));
+
     interf->checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
+
     String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
     interf->select(F("fileList"), cfg);
 
@@ -715,6 +737,14 @@ void block_settings_frame(Interface *interf){
 }
 
 void block_main_frame(Interface *interf){ // функция в которой мф формируем веб интерфейс
+    if(!jee.connected && !iGLOBAL.isAPMODE){
+        // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
+        iGLOBAL.isAddSetup = true;
+        iGLOBAL.addSList = 4;
+        block_settings1(interf);
+        return;
+    }
+
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
 #endif
@@ -841,6 +871,9 @@ void create_parameters(){
 
     jee.section_handle_add(F("main"), block_main_frame);
     jee.section_handle_add(F("effects"), block_effects_frame);
+    jee.section_handle_add(F("eff_list"), block_eff_list);
+    jee.section_handle_add(F("eff_conf"), block_eff_conf);
+
     jee.section_handle_add(F("lamp"), block_lamp_frame);
     jee.section_handle_add(F("settings"), block_settings_frame);
 

@@ -65,15 +65,15 @@ class Interface {
     jeeui2 *jee;
 
     public:
-        Interface(jeeui2 *j, AsyncWebSocket *server): json(2048), section_stack(){
+        Interface(jeeui2 *j, AsyncWebSocket *server, size_t size = 2048): json(size), section_stack(){
             jee = j;
             send_hndl = new frameSendAll(server);
         }
-        Interface(jeeui2 *j, AsyncWebSocketClient *client): json(2048), section_stack(){
+        Interface(jeeui2 *j, AsyncWebSocketClient *client, size_t size = 2048): json(size), section_stack(){
             jee = j;
             send_hndl = new frameSendClient(client);
         }
-        Interface(jeeui2 *j, AsyncWebServerRequest *request): json(2048), section_stack(){
+        Interface(jeeui2 *j, AsyncWebServerRequest *request, size_t size = 2048): json(size), section_stack(){
             jee = j;
             send_hndl = new frameSendHttp(request);
         }
@@ -91,8 +91,10 @@ class Interface {
         void json_frame_flush();
         void json_frame_send();
 
-        void json_section_begin(const String &name, const String &label = "");
-        void json_section_begin(const String &name, const String &label, JsonObject obj);
+        void json_section_main(const String &name, const String &label);
+        void json_section_hidden(const String &name, const String &label);
+        void json_section_begin(const String &name, const String &label = "", bool main = false, bool hidden = false);
+        void json_section_begin(const String &name, const String &label, bool main, bool hidden, JsonObject obj);
         void json_section_end();
 
         void value(const String &id, const String &val);
@@ -108,14 +110,15 @@ class Interface {
         void option(const String &value, const String &label);
         void checkbox(const String &id, const String &label);
         void color(const String &id, const String &label);
-        void button(const String &id, const String &color, const String &label);
-        void button(const String &id, const String &color, const String &label, int column);
         void textarea(const String &id, const String &label);
+        void button(const String &id, const String &color, const String &label);
+        void button_submit(const String &section, const String &color, const String &label);
 
         void formWifi();
         void formMqtt();
 };
 
 void block_main_frame(Interface *interf);
+void pubCallback(Interface *interf);
 
 #endif

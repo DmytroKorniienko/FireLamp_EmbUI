@@ -42,7 +42,6 @@ class jeeui2
 {
     typedef void (*buttonCallback) (Interface *interf);
     typedef void (*updateCallback) ();
-    typedef void (*pubCallback) ();
     typedef void (*mqttCallback) ();
     typedef void (*httpCallback) (const char *param, const char *value);
 
@@ -118,14 +117,11 @@ class jeeui2
     updateCallback updateCallbackHndl();
     void updateCallbackHndl(updateCallback func);
 
-    updateCallback pubCallbackHndl();
-    void pubCallbackHndl(updateCallback func);
-
     httpCallback httpCallbackHndl();
     void httpCallbackHndl(httpCallback func);
 
     void refresh();
-    void post(const String &key, const String &val);
+    void post(JsonArray data);
     void send_pub();
 
     char ip[16]; //"255.255.255.255"
@@ -147,7 +143,6 @@ class jeeui2
 
     httpCallback fcallback_http = nullptr;
     updateCallback fcallback_update = nullptr;
-    updateCallback fcallback_pub = nullptr;
 
     void arr(const String &key, const String &value);
     void wifi_connect();
