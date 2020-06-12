@@ -75,11 +75,9 @@ void setup() {
 
     jee.updateCallbackHndl(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
     jee.httpCallbackHndl(httpCallback);
-#ifdef LAMP_DEBUG
-    jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
-#else
-    jee.begin(false); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
-#endif
+
+    jee.begin(); // Инициализируем JeeUI2 фреймворк.
+
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif

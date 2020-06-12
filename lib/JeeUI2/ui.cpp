@@ -148,13 +148,14 @@ void Interface::select(const String &id, const String &label){
     json_section_begin(F("options"), F(""), false, false, section_stack.end()->block.getElement(section_stack.end()->idx));
 }
 
-void Interface::checkbox(const String &id, const String &label){
+void Interface::checkbox(const String &id, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("checkbox");
     obj[F("id")] = id;
     obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
+    if (directly) obj[F("directly")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         checkbox(id, label);
@@ -187,7 +188,7 @@ void Interface::button(const String &id, const String &color, const String &labe
 void Interface::button_submit(const String &section, const String &color, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("button");
-    obj[F("section")] = section;
+    obj[F("submit")] = section;
     obj[F("color")] = color;
     obj[F("label")] = label;
 
@@ -228,8 +229,10 @@ void Interface::json_frame_value(){
 
 void Interface::json_frame_interface(const String &name){
     json[F("pkg")] = F("interface");
-    json[F("app")] = name;
-    json[F("mc")] = jee->mc;
+    if (name != "") {
+        json[F("app")] = name;
+        json[F("mc")] = jee->mc;
+    }
     json[F("final")] = false;
 
     json_section_begin("root" + String(rand()));

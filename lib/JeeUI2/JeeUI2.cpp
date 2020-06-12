@@ -1,6 +1,5 @@
 #include "JeeUI2.h"
 #include "ui.h"
-#include "../../include/misc.h"
 
 #ifdef LAMP_DEBUG
 #include "MemoryInfo.h"
@@ -40,7 +39,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     if(type == WS_EVT_DATA){
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
         if(info->final && info->index == 0 && info->len == len){
-            DynamicJsonDocument doc(200);
+            DynamicJsonDocument doc(1024);
             deserializeJson(doc, data, info->len);
 
             const char *pkg = doc["pkg"];
@@ -56,7 +55,6 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 void jeeui2::post(JsonArray data){
     // В передаваемых параметрах может быть только один с обработчиком
     section_handle_t *section = nullptr;
-    bool hide = false;
 
     Interface *interf = new Interface(this, &ws, 1024);
     interf->json_frame_value();
@@ -65,17 +63,19 @@ void jeeui2::post(JsonArray data){
         JsonObject item = data[i];
         String key = item["key"], val = item["val"];
 
+        if (val != F("null")) {
+            var(key, val);
+            interf->value(key, val);
+        }
+
         for (int i = 0; !section && i < section_handle.size(); i++) {
             if (section_handle[i]->name == key) {
-                hide = true;
+                // LOG(printf_P, PSTR("MATCH: %s = %s\n"), key.c_str(), section_handle[i]->name.c_str());
                 section = section_handle[i];
-                LOG(printf_P, PSTR("post section: %s\n"), key.c_str());
+            } else {
+                // LOG(printf_P, PSTR("SKIP: %s != %s\n"), key.c_str(), section_handle[i]->name.c_str());
             }
-            var(key, val);
         };
-
-        if (!hide) interf->value(key, val);
-        hide = false;
     }
     interf->json_frame_flush();
     delete interf;
@@ -83,6 +83,7 @@ void jeeui2::post(JsonArray data){
     jee.save();
 
     if (section) {
+        LOG(printf_P, PSTR("\nPOST SECTION: %s\n\n"), section->name.c_str());
         Interface interf(this, &ws);
         section->callback(&interf);
     }
@@ -99,27 +100,31 @@ void jeeui2::send_pub(){
     pubCallback(&interf);
 }
 
-void jeeui2::var(const String &key, const String &value)
+void jeeui2::var(const String &key, const String &value, bool force)
 {
     // JsonObject of N element	8 + 16 * N
     unsigned len = key.length() + value.length() + 16;
     size_t cap = cfg.capacity(), mem = cfg.memoryUsage();
 
-    if (dbg) Serial.printf_P(PSTR("WRITE: key (%s) value (%s) "), key.c_str(), value.substring(0, 15).c_str());
+    LOG(printf_P, PSTR("WRITE: key (%s) value (%s) "), key.c_str(), value.substring(0, 15).c_str());
+    if (!force && !cfg.containsKey(key)) {
+        LOG(printf_P, PSTR("ERROR: KEY (%s) NOT INIT !!!!!!!!\n"), key.c_str());
+        return;
+    }
 
     if (cap - mem < len) {
         cfg.garbageCollect();
-        if (dbg) Serial.printf_P(PSTR("garbage cfg %u(%u) of %u\n"), mem, cfg.memoryUsage(), cap);
+        LOG(printf_P, PSTR("garbage cfg %u(%u) of %u\n"), mem, cfg.memoryUsage(), cap);
 
     }
     if (cap - mem < len) {
-        if (dbg) Serial.printf_P(PSTR("KEY (%s) NOT WRITE !!!!!!!!\n"), key.c_str());
+        LOG(printf_P, PSTR("ERROR: KEY (%s) NOT WRITE !!!!!!!!\n"), key.c_str());
         return;
     }
 
     cfg[key] = value;
 
-    if (dbg) Serial.printf_P(PSTR("FREE: %u\n"), cap - cfg.memoryUsage());
+    LOG(printf_P, PSTR("FREE: %u\n"), cap - cfg.memoryUsage());
 
     if (_t_remotecontrol) {
         publish(String(F("jee/set/")) + key, value, true);
@@ -161,22 +166,20 @@ String jeeui2::deb()
     return cfg_str;
 }
 
-void jeeui2::begin(bool debug) {
-    dbg = debug;
-    nonWifiVar();
-    load();
-    LOG(println, String(F("CONFIG: ")) + deb());
-    begin();
-    LOG(println, String(F("RAM: ")) + String(ESP.getFreeHeap()));
-    LOG(println, String(F("MAC: ")) + mac);
-}
-
 void notFound(AsyncWebServerRequest *request) {
     request->send(404, FPSTR(PGmimetxt), F("Not found"));
 }
 
 void jeeui2::begin() {
+#ifdef LAMP_DEBUG
+    nonWifiVar();
+    load();
+    LOG(println, String(F("CONFIG: ")) + deb());
+#endif
+
     wifi_connect();
+
+    LOG(println, String(F("MAC: ")) + mac);
 
     /*use mdns for host name resolution*/
     char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
@@ -382,11 +385,11 @@ void jeeui2::handle()
 
 void jeeui2::nonWifiVar(){
     getAPmac();
-    if(param(F("wifi")) == F("null")) var(F("wifi"), F("AP"));
-    if(param(F("ssid")) == F("null")) var(F("ssid"), F("JeeUI2"));
-    if(param(F("pass")) == F("null")) var(F("pass"), "");
-    if(param(F("ap_ssid")) == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc);
-    if(param(F("ap_pass")) == F("null")) var(F("ap_pass"), "");
+    if(param(F("wifi")) == F("null")) var(F("wifi"), F("AP"), true);
+    if(param(F("ssid")) == F("null")) var(F("ssid"), F("JeeUI2"), true);
+    if(param(F("pass")) == F("null")) var(F("pass"), "", true);
+    if(param(F("ap_ssid")) == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc, true);
+    if(param(F("ap_pass")) == F("null")) var(F("ap_pass"), "", true);
 }
 
 void jeeui2::getAPmac(){

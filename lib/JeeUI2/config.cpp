@@ -16,7 +16,7 @@ void jeeui2::save(const char *_cfg)
         configFile.close();
         cfg.garbageCollect();
 
-        if(dbg)Serial.println(F("Save Config"));
+        LOG(println, F("Save Config"));
     }
 }
 
@@ -24,7 +24,7 @@ void jeeui2::autosave(){
     if (isConfSaved) return;
     if (!isConfSaved && astimer + asave < millis()){
         save();
-        if(dbg)Serial.println(F("AutoSave"));
+        LOG(println, F("AutoSave"));
         astimer = millis();
         isConfSaved = true; // сохранились
         //sv = false;
@@ -35,7 +35,7 @@ void jeeui2::autosave(){
 void jeeui2::pre_autosave(){
     if (!sv) return;
     if (sv && astimer + 1000 < millis()){
-        if(dbg)Serial.println(F("pre_autosave"));
+        LOG(println, F("pre_autosave"));
         fcallback_update();
         mqtt_update();
         sv = false;
@@ -77,17 +77,17 @@ void jeeui2::load(const char *_cfg)
 
         String cfg_str = configFile.readString();
         if (cfg_str == F("")){
-            if(dbg)Serial.println(F("Failed to open config file"));
+            LOG(println, F("Failed to open config file"));
             save();
             return;
         }
         DeserializationError error = deserializeJson(cfg, cfg_str);
         if (error) {
-            if(dbg)Serial.print(F("JSON config deserializeJson error: "));
-            if(dbg)Serial.println(error.code());
+            LOG(print, F("JSON config deserializeJson error: "));
+            LOG(println, error.code());
             return;
         }
-        if(dbg)Serial.println(F("JSON config loaded"));
+        LOG(println, F("JSON config loaded"));
         configFile.close();
         sv = false;
     }

@@ -86,8 +86,8 @@ void jeeui2::button_handle()
     };
 
     if(section){
-        if(dbg)Serial.print(F("HANDLED: "));
-        if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
+        LOG(print, F("HANDLED: "));
+        LOG(printf_P, PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
 
         section->callback(nullptr);
     }

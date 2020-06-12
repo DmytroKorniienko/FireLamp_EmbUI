@@ -64,7 +64,7 @@ void jeeui2::wifi_connect()
             WiFi.disconnect();
             WiFi.mode(WIFI_AP);
             WiFi.softAP(param(F("ap_ssid")).c_str(), param(F("ap_pass")).c_str(), 6, 0, 4);
-            if(dbg)Serial.println(F("Start Wi-Fi AP mode!"));
+            LOG(println, F("Start Wi-Fi AP mode!"));
             save();
             _wifi_connected = false;
             break;
@@ -83,7 +83,7 @@ void jeeui2::wifi_connect()
             WiFi.mode(WIFI_OFF);
             WiFi.mode(WIFI_STA);
             WiFi.begin(param(F("ssid")).c_str(), param(F("pass")).c_str());
-            if(dbg)Serial.println(F("Connecting STA"));
+            LOG(println, F("Connecting STA"));
             save();
 
             unsigned long interval = millis();
@@ -100,8 +100,8 @@ void jeeui2::wifi_connect()
                 {
                     delay(500);
                 }
-                
-                
+
+
                 btn();
                 if(a_ap + interval < millis() && a_ap != 0){
                     wf = true;
@@ -119,15 +119,15 @@ void jeeui2::wifi_connect()
             }
             strncpy(mac,_mac.c_str(),sizeof(mac)-1);
             strncpy(ip,WiFi.localIP().toString().c_str(),sizeof(ip)-1);
-            if(dbg)Serial.println();
+            LOG(println, );
             break;
         }
     }
     if (wf){
-        if(dbg)Serial.println(F("RECONNECT AP"));
+        LOG(println, F("RECONNECT AP"));
         var(F("wifi"), F("AP"));
         wifi_connect();
-    } 
+    }
     WiFi.scanNetworks(true);
 }
 

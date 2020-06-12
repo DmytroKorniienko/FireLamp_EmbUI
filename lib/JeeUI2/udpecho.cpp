@@ -31,18 +31,18 @@ void jeeui2::udpLoop(){
     if (packetSize)
     {
         strncpy(udpRemoteIP,Udp.remoteIP().toString().c_str(),sizeof(udpRemoteIP)-1); // udpRemoteIP = Udp.remoteIP().toString();
-        if(dbg)Serial.printf(PSTR("Received %d bytes from %s, port %d\n"), packetSize, udpRemoteIP, Udp.remotePort());
+        LOG(printf, PSTR("Received %d bytes from %s, port %d\n"), packetSize, udpRemoteIP, Udp.remotePort());
         int len = Udp.read(incomingPacket, 64);
         if (len > 0)
         {
         incomingPacket[len] = 0;
         }
-        if(dbg)Serial.printf(PSTR("UDP packet contents: %s\n"), incomingPacket);
+        LOG(printf, PSTR("UDP packet contents: %s\n"), incomingPacket);
 
         // send back a reply, to the IP address and port we got the packet from
         Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
         //Udp.write(ip.c_str());
-        if(dbg)Serial.println(String(F("Send UDP: ")) + udpMessage);
+        LOG(println, String(F("Send UDP: ")) + udpMessage);
         Udp.print(udpMessage);
         Udp.endPacket();
     }

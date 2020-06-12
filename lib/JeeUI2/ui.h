@@ -84,7 +84,7 @@ class Interface {
         }
 
         void json_frame_value();
-        void json_frame_interface(const String &name);
+        void json_frame_interface(const String &name = "");
         bool json_frame_add(JsonObject obj);
         void json_frame_next();
         void json_frame_clear();
@@ -108,7 +108,7 @@ class Interface {
         void range(const String &id, int min, int max, float step, const String &label);
         void select(const String &id, const String &label);
         void option(const String &value, const String &label);
-        void checkbox(const String &id, const String &label);
+        void checkbox(const String &id, const String &label, bool directly = false);
         void color(const String &id, const String &label);
         void textarea(const String &id, const String &label);
         void button(const String &id, const String &color, const String &label);

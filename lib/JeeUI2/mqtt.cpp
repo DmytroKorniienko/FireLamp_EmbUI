@@ -214,7 +214,7 @@ void jeeui2::remControl(){
     if(!_t_remotecontrol || !_t_inc_current) return;
     _t_inc_current = false;
 
-    if(dbg)Serial.printf_P(PSTR("RC [%s - %s]\n"), _t_tpc_current, _t_pld_current);
+    LOG(printf_P, PSTR("RC [%s - %s]\n"), _t_tpc_current, _t_pld_current);
     if(strcmp_P(_t_tpc_current, PSTR("get/refresh"))==0){
         //publish(F("jee/get/refresh"), F("true"), false);
         refresh();
@@ -224,7 +224,7 @@ void jeeui2::remControl(){
     char *pos = strstr_P(_t_tpc_current, PSTR("set/"));
     if(pos!=nullptr){
         strncpy(_t_tpc_current,pos+4,sizeof(_t_tpc_current)-1);
-        if(dbg) Serial.printf(PSTR("SET: %s\n"), _t_tpc_current);
+        LOG(printf, PSTR("SET: %s\n"), _t_tpc_current);
         pos = strstr_P(_t_tpc_current, PSTR("BTN_"));
         if(pos!=nullptr){
             //strncpy(btnui, _t_tpc_current.substring(4, _t_tpc_current.length()).c_str(), sizeof(btnui)-1); // btnui = _t_tpc_current.substring(4, _t_tpc_current.length());
@@ -269,7 +269,7 @@ void jeeui2::subscribeAll(){
             key != F("m_user")      &&
             key != F("m_pass")
             ){
-            if(dbg)Serial.println(id(String(F("jee/set/")) + key));
+            LOG(println, id(String(F("jee/set/")) + key));
             delay(33); // задержка на отправку предыдущих пакетов
             while(!mqttClient.subscribe(id(String(F("jee/set/")) + key).c_str(), 0) && retry--){
                 delay(33); // доп. задержка на отправку предыдущих пакетов
@@ -279,13 +279,13 @@ void jeeui2::subscribeAll(){
             retry=3;
         }
     }
-    //if(dbg)Serial.println(btn_id.as<String>());
-    if(dbg)Serial.println( String(F("BTN =>")));
+    //LOG(println, btn_id.as<String>());
+    LOG(println,  String(F("BTN =>")));
     JsonArray arr = btn_id.as<JsonArray>();
     for (size_t i=0; i<arr.size(); i++) {
         JsonObject var=arr[i]; // извлекаем очередной
         String item = id(F("jee/set/")) + String(F("BTN_")) + var[F("b")].as<String>();
-        if(dbg)Serial.println(item);
+        LOG(println, item);
 
         int retry=2;
         delay(33); // задержка на отправку предыдущих пакетов
@@ -295,7 +295,7 @@ void jeeui2::subscribeAll(){
         if(dbg && retry<=0)Serial.println(String(F("-> ")) + item + F(" not subscribed!"));
     }
 */
-    if(dbg)Serial.println(F("Subscribe All"));
+    LOG(println, F("Subscribe All"));
 }
 
 void jeeui2::publish(const String &topic, const String &payload, bool retained){

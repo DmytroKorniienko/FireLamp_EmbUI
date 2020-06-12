@@ -53,8 +53,6 @@ class INTRFACE_GLOBALS{
 public:
 #pragma pack(push,1)
  struct { // набор глобальных флагов
-    bool isSetup:1;
-    bool isTmSetup:1;
     bool isAddSetup:1;
     bool isEdEvent:1;
     bool isMicCal:1;
@@ -66,8 +64,6 @@ public:
  EFFECT *prevEffect = nullptr;
  int mqtt_int; // интервал отправки данных по MQTT в секундах
  INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
-    isSetup = false;
-    isTmSetup = false;
     isAddSetup = false;
     isEdEvent = false;
     isMicCal = false;

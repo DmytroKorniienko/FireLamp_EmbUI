@@ -387,29 +387,6 @@ void bFSaveCallback(Interface *interf)
     jee.refresh();
 }
 
-void bTxtSendCallback(Interface *interf)
-{
-    String tmpStr = jee.param(F("txtColor"));
-    tmpStr.replace(F("#"),F("0x"));
-    //LOG(printf("%s %d\n", tmpStr.c_str(), strtol(tmpStr.c_str(),NULL,0));
-    myLamp.sendStringToLamp(jee.param(F("msg")).c_str(), (CRGB::HTMLColorCode)strtol(tmpStr.c_str(),NULL,0)); // вывести текст на лампу
-}
-
-void bTmSubmCallback(Interface *interf)
-{
-    LOG(println, F("bTmSubmCallback pressed"));
-    myLamp.timeProcessor.setTimezone(jee.param(F("timezone")).c_str());
-    myLamp.timeProcessor.setTime(jee.param(F("time")).c_str());
-
-    if(myLamp.timeProcessor.getIsSyncOnline()){
-        myLamp.refreshTimeManual(); // принудительное обновление времени
-    }
-    iGLOBAL.isTmSetup = false;
-    jee.var(F("isTmSetup"), F("false"));
-    myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
-    jee.refresh();
-}
-
 void bMQTTformCallback(Interface *interf)
 {
     jee.save();
@@ -436,12 +413,42 @@ void pubCallback(Interface *interf){
 void block_menu(Interface *interf){
     // создаем меню
     interf->json_section_begin(F("menu"));
+
     interf->option(F("effects"), F("Эффекты"));
-    if(!iGLOBAL.isSetup){
-        interf->option(F("lamp"), F("Лампа"));
-        interf->option(F("settings"), F("Настройки"));
-    }
+    interf->option(F("lamp"), F("Лампа"));
+    interf->option(F("settings"), F("Настройки"));
+
     interf->json_section_end();
+}
+
+void block_effconf(Interface *interf){
+    interf->json_section_main(F("effconf"), F("Конфигурирование"));
+
+    EFFECT enEff; enEff.setNone();
+
+    interf->select(F("effList"), F("Эффект"));
+    do {
+        enEff = *myLamp.effects.enumNextEffect(&enEff);
+        if (enEff.eff_nb != EFF_NONE) {
+            interf->option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
+        }
+    } while((enEff.eff_nb!=EFF_NONE));
+    interf->json_section_end();
+
+    interf->checkbox(F("canBeSelected"), F("В списке выбора"));
+    interf->checkbox(F("isFavorite"), F("В списке демо"));
+    interf->text(F("param"), F("Доп. параметры"));
+
+
+    interf->button(F("efflist"), F(""), F("Выход"));
+    interf->json_section_end();
+}
+
+void bEffConfCallback(Interface *interf){
+
+    interf->json_frame_interface();
+    block_effconf(interf);
+    interf->json_frame_flush();
 }
 
 void block_eff_list(Interface *interf){
@@ -452,7 +459,7 @@ void block_eff_list(Interface *interf){
         interf->select(F("effList"), F("Эффект"));
         do {
             enEff = *myLamp.effects.enumNextEffect(&enEff);
-            if(enEff.eff_nb!=EFF_NONE && (enEff.canBeSelected || iGLOBAL.isSetup)){
+            if (enEff.eff_nb != EFF_NONE && enEff.canBeSelected) {
                 interf->option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
             }
         } while((enEff.eff_nb!=EFF_NONE));
@@ -467,24 +474,13 @@ void block_eff_list(Interface *interf){
     interf->json_section_end();
 }
 
-void block_eff_conf(Interface *interf){
-    interf->json_section_begin(F("eff_conf"));
-    interf->checkbox(F("isSetup"),F("Конфигурирование"));
-    if (iGLOBAL.isSetup){
-        interf->checkbox(F("canBeSelected"),F("В&nbspсписке&nbspвыбора"));
-        interf->checkbox(F("isFavorite"),F("В&nbspсписке&nbspдемо"));
-        interf->text(F("param"),F("Доп. параметры"));
-    }
-     interf->json_section_end();
-}
-
 void block_effects(Interface *interf){
     // Страница "Управление эффектами"
     interf->json_section_main(F("effects"), F("Эффекты"));
 
-    interf->checkbox(F("ONflag"),F("Включение&nbspлампы"));
+    interf->checkbox(F("ONflag"), F("Включение лампы"));
 #ifdef AUX_PIN
-    interf->checkbox(F("AUX"), F("Включение&nbspAUX"));
+    interf->checkbox(F("AUX"), F("Включение AUX"));
 #endif
 
     block_eff_list(interf);
@@ -494,15 +490,22 @@ void block_effects(Interface *interf){
         interf->range(F("extraR"),1,255,1,F("Доп. регулятор"));
     }
 
-    if (myLamp.getMode()==MODE_DEMO) {
-        interf->button(F("bDemo"),F("green"),F("DEMO -> OFF"));
+    if (myLamp.getMode() == MODE_DEMO) {
+        interf->button(F("bDemo"), F("green"), F("DEMO -> OFF"));
     } else {
-        interf->button(F("bDemo"),F("gray"),F("DEMO -> ON"));
+        interf->button(F("bDemo"), F("gray"), F("DEMO -> ON"));
     }
 
-    block_eff_conf(interf);
+    interf->button(F("effconf"), F(""), F("Конфигурирование"));
 
     interf->json_section_end();
+}
+
+void bEffectsCallback(Interface *interf){
+
+    interf->json_frame_interface();
+    block_effects(interf);
+    interf->json_frame_flush();
 }
 
 void block_lamp_tmsetup(Interface *interf){
@@ -511,21 +514,46 @@ void block_lamp_tmsetup(Interface *interf){
     interf->time(F("time"), F("Время"));
     interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
     interf->text(F("timezone"), F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
-    interf->checkbox(F("isTmSync"), F("Включить&nbspсинхронизацию"));
+    interf->checkbox(F("isTmSync"), F("Включить синхронизацию"));
     interf->button_submit(F("tmsetup"), F("gray"), F("Сохранить"));
 
     interf->json_section_end();
 }
 
+void bTmSubmCallback(Interface *interf){
+    myLamp.timeProcessor.setTimezone(jee.param(F("timezone")).c_str());
+    myLamp.timeProcessor.setTime(jee.param(F("time")).c_str());
+    myLamp.timeProcessor.setIsSyncOnline(jee.param(F("isTmSync"))==F("true"));
+
+    if (myLamp.timeProcessor.getIsSyncOnline()) {
+        myLamp.refreshTimeManual(); // принудительное обновление времени
+    }
+
+    myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
+
+    interf->json_frame_interface();
+    block_lamp_tmsetup(interf);
+    interf->json_frame_flush();
+}
+
 void block_lamp_textsend(Interface *interf){
     interf->json_section_begin(F("textsend"));
 
-    jee.var(F("pTime"), myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
     interf->text(F("msg"),F("Текст для вывода на матрицу"));
     interf->color(F("txtColor"), F("Цвет сообщения"));
     interf->button_submit(F("textsend"), F("gray"), F("Отправить"));
 
     interf->json_section_end();
+}
+
+void bTxtSendCallback(Interface *interf){
+    String tmpStr = jee.param(F("txtColor"));
+    tmpStr.replace(F("#"),F("0x"));
+    myLamp.sendStringToLamp(jee.param(F("msg")).c_str(), (CRGB::HTMLColorCode)strtol(tmpStr.c_str(),NULL,0));
+
+    interf->json_frame_interface();
+    block_lamp_textsend(interf);
+    interf->json_frame_flush();
 }
 
 void block_lamp(Interface *interf){
@@ -541,7 +569,7 @@ void block_lamp(Interface *interf){
 void block_settings1(Interface *interf){
     // Страница настройки
     interf->json_section_main(F("settings"), F("Настройки 1"));
-    interf->checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
+    interf->checkbox(F("isAddSetup"),F("Расширенные настройки"));
 
     interf->select(F("addSList"), F("Группа настроек"));
     interf->option(F("1"), F("Конфигурации"));
@@ -578,7 +606,7 @@ void block_settings1(Interface *interf){
         interf->json_section_end();
         break;
     case 3:
-        interf->checkbox(F("isEdEvent"),F("Новое&nbspсобытие"));
+        interf->checkbox(F("isEdEvent"),F("Новое событие"));
         if(jee.param(F("isEdEvent"))==F("true")){ // редактируем параметры событий
             interf->select(F("evList"), F("Тип события"));
             interf->option(String(EVENT_TYPE::ON), F("Включить лампу"));
@@ -648,12 +676,12 @@ void block_settings1(Interface *interf){
 #endif
     case 9:
         interf->number(F("mqtt_int"), F("Интервал mqtt сек."));
-        interf->checkbox(F("isGLBbr"),F("Глобальная&nbspяркость"));
-        interf->checkbox(F("MIRR_H"),F("Отзеркаливание&nbspH"));
-        interf->checkbox(F("MIRR_V"),F("Отзеркаливание&nbspV"));
-        interf->checkbox(F("isFaderON"),F("Плавное&nbspпереключение&nbspэффектов"));
+        interf->checkbox(F("isGLBbr"),F("Глобальная яркость"));
+        interf->checkbox(F("MIRR_H"),F("Отзеркаливание H"));
+        interf->checkbox(F("MIRR_V"),F("Отзеркаливание V"));
+        interf->checkbox(F("isFaderON"),F("Плавное переключение эффектов"));
 #ifdef ESP_USE_BUTTON
-                interf->checkbox(F("isBtnOn"), F("Кнопка&nbspактивна"));
+                interf->checkbox(F("isBtnOn"), F("Кнопка активна"));
 #endif
 #ifdef OTA
         interf->button(F("bOTA"),(myLamp.getMode()==MODE_OTA?F("grey"):F("blue")),F("Обновление по ОТА-PIO"));
@@ -669,7 +697,7 @@ void block_settings1(Interface *interf){
 void block_settings2(Interface *interf){
     interf->json_section_main(F("settings"), F("Настройки 2"));
 
-    interf->checkbox(F("isAddSetup"),F("Расширенные&nbspнастройки"));
+    interf->checkbox(F("isAddSetup"),F("Расширенные настройки"));
 
     String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
     interf->select(F("fileList"), cfg);
@@ -774,12 +802,12 @@ void create_parameters(){
     jee.var_create(F("m_port"), F("1883"));
     jee.var_create(F("m_user"), F(""));
     jee.var_create(F("m_pass"), F(""));
+    jee.var_create(F("m_pref"), F(""));
 
     // параметры подключения к MQTT
     jee.var_create(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 
     jee.var_create(F("effList"), F("1"));
-    jee.var_create(F("isSetup"), F("false"));
 
     jee.var_create(F("bright"), F("127"));
     jee.var_create(F("speed"), F("127"));
@@ -804,7 +832,7 @@ void create_parameters(){
     jee.var_create(F("time"), F("00:00"));
     jee.var_create(F("timezone"), F(""));
     jee.var_create(F("tm_offs"), F("0"));
-    jee.var_create(F("isTmSetup"), F("false"));
+
     jee.var_create(F("isTmSync"), F("true"));
 
     jee.var_create(F("isGLBbr"),F("false"));
@@ -847,10 +875,13 @@ void create_parameters(){
 #endif
     //-----------------------------------------------
 
-    jee.section_handle_add(F("bTmSubm"), bTmSubmCallback);
+
     jee.section_handle_add(F("bMQTTform"), bMQTTformCallback); // MQTT form button
     jee.section_handle_add(F("bDemo"), bDemoCallback);
-    jee.section_handle_add(F("bTxtSend"), bTxtSendCallback);
+
+    jee.section_handle_add(F("tmsetup"), bTmSubmCallback);
+    jee.section_handle_add(F("textsend"), bTxtSendCallback);
+
     jee.section_handle_add(F("bFLoad"), bFLoadCallback);
     jee.section_handle_add(F("bFSave"), bFSaveCallback);
     jee.section_handle_add(F("bFDel"), bFDelCallback);
@@ -871,8 +902,8 @@ void create_parameters(){
 
     jee.section_handle_add(F("main"), block_main_frame);
     jee.section_handle_add(F("effects"), block_effects_frame);
-    jee.section_handle_add(F("eff_list"), block_eff_list);
-    jee.section_handle_add(F("eff_conf"), block_eff_conf);
+    jee.section_handle_add(F("efflist"), bEffectsCallback);
+    jee.section_handle_add(F("effconf"), bEffConfCallback);
 
     jee.section_handle_add(F("lamp"), block_lamp_frame);
     jee.section_handle_add(F("settings"), block_settings_frame);
@@ -939,20 +970,9 @@ void update(){ // функция выполняется после ввода д
         isRefresh = true;
     }
 
-    if(iGLOBAL.isTmSetup!=(jee.param(F("isTmSetup"))==F("true"))){
-        iGLOBAL.isTmSetup = !iGLOBAL.isTmSetup;
-        isRefresh = true;
-    }
-
     if(iGLOBAL.isAddSetup!=(jee.param(F("isAddSetup"))==F("true"))){
         iGLOBAL.isAddSetup = !iGLOBAL.isAddSetup;
         isRefresh = true;
-    }
-
-    if((jee.param(F("isSetup"))==F("true"))!=iGLOBAL.isSetup){
-        iGLOBAL.isSetup = !iGLOBAL.isSetup;
-        if(iGLOBAL.prevEffect!=nullptr)
-            isRefresh = true;
     }
 
     uint8_t cur_addSList = jee.param(F("addSList")).toInt();
@@ -1015,11 +1035,11 @@ void update(){ // функция выполняется после ввода д
         }
     }
 
-    if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness)
+    if(myLamp.getMode() == MODE_DEMO || isGlobalBrightness) {
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
+    }
+
     myLamp.timeProcessor.setIsSyncOnline(jee.param(F("isTmSync"))==F("true"));
-    //jee.param(F("effList"))=String(0);
-    jee.var(F("pTime"),myLamp.timeProcessor.getFormattedShortTime()); // обновить опубликованное значение
 
     iGLOBAL.prevEffect = curEff;
     jee.setDelayedSave(30000); // отложенное сохранение конфига, раз в 30 секунд относительно последнего изменения

@@ -27,6 +27,7 @@
 
 #include <AsyncMqttClient.h>
 #include "../../include/LList.h"
+#include "../../include/misc.h"
 
 #ifndef __DISABLE_BUTTON0
 #define __BUTTON 0 // Кнопка "FLASH" на NODE_MCU
@@ -75,7 +76,7 @@ class jeeui2
     AsyncWebServer server;
     AsyncWebSocket ws;
 
-    void var(const String &key, const String &value);
+    void var(const String &key, const String &value, bool force = false);
     void var_create(const String &key, const String &value);
     void section_handle_add(const String &btn, buttonCallback response);
     String param(const String &key);
@@ -83,7 +84,6 @@ class jeeui2
     String deb();
     void ap(unsigned long interval);
     void begin();
-    void begin(bool debug);
     void handle();
 
 
@@ -129,7 +129,6 @@ class jeeui2
     char mac[18]; // "ff:ff:ff:ff:ff:ff"
 
     bool connected = false;
-    bool dbg = false;
 
     String id(const String &tpoic);
     static char m_pref[16]; // префикс MQTT
