@@ -86,7 +86,7 @@
 		{{#if html == "select"}}
 			<label id="{{id}}-val">{{label}}</label>
 			<select id="{{id}}" name="{{name}}" value="{{value}}" class="pure-u-5-5"
-			{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
+				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			>
 			{{#block}}
 				<option value="{{value}}" {{#if2 value == _this.value}}selected{{/if2}}>{{label}}</option>
@@ -111,7 +111,7 @@
 				{{#if2 value}}value="{{value}}"{{/if2}}
 				{{#if2 placeholder}}placeholder="{{placeholder}}"{{/if2}}
 				{{#if2 type == "color"}}style="height: 50px"{{/if2}}
-				{{#if2 directly || type == 'range'}}{{onevent "change", "on_change", id}}{{/if2}}
+				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 				{{onevent "input", "on_input", id, label}}
 			>
 		{{/if}}

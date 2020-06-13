@@ -105,8 +105,8 @@ class Interface {
         void date(const String &id, const String &label);
         void datetime(const String &id, const String &label);
         void email(const String &id, const String &label);
-        void range(const String &id, int min, int max, float step, const String &label);
-        void select(const String &id, const String &label);
+        void range(const String &id, int min, int max, float step, const String &label, bool directly = false);
+        void select(const String &id, const String &label, bool directly = false);
         void option(const String &value, const String &label);
         void checkbox(const String &id, const String &label, bool directly = false);
         void color(const String &id, const String &label);

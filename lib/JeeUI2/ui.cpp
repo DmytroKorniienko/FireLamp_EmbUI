@@ -80,13 +80,14 @@ void Interface::datetime(const String &id, const String &label){
     }
 }
 
-void Interface::range(const String &id, int min, int max, float step, const String &label){
+void Interface::range(const String &id, int min, int max, float step, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("range");
     obj[F("id")] = id;
     obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
+    if (directly) obj[F("directly")] = true;
 
     obj[F("min")] = min;
     obj[F("max")] = max;
@@ -133,12 +134,13 @@ void Interface::option(const String &value, const String &label){
     }
 }
 
-void Interface::select(const String &id, const String &label){
+void Interface::select(const String &id, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("select");
     obj[F("id")] = id;
     obj[F("value")] = jee->param(id);
     obj[F("label")] = label;
+    if (directly) obj[F("directly")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         select(id, label);
