@@ -664,22 +664,18 @@ public:
     }
 
     void moveBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
-        while(cnt){
-            for(int i=arrIdx; i<MODE_AMOUNT; i++){
-                if(cnt>0)
-                    cnt--;
-                if(effects[i].isFavorite && cnt==0){
-                    arrIdx = i;
-                    curEff = effects[i].eff_nb;
-                    return;
-                }
-            }
-            if(arrIdx == 0){ return; }
-            else {
-                arrIdx = 0;
-                curEff = effects[0].eff_nb;
-            }
+        int tmpArrIdx;
+        arrIdx=(arrIdx+cnt)%MODE_AMOUNT; // смещаемся на нужное число шагов, но не больше лимита эффектов
+        tmpArrIdx = arrIdx; // запомним позицию
+        
+        while(!effects[arrIdx].isFavorite){ // если не избранный, то будем перебирать по +1
+            arrIdx++;
+            if(arrIdx==MODE_AMOUNT)
+                arrIdx=0;
+            if(arrIdx==tmpArrIdx) // круг прошли, но не нашли, на выход
+                break;
         }
+        curEff = effects[arrIdx].eff_nb;
     }
 
     EFFECT *enumNextEffect(EFFECT *current){
