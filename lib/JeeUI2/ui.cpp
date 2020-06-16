@@ -1,20 +1,6 @@
 #include "ui.h"
 #include "../../include/misc.h"
 
-void Interface::formMqtt(){
-    text(F("m_host"), F("MQTT host"));
-    number(F("m_port"), F("MQTT port"));
-    text(F("m_user"), F("User"));
-    text(F("m_pass"), F("Password"));
-    button(F("bMQTTform"), F("Reconnect"), F("gray"));
-}
-
-void Interface::formWifi(){
-    text(F("ssid"), F("SSID"));
-    password(F("pass"), F("Password"));
-    button(F("sysReset"), F("Connect"), F("gray"));
-}
-
 void Interface::text(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");

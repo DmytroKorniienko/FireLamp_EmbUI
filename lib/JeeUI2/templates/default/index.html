@@ -60,7 +60,7 @@
 		<section id="{{section}}">
 			{{#if hidden}}<div class="pure-u-5-5 pure-button mr" {{onevent "click", "on_showhide", "block_"+section}} >{{label}}</div>{{/if}}
 			{{#if !hidden && label}}<div class="header"><h2>{{label}}</h2></div>{{/if}}
-			<div id="block_{{section}}" class="pure-g" {{#if hidden}}style="display:none;"{{/if}}>
+			<div id="block_{{section}}" class="pure-g {{#if hidden}}nested{{/if}}" {{#if hidden}}style="display:none;"{{/if}}>
 			{{#block}}
 				{{>tmpl_content _this}}
 			{{/block}}

@@ -61,7 +61,6 @@ public:
  };
  #pragma pack(pop)
  uint8_t addSList = 1;
- EFFECT *prevEffect = nullptr;
  int mqtt_int; // интервал отправки данных по MQTT в секундах
  INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
     isAddSetup = false;

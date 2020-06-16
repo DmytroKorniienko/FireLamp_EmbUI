@@ -125,9 +125,6 @@ class Interface {
         void textarea(const String &id, const String &value, const String &label);
         void button(const String &id, const String &label, const String &color = "");
         void button_submit(const String &section, const String &label, const String &color = "");
-
-        void formWifi();
-        void formMqtt();
 };
 
 void section_main_frame(Interface *interf, JsonObject *data);
