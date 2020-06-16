@@ -89,7 +89,7 @@ void jeeui2::button_handle()
         LOG(print, F("HANDLED: "));
         LOG(printf_P, PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
 
-        section->callback(nullptr);
+        section->callback(nullptr, nullptr);
     }
     *btnui = '\0';
 }

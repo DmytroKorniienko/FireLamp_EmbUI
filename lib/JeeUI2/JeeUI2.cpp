@@ -24,7 +24,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         LOG(printf, "ws[%s][%u] connect MEM: %u\n", server->url(), client->id(), ESP.getFreeHeap());
 
         Interface interf(&jee, client);
-        block_main_frame(&interf);
+        section_main_frame(&interf, nullptr);
 
     } else
     if(type == WS_EVT_DISCONNECT){
@@ -45,26 +45,22 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             const char *pkg = doc["pkg"];
             if (!pkg) return;
             if (!strcmp(pkg, "post")) {
-                JsonArray arr = doc["data"];
+                JsonObject arr = doc["data"];
                 jee.post(arr);
             }
         }
   }
 }
 
-void jeeui2::post(JsonArray data){
-    // В передаваемых параметрах может быть только один с обработчиком
+void jeeui2::post(JsonObject data){
     section_handle_t *section = nullptr;
 
-    Interface *interf = new Interface(this, &ws, 1024);
+    Interface *interf = new Interface(this, &ws, 512);
     interf->json_frame_value();
 
-    for (size_t i=0; i < data.size(); i++) {
-        JsonObject item = data[i];
-        String key = item["key"], val = item["val"];
-
+    for (JsonPair kv : data) {
+        String key = kv.key().c_str(), val = kv.value();
         if (val != F("null")) {
-            var(key, val);
             interf->value(key, val);
         }
 
@@ -77,15 +73,16 @@ void jeeui2::post(JsonArray data){
             }
         };
     }
+
     interf->json_frame_flush();
     delete interf;
 
-    jee.save();
+    // jee.save();
 
     if (section) {
         LOG(printf_P, PSTR("\nPOST SECTION: %s\n\n"), section->name.c_str());
         Interface interf(this, &ws);
-        section->callback(&interf);
+        section->callback(&interf, &data);
     }
     // as();
 }

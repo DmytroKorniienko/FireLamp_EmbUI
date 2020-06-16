@@ -6,86 +6,106 @@ void Interface::formMqtt(){
     number(F("m_port"), F("MQTT port"));
     text(F("m_user"), F("User"));
     text(F("m_pass"), F("Password"));
-    button(F("bMQTTform"), F("gray"), F("Reconnect"));
+    button(F("bMQTTform"), F("Reconnect"), F("gray"));
 }
 
 void Interface::formWifi(){
     text(F("ssid"), F("SSID"));
     password(F("pass"), F("Password"));
-    button(F("sysReset"), F("gray"), F("Connect"));
+    button(F("sysReset"), F("Connect"), F("gray"));
 }
 
-void Interface::text(const String &id, const String &label){
+void Interface::text(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("text");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        text(id, label);
+        text(id, value, label);
     }
 }
 
-void Interface::number(const String &id, const String &label){
+void Interface::text(const String &id, const String &label){
+    text(id, jee->param(id), label);
+}
+
+void Interface::number(const String &id, int value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("number");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        number(id, label);
+        number(id, value, label);
     }
 }
 
-void Interface::time(const String &id, const String &label){
+void Interface::number(const String &id, const String &label){
+    number(id, (int)jee->param(id).toInt(), label);
+}
+
+void Interface::time(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("time");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        time(id, label);
+        time(id, value, label);
     }
 }
 
-void Interface::date(const String &id, const String &label){
+void Interface::time(const String &id, const String &label){
+    time(id, jee->param(id), label);
+}
+
+void Interface::date(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("date");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        date(id, label);
+        date(id, value, label);
     }
 }
 
-void Interface::datetime(const String &id, const String &label){
+void Interface::date(const String &id, const String &label){
+    time(id, jee->param(id), label);
+}
+
+void Interface::datetime(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("datetime-local");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        datetime(id, label);
+        datetime(id, value, label);
     }
 }
 
-void Interface::range(const String &id, int min, int max, float step, const String &label, bool directly){
+void Interface::datetime(const String &id, const String &label){
+    datetime(id, jee->param(id), label);
+}
+
+void Interface::range(const String &id, int value, int min, int max, float step, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("range");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
     if (directly) obj[F("directly")] = true;
 
@@ -94,34 +114,46 @@ void Interface::range(const String &id, int min, int max, float step, const Stri
     obj[F("step")] = step;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        range(id, min, max, step, label);
+        range(id, value, min, max, step, label, directly);
     }
 }
 
-void Interface::email(const String &id, const String &label){
+void Interface::range(const String &id, int min, int max, float step, const String &label, bool directly){
+    range(id, (int)jee->param(id).toInt(), min, max, step, label, directly);
+}
+
+void Interface::email(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("email");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        email(id, label);
+        email(id, value, label);
     }
 }
 
-void Interface::password(const String &id, const String &label){
+void Interface::email(const String &id, const String &label){
+    email(id, jee->param(id), label);
+}
+
+void Interface::password(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("password");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        password(id, label);
+        password(id, value, label);
     }
+}
+
+void Interface::password(const String &id, const String &label){
+    password(id, jee->param(id), label);
 }
 
 void Interface::option(const String &value, const String &label){
@@ -134,48 +166,62 @@ void Interface::option(const String &value, const String &label){
     }
 }
 
-void Interface::select(const String &id, const String &label, bool directly){
+void Interface::select(const String &id, const String &value, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("select");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
     if (directly) obj[F("directly")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        select(id, label);
+        select(id, value, label, directly);
         return;
     }
     section_stack.end()->idx--;
     json_section_begin(F("options"), F(""), false, false, section_stack.end()->block.getElement(section_stack.end()->idx));
 }
 
-void Interface::checkbox(const String &id, const String &label, bool directly){
+void Interface::select(const String &id, const String &label, bool directly){
+    select(id, jee->param(id), label, directly);
+}
+
+void Interface::checkbox(const String &id, const String &value, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("checkbox");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
     if (directly) obj[F("directly")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        checkbox(id, label);
+        checkbox(id, value, label, directly);
     }
 }
-void Interface::color(const String &id, const String &label){
+
+void Interface::checkbox(const String &id, const String &label, bool directly){
+    checkbox(id, jee->param(id), label, directly);
+}
+
+void Interface::color(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("color");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        color(id, label);
+        color(id, value, label);
     }
 }
-void Interface::button(const String &id, const String &color, const String &label){
+
+void Interface::color(const String &id, const String &label){
+    color(id, jee->param(id), label);
+}
+
+void Interface::button(const String &id, const String &label, const String &color){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("button");
     obj[F("id")] = id;
@@ -183,11 +229,11 @@ void Interface::button(const String &id, const String &color, const String &labe
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        button(id, color, label);
+        button(id, label, color);
     }
 }
 
-void Interface::button_submit(const String &section, const String &color, const String &label){
+void Interface::button_submit(const String &section, const String &label, const String &color){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("button");
     obj[F("submit")] = section;
@@ -195,20 +241,24 @@ void Interface::button_submit(const String &section, const String &color, const 
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        button_submit(section, color, label);
+        button_submit(section, label, color);
     }
 }
 
-void Interface::textarea(const String &id, const String &label){
+void Interface::textarea(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("textarea");
     obj[F("id")] = id;
-    obj[F("value")] = jee->param(id);
+    obj[F("value")] = value;
     obj[F("label")] = label;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         textarea(id, label);
     }
+}
+
+void Interface::textarea(const String &id, const String &label){
+    textarea(id, jee->param(id), label);
 }
 
 void Interface::value(const String &id, const String &val){

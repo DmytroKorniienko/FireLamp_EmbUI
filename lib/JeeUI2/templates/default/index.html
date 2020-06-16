@@ -32,10 +32,10 @@
 		</div>
 		<div class="left-block">
 			<div>
-				<span class="menu-title">Time:</span><span id="pTime" class="menu-value"></span>
+				<span class="menu-title">Time:</span><span id="pTime" class="menu-value">{{value.pTime}}</span>
 			</div>
 			<div>
-				<span class="menu-title">Memory:</span><span id="pMem" class="menu-value"></span>
+				<span class="menu-title">Memory:</span><span id="pMem" class="menu-value">{{value.pMem}}</span>
 			</div>
 			<div>
 				<span class="menu-title">ID:</span><span class="menu-value">{{mc}}</span>
@@ -95,9 +95,7 @@
 		{{/if}}
 		{{#if type == "checkbox"}}
 			<div style="height: 40px;">
-				<input type="checkbox" id="{{id}}" class='checkbox' {{#if2 value == 'true'}}checked{{/if2}}
-					{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
-				>
+				<input type="checkbox" id="{{id}}" class='checkbox' {{#if2 value == 'true'}}checked{{/if2}} {{#if2 directly}}{{onevent "click", "on_change", id}}{{/if2}}>
 					<label class="switch mr" for="{{id}}"><span class="checkbox-label">{{label}}</span></label>
 				</input>
 			</div>

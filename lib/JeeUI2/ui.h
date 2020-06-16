@@ -99,26 +99,38 @@ class Interface {
 
         void value(const String &id, const String &val);
         void text(const String &id, const String &label);
+        void text(const String &id, const String &value, const String &label);
         void password(const String &id, const String &label);
+        void password(const String &id, const String &value, const String &label);
         void number(const String &id, const String &label);
+        void number(const String &id, int value, const String &label);
         void time(const String &id, const String &label);
+        void time(const String &id, const String &value, const String &label);
         void date(const String &id, const String &label);
+        void date(const String &id, const String &value, const String &label);
         void datetime(const String &id, const String &label);
+        void datetime(const String &id, const String &value, const String &label);
         void email(const String &id, const String &label);
+        void email(const String &id, const String &value, const String &label);
         void range(const String &id, int min, int max, float step, const String &label, bool directly = false);
+        void range(const String &id, int value, int min, int max, float step, const String &label, bool directly);
         void select(const String &id, const String &label, bool directly = false);
+        void select(const String &id, const String &value, const String &label, bool directly = false);
         void option(const String &value, const String &label);
         void checkbox(const String &id, const String &label, bool directly = false);
+        void checkbox(const String &id, const String &value, const String &label, bool directly = false);
         void color(const String &id, const String &label);
+        void color(const String &id, const String &value, const String &label);
         void textarea(const String &id, const String &label);
-        void button(const String &id, const String &color, const String &label);
-        void button_submit(const String &section, const String &color, const String &label);
+        void textarea(const String &id, const String &value, const String &label);
+        void button(const String &id, const String &label, const String &color = "");
+        void button_submit(const String &section, const String &label, const String &color = "");
 
         void formWifi();
         void formMqtt();
 };
 
-void block_main_frame(Interface *interf);
+void section_main_frame(Interface *interf, JsonObject *data);
 void pubCallback(Interface *interf);
 
 #endif

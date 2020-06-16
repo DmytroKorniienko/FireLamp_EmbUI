@@ -41,7 +41,7 @@ class Interface;
 
 class jeeui2
 {
-    typedef void (*buttonCallback) (Interface *interf);
+    typedef void (*buttonCallback) (Interface *interf, JsonObject *data);
     typedef void (*updateCallback) ();
     typedef void (*mqttCallback) ();
     typedef void (*httpCallback) (const char *param, const char *value);
@@ -121,7 +121,7 @@ class jeeui2
     void httpCallbackHndl(httpCallback func);
 
     void refresh();
-    void post(JsonArray data);
+    void post(JsonObject data);
     void send_pub();
 
     char ip[16]; //"255.255.255.255"
