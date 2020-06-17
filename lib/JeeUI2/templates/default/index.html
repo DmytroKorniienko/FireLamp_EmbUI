@@ -83,6 +83,9 @@
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			></textarea>
 		{{/if}}
+		{{#if html == "spacer"}}
+			<h2 class="spacer">{{label}}</h2>
+		{{/if}}
 		{{#if html == "select"}}
 			<label id="{{id}}-val">{{label}}</label>
 			<select id="{{id}}" name="{{name}}" value="{{value}}" class="pure-u-5-5"

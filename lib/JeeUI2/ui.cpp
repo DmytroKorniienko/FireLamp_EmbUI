@@ -231,6 +231,16 @@ void Interface::button_submit(const String &section, const String &label, const 
     }
 }
 
+void Interface::spacer(const String &label){
+    StaticJsonDocument<256> obj;
+    obj[F("html")] = F("spacer");
+    if (label != "") obj[F("label")] = label;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        spacer(label);
+    }
+}
+
 void Interface::textarea(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("textarea");
@@ -325,6 +335,14 @@ void Interface::json_frame_send(){
     serializeJson(json, buff);
     LOG(println, buff.c_str());
     if (send_hndl) send_hndl->send(buff);
+}
+
+void Interface::json_section_menu(){
+    json_section_begin("menu");
+}
+
+void Interface::json_section_content(){
+    json_section_begin("content");
 }
 
 void Interface::json_section_main(const String &name, const String &label){

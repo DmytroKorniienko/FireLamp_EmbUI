@@ -41,6 +41,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 void setEffectParams(EFFECT *curEff);
 
+#define SETPARAM(key, call) if (data->containsKey(F(key))) { \
+    call; \
+    jee.var(F(key), (*data)[F(key)]); \
+}
+
 #ifdef AUX_PIN
 void AUX_toggle(bool key)
 {
@@ -61,14 +66,6 @@ void AUX_toggle(bool key)
 void bEventsCallback(Interface *interf, JsonObject *data)
 {
     myLamp.setIsEventsHandled(!myLamp.IsEventsHandled());
-    jee.refresh();
-}
-
-void bSetCloseCallback(Interface *interf, JsonObject *data)
-{
-    iGLOBAL.isAddSetup = false;
-    iGLOBAL.isAPMODE = true;
-    jee.var(F("isAddSetup"), (F("false")));
     jee.refresh();
 }
 
@@ -110,7 +107,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         //return; // если не нужен вывод текста - раскомментировать
         break;
     case EVENT_TYPE::DEMO_ON :
-        if(myLamp.getMode()!=MODE_DEMO || !myLamp.isLampOn())
+        if(myLamp.getMode() != MODE_DEMO || !myLamp.isLampOn())
             myLamp.startDemoMode();
         break;
     case EVENT_TYPE::LAMP_CONFIG_LOAD :
@@ -298,18 +295,6 @@ void bAddEventCallback(Interface *interf, JsonObject *data)
     jee.refresh();
 }
 
-#ifdef OTA
-void bOTACallback(Interface *interf, JsonObject *data)
-{
-    myLamp.startOTA();
-}
-#endif
-
-void bRefreshCallback(Interface *interf, JsonObject *data)
-{
-    jee.refresh();
-}
-
 void bFDelCallback(Interface *interf, JsonObject *data)
 {
     // Удаление конфигурации из ФС
@@ -328,8 +313,7 @@ void bFDelCallback(Interface *interf, JsonObject *data)
         if(SPIFFS.begin()){
             SPIFFS.remove(filename);
         }
-    iGLOBAL.isAddSetup = false;
-    jee.var(F("isAddSetup"), F("false"));
+
     jee.var(F("fileName"),F(""));
     jee.refresh();
 }
@@ -348,20 +332,10 @@ void bFSaveCallback(Interface *interf, JsonObject *data)
             filename = String(F("/evn/"))+jee.param(F("fileName"));
             myLamp.events.saveConfig(filename.c_str());
         }
-    iGLOBAL.isAddSetup = false;
-    jee.var(F("isAddSetup"), F("false"));
-    jee.refresh();
+
 }
 
-void bDemoCallback(Interface *interf, JsonObject *data)
-{
-    if(myLamp.getMode()!=LAMPMODE::MODE_DEMO)
-        myLamp.startDemoMode();
-    else
-        myLamp.startNormalMode();
 
-    //jee.refresh();
-}
 
 void pubCallback(Interface *interf){
     interf->json_frame_value();
@@ -372,7 +346,7 @@ void pubCallback(Interface *interf){
 
 void block_menu(Interface *interf, JsonObject *data){
     // создаем меню
-    interf->json_section_begin(F("menu"));
+    interf->json_section_menu();
 
     interf->option(F("effects"), F("Эффекты"));
     interf->option(F("lamp"), F("Лампа"));
@@ -403,15 +377,9 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
 
-    if (data->containsKey(F("param"))) {
-        confEff->updateParam((*data)[F("param")]);
-    }
-    if (data->containsKey(F("canBeSelected"))) {
-        confEff->canBeSelected = ((*data)[F("canBeSelected")] == true);
-    }
-    if (data->containsKey(F("isFavorite"))) {
-        confEff->isFavorite = ((*data)[F("isFavorite")] == true);
-    }
+    SETPARAM("param", confEff->updateParam((*data)[F("param")]));
+    SETPARAM("canBeSelected", confEff->canBeSelected = ((*data)[F("canBeSelected")] == true));
+    SETPARAM("isFavorite", confEff->isFavorite = ((*data)[F("isFavorite")] == true));
 
     String filename = String(F("/cfg/"))+jee.param(F("fileName"));
     if (filename.length() > 4 && SPIFFS.begin()) {
@@ -433,6 +401,7 @@ void block_effects_config(Interface *interf, JsonObject *data){
 
     block_effects_config_param(interf, nullptr);
 
+    interf->spacer();
     interf->button(F("effects"), F("Выход"));
     interf->json_section_end();
 }
@@ -494,18 +463,10 @@ void set_effects_param(Interface *interf, JsonObject *data){
     EFFECT *curEff = myLamp.effects.getCurrent();
     if (!curEff || !data) return;
 
-    if (data->containsKey(F("bright"))) {
-        curEff->brightness = (*data)[F("bright")];
-    }
-    if (data->containsKey(F("speed"))) {
-        curEff->speed = (*data)[F("speed")];
-    }
-    if (data->containsKey(F("scale"))) {
-        curEff->scale = (*data)[F("scale")];
-    }
-    if (data->containsKey(F("extraR"))) {
-        curEff->setValue(curEff->param, F("R"), (*data)[F("extraR")].as<String>().c_str());
-    }
+    SETPARAM("bright", curEff->brightness = (*data)[F("bright")]);
+    SETPARAM("speed", curEff->speed = (*data)[F("speed")]);
+    SETPARAM("scale", curEff->speed = (*data)[F("speed")]);
+    SETPARAM("extraR", curEff->setValue(curEff->param, F("R"), (*data)[F("extraR")].as<String>().c_str()));
 
     String filename = String(F("/cfg/"))+jee.param(F("fileName"));
     if (filename.length() > 4 && SPIFFS.begin()) {
@@ -517,7 +478,8 @@ void block_effects_main(Interface *interf, JsonObject *data){
     // Страница "Управление эффектами"
     interf->json_section_main(F("effects"), F("Эффекты"));
 
-    interf->checkbox(F("ONflag"), F("Включение лампы"), true);
+    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включение лампы"), true);
+    interf->checkbox(F("Demo"), (myLamp.getMode() == MODE_DEMO)? F("true") : F("false"), F("Демо режим"), true);
 #ifdef AUX_PIN
     interf->checkbox(F("AUX"), F("Включение AUX"), true);
 #endif
@@ -532,12 +494,6 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     block_effects_param(interf, data);
-
-    if (myLamp.getMode() == MODE_DEMO) {
-        interf->button(F("bDemo"), F("DEMO -> OFF"), F("green"));
-    } else {
-        interf->button(F("bDemo"), F("DEMO -> ON"), F("gray"));
-    }
 
     interf->button(F("effects_config"), F("Конфигурирование"));
 
@@ -555,9 +511,30 @@ void set_onflag(Interface *interf, JsonObject *data){
             myLamp.setOnOff(newpower);
         }
     }
-    jee.var(F("ONflag"), (*data)[F("ONflag")]);
-    jee.save();
 }
+
+void set_demoflag(Interface *interf, JsonObject *data){
+    bool newdemo = (*data)[F("Demo")] == true;
+    switch (myLamp.getMode()) {
+        case MODE_NORMAL:
+            if (newdemo) myLamp.startDemoMode(); break;
+        case MODE_DEMO:
+            if (!newdemo) myLamp.startNormalMode(); break;
+        default:;
+    }
+}
+
+#ifdef OTA
+void set_otaflag(Interface *interf, JsonObject *data){
+    myLamp.startOTA();
+
+    interf->json_frame_interface();
+    interf->json_section_content();
+    interf->button(F("OTA"), F("Обновление по ОТА-PIO"), F("grey"));
+    interf->json_section_end();
+    interf->json_frame_flush();
+}
+#endif
 
 #ifdef AUX_PIN
 void set_auxflag(Interface *interf, JsonObject *data){
@@ -568,63 +545,6 @@ void set_auxflag(Interface *interf, JsonObject *data){
     jee.save();
 }
 #endif
-
-void block_lamp_tmsetup(Interface *interf, JsonObject *data){
-    interf->json_section_hidden(F("tmsetup"), F("Настройка времени"));
-
-    interf->time(F("time"), F("Время"));
-    interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
-    interf->text(F("timezone"), F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
-    interf->checkbox(F("isTmSync"), F("Включить синхронизацию"));
-    interf->button_submit(F("tmsetup"), F("Сохранить"), F("gray"));
-
-    interf->json_section_end();
-}
-
-void set_lamp_tmsetup(Interface *interf, JsonObject *data){
-    if (data->containsKey(F("timezone"))) {
-        jee.var(F("timezone"), (*data)[F("timezone")]);
-        myLamp.timeProcessor.setTimezone((*data)[F("timezone")]);
-    }
-    if (data->containsKey(F("time"))) {
-        jee.var(F("time"), (*data)[F("time")]);
-        myLamp.timeProcessor.setTime((*data)[F("time")]);
-    }
-    if (data->containsKey(F("isTmSync"))) {
-        jee.var(F("isTmSync"), (*data)[F("isTmSync")]);
-        myLamp.timeProcessor.setIsSyncOnline((*data)[F("isTmSync")] == true);
-    }
-
-    if (myLamp.timeProcessor.getIsSyncOnline()) {
-        myLamp.refreshTimeManual(); // принудительное обновление времени
-    }
-
-    myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
-    jee.save();
-}
-
-void block_lamp_tmsetup2(Interface *interf, JsonObject *data){
-    interf->json_section_hidden(F("tmsetup"), F("Настройка времени"));
-
-    interf->number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
-    interf->number(F("ny_unix"), F("UNIX дата/время нового года"));
-    interf->range(F("txtSpeed"),10,100,10,F("Задержка прокрутки текста"));
-    interf->range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
-
-    interf->select(F("perTime"), F("Периодический вывод времени"));
-    interf->option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
-    interf->option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
-    interf->option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
-    interf->option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
-    interf->option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
-    interf->option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
-    interf->option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
-    interf->json_section_end();
-
-    interf->button_submit(F("tmsetup"), F("Сохранить"), F("gray"));
-
-    interf->json_section_end();
-}
 
 void block_lamp_textsend(Interface *interf, JsonObject *data){
     interf->json_section_begin(F("textsend"));
@@ -645,13 +565,63 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
     myLamp.sendStringToLamp((*data)[F("msg")], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
 }
 
+void block_lamp_config(Interface *interf, JsonObject *data){
+    interf->json_section_hidden(F("lamp_config"), F("Конфигурации эффектов"));
+
+    String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
+    interf->select(F("fileList"), cfg);
+
+    if(SPIFFS.begin()){
+#ifdef ESP32
+        File root = SPIFFS.open("/cfg");
+        File file = root.openNextFile();
+#else
+        Dir dir = SPIFFS.openDir(F("/cfg"));
+#endif
+        String fn;
+#ifdef ESP32
+        while (file) {
+            fn=file.name();
+            if(!file.isDirectory()){
+#else
+        while (dir.next()) {
+            fn=dir.fileName();
+#endif
+
+            fn.replace(F("/cfg/"),F(""));
+            //LOG(println, fn);
+            interf->option(fn, fn);
+#ifdef ESP32
+            file = root.openNextFile();
+        }
+#endif
+        }
+    }
+    interf->json_section_end();
+
+    interf->button(F("bFDel"), F("Удалить из ФС"), F("red"));
+    interf->button(F("bFDel"), F("Удалить из ФС"), F("red"));
+
+    interf->text(F("fileName"),F("Конфигурация"));
+    interf->button(F("bFSave"), F("Записать в ФС"), F("green"));
+
+    interf->json_section_end();
+}
+
+void set_settings_conf_list(Interface *interf, JsonObject *data){
+    // Загрузка сохраненной конфигурации эффектов вместо текущей
+    String fn = (*data)[F("fileList")];
+    myLamp.effects.loadConfig(fn.c_str());
+    jee.var(F("fileName"), fn);
+    jee.save();
+}
+
 void block_lamp(Interface *interf, JsonObject *data){
     //Страница "Управление лампой"
     interf->json_section_main(F("lamp"), F("Лампа"));
 
     block_lamp_textsend(interf, data);
-    block_lamp_tmsetup(interf, data);
-    block_lamp_tmsetup2(interf, data);
+    block_lamp_config(interf, data);
 
     interf->json_section_end();
 }
@@ -659,15 +629,13 @@ void block_lamp(Interface *interf, JsonObject *data){
 void block_settings1(Interface *interf, JsonObject *data){
     // Страница настройки
     interf->json_section_main(F("settings"), F("Настройки 1"));
-    interf->checkbox(F("isAddSetup"),F("Расширенные настройки"));
 
     interf->select(F("addSList"), F("Группа настроек"));
-    interf->option(F("2"), F("Время/Текст"));
     interf->option(F("3"), F("События"));
 
     interf->json_section_end();
 
-    switch (iGLOBAL.addSList)
+    switch (0)
     {
     case 3:
         interf->checkbox(F("isEdEvent"),F("Новое событие"));
@@ -736,7 +704,10 @@ void block_settings_mic(Interface *interf, JsonObject *data){
         interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
+    interf->spacer();
     interf->button(F("bmicCal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
+
+    interf->spacer();
     interf->button(F("settings"), F("Выход"));
 
     interf->json_section_end();
@@ -749,22 +720,11 @@ void show_settings_mic(Interface *interf, JsonObject *data){
 }
 
 void set_settings_mic(Interface *interf, JsonObject *data){
-    if (data->containsKey(F("isMicON"))) {
-        myLamp.setMicOnOff((*data)[F("isMicON")] == true);
-        jee.var(F("isMicON"), (*data)[F("isMicON")]);
-    }
-    if (data->containsKey(F("micScale"))) {
-        myLamp.setMicScale((*data)[F("micScale")].as<float>());
-        jee.var(F("micScale"), (*data)[F("micScale")]);
-    }
-    if (data->containsKey(F("micNoise"))) {
-        myLamp.setMicNoise((*data)[F("micNoise")].as<float>());
-        jee.var(F("micNoise"), (*data)[F("micNoise")]);
-    }
-    if (data->containsKey(F("micnRdcLvl"))) {
-        myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>());
-        jee.var(F("micnRdcLvl"), (*data)[F("micnRdcLvl")]);
-    }
+    SETPARAM("isMicON", myLamp.setMicOnOff((*data)[F("isMicON")] == true));
+    SETPARAM("micScale", myLamp.setMicScale((*data)[F("micScale")].as<float>()));
+    SETPARAM("micNoise", myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
+    SETPARAM("micnRdcLvl", myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>()));
+
     jee.save();
 }
 
@@ -808,6 +768,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->button_submit(F("set_mqtt"), F("Connect"), F("gray"));
     interf->json_section_end();
 
+    interf->spacer();
     interf->button(F("settings"), F("Выход"));
 
     interf->json_section_end();
@@ -820,37 +781,21 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
 }
 
 void set_settings_wifi(Interface *interf, JsonObject *data){
-    if (data->containsKey(F("ap_ssid"))) {
-        jee.var(F("ap_ssid"), (*data)[F("ap_ssid")]);
-    }
-    if (data->containsKey(F("ssid"))) {
-        jee.var(F("ssid"), (*data)[F("ssid")]);
-    }
-    if (data->containsKey(F("pass"))) {
-        jee.var(F("pass"), (*data)[F("pass")]);
-    }
+    SETPARAM("ap_ssid", 0);
+    SETPARAM("ssid", 0);
+    SETPARAM("pass", 0);
+
     jee.var(F("wifi"), F("STA"));
     jee.save();
     ESP.restart();
 }
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
-    if (data->containsKey(F("m_host"))) {
-        jee.var(F("m_host"), (*data)[F("m_host")]);
-    }
-    if (data->containsKey(F("m_port"))) {
-        jee.var(F("m_port"), (*data)[F("m_port")]);
-    }
-    if (data->containsKey(F("m_user"))) {
-        jee.var(F("m_user"), (*data)[F("m_user")]);
-    }
-    if (data->containsKey(F("m_pass"))) {
-        jee.var(F("m_pass"), (*data)[F("m_pass")]);
-    }
-    if (data->containsKey(F("mqtt_int"))) {
-        iGLOBAL.mqtt_int = (*data)[F("mqtt_int")];
-        jee.var(F("mqtt_int"), (*data)[F("mqtt_int")]);
-    }
+    SETPARAM("m_host", 0);
+    SETPARAM("m_port", 0);
+    SETPARAM("m_user", 0);
+    SETPARAM("m_pass", 0);
+    SETPARAM("mqtt_int", iGLOBAL.mqtt_int = (*data)[F("mqtt_int")]);
 
     jee.save();
     ESP.restart();
@@ -868,91 +813,79 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(F("isBtnOn"), F("Кнопка активна"));
 #endif
 
+    interf->spacer(F("Вывод текста"));
+    interf->range(F("txtSpeed"),10,100,10,F("Задержка прокрутки текста"));
+    interf->range(F("txtOf"),-1,10,1,F("Смещение вывода текста"));
+
+    interf->select(F("perTime"), F("Периодический вывод времени"));
+    interf->option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
+    interf->option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
+    interf->option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
+    interf->option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
+    interf->option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
+    interf->option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
+    interf->option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
+    interf->json_section_end();
+
+    interf->spacer(F("Новогоднее поздравление"));
+    interf->number(F("ny_period"), F("Период вывода новогоднего поздравления в минутах (0 - не выводить)"));
+    interf->number(F("ny_unix"), F("UNIX дата/время нового года"));
+
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
 
     interf->json_section_end();
 }
 
 void set_settings_other(Interface *interf, JsonObject *data){
-    if (data->containsKey(F("isGLBbr"))) {
-        myLamp.setIsGlobalBrightness((*data)[F("isGLBbr")] == true);
-        jee.var(F("isGLBbr"), (*data)[F("isGLBbr")]);
-    }
+    SETPARAM("isGLBbr", myLamp.setIsGlobalBrightness((*data)[F("isGLBbr")] == true));
+
     if (data->containsKey(F("GlobBRI"))) {
         if (myLamp.IsGlobalBrightness()) {
             myLamp.setGlobalBrightness((*data)[F("GlobBRI")].as<long>());
         }
         jee.var(F("GlobBRI"), (*data)[F("GlobBRI")]);
     }
-    if (data->containsKey(F("MIRR_H"))) {
-        myLamp.setMIRR_H((*data)[F("MIRR_H")] == true);
-        jee.var(F("MIRR_H"), (*data)[F("MIRR_H")]);
-    }
-    if (data->containsKey(F("MIRR_V"))) {
-        myLamp.setMIRR_V((*data)[F("MIRR_V")] == true);
-        jee.var(F("MIRR_V"), (*data)[F("MIRR_V")]);
-    }
-    if (data->containsKey(F("isFaderON"))) {
-        myLamp.setFaderFlag((*data)[F("isFaderON")] == true);
-        jee.var(F("isFaderON"), (*data)[F("isFaderON")]);
-    }
+
+    SETPARAM("MIRR_H", myLamp.setMIRR_H((*data)[F("MIRR_H")] == true));
+    SETPARAM("MIRR_V", myLamp.setMIRR_V((*data)[F("isGLBbr")] == true));
+    SETPARAM("isFaderON", myLamp.setFaderFlag((*data)[F("isGLBbr")] == true));
+
 #ifdef ESP_USE_BUTTON
-    if (data->containsKey(F("isBtnOn"))) {
-        myLamp.setButtonOn((*data)[F("isBtnOn")] == true);
-        jee.var(F("isBtnOn"), (*data)[F("isBtnOn")]);
-    }
+    SETPARAM("isBtnOn", myLamp.setButtonOn((*data)[F("isGLBbr")] == true));
 #endif
+
+    SETPARAM("txtSpeed", myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
+    SETPARAM("txtOf", myLamp.setTextOffset((*data)[F("txtOf")]));
+    SETPARAM("perTime", myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[F("perTime")].as<long>()));
+    SETPARAM("ny_period", myLamp.setNYMessageTimer((*data)[F("ny_period")]));
+    SETPARAM("ny_unix", myLamp.setNYUnixTime((*data)[F("ny_unix")]));
+
     jee.save();
 }
 
-void block_settings_config(Interface *interf, JsonObject *data){
-    interf->json_section_hidden(F("settings_config"), F("Конфигурации эффектов"));
+void block_settings_tmsetup(Interface *interf, JsonObject *data){
+    interf->json_section_hidden(F("tmsetup"), F("Настройка времени"));
 
-    String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileList")); cfg+=")";
-    interf->select(F("fileList"), cfg);
-
-    if(SPIFFS.begin()){
-#ifdef ESP32
-        File root = SPIFFS.open("/cfg");
-        File file = root.openNextFile();
-#else
-        Dir dir = SPIFFS.openDir(F("/cfg"));
-#endif
-        String fn;
-#ifdef ESP32
-        while (file) {
-            fn=file.name();
-            if(!file.isDirectory()){
-#else
-        while (dir.next()) {
-            fn=dir.fileName();
-#endif
-
-            fn.replace(F("/cfg/"),F(""));
-            //LOG(println, fn);
-            interf->option(fn, fn);
-#ifdef ESP32
-            file = root.openNextFile();
-        }
-#endif
-        }
-    }
-    interf->json_section_end();
-
-    interf->button(F("bFDel"), F("Удалить из ФС"), F("red"));
-    interf->button(F("bFDel"), F("Удалить из ФС"), F("red"));
-
-    interf->text(F("fileName"),F("Конфигурация"));
-    interf->button(F("bFSave"), F("Записать в ФС"), F("green"));
+    interf->time(F("time"), F("Время"));
+    interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
+    interf->text(F("timezone"), F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
+    interf->checkbox(F("isTmSync"), F("Включить синхронизацию"));
+    interf->button_submit(F("tmsetup"), F("Сохранить"), F("gray"));
 
     interf->json_section_end();
 }
 
-void set_settings_conf_list(Interface *interf, JsonObject *data){
-    // Загрузка сохраненной конфигурации эффектов вместо текущей
-    String fn = (*data)[F("fileList")];
-    myLamp.effects.loadConfig(fn.c_str());
-    jee.var(F("fileName"), fn);
+void set_settings_tmsetup(Interface *interf, JsonObject *data){
+    SETPARAM("tm_offs", myLamp.timeProcessor.SetOffset((*data)[F("tm_offs")]));
+    SETPARAM("timezone", myLamp.timeProcessor.setTimezone((*data)[F("timezone")]));
+    SETPARAM("time", myLamp.timeProcessor.setTime((*data)[F("time")]));
+    SETPARAM("isTmSync", myLamp.timeProcessor.setIsSyncOnline((*data)[F("isTmSync")] == true));
+
+    if (myLamp.timeProcessor.getIsSyncOnline()) {
+        myLamp.refreshTimeManual(); // принудительное обновление времени
+    }
+
+    myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
     jee.save();
 }
 
@@ -985,12 +918,17 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 
     interf->json_section_main(F("settings"), F("Настройки"));
 
-    block_settings_config(interf, data);
+    block_settings_tmsetup(interf, data);
     block_settings_other(interf, data);
+
+    interf->button(F("show_wifi"), F("WiFi & MQTT"));
 #ifdef MIC_EFFECTS
     interf->button(F("show_mic"), F("Микрофон"));
 #endif
-    interf->button(F("show_wifi"), F("WiFi & MQTT"));
+#ifdef OTA
+    interf->spacer();
+    interf->button(F("OTA"), F("Обновление по ОТА-PIO"), (myLamp.getMode() == MODE_OTA? F("grey") : F("blue")));
+#endif
 
     interf->json_section_end();
     interf->json_frame_flush();
@@ -999,9 +937,7 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 void section_main_frame(Interface *interf, JsonObject *data){ // функция в которой мф формируем веб интерфейс
     if(!jee.connected && !iGLOBAL.isAPMODE){
         // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
-        iGLOBAL.isAddSetup = true;
-        iGLOBAL.addSList = 4;
-        block_settings1(interf, data);
+        show_settings_wifi(interf, data);
         return;
     }
 
@@ -1014,10 +950,6 @@ void section_main_frame(Interface *interf, JsonObject *data){ // функция 
 
     block_menu(interf, data);
     block_effects_main(interf, data);
-
-#ifdef OTA
-    interf->button(F("bOTA"), F("Обновление по ОТА-PIO"), (myLamp.getMode()==MODE_OTA?F("grey"):F("blue")));
-#endif
 
     interf->json_frame_flush();
 
@@ -1045,7 +977,6 @@ void create_parameters(){
 
     jee.var_create(F("effList"), F("1"));
 
-    jee.var_create(F("ONflag"), F("true"));
     jee.var_create(F("MIRR_H"), F("false"));
     jee.var_create(F("MIRR_V"), F("false"));
 #ifdef AUX_PIN
@@ -1067,13 +998,11 @@ void create_parameters(){
 
     jee.var_create(F("isGLBbr"),F("false"));
 
-    jee.var_create(F("isAddSetup"), F("false"));
     jee.var_create(F("fileName"), F("cfg1"));
 
     jee.var_create(F("ny_period"), F("0"));
     jee.var_create(F("ny_unix"), F("1609459200"));
 
-    jee.var_create(F("addSList"),F("1"));
     jee.var_create(F("isEdEvent"),F("false"));
     jee.var_create(F("isEnabled"),F("true"));
     jee.var_create(F("tmEvent"),F(""));
@@ -1105,20 +1034,14 @@ void create_parameters(){
     //-----------------------------------------------
 
 
-    jee.section_handle_add(F("bDemo"), bDemoCallback);
-
-
     jee.section_handle_add(F("bFSave"), bFSaveCallback);
     jee.section_handle_add(F("bFDel"), bFDelCallback);
-    jee.section_handle_add(F("bRefresh"), bRefreshCallback);
-#ifdef OTA
-    jee.section_handle_add(F("bOTA"), bOTACallback);
-#endif
+
     jee.section_handle_add(F("bAddEvent"), bAddEventCallback);
     jee.section_handle_add(F("bDelEvent"), bDelEventCallback);
     jee.section_handle_add(F("bEditEvent"), bEditEventCallback);
     jee.section_handle_add(F("bOwrEvent"), bOwrEventCallback);
-    jee.section_handle_add(F("bSetClose"), bSetCloseCallback);
+
     jee.section_handle_add(F("bEvents"), bEventsCallback);
 
 
@@ -1137,13 +1060,16 @@ void create_parameters(){
     jee.section_handle_add(F("eff_conf_prm"), set_effects_config_param);
 
     jee.section_handle_add(F("ONflag"), set_onflag);
+    jee.section_handle_add(F("Demo"), set_demoflag);
+#ifdef OTA
+    jee.section_handle_add(F("OTA"), set_otaflag);
+#endif
 #ifdef AUX_PIN
     jee.section_handle_add(F("AUX"), set_auxflag);
 #endif
 
 
     jee.section_handle_add(F("lamp"), section_lamp_frame);
-    jee.section_handle_add(F("tmsetup"), set_lamp_tmsetup);
     jee.section_handle_add(F("textsend"), set_lamp_textsend);
 
     jee.section_handle_add(F("settings"), section_settings_frame);
@@ -1151,6 +1077,7 @@ void create_parameters(){
     jee.section_handle_add(F("show_wifi"), show_settings_wifi);
     jee.section_handle_add(F("set_wifi"), set_settings_wifi);
     jee.section_handle_add(F("set_mqtt"), set_settings_mqtt);
+    jee.section_handle_add(F("tmsetup"), set_settings_tmsetup);
 #ifdef MIC_EFFECTS
     jee.section_handle_add(F("show_mic"), show_settings_mic);
     jee.section_handle_add(F("set_mic"), set_settings_mic);
@@ -1174,16 +1101,6 @@ void update(){ // функция выполняется после ввода д
     LOG(println, F("In update..."));
 
     myLamp.demoTimer(T_RESET);  // при любом изменении UI сбрасываем таймер ДЕМО режима и начинаем отсчет снова
-
-    myLamp.setTextMovingSpeed(jee.param(F("txtSpeed")).toInt());
-    myLamp.setTextOffset(jee.param(F("txtOf")).toInt());
-    myLamp.setPeriodicTimePrint((PERIODICTIME)jee.param(F("perTime")).toInt());
-
-
-    myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
-    myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
-    myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
-
 
     EFFECT *curEff = myLamp.effects.getCurrent();
 /*
@@ -1223,7 +1140,7 @@ void updateParm() // передача параметров в UI после на
     EFFECT *curEff = myLamp.effects.getCurrent();
     setEffectParams(curEff);
 
-    if(myLamp.getMode()!=MODE_DEMO) jee.save(); // Cохранить конфиг
+    if(myLamp.getMode() != MODE_DEMO) jee.save(); // Cохранить конфиг
     jee.refresh(); // форсировать перерисовку интерфейсов клиентов
 }
 

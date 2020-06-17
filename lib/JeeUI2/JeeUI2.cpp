@@ -54,7 +54,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
 void jeeui2::post(JsonObject data){
     section_handle_t *section = nullptr;
-
+    int count = 0;
     Interface *interf = new Interface(this, &ws, 512);
     interf->json_frame_value();
 
@@ -62,6 +62,7 @@ void jeeui2::post(JsonObject data){
         String key = kv.key().c_str(), val = kv.value();
         if (val != F("null")) {
             interf->value(key, val);
+            ++count;
         }
 
         for (int i = 0; !section && i < section_handle.size(); i++) {
@@ -74,7 +75,11 @@ void jeeui2::post(JsonObject data){
         };
     }
 
-    interf->json_frame_flush();
+    if (count) {
+        interf->json_frame_flush();
+    } else {
+        interf->json_frame_clear();
+    }
     delete interf;
 
     // jee.save();
@@ -240,11 +245,6 @@ void jeeui2::begin() {
         request->send(SPIFFS, F("/events_config.json"), String(), true);
     });
 
-    // server all files from SPIFFS root
-    server.serveStatic("/", SPIFFS, "/")
-        .setDefaultFile("index.html")
-        .setCacheControl("max-age=864000");
-
     server.on(PSTR("/restart"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         request->redirect("/heap");
         delay(1000);
@@ -324,6 +324,11 @@ void jeeui2::begin() {
     request->send(200, FPSTR(PGmimejson), json);
     json = String();
     });
+
+    // server all files from SPIFFS root
+    server.serveStatic("/", SPIFFS, "/")
+        .setDefaultFile("index.html")
+        .setCacheControl("max-age=864000");
 
     server.onNotFound(notFound);
 

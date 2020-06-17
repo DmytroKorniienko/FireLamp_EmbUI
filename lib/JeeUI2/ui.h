@@ -91,6 +91,8 @@ class Interface {
         void json_frame_flush();
         void json_frame_send();
 
+        void json_section_menu();
+        void json_section_content();
         void json_section_main(const String &name, const String &label);
         void json_section_hidden(const String &name, const String &label);
         void json_section_begin(const String &name, const String &label = "", bool main = false, bool hidden = false);
@@ -125,6 +127,7 @@ class Interface {
         void textarea(const String &id, const String &value, const String &label);
         void button(const String &id, const String &label, const String &color = "");
         void button_submit(const String &section, const String &label, const String &color = "");
+        void spacer(const String &label = "");
 };
 
 void section_main_frame(Interface *interf, JsonObject *data);

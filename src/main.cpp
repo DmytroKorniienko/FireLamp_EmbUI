@@ -129,7 +129,7 @@ void sendData(){
 #else
   LOG(printf_P, PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 #endif
-  //jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
+
 }
 
 /*
