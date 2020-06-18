@@ -405,7 +405,6 @@ private:
     bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
     bool ONflag:1; // флаг включения/выключения
     bool manualOff:1; // будильник, разпознавание действия пользователя во время работы будильника, либо факта окончания действия рассвета
-    bool loadingFlag:1; // флаг для начальной инициализации эффекта
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
     bool isFirstHoldingPress:1; // флаг: только начали удерживать?
@@ -547,11 +546,7 @@ public:
     bool isMicOnOff() {return isMicOn;}
     void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
 #endif
-
-
-    bool isLoading() {if(!loadingFlag) return loadingFlag; else {loadingFlag=false; return true;}}
-    void setLoading(bool flag=true) {loadingFlag = flag;}
-
+    
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}

@@ -360,7 +360,6 @@ if(touch.isHold() || !touch.isHolded())
           //changePower(true);
           setOnOff(true);
           switcheffect(SW_SPECIFIC, getFaderFlag(), effects.getEn());
-          loadingFlag = true;
         }
       } else {        // лампа была включена
         storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
@@ -545,15 +544,13 @@ void LAMP::effectsTick()
   uint32_t _begin = millis();
   if(dawnFlag){
     doPrintStringToLamp(); // обработчик печати строки
-    //FastLED.show();
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
     return;
   }
 
   if(!isEffectsDisabledUntilText){
-    // отрисовать текущий эффект (если есть) 
-    if(effects.getCurrent()->func!=nullptr){
-      effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param);
+    // посчитать текущий эффект (сохранить кадр в буфер, если ОК) 
+    if(effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param)) {
 #ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
@@ -566,7 +563,7 @@ void LAMP::effectsTick()
   GaugeShow();
 #endif
 
-  if (isEffectsDisabledUntilText || effects.getCurrent()->func!=nullptr) {
+  if (isEffectsDisabledUntilText || effects.worker->status()) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else {
@@ -722,7 +719,6 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_
       dawnFlag = false; // флаг устанавливается будильником "рассвет"
       ONflag = false; // флаг включения/выключения
       manualOff = false;
-      loadingFlag = true; // флаг для начальной инициализации эффекта
       isFaderON = true; // признак того, что используется фейдер для смены эффектов
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
       isFirstHoldingPress = false; // флаг: только начали удерживать?
@@ -1334,10 +1330,9 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   }
 
   EFFECT *currentEffect = effects.getCurrent();
-  setLoading();
 
-  if(currentEffect->func!=nullptr)
-    currentEffect->func(getUnsafeLedsArray(), currentEffect->param); // отрисовать текущий эффект
+  // отрисовать текущий эффект
+  effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param);
 
   if (fade) {
     fadelight(getNormalizedLampBrightness());
@@ -1426,6 +1421,7 @@ void LAMP::showWarning(
   myLamp.fadelight(myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
   delay(1);
   FastLED.show();
-  myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
+  // наверное это не актуально
+  //myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
 }
 //-----------------------------

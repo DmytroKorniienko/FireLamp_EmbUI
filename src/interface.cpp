@@ -576,7 +576,7 @@ void block_effects(){
     jee.range(F("bright"),1,255,1,F("Яркость"));
     jee.range(F("speed"),1,255,1,F("Скорость"));
     jee.range(F("scale"),1,255,1,F("Масштаб"));
-    String v=myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param,F("R"));
+    String v=myLamp.effects.getValue(myLamp.effects.getCurrent()->param,F("R"));
     //LOG(printf_P, PSTR("\nJsonObject: %s\n"),v.c_str());
     if(!v.isEmpty())
         jee.range(F("extraR"),1,255,1,F("Доп. регулятор"));
@@ -924,35 +924,41 @@ void update(){ // функция выполняется после ввода д
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
             if(myLamp.isLampOn()) // только если включена, поскольку этот вызов при перезагрузке зажжет лампу, даже если она выключена в конфиге
                 myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), myLamp.getFaderFlag());    // два вызова выглядят коряво, но встраивать setBrightness в setLampBrightness нельзя, т.к. это корежит фэйдер и отложенную смену эфектов, можно попробовать наоборот сделать setBrightness будет менять яркость в конфиге эффекта
-            curEff->speed = jee.param(F("speed")).toInt();
-            curEff->scale = jee.param(F("scale")).toInt();
+            //curEff->speed = jee.param(F("speed")).toInt();
+            //curEff->scale = jee.param(F("scale")).toInt();
+            myLamp.effects.setSpeed(jee.param(F("speed")).toInt());
+            myLamp.effects.setScale(jee.param(F("scale")).toInt());
+
 
             //LOG(printf_P, PSTR("curEff->param=%p\n"),curEff->param);
             // Если руками правили строковый параметр - то обновляем его в эффекте, а дальше синхронизируем (нужно для возможности очистки)
             String tmpParam = jee.param(F("param"));
             if(curEff->param==nullptr || strcmp_P(curEff->param, tmpParam.c_str())){ // различаются
                 if(curEff->param==nullptr){
-                    curEff->updateParam(("")); // для вновь добавленного эффекта сделаем очистку, а не копирование с предыдущего эффекта
+                    //curEff->updateParam(("")); // для вновь добавленного эффекта сделаем очистку, а не копирование с предыдущего эффекта
+                    myLamp.effects.updateParam((""));
                     jee.var(F("extraR"), F(""));
                 }
                 else {
-                    curEff->updateParam(tmpParam.c_str());
-                    jee.var(F("extraR"), curEff->getValue(curEff->param, F("R")));
+                    //curEff->updateParam(tmpParam.c_str());
+                    myLamp.effects.updateParam(tmpParam.c_str());
+                    jee.var(F("extraR"), myLamp.effects.getValue(curEff->param, F("R")));
                 }
             }
-            String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+            //String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
+            String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
             if(!var.isEmpty()){
-                curEff->setValue(curEff->param, F("R"), (jee.param(F("extraR"))).c_str());
+                myLamp.effects.setValue(curEff->param, F("R"), (jee.param(F("extraR"))).c_str());
+                //curEff->setValue(curEff->param, F("R"), (jee.param(F("extraR"))).c_str());
                 String tmp = FPSTR(curEff->param);
                 jee.var(F("param"), tmp);
                 tmpParam = tmp;
             }
+/*  По-моему это тоже самое что и выше делается по новой, не?
             if(strcmp_P(tmpParam.c_str(), curEff->param)){ // различаются  || (curEff->param==nullptr && (jee.param(F("param"))).length()!=0)
                 curEff->updateParam(tmpParam.c_str());
             }
-
-            myLamp.setLoading(true); // перерисовать эффект
-
+*/
             if(iGLOBAL.prevEffect!=nullptr){
                 if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
                     myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
@@ -990,9 +996,13 @@ void setEffectParams(EFFECT *curEff)
     jee.var(F("bright"),String(myLamp.getLampBrightness()));
     jee.var(F("speed"),String(curEff->speed));
     jee.var(F("scale"),String(curEff->scale));
-    jee.var(F("param"), curEff->getParam());
-    jee.var(F("extraR"), curEff->getValue(curEff->param, F("R")));
+    jee.var(F("param"), myLamp.effects.getParam());
+    jee.var(F("extraR"), myLamp.effects.getValue(curEff->param, F("R")));
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
+	
+#ifdef AUX_PIN
+    jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
+#endif
 
 #ifdef AUX_PIN
     jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
@@ -1004,7 +1014,6 @@ void setEffectParams(EFFECT *curEff)
         jee.var(F("GlobBRI"), String(myLamp.getLampBrightness()));
     else
         myLamp.setGlobalBrightness(jee.param(F("GlobBRI")).toInt());
-    myLamp.setLoading(); // обновить эффект
     iGLOBAL.prevEffect = curEff; // обновить указатель на предыдущий эффект
 
     // if(myLamp.getMode()==LAMPMODE::MODE_DEMO){
@@ -1050,20 +1059,19 @@ void httpCallback(const char *param, const char *value)
             }
             myLamp.setLampBrightness(atoi(value));
             myLamp.fadelight(myLamp.getNormalizedLampBrightness());
-            //myLamp.setLoading(true); // перерисовать эффект
         }
     } else if(!strcmp_P(param,PSTR("speed"))){
         if(atoi(value)>0){
             jee.var(F("speed"), value);
-            curEff->speed = atoi(value);
-            myLamp.setLoading(true); // перерисовать эффект
+            myLamp.effects.setSpeed(atoi(value));
+            //curEff->speed = atoi(value);
         }
     } else if(!strcmp_P(param,PSTR("scale"))){
         if(atoi(value)>0){
             jee.var(F("scale"), value);
-            curEff->scale = atoi(value);
-            myLamp.setLoading(true); // перерисовать эффект
-        }
+            myLamp.effects.setScale(atoi(value));
+            //curEff->scale = atoi(value);
+        }    
     } else if(!strcmp_P(param,PSTR("effect"))){
         if(atoi(value)>0){
             jee.var(F("effList"), value);

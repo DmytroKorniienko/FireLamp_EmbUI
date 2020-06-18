@@ -40,6 +40,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "config.h"
 
+
 /*
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon
@@ -61,6 +62,146 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+
+/**
+ * константы/определения
+ */
+#define MAP_SIN 1
+#define MAP_COS 0
+#define MOVE_X 1
+#define MOVE_Y 0
+#define MIN_RANGE 1     // заложим дейфан пока нет динамических ползунков
+#define MAX_RANGE 255   // заложим дейфан пока нет динамических ползунков
+
+/**
+ * типы/определения для палитр
+ */
+typedef const TProgmemRGBPalette16 PGMPallete;
+#define FASTLED_PALETTS_COUNT 8
+
+/**
+ * Набор палитр в дополнение к тем что идут с FastLED
+ * новые палитры добавляем в алфавитном порядке
+ */
+static const TProgmemRGBPalette16 AlcoholFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue};  //* Blue
+static const TProgmemRGBPalette16 CopperFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen};     //* Green
+static const TProgmemRGBPalette16 HeatColors2_p FL_PROGMEM = {    0x000000,
+    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
+    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
+    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF};
+static const TProgmemRGBPalette16 LithiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink};        //* Redstatic
+static const TProgmemRGBPalette16 NormalFire_p FL_PROGMEM = {CRGB::Black, CRGB::Red, 0xff3c00, 0xff7800};                             // пытаюсь сделать что-то более приличное
+static const TProgmemRGBPalette16 NormalFire2_p FL_PROGMEM = {CRGB::Black, CRGB::FireBrick, 0xff3c00, 0xff7800};                      // пытаюсь сделать что-то более приличное
+static const TProgmemRGBPalette16 RubidiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue};        //* Indigo
+static const TProgmemRGBPalette16 PotassiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink}; //* Violet
+static const TProgmemRGBPalette16 SodiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod};           //* Yellow
+static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
+  CRGB::Black,
+  CRGB::DarkSlateGray,
+  CRGB::DimGray,
+  CRGB::LightSlateGray,
+
+  CRGB::DimGray,
+  CRGB::DarkSlateGray,
+  CRGB::Silver,
+  CRGB::DarkCyan,
+
+  CRGB::Lavender,
+  CRGB::Silver,
+  CRGB::Azure,
+  CRGB::LightGrey,
+
+  CRGB::GhostWhite,
+  CRGB::Silver,
+  CRGB::White,
+  CRGB::RoyalBlue
+};
+static const TProgmemRGBPalette16 WoodFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold};             //* Orange
+
+
+// ==== Константы для эффектов ====
+
+// 3D Noise
+#define NOISE_SCALE_AMP  (58UL)    // амплификатор шкалы
+#define NOISE_SCALE_ADD  (8UL)    // корректор шкалы
+
+
+#define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
+#define LIGHTERS_AM            (64U)                // светлячки
+#define NUM_LAYERS             (1U)                 // The coordinates for 3 16-bit noise spaces.
+#define NUM_LAYERS2            (2U)                 // The coordinates for 3 16-bit noise spaces.
+#define AVAILABLE_BOID_COUNT   (10U)                // стая, кол-во птиц
+
+// ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
+#define e_com_TAILSPEED             (500)         // скорость смещения хвоста 
+#define e_com_BLUR                  (24U)         // размытие хвоста 
+#define e_com_3DCOLORSPEED          (5U)          // скорость случайного изменения цвета (0й - режим)
+
+// ------------- светлячки со шлейфом -------------
+//#define BALLS_AMOUNT          (7U)                          // максимальное количество "шариков"
+#define CLEAR_PATH            (1U)                          // очищать путь
+#define BALL_TRACK            (1U)                          // (0 / 1) - вкл/выкл следы шариков
+#define TRACK_STEP            (70U)                         // длина хвоста шарика (чем больше цифра, тем хвост короче)
+
+// ------------- блуждающий кубик -------------
+#define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
+
+// --------------------------- эффект мячики ----------------------
+#define bballsMaxNUM_BALLS     (16U)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+#define bballsGRAVITY          (-10)                // Downward (negative) acceleration of gravity in m/s^2
+#define bballsH0                (2)                 // Starting height, in meters, of the ball (strip length)
+#define bballsVImpact0          (sqrt(-2 * bballsGRAVITY * bballsH0))
+
+// ------------- метель -------------
+#define SNOW_DENSE            (60U)                         // плотность снега
+#define SNOW_TAIL_STEP        (100U)                        // длина хвоста
+#define SNOW_SATURATION       (0U)                          // насыщенность (от 0 до 255)
+
+// ------------- звездопад -------------
+#define STAR_DENSE            (60U)                         // плотность комет
+#define STAR_TAIL_STEP        (100U)                        // длина хвоста кометы
+#define STAR_SATURATION       (150U)                        // насыщенность кометы (от 0 до 255)
+
+// ============= DRIFT / ДРИФТ ===============
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
+// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
+// https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
+#define CENTER_max  max(WIDTH / 2, HEIGHT / 2) // Наибольшее значение центра
+#define WIDTH_steps  256U / WIDTH   // диапазон значений приходящихся на 1 пиксель ширины матрицы
+#define HEIGHT_steps 256U / HEIGHT // диапазон значений приходящихся на 1 пиксель высоты матрицы
+
+// ============= Fire Effect =================
+#define SPARKLES              (1U)                     // вылетающие угольки вкл выкл
+#define UNIVERSE_FIRE                                  // универсальный огонь 2-в-1 Цветной+Белый
+
+//these values are substracetd from the generated values to give a shape to the animation
+static const uint8_t valueMask[8][16] PROGMEM =
+{
+  {0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  },
+  {0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  },
+  {0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  },
+  {0  , 32 , 64 , 128, 128, 64 , 32 , 0  , 0  , 32 , 64 , 128, 128, 64 , 32 , 0  },
+  {32 , 64 , 96 , 160, 160, 96 , 64 , 32 , 32 , 64 , 96 , 160, 160, 96 , 64 , 32 },
+  {64 , 96 , 128, 192, 192, 128, 96 , 64 , 64 , 96 , 128, 192, 192, 128, 96 , 64 },
+  {96 , 128, 160, 255, 255, 160, 128, 96 , 96 , 128, 160, 255, 255, 160, 128, 96 },
+  {128, 160, 192, 255, 255, 192, 160, 128, 128, 160, 192, 255, 255, 192, 160, 128}
+};
+
+//these are the hues for the fire,
+//should be between 0 (red) to about 25 (yellow)
+static const uint8_t hueMask[8][16] PROGMEM =
+{
+  {25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25 },
+  {25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19 },
+  {19, 16, 8 , 1 , 1 , 8 , 13, 16, 19, 16, 8 , 1 , 1 , 8 , 13, 16 },
+  {13, 13, 5 , 1 , 1 , 5 , 11, 13, 13, 13, 5 , 1 , 1 , 5 , 11, 13 },
+  {11, 11, 5 , 1 , 1 , 5 , 11, 11, 11, 11, 5 , 1 , 1 , 5 , 11, 11 },
+  {8 , 5 , 1 , 0 , 0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 , 0 , 1 , 5 , 8  },
+  {5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5  },
+  {1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1  }
+};
+
 
 template <class T>
 class Vector2 {
