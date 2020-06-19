@@ -53,8 +53,12 @@ void fake(){}
 void emptyFunction(const String &, const String &){}
 
 void jeeui2::mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol){
-    
-    
+
+    if (host.length()==0){
+      if(dbg) Serial.println(F("MQTT host is empty - disabled!"));
+      return;   // выходим если host не задан
+    }
+
     if(param(F("m_pref")) == F("null")) var(F("m_pref"), pref);
     if(param(F("m_host")) == F("null")) var(F("m_host"), host);
     if(param(F("m_port")) == F("null")) var(F("m_port"), String(port));

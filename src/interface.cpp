@@ -505,7 +505,7 @@ void create_parameters(){
     jee.var_create(F("isMicON"),F("true"));
 #endif
     jee.var_create(F("param"),F(""));
-    jee.var_create(F("extraR"),F("127"));
+    jee.var_create(FPSTR(extraR),F("127"));
     jee.var_create(F("isFaderON"),(FADE==true?F("true"):F("false")));
 
 #ifdef ESP_USE_BUTTON
@@ -579,7 +579,7 @@ void block_effects(){
     String v=myLamp.effects.getValue(myLamp.effects.getCurrent()->param,F("R"));
     //LOG(printf_P, PSTR("\nJsonObject: %s\n"),v.c_str());
     if(!v.isEmpty())
-        jee.range(F("extraR"),1,255,1,F("Доп. регулятор"));
+        jee.range(FPSTR(extraR),1,255,1,F("Доп. регулятор"));
 
     //jee.button(F("btn1"),F("gray"),F("<"), 1);
     if(myLamp.getMode()==MODE_DEMO)
@@ -935,21 +935,18 @@ void update(){ // функция выполняется после ввода д
             String tmpParam = jee.param(F("param"));
             if(curEff->param==nullptr || strcmp_P(curEff->param, tmpParam.c_str())){ // различаются
                 if(curEff->param==nullptr){
-                    //curEff->updateParam(("")); // для вновь добавленного эффекта сделаем очистку, а не копирование с предыдущего эффекта
                     myLamp.effects.updateParam((""));
-                    jee.var(F("extraR"), F(""));
+                    jee.var(FPSTR(extraR), F(""));
                 }
                 else {
-                    //curEff->updateParam(tmpParam.c_str());
                     myLamp.effects.updateParam(tmpParam.c_str());
-                    jee.var(F("extraR"), myLamp.effects.getValue(curEff->param, F("R")));
+                    jee.var(FPSTR(extraR), myLamp.effects.getValue(curEff->param, FPSTR(R)));
                 }
             }
             //String var = myLamp.effects.getCurrent()->getValue(myLamp.effects.getCurrent()->param, F("R"));
-            String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
+            String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, FPSTR(R));
             if(!var.isEmpty()){
-                myLamp.effects.setValue(curEff->param, F("R"), (jee.param(F("extraR"))).c_str());
-                //curEff->setValue(curEff->param, F("R"), (jee.param(F("extraR"))).c_str());
+                myLamp.effects.setValue(curEff->param, FPSTR(R), (jee.param(FPSTR(extraR))).c_str());
                 String tmp = FPSTR(curEff->param);
                 jee.var(F("param"), tmp);
                 tmpParam = tmp;
@@ -997,7 +994,7 @@ void setEffectParams(EFFECT *curEff)
     jee.var(F("speed"),String(curEff->speed));
     jee.var(F("scale"),String(curEff->scale));
     jee.var(F("param"), myLamp.effects.getParam());
-    jee.var(F("extraR"), myLamp.effects.getValue(curEff->param, F("R")));
+    jee.var(FPSTR(extraR), myLamp.effects.getValue(curEff->param, F("R")));
     jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
 	
 #ifdef AUX_PIN

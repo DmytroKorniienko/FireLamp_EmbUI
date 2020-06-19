@@ -123,11 +123,8 @@ void LAMP::lamp_init()
 
 void LAMP::handle()
 {
-  //effectsTick(); // уехало в тикер
-
-  static unsigned long mic_check;
-
 #ifdef MIC_EFFECTS
+  static unsigned long mic_check;
   if(isMicOn && ONflag && (!dawnFlag) && mic_check + MIC_POLLRATE < millis()){
     micHandler();
     mic_check = millis();
@@ -148,6 +145,7 @@ void LAMP::handle()
 EVERY_N_SECONDS(15){
   // fps counter
   LOG(printf, "Eff:%d FPS: %u\n", effects.getEn(), fps);
+  LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 }
   fps = 0;
 #endif
@@ -1047,10 +1045,6 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 }
 
-
-static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
-static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";
-
 void LAMP::newYearMessageHandle()
 {
   if(!tmNewYearMessage.isReady() || timeProcessor.isDirtyTime())
@@ -1329,8 +1323,6 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
       break;
   }
 
-  EFFECT *currentEffect = effects.getCurrent();
-
   // отрисовать текущий эффект
   effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param);
 
@@ -1344,7 +1336,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
 }
 
 /*
- * включает/выключает режим "демо", возвращает установленный статус
+ * включает/выключает режим "демо"
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
 void LAMP::demoTimer(SCHEDULER action){
@@ -1366,6 +1358,10 @@ void LAMP::demoTimer(SCHEDULER action){
   }
 }
 
+/*
+ * включает/выключает таймер обработки эффектов
+ * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
+ */
 void LAMP::effectsTimer(SCHEDULER action) {
 //  LOG.printf_P(PSTR("effectsTimer: %u\n"), action);
   switch (action)

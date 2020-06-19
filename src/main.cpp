@@ -57,9 +57,6 @@ void setup() {
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
-    // randomSeed(analogRead(A0)); // А0 не трогаем, да и лучше инициализировать если нужно внутрях эффектов, примеры можно поиском найти, там их есть
-    //Serial.println(F("Starting..."));
-    //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
 
     jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
 #if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
@@ -107,7 +104,8 @@ void loop() {
     myLamp.handle(); // цикл, обработка лампы
     jeebuttonshandle();
 
-    sendData(); // цикл отправки данных по MQTT
+    // по-моему эта функция уже давно ничего по мкутт не отправляет
+    //sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
 #endif

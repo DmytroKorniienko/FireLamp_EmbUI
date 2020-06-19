@@ -74,10 +74,13 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define MIN_RANGE 1     // заложим дейфан пока нет динамических ползунков
 #define MAX_RANGE 255   // заложим дейфан пока нет динамических ползунков
 
+static const char R[] PROGMEM = "R";
+static const char extraR[] PROGMEM = "extraR";
+
 /**
  * типы/определения для палитр
  */
-typedef const TProgmemRGBPalette16 PGMPallete;
+typedef const TProgmemRGBPalette16 PGMPalette;
 #define FASTLED_PALETTS_COUNT 8
 
 /**
@@ -118,6 +121,12 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
   CRGB::RoyalBlue
 };
 static const TProgmemRGBPalette16 WoodFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold};             //* Orange
+static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {
+  CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black,
+  CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black,
+  CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black,
+  CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black
+};
 
 
 // ==== Константы для эффектов ====

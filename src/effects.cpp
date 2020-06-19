@@ -133,7 +133,7 @@ void EffectCalc::palettesload(){
  * @param _val - байт "ползунка"
  * @param _pals - набор с палитрами
  */
-void EffectCalc::palettemap(std::vector<PGMPallete*> &_pals, const uint8_t _val){
+void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
 
   if (!_pals.size()) {
     LOG(println,F("No palettes loaded!"));
@@ -1097,7 +1097,8 @@ void Effect3DNoise::fillNoiseLED()
       {
         bri = dim8_raw( bri * 2);
       }
-      CRGB color = ColorFromPalette( *(CRGBPalette16 *)(currentPalette), index, bri);      
+      CRGB color = ColorFromPalette( *curPalette, index, bri);
+
       myLamp.drawPixelXY(i, j, color);                             //leds[getPixelNumber(i, j)] = color;
     }
   }
@@ -1123,43 +1124,35 @@ void Effect3DNoise::load(){
   switch (effect)
   {
   case EFF_ENUM::EFF_RAINBOW :
-    *(CRGBPalette16 *)(currentPalette) = RainbowColors_p;
+    curPalette = &RainbowColors_p;
     colorLoop = 1;
     break;
   case EFF_ENUM::EFF_RAINBOW_STRIPE :
-    *(CRGBPalette16 *)(currentPalette) = RainbowStripeColors_p;
+    curPalette = &RainbowStripeColors_p;
     colorLoop = 1;
     break;
   case EFF_ENUM::EFF_ZEBRA :
-    // 'black out' all 16 palette entries...
-    *(CRGBPalette16 *)(currentPalette) = PartyColors_p;
-    cp = (CRGBPalette16 *)(currentPalette);
-    fill_solid(*cp, 16, CRGB::Black);
-    // and set every fourth one to white.
-    (*cp)[0] = CRGB::White;
-    (*cp)[4] = CRGB::White;
-    (*cp)[8] = CRGB::White;
-    (*cp)[12] = CRGB::White;
+    curPalette = &ZeebraColors_p;
     colorLoop = 1;
     break;
   case EFF_ENUM::EFF_FOREST :
-    *(CRGBPalette16 *)(currentPalette) = ForestColors_p;
+    curPalette = &ForestColors_p;
     colorLoop = 0;
     break;
   case EFF_ENUM::EFF_OCEAN :
-    *(CRGBPalette16 *)(currentPalette) = OceanColors_p;
+    curPalette = &OceanColors_p;
     colorLoop = 0;
      break;
   case EFF_ENUM::EFF_PLASMA :
-    *(CRGBPalette16 *)(currentPalette) = PartyColors_p;
+    curPalette = &PartyColors_p;
     colorLoop = 1;
     break;
   case EFF_ENUM::EFF_CLOUDS :
-    *(CRGBPalette16 *)(currentPalette) = CloudColors_p;
+    curPalette = &CloudColors_p;
     colorLoop = 0;
     break;
   case EFF_ENUM::EFF_LAVA :
-    *(CRGBPalette16 *)(currentPalette) = LavaColors_p;
+    curPalette = &LavaColors_p;
     colorLoop = 0;
     break;
   default:
@@ -1608,6 +1601,7 @@ bool EffectPrismata::prismataRoutine(CRGB *leds, const char *param)
       uint8_t y = beatsin8(x + 1 * speed/5, 0, HEIGHT-1);
       myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (x+spirohueoffset) * 4));
     }
+  return true;
 }
 
 // ============= ЭФФЕКТ СТАЯ ===============
@@ -3177,10 +3171,10 @@ void EffectFire::drawFrame(uint8_t pcnt, bool isColored) {                  // �
 #endif
   uint8_t baseSat = (myLamp.effects.getScale() < 255) ? 255U : 0U;  // вычисление базового оттенка
 
-  uint8_t deltaValue = random8(0U, 3U) ? constrain (shiftValue[0] + random8(0U, 2U) - random8(0U, 2U), 15U, 17U) : shiftValue[0]; // random(0U, 3U)= скорость смещения очага чем больше 3U - тем медленнее                          // текущее смещение пламени (hueValue)
+  uint8_t deltaValue = random8(0U, 3U) ? constrain (shiftValue[0] + random8(0U, 2U) - random8(0U, 2U), 15, 17) : shiftValue[0]; // random(0U, 3U)= скорость смещения очага чем больше 3U - тем медленнее                          // текущее смещение пламени (hueValue)
  
   //first row interpolates with the "next" line
-  uint8_t deltaHue = random8(0U, 2U) ? constrain (shiftHue[0] + random8(0U, 2U) - random8(0U, 2U), 15U, 17U) : shiftHue[0]; // random(0U, 2U)= скорость смещения языков чем больше 2U - тем медленнее
+  uint8_t deltaHue = random8(0U, 2U) ? constrain (shiftHue[0] + random8(0U, 2U) - random8(0U, 2U), 15, 17) : shiftHue[0]; // random(0U, 2U)= скорость смещения языков чем больше 2U - тем медленнее
   // 15U, 17U - амплитуда качания -1...+1 относительно 16U
   // высчитываем плавную дорожку смещения всполохов для нижней строки
   // так как в последствии координаты точки будут исчисляться из остатка, то за базу можем принять кратную ширину матрицы hueMask

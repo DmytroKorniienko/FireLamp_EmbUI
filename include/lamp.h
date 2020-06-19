@@ -47,6 +47,14 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "micFFT.h"
 #endif
 
+/*
+ * Статические константы и строки
+*/
+static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
+static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";
+
+
+
 typedef enum _LAMPMODE {
   MODE_NORMAL = 0,
   MODE_DEMO,
@@ -565,8 +573,8 @@ public:
     bool isPrintingNow() { return isStringPrinting; }
     LAMP();
 
-    void handle(); // главная функция обработки эффектов
-    void lamp_init();
+    void handle();          // главная функция обработки эффектов
+    void lamp_init();       // первичная инициализация Лампы
 
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
     void setFaderFlag(bool flag) {isFaderON = flag;}

@@ -270,7 +270,7 @@ public:
      *  -  проверку R?
      */
     bool usepalettes=false;
-    std::vector<PGMPallete*> palettes;          /**< набор используемых палитр (пустой)*/
+    std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
     TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
 
     /** полезные обертки **/
@@ -358,7 +358,7 @@ public:
      * @param _val - байт "ползунка"
      * @param _pals - набор с палитрами
      */
-    virtual void palettemap(std::vector<PGMPallete*> &_pals, const uint8_t _val);
+    virtual void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val);
 
     /**
      * метод выбирает текущую палитру '*curPalette' из набора дотупных палитр 'palettes'
@@ -634,7 +634,6 @@ private:
     #else
     uint8_t noise[2*WIDTH][HEIGHT];
     #endif
-    char currentPalette[sizeof(CRGBPalette16)];
 
 public:
     void load() override;
@@ -1080,7 +1079,7 @@ public:
 
     void moveBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
         arrIdx=(arrIdx+cnt)%MODE_AMOUNT; // смещаемся на нужное число шагов, но не больше лимита эффектов
-        int tmpArrIdx = arrIdx; // запомним позицию
+        unsigned int tmpArrIdx = arrIdx; // запомним позицию
         
         while(!effects[arrIdx].isFavorite){ // если не избранный, то будем перебирать по +1
             arrIdx++;
@@ -1160,7 +1159,7 @@ public:
         return String(); // empty
     }
 
-    void setValue(const char *src, const _PTR type, const char *val){
+    void setValue(const char *src, const __FlashStringHelper *type, const char *val){
         //Serial.println("In Eff.h setValue");
         DynamicJsonDocument doc(128);
         deserializeJson(doc,String(FPSTR(src)));
@@ -1178,7 +1177,7 @@ public:
         updateParam(tmp.c_str());
 
         // устанавливаем переменну 'rval' если задается ключ 'R'
-        if (type == "R" && worker)
+        if (strcmp_P("R", (PGM_P)type) && worker)
             worker->setrval(atoi(val));
     }
 
