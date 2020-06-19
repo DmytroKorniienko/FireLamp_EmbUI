@@ -18,6 +18,9 @@
         "new": "cpp",
         "fstream": "cpp",
         "sstream": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "cmath": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp"
     }
 }

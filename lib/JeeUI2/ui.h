@@ -99,7 +99,7 @@ class Interface {
         void json_section_begin(const String &name, const String &label, bool main, bool hidden, JsonObject obj);
         void json_section_end();
 
-        void value(const String &id, const String &val);
+        void value(const String &id, const String &val, bool html = false);
         void text(const String &id, const String &label);
         void text(const String &id, const String &value, const String &label);
         void password(const String &id, const String &label);
@@ -125,8 +125,10 @@ class Interface {
         void color(const String &id, const String &value, const String &label);
         void textarea(const String &id, const String &label);
         void textarea(const String &id, const String &value, const String &label);
+        void file(const String &name, const String &action, const String &label);
         void button(const String &id, const String &label, const String &color = "");
         void button_submit(const String &section, const String &label, const String &color = "");
+        void button_submit_value(const String &section, const String &value, const String &label, const String &color = "");
         void spacer(const String &label = "");
 };
 

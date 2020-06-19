@@ -207,6 +207,18 @@ void Interface::color(const String &id, const String &label){
     color(id, jee->param(id), label);
 }
 
+void Interface::file(const String &name, const String &action, const String &label){
+     StaticJsonDocument<256> obj;
+    obj[F("html")] = F("file");
+    obj[F("name")] = name;
+    obj[F("action")] = action;
+    obj[F("label")] = label;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        file(name, action, label);
+    }
+}
+
 void Interface::button(const String &id, const String &label, const String &color){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("button");
@@ -225,6 +237,19 @@ void Interface::button_submit(const String &section, const String &label, const 
     obj[F("submit")] = section;
     obj[F("color")] = color;
     obj[F("label")] = label;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        button_submit(section, label, color);
+    }
+}
+
+void Interface::button_submit_value(const String &section, const String &value, const String &label, const String &color){
+    StaticJsonDocument<256> obj;
+    obj[F("html")] = F("button");
+    obj[F("submit")] = section;
+    obj[F("color")] = color;
+    obj[F("label")] = label;
+    obj[F("value")] = value;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         button_submit(section, label, color);
@@ -257,10 +282,11 @@ void Interface::textarea(const String &id, const String &label){
     textarea(id, jee->param(id), label);
 }
 
-void Interface::value(const String &id, const String &val){
+void Interface::value(const String &id, const String &val, bool html){
     StaticJsonDocument<256> obj;
     obj[F("id")] = id;
     obj[F("value")] = val;
+    if (html) obj[F("html")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
         value(id, val);
