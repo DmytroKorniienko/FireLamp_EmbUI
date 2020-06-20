@@ -65,15 +65,15 @@ class Interface {
     jeeui2 *jee;
 
     public:
-        Interface(jeeui2 *j, AsyncWebSocket *server, size_t size = 2048): json(size), section_stack(){
+        Interface(jeeui2 *j, AsyncWebSocket *server, size_t size = 3000): json(size), section_stack(){
             jee = j;
             send_hndl = new frameSendAll(server);
         }
-        Interface(jeeui2 *j, AsyncWebSocketClient *client, size_t size = 2048): json(size), section_stack(){
+        Interface(jeeui2 *j, AsyncWebSocketClient *client, size_t size = 3000): json(size), section_stack(){
             jee = j;
             send_hndl = new frameSendClient(client);
         }
-        Interface(jeeui2 *j, AsyncWebServerRequest *request, size_t size = 2048): json(size), section_stack(){
+        Interface(jeeui2 *j, AsyncWebServerRequest *request, size_t size = 3000): json(size), section_stack(){
             jee = j;
             send_hndl = new frameSendHttp(request);
         }
@@ -93,10 +93,11 @@ class Interface {
 
         void json_section_menu();
         void json_section_content();
+        void json_section_line();
         void json_section_main(const String &name, const String &label);
         void json_section_hidden(const String &name, const String &label);
-        void json_section_begin(const String &name, const String &label = "", bool main = false, bool hidden = false);
-        void json_section_begin(const String &name, const String &label, bool main, bool hidden, JsonObject obj);
+        void json_section_begin(const String &name, const String &label = "", bool main = false, bool hidden = false, bool line = false);
+        void json_section_begin(const String &name, const String &label, bool main, bool hidden, bool line, JsonObject obj);
         void json_section_end();
 
         void value(const String &id, const String &val, bool html = false);

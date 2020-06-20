@@ -63,20 +63,6 @@ void AUX_toggle(bool key)
 }
 #endif
 
-void bEventsCallback(Interface *interf, JsonObject *data)
-{
-    myLamp.setIsEventsHandled(!myLamp.IsEventsHandled());
-    jee.refresh();
-}
-
-void bDelEventCallback(bool);
-void bAddEventCallback(Interface *interf, JsonObject *data);
-
-void bOwrEventCallback(Interface *interf, JsonObject *data)
-{
-    bDelEventCallback(false);
-    bAddEventCallback(interf, data);
-}
 
 void event_worker(const EVENT *event) // обработка эвентов лампы
 {
@@ -295,6 +281,12 @@ void bAddEventCallback(Interface *interf, JsonObject *data)
     jee.refresh();
 }
 
+void bOwrEventCallback(Interface *interf, JsonObject *data)
+{
+    bDelEventCallback(false);
+    bAddEventCallback(interf, data);
+}
+
 void pubCallback(Interface *interf){
     interf->json_frame_value();
     interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
@@ -437,10 +429,6 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->json_section_main(F("effects"), F("Эффекты"));
 
     interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включение лампы"), true);
-    interf->checkbox(F("Demo"), (myLamp.getMode() == MODE_DEMO)? F("true") : F("false"), F("Демо режим"), true);
-#ifdef AUX_PIN
-    interf->checkbox(F("AUX"), F("Включение AUX"), true);
-#endif
 
     EFFECT enEff; enEff.setNone();
     interf->select(F("effList"), F("Эффект"), true);
@@ -509,8 +497,8 @@ void block_lamp_config(Interface *interf, JsonObject *data){
 
     interf->json_section_begin(F("edit_lamp_config"));
     String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileName")); cfg+=")";
-    interf->select(F("fileName"), cfg);
 
+    interf->select(F("fileName"), cfg);
     if(SPIFFS.begin()){
 #ifdef ESP32
         File root = SPIFFS.open("/cfg");
@@ -539,9 +527,11 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     }
     interf->json_section_end();
 
+    interf->json_section_line();
     interf->button_submit_value(F("edit_lamp_config"), F("load"), F("Загрузить"), F("green"));
-    interf->spacer();
     interf->button_submit_value(F("edit_lamp_config"), F("del"), F("Удалить"), F("red"));
+    interf->json_section_end();
+
     interf->json_section_end();
 
     interf->spacer();
@@ -607,7 +597,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 void block_lamp_textsend(Interface *interf, JsonObject *data){
     interf->json_section_begin(F("textsend"));
 
-    interf->text(F("msg"), F("Текст для вывода на матрицу"));
+    interf->spacer(F("Вывести на лампе"));
+    interf->text(F("msg"), F("Текст"));
     interf->color(F("txtColor"), F("Цвет сообщения"));
     interf->button_submit(F("textsend"), F("Отправить"), F("gray"));
 
@@ -627,75 +618,20 @@ void block_lamp(Interface *interf, JsonObject *data){
     //Страница "Управление лампой"
     interf->json_section_main(F("lamp"), F("Лампа"));
 
+    interf->json_section_line();
+    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включение"), true);
+    interf->checkbox(F("Demo"), (myLamp.getMode() == MODE_DEMO)? F("true") : F("false"), F("Демо режим"), true);
+#ifdef AUX_PIN
+    interf->checkbox(F("AUX"), F("Включение AUX"), true);
+#endif
+#ifdef MIC_EFFECTS
+    interf->checkbox(F("Mic"), F("Микрофон"), true);
+#endif
+    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
+    interf->json_section_end();
+
     block_lamp_textsend(interf, data);
     block_lamp_config(interf, data);
-
-    interf->json_section_end();
-}
-
-void block_settings1(Interface *interf, JsonObject *data){
-    // Страница настройки
-    interf->json_section_main(F("settings"), F("Настройки 1"));
-
-    interf->select(F("addSList"), F("Группа настроек"));
-    interf->option(F("3"), F("События"));
-
-    interf->json_section_end();
-
-    switch (0)
-    {
-    case 3:
-        interf->checkbox(F("isEdEvent"),F("Новое событие"));
-        if(jee.param(F("isEdEvent"))==F("true")){ // редактируем параметры событий
-            interf->select(F("evList"), F("Тип события"));
-            interf->option(String(EVENT_TYPE::ON), F("Включить лампу"));
-            interf->option(String(EVENT_TYPE::OFF), F("Выключить лампу"));
-            interf->option(String(EVENT_TYPE::DEMO_ON), F("Включить DEMO"));
-            interf->option(String(EVENT_TYPE::ALARM), F("Будильник"));
-            interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), F("Загрузка конф. лампы"));
-            interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
-            interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
-            interf->option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
-            interf->option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
-#ifdef AUX_PIN
-            interf->option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
-            interf->option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
-            interf->option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
-#endif
-            interf->json_section_end();
-
-            interf->checkbox(F("isEnabled"),F("Разрешено"));
-            interf->datetime(F("tmEvent"),F("Дата/время события"));
-            interf->number(F("repeat"),F("Повтор, мин"));
-            interf->number(F("stopat"),F("Остановить через, мин"));
-            interf->text(F("msg"),F("Параметр (текст)"));
-            interf->checkbox(F("d1"),F("Понедельник"));
-            interf->checkbox(F("d2"),F("Вторник"));
-            interf->checkbox(F("d3"),F("Среда"));
-            interf->checkbox(F("d4"),F("Четверг"));
-            interf->checkbox(F("d5"),F("Пятница"));
-            interf->checkbox(F("d6"),F("Суббота"));
-            interf->checkbox(F("d7"),F("Воскресенье"));
-            interf->button(F("bOwrEvent"), F("Обновить событие"), F("grey"));
-            interf->button(F("bAddEvent"), F("Добавить событие"), F("green"));
-        } else {
-            interf->select(F("evSelList"), F("Событие"));
-            EVENT *next = myLamp.events.getNextEvent(nullptr);
-            int i = 1;
-            while (next!=nullptr) {
-                interf->option(String(i), next->getName());
-                i++;
-                next = myLamp.events.getNextEvent(next);
-            }
-            interf->json_section_end();
-
-            interf->button(F("bEditEvent"), F("Редактировать событие"), F("green"));
-            interf->button(F("bDelEvent"), F("Удалить событие"), F("red"));
-        }
-        break;
-    default:
-        break;
-    }
 
     interf->json_section_end();
 }
@@ -704,7 +640,7 @@ void block_settings1(Interface *interf, JsonObject *data){
 void block_settings_mic(Interface *interf, JsonObject *data){
     interf->json_section_main(F("set_mic"), F("Микрофон"));
 
-    interf->checkbox(F("isMicON"), F("Микрофон"));
+    interf->checkbox(F("Mic"), F("Микрофон"), true);
     if (!iGLOBAL.isMicCal) {
         interf->number(F("micScale"), F("Коэф. коррекции нуля"));
         interf->number(F("micNoise"), F("Уровень шума, ед"));
@@ -727,11 +663,14 @@ void show_settings_mic(Interface *interf, JsonObject *data){
 }
 
 void set_settings_mic(Interface *interf, JsonObject *data){
-    SETPARAM("isMicON", myLamp.setMicOnOff((*data)[F("isMicON")] == true));
     SETPARAM("micScale", myLamp.setMicScale((*data)[F("micScale")].as<float>()));
     SETPARAM("micNoise", myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
     SETPARAM("micnRdcLvl", myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>()));
+    jee.save();
+}
 
+void set_micflag(Interface *interf, JsonObject *data){
+    SETPARAM("Mic", myLamp.setMicOnOff((*data)[F("isMicON")] == true));
     jee.save();
 }
 
@@ -930,15 +869,77 @@ void block_settings_update(Interface *interf, JsonObject *data){
 }
 
 void block_settings_event(Interface *interf, JsonObject *data){
-    interf->json_section_hidden(F("set_other"), F("Разные"));
+    interf->json_section_main(F("set_events"), F("События"));
 
-    if (myLamp.IsEventsHandled()) {
-        interf->button(F("bEvents"),F("EVENTS -> OFF"),F("red"));
+    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
+
+    interf->checkbox(F("isEdEvent"),F("Новое событие"));
+    if(jee.param(F("isEdEvent"))==F("true")){ // редактируем параметры событий
+        interf->select(F("evList"), F("Тип события"));
+        interf->option(String(EVENT_TYPE::ON), F("Включить лампу"));
+        interf->option(String(EVENT_TYPE::OFF), F("Выключить лампу"));
+        interf->option(String(EVENT_TYPE::DEMO_ON), F("Включить DEMO"));
+        interf->option(String(EVENT_TYPE::ALARM), F("Будильник"));
+        interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), F("Загрузка конф. лампы"));
+        interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
+        interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
+        interf->option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
+        interf->option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
+#ifdef AUX_PIN
+        interf->option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
+        interf->option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
+        interf->option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
+#endif
+        interf->json_section_end();
+
+        interf->checkbox(F("isEnabled"),F("Разрешено"));
+        interf->datetime(F("tmEvent"),F("Дата/время события"));
+        interf->number(F("repeat"),F("Повтор, мин"));
+        interf->number(F("stopat"),F("Остановить через, мин"));
+        interf->text(F("msg"),F("Параметр (текст)"));
+        interf->checkbox(F("d1"),F("Понедельник"));
+        interf->checkbox(F("d2"),F("Вторник"));
+        interf->checkbox(F("d3"),F("Среда"));
+        interf->checkbox(F("d4"),F("Четверг"));
+        interf->checkbox(F("d5"),F("Пятница"));
+        interf->checkbox(F("d6"),F("Суббота"));
+        interf->checkbox(F("d7"),F("Воскресенье"));
+        interf->button(F("bOwrEvent"), F("Обновить событие"), F("grey"));
+        interf->button(F("bAddEvent"), F("Добавить событие"), F("green"));
     } else {
-        interf->button(F("bEvents"),F("EVENTS -> ON"),F("green"));
+        interf->select(F("evSelList"), F("Событие"));
+        EVENT *next = myLamp.events.getNextEvent(nullptr);
+        int i = 1;
+        while (next!=nullptr) {
+            interf->option(String(i), next->getName());
+            i++;
+            next = myLamp.events.getNextEvent(next);
+        }
+        interf->json_section_end();
+
+        interf->button(F("bEditEvent"), F("Редактировать событие"), F("green"));
+        interf->button(F("bDelEvent"), F("Удалить событие"), F("red"));
     }
 
+    interf->spacer();
+    interf->button(F("settings"), F("Выход"));
+
     interf->json_section_end();
+}
+
+void show_settings_event(Interface *interf, JsonObject *data){
+    interf->json_frame_interface();
+    block_settings_event(interf, data);
+    interf->json_frame_flush();
+}
+
+void bEventsCallback(Interface *interf, JsonObject *data)
+{
+    myLamp.setIsEventsHandled(!myLamp.IsEventsHandled());
+    jee.refresh();
+}
+void set_eventflag(Interface *interf, JsonObject *data){
+    myLamp.setIsEventsHandled((*data)[F("Events")]);
 }
 
 void section_effects_frame(Interface *interf, JsonObject *data){
@@ -966,6 +967,8 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 #ifdef MIC_EFFECTS
     interf->button(F("show_mic"), F("Микрофон"));
 #endif
+
+    interf->button(F("show_event"), F("События"));
 
     interf->spacer();
     block_settings_update(interf, data);
@@ -1062,7 +1065,7 @@ void create_parameters(){
     jee.var_create(F("micScale"),F("1.28"));
     jee.var_create(F("micNoise"),F("0.00"));
     jee.var_create(F("micnRdcLvl"),F("0"));
-    jee.var_create(F("isMicON"),F("true"));
+    jee.var_create(F("Mic"),F("true"));
 #endif
 
     jee.var_create(F("isFaderON"),(FADE==true?F("true"):F("false")));
@@ -1071,14 +1074,6 @@ void create_parameters(){
     jee.var_create(F("isBtnOn"), F("true"));
 #endif
     //-----------------------------------------------
-
-
-    jee.section_handle_add(F("bAddEvent"), bAddEventCallback);
-    jee.section_handle_add(F("bDelEvent"), bDelEventCallback);
-    jee.section_handle_add(F("bEditEvent"), bEditEventCallback);
-    jee.section_handle_add(F("bOwrEvent"), bOwrEventCallback);
-    jee.section_handle_add(F("bEvents"), bEventsCallback);
-
 
     jee.section_handle_add(F("main"), section_main_frame);
 
@@ -1119,8 +1114,18 @@ void create_parameters(){
 #ifdef MIC_EFFECTS
     jee.section_handle_add(F("show_mic"), show_settings_mic);
     jee.section_handle_add(F("set_mic"), set_settings_mic);
+    jee.section_handle_add(F("Mic"), set_micflag);
     jee.section_handle_add(F("bmicCal"), set_settings_mic_calib);
 #endif
+
+    jee.section_handle_add(F("show_event"), show_settings_event);
+    jee.section_handle_add(F("Events"), set_eventflag);
+
+    jee.section_handle_add(F("bAddEvent"), bAddEventCallback);
+    jee.section_handle_add(F("bDelEvent"), bDelEventCallback);
+    jee.section_handle_add(F("bEditEvent"), bEditEventCallback);
+    jee.section_handle_add(F("bOwrEvent"), bOwrEventCallback);
+
 }
 
 void setEffectParams(EFFECT *curEff){

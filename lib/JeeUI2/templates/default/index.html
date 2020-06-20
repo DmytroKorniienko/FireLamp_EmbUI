@@ -69,7 +69,7 @@
 	</script>
 
 	<script type="text/html" id="tmpl_content">
-		<div class="pure-u-1">
+		<div class="pure-u-1{{#if _this.line}}-{{_this.block.length}}{{/if}}">
 		{{#if html == "button"}}
 			<div id="{{id}}" style="background-color: {{color}}" class="pure-u-5-5 pure-button pure-button-primary mr"
 				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}

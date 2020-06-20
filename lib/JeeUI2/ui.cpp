@@ -165,7 +165,7 @@ void Interface::select(const String &id, const String &value, const String &labe
         return;
     }
     section_stack.end()->idx--;
-    json_section_begin(F("options"), F(""), false, false, section_stack.end()->block.getElement(section_stack.end()->idx));
+    json_section_begin(F("options"), F(""), false, false, false, section_stack.end()->block.getElement(section_stack.end()->idx));
 }
 
 void Interface::select(const String &id, const String &label, bool directly){
@@ -314,7 +314,7 @@ void Interface::json_frame_interface(const String &name){
 
 bool Interface::json_frame_add(JsonObject obj) {
     LOG(printf_P, PSTR("json_frame_add: %u = %u "), obj.memoryUsage(), json.capacity() - json.memoryUsage());
-    if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 20 && section_stack.end()->block.add(obj)) {
+    if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 40 && section_stack.end()->block.add(obj)) {
         section_stack.end()->idx++;
         LOG(printf, PSTR("OK [%u]  MEM: %u\n"), section_stack.end()->idx, ESP.getFreeHeap());
         return true;
@@ -364,11 +364,15 @@ void Interface::json_frame_send(){
 }
 
 void Interface::json_section_menu(){
-    json_section_begin("menu");
+    json_section_begin(F("menu"));
 }
 
 void Interface::json_section_content(){
-    json_section_begin("content");
+    json_section_begin(F("content"));
+}
+
+void Interface::json_section_line(){
+    json_section_begin(F("line"), F(""), false, false, true);
 }
 
 void Interface::json_section_main(const String &name, const String &label){
@@ -379,21 +383,22 @@ void Interface::json_section_hidden(const String &name, const String &label){
     json_section_begin(name, label, false, true);
 }
 
-void Interface::json_section_begin(const String &name, const String &label, bool main, bool hidden){
+void Interface::json_section_begin(const String &name, const String &label, bool main, bool hidden, bool line){
     JsonObject obj;
     if (section_stack.size()) {
         obj = section_stack.end()->block.createNestedObject();
     } else {
         obj = json.as<JsonObject>();
     }
-    json_section_begin(name, label, main, hidden, obj);
+    json_section_begin(name, label, main, hidden, line, obj);
 }
 
-void Interface::json_section_begin(const String &name, const String &label, bool main, bool hidden, JsonObject obj){
+void Interface::json_section_begin(const String &name, const String &label, bool main, bool hidden, bool line, JsonObject obj){
     obj[F("section")] = name;
     if (label != "") obj[F("label")] = label;
     if (main) obj[F("main")] = true;
     if (hidden) obj[F("hidden")] = true;
+    if (line) obj[F("line")] = true;
 
     section_stack_t *section = new section_stack_t;
     section->name = name;
