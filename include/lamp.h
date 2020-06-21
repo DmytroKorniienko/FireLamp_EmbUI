@@ -101,7 +101,7 @@ typedef enum _SCHEDULER {
  потеряно в любом случае, даже если остальные таски будут обработаны быстрее
  пока оставим тут, это крутилка не для общего конфига
  */
-#define LED_SHOW_DELAY 2
+#define LED_SHOW_DELAY 1
 
 
 struct EVENT {
@@ -449,9 +449,6 @@ private:
     EFF_ENUM storedEffect = EFF_NONE;
     EFFSWITCH _postponedSW = SW_NONE;       // отложенное действие смены ээфекта для федера
 
-    uint32_t effTimer; // таймер для эффекта, сравнивается со скоростью текущего эффекта
-    uint32_t effDelay; // доп. задержка для эффектов
-    uint32_t effDelay_uS; // доп. задержка для эффектов микросекунді
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
     void(*updateParmFunc)() = nullptr; // функтор обновления параметров
@@ -484,7 +481,7 @@ private:
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
     Ticker _buttonTicker;           // планировщик кнопки
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
-    Ticker _effectsTicker;          // планировщик планировщик обработки эффектов
+    Ticker _effectsTicker;          // планировщик обработки эффектов
     //Ticker _nextLoop;               // планировщик для тасок на ближайший луп
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
@@ -580,7 +577,6 @@ public:
     void setFaderFlag(bool flag) {isFaderON = flag;}
     bool getFaderFlag() {return isFaderON;}
     void setButtonOn(bool flag) {buttonEnabled = flag;}
-    void setOnOff(bool flag) {changePower(flag); manualOff = true;} // любая активность в интерфейсе - отключаем будильник
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
@@ -606,12 +602,8 @@ public:
     void setNYUnixTime(time_t tm){ NEWYEAR_UNIXDATETIME = tm; }
 
     // ---------- служебные функции -------------
-    uint32_t getEffDelay() {return effDelay;}
-    uint32_t getEffDelay_uS() {return effDelay_uS;}
     uint16_t getmaxDim() {return maxDim;}
     uint16_t getminDim() {return minDim;}
-    void setEffDelay(uint32_t dl) {effDelay=dl;}
-    void setEffDelay_uS(uint32_t dl) {effDelay_uS=dl;}
 
     void changePower(); // плавное включение/выключение
     void changePower(bool);

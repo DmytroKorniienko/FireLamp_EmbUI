@@ -45,6 +45,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects_types.h"
 
 #define DEFAULT_SLIDER 127
+#define PARAM_BUFSIZE 128
+
+static const char _R255[] PROGMEM = "[{'R':'127'}]";
 
 typedef enum _EFF_ENUM {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
@@ -99,8 +102,6 @@ EFF_TIME = (98)                               // Часы (служебный, �
 #endif
 } EFF_ENUM;
 
-
-
 /*
  * заглушка для "старых" эффектов
  */
@@ -110,7 +111,6 @@ void freqAnalyseRoutine(CRGB*, const char*);
 #endif
 void timePrintRoutine(CRGB*, const char *);
 //-------------------------------------------------
-const char _R255[] PROGMEM = "[{'R':'127'}]";
 
 #pragma pack(push,1)
 typedef struct _EFFECT {
@@ -893,7 +893,7 @@ public:
 
 class EffectWorker {
 private:
-    const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
+    const unsigned int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     EFF_ENUM curEff = EFF_NONE;     ///< энумератор текущего эффекта
@@ -984,7 +984,7 @@ public:
             EFFECT *cur_eff;
 
             configFile.print("[");
-            for(int i=1; i<MODE_AMOUNT; i++){ // EFF_NONE не сохраняем
+            for(unsigned int i=1; i<MODE_AMOUNT; i++){ // EFF_NONE не сохраняем
                 cur_eff = &(effects[i]);
                 configFile.printf_P( PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
@@ -1023,7 +1023,7 @@ public:
     
     void moveNext() // следующий эффект, кроме canBeSelected==false
     {
-        int i;
+        unsigned int i;
 
         for(i=arrIdx+1; i<MODE_AMOUNT; i++){
             if(effects[i].canBeSelected){
@@ -1093,7 +1093,7 @@ public:
     }
 
     EFFECT *enumNextEffect(EFFECT *current){
-        for(int i=0; i<MODE_AMOUNT; i++){
+        for(unsigned int i=0; i<MODE_AMOUNT; i++){
             if(effects[i].eff_nb == current->eff_nb){
                 if((i+1)!=MODE_AMOUNT)
                     return &effects[i+1];
@@ -1138,15 +1138,13 @@ public:
     }
 
     String getValue(const char *src, const _PTR type){
-        //Serial.println("In Eff.h getValue");
         if(src==nullptr)
             return String(); // empty
-        //LOG(printf_P, PSTR("GetVALstr: %s\n"),src);
         String tmp(FPSTR(src)); // разве сюда в src прилетат указатель на чары из структуры конфига, не нa флеш??
         //String tmp(src);
         if (tmp.length()==0)
             return String(); // empty
-        DynamicJsonDocument doc(128);
+        DynamicJsonDocument doc(PARAM_BUFSIZE);
         tmp.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
         deserializeJson(doc,tmp);
         JsonArray arr = doc.as<JsonArray>();
@@ -1160,8 +1158,7 @@ public:
     }
 
     void setValue(const char *src, const __FlashStringHelper *type, const char *val){
-        //Serial.println("In Eff.h setValue");
-        DynamicJsonDocument doc(128);
+        DynamicJsonDocument doc(PARAM_BUFSIZE);
         deserializeJson(doc,String(FPSTR(src)));
         JsonArray arr = doc.as<JsonArray>();
         for (size_t i=0; i<arr.size(); i++) {
@@ -1173,7 +1170,6 @@ public:
         String tmp;
         serializeJson(doc,tmp);
         tmp.replace(F("\""),F("'")); // так делать не красиво, но шопаделаешь...
-        //LOG(println, tmp);
         updateParam(tmp.c_str());
 
         // устанавливаем переменну 'rval' если задается ключ 'R'

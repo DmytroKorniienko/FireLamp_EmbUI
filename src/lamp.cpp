@@ -161,7 +161,7 @@ EVERY_N_SECONDS(15){
   // отложенное включение/выключение
   if(isOffAfterText && !isStringPrinting) {
     isOffAfterText = false;
-    setOnOff(false);
+    changePower(false);
   }
 
   newYearMessageHandle();
@@ -355,8 +355,7 @@ if(touch.isHold() || !touch.isHolded())
         if(storedEffect!=EFF_NONE) {    // переключение на ПРЕДЫДУЩИЙ эффект только если он был запомнен, иначе используется ТЕКУЩИЙ из конфига
           switcheffect(SW_SPECIFIC, isFaderON, storedEffect); // ПРЕДЫДУЩИЙ будет запоминаться для случая включения белой лампы
         } else {
-          //changePower(true);
-          setOnOff(true);
+          changepower(true);
           switcheffect(SW_SPECIFIC, getFaderFlag(), effects.getEn());
         }
       } else {        // лампа была включена
@@ -397,7 +396,7 @@ if(touch.isHold() || !touch.isHolded())
         if(!isLampOn()){
             disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
             setOffAfterText();
-            setOnOff(true);
+            changepower(true);
             setBrightness(1,false,false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
             sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
         } else {
@@ -411,7 +410,7 @@ if(touch.isHold() || !touch.isHolded())
         if(!isLampOn()){
             disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
             setOffAfterText();
-            setOnOff(true);
+            changepower(true);
             setBrightness(1,false,false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
             sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
         } else {
@@ -746,6 +745,7 @@ void LAMP::changePower() {changePower(!ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
+  manualOff = true;             // любая активность в интерфейсе - отключаем будильник
   if ( flag == ONflag) return;  // пропускаем холостые вызовы
   LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
   ONflag = flag;

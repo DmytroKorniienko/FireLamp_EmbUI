@@ -142,7 +142,6 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val)
 
   uint8_t ptPallete;    // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
   uint8_t pos;        // позиция в массиве указателей паллитр
-  uint8_t curVal;     // curVal == либо var как есть, либо getScale
 
   ptPallete = MAX_RANGE/_pals.size() + !!(MAX_RANGE%_pals.size());     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
   pos = _val/ptPallete + !!(_val%ptPallete);
@@ -530,7 +529,7 @@ bool EffectRainbow::run(CRGB *ledarr, const char *opt){
 
 bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param) 
 {
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER)
+  if((millis() - lastrun - EFFECTS_RUN_TIMER)
 #ifdef MIC_EFFECTS
     < (unsigned)(255-speed)*((myLamp.getMicMapMaxPeak()>scale%86+50)?(2.0*(50.0/myLamp.getMicMapMaxPeak())):1) ){
 #else
@@ -538,7 +537,7 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
 #endif
     return false;
   } else {
-    myLamp.setEffDelay(millis());
+    lastrun=millis();
   }
 
   if(scale<85){
@@ -960,9 +959,7 @@ bool EffectLightBalls::lightBallsRoutine(CRGB *leds, const char *param)
 
 // ------------- эффект "блуждающий кубик" -------------
 void EffectBall::load(){
-    //FastLED.clear();
   ballSize = map(scale, 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
-  myLamp.setEffDelay(millis());
   for (uint8_t i = 0U; i < 2U; i++)
   {
     coordB[i] = i? (WIDTH - ballSize) / 2 : (HEIGHT - ballSize) / 2;
@@ -1120,7 +1117,6 @@ void Effect3DNoise::fillnoise8()
 }
 
 void Effect3DNoise::load(){
-  CRGBPalette16 *cp;
   switch (effect)
   {
   case EFF_ENUM::EFF_RAINBOW :
@@ -2929,13 +2925,11 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
 
 //--------------
 bool EffectTime::run(CRGB *ledarr, const char *opt){
-  if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
+  if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
       myLamp.dimAll(254);
     return true;
   } else {
-    myLamp.setEffDelay(millis());
-    if (myLamp.isPrintingNow())
-      return false;
+    lastrun = millis();
   }
   // if (dryrun())
   //   return false;
@@ -3115,17 +3109,14 @@ void EffectFire::load(){
 }
 
 bool EffectFire::run(CRGB *ledarr, const char *opt){
+  if (dryrun())
+    return false;
+  
   return fireRoutine(*&ledarr, &*opt);
 }
 
 bool EffectFire::fireRoutine(CRGB *leds, const char *param)
 {
-  if ((micros() - myLamp.getEffDelay_uS() - 5000U) < (50000U - map(myLamp.effects.getSpeed(), 1, 255, 0, 50000U))) {
-    return false;
-  } else {
-    myLamp.setEffDelay_uS(micros());
-  }
-
   if (pcnt >= 30) {                                  // внутренний делитель кадров для поднимающегося пламени
     shiftUp();                                              // смещение кадра вверх
     generateLine();                                         // перерисовать новую нижнюю линию случайным образом

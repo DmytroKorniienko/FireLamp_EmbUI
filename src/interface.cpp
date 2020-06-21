@@ -111,7 +111,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
     switch (event->event)
     {
     case EVENT_TYPE::ON :
-        myLamp.setOnOff(true);
+        myLamp.changePower(true);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
         myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         break;
@@ -154,7 +154,7 @@ void event_worker(const EVENT *event) // обработка эвентов ла�
         if(!myLamp.isLampOn()){
             myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
             myLamp.setOffAfterText();
-            myLamp.setOnOff(true);
+            myLamp.changePower(true);
             myLamp.setBrightness(1,false,false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
             myLamp.sendStringToLamp(event->message,color);
         } else {
@@ -847,7 +847,7 @@ void update(){ // функция выполняется после ввода д
     myLamp.setPeriodicTimePrint((PERIODICTIME)jee.param(F("perTime")).toInt());
     myLamp.setMIRR_H(jee.param(F("MIRR_H"))==F("true"));
     myLamp.setMIRR_V(jee.param(F("MIRR_V"))==F("true"));
-    //myLamp.setOnOff(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
+    //myLamp.changePower(jee.param(F("ONflag"))==F("true")); // эта часть перенесена выше
     //myLamp.setFaderFlag(jee.param(F("isFaderON"))==F("true"));
 #ifdef ESP_USE_BUTTON
     myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));
@@ -875,7 +875,7 @@ void update(){ // функция выполняется после ввода д
         if (newpower) {         // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
         } else {
-            myLamp.setOnOff(newpower);
+            myLamp.changePower(newpower);
             jee.refresh(); // устанавливать в самом конце!
         }
         return;                 // если менялся "выключатель" то остальное даже не смотрим
@@ -924,8 +924,6 @@ void update(){ // функция выполняется после ввода д
             myLamp.setLampBrightness(jee.param(F("bright")).toInt());
             if(myLamp.isLampOn()) // только если включена, поскольку этот вызов при перезагрузке зажжет лампу, даже если она выключена в конфиге
                 myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), myLamp.getFaderFlag());    // два вызова выглядят коряво, но встраивать setBrightness в setLampBrightness нельзя, т.к. это корежит фэйдер и отложенную смену эфектов, можно попробовать наоборот сделать setBrightness будет менять яркость в конфиге эффекта
-            //curEff->speed = jee.param(F("speed")).toInt();
-            //curEff->scale = jee.param(F("scale")).toInt();
             myLamp.effects.setSpeed(jee.param(F("speed")).toInt());
             myLamp.effects.setScale(jee.param(F("scale")).toInt());
 
@@ -1036,11 +1034,11 @@ void httpCallback(const char *param, const char *value)
 
     LOG(printf_P, "HTTP: %s - %s\n", param, value);
     if(!strcmp_P(param,PSTR("on"))){
-        myLamp.setOnOff(true);
+        myLamp.changePower(true);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
         myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
     } else if(!strcmp_P(param,PSTR("off"))){
-        myLamp.setOnOff(false);
+        myLamp.changePower(false);
         jee.var(F("ONflag"), (myLamp.isLampOn()?F("true"):F("false")));
     } else if(!strcmp_P(param,PSTR("demo"))){
         myLamp.startDemoMode();
