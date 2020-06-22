@@ -1,6 +1,37 @@
 #include "ui.h"
 #include "../../include/misc.h"
 
+void Interface::hidden(const String &id, const String &value){
+    StaticJsonDocument<256> obj;
+    obj[F("html")] = F("hidden");
+    obj[F("id")] = id;
+    obj[F("value")] = value;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        hidden(id, value);
+    }
+}
+
+void Interface::hidden(const String &id){
+    hidden(id, jee->param(id));
+}
+
+void Interface::constant(const String &id, const String &value, const String &label){
+    StaticJsonDocument<256> obj;
+    obj[F("html")] = F("const");
+    obj[F("id")] = id;
+    obj[F("value")] = value;
+    obj[F("label")] = label;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        constant(id, value, label);
+    }
+}
+
+void Interface::constant(const String &id, const String &label){
+    constant(id, jee->param(id), label);
+}
+
 void Interface::text(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");

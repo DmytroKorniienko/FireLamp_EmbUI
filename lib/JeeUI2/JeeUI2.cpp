@@ -65,12 +65,13 @@ void jeeui2::post(JsonObject data){
             ++count;
         }
 
+        const char *kname = key.c_str();
         for (int i = 0; !section && i < section_handle.size(); i++) {
-            if (section_handle[i]->name == key) {
-                // LOG(printf_P, PSTR("MATCH: %s = %s\n"), key.c_str(), section_handle[i]->name.c_str());
+            const char *sname = section_handle[i]->name.c_str();
+            const char *mall = strchr(sname, '*');
+            unsigned len = mall? mall - sname - 1 : strlen(kname);
+            if (strncmp(sname, kname, len) == 0) {
                 section = section_handle[i];
-            } else {
-                // LOG(printf_P, PSTR("SKIP: %s != %s\n"), key.c_str(), section_handle[i]->name.c_str());
             }
         };
     }
@@ -98,6 +99,7 @@ void jeeui2::refresh(){
 }
 
 void jeeui2::send_pub(){
+    if (!ws.count()) return;
     Interface interf(this, &ws, 512);
     pubCallback(&interf);
 }

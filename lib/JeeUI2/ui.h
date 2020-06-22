@@ -101,6 +101,10 @@ class Interface {
         void json_section_end();
 
         void value(const String &id, const String &val, bool html = false);
+        void hidden(const String &id);
+        void hidden(const String &id, const String &value);
+        void constant(const String &id, const String &label);
+        void constant(const String &id, const String &value, const String &label);
         void text(const String &id, const String &label);
         void text(const String &id, const String &value, const String &label);
         void password(const String &id, const String &label);
