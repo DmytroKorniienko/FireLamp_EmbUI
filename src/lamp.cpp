@@ -355,7 +355,7 @@ if(touch.isHold() || !touch.isHolded())
         if(storedEffect!=EFF_NONE) {    // переключение на ПРЕДЫДУЩИЙ эффект только если он был запомнен, иначе используется ТЕКУЩИЙ из конфига
           switcheffect(SW_SPECIFIC, isFaderON, storedEffect); // ПРЕДЫДУЩИЙ будет запоминаться для случая включения белой лампы
         } else {
-          changepower(true);
+          changePower(true);
           switcheffect(SW_SPECIFIC, getFaderFlag(), effects.getEn());
         }
       } else {        // лампа была включена
@@ -396,7 +396,7 @@ if(touch.isHold() || !touch.isHolded())
         if(!isLampOn()){
             disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
             setOffAfterText();
-            changepower(true);
+            changePower(true);
             setBrightness(1,false,false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
             sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
         } else {
@@ -410,7 +410,7 @@ if(touch.isHold() || !touch.isHolded())
         if(!isLampOn()){
             disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
             setOffAfterText();
-            changepower(true);
+            changePower(true);
             setBrightness(1,false,false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
             sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
         } else {
