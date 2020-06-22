@@ -80,7 +80,7 @@ void jeeui2::wifi_connect()
             WiFi.onEvent(WiFiEvent);
 #endif
             WiFi.disconnect();
-            WiFi.mode(WIFI_OFF);
+            //WiFi.mode(WIFI_OFF);
             WiFi.mode(WIFI_STA);
             WiFi.hostname(param(F("ap_ssid")).c_str());
             WiFi.begin(param(F("ssid")).c_str(), param(F("pass")).c_str());

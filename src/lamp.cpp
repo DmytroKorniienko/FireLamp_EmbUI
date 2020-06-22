@@ -172,10 +172,11 @@ EVERY_N_SECONDS(15){
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
 #endif
 
-  timeProcessor.handleTime();                         // Обновление времени
+  //timeProcessor.handleTime();                         // Обновление времени
 
-  if(!second(timeProcessor.getUnixTime()) && isEventsHandled) // только на 0 секунду, т.е. 1 раз в минуту и если обработка разрешена
-    events.events_handle(timeProcessor.getUnixTime(),timeProcessor.getOffset());
+  // обработчик событий (пока не выкину в планировщик)
+  if ( isEventsHandled)
+    events.events_handle();
 }
 
 #ifdef ESP_USE_BUTTON
@@ -501,7 +502,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
 
 #ifdef PRINT_ALARM_TIME        
         EVERY_N_SECONDS(1){
-          if(!second(timeProcessor.getUnixTime())){
+          if(timeProcessor.seconds00()){
             CRGB letterColor;
             hsv2rgb_rainbow(GSHMEM.dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
             sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
@@ -890,7 +891,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   return false;
 }
 
-void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
 {
   uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
@@ -1052,10 +1053,10 @@ void LAMP::newYearMessageHandle()
 
   {
     char strMessage[256]; // буффер
-    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUTCUnixTime(); // unix_diff_time
+    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUnixTime(); // тут забит гвоздями 2020 год, не работоспособно
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, timeProcessor.getYear());
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(TimeProcessor::now())->tm_year);
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, PSTR("секунд"));
     } else if(calc/60<60){
@@ -1083,13 +1084,16 @@ void LAMP::periodicTimeHandle()
 {
   static bool cancel = false;
   
-  time_t tm = timeProcessor.getUnixTime();
+  //time_t tm = timeProcessor.getUnixTime();
+  //*(localtime(time(nullptr)))->tm_sec;
+
+  const tm* t = localtime(timeProcessor.now());
   //LOG(println, tm);
-  if(second(tm)) {cancel=false; return;}
+  if( t->tm_sec ) {cancel=false; return;}
   if(cancel) return;
 
   cancel = true; // только раз в минуту срабатываем, на первую секунду
-  tm = hour(tm) * 60 + minute(tm);
+  time_t tm = t->tm_hour * 60 + t->tm_min;
 
   switch (enPeriodicTimePrint)
   {

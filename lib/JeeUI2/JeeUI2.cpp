@@ -195,6 +195,8 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void jeeui2::begin() {
+    // не сохраняем креды от WiFi во флеш, т.к. они у нас уже лежат в конфиге
+    WiFi.persistent(false);
     wifi_connect();
 
     /*use mdns for host name resolution*/

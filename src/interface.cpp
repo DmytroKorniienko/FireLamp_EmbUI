@@ -291,21 +291,20 @@ void bAddEventCallback()
     event.repeat=jee.param(F("repeat")).toInt();
     event.stopat=jee.param(F("stopat")).toInt();
     String tmEvent = jee.param(F("tmEvent"));
-    time_t unixtime;
-    tmElements_t tm;
-    // Serial.println, tmEvent);
-    // Serial.println, tmEvent.substring(0,4).c_str());
-    tm.Year=atoi(tmEvent.substring(0,4).c_str())-1970;
-    tm.Month=atoi(tmEvent.substring(5,7).c_str());
-    tm.Day=atoi(tmEvent.substring(8,10).c_str());
-    tm.Hour=atoi(tmEvent.substring(11,13).c_str());
-    tm.Minute=atoi(tmEvent.substring(14,16).c_str());
-    tm.Second=0;
+    struct tm t;
+    tm *tm=&t;
+    Serial.println( tmEvent);   //debug
+    Serial.println( tmEvent.substring(0,4).c_str());
+    tm->tm_year=atoi(tmEvent.substring(0,4).c_str())-1900;
+    tm->tm_mon=atoi(tmEvent.substring(5,7).c_str());
+    tm->tm_mday=atoi(tmEvent.substring(8,10).c_str());
+    tm->tm_hour=atoi(tmEvent.substring(11,13).c_str());
+    tm->tm_min=atoi(tmEvent.substring(14,16).c_str());
+    tm->tm_sec=0;
 
-    LOG(printf_P, PSTR("%d %d %d %d %d\n"), tm.Year, tm.Month, tm.Day, tm.Hour, tm.Minute);
+    LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
-    unixtime = makeTime(tm);
-    event.unixtime = unixtime;
+    event.unixtime = mktime(tm);
     String tmpMsg(jee.param(F("msg")));
     event.message = (char*)(tmpMsg.c_str());
     myLamp.events.addEvent(event);
@@ -390,12 +389,14 @@ void bTxtSendCallback()
 void bTmSubmCallback()
 {
     LOG(println, F("bTmSubmCallback pressed"));
+/*
     myLamp.timeProcessor.setTimezone(jee.param(F("timezone")).c_str());
     myLamp.timeProcessor.setTime(jee.param(F("time")).c_str());
 
     if(myLamp.timeProcessor.getIsSyncOnline()){
         myLamp.refreshTimeManual(); // принудительное обновление времени
     }
+*/
     iGLOBAL.isTmSetup = false;
     jee.var(F("isTmSetup"), F("false"));
     myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
@@ -852,7 +853,7 @@ void update(){ // функция выполняется после ввода д
 #ifdef ESP_USE_BUTTON
     myLamp.setButtonOn(jee.param(F("isBtnOn"))==F("true"));
 #endif
-    myLamp.timeProcessor.SetOffset(jee.param(F("tm_offs")).toInt());
+    //myLamp.timeProcessor.setOffset(jee.param(F("tm_offs")).toInt());
     myLamp.setNYUnixTime(jee.param(F("ny_unix")).toInt());
     myLamp.setNYMessageTimer(jee.param(F("ny_period")).toInt());
 # ifdef MIC_EFFECTS

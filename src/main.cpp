@@ -69,7 +69,6 @@ void setup() {
     myLamp.effects.loadConfig();
     myLamp.events.loadConfig();
     myLamp.updateParm(updateParm);
-
     jee.uiCallbackHndl(interface); // обратный вызов - интерфейс
     jee.updateCallbackHndl(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
     jee.httpCallbackHndl(httpCallback);
@@ -84,11 +83,8 @@ void setup() {
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
     update(); // этой функцией получаем значения параметров в переменные (обратный вызов UI)
     updateParm(); // вызвать обновление параметров UI (синхронизация с конфигом эффектов и кнопкой)
-    if(myLamp.timeProcessor.getIsSyncOnline()){
-      myLamp.refreshTimeManual(); // принудительное обновление времени
-    }
-    if(myLamp.timeProcessor.isDirtyTime())
-      myLamp.setIsEventsHandled(false);
+//    if(myLamp.timeProcessor.isDirtyTime()) обработка событий по времени? todo: переназначить коллбэк
+//      myLamp.setIsEventsHandled(false);
     myLamp.events.setEventCallback(event_worker);
 
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
@@ -116,6 +112,7 @@ void mqttCallback(const String &topic, const String &payload){ // функция
   //jee.refresh();
 }
 
+// нужно подчистить эту функцию, печатать инфо можно более аккуратным способом
 void sendData(){
   static unsigned long i;
   static unsigned int in;
