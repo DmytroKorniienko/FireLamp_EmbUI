@@ -23,8 +23,9 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     if(type == WS_EVT_CONNECT){
         LOG(printf, "ws[%s][%u] connect MEM: %u\n", server->url(), client->id(), ESP.getFreeHeap());
 
-        Interface interf(&jee, client);
-        section_main_frame(&interf, nullptr);
+        Interface *interf = new Interface(&jee, client);
+        section_main_frame(interf, nullptr);
+        delete interf;
 
     } else
     if(type == WS_EVT_DISCONNECT){
@@ -83,25 +84,23 @@ void jeeui2::post(JsonObject data){
     }
     delete interf;
 
-    // jee.save();
-
     if (section) {
         LOG(printf_P, PSTR("\nPOST SECTION: %s\n\n"), section->name.c_str());
-        Interface interf(this, &ws);
-        section->callback(&interf, &data);
+        Interface *interf = new Interface(this, &ws);
+        section->callback(interf, &data);
+        delete interf;
     }
-    // as();
 }
 
 void jeeui2::refresh(){
-    if (!ws.count()) return;
-    // send(&ws);
+
 }
 
 void jeeui2::send_pub(){
     if (!ws.count()) return;
-    Interface interf(this, &ws, 512);
-    pubCallback(&interf);
+    Interface *interf = new Interface(this, &ws, 512);
+    pubCallback(interf);
+    delete interf;
 }
 
 void jeeui2::var(const String &key, const String &value, bool force)

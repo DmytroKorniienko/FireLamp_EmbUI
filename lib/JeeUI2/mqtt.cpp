@@ -215,33 +215,28 @@ void jeeui2::remControl(){
     _t_inc_current = false;
 
     LOG(printf_P, PSTR("RC [%s - %s]\n"), _t_tpc_current, _t_pld_current);
-    if(strcmp_P(_t_tpc_current, PSTR("get/refresh"))==0){
-        //publish(F("jee/get/refresh"), F("true"), false);
-        refresh();
-    }
-    else if(strcmp_P(_t_tpc_current, PSTR("get/"))==0)
+
+    if (strcmp_P(_t_tpc_current, PSTR("get/")) == 0) {
         publish(F("jee/get/cfg"), deb(), false);
+    }
+
     char *pos = strstr_P(_t_tpc_current, PSTR("set/"));
-    if(pos!=nullptr){
+    if (pos != nullptr) {
         strncpy(_t_tpc_current,pos+4,sizeof(_t_tpc_current)-1);
         LOG(printf, PSTR("SET: %s\n"), _t_tpc_current);
         pos = strstr_P(_t_tpc_current, PSTR("BTN_"));
-        if(pos!=nullptr){
-            //strncpy(btnui, _t_tpc_current.substring(4, _t_tpc_current.length()).c_str(), sizeof(btnui)-1); // btnui = _t_tpc_current.substring(4, _t_tpc_current.length());
+        if (pos != nullptr) {
             strncpy(btnui, pos+4, sizeof(btnui)-1); // btnui = _t_tpc_current.substring(4, _t_tpc_current.length());
             if(strcmp_P(btnui, PSTR("_sysReset"))==0){
                 var(F("wifi"), F("STA"));
                 save();
                 ESP.restart();
             }
-        }
-        else {
-            //Serial.printf_P("PROCEED: %s - %s\n",_t_tpc_current,_t_pld_current);
+        } else {
             if(param(_t_tpc_current) != _t_pld_current){
                 var(_t_tpc_current, _t_pld_current);
                 as();
             }
-
         }
     }
     *_t_tpc_current = '\0'; // _t_tpc_current = F("");

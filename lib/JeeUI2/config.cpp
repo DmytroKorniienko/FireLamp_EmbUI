@@ -36,20 +36,11 @@ void jeeui2::pre_autosave(){
     if (!sv) return;
     if (sv && astimer + 1000 < millis()){
         LOG(println, F("pre_autosave"));
-        fcallback_update();
         mqtt_update();
         sv = false;
         isConfSaved = false;
         astimer = millis(); // обновляем счетчик после последнего изменения UI
     }
-}
-
-jeeui2::updateCallback jeeui2::updateCallbackHndl(){
-    return fcallback_update;
-}
-
-void jeeui2::updateCallbackHndl(updateCallback func){
-    fcallback_update = func;
 }
 
 jeeui2::httpCallback jeeui2::httpCallbackHndl(){

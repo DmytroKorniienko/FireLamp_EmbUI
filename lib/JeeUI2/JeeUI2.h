@@ -42,7 +42,6 @@ class Interface;
 class jeeui2
 {
     typedef void (*buttonCallback) (Interface *interf, JsonObject *data);
-    typedef void (*updateCallback) ();
     typedef void (*mqttCallback) ();
     typedef void (*httpCallback) (const char *param, const char *value);
 
@@ -114,9 +113,6 @@ class jeeui2
 
     void remControl();
 
-    updateCallback updateCallbackHndl();
-    void updateCallbackHndl(updateCallback func);
-
     httpCallback httpCallbackHndl();
     void httpCallbackHndl(httpCallback func);
 
@@ -141,7 +137,6 @@ class jeeui2
     char httpValue[32]; // и его значение
 
     httpCallback fcallback_http = nullptr;
-    updateCallback fcallback_update = nullptr;
 
     void arr(const String &key, const String &value);
     void wifi_connect();

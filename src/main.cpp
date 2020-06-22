@@ -73,7 +73,6 @@ void setup() {
     myLamp.events.loadConfig();
     myLamp.updateParm(updateParm);
 
-    jee.updateCallbackHndl(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
     jee.httpCallbackHndl(httpCallback);
 
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
@@ -82,7 +81,6 @@ void setup() {
     ftp_setup(); // запуск ftp-сервера
 #endif
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-    update(); // этой функцией получаем значения параметров в переменные (обратный вызов UI)
     updateParm(); // вызвать обновление параметров UI (синхронизация с конфигом эффектов и кнопкой)
     if(myLamp.timeProcessor.getIsSyncOnline()){
       myLamp.refreshTimeManual(); // принудительное обновление времени

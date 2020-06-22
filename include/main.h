@@ -77,7 +77,6 @@ extern GButton touch;
 
 void mqttCallback(const String &topic, const String &payload);
 void sendData();
-void update();
 
 void create_parameters();
 void updateParm();
