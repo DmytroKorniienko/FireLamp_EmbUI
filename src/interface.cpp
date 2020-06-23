@@ -1027,193 +1027,188 @@ void create_parameters(){
 // передача параметров в UI после нажатия сенсорной или мех. кнопки
 void updateParm(){
     LOG(println, F("Обновляем параметры после нажатия кнопки..."));
-    EFFECT *curEff = myLamp.effects.getCurrent();
+
 
     if(myLamp.getMode() != MODE_DEMO) jee.save(); // Cохранить конфиг
     jee.refresh(); // форсировать перерисовку интерфейсов клиентов
 }
 
-void httpCallback(const char *param, const char *value){
-    EFFECT *curEff = myLamp.effects.getCurrent();
-
-    LOG(printf_P, "HTTP: %s - %s\n", param, value);
-    if (!strcmp_P(param, PSTR("on"))) {
-        CALLSETTER(F("ONflag"), true, set_onflag);
-    } else
-    if (!strcmp_P(param, PSTR("off"))) {
-       CALLSETTER(F("ONflag"), false, set_onflag);
-    } else
-    if(!strcmp_P(param, PSTR("demo"))){
-        myLamp.startDemoMode();
-    } else
-    if (!strcmp_P(param, PSTR("msg"))) {
-        myLamp.sendStringToLamp(value, CRGB::Green);
-    } else
-    if (!strcmp_P(param, PSTR("bright"))) {
-        if (atoi(value) > 0) {
+void remote_action(RA action, const char *value){
+    switch (action) {
+        case RA::RA_ON:
+            CALLSETTER(F("ONflag"), true, set_onflag);
+            break;
+        case RA::RA_OFF:
+            CALLSETTER(F("ONflag"), false, set_onflag);
+            break;
+        case RA::RA_DEMO:
+            myLamp.startDemoMode();
+            break;
+        case RA::RA_MV_NEXT:
+            myLamp.switcheffect(SW_NEXT);
+            break;
+        case RA::RA_MV_PREV:
+            myLamp.switcheffect(SW_PREV);
+            break;
+        case RA::RA_MV_RAND:
+            myLamp.switcheffect(SW_RND);
+            break;
+        case RA::RA_ALARM:
+            myLamp.startAlarm();
+            break;
+        case RA::RA_REBOOT:
+            ESP.restart(); // так лучше :)
+            break;
+        case RA::RA_EFFECT:
+            CALLSETTER(F("effList"), value, set_effects_list);
+            break;
+        case RA::RA_BRIGHT:
             if (myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness()) {
                 CALLSETTER(F("GlobBRI"), value, set_settings_other);
             } else {
                 CALLSETTER(F("bright"), value, set_effects_param);
             }
-        }
-    } else
-    if (!strcmp_P(param, PSTR("speed"))) {
-        if (atoi(value) > 0) {
+            break;
+        case RA::RA_SPEED:
             CALLSETTER(F("speed"), value, set_effects_param);
-        }
-    } else
-    if (!strcmp_P(param, PSTR("scale"))) {
-        if (atoi(value) > 0) {
+            break;
+        case RA::RA_SCALE:
             CALLSETTER(F("scale"), value, set_effects_param);
+            break;
+        case RA::RA_LAMP_CONFIG:
+            if (value && *value) {
+                String filename = String(F("/glb/"));
+                filename.concat(value);
+                jee.load(filename.c_str());
+            }
+            break;
+        case RA::RA_EFF_CONFIG:
+            if (value && *value) {
+                String filename = String(F("/cfg/"));
+                filename.concat(value);
+                myLamp.effects.loadConfig(filename.c_str());
+            }
+            break;
+        case RA::RA_EVENTS_CONFIG:
+            if (value && *value) {
+                String filename = String(F("/evn/"));
+                filename.concat(value);
+                myLamp.events.loadConfig(filename.c_str());
+            }
+            break;
+        case RA::RA_SEND_TEXT: {
+            String tmpStr = jee.param(F("txtColor"));
+            tmpStr.replace(F("#"),F("0x"));
+            CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0);
+            if (!myLamp.isLampOn()) {
+                myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
+                myLamp.setOffAfterText();
+                myLamp.setOnOff(true);
+                myLamp.setBrightness(1, false, false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
+                myLamp.sendStringToLamp(value, color);
+            } else {
+                myLamp.sendStringToLamp(value, color);
+            }
+            break;
         }
-    } else
-    if (!strcmp_P(param, PSTR("effect"))) {
-        if (atoi(value) > 0) {
-            CALLSETTER(F("effList"), value, set_effects_list);
-        }
-    } else
-    if (!strcmp_P(param, PSTR("move_next"))) {
-        myLamp.switcheffect(SW_NEXT);
-    } else
-    if (!strcmp_P(param, PSTR("move_prev"))) {
-        myLamp.switcheffect(SW_PREV);
-    } else
-    if (!strcmp_P(param, PSTR("move_rnd"))){
-        myLamp.switcheffect(SW_RND);
-    } else
-    if (!strcmp_P(param, PSTR("reboot"))){
-        ESP.restart(); // так лучше :)
-    }
 #ifdef OTA
-    else if (!strcmp_P(param,PSTR("OTA"))) {
-        myLamp.startOTA();
-    }
+        case RA::RA_OTA:
+            myLamp.startOTA();
+            break;
 #endif
 #ifdef AUX_PIN
-    else if (!strcmp_P(param, PSTR("aux_on"))) {
-        AUX_toggle(true);
-    }
-    else if (!strcmp_P(param, PSTR("aux_off"))) {
-        AUX_toggle(false);
-    }
-    else if (!strcmp_P(param, PSTR("aux_toggle"))) {
-        AUX_toggle(!digitalRead(AUX_PIN));
-    }
+        case RA::RA_AUX_ON:
+            CALLSETTER(F("AUX"), true, set_auxflag);
+            break;
+        case RA::RA_AUX_OFF:
+            CALLSETTER(F("AUX"), false, set_auxflag);
+            break;
+        case RA::RA_AUX_TOGLE:
+            AUX_toggle(!digitalRead(AUX_PIN));
+            break;
 #endif
+        default:;
+    }
+}
+
+void httpCallback(const char *param, const char *value){
+    EFFECT *curEff = myLamp.effects.getCurrent();
+    RA action = RA_UNKNOWN;
+    LOG(printf_P, "HTTP: %s - %s\n", param, value);
+
+    if (!strcmp_P(param, PSTR("on"))) action = RA_ON;
+    else if (!strcmp_P(param, PSTR("off"))) action = RA_OFF;
+    else if(!strcmp_P(param, PSTR("demo"))) action = RA_DEMO;
+    else if (!strcmp_P(param, PSTR("msg"))) action = RA_SEND_TEXT;
+    else if (!strcmp_P(param, PSTR("bright")))  action = RA_BRIGHT;
+    else if (!strcmp_P(param, PSTR("speed"))) action = RA_SPEED;
+    else if (!strcmp_P(param, PSTR("scale"))) action = RA_SCALE;
+    else if (!strcmp_P(param, PSTR("effect"))) action = RA_EFFECT;
+    else if (!strcmp_P(param, PSTR("move_next"))) action = RA_MV_NEXT;
+    else if (!strcmp_P(param, PSTR("move_prev"))) action = RA_MV_PREV;
+    else if (!strcmp_P(param, PSTR("move_rnd"))) action = RA_MV_RAND;
+    else if (!strcmp_P(param, PSTR("reboot"))) action = RA_REBOOT;
+#ifdef OTA
+    else if (!strcmp_P(param,PSTR("OTA"))) action = RA_OTA;
+#endif
+#ifdef AUX_PIN
+    else if (!strcmp_P(param, PSTR("aux_on"))) action = RA_AUX_ON;
+    else if (!strcmp_P(param, PSTR("aux_off")))  action = RA_AUX_OFF;
+    else if (!strcmp_P(param, PSTR("aux_toggle")))  action = RA_AUX_TOGLE;
+#endif
+    remote_action(action, value);
 }
 
 // обработка эвентов лампы
 void event_worker(const EVENT *event){
+    RA action = RA_UNKNOWN;
     LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 
-    String filename;
-    String tmpStr = jee.param(F("txtColor"));
-    tmpStr.replace(F("#"),F("0x"));
-    CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(),NULL,0);
-    EFFECT *curEff = myLamp.effects.getCurrent();
-
-    switch (event->event)
-    {
-    case EVENT_TYPE::ON :
-        CALLSETTER(F("ONflag"), true, set_onflag);
-        break;
-    case EVENT_TYPE::OFF :
-        myLamp.disableEffectsUntilText();
-        myLamp.setOffAfterText();
-        CALLSETTER(F("ONflag"), false, set_onflag);
-        break;
-    case EVENT_TYPE::ALARM :
-        myLamp.startAlarm();
-        break;
-    case EVENT_TYPE::DEMO_ON :
-        if (myLamp.getMode() != MODE_DEMO || !myLamp.isLampOn()) {
-            myLamp.startDemoMode();
-        }
-        break;
-    case EVENT_TYPE::LAMP_CONFIG_LOAD :
-        if (event->message) {
-            filename = String(F("/glb/"));
-            filename.concat(event->message);
-            jee.load(filename.c_str());
-        }
-        break;
-    case EVENT_TYPE::EFF_CONFIG_LOAD :
-        if (event->message) {
-            filename = String(F("/cfg/"));
-            filename.concat(event->message);
-            myLamp.effects.loadConfig(filename.c_str());
-        }
-        break;
-    case EVENT_TYPE::EVENTS_CONFIG_LOAD :
-        if (event->message) {
-            filename = String(F("/evn/"));
-            filename.concat(event->message);
-            myLamp.events.loadConfig(filename.c_str());
-        }
-        break;
-    case EVENT_TYPE::SEND_TEXT :
+    switch (event->event) {
+    case EVENT_TYPE::ON: action = RA_ON; break;
+    case EVENT_TYPE::OFF: action = RA_OFF; break;
+    case EVENT_TYPE::DEMO_ON: action = RA_DEMO; break;
+    case EVENT_TYPE::ALARM: action = RA_ALARM; break;
+    case EVENT_TYPE::LAMP_CONFIG_LOAD: action = RA_LAMP_CONFIG; break;
+    case EVENT_TYPE::EFF_CONFIG_LOAD:  action = RA_EFF_CONFIG; break;
+    case EVENT_TYPE::EVENTS_CONFIG_LOAD: action = RA_EVENTS_CONFIG; break;
+    case EVENT_TYPE::SEND_TEXT:  action = RA_SEND_TEXT; break;
+#ifdef AUX_PIN
+    case EVENT_TYPE::AUX_ON: action = RA_AUX_ON; break;
+    case EVENT_TYPE::AUX_OFF: action = RA_AUX_OFF; break;
+    case EVENT_TYPE::AUX_TOGGLE: action = RA_AUX_TOGLE; break;
+#endif
+    case EVENT_TYPE::PIN_STATE: {
         if (event->message == nullptr) break;
 
-        if (!myLamp.isLampOn()) {
-            myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
-            myLamp.setOffAfterText();
-            myLamp.setOnOff(true);
-            myLamp.setBrightness(1,false,false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
-            myLamp.sendStringToLamp(event->message,color);
-        } else {
-            myLamp.sendStringToLamp(event->message,color);
-        }
-        return;
-    case EVENT_TYPE::PIN_STATE : {
-            if (event->message == nullptr) break;
-
-            String tmpS(event->message);
-            tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
-            DynamicJsonDocument doc(128);
-            deserializeJson(doc,tmpS);
-            JsonArray arr = doc.as<JsonArray>();
-            for (size_t i=0; i<arr.size(); i++) {
-                JsonObject item = arr[i];
-                uint8_t pin = item[F("pin")].as<int>();
-                String action = item[F("act")].as<String>();
-                //LOG(printf_P, PSTR("text: %s, pin: %d - %s\n"), tmpS.c_str(), pin, action.c_str());
-                pinMode(pin, OUTPUT);
-                switch(action.c_str()[0]){
-                    case 'H':
-                        digitalWrite(pin, HIGH); // LOW
-                        break;
-                    case 'L':
-                        digitalWrite(pin, LOW); // LOW
-                        break;
-                    case 'T':
-                        digitalWrite(pin, !digitalRead(pin)); // inverse
-                        break;
-                    default:
-                        break;
-                }
-                char tmpbuffer[32];
-                sprintf_P(tmpbuffer, PSTR("Set PIN: %d to %s"), pin, action.c_str());
-                myLamp.sendStringToLamp(tmpbuffer,color);
-                return;
+        String tmpS(event->message);
+        tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
+        StaticJsonDocument<128> doc;
+        deserializeJson(doc, tmpS);
+        JsonArray arr = doc.as<JsonArray>();
+        for (size_t i = 0; i < arr.size(); i++) {
+            JsonObject item = arr[i];
+            uint8_t pin = item[F("pin")].as<int>();
+            String action = item[F("act")].as<String>();
+            pinMode(pin, OUTPUT);
+            switch(action.c_str()[0]){
+                case 'H':
+                    digitalWrite(pin, HIGH); // LOW
+                    break;
+                case 'L':
+                    digitalWrite(pin, LOW); // LOW
+                    break;
+                case 'T':
+                    digitalWrite(pin, !digitalRead(pin)); // inverse
+                    break;
+                default:
+                    break;
             }
         }
         break;
-#ifdef AUX_PIN
-    case EVENT_TYPE::AUX_ON:
-        AUX_toggle(true);
-        break;
-    case EVENT_TYPE::AUX_OFF:
-        AUX_toggle(false);
-        break;
-    case EVENT_TYPE::AUX_TOGGLE:
-        digitalWrite(AUX_PIN, !digitalRead(AUX_PIN));
-        jee.var(F("AUX"), (digitalRead(AUX_PIN) == AUX_LEVEL ? F("true") : F("false")));
-        //return;
-        break;
-#endif
-    default:
-        break;
     }
-    if (event->message) myLamp.sendStringToLamp(event->message,color);
+    default:;
+    }
+
+    remote_action(action, event->message);
 }
