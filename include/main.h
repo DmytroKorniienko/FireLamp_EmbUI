@@ -66,36 +66,6 @@ public:
 }
 };
 
-typedef enum _remote_action {
-    RA_UNKNOWN,
-    RA_ON,
-    RA_OFF,
-    RA_DEMO,
-    RA_ALARM,
-    RA_LAMP_CONFIG,
-    RA_EFF_CONFIG,
-    RA_EVENTS_CONFIG,
-    RA_SEND_TEXT,
-#ifdef AUX_PIN
-    RA_AUX_ON,
-    RA_AUX_OFF,
-    RA_AUX_TOGLE,
-#endif
-#ifdef OTA
-    RA_OTA,
-#endif
-    RA_REBOOT,
-    RA_MV_NEXT,
-    RA_MV_PREV,
-    RA_MV_RAND,
-    RA_BRIGHT,
-    RA_SPEED,
-    RA_SCALE,
-    RA_EFFECT,
-} RA;
-
-void remote_action(RA action, const char *value);
-
 // глобальные переменные для работы с ними в программе
 extern SHARED_MEM GSHMEM; // Глобальная разделяемая память эффектов
 extern INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
@@ -111,6 +81,5 @@ void sendData();
 void create_parameters();
 void updateParm();
 void event_worker(const EVENT *);
-void httpCallback(const char *param, const char *value);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
 void buttonhelper(bool state);

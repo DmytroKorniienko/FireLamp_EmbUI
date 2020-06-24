@@ -1,4 +1,5 @@
 #include "JeeUI2.h"
+#include "interface.h"
 #include "ui.h"
 
 #ifdef LAMP_DEBUG
@@ -46,8 +47,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             const char *pkg = doc["pkg"];
             if (!pkg) return;
             if (!strcmp(pkg, "post")) {
-                JsonObject arr = doc["data"];
-                jee.post(arr);
+                JsonObject data = doc["data"];
+                jee.post(data);
             }
         }
   }
@@ -92,10 +93,6 @@ void jeeui2::post(JsonObject data){
     }
 }
 
-void jeeui2::refresh(){
-
-}
-
 void jeeui2::send_pub(){
     if (!ws.count()) return;
     Interface *interf = new Interface(this, &ws, 512);
@@ -126,10 +123,11 @@ void jeeui2::var(const String &key, const String &value, bool force)
     }
 
     cfg[key] = value;
+    isNeedSave = true;
 
     LOG(printf_P, PSTR("FREE: %u\n"), cap - cfg.memoryUsage());
 
-    if (_t_remotecontrol) {
+    if (mqtt_remotecontrol) {
         publish(String(F("jee/set/")) + key, value, true);
     }
 }
@@ -177,12 +175,11 @@ void jeeui2::begin() {
 #ifdef LAMP_DEBUG
     nonWifiVar();
     load();
-    LOG(println, String(F("CONFIG: ")) + deb());
+    LOG(println, String(F("CONFIG: ")) + jee.deb());
 #endif
-
+    ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
     wifi_connect();
-
-    LOG(println, String(F("MAC: ")) + mac);
+    LOG(println, String(F("MAC: ")) + jee.mac);
 
     /*use mdns for host name resolution*/
     char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
@@ -218,11 +215,10 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/cmd"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebParameter *p;
-        p = request->getParam(0);
-        strncpy(httpParam,p->name().c_str(),sizeof(httpParam)-1);
-        strncpy(httpValue,p->value().c_str(),sizeof(httpValue)-1);
-        _isHttpCmd = true;
+        AsyncWebParameter *prm = request->getParam(0);
+        if (prm) {
+            httpCallback(prm->name(), prm->value());
+        }
         request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
@@ -247,9 +243,8 @@ void jeeui2::begin() {
     });
 
     server.on(PSTR("/restart"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        request->redirect("/heap");
-        delay(1000);
-        ESP.restart();
+        __shouldReboot = true;
+        request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
     server.on(PSTR("/heap"), HTTP_GET, [this](AsyncWebServerRequest *request){
@@ -298,32 +293,32 @@ void jeeui2::begin() {
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
     //Do not request more often than 3-5 seconds
     server.on(PSTR("/scan"), HTTP_GET, [](AsyncWebServerRequest *request){
-    String json = F("[");
-    int n = WiFi.scanComplete();
-    if(n == -2){
-        WiFi.scanNetworks(true);
-    } else if(n){
-        for (int i = 0; i < n; ++i){
-        if(i) json += F(",");
-        json += F("{");
-        json += String(F("\"rssi\":"))+String(WiFi.RSSI(i));
-        json += String(F(",\"ssid\":\""))+WiFi.SSID(i)+F("\"");
-        json += String(F(",\"bssid\":\""))+WiFi.BSSIDstr(i)+F("\"");
-        json += String(F(",\"channel\":"))+String(WiFi.channel(i));
-        json += String(F(",\"secure\":"))+String(WiFi.encryptionType(i));
+        String json = F("[");
+        int n = WiFi.scanComplete();
+        if(n == -2){
+            WiFi.scanNetworks(true);
+        } else if(n){
+            for (int i = 0; i < n; ++i){
+            if(i) json += F(",");
+            json += F("{");
+            json += String(F("\"rssi\":"))+String(WiFi.RSSI(i));
+            json += String(F(",\"ssid\":\""))+WiFi.SSID(i)+F("\"");
+            json += String(F(",\"bssid\":\""))+WiFi.BSSIDstr(i)+F("\"");
+            json += String(F(",\"channel\":"))+String(WiFi.channel(i));
+            json += String(F(",\"secure\":"))+String(WiFi.encryptionType(i));
 #ifdef ESP8266
-        json += String(F(",\"hidden\":"))+String(WiFi.isHidden(i)?F("true"):F("false")); // что-то сломали и в esp32 больше не работает...
+            json += String(F(",\"hidden\":"))+String(WiFi.isHidden(i)?F("true"):F("false")); // что-то сломали и в esp32 больше не работает...
 #endif
-        json += F("}");
+            json += F("}");
+            }
+            WiFi.scanDelete();
+            if(WiFi.scanComplete() == -2){
+            WiFi.scanNetworks(true);
+            }
         }
-        WiFi.scanDelete();
-        if(WiFi.scanComplete() == -2){
-        WiFi.scanNetworks(true);
-        }
-    }
-    json += F("]");
-    request->send(200, FPSTR(PGmimejson), json);
-    json = String();
+        json += F("]");
+        request->send(200, FPSTR(PGmimejson), json);
+        json = String();
     });
 
     // server all files from SPIFFS root
@@ -334,9 +329,6 @@ void jeeui2::begin() {
     server.onNotFound(notFound);
 
     server.begin();
-
-    //fcallback_upd();
-    mqtt_update();
 }
 
 void jeeui2::led(uint8_t pin, bool invert)
@@ -349,14 +341,7 @@ void jeeui2::led(uint8_t pin, bool invert)
 
 void jeeui2::handle()
 {
-    if(_isHttpCmd){
-        if(fcallback_http != nullptr)
-            fcallback_http(httpParam, httpValue);
-        _isHttpCmd = false;
-        *httpParam='\0'; *httpValue='\0';
-    }
-
-    if(__shouldReboot){
+    if (__shouldReboot) {
         Serial.println(F("Rebooting..."));
         delay(100);
         ESP.restart();
@@ -375,7 +360,6 @@ void jeeui2::handle()
     btn();
     led_handle();
     button_handle();
-    pre_autosave();
     autosave();
     ws.cleanupClients(4);
 

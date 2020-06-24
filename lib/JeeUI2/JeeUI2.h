@@ -43,7 +43,6 @@ class jeeui2
 {
     typedef void (*buttonCallback) (Interface *interf, JsonObject *data);
     typedef void (*mqttCallback) ();
-    typedef void (*httpCallback) (const char *param, const char *value);
 
     typedef struct section_handle_t{
       String name;
@@ -66,10 +65,7 @@ class jeeui2
       *m_host='\0';
       *udpRemoteIP='\0';
       *incomingPacket='\0';
-      *btnui='\0';
       *udpMessage='\0';
-      *_t_tpc_current='\0';
-      *_t_pld_current='\0';
     }
 
     AsyncWebServer server;
@@ -85,13 +81,11 @@ class jeeui2
     void begin();
     void handle();
 
-
     void save(const char *_cfg = nullptr);
     void load(const char *_cfg = nullptr);
+
     void udp(const String &message);
     void udp();
-
-
 
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), bool remotecontrol);
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload));
@@ -113,10 +107,6 @@ class jeeui2
 
     void remControl();
 
-    httpCallback httpCallbackHndl();
-    void httpCallbackHndl(httpCallback func);
-
-    void refresh();
     void post(JsonObject data);
     void send_pub();
 
@@ -127,18 +117,14 @@ class jeeui2
     bool connected = false;
 
     String id(const String &tpoic);
-    static char m_pref[16]; // префикс MQTT
 
-    void setDelayedSave(unsigned int ms) { asave = ms; astimer = millis(); sv=true; } // Отложенное сохранение
+    static char m_pref[16]; // префикс MQTT
+    char m_host[256]; // MQTT
+    int m_port = 0;
+    char m_user[64];
+    char m_pass[64];
 
   private:
-    bool _isHttpCmd = false;
-    char httpParam[32]; // буфер под параметр
-    char httpValue[32]; // и его значение
-
-    httpCallback fcallback_http = nullptr;
-
-    void arr(const String &key, const String &value);
     void wifi_connect();
     void button_handle();
     void led_handle();
@@ -147,8 +133,6 @@ class jeeui2
     void led_off();
     void led_inv();
     void autosave();
-    void pre_autosave();
-    void as();
     void udpBegin();
     void udpLoop();
     void btn();
@@ -156,31 +140,18 @@ class jeeui2
 
     void pub_mqtt(const String &key, const String &value);
 
-    void mqtt_update();
     void mqtt_handle();
-    void mqtt_send();
-    void mqtt_reconnect();
-    bool mqtt_ok = false;
     bool mqtt_enable = false;
 
     void _connected();
     void subscribeAll();
-
-    char m_host[256]; // MQTT
-    int m_port = 0;
-    char m_user[64];
-    char m_pass[64];
-    bool m_params;
-
-    int sendConfig = 0;
 
     char udpRemoteIP[16];
     unsigned int localUdpPort = 4243;
     char incomingPacket[64];
 
     unsigned int asave = 1000;
-    bool sv = false;
-    bool isConfSaved = true; // признак сохраненного конфига
+    bool isNeedSave = false;
     unsigned long astimer;
 
     uint8_t wifi_mode;
@@ -190,7 +161,6 @@ class jeeui2
     unsigned long a_ap = 0;
     bool wf = false;
     uint8_t pg = 0;
-    char btnui[32]; // Последняя нажатая кнопка (аппаратная или UI), после обработки - сброс значения
     char udpMessage[65]; // Обмен по UDP
 
     void connectToMqtt();
@@ -205,12 +175,7 @@ class jeeui2
 
     static bool mqtt_connected;
     static bool mqtt_connect;
-    static char _t_tpc_current[128]; // топик без префикса
-    static char _t_pld_current[128]; // сообщение
-    static bool _t_inc_current;
-    static bool _t_remotecontrol;
-    // bool httpstream = false;
-    String op; // опции для выпадающего списка <-- весьма желательно очищать сразу же...
+    static bool mqtt_remotecontrol;
 };
 
 #endif

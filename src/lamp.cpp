@@ -104,7 +104,7 @@ void LAMP::lamp_init()
           xStep = 1;
           xCol = 1;
         }
-      
+
         yStep = HEIGHT / 4;
         yCol = 4;
         if(yStep<2) {
@@ -196,7 +196,7 @@ void LAMP::buttonTick()
       startDemoMode();
       return;
     }
-    
+
     if (touch.isHolded()) {
       LOG(printf_P, PSTR("Удержание кнопки из выключенного состояния\n"));
       numHold = 1;
@@ -229,7 +229,7 @@ void LAMP::buttonTick()
       if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
       return;
     }
-  } 
+  }
 
   // кнопка только начала удерживаться
   if (ONflag && (touch.isHolded())){
@@ -276,7 +276,7 @@ void LAMP::buttonTick()
 
     // Для второго входа, сбрасываем флаг
     isFirstHoldingPress = false;
-    
+
     debugPrint(); // отладка
     if (numHold != 0) {
       tmNumHoldTimer.reset();
@@ -503,7 +503,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
           }
         }
 
-#ifdef PRINT_ALARM_TIME        
+#ifdef PRINT_ALARM_TIME
         EVERY_N_SECONDS(1){
           if(!second(timeProcessor.getUnixTime())){
             CRGB letterColor;
@@ -551,7 +551,7 @@ void LAMP::effectsTick()
   }
 
   if(!isEffectsDisabledUntilText){
-    // отрисовать текущий эффект (если есть) 
+    // отрисовать текущий эффект (если есть)
     if(effects.getCurrent()->func!=nullptr){
       effects.getCurrent()->func(getUnsafeLedsArray(), effects.getCurrent()->param);
 #ifdef USELEDBUF
@@ -590,7 +590,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   if (!_effectsTicker.active() ) return;
 
   FastLED.show();
-// восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
+// восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов)
 #ifdef USELEDBUF
   if (!ledsbuff.empty()) {
     std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
@@ -632,7 +632,7 @@ void LAMP::frameShow(const uint32_t ticktime){
     void LAMP::GaugeShow() {
       byte ind;
       if(!startButtonHolding) return;
-      
+
       switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
 #if (VERTGAUGE==1)
         case 1:
@@ -709,7 +709,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 
 
 LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
-#ifdef ESP_USE_BUTTON    
+#ifdef ESP_USE_BUTTON
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
 #endif
@@ -836,12 +836,12 @@ void LAMP::startNormalMode()
   if(storedEffect!=EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
   } else if(effects.getEn()==EFF_NONE){ // если по каким-то причинам текущий пустой, то выбираем рандомный
-    switcheffect(SW_RND, isFaderON); 
+    switcheffect(SW_RND, isFaderON);
   }
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
-{        
+{
   mode = MODE_OTA;
   effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
@@ -856,7 +856,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
 
   if(pos)
     offset = (MIRR_V ? 0 + pos : WIDTH - pos);
-  
+
   if (!text || !strlen(text))
   {
     return true;
@@ -942,7 +942,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor,
         if(isInverse)
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);    
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
           //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }
@@ -994,12 +994,12 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
-      
+
       if(!docArrMessages.isNull())
         arr = docArrMessages.as<JsonArray>(); // используем имеющийся
       else
         arr = docArrMessages.to<JsonArray>(); // создаем новый
-      
+
       JsonObject var = arr.createNestedObject();
       var[F("s")]=text;
       var[F("c")]=((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b;
@@ -1092,7 +1092,7 @@ void LAMP::newYearMessageHandle()
 void LAMP::periodicTimeHandle()
 {
   static bool cancel = false;
-  
+
   time_t tm = timeProcessor.getUnixTime();
   //LOG(println, tm);
   if(second(tm)) {cancel=false; return;}
@@ -1127,7 +1127,7 @@ void LAMP::periodicTimeHandle()
       if(!(tm%60))
         sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
       break;
-    
+
     default:
       break;
   }
@@ -1139,7 +1139,7 @@ void LAMP::periodicTimeHandle()
 void LAMP::micHandler()
 {
   static uint8_t counter=0;
-  
+
   if(mw==nullptr && !isCalibrationRequest){ // обычный режим
     //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
@@ -1234,7 +1234,7 @@ uint8_t LAMP::getBrightness(const bool natural){
 
 /*
  * Set global brightness
- * @param bool natural 
+ * @param bool natural
  */
 void LAMP::brightness(const uint8_t _brt, bool natural){
     uint8_t _cur = natural ? brighten8_video(FastLED.getBrightness()) : FastLED.getBrightness();
@@ -1270,7 +1270,7 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
  * buttonPress - управление планировщиком опроса кнопки
  * оберка нужна т.к. touch.tick() нельзя положить в ICACHE_RAM
  * по наступлению прерывания "нажато" врубаем опрос событий кнопки не реже чем BUTTON_STEP_TIMEOUT/2 чтобы отловить "удержание"
- * 
+ *
  * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
  * чтобы не он забыл зачем живет :)
  */

@@ -36,6 +36,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "main.h"
+#include "interface.h"
 #include "effects.h"
 #include "ui.h"
 
@@ -90,8 +91,8 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff) return;
 
     interf->json_section_begin(F("set_effect_prm"));
-    interf->checkbox(F("canBeSelected"), confEff->canBeSelected? F("true") : F("false"), F("В списке выбора"), false);
-    interf->checkbox(F("isFavorite"), confEff->isFavorite? F("true") : F("false"), F("В списке демо"), false);
+    interf->checkbox(F("eff_sel"), confEff->canBeSelected? F("true") : F("false"), F("В списке выбора"), false);
+    interf->checkbox(F("eff_fav"), confEff->isFavorite? F("true") : F("false"), F("В списке демо"), false);
     interf->text(F("param"), confEff->getParam(), F("Доп. параметры"));
 
     interf->button_submit(F("set_effect_prm"), F("Сохранить"), F("gray"));
@@ -108,8 +109,8 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff || !data) return;
 
     confEff->updateParam((*data)[F("param")]);
-    confEff->canBeSelected = ((*data)[F("canBeSelected")] == true);
-    confEff->isFavorite = ((*data)[F("isFavorite")] == true);
+    confEff->canBeSelected = ((*data)[F("eff_sel")] == true);
+    confEff->isFavorite = ((*data)[F("eff_fav")] == true);
 
     String filename = String(F("/cfg/")) + jee.param(F("fileName"));
     if (filename.length() > 4 && SPIFFS.begin()) {
@@ -185,7 +186,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     } else {
         myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
     }
-    myLamp.setLoading();
+    // myLamp.setLoading();
     jee.var(F("effList"), (*data)[F("effList")]);
     jee.save();
 
@@ -243,12 +244,12 @@ void block_effects_main(Interface *interf, JsonObject *data){
 
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    EFFECT *curEff = myLamp.effects.getCurrent();
     bool newpower = (*data)[F("ONflag")] == true;
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
-            myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
+            myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
+            // myLamp.setLoading();
         } else {
             myLamp.setOnOff(newpower);
         }
@@ -544,11 +545,12 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("m_host", 0);
-    SETPARAM("m_port", 0);
-    SETPARAM("m_user", 0);
-    SETPARAM("m_pass", 0);
+    SETPARAM("m_host", strncpy(jee.m_host, jee.param(F("m_host")).c_str(), sizeof(jee.m_host)-1));
+    SETPARAM("m_user", strncpy(jee.m_user, jee.param(F("m_user")).c_str(), sizeof(jee.m_user)-1));
+    SETPARAM("m_pass", strncpy(jee.m_pass, jee.param(F("m_pass")).c_str(), sizeof(jee.m_pass)-1));
+    SETPARAM("m_port", jee.m_port = jee.param(F("m_port")).toInt());
     SETPARAM("mqtt_int", iGLOBAL.mqtt_int = (*data)[F("mqtt_int")]);
+    //m_pref
 
     jee.save();
     ESP.restart();
@@ -1030,10 +1032,10 @@ void updateParm(){
 
 
     if(myLamp.getMode() != MODE_DEMO) jee.save(); // Cохранить конфиг
-    jee.refresh(); // форсировать перерисовку интерфейсов клиентов
+
 }
 
-void remote_action(RA action, const char *value){
+void remote_action(RA action, const String &value){
     switch (action) {
         case RA::RA_ON:
             CALLSETTER(F("ONflag"), true, set_onflag);
@@ -1042,16 +1044,16 @@ void remote_action(RA action, const char *value){
             CALLSETTER(F("ONflag"), false, set_onflag);
             break;
         case RA::RA_DEMO:
-            myLamp.startDemoMode();
+            CALLSETTER(F("Demo"), true, set_demoflag);
             break;
         case RA::RA_MV_NEXT:
-            myLamp.switcheffect(SW_NEXT);
+            myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             break;
         case RA::RA_MV_PREV:
-            myLamp.switcheffect(SW_PREV);
+            myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
             break;
         case RA::RA_MV_RAND:
-            myLamp.switcheffect(SW_RND);
+            myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
             break;
         case RA::RA_ALARM:
             myLamp.startAlarm();
@@ -1076,21 +1078,21 @@ void remote_action(RA action, const char *value){
             CALLSETTER(F("scale"), value, set_effects_param);
             break;
         case RA::RA_LAMP_CONFIG:
-            if (value && *value) {
+            if (!value.isEmpty()) {
                 String filename = String(F("/glb/"));
                 filename.concat(value);
                 jee.load(filename.c_str());
             }
             break;
         case RA::RA_EFF_CONFIG:
-            if (value && *value) {
+            if (!value.isEmpty()) {
                 String filename = String(F("/cfg/"));
                 filename.concat(value);
                 myLamp.effects.loadConfig(filename.c_str());
             }
             break;
         case RA::RA_EVENTS_CONFIG:
-            if (value && *value) {
+            if (!value.isEmpty()) {
                 String filename = String(F("/evn/"));
                 filename.concat(value);
                 myLamp.events.loadConfig(filename.c_str());
@@ -1105,9 +1107,9 @@ void remote_action(RA action, const char *value){
                 myLamp.setOffAfterText();
                 myLamp.setOnOff(true);
                 myLamp.setBrightness(1, false, false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
-                myLamp.sendStringToLamp(value, color);
+                myLamp.sendStringToLamp(value.c_str(), color);
             } else {
-                myLamp.sendStringToLamp(value, color);
+                myLamp.sendStringToLamp(value.c_str(), color);
             }
             break;
         }
@@ -1131,30 +1133,29 @@ void remote_action(RA action, const char *value){
     }
 }
 
-void httpCallback(const char *param, const char *value){
-    EFFECT *curEff = myLamp.effects.getCurrent();
+void httpCallback(const String &param, const String &value){
     RA action = RA_UNKNOWN;
-    LOG(printf_P, "HTTP: %s - %s\n", param, value);
+    LOG(printf_P, PSTR("HTTP: %s - %s\n"), param.c_str(), value.c_str());
 
-    if (!strcmp_P(param, PSTR("on"))) action = RA_ON;
-    else if (!strcmp_P(param, PSTR("off"))) action = RA_OFF;
-    else if(!strcmp_P(param, PSTR("demo"))) action = RA_DEMO;
-    else if (!strcmp_P(param, PSTR("msg"))) action = RA_SEND_TEXT;
-    else if (!strcmp_P(param, PSTR("bright")))  action = RA_BRIGHT;
-    else if (!strcmp_P(param, PSTR("speed"))) action = RA_SPEED;
-    else if (!strcmp_P(param, PSTR("scale"))) action = RA_SCALE;
-    else if (!strcmp_P(param, PSTR("effect"))) action = RA_EFFECT;
-    else if (!strcmp_P(param, PSTR("move_next"))) action = RA_MV_NEXT;
-    else if (!strcmp_P(param, PSTR("move_prev"))) action = RA_MV_PREV;
-    else if (!strcmp_P(param, PSTR("move_rnd"))) action = RA_MV_RAND;
-    else if (!strcmp_P(param, PSTR("reboot"))) action = RA_REBOOT;
+    if (param == F("on")) action = RA_ON;
+    else if (param == F("off")) action = RA_OFF;
+    else if(param == F("demo")) action = RA_DEMO;
+    else if (param == F("msg")) action = RA_SEND_TEXT;
+    else if (param == F("bright"))  action = RA_BRIGHT;
+    else if (param == F("speed")) action = RA_SPEED;
+    else if (param == F("scale")) action = RA_SCALE;
+    else if (param == F("effect")) action = RA_EFFECT;
+    else if (param == F("move_next")) action = RA_MV_NEXT;
+    else if (param == F("move_prev")) action = RA_MV_PREV;
+    else if (param == F("move_rnd")) action = RA_MV_RAND;
+    else if (param == F("reboot")) action = RA_REBOOT;
 #ifdef OTA
-    else if (!strcmp_P(param,PSTR("OTA"))) action = RA_OTA;
+    else if (param == F("OTA")) action = RA_OTA;
 #endif
 #ifdef AUX_PIN
-    else if (!strcmp_P(param, PSTR("aux_on"))) action = RA_AUX_ON;
-    else if (!strcmp_P(param, PSTR("aux_off")))  action = RA_AUX_OFF;
-    else if (!strcmp_P(param, PSTR("aux_toggle")))  action = RA_AUX_TOGLE;
+    else if (param == F("aux_on")) action = RA_AUX_ON;
+    else if (param == F("aux_off"))  action = RA_AUX_OFF;
+    else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
     remote_action(action, value);
 }

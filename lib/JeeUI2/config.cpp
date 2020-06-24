@@ -1,13 +1,13 @@
 #include "JeeUI2.h"
 
-void jeeui2::save(const char *_cfg)
-{
-    if(SPIFFS.begin()){
+void jeeui2::save(const char *_cfg) {
+    if (isNeedSave && SPIFFS.begin()) {
         File configFile;
-        if(_cfg == nullptr)
+        if (_cfg == nullptr) {
             configFile = SPIFFS.open(F("/config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
-        else
+        } else {
             configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+        }
 
         String cfg_str;
         serializeJson(cfg, cfg_str);
@@ -15,56 +15,27 @@ void jeeui2::save(const char *_cfg)
         configFile.flush();
         configFile.close();
         cfg.garbageCollect();
-
+        isNeedSave = false;
         LOG(println, F("Save Config"));
     }
 }
 
 void jeeui2::autosave(){
-    if (isConfSaved) return;
-    if (!isConfSaved && astimer + asave < millis()){
+    if (isNeedSave && millis() > astimer + asave){
         save();
         LOG(println, F("AutoSave"));
         astimer = millis();
-        isConfSaved = true; // сохранились
-        //sv = false;
-        //mqtt_update();
     }
 }
 
-void jeeui2::pre_autosave(){
-    if (!sv) return;
-    if (sv && astimer + 1000 < millis()){
-        LOG(println, F("pre_autosave"));
-        mqtt_update();
-        sv = false;
-        isConfSaved = false;
-        astimer = millis(); // обновляем счетчик после последнего изменения UI
-    }
-}
-
-jeeui2::httpCallback jeeui2::httpCallbackHndl(){
-    return fcallback_http;
-}
-
-void jeeui2::httpCallbackHndl(httpCallback func){
-    fcallback_http = func;
-}
-
-
-void jeeui2::as(){
-    sv = true;
-    astimer = millis();
-}
-
-void jeeui2::load(const char *_cfg)
-{
-    if(SPIFFS.begin()){
+void jeeui2::load(const char *_cfg){
+    if (SPIFFS.begin()) {
         File configFile;
-        if(_cfg == nullptr)
+        if (_cfg == nullptr) {
             configFile = SPIFFS.open(F("/config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
-        else
+        } else {
             configFile = SPIFFS.open(_cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+        }
 
         String cfg_str = configFile.readString();
         if (cfg_str == F("")){
@@ -80,6 +51,5 @@ void jeeui2::load(const char *_cfg)
         }
         LOG(println, F("JSON config loaded"));
         configFile.close();
-        sv = false;
     }
 }

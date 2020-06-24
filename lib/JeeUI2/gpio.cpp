@@ -1,7 +1,6 @@
 #include "JeeUI2.h"
 
-void jeeui2::led_handle()
-{
+void jeeui2::led_handle(){
     if (LED_PIN == -1) return;
     if (wifi_mode == 1)
         digitalWrite(LED_PIN, !digitalRead(LED_PIN));
@@ -9,8 +8,7 @@ void jeeui2::led_handle()
         digitalWrite(LED_PIN, LOW + LED_INVERT);
 }
 
-void jeeui2::btn()
-{
+void jeeui2::btn(){
 #ifdef __BUTTON
     if (digitalRead(__BUTTON))
         return;
@@ -69,27 +67,19 @@ void jeeui2::led_inv(){
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
 }
 
-void testFunction(){
+void jeeui2::button_handle(){
+    // section_handle_t *section = nullptr;
+    // for (int i = 0; i < section_handle.size(); i++) {
+    //     if (section_handle[i]->name == btnui) {
+    //         section = section_handle[i];
+    //         break;
+    //     }
+    // };
 
-}
+    // if(section){
+    //     LOG(print, F("HANDLED: "));
+    //     LOG(printf_P, PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
 
-void jeeui2::button_handle()
-{
-    if(!*btnui) return;
-
-    section_handle_t *section = nullptr;
-    for (int i = 0; i < section_handle.size(); i++) {
-        if (section_handle[i]->name == btnui) {
-            section = section_handle[i];
-            break;
-        }
-    };
-
-    if(section){
-        LOG(print, F("HANDLED: "));
-        LOG(printf_P, PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
-
-        section->callback(nullptr, nullptr);
-    }
-    *btnui = '\0';
+    //     section->callback(nullptr, nullptr);
+    // }
 }
