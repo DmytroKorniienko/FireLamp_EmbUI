@@ -71,7 +71,9 @@ typedef enum _EFFSWITCH {
     SW_RND,         // случайный
     SW_DELAY,       // сохраненный (для фейдера)
     SW_SPECIFIC,    // переход на конкретный эффект по индексу/имени
-    SW_NEXT_DEMO    // следующий для ДЕМО, исключая отключенные
+    SW_NEXT_DEMO,    // следующий для ДЕМО, исключая отключенные
+    SW_WHITE_HI,
+    SW_WHITE_LO,
 } EFFSWITCH;
 
 // управление Тикером
@@ -445,8 +447,6 @@ private:
     uint32_t effDelay_uS; // доп. задержка для эффектов микросекунді
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
-    void(*updateParmFunc)() = nullptr; // функтор обновления параметров
-
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
     float mic_noise = 0.0; // уровень шума в ед.
@@ -559,11 +559,11 @@ public:
     bool IsGlobalBrightness() {return isGlobalBrightness;}
 
     LAMPMODE getMode() {return mode;}
-    void updateParm(void(*f)()) { updateParmFunc=f; }
 
     TimeProcessor timeProcessor;
     void refreshTimeManual() { timeProcessor.handleTime(true); }
 
+    void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool isPrintingNow() { return isStringPrinting; }
     LAMP();

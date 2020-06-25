@@ -40,18 +40,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "ui.h"
 
-#define SETPARAM(key, call) if (data->containsKey(F(key))) { \
-    call; \
-    jee.var(F(key), (*data)[F(key)]); \
-}
-
-#define CALLSETTER(key, val, call) { \
-    StaticJsonDocument<128> doc; \
-    doc[key] = val; \
-    JsonObject obj = doc.as<JsonObject>(); \
-    call(nullptr, &obj); \
-}
-
 #ifdef AUX_PIN
 void AUX_toggle(bool key)
 {
@@ -200,13 +188,16 @@ void set_effects_param(Interface *interf, JsonObject *data){
     if (data->containsKey(F("bright"))) {
         curEff->brightness = (*data)[F("bright")];
         myLamp.setLampBrightness(curEff->brightness);
-        myLamp.fadelight(myLamp.getNormalizedLampBrightness());
+        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
+        LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getLampBrightness());
     }
     if (data->containsKey(F("speed"))) {
         curEff->speed = (*data)[F("speed")];
+        LOG(printf_P, PSTR("Новое значение скорости: %d\n"), myLamp.effects.getSpeed());
     }
     if (data->containsKey(F("scale"))) {
         curEff->scale = (*data)[F("scale")];
+        LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), myLamp.effects.getScale());
     }
     if (data->containsKey(F("extraR"))) {
         curEff->setValue(curEff->param, F("R"), (*data)[F("extraR")].as<String>().c_str());
@@ -1026,33 +1017,51 @@ void create_parameters(){
 
 }
 
-// передача параметров в UI после нажатия сенсорной или мех. кнопки
-void updateParm(){
-    LOG(println, F("Обновляем параметры после нажатия кнопки..."));
-
-
-    if(myLamp.getMode() != MODE_DEMO) jee.save(); // Cохранить конфиг
+void sync_parameters(){
 
 }
 
-void remote_action(RA action, const String &value){
+void remote_action(RA action, const char *value){
+    StaticJsonDocument<128> doc;
+    JsonObject obj = doc.as<JsonObject>();
     switch (action) {
         case RA::RA_ON:
-            CALLSETTER(F("ONflag"), true, set_onflag);
+            obj[F("ONflag")] = true;
+            set_onflag(nullptr, &obj);
             break;
         case RA::RA_OFF:
-            CALLSETTER(F("ONflag"), false, set_onflag);
+            obj[F("ONflag")] = false;
+            set_onflag(nullptr, &obj);
             break;
         case RA::RA_DEMO:
-            CALLSETTER(F("Demo"), true, set_demoflag);
+            obj[F("Demo")] = true;
+            set_demoflag(nullptr, &obj);
             break;
-        case RA::RA_MV_NEXT:
+        case RA::RA_EFFECT:
+            obj[F("effList")] = value;
+            set_effects_list(nullptr, &obj);
+            break;
+        case RA::RA_BRIGHT_NF:
+            obj[F("nofade")] = true;
+        case RA::RA_BRIGHT:
+            obj[F("bright")] = value;
+            set_effects_param(nullptr, &obj);
+            break;
+        case RA::RA_SPEED:
+            obj[F("speed")] = value;
+            set_effects_param(nullptr, &obj);
+            break;
+        case RA::RA_SCALE:
+            obj[F("scale")] = value;
+            set_effects_param(nullptr, &obj);
+            break;
+        case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             break;
-        case RA::RA_MV_PREV:
+        case RA::RA_EFF_PREV:
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
             break;
-        case RA::RA_MV_RAND:
+        case RA::RA_EFF_RAND:
             myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
             break;
         case RA::RA_ALARM:
@@ -1061,38 +1070,28 @@ void remote_action(RA action, const String &value){
         case RA::RA_REBOOT:
             ESP.restart(); // так лучше :)
             break;
-        case RA::RA_EFFECT:
-            CALLSETTER(F("effList"), value, set_effects_list);
+        case RA::RA_WHITE_HI:
+            myLamp.switcheffect(SW_WHITE_HI);
             break;
-        case RA::RA_BRIGHT:
-            if (myLamp.getMode() == MODE_DEMO || myLamp.IsGlobalBrightness()) {
-                CALLSETTER(F("GlobBRI"), value, set_settings_other);
-            } else {
-                CALLSETTER(F("bright"), value, set_effects_param);
-            }
-            break;
-        case RA::RA_SPEED:
-            CALLSETTER(F("speed"), value, set_effects_param);
-            break;
-        case RA::RA_SCALE:
-            CALLSETTER(F("scale"), value, set_effects_param);
+        case RA::RA_WHITE_LO:
+            myLamp.switcheffect(SW_WHITE_LO);
             break;
         case RA::RA_LAMP_CONFIG:
-            if (!value.isEmpty()) {
+            if (value && *value) {
                 String filename = String(F("/glb/"));
                 filename.concat(value);
                 jee.load(filename.c_str());
             }
             break;
         case RA::RA_EFF_CONFIG:
-            if (!value.isEmpty()) {
+            if (value && *value) {
                 String filename = String(F("/cfg/"));
                 filename.concat(value);
                 myLamp.effects.loadConfig(filename.c_str());
             }
             break;
         case RA::RA_EVENTS_CONFIG:
-            if (!value.isEmpty()) {
+            if (value && *value) {
                 String filename = String(F("/evn/"));
                 filename.concat(value);
                 myLamp.events.loadConfig(filename.c_str());
@@ -1102,17 +1101,16 @@ void remote_action(RA action, const String &value){
             String tmpStr = jee.param(F("txtColor"));
             tmpStr.replace(F("#"),F("0x"));
             CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0);
-            if (!myLamp.isLampOn()) {
-                myLamp.disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
-                myLamp.setOffAfterText();
-                myLamp.setOnOff(true);
-                myLamp.setBrightness(1, false, false); // выводить будем минимальной яркостью myLamp.getNormalizedLampBrightness()
-                myLamp.sendStringToLamp(value.c_str(), color);
-            } else {
-                myLamp.sendStringToLamp(value.c_str(), color);
-            }
+
+            myLamp.sendString(value, color);
             break;
         }
+        case RA::RA_SEND_IP:
+            myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
+            break;
+        case RA::RA_SEND_TIME:
+            myLamp.sendString(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
+            break;
 #ifdef OTA
         case RA::RA_OTA:
             myLamp.startOTA();
@@ -1120,10 +1118,12 @@ void remote_action(RA action, const String &value){
 #endif
 #ifdef AUX_PIN
         case RA::RA_AUX_ON:
-            CALLSETTER(F("AUX"), true, set_auxflag);
+            obj[F("AUX")] = true;
+            set_auxflag(nullptr, &obj);
             break;
         case RA::RA_AUX_OFF:
-            CALLSETTER(F("AUX"), false, set_auxflag);
+            obj[F("AUX")] = false;
+            set_auxflag(nullptr, &obj);
             break;
         case RA::RA_AUX_TOGLE:
             AUX_toggle(!digitalRead(AUX_PIN));
@@ -1145,9 +1145,9 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("speed")) action = RA_SPEED;
     else if (param == F("scale")) action = RA_SCALE;
     else if (param == F("effect")) action = RA_EFFECT;
-    else if (param == F("move_next")) action = RA_MV_NEXT;
-    else if (param == F("move_prev")) action = RA_MV_PREV;
-    else if (param == F("move_rnd")) action = RA_MV_RAND;
+    else if (param == F("move_next")) action = RA_EFF_NEXT;
+    else if (param == F("move_prev")) action = RA_EFF_PREV;
+    else if (param == F("move_rnd")) action = RA_EFF_RAND;
     else if (param == F("reboot")) action = RA_REBOOT;
 #ifdef OTA
     else if (param == F("OTA")) action = RA_OTA;
@@ -1157,7 +1157,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("aux_off"))  action = RA_AUX_OFF;
     else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
-    remote_action(action, value);
+    remote_action(action, value.c_str());
 }
 
 // обработка эвентов лампы
@@ -1184,7 +1184,7 @@ void event_worker(const EVENT *event){
 
         String tmpS(event->message);
         tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
-        StaticJsonDocument<128> doc;
+        StaticJsonDocument<256> doc;
         deserializeJson(doc, tmpS);
         JsonArray arr = doc.as<JsonArray>();
         for (size_t i = 0; i < arr.size(); i++) {

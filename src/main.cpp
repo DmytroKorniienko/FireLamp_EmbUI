@@ -71,7 +71,6 @@ void setup() {
 
     myLamp.effects.loadConfig();
     myLamp.events.loadConfig();
-    myLamp.updateParm(updateParm);
 
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
 
@@ -80,7 +79,7 @@ void setup() {
 #endif
 
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-    updateParm(); // вызвать обновление параметров UI (синхронизация с конфигом эффектов и кнопкой)
+    sync_parameters();
 
     if (myLamp.timeProcessor.getIsSyncOnline()) {
       myLamp.refreshTimeManual(); // принудительное обновление времени

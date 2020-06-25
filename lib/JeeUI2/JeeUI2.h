@@ -126,7 +126,6 @@ class jeeui2
 
   private:
     void wifi_connect();
-    void button_handle();
     void led_handle();
     void nonWifiVar();
     void led_on();

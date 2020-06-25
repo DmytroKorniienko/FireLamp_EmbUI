@@ -331,16 +331,14 @@ void jeeui2::begin() {
     server.begin();
 }
 
-void jeeui2::led(uint8_t pin, bool invert)
-{
+void jeeui2::led(uint8_t pin, bool invert){
     if (pin == -1) return;
     LED_PIN = pin;
     LED_INVERT = invert;
     pinMode(LED_PIN, OUTPUT);
 }
 
-void jeeui2::handle()
-{
+void jeeui2::handle(){
     if (__shouldReboot) {
         Serial.println(F("Rebooting..."));
         delay(100);
@@ -359,7 +357,6 @@ void jeeui2::handle()
 
     btn();
     led_handle();
-    button_handle();
     autosave();
     ws.cleanupClients(4);
 

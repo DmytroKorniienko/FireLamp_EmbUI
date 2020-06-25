@@ -66,20 +66,3 @@ void jeeui2::led_inv(){
     if (LED_PIN == -1) return;
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
 }
-
-void jeeui2::button_handle(){
-    // section_handle_t *section = nullptr;
-    // for (int i = 0; i < section_handle.size(); i++) {
-    //     if (section_handle[i]->name == btnui) {
-    //         section = section_handle[i];
-    //         break;
-    //     }
-    // };
-
-    // if(section){
-    //     LOG(print, F("HANDLED: "));
-    //     LOG(printf_P, PSTR("BTN (%s) RAM: %d\n"), btnui, ESP.getFreeHeap());
-
-    //     section->callback(nullptr, nullptr);
-    // }
-}
