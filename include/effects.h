@@ -203,7 +203,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_ZEBRA, T_ZEBRA, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_FOREST, T_FOREST, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_OCEAN, T_OCEAN, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_BBALS, T_BBALS, stubRoutine, nullptr}, 
+    {true, true, 127, 127, 127, EFF_BBALS, T_BBALS, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SINUSOID3, T_SINUSOID3, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_METABALLS, T_METABALLS, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SPIRO, T_SPIRO, stubRoutine, nullptr},
@@ -227,9 +227,9 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_CUBE2, T_CUBE2, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, stubRoutine, ((char *)_R255)},  // очень хреновое приведение типов, но дальше это разрулим :)
     {true, true, 127, 127, 127, EFF_TIME, T_TIME, stubRoutine, nullptr}
-#ifdef MIC_EFFECTS
-    ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
-#endif
+// #ifdef MIC_EFFECTS
+//     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
+// #endif
 };
 
 class SHARED_MEM {
@@ -246,7 +246,7 @@ public:
 //! Basic Effect Calc class
 /**
  * Базовый класс эффекта с основными переменными и методами общими для всех эффектов
- * методы переопределяются каждым эффектом по необходимости 
+ * методы переопределяются каждым эффектом по необходимости
 */
 class EffectCalc {
 private:
@@ -260,8 +260,7 @@ public:
     byte scale;
     uint8_t rval;               /**< загадочная R */
     uint8_t palettescale;       /**< странная переменная шкалы внутри палитры */
-    //uint8_t mmf=0;            /**< резерв для микрофона */
-    //uint8_t mmp=0;
+
 
     /** флаг, включает использование палитр в эффекте.
      *  влияет на:
@@ -287,13 +286,13 @@ public:
      * @param _brt - яркость, прилетающая из "настроек" эффекта, эффект может менять свою яркость позже независимо от указок "сверху"
      * @param _spd - скорость, прилетающая из "настроек" эффекта, эффект может менять свою скорость позже независимо от указок "сверху"
      * @param _scl - шкала, прилетающая из "настроек" эффекта, эффект может менять свою шкалу позже независимо от указок "сверху"
-     *  
+     *
     */
     void init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl);
 
     /**
      * load метод, по умолчанию пустой. Вызывается автоматом из init(), в дочернем классе можно заменять на процедуру первой загрузки эффекта (вместо того что выполняется под флагом load)
-     * 
+     *
     */
     virtual void load();
 
@@ -305,7 +304,7 @@ public:
      * @param opt - опция, пока не используется, вероятно нужно заменить на какую-нибудь расширяемую структуру
     */
     virtual bool run(CRGB* ledarr, const char *opt=nullptr);
- 
+
     /**
      * drynrun метод, всеми любимая затычка-проверка на "пустой" вызов
      * возвращает false если еще не прошло достаточно времени с EFFECTS_RUN_TIMER
@@ -343,7 +342,7 @@ public:
     virtual void setscl(const byte _scl);
 
     /**
-     * setrval - установка переменной R 
+     * setrval - установка переменной R
      */
     virtual void setrval(const byte _R);
 
@@ -644,10 +643,10 @@ class EffectSpiro : public EffectCalc {
 private:
   const uint8_t spiroradiusx = WIDTH / 4;
   const uint8_t spiroradiusy = HEIGHT / 4;
-  
+
   const uint8_t spirocenterX = WIDTH / 2;
   const uint8_t spirocenterY = HEIGHT / 2;
-  
+
   const uint8_t spirominx = spirocenterX - spiroradiusx;
   const uint8_t spiromaxx = spirocenterX + spiroradiusx + 1;
   const uint8_t spirominy = spirocenterY - spiroradiusy;
@@ -838,7 +837,7 @@ private:
   ////ringHueShift[ringsCount]; // шаг градиета оттенка внутри кольца -8 - +8 случайное число
   ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
-  uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3            
+  uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
 
   void ringsSet();
   bool ringsRoutine(CRGB *leds, const char *param);
@@ -903,7 +902,7 @@ private:
 
     /**
      * создает и инициализирует экземпляр класса выбранного эффекта
-     * 
+     *
     */
     void workerset(EFF_ENUM effect);
 
@@ -920,13 +919,17 @@ public:
     std::unique_ptr<EffectCalc> worker;           ///< указатель-класс обработчик текущего эффекта
 
     void loadConfig(const char *cfg = nullptr) {
-        if(LittleFS.begin()){
+        if (LittleFS.begin()) {
             File configFile;
-            if(cfg == nullptr)
+            if (cfg == nullptr) {
+                LOG(println, F("Load default effects config file"));
                 configFile = LittleFS.open(F("/eff_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
-            else
+            } else {
+                LOG(printf_P, PSTR("Load %s effects config file\n"), cfg);
                 configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
+            }
             String cfg_str = configFile.readString();
+            configFile.close();
 
             if (cfg_str == F("")){
                 LOG(println, F("Failed to open effects config file"));
@@ -965,22 +968,20 @@ public:
                 }
                 LOG(printf_P, PSTR("(%d - %d - %d - %d - %d - %d - %s)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected, eff->param!=nullptr?FPSTR(eff->param):FPSTR(F("")));
             }
-            // JsonArray::iterator it;
-            // for (it=arr.begin(); it!=arr.end(); ++it) {
-            //     const JsonObject& elem = *it;
-            // }
-            LOG(println, F("Effects config loaded"));
             doc.clear();
         }
     }
 
     void saveConfig(const char *cfg = nullptr) {
-        if(LittleFS.begin()){
+        if (LittleFS.begin()) {
             File configFile;
-            if(cfg == nullptr)
+            if (cfg == nullptr) {
+                LOG(println, F("Save default effects config file"));
                 configFile = LittleFS.open(F("/eff_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
-            else
+            } else {
+                LOG(printf_P, PSTR("Save %s effects config file\n"), cfg);
                 configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
+            }
             EFFECT *cur_eff;
 
             configFile.print("[");
@@ -992,11 +993,10 @@ public:
                 LOG(printf_P, PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
                     (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
                     ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
-            }     
+            }
             configFile.print("]");
             configFile.flush();
             configFile.close();
-            LOG(println, F("\nSave effects config"));
         }
     }
 
@@ -1020,7 +1020,7 @@ public:
     byte getModeAmount() {return MODE_AMOUNT;}
     const char *getName() {return effects[arrIdx].eff_name;}
     const EFF_ENUM getEn() {return effects[arrIdx].eff_nb;}
-    
+
     void moveNext() // следующий эффект, кроме canBeSelected==false
     {
         unsigned int i;
@@ -1045,7 +1045,7 @@ public:
     }
 
     void movePrev() // предыдущий эффект, кроме canBeSelected==false
-    { 
+    {
         int i;
 
         for(i=arrIdx-1; i>0; i--){
@@ -1080,7 +1080,7 @@ public:
     void moveBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
         arrIdx=(arrIdx+cnt)%MODE_AMOUNT; // смещаемся на нужное число шагов, но не больше лимита эффектов
         unsigned int tmpArrIdx = arrIdx; // запомним позицию
-        
+
         while(!effects[arrIdx].isFavorite){ // если не избранный, то будем перебирать по +1
             arrIdx++;
             if(arrIdx==MODE_AMOUNT)
@@ -1135,6 +1135,13 @@ public:
             delete [] effects[arrIdx].param;
         effects[arrIdx].param = new char[strlen(str)+1];
         strcpy(effects[arrIdx].param, str);
+    }
+
+    void updateParam(EFFECT *eff, const char *str) {
+        if (eff->param != nullptr && eff->param != _R255) // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
+            delete [] eff->param;
+        eff->param = new char[strlen(str)+1];
+        strcpy(eff->param, str);
     }
 
     String getValue(const char *src, const _PTR type){

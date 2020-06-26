@@ -19,8 +19,9 @@
 		<div id="debug"></div>
 
 	</div>
+
 	<script type="text/html" id="tmpl_menu">
-		<div class="pure-menu"><a class="pure-menu-heading" href="#">{{app}}</a>
+		<div class="pure-menu"><div class="pure-menu-heading">{{app}}</div>
 			<ul class="pure-menu-list">
 			{{#menu}}
 				<li class="pure-menu-item {{#if value == _this.menu_id}}menu-item-divided pure-menu-selected{{/if}}" {{onevent "click", "on_page", value}}>
@@ -28,60 +29,110 @@
 				</li>
 			{{/menu}}
 			</ul>
-			<br><br>
-			<p>&nbsp&nbspID:&nbsp<b>{{mc}}</b><p>
+		</div>
+		<div class="left-block">
+			<div>
+				<span class="menu-title">Time:</span><span id="pTime" class="menu-value">{{value.pTime}}</span>
+			</div>
+			<div>
+				<span class="menu-title">Memory:</span><span id="pMem" class="menu-value">{{value.pMem}}</span>
+			</div>
+			<div>
+				<span class="menu-title">ID:</span><span class="menu-value">{{mc}}</span>
+			</div>
 		</div>
 	</script>
-	<script type="text/html" id="tmpl_main">
-		<div id="{{section}}" style="display:{{#if selected}}block{{/if}}{{#if !selected}}none{{/if}};">
-			<div class="header"><h1>"{{menu}}"</h1></div>
-			<div class="content">
-				<form class="pure-form pure-form-stacked">
-				<fieldset>
+
+	<script type="text/html" id="tmpl_section_main">
+		<section id="{{section}}">
+			<div class="header"><h1>{{label}}</h1></div>
+			<div class="content pure-form pure-form-stacked">
 				<div class="pure-g">
 				{{#block}}
 					{{>tmpl_content _this}}
 				{{/block}}
 				</div>
-				</fieldset>
-				</form>
 			</div>
-		</div>
+		</section>
 	</script>
+
+	<script type="text/html" id="tmpl_section">
+		<section id="{{section}}">
+			{{#if hidden}}<div class="pure-u-5-5 pure-button mr" {{onevent "click", "on_showhide", "block_"+section}} >{{label}}</div>{{/if}}
+			{{#if !hidden && label}}<div class="header-block">{{label}}</div>{{/if}}
+			<div id="block_{{section}}" class="pure-g {{#if label}}nested{{/if}}" {{#if hidden}}style="display:none;"{{/if}}>
+			{{#block}}
+				{{>tmpl_content _this}}
+			{{/block}}
+			</div>
+		</section>
+	</script>
+
 	<script type="text/html" id="tmpl_content">
-		<div class="pure-u-1">
+		<div class="pure-u-1{{#if _this.line}}-{{_this.block.length}}{{/if}}" {{#if html == "hidden"}}style="display:hidden;"{{/if}}>
+		{{#if html == "hidden"}}
+			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
+		{{/if}}
+		{{#if html == "const"}}
+			<div class="pure-u-5-5 pure-button mr">{{label}}</div>
+			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
+		{{/if}}
 		{{#if html == "button"}}
-			<br><input type="button" id="{{id}}" style="background-color: {{color}}" value="{{label}}" class="pure-u-5-5 pure-button pure-button-primary" {{onevent "click", "on_change", 'BTN_'+id, label, _index}}>
+			<div id="{{id}}" style="background-color: {{color}}" class="pure-u-5-5 pure-button pure-button-primary mr"
+				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}
+				{{#if2 !submit}}{{onevent "click", "on_change", id}}{{/if2}}
+			>
+				{{label}}
+			</div>
 		{{/if}}
 		{{#if html == "textarea"}}
-			<textarea class="pure-u-24-24" maxlength="255" id="{{id}}" {{onevent "change", "on_change", id, label, _index}}></textarea>
+			<textarea class="pure-u-24-24" maxlength="255" id="{{id}}" name="{{id}}"
+				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
+			></textarea>
+		{{/if}}
+		{{#if html == "file"}}
+			<form method="POST" action="/{{action}}" enctype="multipart/form-data" class="pure-form pure-g mr">
+				<input type="file" name="{{name}}" class="pure-u-2-3">
+				<input type="submit" value="{{label}}" class="pure-u-1-3 pure-button pure-button-primary">
+			</form>
+		{{/if}}
+		{{#if html == "spacer"}}
+			<h2 class="spacer">{{label}}</h2>
 		{{/if}}
 		{{#if html == "select"}}
 			<label id="{{id}}-val">{{label}}</label>
-			<select id="{{id}}" name="{{name}}" value="{{value}}" class="pure-u-5-5" {{onevent "change", "on_change", id, label, _index}}>
+			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-5-5"
+				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
+			>
 			{{#block}}
 				<option value="{{value}}" {{#if2 value == _this.value}}selected{{/if2}}>{{label}}</option>
 			{{/block}}
 			</select>
 		{{/if}}
 		{{#if type == "checkbox"}}
-			<br><div style=\"height: 40px;\">
-				<input type="checkbox" id="{{id}}" class='checkbox' {{onevent "change", "on_change", id, label, _index}} {{#if2 value == 'true'}}checked{{/if2}}>
-					<label class="switch" for="{{id}}">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp{{label}}</label>
+			<div style="height: 40px;">
+				<input type="checkbox" id="{{id}}" name="{{id}}" class="checkbox" {{#if2 value == "true"}}checked{{/if2}} {{#if2 directly}}{{onevent "click", "on_change", id}}{{/if2}}>
+					<label class="switch mr" for="{{id}}"><span class="checkbox-label">{{label}}</span></label>
 				</input>
 			</div>
 		{{/if}}
 		{{#if html == "input" && type != "checkbox"}}
-			<label id="{{id}}-val">{{label}}{{#if2 type == 'range' || type == 'color'}}: {{value}}{{/if2}}</label>
-			<input type="{{type}}" id="{{id}}" name="{{name}}" class="pure-u-5-5"
-				min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}" placeholder="{{placeholder}}"
+			<label id="{{id}}-val">{{label}}{{#if2 type == "range" || type == "color"}}: {{value}}{{/if2}}</label>
+			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-5-5"
+				{{#if2 min}}min="{{min}}"{{/if2}}
+				{{#if2 max}}max="{{max}}"{{/if2}}
+				{{#if2 step}}step="{{step}}"{{/if2}}
+				{{#if2 value}}value="{{value}}"{{/if2}}
+				{{#if2 placeholder}}placeholder="{{placeholder}}"{{/if2}}
 				{{#if2 type == "color"}}style="height: 50px"{{/if2}}
-				{{onevent "change", "on_change", id}}
+				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 				{{onevent "input", "on_input", id, label}}
 			>
 		{{/if}}
+		{{#if html != "select" && block}}{{>tmpl_section _this}}{{/if}}
 		</div>
 	</script>
+
 	<script src="js/all.js"></script>
 </body>
 </html>

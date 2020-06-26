@@ -1,4 +1,6 @@
 #include "JeeUI2.h"
+#include "interface.h"
+#include "ui.h"
 
 #ifdef LAMP_DEBUG
 #include "MemoryInfo.h"
@@ -6,169 +8,154 @@
 
 bool __shouldReboot; // OTA update reboot flag
 
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
-
 extern jeeui2 jee;
+
+static const char PGmimetxt[] PROGMEM  = "text/plain";
+static const char PGmimecss[] PROGMEM  = "text/css";
+static const char PGmimehtml[] PROGMEM = "text/html; charset=utf-8";
+static const char PGmimejson[] PROGMEM = "application/json";
+static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
+static const char PGhdrcachec[] PROGMEM = "Cache-Control";
+static const char PGgzip[] PROGMEM = "gzip";
+static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";    // 10 days cache
+static const char PGpmaxage[] PROGMEM = "public, max-age=864000";    // 10 days cache
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
-       if(jee.dbg) Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-       jee.send(client);
+        LOG(printf, "ws[%s][%u] connect MEM: %u\n", server->url(), client->id(), ESP.getFreeHeap());
+
+        Interface *interf = new Interface(&jee, client);
+        section_main_frame(interf, nullptr);
+        delete interf;
+
     } else
     if(type == WS_EVT_DISCONNECT){
-        if(jee.dbg) Serial.printf("ws[%s][%u] disconnect\n", server->url(), client->id());
+        LOG(printf, "ws[%s][%u] disconnect\n", server->url(), client->id());
     } else
     if(type == WS_EVT_ERROR){
-        if(jee.dbg) Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        LOG(printf, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
     } else
     if(type == WS_EVT_PONG){
-        if(jee.dbg) Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        LOG(printf, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
     } else
     if(type == WS_EVT_DATA){
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
         if(info->final && info->index == 0 && info->len == len){
-            DynamicJsonDocument doc(200);
+            DynamicJsonDocument doc(1024);
             deserializeJson(doc, data, info->len);
 
             const char *pkg = doc["pkg"];
             if (!pkg) return;
             if (!strcmp(pkg, "post")) {
-                frameSend *prev = jee.send_hndl;
-                jee.send_hndl = new frameSendAll(&ws);
-                jee.json_frame_value();
-
-                JsonArray arr = doc["data"];
-                for (size_t i=0; i < arr.size(); i++) {
-                    JsonObject item = arr[i];
-                    jee.post(item["key"], item["val"]);
-                    jee.value(item["key"], item["val"]);
-                }
-
-                jee.json_frame_flush();
-                delete jee.send_hndl;
-                jee.send_hndl = prev;
+                JsonObject data = doc["data"];
+                jee.post(data);
             }
         }
   }
 }
 
-void jeeui2::post(const String &key, const String &value){
-    if (!key || !value) return;
-    if (key.indexOf(F("BTN_")) != -1){
-        strncpy(btnui, key. substring(4, key.length()).c_str(), sizeof(btnui)-1);
-        if(dbg) Serial.printf_P(PSTR("BUTTON PRESS: %s\n"), btnui);
-        if(strcmp_P(btnui, PSTR("_sysReset")) == 0){
-            var(F("wifi"), F("STA"));
-            save();
-            ESP.restart();
+void jeeui2::post(JsonObject data){
+    section_handle_t *section = nullptr;
+    int count = 0;
+    Interface *interf = new Interface(this, &ws, 512);
+    interf->json_frame_value();
+
+    for (JsonPair kv : data) {
+        String key = kv.key().c_str(), val = kv.value();
+        if (val != F("null")) {
+            interf->value(key, val);
+            ++count;
         }
+
+        const char *kname = key.c_str();
+        for (int i = 0; !section && i < section_handle.size(); i++) {
+            const char *sname = section_handle[i]->name.c_str();
+            const char *mall = strchr(sname, '*');
+            unsigned len = mall? mall - sname - 1 : strlen(kname);
+            if (strncmp(sname, kname, len) == 0) {
+                section = section_handle[i];
+            }
+        };
+    }
+
+    if (count) {
+        interf->json_frame_flush();
     } else {
-        var(String(key), String(value));
-        as();
+        interf->json_frame_clear();
+    }
+    delete interf;
+
+    if (section) {
+        LOG(printf_P, PSTR("\nPOST SECTION: %s\n\n"), section->name.c_str());
+        Interface *interf = new Interface(this, &ws);
+        section->callback(interf, &data);
+        delete interf;
     }
 }
 
-void jeeui2::send(AsyncWebSocket *server){
-    frameSend *prev = send_hndl;
-    send_hndl = new frameSendAll(server);
-
-    fcallback_ui();
-
-    delete send_hndl;
-    send_hndl = prev;
-}
-
-void jeeui2::send(AsyncWebSocketClient *client){
-    frameSend *prev = send_hndl;
-    send_hndl = new frameSendClient(client);
-
-    fcallback_ui();
-
-    delete send_hndl;
-    send_hndl = prev;
-}
-
-void jeeui2::send(AsyncWebServerRequest *request){
-    frameSend *prev = send_hndl;
-    send_hndl = new frameSendHttp(request);
-
-    fcallback_ui();
-    send_hndl->flush();
-
-    delete send_hndl;
-    send_hndl = prev;
-}
-
-void jeeui2::refresh(){
+void jeeui2::send_pub(){
     if (!ws.count()) return;
-    send(&ws);
+    Interface *interf = new Interface(this, &ws, 512);
+    pubCallback(interf);
+    delete interf;
 }
 
-void jeeui2::var(const String &key, const String &value, bool pub)
+void jeeui2::var(const String &key, const String &value, bool force)
 {
-    if(pub_transport.containsKey(key) || pub){
-        String tmp;
-        pub_transport[key] = value;
-        serializeJson(pub_transport, tmp);
-        deserializeJson(pub_transport, tmp);
-        //if(dbg)Serial.printf_P(PSTR("serializeJson: [%s]: %s\n"), key.c_str(), pub_transport.as<String>().c_str());
-        if(pub) return;
+    // JsonObject of N element	8 + 16 * N
+    unsigned len = key.length() + value.length() + 16;
+    size_t cap = cfg.capacity(), mem = cfg.memoryUsage();
+
+    LOG(printf_P, PSTR("WRITE: key (%s) value (%s) "), key.c_str(), value.substring(0, 15).c_str());
+    if (!force && !cfg.containsKey(key)) {
+        LOG(printf_P, PSTR("ERROR: KEY (%s) NOT INIT !!!!!!!!\n"), key.c_str());
+        return;
     }
-    if(pub_enable){
-        JsonVariant pub_key = pub_transport[key];
-        if (!pub_key.isNull()) {
-            pub_transport[key] = value;
-            //if(dbg)Serial.printf_P(PSTR("Pub: [%s - %s]\n"), key.c_str(), value.c_str());
-            //pub_mqtt(key, value);
-            publish(String(F("jee/pub/")) + key, value, true);
-            return;
-        }
+
+    if (cap - mem < len) {
+        cfg.garbageCollect();
+        LOG(printf_P, PSTR("garbage cfg %u(%u) of %u\n"), mem, cfg.memoryUsage(), cap);
+
     }
-    if(dbg)Serial.print(F("WRITE: "));
-    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
+    if (cap - mem < len) {
+        LOG(printf_P, PSTR("ERROR: KEY (%s) NOT WRITE !!!!!!!!\n"), key.c_str());
+        return;
+    }
+
     cfg[key] = value;
-    if(rc)publish(String(F("jee/set/")) + key, value, true);
+    isNeedSave = true;
+
+    LOG(printf_P, PSTR("FREE: %u\n"), cap - cfg.memoryUsage());
+
+    if (mqtt_remotecontrol) {
+        publish(String(F("jee/set/")) + key, value, true);
+    }
 }
 
 void jeeui2::var_create(const String &key, const String &value)
 {
     if(cfg[key].isNull()){
         cfg[key] = value;
-        if(dbg)Serial.print(F("CREATE: "));
-        if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
+        LOG(print, F("CREATE: "));
+        LOG(printf_P, PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.substring(0, 15).c_str(), ESP.getFreeHeap());
     }
 }
 
-void jeeui2::btn_create(const String &btn, buttonCallback response)
+void jeeui2::section_handle_add(const String &name, buttonCallback response)
 {
-    //return;
-    if(!btn_id.containsKey(btn)){
-        JsonArray arr; // добавляем в очередь
-        String tmp;
+    section_handle_t *section = new section_handle_t;
+    section->name = name;
+    section->callback = response;
+    section_handle.add(section);
 
-        if(!btn_id.isNull())
-            arr = btn_id.as<JsonArray>(); // используем имеющийся
-        else
-            arr = btn_id.to<JsonArray>(); // создаем новый
-
-        JsonObject var = arr.createNestedObject();
-        var[F("b")]=btn;
-        var[F("f")]=(unsigned long)response;
-
-        if(dbg)Serial.print(F("REGISTER: "));
-        if(dbg)Serial.printf_P(PSTR("BTN (%s) RAM: %d\n"), btn.c_str(), ESP.getFreeHeap());
-
-        serializeJson(btn_id, tmp); // Тут шаманство, чтобы не ломало JSON
-        deserializeJson(btn_id, tmp);
-    }
+    LOG(printf_P, PSTR("REGISTER: %s\n"), name.c_str());
 }
 
 String jeeui2::param(const String &key)
 {
     String value = cfg[key].as<String>();
-    if(dbg)Serial.print(F("READ: "));
-    if(dbg)Serial.printf_P(PSTR("key (%s) value (%s) RAM: %d\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
+    LOG(print, F("READ: "));
+    LOG(printf_P, PSTR("key (%s) value (%s) MEM: %u\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
     return value;
 }
 
@@ -176,27 +163,25 @@ String jeeui2::deb()
 {
     String cfg_str;
     serializeJson(cfg, cfg_str);
-    deserializeJson(cfg, cfg_str); // сильное колдунство #%@%#@$ (пытаемся починить ломающийся json если долго не было сохранений)
     return cfg_str;
-}
-
-void jeeui2::begin(bool debug) {
-    dbg = debug;
-    nonWifiVar();
-    load();
-    if(dbg)Serial.println(String(F("CONFIG: ")) + deb());
-    begin();
-    if(dbg)Serial.println(String(F("RAM: ")) + String(ESP.getFreeHeap()));
-    if(dbg)Serial.println(String(F("MAC: ")) + mac);
 }
 
 void notFound(AsyncWebServerRequest *request) {
     request->send(404, FPSTR(PGmimetxt), F("Not found"));
 }
 
-void jeeui2::begin() {
+void jeeui2::init(){
+#ifdef LAMP_DEBUG
+    nonWifiVar();
+    load();
+    LOG(println, String(F("CONFIG: ")) + jee.deb());
+#endif
+    ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
     wifi_connect();
+    LOG(println, String(F("MAC: ")) + jee.mac);
+}
 
+void jeeui2::begin(){
     /*use mdns for host name resolution*/
     char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
     if(param(F("ap_ssid")).length()>0)
@@ -219,7 +204,7 @@ void jeeui2::begin() {
 
     // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        jee.send(request);
+        // jee.send(request);
     });
 
     server.on(PSTR("/version"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
@@ -230,33 +215,11 @@ void jeeui2::begin() {
         request->send(200, FPSTR(PGmimetxt), buf.c_str());
     });
 
-    server.on(PSTR("/post"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        uint8_t params = request->params();
-        for (uint8_t i = 0; i < params; i++) {
-            AsyncWebParameter *p = request->getParam(i);
-            post(p->name(), p->value());
-        }
-        request->send(200, FPSTR(PGmimetxt), F("OK"));
-    });
-
-    server.on(PSTR("/pub"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebParameter *p;
-        String value = F("");
-        p = request->getParam(0);
-        JsonVariant pub_key = pub_transport[p->name()];
-        if (!pub_key.isNull()) {
-            value = pub_transport[p->name()].as<String>();
-            if(dbg)Serial.printf_P(PSTR("pub: [%s - %s - %s]\n"),p->name().c_str(), p->value().c_str(), value.c_str());
-        }
-        request->send(200, FPSTR(PGmimetxt), pub_transport[p->name()].isNull()?p->value():pub_transport[p->name()].as<String>()); //p->value());
-    });
-
     server.on(PSTR("/cmd"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        AsyncWebParameter *p;
-        p = request->getParam(0);
-        strncpy(httpParam,p->name().c_str(),sizeof(httpParam)-1);
-        strncpy(httpValue,p->value().c_str(),sizeof(httpValue)-1);
-        _isHttpCmd = true;
+        AsyncWebParameter *prm = request->getParam(0);
+        if (prm) {
+            httpCallback(prm->name(), prm->value());
+        }
         request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
@@ -280,18 +243,12 @@ void jeeui2::begin() {
         request->send(LittleFS, F("/events_config.json"), String(), true);
     });
 
-    // server all files from LittleFS root
-    server.serveStatic("/", LittleFS, "/")
-        .setDefaultFile("index.html")
-        .setCacheControl("max-age=864000");
-
     server.on(PSTR("/restart"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
-        request->redirect("/heap");
-        delay(1000);
-        ESP.restart();
+        __shouldReboot = true;
+        request->send(200, FPSTR(PGmimetxt), F("Ok"));
     });
 
-    server.on(PSTR("/heap"), HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on(PSTR("/heap"), HTTP_GET, [this](AsyncWebServerRequest *request){
         String out = "Heap: "+String(ESP.getFreeHeap());
 #ifdef LAMP_DEBUG
         out += "\nFrac: " + String(getFragmentation());
@@ -337,60 +294,53 @@ void jeeui2::begin() {
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
     //Do not request more often than 3-5 seconds
     server.on(PSTR("/scan"), HTTP_GET, [](AsyncWebServerRequest *request){
-    String json = F("[");
-    int n = WiFi.scanComplete();
-    if(n == -2){
-        WiFi.scanNetworks(true);
-    } else if(n){
-        for (int i = 0; i < n; ++i){
-        if(i) json += F(",");
-        json += F("{");
-        json += String(F("\"rssi\":"))+String(WiFi.RSSI(i));
-        json += String(F(",\"ssid\":\""))+WiFi.SSID(i)+F("\"");
-        json += String(F(",\"bssid\":\""))+WiFi.BSSIDstr(i)+F("\"");
-        json += String(F(",\"channel\":"))+String(WiFi.channel(i));
-        json += String(F(",\"secure\":"))+String(WiFi.encryptionType(i));
+        String json = F("[");
+        int n = WiFi.scanComplete();
+        if(n == -2){
+            WiFi.scanNetworks(true);
+        } else if(n){
+            for (int i = 0; i < n; ++i){
+            if(i) json += F(",");
+            json += F("{");
+            json += String(F("\"rssi\":"))+String(WiFi.RSSI(i));
+            json += String(F(",\"ssid\":\""))+WiFi.SSID(i)+F("\"");
+            json += String(F(",\"bssid\":\""))+WiFi.BSSIDstr(i)+F("\"");
+            json += String(F(",\"channel\":"))+String(WiFi.channel(i));
+            json += String(F(",\"secure\":"))+String(WiFi.encryptionType(i));
 #ifdef ESP8266
-        json += String(F(",\"hidden\":"))+String(WiFi.isHidden(i)?F("true"):F("false")); // что-то сломали и в esp32 больше не работает...
+            json += String(F(",\"hidden\":"))+String(WiFi.isHidden(i)?F("true"):F("false")); // что-то сломали и в esp32 больше не работает...
 #endif
-        json += F("}");
+            json += F("}");
+            }
+            WiFi.scanDelete();
+            if(WiFi.scanComplete() == -2){
+            WiFi.scanNetworks(true);
+            }
         }
-        WiFi.scanDelete();
-        if(WiFi.scanComplete() == -2){
-        WiFi.scanNetworks(true);
-        }
-    }
-    json += F("]");
-    request->send(200, FPSTR(PGmimejson), json);
-    json = String();
+        json += F("]");
+        request->send(200, FPSTR(PGmimejson), json);
+        json = String();
     });
+
+    // server all files from LittleFS root
+    server.serveStatic("/", LittleFS, "/")
+        .setDefaultFile("index.html")
+        .setCacheControl("max-age=864000");
 
     server.onNotFound(notFound);
 
     server.begin();
-    //fcallback_ui();    //WHY???
-    //fcallback_upd();
-    mqtt_update();
 }
 
-void jeeui2::led(uint8_t pin, bool invert)
-{
+void jeeui2::led(uint8_t pin, bool invert){
     if (pin == -1) return;
     LED_PIN = pin;
     LED_INVERT = invert;
     pinMode(LED_PIN, OUTPUT);
 }
 
-void jeeui2::handle()
-{
-    if(_isHttpCmd){
-        if(fcallback_http != nullptr)
-            fcallback_http(httpParam, httpValue);
-        _isHttpCmd = false;
-        *httpParam='\0'; *httpValue='\0';
-    }
-
-    if(__shouldReboot){
+void jeeui2::handle(){
+    if (__shouldReboot) {
         Serial.println(F("Rebooting..."));
         delay(100);
         ESP.restart();
@@ -401,25 +351,30 @@ void jeeui2::handle()
     _connected();
     mqtt_handle();
     udpLoop();
-    static unsigned long timer;
-    if (timer + 300U > millis())
-        return;
+
+    static unsigned long timer = 0;
+    if (timer + 300U > millis()) return;
     timer = millis();
+
     btn();
     led_handle();
-    button_handle();
-    pre_autosave();
     autosave();
     ws.cleanupClients(4);
+
+    //публикация изменяющихся значений
+    static unsigned long timer_pub = 0;
+    if (timer_pub + 10*1000 > millis()) return;
+    timer_pub = millis();
+    send_pub();
 }
 
 void jeeui2::nonWifiVar(){
     getAPmac();
-    if(param(F("wifi")) == F("null")) var(F("wifi"), F("AP"));
-    if(param(F("ssid")) == F("null")) var(F("ssid"), F("JeeUI2"));
-    if(param(F("pass")) == F("null")) var(F("pass"), "");
-    if(param(F("ap_ssid")) == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc);
-    if(param(F("ap_pass")) == F("null")) var(F("ap_pass"), "");
+    if(param(F("wifi")) == F("null")) var(F("wifi"), F("AP"), true);
+    if(param(F("ssid")) == F("null")) var(F("ssid"), F("JeeUI2"), true);
+    if(param(F("pass")) == F("null")) var(F("pass"), "", true);
+    if(param(F("ap_ssid")) == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc, true);
+    if(param(F("ap_pass")) == F("null")) var(F("ap_pass"), "", true);
 }
 
 void jeeui2::getAPmac(){

@@ -38,6 +38,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 #include "main.h"
 #include "misc.h"
+#include "interface.h"
 
 extern LAMP myLamp; // Объект лампы
 
@@ -104,7 +105,7 @@ void LAMP::lamp_init()
           xStep = 1;
           xCol = 1;
         }
-      
+
         yStep = HEIGHT / 4;
         yCol = 4;
         if(yStep<2) {
@@ -191,29 +192,24 @@ void LAMP::buttonTick()
 
   if (!ONflag) { // Обработка из выключенного состояния
     if (touch.isDouble()) { // Демо-режим, с переключением каждые 30 секунд для двойного клика в выключенном состоянии
-      startDemoMode();
+      remote_action(RA::RA_DEMO, nullptr);
       return;
     }
-    
+
     if (touch.isHolded()) {
       LOG(printf_P, PSTR("Удержание кнопки из выключенного состояния\n"));
       numHold = 1;
       int clicks = touch.getHoldClicks();
-      if(!clicks) {
+      if (!clicks) {
         // Включаем белую лампу в полную яркость
         brightDirection = 1;
         mode = MODE_WHITELAMP;
-        effects.moveBy(EFF_WHITE_COLOR);
-        setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
-        setBrightness(getNormalizedLampBrightness(), isFaderON, false);
-      }
-      if(clicks==1){
+        switcheffect(SW_WHITE_HI);
+      } else {
         // Включаем белую лампу в минимальную яркость
         brightDirection = 0;
         mode = MODE_WHITELAMP;
-        effects.moveBy(EFF_WHITE_COLOR);
-        setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
-        setBrightness(getNormalizedLampBrightness(), false, false);   // оставляем для включения с кнопки c минимальной яркости, тут так задумано, в обход фейдера :)
+        switcheffect(SW_WHITE_LO);
       }
       LOG(printf_P, PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
 
@@ -223,11 +219,9 @@ void LAMP::buttonTick()
       tmNumHoldTimer.reset();
       tmChangeDirectionTimer.reset();
 
-      changePower(true);
-      if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
       return;
     }
-  } 
+  }
 
   // кнопка только начала удерживаться
   if (ONflag && (touch.isHolded())){
@@ -257,24 +251,23 @@ void LAMP::buttonTick()
   }
 
   // кнопка нажата и удерживается
-  if (ONflag && touch.isStep())
-  {
-    if(!isFirstHoldingPress && (((getLampBrightness() == BRIGHTNESS || getLampBrightness() <= 1) && numHold == 1)
-    || ((effects.getSpeed() == 255 || effects.getSpeed() <= 1) && numHold == 2)
-    || ((effects.getScale() == 255 || effects.getScale() <= 1) && numHold == 3))){
-      if(!setDirectionTimeout){
+  if (ONflag && touch.isStep()) {
+    if (!isFirstHoldingPress && (((getLampBrightness() == BRIGHTNESS || getLampBrightness() <= 1) && numHold == 1)
+      || ((effects.getSpeed() == 255 || effects.getSpeed() <= 1) && numHold == 2)
+      || ((effects.getScale() == 255 || effects.getScale() <= 1) && numHold == 3))
+    ){
+      if (!setDirectionTimeout) {
         LOG(printf_P, PSTR("Граничное значение! numHold: %d brightness: %d speed: %d scale: %d\n"), numHold,getLampBrightness(), effects.getSpeed(), effects.getScale());
         tmChangeDirectionTimer.reset(); // пауза на смену направления
         setDirectionTimeout = true;
-      }
-      else {
+      } else {
         changeDirection(numHold);
       }
     }
 
     // Для второго входа, сбрасываем флаг
     isFirstHoldingPress = false;
-    
+
     debugPrint(); // отладка
     if (numHold != 0) {
       tmNumHoldTimer.reset();
@@ -287,139 +280,82 @@ void LAMP::buttonTick()
          newval = constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255);
          // не мелькаем яркостью там где не надо
          if (getNormalizedLampBrightness() != newval) {
-           setLampBrightness(newval);
-           setBrightness(getNormalizedLampBrightness(), false); // используем общий метод, но без эффекта фейда
+           remote_action(RA::RA_BRIGHT_NF, String(newval).c_str());
          }
          break;
 
       case 2:
-        effects.setSpeed(constrain(effects.getSpeed() + (effects.getSpeed() / 25 + 1) * (speedDirection * 2 - 1), 1 , 255));
+        newval = constrain(effects.getSpeed() + (effects.getSpeed() / 25 + 1) * (speedDirection * 2 - 1), 1 , 255);
+        remote_action(RA::RA_SPEED, String(newval).c_str());
         break;
 
       case 3:
-        effects.setScale(constrain(effects.getScale() + (effects.getScale() / 25 + 1) * (scaleDirection * 2 - 1), 1 , 255));
+        newval = constrain(effects.getScale() + (effects.getScale() / 25 + 1) * (scaleDirection * 2 - 1), 1 , 255);
+        remote_action(RA::RA_SCALE, String(newval).c_str());
         break;
     }
     return;
   }
 
-  if (ONflag && !touch.isHold() && startButtonHolding)      // кнопка отпущена после удерживания
-  {
+  if (ONflag && !touch.isHold() && startButtonHolding) {
+    // кнопка отпущена после удерживания
     startButtonHolding = false;
     setDirectionTimeout = false;
 
     changeDirection(numHold);
-
-#ifdef LAMP_DEBUG
-    switch (numHold) {
-      case 1:
-        LOG(printf_P, PSTR("Новое значение яркости: %d\n"), getLampBrightness());
-        break;
-      case 2:
-        LOG(printf_P, PSTR("Новое значение скорости: %d\n"), effects.getSpeed());
-        break;
-      case 3:
-        LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), effects.getScale());
-        break;
-    }
-#endif
-    if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
-
     return;
   }
 
 // ---------------------- обработка одиночных нажатий без удержания ----------------
 
-if(touch.isHold() || !touch.isHolded())
-{
+if (touch.isHold() || !touch.isHolded()) {
     uint8_t clickCount = touch.hasClicks() ? touch.getClicks() : 0U;
 
     // однократное нажатие
-    if (clickCount == 1U)
-    {
+    if (clickCount == 1U) {
       LOG(printf_P, PSTR("Одиночное нажатие, current: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
 
-      if (dawnFlag) // нажатие во время будильника
-      {
+      if (dawnFlag) {
+        // нажатие во время будильника
         manualOff = true;
         dawnFlag = false;
-        setBrightness(getNormalizedLampBrightness(),false, false); // восстановить яркость
+        setBrightness(getNormalizedLampBrightness(), false, false); // восстановить яркость
         mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
-        if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
         return;
       }
 
-      if(!ONflag){    // лампа была выключена
-        numHold = 0;
-        mode = MODE_NORMAL;
-        if(storedEffect!=EFF_NONE) {    // переключение на ПРЕДЫДУЩИЙ эффект только если он был запомнен, иначе используется ТЕКУЩИЙ из конфига
-          switcheffect(SW_SPECIFIC, isFaderON, storedEffect); // ПРЕДЫДУЩИЙ будет запоминаться для случая включения белой лампы
-        } else {
-          changePower(true);
-          switcheffect(SW_SPECIFIC, getFaderFlag(), effects.getEn());
-        }
-      } else {        // лампа была включена
-        storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
-        changePower(false);
+      if (ONflag) {
+        remote_action(RA::RA_OFF, nullptr);
+      } else {
+        remote_action(RA::RA_ON, nullptr);
       }
-
-      LOG(printf_P, PSTR("Лампа %s, lamp mode: %d, current: %d, storedEffect: %d\n"), ONflag ? F("включена") : F("выключена") , mode, effects.getEn(), storedEffect);
     }
 
     // двухкратное нажатие  - следующий эффект
-    if (ONflag && clickCount == 2U)
-    {
-        LOG(printf_P, PSTR("Даблклик, lamp mode: %d, current: %d, storedEffect: %d\n"), mode, effects.getEn(), storedEffect);
-      switcheffect(SW_NEXT, isFaderON);
+    if (ONflag && clickCount == 2U) {
+      remote_action(RA::RA_EFF_NEXT, nullptr);
     }
 
     // трёхкратное нажатие - предыдущий эффект
-    if (ONflag && clickCount == 3U)
-    {
-      switcheffect(SW_PREV, isFaderON);
+    if (ONflag && clickCount == 3U) {
+      remote_action(RA::RA_EFF_PREV, nullptr);
     }
 
+#ifdef OTA
     // четырёхкратное нажатие - запуск сервиса ОТА
-    if (clickCount == 4U)
-    {
-      #ifdef OTA
-      if (otaManager.RequestOtaUpdate())
-      {
-        startOTAUpdate();
-      }
-      #endif
+    if (clickCount == 4U) {
+      remote_action(RA::RA_OTA, nullptr);
+    }
+#endif
+
+    // пятикратное нажатие - вывод IP на лампу
+    if (clickCount == 5U) {
+        remote_action(RA::RA_SEND_IP, nullptr);
     }
 
-    // пятикратное нажатие
-    if (clickCount == 5U)                                     // вывод IP на лампу
-    {
-        if(!isLampOn()){
-            disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
-            setOffAfterText();
-            changePower(true);
-            setBrightness(1,false,false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
-            sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
-        } else {
-            sendStringToLamp(WiFi.localIP().toString().c_str(), CRGB::White);
-        }
-    }
-
-    // шестикратное нажатие
-    if (clickCount == 6U)                                     // вывод текущего времени бегущей строкой
-    {
-        if(!isLampOn()){
-            disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
-            setOffAfterText();
-            changePower(true);
-            setBrightness(1,false,false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
-            sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
-        } else {
-            sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Green); // вывести время на лампу
-        }
-    }
-
-    if(clickCount>0 && !isOffAfterText){ // для случая ВРЕМЕННО включенной лампы не дергаем обновления параметров (вывод IP/времени при выключенной)
-      if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+    // шестикратное нажатие - вывод текущего времени бегущей строкой
+    if (clickCount == 6U) {
+        remote_action(RA::RA_SEND_TIME, nullptr);
     }
   }
 }
@@ -499,7 +435,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
           }
         }
 
-#ifdef PRINT_ALARM_TIME        
+#ifdef PRINT_ALARM_TIME
         EVERY_N_SECONDS(1){
           if(!second(timeProcessor.getUnixTime())){
             CRGB letterColor;
@@ -546,7 +482,7 @@ void LAMP::effectsTick()
   }
 
   if(!isEffectsDisabledUntilText){
-    // посчитать текущий эффект (сохранить кадр в буфер, если ОК) 
+    // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
     if(effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param)) {
 #ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
@@ -584,7 +520,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   if (!_effectsTicker.active() ) return;
 
   FastLED.show();
-// восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов) 
+// восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов)
 #ifdef USELEDBUF
   if (!ledsbuff.empty()) {
     std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
@@ -626,7 +562,7 @@ void LAMP::frameShow(const uint32_t ticktime){
     void LAMP::GaugeShow() {
       byte ind;
       if(!startButtonHolding) return;
-      
+
       switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
 #if (VERTGAUGE==1)
         case 1:
@@ -703,7 +639,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 
 
 LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
-#ifdef ESP_USE_BUTTON    
+#ifdef ESP_USE_BUTTON
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
 #endif
@@ -827,20 +763,20 @@ void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
-  if(storedEffect!=EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
+  if (storedEffect != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
-  } else if(effects.getEn()==EFF_NONE){ // если по каким-то причинам текущий пустой, то выбираем рандомный
-    switcheffect(SW_RND, isFaderON); 
+  } else
+  if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
+    switcheffect(SW_RND, isFaderON);
   }
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
-{        
+{
   mode = MODE_OTA;
   effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
   changePower(true);
-  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
   sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
 }
 #endif
@@ -850,7 +786,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
 
   if(pos)
     offset = (MIRR_V ? 0 + pos : WIDTH - pos);
-  
+
   if (!text || !strlen(text))
   {
     return true;
@@ -936,7 +872,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor,
         if(isInverse)
           drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);    
+          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
           //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }
@@ -961,6 +897,18 @@ uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпре�
   }
 
   return 0;
+}
+
+void LAMP::sendString(const char* text, const CRGB &letterColor){
+  if (!isLampOn()){
+      disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
+      setOffAfterText();
+      changePower(true);
+      setBrightness(1, false, false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
+      sendStringToLamp(text, letterColor);
+  } else {
+      sendStringToLamp(text, letterColor);
+  }
 }
 
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
@@ -988,12 +936,12 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
-      
+
       if(!docArrMessages.isNull())
         arr = docArrMessages.as<JsonArray>(); // используем имеющийся
       else
         arr = docArrMessages.to<JsonArray>(); // создаем новый
-      
+
       JsonObject var = arr.createNestedObject();
       var[F("s")]=text;
       var[F("c")]=((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b;
@@ -1082,7 +1030,7 @@ void LAMP::newYearMessageHandle()
 void LAMP::periodicTimeHandle()
 {
   static bool cancel = false;
-  
+
   time_t tm = timeProcessor.getUnixTime();
   //LOG(println, tm);
   if(second(tm)) {cancel=false; return;}
@@ -1117,7 +1065,7 @@ void LAMP::periodicTimeHandle()
       if(!(tm%60))
         sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
       break;
-    
+
     default:
       break;
   }
@@ -1129,7 +1077,7 @@ void LAMP::periodicTimeHandle()
 void LAMP::micHandler()
 {
   static uint8_t counter=0;
-  
+
   if(mw==nullptr && !isCalibrationRequest){ // обычный режим
     //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
@@ -1224,7 +1172,7 @@ uint8_t LAMP::getBrightness(const bool natural){
 
 /*
  * Set global brightness
- * @param bool natural 
+ * @param bool natural
  */
 void LAMP::brightness(const uint8_t _brt, bool natural){
     uint8_t _cur = natural ? brighten8_video(FastLED.getBrightness()) : FastLED.getBrightness();
@@ -1260,7 +1208,7 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
  * buttonPress - управление планировщиком опроса кнопки
  * оберка нужна т.к. touch.tick() нельзя положить в ICACHE_RAM
  * по наступлению прерывания "нажато" врубаем опрос событий кнопки не реже чем BUTTON_STEP_TIMEOUT/2 чтобы отловить "удержание"
- * 
+ *
  * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
  * чтобы не он забыл зачем живет :)
  */
@@ -1300,6 +1248,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
 
   changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
 
+  bool natural = true;
   switch (action)
   {
   case EFFSWITCH::SW_NEXT :
@@ -1316,7 +1265,16 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
       break;
   case EFFSWITCH::SW_RND :
       effects.moveBy(random(0, effects.getModeAmount()));
-      LOG(printf_P, PSTR("%s DEMO mode ON. Current: %d, storedEffect: %d\n"),(RANDOM_DEMO?PSTR("Random"):PSTR("Seq")) , effects.getEn(), storedEffect);
+      break;
+  case EFFSWITCH::SW_WHITE_HI:
+      effects.moveBy(EFF_WHITE_COLOR);
+      setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
+      natural = false;
+      break;
+  case EFFSWITCH::SW_WHITE_LO:
+      effects.moveBy(EFF_WHITE_COLOR);
+      setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
+      fade = natural = false;
       break;
   default:
       return;
@@ -1325,14 +1283,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
 
   // отрисовать текущий эффект
   effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param);
-
-  if (fade) {
-    fadelight(getNormalizedLampBrightness());
-  } else {
-    setBrightness(getNormalizedLampBrightness());
-  }
-
-  if(updateParmFunc!=nullptr) updateParmFunc(); // обновить параметры UI
+  setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
 
 /*

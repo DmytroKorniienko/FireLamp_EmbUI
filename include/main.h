@@ -53,23 +53,13 @@ class INTRFACE_GLOBALS{
 public:
 #pragma pack(push,1)
  struct { // набор глобальных флагов
-    bool isSetup:1;
-    bool isTmSetup:1;
-    bool isAddSetup:1;
-    bool isEdEvent:1;
     bool isMicCal:1;
     bool pinTransition:1;  // ловим "нажатие" кнопки
     bool isAPMODE:1; // в случае режима AP один раз до нажатия "Выйти из настроек" форсируем переключение на вкладку WiFi, дальше этого не делаем
  };
  #pragma pack(pop)
- uint8_t addSList = 1;
- EFFECT *prevEffect = nullptr;
- int mqtt_int; // интервал отправки данных по MQTT в секундах 
+ int mqtt_int; // интервал отправки данных по MQTT в секундах
  INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
-    isSetup = false;
-    isTmSetup = false;
-    isAddSetup = false;
-    isEdEvent = false;
     isMicCal = false;
     pinTransition = true;
     isAPMODE = false;
@@ -87,13 +77,9 @@ extern GButton touch;
 
 void mqttCallback(const String &topic, const String &payload);
 void sendData();
-void update();
-void interface();
+
 void create_parameters();
-void updateParm();
-void jeebuttonshandle();
+void sync_parameters();
 void event_worker(const EVENT *);
-void httpCallback(const char *param, const char *value);
-void setEffectParams(EFFECT *curEff);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
 void buttonhelper(bool state);

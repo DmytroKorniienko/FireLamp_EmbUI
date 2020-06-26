@@ -35,6 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
+
+#include "config.h"
+
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
 #ifdef ESP8266
@@ -60,7 +63,7 @@ void MICWORKER::read_data()
   //   vImag[i] = 0.0; //Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows
   // }
 
-// #ifdef ESP8266  
+// #ifdef ESP8266
 //   system_adc_read_fast(adc_addr, samples, adc_clk_div);
 //   if(!useFixedFreq)
 //     samplingFrequency = ((1000UL*1000UL)/(micros()-_m))*(samples)*1;
@@ -187,14 +190,14 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
 {
   FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
-  FFT.complexToMagnitude(); /* Compute magnitudes */  
-  
+  FFT.complexToMagnitude(); /* Compute magnitudes */
+
   // for(uint8_t i=0; i<(samples >> 1); i++){
   //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
   //   //LOG(printf_P, PSTR("%3d "),(uint8_t)vReal[i]);
   //   //LOG(printf_P, PSTR("%5.2f "),(20 * log10(vReal[i])));
   // }
-  // //LOG(println, FFT.majorPeak()); 
+  // //LOG(println, FFT.majorPeak());
 
   float minFreq=(log((float)samplingFrequency*2/samples));
   float scale = size/(log(20000.0)-minFreq);
@@ -230,7 +233,7 @@ void MICWORKER::debug()
 
   // LOG(println, F("Computed Imaginary values:"));
   // PrintVector(vImag, samples, SCL_INDEX);
-  
+
   FFT.complexToMagnitude(); /* Compute magnitudes */
   LOG(println, F("Computed magnitudes:"));
   // PrintVector(vReal, (samples >> 1), SCL_FREQUENCY);

@@ -79,7 +79,9 @@ typedef enum _EFFSWITCH {
     SW_RND,         // случайный
     SW_DELAY,       // сохраненный (для фейдера)
     SW_SPECIFIC,    // переход на конкретный эффект по индексу/имени
-    SW_NEXT_DEMO    // следующий для ДЕМО, исключая отключенные
+    SW_NEXT_DEMO,    // следующий для ДЕМО, исключая отключенные
+    SW_WHITE_HI,
+    SW_WHITE_LO,
 } EFFSWITCH;
 
 // управление Тикером
@@ -133,17 +135,13 @@ struct EVENT {
         sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
         return String(tmpBuf);
     }
-    
+
     String getName(int offset = 0) {
         String buffer;
         char tmpBuf[]="9999-99-99T99:99";
         String day_buf(T_EVENT_DAYS);
 
-        buffer.concat(isEnabled?F(" "):F("!"));
-
-        time_t tm = unixtime+offset;
-        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
-        buffer.concat(tmpBuf); buffer.concat(F(","));
+        buffer.concat(isEnabled?F("+"):F("-"));
 
         switch (event)
         {
@@ -173,22 +171,26 @@ struct EVENT {
             break;
         case EVENT_TYPE::PIN_STATE:
             buffer.concat(F("PIN"));
-            break; 
+            break;
 #ifdef AUX_PIN
         case EVENT_TYPE::AUX_ON:
             buffer.concat(F("AUX ON"));
-            break; 
+            break;
         case EVENT_TYPE::AUX_OFF:
             buffer.concat(F("AUX OFF"));
-            break; 
+            break;
         case EVENT_TYPE::AUX_TOGGLE:
             buffer.concat(F("AUX TOGGLE"));
-            break; 
+            break;
 #endif
         default:
             break;
         }
         buffer.concat(F(","));
+
+        time_t tm = unixtime+offset;
+        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
+        buffer.concat(tmpBuf); buffer.concat(F(","));
 
         if(repeat) {buffer.concat(repeat); buffer.concat(F(","));}
         if(repeat && stopat) {buffer.concat(stopat); buffer.concat(F(","));}
@@ -196,19 +198,17 @@ struct EVENT {
         uint8_t t_raw_data = raw_data>>1;
         for(uint8_t i=1;i<8; i++){
             if(t_raw_data&1){
-                //Serial.println, day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
                 buffer.concat(day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
                 buffer.concat(F(","));
             }
             t_raw_data >>= 1;
         }
-        //return buffer;
 
-        if(message[0]){
-            memcpy(tmpBuf,message,5*2);
-            strcpy_P(tmpBuf+5*2,PSTR("..."));
-        }
-        buffer.concat(tmpBuf);
+        // if(message[0]){
+        //     memcpy(tmpBuf,message,5*2);
+        //     strcpy_P(tmpBuf+5*2,PSTR("..."));
+        // }
+        // buffer.concat(tmpBuf);
         return buffer;
     }
 };
@@ -286,7 +286,7 @@ public:
             root = new_event;
         }
     }
-    
+
     void delEvent(const EVENT&event) {
         EVENT *next=root;
         EVENT *prev=root;
@@ -310,7 +310,7 @@ public:
     {
         cb_func = func;
     }
-    
+
     EVENT *getNextEvent(EVENT *next=nullptr)
     {
         if(next==nullptr) return root; else return next->next;
@@ -325,15 +325,19 @@ public:
             next = getNextEvent(next);
         }
     }
-    
+
     void loadConfig(const char *cfg = nullptr) {
-        if(LittleFS.begin()){
+        if (LittleFS.begin()) {
             File configFile;
-            if(cfg == nullptr)
+            if (cfg == nullptr) {
+                LOG(println, F("Load default events config file"));
                 configFile = LittleFS.open(F("/events_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
-            else
+            } else {
+                LOG(printf_P, PSTR("Load %s events config file\n"), cfg);
                 configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
-            String cfg_str = configFile.readString();
+            }
+			String cfg_str = configFile.readString();
+            configFile.close();
 
             if (cfg_str == F("")){
                 LOG(println, F("Failed to open events config file"));
@@ -366,23 +370,20 @@ public:
                 addEvent(event);
                 LOG(printf_P, PSTR("[%u - %u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
             }
-            // JsonArray::iterator it;
-            // for (it=arr.begin(); it!=arr.end(); ++it) {
-            //     const JsonObject& elem = *it;
-            // }
-            LOG(println, F("Events config loaded"));
             doc.clear();
         }
     }
 
     void saveConfig(const char *cfg = nullptr) {
-        if(LittleFS.begin()){
+        if (LittleFS.begin()) {
             File configFile;
-            if(cfg == nullptr)
+            if (cfg == nullptr) {
+                LOG(println, F("Save default events config file"));
                 configFile = LittleFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
-            else
+            } else {
+                LOG(printf_P, PSTR("Save %s events config file\n"), cfg);
                 configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
-
+            }
             configFile.print("[");
             EVENT *next=root;
             int i=1;
@@ -395,11 +396,10 @@ public:
                     ((next->message!=nullptr)?next->message:(char*)F("")));
                 i++;
                 next=next->next;
-            }     
+            }
             configFile.print("]");
             configFile.flush();
             configFile.close();
-            LOG(println, F("\nSave events config"));
         }
     }
 };
@@ -451,8 +451,6 @@ private:
 
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
-    void(*updateParmFunc)() = nullptr; // функтор обновления параметров
-
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
     float mic_noise = 0.0; // уровень шума в ед.
@@ -471,7 +469,7 @@ private:
     timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
-    
+
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
 
     // async fader and brightness control vars and methods
@@ -488,7 +486,7 @@ private:
 
 
 #ifdef ESP_USE_BUTTON
-    GButton touch;               
+    GButton touch;
     void buttonTick(); // обработчик кнопки
     timerMinim tmChangeDirectionTimer;     // таймаут смены направления увеличение-уменьшение при удержании кнопки
     void changeDirection(byte numHold);
@@ -551,7 +549,7 @@ public:
     bool isMicOnOff() {return isMicOn;}
     void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
 #endif
-    
+
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
@@ -561,11 +559,11 @@ public:
     bool IsGlobalBrightness() {return isGlobalBrightness;}
 
     LAMPMODE getMode() {return mode;}
-    void updateParm(void(*f)()) { updateParmFunc=f; }
 
     TimeProcessor timeProcessor;
     void refreshTimeManual() { timeProcessor.handleTime(true); }
 
+    void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool isPrintingNow() { return isStringPrinting; }
     LAMP();
