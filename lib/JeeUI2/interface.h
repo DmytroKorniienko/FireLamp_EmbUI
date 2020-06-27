@@ -33,9 +33,9 @@ typedef enum _remote_action {
     RA_WHITE_LO,
 } RA;
 
-#define SETPARAM(key, call) if (data->containsKey(F(key))) { \
+#define SETPARAM(key, call) if (data->containsKey(key)) { \
+    jee.var(key, (*data)[key]); \
     call; \
-    jee.var(F(key), (*data)[F(key)]); \
 }
 
 #define CALLSETTER(key, val, call) { \

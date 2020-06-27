@@ -99,8 +99,8 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     if (data->containsKey(F("param"))) {
        myLamp.effects.updateParam(confEff, (*data)[F("param")]);
     }
-    confEff->canBeSelected = ((*data)[F("eff_sel")] == true);
-    confEff->isFavorite = ((*data)[F("eff_fav")] == true);
+    confEff->canBeSelected = ((*data)[F("eff_sel")] == F("true"));
+    confEff->isFavorite = ((*data)[F("eff_fav")] == F("true"));
 
     myLamp.effects.saveConfig();
 }
@@ -227,7 +227,8 @@ void block_effects_main(Interface *interf, JsonObject *data){
 
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    bool newpower = (*data)[F("ONflag")] == true;
+    // Специально не сохраняем, считаю что лампа должна стартавать выключеной
+    bool newpower = (*data)[F("ONflag")] == F("true");
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
@@ -240,7 +241,8 @@ void set_onflag(Interface *interf, JsonObject *data){
 
 void set_demoflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    bool newdemo = (*data)[F("Demo")] == true;
+    // Специально не сохраняем, считаю что демо при старте не должно запускаться
+    bool newdemo = (*data)[F("Demo")] == F("true");
     switch (myLamp.getMode()) {
         case MODE_NORMAL:
             if (newdemo) myLamp.startDemoMode(); break;
@@ -265,7 +267,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
 #ifdef AUX_PIN
 void set_auxflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    if (((*data)[F("AUX")] == true) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false)) {
+    if (((*data)[F("AUX")] == F("true")) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false)) {
         AUX_toggle(!(digitalRead(AUX_PIN) == AUX_LEVEL ? true : false));
     }
 }
@@ -273,7 +275,7 @@ void set_auxflag(Interface *interf, JsonObject *data){
 
 void block_lamp_config(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_hidden(F("lamp_config"), F("Конфигурации эффектов"));
+    interf->json_section_hidden(F("lamp_config"), F("Конфигурации"));
 
     interf->json_section_begin(F("edit_lamp_config"));
     String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileName")); cfg+=")";
@@ -448,14 +450,14 @@ void show_settings_mic(Interface *interf, JsonObject *data){
 
 void set_settings_mic(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("micScale", myLamp.setMicScale((*data)[F("micScale")].as<float>()));
-    SETPARAM("micNoise", myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
-    SETPARAM("micnRdcLvl", myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>()));
+    SETPARAM(F("micScale"), myLamp.setMicScale((*data)[F("micScale")].as<float>()));
+    SETPARAM(F("micNoise"), myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
+    SETPARAM(F("micnRdcLvl"), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>()));
 }
 
 void set_micflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("Mic", myLamp.setMicOnOff((*data)[F("Mic")] == true));
+    SETPARAM(F("Mic"), myLamp.setMicOnOff((*data)[F("Mic")] == F("true")));
 }
 
 void set_settings_mic_calib(Interface *interf, JsonObject *data){
@@ -513,9 +515,9 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("ap_ssid", 0);
-    SETPARAM("ssid", 0);
-    SETPARAM("pass", 0);
+    SETPARAM(F("ap_ssid"), 0);
+    SETPARAM(F("ssid"), 0);
+    SETPARAM(F("pass"), 0);
 
     jee.var(F("wifi"), F("STA"));
     jee.save();
@@ -524,11 +526,11 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("m_host", strncpy(jee.m_host, jee.param(F("m_host")).c_str(), sizeof(jee.m_host)-1));
-    SETPARAM("m_user", strncpy(jee.m_user, jee.param(F("m_user")).c_str(), sizeof(jee.m_user)-1));
-    SETPARAM("m_pass", strncpy(jee.m_pass, jee.param(F("m_pass")).c_str(), sizeof(jee.m_pass)-1));
-    SETPARAM("m_port", jee.m_port = jee.param(F("m_port")).toInt());
-    SETPARAM("mqtt_int", iGLOBAL.mqtt_int = (*data)[F("mqtt_int")]);
+    SETPARAM(F("m_host"), strncpy(jee.m_host, jee.param(F("m_host")).c_str(), sizeof(jee.m_host)-1));
+    SETPARAM(F("m_user"), strncpy(jee.m_user, jee.param(F("m_user")).c_str(), sizeof(jee.m_user)-1));
+    SETPARAM(F("m_pass"), strncpy(jee.m_pass, jee.param(F("m_pass")).c_str(), sizeof(jee.m_pass)-1));
+    SETPARAM(F("m_port"), jee.m_port = jee.param(F("m_port")).toInt());
+    SETPARAM(F("mqtt_int"), iGLOBAL.mqtt_int = (*data)[F("mqtt_int")]);
     //m_pref
 
     jee.save();
@@ -583,7 +585,7 @@ void show_settings_other(Interface *interf, JsonObject *data){
 
 void set_settings_other(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("isGLBbr", myLamp.setIsGlobalBrightness((*data)[F("isGLBbr")] == true));
+    SETPARAM(F("isGLBbr"), myLamp.setIsGlobalBrightness((*data)[F("isGLBbr")] == F("true")));
 
     if (data->containsKey(F("GlobBRI"))) {
         if (myLamp.IsGlobalBrightness()) {
@@ -592,19 +594,19 @@ void set_settings_other(Interface *interf, JsonObject *data){
         jee.var(F("GlobBRI"), (*data)[F("GlobBRI")]);
     }
 
-    SETPARAM("MIRR_H", myLamp.setMIRR_H((*data)[F("MIRR_H")] == true));
-    SETPARAM("MIRR_V", myLamp.setMIRR_V((*data)[F("MIRR_V")] == true));
-    SETPARAM("isFaderON", myLamp.setFaderFlag((*data)[F("isFaderON")] == true));
+    SETPARAM(F("MIRR_H"), myLamp.setMIRR_H((*data)[F("MIRR_H")] == F("true")));
+    SETPARAM(F("MIRR_V"), myLamp.setMIRR_V((*data)[F("MIRR_V")] == F("true")));
+    SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
 
 #ifdef ESP_USE_BUTTON
-    SETPARAM("isBtnOn", myLamp.setButtonOn((*data)[F("isBtnOn")] == true));
+    SETPARAM(F("isBtnOn"), myLamp.setButtonOn((*data)[F("isBtnOn")] == F("true")));
 #endif
 
-    SETPARAM("txtSpeed", myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
-    SETPARAM("txtOf", myLamp.setTextOffset((*data)[F("txtOf")]));
-    SETPARAM("perTime", myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[F("perTime")].as<long>()));
-    SETPARAM("ny_period", myLamp.setNYMessageTimer((*data)[F("ny_period")]));
-    SETPARAM("ny_unix", myLamp.setNYUnixTime((*data)[F("ny_unix")]));
+    SETPARAM(F("txtSpeed"), myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
+    SETPARAM(F("txtOf"), myLamp.setTextOffset((*data)[F("txtOf")]));
+    SETPARAM(F("perTime"), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[F("perTime")].as<long>()));
+    SETPARAM(F("ny_period"), myLamp.setNYMessageTimer((*data)[F("ny_period")]));
+    SETPARAM(F("ny_unix"), myLamp.setNYUnixTime((*data)[F("ny_unix")]));
 }
 
 void block_settings_time(Interface *interf, JsonObject *data){
@@ -632,10 +634,10 @@ void show_settings_time(Interface *interf, JsonObject *data){
 
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("tm_offs", myLamp.timeProcessor.SetOffset((*data)[F("tm_offs")]));
-    SETPARAM("timezone", myLamp.timeProcessor.setTimezone((*data)[F("timezone")]));
-    SETPARAM("time", myLamp.timeProcessor.setTime((*data)[F("time")]));
-    SETPARAM("isTmSync", myLamp.timeProcessor.setIsSyncOnline((*data)[F("isTmSync")] == true));
+    SETPARAM(F("tm_offs"), myLamp.timeProcessor.SetOffset((*data)[F("tm_offs")]));
+    SETPARAM(F("timezone"), myLamp.timeProcessor.setTimezone((*data)[F("timezone")]));
+    SETPARAM(F("time"), myLamp.timeProcessor.setTime((*data)[F("time")]));
+    SETPARAM(F("isTmSync"), myLamp.timeProcessor.setIsSyncOnline((*data)[F("isTmSync")] == F("true")));
 
     if (myLamp.timeProcessor.getIsSyncOnline()) {
         myLamp.refreshTimeManual(); // принудительное обновление времени
@@ -695,7 +697,7 @@ void show_settings_event(Interface *interf, JsonObject *data){
 
 void set_eventflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM("Events", myLamp.setIsEventsHandled((*data)[F("Events")] == true));
+    SETPARAM(F("Events"), myLamp.setIsEventsHandled((*data)[F("Events")] == F("true")));
 }
 
 void set_event_conf(Interface *interf, JsonObject *data){
@@ -712,18 +714,18 @@ void set_event_conf(Interface *interf, JsonObject *data){
     }
 
     if (data->containsKey(F("enabled"))) {
-        event.isEnabled = ((*data)[F("enabled")] == true);
+        event.isEnabled = ((*data)[F("enabled")] == F("true"));
     } else {
         event.isEnabled = true;
     }
 
-    event.d1 = ((*data)[F("d1")] == true);
-    event.d2 = ((*data)[F("d2")] == true);
-    event.d3 = ((*data)[F("d3")] == true);
-    event.d4 = ((*data)[F("d4")] == true);
-    event.d5 = ((*data)[F("d5")] == true);
-    event.d6 = ((*data)[F("d6")] == true);
-    event.d7 = ((*data)[F("d7")] == true);
+    event.d1 = ((*data)[F("d1")] == F("true"));
+    event.d2 = ((*data)[F("d2")] == F("true"));
+    event.d3 = ((*data)[F("d3")] == F("true"));
+    event.d4 = ((*data)[F("d4")] == F("true"));
+    event.d5 = ((*data)[F("d5")] == F("true"));
+    event.d6 = ((*data)[F("d6")] == F("true"));
+    event.d7 = ((*data)[F("d7")] == F("true"));
     event.event = (EVENT_TYPE)(*data)[F("evList")].as<long>();
     event.repeat = (*data)[F("repeat")];
     event.stopat = (*data)[F("stopat")];
@@ -948,7 +950,7 @@ void create_parameters(){
 
     jee.var_create(F("Events"), F("false"));
 
-    jee.var_create(F("isFaderON"),(FADE==true?F("true"):F("false")));
+    jee.var_create(F("isFaderON"), (FADE == true? F("true") : F("false")));
 
 
     // далее идут обработчики параметров
@@ -1005,16 +1007,16 @@ void create_parameters(){
 }
 
 void sync_parameters(){
-    StaticJsonDocument<512> doc;
-    JsonObject obj = doc.as<JsonObject>();
+    DynamicJsonDocument doc(512);
+    JsonObject obj = doc.to<JsonObject>();
 
     CALLSETTER(F("effList"), jee.param(F("effList")), set_effects_list);
-    CALLSETTER(F("Events"), (jee.param(F("Events")) == F("true")), set_eventflag);
+    CALLSETTER(F("Events"), jee.param(F("Events")), set_eventflag);
 #ifdef AUX_PIN
-    CALLSETTER(F("AUX"), (jee.param(F("AUX")) == F("true")), set_auxflag);
+    CALLSETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
 #endif
 #ifdef MIC_EFFECTS
-    CALLSETTER(F("Mic"), (jee.param(F("Mic")) == F("true")), set_micflag);
+    CALLSETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
 #endif
 
     obj[F("micScale")] = jee.param(F("micScale"));
@@ -1024,13 +1026,13 @@ void sync_parameters(){
     obj.clear();
 
 #ifdef ESP_USE_BUTTON
-    obj[F("isBtnOn")] = (jee.param(F("isBtnOn")) == F("true"));
+    obj[F("isBtnOn")] = jee.param(F("isBtnOn"));
 #endif
-    obj[F("isFaderON")] = (jee.param(F("isFaderON")) == F("true"));
-    obj[F("isGLBbr")] = (jee.param(F("isGLBbr")) == F("true"));
+    obj[F("isFaderON")] = jee.param(F("isFaderON"));
+    obj[F("isGLBbr")] = jee.param(F("isGLBbr"));
     obj[F("GlobBRI")] = jee.param(F("GlobBRI"));
-    obj[F("MIRR_H")] = (jee.param(F("MIRR_H")) == F("true"));
-    obj[F("MIRR_V")] = (jee.param(F("MIRR_V")) == F("true"));
+    obj[F("MIRR_H")] = jee.param(F("MIRR_H"));
+    obj[F("MIRR_V")] = jee.param(F("MIRR_V"));
     obj[F("txtSpeed")] = jee.param(F("txtSpeed"));
     obj[F("txtOf")] = jee.param(F("txtOf"));
     obj[F("perTime")] = jee.param(F("perTime"));
