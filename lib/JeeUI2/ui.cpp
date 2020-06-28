@@ -283,7 +283,7 @@ void Interface::button_submit_value(const String &section, const String &value, 
     obj[F("value")] = value;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        button_submit(section, label, color);
+        button_submit_value(section, value, label, color);
     }
 }
 
