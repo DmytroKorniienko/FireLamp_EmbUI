@@ -447,7 +447,6 @@ private:
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     EFF_ENUM storedEffect = EFF_NONE;
-    EFFSWITCH _postponedSW = SW_NONE;       // отложенное действие смены ээфекта для федера
 
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
@@ -553,7 +552,7 @@ public:
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
-    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightness(brg);} }
+    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightnessS(brg);} }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}

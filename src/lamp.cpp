@@ -1237,48 +1237,55 @@ void LAMP::buttonPress(bool state){
  */
 void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
   LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
-  if (action == SW_DELAY ) {
-    action = _postponedSW;
-    _postponedSW = EFFSWITCH::SW_NONE;  // сбрасываем отложенный эффект
-  } else if (fade && ONflag ) {         // тухнем "вниз" только на включенной лампе
-    _postponedSW = action;  // откладывает смену эффекта на следующий вызов через коллбек от фейдера
-    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, EFFSWITCH::SW_DELAY, fade, effnb));
+
+  if (effects.isSelected()) {
+    switch (action) {
+    case EFFSWITCH::SW_NEXT :
+        effects.setSelected(effects.getNext());
+        break;
+    case EFFSWITCH::SW_NEXT_DEMO :
+        effects.setSelected(effects.getBy(1));
+        break;
+    case EFFSWITCH::SW_PREV :
+        effects.setSelected(effects.getPrev());
+        break;
+    case EFFSWITCH::SW_SPECIFIC :
+        effects.setSelected(effects.getBy(effnb));
+        break;
+    case EFFSWITCH::SW_RND :
+        effects.setSelected(effects.getBy(random(0, effects.getModeAmount())));
+        break;
+    case EFFSWITCH::SW_WHITE_HI:
+        effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
+        break;
+    case EFFSWITCH::SW_WHITE_LO:
+        effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
+        break;
+    default:
+        return;
+    }
+  }
+
+  // тухнем "вниз" только на включенной лампе
+  if (fade && ONflag) {
+    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, false, effnb));
     return;
   }
 
   changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
+  effects.moveSelected();
 
   bool natural = true;
-  switch (action)
-  {
-  case EFFSWITCH::SW_NEXT :
-      effects.moveNext();
-      break;
-  case EFFSWITCH::SW_NEXT_DEMO :
-      effects.moveBy(1);
-      break;
-  case EFFSWITCH::SW_PREV :
-      effects.movePrev();
-      break;
-  case EFFSWITCH::SW_SPECIFIC :
-      effects.moveBy(effnb);
-      break;
-  case EFFSWITCH::SW_RND :
-      effects.moveBy(random(0, effects.getModeAmount()));
-      break;
+  switch (action) {
   case EFFSWITCH::SW_WHITE_HI:
-      effects.moveBy(EFF_WHITE_COLOR);
       setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
       natural = false;
       break;
   case EFFSWITCH::SW_WHITE_LO:
-      effects.moveBy(EFF_WHITE_COLOR);
       setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
       fade = natural = false;
       break;
-  default:
-      return;
-      break;
+  default:;
   }
 
   // отрисовать текущий эффект
