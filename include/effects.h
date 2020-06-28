@@ -896,8 +896,8 @@ private:
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     EFF_ENUM curEff = EFF_NONE;     ///< энумератор текущего эффекта
-    unsigned int arrIdx = 0;        ///< абсолютный номер эффекта по порядку
-    unsigned int storedIdx = 0;     ///< предыдущий эффект
+    unsigned int workIdx = 0;       ///< абсолютный номер эффекта по порядку (исполняемый)
+    unsigned int selectIdx = 0;     ///< абсолютный номер эффекта по порядку (выбраный)
     EFFECT* effects = _EFFECTS_ARR; ///< массив настроек всех эффектов
 
     /**
@@ -1011,84 +1011,92 @@ public:
         return true; // сохранились
     }
 
-    void setBrightness(byte val) {effects[arrIdx].brightness = val; if (worker) worker->setbrt(val);}
-    void setSpeed(byte val) {effects[arrIdx].speed = val; if (worker) worker->setspd(val);}
-    void setScale(byte val) {effects[arrIdx].scale = val; if (worker) worker->setscl(val);}
-    byte getBrightness() { return effects[arrIdx].brightness; }
-    byte getSpeed() { return effects[arrIdx].speed; }
-    byte getScale() { return effects[arrIdx].scale; }
     byte getModeAmount() {return MODE_AMOUNT;}
-    const char *getName() {return effects[arrIdx].eff_name;}
-    const EFF_ENUM getEn() {return effects[arrIdx].eff_nb;}
 
-    void moveNext() // следующий эффект, кроме canBeSelected==false
-    {
-        unsigned int i;
+    void setBrightness(byte val) {effects[workIdx].brightness = val; if (worker) worker->setbrt(val);}
+    void setSpeed(byte val) {effects[workIdx].speed = val; if (worker) worker->setspd(val);}
+    void setScale(byte val) {effects[workIdx].scale = val; if (worker) worker->setscl(val);}
+    byte getBrightness() { return effects[workIdx].brightness; }
+    byte getSpeed() { return effects[workIdx].speed; }
+    byte getScale() { return effects[workIdx].scale; }
+    const char *getName() {return effects[workIdx].eff_name;}
+    const EFF_ENUM getEn() {return effects[workIdx].eff_nb;}
 
-        for(i=arrIdx+1; i<MODE_AMOUNT; i++){
-            if(effects[i].canBeSelected){
-                arrIdx = i;
-                curEff = effects[i].eff_nb;
-                workerset(curEff);
-                return;
-            }
+    void setBrightnessS(byte val) {effects[selectIdx].brightness = val; if (worker && isSelected()) worker->setbrt(val);}
+    void setSpeedS(byte val) {effects[selectIdx].speed = val; if (worker && isSelected()) worker->setspd(val);}
+    void setScaleS(byte val) {effects[selectIdx].scale = val; if (worker && isSelected()) worker->setscl(val);}
+    byte getBrightnessS() { return effects[selectIdx].brightness; }
+    byte getSpeedS() { return effects[selectIdx].speed; }
+    byte getScaleS() { return effects[selectIdx].scale; }
+    const char *getNameS() {return effects[selectIdx].eff_name;}
+    const EFF_ENUM getEnS() {return effects[selectIdx].eff_nb;}
+
+    unsigned getNext() { // следующий эффект, кроме canBeSelected==false
+        unsigned i;
+        for (i = workIdx + 1; i < MODE_AMOUNT; i++) {
+            if (effects[i].canBeSelected) return i;
         }
-        i = 1;
-        for(; i<MODE_AMOUNT; i++){
-            if(effects[i].canBeSelected){
-                arrIdx = i;
-                curEff = effects[i].eff_nb;
-                workerset(curEff);
-                return;
-            }
+        for (i = 1; i < MODE_AMOUNT; i++) {
+            if (effects[i].canBeSelected) return i;
         }
+        return 0;
     }
 
-    void movePrev() // предыдущий эффект, кроме canBeSelected==false
-    {
-        int i;
+    void moveNext() { // следующий эффект, кроме canBeSelected==false
+        workIdx = selectIdx = getNext();
+        curEff = effects[workIdx].eff_nb;
+        workerset(curEff);
+    }
 
-        for(i=arrIdx-1; i>0; i--){
-            if(effects[i].canBeSelected){
-                arrIdx = i;
-                curEff = effects[i].eff_nb;
-                workerset(curEff);
-                return;
-            }
+    unsigned getPrev() { // предыдущий эффект, кроме canBeSelected==false
+        unsigned i;
+        for (i = selectIdx - 1; i > 0; i--) {
+            if (effects[i].canBeSelected) return i;
         }
-        i = MODE_AMOUNT-1;
-        for(; i>=0; i--){
-            if(effects[i].canBeSelected){
-                arrIdx = i;
-                curEff = effects[i].eff_nb;
-                workerset(curEff);
-                return;
-            }
+        for (i = MODE_AMOUNT - 1; i >= 0; i--){
+            if (effects[i].canBeSelected) return i;
+        }
+        return 0;
+    }
+
+    void movePrev() { // предыдущий эффект, кроме canBeSelected==false
+        workIdx = selectIdx = getPrev();
+        curEff = effects[workIdx].eff_nb;
+        workerset(curEff);
+    }
+
+    unsigned getBy(EFF_ENUM select){ // перейти по перечислению
+        for (unsigned i = MODE_AMOUNT - 1; i >= 0; i--) {
+            if (effects[i].eff_nb == select) return i;
         }
     }
 
     void moveBy(EFF_ENUM select){ // перейти по перечислению
-        for(int i=MODE_AMOUNT-1; i>=0; i--){
-            if(effects[i].eff_nb == select){
-                arrIdx = i;
-                curEff = effects[i].eff_nb;
-                workerset(curEff);
-            }
+        workIdx = selectIdx = getBy(select);
+        curEff = effects[workIdx].eff_nb;
+        workerset(curEff);
+    }
+
+    void moveSelected(){ // перейти по предворительно выбранному
+        workIdx = selectIdx;
+        curEff = effects[workIdx].eff_nb;
+        workerset(curEff);
+    }
+
+    unsigned getBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
+        unsigned i = (selectIdx + cnt) % MODE_AMOUNT; // смещаемся на нужное число шагов, но не больше лимита эффектов
+        unsigned tmp = i; // запомним позицию
+
+        while (!effects[i].isFavorite) { // если не избранный, то будем перебирать по +1
+            if (++i == MODE_AMOUNT) i = 0;
+            if (i == tmp) break; // круг прошли, но не нашли, на выход
         }
+        return i;
     }
 
     void moveBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
-        arrIdx=(arrIdx+cnt)%MODE_AMOUNT; // смещаемся на нужное число шагов, но не больше лимита эффектов
-        unsigned int tmpArrIdx = arrIdx; // запомним позицию
-
-        while(!effects[arrIdx].isFavorite){ // если не избранный, то будем перебирать по +1
-            arrIdx++;
-            if(arrIdx==MODE_AMOUNT)
-                arrIdx=0;
-            if(arrIdx==tmpArrIdx) // круг прошли, но не нашли, на выход
-                break;
-        }
-        curEff = effects[arrIdx].eff_nb;
+        workIdx = selectIdx = getBy(cnt);
+        curEff = effects[workIdx].eff_nb;
         workerset(curEff);
     }
 
@@ -1114,32 +1122,47 @@ public:
     }
 
     EFFECT *getCurrent(){ // вернуть текущий
-        return &(effects[arrIdx]);
+        return &(effects[workIdx]);
     }
 
+    EFFECT *getSelected(){ // вернуть текущий
+        return &(effects[selectIdx]);
+    }
+
+    void setSelected(unsigned idx){
+        selectIdx = idx;
+    }
+
+    bool isSelected(){
+        return (selectIdx == workIdx);
+    }
 
     // ой как не нравятся мне джейсоны :()
     String getParam() {
-        if(effects[arrIdx].param!=nullptr){
-            size_t slen = strlen_P(effects[arrIdx].param);
-            char buffer[slen+4]; memset(buffer,0,slen+4);
-            strcpy_P(buffer, effects[arrIdx].param); // Обход Exeption 3, это шаманство из-за корявого использования указателя, он одновременно может быть и на PROGMEM, и на RAM
+        if (effects[selectIdx].param != nullptr) {
+            size_t slen = strlen_P(effects[selectIdx].param);
+            char buffer[slen + 4]; memset(buffer, 0, slen+4);
+            strcpy_P(buffer, effects[selectIdx].param); // Обход Exeption 3, это шаманство из-за корявого использования указателя, он одновременно может быть и на PROGMEM, и на RAM
             String tmp = buffer;
             return tmp;
-        } else
-            return String(); // empty
+        }
+        return String(); // empty
     }
 
     void updateParam(const char *str) {
-        if(effects[arrIdx].param!=nullptr && effects[arrIdx].param!=_R255) // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
-            delete [] effects[arrIdx].param;
-        effects[arrIdx].param = new char[strlen(str)+1];
-        strcpy(effects[arrIdx].param, str);
+        if (effects[selectIdx].param != nullptr && effects[workIdx].param != _R255) {
+            // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
+            delete [] effects[selectIdx].param;
+        }
+        effects[selectIdx].param = new char[strlen(str)+1];
+        strcpy(effects[selectIdx].param, str);
     }
 
     void updateParam(EFFECT *eff, const char *str) {
-        if (eff->param != nullptr && eff->param != _R255) // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
+        if (eff->param != nullptr && eff->param != _R255) {
+            // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
             delete [] eff->param;
+        }
         eff->param = new char[strlen(str)+1];
         strcpy(eff->param, str);
     }

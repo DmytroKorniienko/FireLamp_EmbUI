@@ -143,11 +143,11 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 void block_effects_param(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_begin(F("effects_param"));
-    interf->range(F("bright"), myLamp.effects.getBrightness(), 1, 255, 1, F("Яркость"), true);
-    interf->range(F("speed"), myLamp.effects.getSpeed(), 1, 255, 1, F("Скорость"), true);
-    interf->range(F("scale"), myLamp.effects.getScale(), 1, 255, 1, F("Масштаб"), true);
+    interf->range(F("bright"), myLamp.effects.getBrightnessS(), 1, 255, 1, F("Яркость"), true);
+    interf->range(F("speed"), myLamp.effects.getSpeedS(), 1, 255, 1, F("Скорость"), true);
+    interf->range(F("scale"), myLamp.effects.getScaleS(), 1, 255, 1, F("Масштаб"), true);
 
-    String v = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
+    String v = myLamp.effects.getValue(myLamp.effects.getSelected()->param, F("R"));
     if (!v.isEmpty()) {
         interf->range(FPSTR(extraR), (int)v.toInt(), 1, 255, 1, F("Доп. регулятор"), true);
     }
@@ -182,21 +182,21 @@ void set_effects_param(Interface *interf, JsonObject *data){
     if (!data) return;
 
     if (data->containsKey(F("bright"))) {
-        myLamp.effects.setBrightness((*data)[F("bright")]);
+        myLamp.effects.setBrightnessS((*data)[F("bright")]);
         myLamp.setLampBrightness(myLamp.effects.getBrightness());
         myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getLampBrightness());
     }
     if (data->containsKey(F("speed"))) {
-        myLamp.effects.setSpeed((*data)[F("speed")]);
-        LOG(printf_P, PSTR("Новое значение скорости: %d\n"), myLamp.effects.getSpeed());
+        myLamp.effects.setSpeedS((*data)[F("speed")]);
+        LOG(printf_P, PSTR("Новое значение скорости: %d\n"), myLamp.effects.getSpeedS());
     }
     if (data->containsKey(F("scale"))) {
-        myLamp.effects.setScale((*data)[F("scale")]);
-        LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), myLamp.effects.getScale());
+        myLamp.effects.setScaleS((*data)[F("scale")]);
+        LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), myLamp.effects.getScaleS());
     }
     if (data->containsKey(FPSTR(extraR))) {
-        myLamp.effects.setValue(myLamp.effects.getCurrent()->param, F("R"), (*data)[FPSTR(extraR)].as<String>().c_str());
+        myLamp.effects.setValue(myLamp.effects.getSelected()->param, F("R"), (*data)[FPSTR(extraR)].as<String>().c_str());
     }
 
     myLamp.effects.saveConfig();
