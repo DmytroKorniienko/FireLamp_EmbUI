@@ -5,6 +5,7 @@ typedef enum _remote_action {
     RA_ON,
     RA_OFF,
     RA_DEMO,
+    RA_DEMO_NEXT,
     RA_ALARM,
     RA_LAMP_CONFIG,
     RA_EFF_CONFIG,
@@ -42,6 +43,13 @@ typedef enum _remote_action {
     obj[key] = val; \
     call(nullptr, &obj); \
     obj.clear(); \
+}
+
+#define CALLINTERF(key, val, call) { \
+    obj[key] = val; \
+    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
+    call(interf, &obj); \
+    if (interf) delete interf; \
 }
 
 void remote_action(RA action, const char *value);

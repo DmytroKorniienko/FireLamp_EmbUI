@@ -512,11 +512,6 @@ private:
     void alarmWorker();
 
     /*
-     * Смена эффекта в демо по таймеру
-     */
-    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT_DEMO, isFaderON);}
-
-    /*
      * вывод готового кадра на матрицу,
      * и перезапуск эффект-процессора
      */
