@@ -681,8 +681,8 @@ void LAMP::changePower() {changePower(!ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
-  manualOff = true;             // любая активность в интерфейсе - отключаем будильник
-  if ( flag == ONflag) return;  // пропускаем холостые вызовы
+  manualOff = true;            // любая активность в интерфейсе - отключаем будильник
+  if (flag == ONflag) return;  // пропускаем холостые вызовы
   LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
   ONflag = flag;
 
@@ -1235,10 +1235,10 @@ void LAMP::buttonPress(bool state){
  * @param EFFSWITCH action - вид переключения (пред, след, случ.)
  * @param fade - переключаться через фейдер или сразу
  */
-void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
+void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) {
   LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
 
-  if (effects.isSelected()) {
+  if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :
         effects.setSelected(effects.getNext());
@@ -1264,12 +1264,11 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
     default:
         return;
     }
-  }
-
-  // тухнем "вниз" только на включенной лампе
-  if (fade && ONflag) {
-    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, false, effnb));
-    return;
+    // тухнем "вниз" только на включенной лампе
+    if (fade && ONflag) {
+      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      return;
+    }
   }
 
   changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
