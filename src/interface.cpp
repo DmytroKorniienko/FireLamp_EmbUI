@@ -1029,12 +1029,12 @@ void sync_parameters(){
 #endif
 #ifdef MIC_EFFECTS
     CALLSETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
-#endif
 
     obj[F("micScale")] = jee.param(F("micScale"));
     obj[F("micNoise")] = jee.param(F("micNoise"));
     obj[F("micnRdcLvl")] = jee.param(F("micnRdcLvl"));
     set_settings_mic(nullptr, &obj);
+#endif
     obj.clear();
 
 #ifdef ESP_USE_BUTTON
