@@ -402,8 +402,8 @@ void Interface::json_section_content(){
     json_section_begin(F("content"));
 }
 
-void Interface::json_section_line(){
-    json_section_begin(F("line"), F(""), false, false, true);
+void Interface::json_section_line(const String &name){
+    json_section_begin(name, F(""), false, false, true);
 }
 
 void Interface::json_section_main(const String &name, const String &label){

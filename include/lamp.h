@@ -512,11 +512,6 @@ private:
     void alarmWorker();
 
     /*
-     * Смена эффекта в демо по таймеру
-     */
-    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT_DEMO, isFaderON);}
-
-    /*
      * вывод готового кадра на матрицу,
      * и перезапуск эффект-процессора
      */
@@ -588,7 +583,7 @@ public:
     void periodicTimeHandle();
 
     void startAlarm();
-    void startDemoMode();
+    void startDemoMode(byte tmout = DEMO_TIMEOUT);
     void startNormalMode();
 #ifdef OTA
     void startOTAUpdate();
@@ -669,7 +664,7 @@ public:
      * включает/выключает "демо"-таймер
      * @param TICKER action - enable/disable/reset
      */
-    void demoTimer(SCHEDULER action);
+    void demoTimer(SCHEDULER action, byte tmout = DEMO_TIMEOUT);
 
     /*
      * включает/выключает "эффект"-таймер

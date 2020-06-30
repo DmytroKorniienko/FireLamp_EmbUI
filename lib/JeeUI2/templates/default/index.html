@@ -58,9 +58,9 @@
 
 	<script type="text/html" id="tmpl_section">
 		<section id="{{section}}">
-			{{#if hidden}}<div class="pure-u-5-5 pure-button mr" {{onevent "click", "on_showhide", "block_"+section}} >{{label}}</div>{{/if}}
+			{{#if hidden}}<div class="pure-u-1 pure-button mr" {{onevent "click", "on_showhide", "block_"+section}} >{{label}}</div>{{/if}}
 			{{#if !hidden && label}}<div class="header-block">{{label}}</div>{{/if}}
-			<div id="block_{{section}}" class="pure-g {{#if label}}nested{{/if}}" {{#if hidden}}style="display:none;"{{/if}}>
+			<div id="block_{{section}}" class="{{#if !line}}pure-g{{/if}} {{#if label}}nested{{/if}}" {{#if hidden}}style="display:none;"{{/if}}>
 			{{#block}}
 				{{>tmpl_content _this}}
 			{{/block}}
@@ -69,16 +69,17 @@
 	</script>
 
 	<script type="text/html" id="tmpl_content">
-		<div class="pure-u-1{{#if _this.line}}-{{_this.block.length}}{{/if}}" {{#if html == "hidden"}}style="display:hidden;"{{/if}}>
+		{{#if _this.line}}<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">{{/if}}
+		{{#if !_this.line}}<div class="pure-u-1" {{#if2 html == "hidden"}}style="display:hidden;"{{/if2}}>{{/if}}
 		{{#if html == "hidden"}}
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "const"}}
-			<div class="pure-u-5-5 pure-button mr">{{label}}</div>
+			<div class="pure-u-1 pure-button mr">{{label}}</div>
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "button"}}
-			<div id="{{id}}" style="background-color: {{color}}" class="pure-u-5-5 pure-button pure-button-primary mr"
+			<div id="{{id}}" style="background-color: {{color}}" class="pure-u-1 pure-button pure-button-primary mr"
 				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}
 				{{#if2 !submit}}{{onevent "click", "on_change", id}}{{/if2}}
 			>
@@ -86,7 +87,7 @@
 			</div>
 		{{/if}}
 		{{#if html == "textarea"}}
-			<textarea class="pure-u-24-24" maxlength="255" id="{{id}}" name="{{id}}"
+			<textarea class="pure-u-1" maxlength="255" id="{{id}}" name="{{id}}"
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			></textarea>
 		{{/if}}
@@ -101,7 +102,7 @@
 		{{/if}}
 		{{#if html == "select"}}
 			<label id="{{id}}-val">{{label}}</label>
-			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-5-5"
+			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-1"
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			>
 			{{#block}}
@@ -110,15 +111,15 @@
 			</select>
 		{{/if}}
 		{{#if type == "checkbox"}}
-			<div style="height: 40px;">
+			<div class="switch-block">
 				<input type="checkbox" id="{{id}}" name="{{id}}" class="checkbox" {{#if2 value == "true"}}checked{{/if2}} {{#if2 directly}}{{onevent "click", "on_change", id}}{{/if2}}>
-					<label class="switch mr" for="{{id}}"><span class="checkbox-label">{{label}}</span></label>
+					<label class="switch" for="{{id}}"><span class="checkbox-label">{{label}}</span></label>
 				</input>
 			</div>
 		{{/if}}
 		{{#if html == "input" && type != "checkbox"}}
 			<label id="{{id}}-val">{{label}}{{#if2 type == "range" || type == "color"}}: {{value}}{{/if2}}</label>
-			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-5-5"
+			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1"
 				{{#if2 min}}min="{{min}}"{{/if2}}
 				{{#if2 max}}max="{{max}}"{{/if2}}
 				{{#if2 step}}step="{{step}}"{{/if2}}

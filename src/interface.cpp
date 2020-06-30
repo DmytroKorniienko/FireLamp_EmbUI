@@ -102,7 +102,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     confEff->canBeSelected = ((*data)[F("eff_sel")] == F("true"));
     confEff->isFavorite = ((*data)[F("eff_fav")] == F("true"));
 
-    myLamp.effects.saveConfig();
+    // myLamp.effects.saveConfig();
 }
 
 void block_effects_config(Interface *interf, JsonObject *data){
@@ -168,16 +168,20 @@ void show_effects_param(Interface *interf, JsonObject *data){
 void set_effects_list(Interface *interf, JsonObject *data){
     if (!data) return;
     EFF_ENUM num = (EFF_ENUM)(*data)[F("effList")];
+    EFF_ENUM curr = myLamp.effects.getSelected()->eff_nb;
     EFFECT *curEff = myLamp.effects.getEffectBy(num);
     if (!curEff) return;
 
-    if (!myLamp.isLampOn()) {
-        myLamp.effects.moveBy(curEff->eff_nb); // переходим на выбранный эффект для начальной инициализации
-    } else {
-        myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
-    }
+    LOG(printf_P, PSTR("EFF LIST n:%d, o:%d, on:%d, md:%d\n"), curEff->eff_nb, curr, myLamp.isLampOn(), myLamp.getMode());
+    if (curEff->eff_nb != curr) {
+        if (!myLamp.isLampOn()) {
+            myLamp.effects.moveBy(curEff->eff_nb); // переходим на выбранный эффект для начальной инициализации
+        } else {
+            myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), curEff->eff_nb);
+        }
 
-    jee.var(F("effList"), (*data)[F("effList")]);
+        jee.var(F("effList"), (*data)[F("effList")]);
+    }
 
     show_effects_param(interf, data);
 }
@@ -205,7 +209,36 @@ void set_effects_param(Interface *interf, JsonObject *data){
         myLamp.effects.setValue(myLamp.effects.getSelected()->param, F("R"), (*data)[FPSTR(extraR)].as<String>().c_str());
     }
 
-    myLamp.effects.saveConfig();
+    // myLamp.effects.saveConfig();
+}
+
+void block_main_flags(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_section_line(F("flags"));
+    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включить"), true);
+    interf->checkbox(F("Demo"), (myLamp.getMode() == MODE_DEMO)? F("true") : F("false"), F("Демо"), true);
+    interf->checkbox(F("GBR"), myLamp.IsGlobalBrightness()? F("true") : F("false"), F("Гл.Яркость"), true);
+    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
+#ifdef MIC_EFFECTS
+    interf->checkbox(F("Mic"), F("Микр."), true);
+#else
+    interf->hidden("nil");
+#endif
+#ifdef AUX_PIN
+    interf->checkbox(F("AUX"), F("AUX"), true);
+#else
+    interf->hidden("nil");
+#endif
+    interf->json_section_end();
+}
+
+void show_main_flags(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_frame_interface();
+    block_main_flags(interf, data);
+    interf->spacer();
+    interf->button(F("effects"), F("Выход"));
+    interf->json_frame_flush();
 }
 
 void block_effects_main(Interface *interf, JsonObject *data){
@@ -213,7 +246,10 @@ void block_effects_main(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("effects"), F("Эффекты"));
 
-    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включение лампы"), true);
+    interf->json_section_line(F("flags"));
+    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включить"), true);
+    interf->button(F("show_flags"), F("Режимы"));
+    interf->json_section_end();
 
     EFFECT enEff; enEff.setNone();
     interf->select(F("effList"), F("Эффект"), true);
@@ -251,7 +287,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
     bool newdemo = (*data)[F("Demo")] == F("true");
     switch (myLamp.getMode()) {
         case MODE_NORMAL:
-            if (newdemo) myLamp.startDemoMode(); break;
+            if (newdemo) myLamp.startDemoMode(jee.param(F("DTimer")).toInt()); break;
         case MODE_DEMO:
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
@@ -416,25 +452,6 @@ void block_lamp(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("lamp"), F("Лампа"));
 
-    interf->json_section_line();
-    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Вкл."), true);
-    interf->checkbox(F("Demo"), (myLamp.getMode() == MODE_DEMO)? F("true") : F("false"), F("Демо"), true);
-    interf->checkbox(F("GBR"), myLamp.IsGlobalBrightness()? F("true") : F("false"), F("Гл.Ярк"), true);
-    interf->json_section_end();
-    interf->json_section_line();
-    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
-#ifdef MIC_EFFECTS
-    interf->checkbox(F("Mic"), F("Микр."), true);
-#else
-    interf->hidden("nil");
-#endif
-#ifdef AUX_PIN
-    interf->checkbox(F("AUX"), F("AUX"), true);
-#else
-    interf->hidden("nil");
-#endif
-    interf->json_section_end();
-
     block_lamp_textsend(interf, data);
     block_lamp_config(interf, data);
 
@@ -565,6 +582,8 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(F("MIRR_H"), F("Отзеркаливание H"));
     interf->checkbox(F("MIRR_V"), F("Отзеркаливание V"));
     interf->checkbox(F("isFaderON"), F("Плавное переключение эффектов"));
+    interf->checkbox(F("DRand"), F("Случайный эффект в Демо"));
+    interf->range(F("DTimer"), 30, 250, 10, F("Время в секундах для смены режима"));
 #ifdef ESP_USE_BUTTON
     interf->checkbox(F("isBtnOn"), F("Кнопка активна"));
 #endif
@@ -607,6 +626,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("MIRR_H"), myLamp.setMIRR_H((*data)[F("MIRR_H")] == F("true")));
     SETPARAM(F("MIRR_V"), myLamp.setMIRR_V((*data)[F("MIRR_V")] == F("true")));
     SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
+    SETPARAM(F("DRand"), 0);
+    SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
 
 #ifdef ESP_USE_BUTTON
     SETPARAM(F("isBtnOn"), myLamp.setButtonOn((*data)[F("isBtnOn")] == F("true")));
@@ -961,11 +982,14 @@ void create_parameters(){
     jee.var_create(F("Events"), F("false"));
 
     jee.var_create(F("isFaderON"), (FADE == true? F("true") : F("false")));
+    jee.var_create(F("DRand"), (RANDOM_DEMO == true? F("true") : F("false")));
+    jee.var_create(F("DTimer"), String(DEMO_TIMEOUT).c_str());
 
 
     // далее идут обработчики параметров
 
     jee.section_handle_add(F("main"), section_main_frame);
+    jee.section_handle_add(F("show_flags"), show_main_flags);
 
     jee.section_handle_add(F("effects"), section_effects_frame);
     jee.section_handle_add(F("effects_param"), show_effects_param);
@@ -1054,58 +1078,59 @@ void sync_parameters(){
 
 void remote_action(RA action, const char *value){
     StaticJsonDocument<128> doc;
-    JsonObject obj = doc.as<JsonObject>();
+    JsonObject obj = doc.to<JsonObject>();
     switch (action) {
         case RA::RA_ON:
-            obj[F("ONflag")] = true;
-            set_onflag(nullptr, &obj);
+            CALLINTERF(F("ONflag"), true, set_onflag);
             break;
         case RA::RA_OFF:
-            obj[F("ONflag")] = false;
-            set_onflag(nullptr, &obj);
+            CALLINTERF(F("ONflag"), false, set_onflag);
             break;
         case RA::RA_DEMO:
-            obj[F("Demo")] = true;
-            set_demoflag(nullptr, &obj);
+            CALLINTERF(F("Demo"), true, set_demoflag);
             break;
-        case RA::RA_EFFECT:
-            obj[F("effList")] = value;
-            set_effects_list(nullptr, &obj);
+        case RA::RA_DEMO_NEXT:
+            if (jee.param(F("DRand")) == F("true")) {
+                myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
+            } else {
+                myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
+            }
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+        case RA::RA_EFFECT: {
+            CALLINTERF(F("effList"), value, set_effects_list);
             break;
+        }
         case RA::RA_BRIGHT_NF:
             obj[F("nofade")] = true;
         case RA::RA_BRIGHT:
-            obj[F("bright")] = value;
-            set_effects_param(nullptr, &obj);
+            CALLINTERF(F("bright"), value, set_effects_param);
             break;
         case RA::RA_SPEED:
-            obj[F("speed")] = value;
-            set_effects_param(nullptr, &obj);
+            CALLINTERF(F("speed"), value, set_effects_param);
             break;
         case RA::RA_SCALE:
-            obj[F("scale")] = value;
-            set_effects_param(nullptr, &obj);
+            CALLINTERF(F("scale"), value, set_effects_param);
             break;
         case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
-            break;
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_EFF_PREV:
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
-            break;
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_EFF_RAND:
             myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
-            break;
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+        case RA::RA_WHITE_HI:
+            myLamp.switcheffect(SW_WHITE_HI);
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+        case RA::RA_WHITE_LO:
+            myLamp.switcheffect(SW_WHITE_LO);
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_ALARM:
             myLamp.startAlarm();
             break;
         case RA::RA_REBOOT:
             ESP.restart(); // так лучше :)
-            break;
-        case RA::RA_WHITE_HI:
-            myLamp.switcheffect(SW_WHITE_HI);
-            break;
-        case RA::RA_WHITE_LO:
-            myLamp.switcheffect(SW_WHITE_LO);
             break;
         case RA::RA_LAMP_CONFIG:
             if (value && *value) {
