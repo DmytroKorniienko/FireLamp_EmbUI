@@ -583,7 +583,7 @@ public:
     void periodicTimeHandle();
 
     void startAlarm();
-    void startDemoMode();
+    void startDemoMode(byte tmout = DEMO_TIMEOUT);
     void startNormalMode();
 #ifdef OTA
     void startOTAUpdate();
@@ -664,7 +664,7 @@ public:
      * включает/выключает "демо"-таймер
      * @param TICKER action - enable/disable/reset
      */
-    void demoTimer(SCHEDULER action);
+    void demoTimer(SCHEDULER action, byte tmout = DEMO_TIMEOUT);
 
     /*
      * включает/выключает "эффект"-таймер

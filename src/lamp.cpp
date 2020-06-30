@@ -749,14 +749,14 @@ void LAMP::startAlarm()
 /*
  * запускаем режим "ДЕМО"
  */
-void LAMP::startDemoMode()
+void LAMP::startDemoMode(byte tmout)
 {
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
   remote_action(RA::RA_DEMO_NEXT, nullptr);
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
-  demoTimer(T_ENABLE);
+  demoTimer(T_ENABLE, tmout);
 }
 
 void LAMP::startNormalMode()
@@ -1296,7 +1296,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) 
  * включает/выключает режим "демо"
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
-void LAMP::demoTimer(SCHEDULER action){
+void LAMP::demoTimer(SCHEDULER action, byte tmout){
 //  LOG.printf_P(PSTR("demoTimer: %u\n"), action);
   switch (action)
   {
@@ -1304,7 +1304,7 @@ void LAMP::demoTimer(SCHEDULER action){
     _demoTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
-    _demoTicker.attach_scheduled(DEMO_TIMEOUT, std::bind(&remote_action, RA::RA_DEMO_NEXT, nullptr));
+    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, nullptr));
     break;
   case SCHEDULER::T_RESET :
     if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); }// тут же сбросим и будильник

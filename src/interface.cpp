@@ -287,7 +287,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
     bool newdemo = (*data)[F("Demo")] == F("true");
     switch (myLamp.getMode()) {
         case MODE_NORMAL:
-            if (newdemo) myLamp.startDemoMode(); break;
+            if (newdemo) myLamp.startDemoMode(jee.param(F("DTimer")).toInt()); break;
         case MODE_DEMO:
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
@@ -582,6 +582,8 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(F("MIRR_H"), F("Отзеркаливание H"));
     interf->checkbox(F("MIRR_V"), F("Отзеркаливание V"));
     interf->checkbox(F("isFaderON"), F("Плавное переключение эффектов"));
+    interf->checkbox(F("DRand"), F("Случайный эффект в Демо"));
+    interf->range(F("DTimer"), 30, 250, 10, F("Время в секундах для смены режима"));
 #ifdef ESP_USE_BUTTON
     interf->checkbox(F("isBtnOn"), F("Кнопка активна"));
 #endif
@@ -624,6 +626,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("MIRR_H"), myLamp.setMIRR_H((*data)[F("MIRR_H")] == F("true")));
     SETPARAM(F("MIRR_V"), myLamp.setMIRR_V((*data)[F("MIRR_V")] == F("true")));
     SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
+    SETPARAM(F("DRand"), 0);
+    SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
 
 #ifdef ESP_USE_BUTTON
     SETPARAM(F("isBtnOn"), myLamp.setButtonOn((*data)[F("isBtnOn")] == F("true")));
@@ -978,6 +982,8 @@ void create_parameters(){
     jee.var_create(F("Events"), F("false"));
 
     jee.var_create(F("isFaderON"), (FADE == true? F("true") : F("false")));
+    jee.var_create(F("DRand"), (RANDOM_DEMO == true? F("true") : F("false")));
+    jee.var_create(F("DTimer"), String(DEMO_TIMEOUT).c_str());
 
 
     // далее идут обработчики параметров
@@ -1084,7 +1090,7 @@ void remote_action(RA action, const char *value){
             CALLINTERF(F("Demo"), true, set_demoflag);
             break;
         case RA::RA_DEMO_NEXT:
-            if (RANDOM_DEMO) {
+            if (jee.param(F("DRand")) == F("true")) {
                 myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
             } else {
                 myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
