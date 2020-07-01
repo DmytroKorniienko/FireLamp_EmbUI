@@ -765,10 +765,10 @@ void LAMP::startNormalMode()
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   if (storedEffect != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
+    remote_action(RA::RA_EFFECT, String(storedEffect).c_str());
   } else
   if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    switcheffect(SW_RND, isFaderON);
+    remote_action(RA::RA_EFF_RAND, nullptr);
   }
 }
 #ifdef OTA
@@ -1031,7 +1031,7 @@ void LAMP::newYearMessageHandle()
 void LAMP::periodicTimeHandle()
 {
   static bool cancel = false;
-  
+
   const tm* t = localtime(timeProcessor.now());
   //LOG(println, tm);
   if( t->tm_sec ) {cancel=false; return;}

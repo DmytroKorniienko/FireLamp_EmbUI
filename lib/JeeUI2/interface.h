@@ -26,6 +26,7 @@ typedef enum _remote_action {
     RA_BRIGHT_NF,
     RA_SPEED,
     RA_SCALE,
+    RA_EXTRA,
     RA_EFFECT,
     RA_SEND_TEXT,
     RA_SEND_TIME,
@@ -34,7 +35,7 @@ typedef enum _remote_action {
     RA_WHITE_LO,
 } RA;
 
-#define SETPARAM(key, call) if (data->containsKey(key)) { \
+#define SETPARAM(key, call...) if (data->containsKey(key)) { \
     jee.var(key, (*data)[key]); \
     call; \
 }
@@ -45,10 +46,11 @@ typedef enum _remote_action {
     obj.clear(); \
 }
 
-#define CALLINTERF(key, val, call) { \
+#define CALLINTERF(key, val, call, prm...) { \
     obj[key] = val; \
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
     call(interf, &obj); \
+    prm; \
     if (interf) delete interf; \
 }
 

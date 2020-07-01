@@ -320,8 +320,12 @@ void Interface::value(const String &id, const String &val, bool html){
     if (html) obj[F("html")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        value(id, val);
+        value(id, val, html);
     }
+}
+
+void Interface::value(const String &id, bool html){
+    value(id, jee->param(id), html);
 }
 
 ///////////////////////////////////////
