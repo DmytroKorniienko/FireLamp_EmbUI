@@ -1074,6 +1074,10 @@ void sync_parameters(){
     obj[F("ny_unix")] = jee.param(F("ny_unix"));
     set_settings_other(nullptr, &obj);
     obj.clear();
+
+    if (myLamp.IsGlobalBrightness()) {
+        CALLSETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_param);
+    }
 }
 
 void remote_action(RA action, const char *value){

@@ -1203,10 +1203,10 @@ public:
         updateParam(tmp.c_str());
 
         // устанавливаем переменну 'rval' если задается ключ 'R'
-        if (strcmp_P("R", (PGM_P)type) && worker)
+        if (!strcmp_P("R", (PGM_P)type) && worker) {
             worker->setrval(atoi(val));
+        }
     }
-
 
 };
 
