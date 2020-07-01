@@ -665,7 +665,9 @@ void show_settings_time(Interface *interf, JsonObject *data){
 
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("tm_offs"), myLamp.timeProcessor.SetOffset((*data)[F("tm_offs")]));
+/*
+    // пока решаем чего хотим в этом месте
+    SETPARAM(F("tm_offs"), myLamp.timeProcessor.setOffset((*data)[F("tm_offs")]));
     SETPARAM(F("timezone"), myLamp.timeProcessor.setTimezone((*data)[F("timezone")]));
     SETPARAM(F("time"), myLamp.timeProcessor.setTime((*data)[F("time")]));
     SETPARAM(F("isTmSync"), myLamp.timeProcessor.setIsSyncOnline((*data)[F("isTmSync")] == F("true")));
@@ -673,7 +675,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
     if (myLamp.timeProcessor.getIsSyncOnline()) {
         myLamp.refreshTimeManual(); // принудительное обновление времени
     }
-
+*/
     myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
 }
 
@@ -760,17 +762,22 @@ void set_event_conf(Interface *interf, JsonObject *data){
     event.event = (EVENT_TYPE)(*data)[F("evList")].as<long>();
     event.repeat = (*data)[F("repeat")];
     event.stopat = (*data)[F("stopat")];
-
-    tmElements_t tm;
     String tmEvent = (*data)[F("tmEvent")];
-    tm.Year = atoi(tmEvent.substring(0,4).c_str()) - 1970;
-    tm.Month = atoi(tmEvent.substring(5,7).c_str());
-    tm.Day = atoi(tmEvent.substring(8,10).c_str());
-    tm.Hour = atoi(tmEvent.substring(11,13).c_str());
-    tm.Minute = atoi(tmEvent.substring(14,16).c_str());
-    tm.Second = 0;
 
-    event.unixtime = makeTime(tm);;
+    struct tm t;
+    tm *tm=&t;
+    Serial.println( tmEvent);   //debug
+    Serial.println( tmEvent.substring(0,4).c_str());
+    tm->tm_year=tmEvent.substring(0,4).toInt()-TM_BASE_YEAR;
+    tm->tm_mon=tmEvent.substring(5,7).toInt();
+    tm->tm_mday=tmEvent.substring(8,10).toInt();
+    tm->tm_hour=tmEvent.substring(11,13).toInt();
+    tm->tm_min=tmEvent.substring(14,16).toInt();
+    tm->tm_sec=0;
+
+    LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
+
+    event.unixtime = mktime(tm);;
     String tmpMsg(jee.param(F("msg")));
     event.message = (char*)(tmpMsg.c_str());
 

@@ -177,6 +177,8 @@ void jeeui2::init(){
     LOG(println, String(F("CONFIG: ")) + jee.deb());
 #endif
     ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
+
+    WiFi.persistent(false);     // не сохраняем креды от WiFi во флеш, т.к. они у нас уже лежат в конфиге
     wifi_connect();
     LOG(println, String(F("MAC: ")) + jee.mac);
 }

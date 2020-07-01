@@ -80,10 +80,6 @@ void setup() {
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
     sync_parameters();
 
-    if (myLamp.timeProcessor.getIsSyncOnline()) {
-      myLamp.refreshTimeManual(); // принудительное обновление времени
-    }
-
     if (myLamp.timeProcessor.isDirtyTime()) {
       myLamp.setIsEventsHandled(false);
     }
@@ -114,6 +110,7 @@ void mqttCallback(const String &topic, const String &payload){ // функция
   LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
 }
 
+// нужно подчистить эту функцию, печатать инфо можно более аккуратным способом
 void sendData(){
   static unsigned long i;
   static unsigned int in;

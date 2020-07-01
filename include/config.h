@@ -211,13 +211,15 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 #endif
 
-#ifndef TIME_SYNC_INTERVAL
-#define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
+// настройки времени
+//#ifndef TZONE
+//#define TZONE                 ("AUTO")
+//#endif
+#ifndef HTTPTIME_SYNC_INTERVAL
+ #define HTTPTIME_SYNC_INTERVAL    (4)                           // интервал синхронизации времени по http, час
 #endif
-#ifndef NTPADDRESS
-#define NTPADDRESS            ("ntp2.colocall.net")         // сервер времени для NTP (альтернативный метод), можно также попробовать "ntp2.colocall.net, pool.ntp.org, europe.pool.ntp.org" и т.д.
-#endif
-const char NTP_ADDRESS[] PROGMEM = NTPADDRESS;
+
+
 
 #ifndef TEXT_OFFSET
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)

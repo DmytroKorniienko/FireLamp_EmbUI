@@ -37,145 +37,263 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "timeProcessor.h"
 
-String TimeProcessor::getHttpData(const char *url)
-{
-  String payload(256);
-  LOG(println, F("Time updating via HTTP..."));
-  http.begin(client, url);
-  
-  int httpCode = http.GET();
-  if (httpCode > 0){
-    if (httpCode == HTTP_CODE_OK){
-      payload = http.getString(); 
-    } else {
-        LOG(printf_P, PSTR("HTTPCode=%d\n"), httpCode);
-        LOG(println, F("Forcing getString"));
-		delay(1000);
-		payload = http.getString(); 
-	}
-  }
-  http.end();
-  return payload;
-}
+#include <TZ.h>
+#include <coredecls.h>                  // settimeofday_cb()
+#include <sntp.h>
 
-void TimeProcessor::handleTime(bool force)
+#ifdef ESP8266
+ #include "ESP8266HTTPClient.h"
+#endif
+
+#ifdef ESP32
+ #include "HTTPClient.h"
+#endif
+
+#ifndef TZONE
+    #include "ArduinoJson.h"
+#endif
+
+TimeProcessor::TimeProcessor()
 {
-    static unsigned long timer;
-    if (timer + TIME_SYNC_INTERVAL > millis() && !force)
-        return;
-    
-    timer = millis();
-    if(!getTimeJson(timer)){
-        timer = millis();
-        getTimeNTP(timer);
-    }
+    eGotIPHandler = WiFi.onStationModeGotIP(std::bind(&TimeProcessor::onSTAGotIP, this, std::placeholders::_1));
+    eDisconnectHandler = WiFi.onStationModeDisconnected(std::bind(&TimeProcessor::onSTADisconnected, this, std::placeholders::_1));
+
+    settimeofday_cb(std::bind(&TimeProcessor::timeavailable, this));
+
+    #ifdef TZONE
+      //setTZ(TZONE);
+      configTime(TZONE, NTP1ADDRESS, NTP2ADDRESS);
+      LOG(print, F("Time Zone: "));      LOG(print, TZONE);
+    #else
+      configTime(TZ_Etc_GMT, NTP1ADDRESS, NTP2ADDRESS);
+    #endif
+    sntp_stop();    // отключаем ntp пока нет подключения к AP
 }
 
 String TimeProcessor::getFormattedShortTime()
 {
-    char buffer[10];
-    time_t ut=getUnixTime();
-    // unsigned long val, val_tm;
-
-    // if(!isSynced){
-    //     val = dirtytime*1000; val_tm = query_last_dirtytime_timer;
-    // } else {
-    //     val = (unixtime%86400UL+raw_offset)*1000; val_tm = query_last_timer;
-    // }
-
-    // //LOG.println((millis()-val_tm));
-    // sprintf_P(buffer,PSTR("%02u:%02u"),(unsigned)((val+(millis()-val_tm))/(3600000UL)%24) // 3600*1000
-    // ,(unsigned)((val+(millis()-val_tm))%(3600000UL))/(60000UL)); // 60*1000
-    sprintf_P(buffer,PSTR("%02u:%02u"),hour(ut),minute(ut));
+    char buffer[6];
+    sprintf_P(buffer,PSTR("%02u:%02u"), localtime(now())->tm_hour, localtime(now())->tm_min);
     return String(buffer);
 }
 
-void TimeProcessor::setTime(const char *var)
-{
-    char st[3];
-    int val1, val2;
-
-    st[0]=var[0]; st[1]=var[1]; st[2]='\0';
-    val1 = atoi(st);
-    st[0]=var[3]; st[1]=var[4]; st[2]='\0';
-    val2 = atoi(st);
-
-    dirtytime=(val1*3600+val2*60);
-    query_last_dirtytime_timer=millis();
+/**
+ * установка строки с текущей временной зоной в текстовом виде
+ * влияет, на запрос через http-api за временем в конкретной зоне,
+ * вместо автоопределения по ip
+ */
+void TimeProcessor::setTimezone(const char *var){
+  if (!var)
+    return;
+  tzone = var;
 }
 
-bool TimeProcessor::getTimeJson(unsigned long timer)
+/**
+ * по идее это функция установки времени из гуя.
+ * Но похоже что выставляет она только часы и минуты, и то не очень понятно куда?
+ * надо переделать под выставление даты/веремени из браузера (например) когда нормально заработает гуй
+ */
+void TimeProcessor::setTime(const char *timestr){
+    String _str(timestr);
+    setTime(_str);
+}
+
+void TimeProcessor::setTime(String &timestr){
+    //"YYYY-MM-DDThh:mm:ss"    [19]
+    if (timestr.length()<DATETIME_STRLEN)
+        return;
+
+    struct tm t;
+    tm *tm=&t;
+
+    tm->tm_year = timestr.substring(0,4).toInt() - TM_BASE_YEAR;
+    tm->tm_mon = timestr.substring(5,7).toInt();
+    tm->tm_mday = timestr.substring(8,10).toInt();
+    tm->tm_hour= timestr.substring(11,13).toInt();
+    tm->tm_min = timestr.substring(14,16).toInt();
+    tm->tm_sec = timestr.substring(17,19).toInt();
+
+    timeval tv = { mktime(tm), 0 };
+    settimeofday(&tv, NULL);
+}
+
+
+/**
+ * установки системной временной зоны/правил сезонного времени.
+ * по сути дублирует системную функцию setTZ, но работает сразу
+ * со строкой из памяти, а не из PROGMEM
+ * Может использоваться для задания настроек зоны/правил налету из
+ * браузера/апи вместо статического задания Зоны на этапе компиляции
+ * @param tz - указатель на строку в формате TZSET(3)
+ * набор отформатированных строк зон под прогмем лежит тут
+ * https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h
+ */
+void TimeProcessor::tzsetup(const char* tz){
+    setenv("TZ", tz, 1/*overwrite*/);
+    tzset();
+}
+
+#ifndef TZONE
+/**
+ * берем урл и записываем ответ в переданную строку
+ * в случае если в коде ответа ошибка, обнуляем строку
+ */ 
+unsigned int TimeProcessor::getHttpData(String &payload, const String &url)
 {
-    String result;
-    if(!strlen(timezone)){
-        timer = millis();
-        result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
+  WiFiClient client;
+  HTTPClient http;
+  LOG(println, F("TimeZone updating via HTTP..."));
+  http.begin(client, url);
+
+  int httpCode = http.GET();
+  if (httpCode == HTTP_CODE_OK){
+    payload = http.getString(); 
+  } else {
+    LOG(printf_P, PSTR("Time HTTPCode=%d\n"), httpCode);
+  }
+  http.end();
+  return payload.length();
+}
+
+void TimeProcessor::getTimeHTTP()
+{
+    String result((char *)0);
+    result.reserve(TIMEAPI_BUFSIZE);
+    if(tzone.length()){
+        String url(FPSTR(PG_timeapi_tz_url));
+        url+=tzone;
+        getHttpData(result, url);
     }
-    else {
-        timer = millis();
-        String tmpStr(PSTR("http://worldtimeapi.org/api/timezone/"));
-        tmpStr+=timezone;
-        result = getHttpData(tmpStr.c_str());
-        if(result.length()<50){ // {"error":"unknown location"}
-            timer = millis();
-            result = getHttpData(PSTR("http://worldtimeapi.org/api/ip"));
-        }
+
+    if(!result.length()){
+        String url(FPSTR(PG_timeapi_ip_url));
+        if(!getHttpData(result, url))
+            return;
     }
-    query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
-    DynamicJsonDocument doc(768);
-    DeserializationError error = deserializeJson(doc, result);
+
     LOG(println, result);
+    DynamicJsonDocument doc(TIMEAPI_BUFSIZE);
+    DeserializationError error = deserializeJson(doc, result);
+    result="";
 
     if (error) {
-        LOG(print, F("deserializeJson error: "));
+        LOG(print, F("Time deserializeJson error: "));
         LOG(println, error.code());
-        return false;
+        return;
     }
 
-    if(!doc[F("error")].size()){
-        week_number=doc[F("week_number")];
-        day_of_week=doc[F("day_of_week")];
-        day_of_year=doc[F("day_of_year")];
-        unixtime=doc[F("unixtime")];
-        raw_offset=doc[F("raw_offset")];
-        dst_offset=doc[F("dst_offset")]; // смещение на летнее время, если есть
-        if(unixtime) isSynced = true;
-        sync = SYNC_TYPE::JSON_SYNC;
-    } else {
-        if(!unixtime) isSynced = false;
-    }
+    int raw_offset, dst_offset = 0;
 
-    return isSynced;
+    raw_offset=doc[F("raw_offset")];    // по сути ничего кроме текущего смещения от UTC от сервиса не нужно
+                                        // правила перехода сезонного времени в формате, воспринимаемом системной
+                                        // либой он не выдает, нужно писать внешний парсер. Мнемонические определения
+                                        // слишком объемные для контроллера чтобы держать и обрабатывать их на лету.
+                                        // Вероятно проще будет их запихать в js веб-интерфейса
+    dst_offset=doc[F("dst_offset")];
+    setOffset(raw_offset+dst_offset);
+
+    if (!tzone.length()) {
+        const char *tz = doc[F("timezone")];
+        tzone+=tz;
+    }
+    LOG(printf_P, PSTR("HTTP TimeZone: %s, offset: %d, dst offset: %d\n"), tzone.c_str(), raw_offset, dst_offset);
+
+    if (doc[F("dst_from")]!=nullptr){
+        Serial.println("Zone has DST, rescheduling refresh");
+        httprefreshtimer();
+    }
 }
 
-bool TimeProcessor::getTimeNTP(unsigned long timer)
-{
-    WiFiUDP wifiUdp;
-    char ntpNameBuffer[64]; // NTPClient почему-то падает в Exception (3) при попытке передать PSTR, поэтому ход конем - копируем во временный буффер
-    strncpy_P(ntpNameBuffer, NTP_ADDRESS, sizeof(ntpNameBuffer)-1);
-    NTPClient timeClient(wifiUdp, ntpNameBuffer, 0); // utcOffsetInSeconds
-    //NTPClient timeClient(wifiUdp, String(FPSTR(NTP_ADDRESS)).c_str(), 0); // utcOffsetInSeconds
-    Serial.println(F("Time updating via NTP..."));
+void TimeProcessor::httprefreshtimer(const uint32_t delay){
+    if (!usehttpzone)
+        return;     // выходим если не выставлено разрешение на использование http
 
-    timeClient.begin();
-    //delay(300);
-    timer = millis();
-    timeClient.update();
-    if(timeClient.getEpochTime()<9999999) {  // что-то пошло не так, попытаемся еще раз c задержкой
-        timer = millis();
-        delay(300);
-        timeClient.update();
-    }
+    time_t timer;
 
-    LOG(println, timeClient.getEpochTime());
-
-    if(timeClient.getEpochTime()>9999999){
-        unixtime = timeClient.getEpochTime();
-        if(unixtime) isSynced = true;
-        query_last_timer = millis()-((millis()-timer)/2); // значение в millis() на момент получения времени, со смещением на половину времени ушедшего на получение времени.
-        sync = SYNC_TYPE::NTP_SYNC;
-        return true;
+    if (delay){
+        timer = delay;
     } else {
-        return false;
+        struct tm t;
+        tm *tm=&t;
+        localtime_r(now(), tm);
+
+        tm->tm_mday++;                  // выставляем "завтра"
+        tm->tm_hour= HTTP_REFRESH_HRS;
+        tm->tm_min = HTTP_REFRESH_MIN;
+
+        timer = (mktime(tm) - getUnixTime())% DAYSECONDS;
+
+        LOG(printf_P, PSTR("Schedule TZ refresh in %d\n"), timer);
     }
+
+    _wrk.once_scheduled(timer, std::bind(&TimeProcessor::getTimeHTTP, this));
+}
+#endif
+
+/**
+ * обратный вызов при подключении к WiFi точке доступа
+ * запускает синхронизацию времени
+ */
+void TimeProcessor::onSTAGotIP(const WiFiEventStationModeGotIP ipInfo)
+{
+    sntp_init();
+    #ifndef TZONE
+        // отложенный запрос смещения зоны через http-сервис
+        httprefreshtimer(HTTPSYNC_DELAY);
+    #endif
+}
+
+void TimeProcessor::onSTADisconnected(const WiFiEventStationModeDisconnected event_info)
+{
+  sntp_stop();
+  #ifndef TZONE
+    _wrk.detach();
+  #endif
+}
+
+void TimeProcessor::timeavailable(){
+    LOG(println, F("Полученно точное время"));
+    isSynced = true;
+    if(_timecallback)
+        _timecallback();
+}
+
+/**
+ * функция допечатывает в переданную строку текущие дату/время в формате "YYYY-MM-DDThh:mm:ss"
+ * 
+ */
+void TimeProcessor::getDateTimeString(String &buf){
+  char tmpBuf[17];
+  const tm* tm = localtime(now());
+  sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"), tm->tm_year + TM_BASE_YEAR, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
+  //  long int a = getOffset();  LOG(printf_P, PSTR("DT: %s, TZoffset:%d\n"), tmpBuf, a);
+  buf.concat(tmpBuf);
+}
+
+/**
+ * установка текущего смещения от UTC в секундах
+ */
+void TimeProcessor::setOffset(const int val){
+    LOG(printf_P, PSTR("Set time zone offset to: %d\n"), val);
+    sntp_set_timezone_in_seconds(-1*val);   // в правилах смещение имеет обратный знак (TZ-OffSet=UTC)
+}
+
+/**
+ * Возвращает текущее смещение локального системного времени от UTC в секундах
+ * с учетом часовой зоны и правил смены сезонного времени (если эти параметры были
+ * корректно установленно ранее каким-либо методом)
+ */
+long int TimeProcessor::getOffset(){
+    const tm* tm = localtime(now());
+    auto tz = __gettzinfo();
+    return *(tm->tm_isdst == 1 ? &tz->__tzrule[1].offset : &tz->__tzrule[0].offset);
+}
+
+void TimeProcessor::setcustomntp(const char* ntp){
+    if (ntp)
+        sntp_setservername(CUSTOM_NTP_INDEX, (char*)ntp);
+}
+
+void TimeProcessor::attach_callback(std::function<void(void)> callback){
+    _timecallback = std::move(callback);
 }
