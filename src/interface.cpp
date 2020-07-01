@@ -284,7 +284,6 @@ void block_effects_main(Interface *interf, JsonObject *data){
 
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    // Специально не сохраняем, считаю что лампа должна стартавать выключеной
     bool newpower = (*data)[F("ONflag")] == F("true");
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
@@ -294,6 +293,9 @@ void set_onflag(Interface *interf, JsonObject *data){
             myLamp.changePower(newpower);
         }
     }
+#ifdef RESTORE_STATE
+    jee.var(F("ONflag"), (*data)[F("ONflag")]);
+#endif
 }
 
 void set_demoflag(Interface *interf, JsonObject *data){
@@ -307,6 +309,9 @@ void set_demoflag(Interface *interf, JsonObject *data){
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
     }
+#ifdef RESTORE_STATE
+    jee.var(F("Demo"), (*data)[F("Demo")]);
+#endif
 }
 
 #ifdef OTA
@@ -994,11 +999,16 @@ void create_parameters(){
     jee.var_create(F("ny_period"), F("0"));
     jee.var_create(F("ny_unix"), F("1609459200"));
 
-# ifdef MIC_EFFECTS
+#ifdef MIC_EFFECTS
     jee.var_create(F("micScale"),F("1.28"));
     jee.var_create(F("micNoise"),F("0.00"));
     jee.var_create(F("micnRdcLvl"),F("0"));
     jee.var_create(F("Mic"), F("true"));
+#endif
+
+#ifdef RESTORE_STATE
+    jee.var_create(F("ONflag"), F("false"));
+    jee.var_create(F("Demo"), F("false"));
 #endif
 
     jee.var_create(F("Events"), F("false"));
@@ -1070,9 +1080,16 @@ void sync_parameters(){
     CALLSETTER(F("effList"), jee.param(F("effList")), set_effects_list);
     CALLSETTER(F("Events"), jee.param(F("Events")), set_eventflag);
     CALLSETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
+
+#ifdef RESTORE_STATE
+    CALLSETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
+    CALLSETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
+#endif
+
 #ifdef AUX_PIN
     CALLSETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
 #endif
+
 #ifdef MIC_EFFECTS
     CALLSETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
 
@@ -1086,6 +1103,7 @@ void sync_parameters(){
 #ifdef ESP_USE_BUTTON
     obj[F("isBtnOn")] = jee.param(F("isBtnOn"));
 #endif
+
     obj[F("isFaderON")] = jee.param(F("isFaderON"));
     obj[F("MIRR_H")] = jee.param(F("MIRR_H"));
     obj[F("MIRR_V")] = jee.param(F("MIRR_V"));
