@@ -1126,13 +1126,13 @@ void remote_action(RA action, const char *value){
     JsonObject obj = doc.to<JsonObject>();
     switch (action) {
         case RA::RA_ON:
-            CALLINTERF(F("ONflag"), true, set_onflag);
+            CALLINTERF(F("ONflag"), F("true"), set_onflag);
             break;
         case RA::RA_OFF:
-            CALLINTERF(F("ONflag"), false, set_onflag);
+            CALLINTERF(F("ONflag"), F("false"), set_onflag);
             break;
         case RA::RA_DEMO:
-            CALLINTERF(F("Demo"), true, set_demoflag);
+            CALLINTERF(F("Demo"), F("true"), set_demoflag);
             break;
         case RA::RA_DEMO_NEXT:
             if (jee.param(F("DRand")) == F("true")) {
