@@ -1142,11 +1142,7 @@ void remote_action(RA action, const char *value){
             }
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_EFFECT: {
-            CALLINTERF(F("effList"), value, set_effects_list, ({
-                interf->json_frame_value();
-                interf->value(F("effList"), String(myLamp.effects.getSelected()->eff_nb));
-                interf->json_frame_flush();
-            }));
+            CALLINTERF(F("effList"), value, set_effects_list);
             break;
         }
         case RA::RA_BRIGHT_NF:

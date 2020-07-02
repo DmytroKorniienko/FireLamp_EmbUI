@@ -46,11 +46,13 @@ typedef enum _remote_action {
     obj.clear(); \
 }
 
-#define CALLINTERF(key, val, call, prm...) { \
+#define CALLINTERF(key, val, call) { \
     obj[key] = val; \
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
     call(interf, &obj); \
-    prm; \
+    interf->json_frame_value(); \
+    interf->value(key, val, false); \
+    interf->json_frame_flush(); \
     if (interf) delete interf; \
 }
 
