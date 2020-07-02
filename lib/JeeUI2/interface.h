@@ -32,7 +32,7 @@ typedef enum _remote_action {
     RA_SEND_TIME,
     RA_SEND_IP,
     RA_WHITE_HI,
-    RA_WHITE_LO,
+    RA_WHITE_LO
 } RA;
 
 #define SETPARAM(key, call...) if (data->containsKey(key)) { \

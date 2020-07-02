@@ -573,9 +573,9 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("ap_ssid"));
-    SETPARAM(F("ssid"));
-    SETPARAM(F("pass"));
+    SETPARAM(F("ap_ssid"), jee.param(F("ap_ssid")).c_str());
+    SETPARAM(F("ssid"), jee.param(F("ssid")).c_str());
+    SETPARAM(F("pass"), jee.param(F("pass")).c_str());
 
     jee.var(F("wifi"), F("STA"));
     jee.save();
@@ -646,7 +646,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("MIRR_H"), myLamp.setMIRR_H((*data)[F("MIRR_H")] == F("true")));
     SETPARAM(F("MIRR_V"), myLamp.setMIRR_V((*data)[F("MIRR_V")] == F("true")));
     SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
-    SETPARAM(F("DRand"));
+    SETPARAM(F("DRand"), jee.param(F("DRand")).c_str());
     SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
 
 #ifdef ESP_USE_BUTTON
@@ -1266,6 +1266,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
     remote_action(action, value.c_str());
+    jee.publish(String(F("jee/pub/")) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
 // обработка эвентов лампы
