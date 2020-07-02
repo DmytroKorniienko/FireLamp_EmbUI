@@ -1266,6 +1266,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
     remote_action(action, value.c_str());
+    jee.publish(String(F("jee/pub/")) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
 // обработка эвентов лампы
