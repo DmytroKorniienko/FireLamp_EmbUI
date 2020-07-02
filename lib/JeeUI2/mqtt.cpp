@@ -168,8 +168,8 @@ void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessagePro
     String tpc = String(topic);
     if (*m_pref) tpc = tpc.substring(strlen(m_pref) + 1, tpc.length());
 
-    if (tpc.equals(F("jee/get/cfg"))) {
-        jee.publish(F("jee/pub/cfg"), jee.deb(), false);    
+    if (tpc.equals(F("jee/get/config"))) {
+        jee.publish(F("jee/pub/config"), jee.deb(), false);    
     } else
     if (tpc.startsWith(F("jee/get/"))) {
        String param = tpc.substring(8);

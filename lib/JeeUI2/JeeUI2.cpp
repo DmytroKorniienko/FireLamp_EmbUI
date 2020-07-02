@@ -127,9 +127,9 @@ void jeeui2::var(const String &key, const String &value, bool force)
 
     LOG(printf_P, PSTR("FREE: %u\n"), cap - cfg.memoryUsage());
 
-    if (mqtt_remotecontrol) {
-        publish(String(F("jee/set/")) + key, value, true);
-    }
+    // if (mqtt_remotecontrol) {
+    //     publish(String(F("jee/set/")) + key, value, true);
+    // }
 }
 
 void jeeui2::var_create(const String &key, const String &value)
