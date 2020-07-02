@@ -320,8 +320,12 @@ void Interface::value(const String &id, const String &val, bool html){
     if (html) obj[F("html")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        value(id, val);
+        value(id, val, html);
     }
+}
+
+void Interface::value(const String &id, bool html){
+    value(id, jee->param(id), html);
 }
 
 ///////////////////////////////////////
@@ -402,8 +406,8 @@ void Interface::json_section_content(){
     json_section_begin(F("content"));
 }
 
-void Interface::json_section_line(){
-    json_section_begin(F("line"), F(""), false, false, true);
+void Interface::json_section_line(const String &name){
+    json_section_begin(name, F(""), false, false, true);
 }
 
 void Interface::json_section_main(const String &name, const String &label){

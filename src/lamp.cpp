@@ -173,10 +173,11 @@ EVERY_N_SECONDS(15){
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
 #endif
 
-  timeProcessor.handleTime();                         // Обновление времени
+  //timeProcessor.handleTime();                         // Обновление времени
 
-  if(!second(timeProcessor.getUnixTime()) && isEventsHandled) // только на 0 секунду, т.е. 1 раз в минуту и если обработка разрешена
-    events.events_handle(timeProcessor.getUnixTime(),timeProcessor.getOffset());
+  // обработчик событий (пока не выкину в планировщик)
+  if ( isEventsHandled)
+    events.events_handle();
 }
 
 #ifdef ESP_USE_BUTTON
@@ -437,7 +438,7 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
 
 #ifdef PRINT_ALARM_TIME
         EVERY_N_SECONDS(1){
-          if(!second(timeProcessor.getUnixTime())){
+          if(timeProcessor.seconds00()){
             CRGB letterColor;
             hsv2rgb_rainbow(GSHMEM.dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
             sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
@@ -681,8 +682,8 @@ void LAMP::changePower() {changePower(!ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
-  manualOff = true;             // любая активность в интерфейсе - отключаем будильник
-  if ( flag == ONflag) return;  // пропускаем холостые вызовы
+  manualOff = true;            // любая активность в интерфейсе - отключаем будильник
+  if (flag == ONflag) return;  // пропускаем холостые вызовы
   LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
   ONflag = flag;
 
@@ -749,14 +750,14 @@ void LAMP::startAlarm()
 /*
  * запускаем режим "ДЕМО"
  */
-void LAMP::startDemoMode()
+void LAMP::startDemoMode(byte tmout)
 {
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
-  demoNext();
+  remote_action(RA::RA_DEMO_NEXT, nullptr);
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
-  demoTimer(T_ENABLE);
+  demoTimer(T_ENABLE, tmout);
 }
 
 void LAMP::startNormalMode()
@@ -764,10 +765,10 @@ void LAMP::startNormalMode()
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   if (storedEffect != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    switcheffect(SW_SPECIFIC, isFaderON, storedEffect);
+    remote_action(RA::RA_EFFECT, String(storedEffect).c_str());
   } else
   if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    switcheffect(SW_RND, isFaderON);
+    remote_action(RA::RA_EFF_RAND, nullptr);
   }
 }
 #ifdef OTA
@@ -826,7 +827,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   return false;
 }
 
-void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
 {
   uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
@@ -1000,10 +1001,10 @@ void LAMP::newYearMessageHandle()
 
   {
     char strMessage[256]; // буффер
-    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUTCUnixTime(); // unix_diff_time
+    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUnixTime(); // тут забит гвоздями 2020 год, не работоспособно
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, timeProcessor.getYear());
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(TimeProcessor::now())->tm_year);
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, PSTR("секунд"));
     } else if(calc/60<60){
@@ -1031,13 +1032,13 @@ void LAMP::periodicTimeHandle()
 {
   static bool cancel = false;
 
-  time_t tm = timeProcessor.getUnixTime();
+  const tm* t = localtime(timeProcessor.now());
   //LOG(println, tm);
-  if(second(tm)) {cancel=false; return;}
+  if( t->tm_sec ) {cancel=false; return;}
   if(cancel) return;
 
   cancel = true; // только раз в минуту срабатываем, на первую секунду
-  tm = hour(tm) * 60 + minute(tm);
+  time_t tm = t->tm_hour * 60 + t->tm_min;
 
   switch (enPeriodicTimePrint)
   {
@@ -1235,10 +1236,10 @@ void LAMP::buttonPress(bool state){
  * @param EFFSWITCH action - вид переключения (пред, след, случ.)
  * @param fade - переключаться через фейдер или сразу
  */
-void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
+void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) {
   LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
 
-  if (effects.isSelected()) {
+  if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :
         effects.setSelected(effects.getNext());
@@ -1264,12 +1265,11 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
     default:
         return;
     }
-  }
-
-  // тухнем "вниз" только на включенной лампе
-  if (fade && ONflag) {
-    fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, false, effnb));
-    return;
+    // тухнем "вниз" только на включенной лампе
+    if (fade && ONflag) {
+      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      return;
+    }
   }
 
   changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
@@ -1297,7 +1297,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb) {
  * включает/выключает режим "демо"
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
-void LAMP::demoTimer(SCHEDULER action){
+void LAMP::demoTimer(SCHEDULER action, byte tmout){
 //  LOG.printf_P(PSTR("demoTimer: %u\n"), action);
   switch (action)
   {
@@ -1305,7 +1305,7 @@ void LAMP::demoTimer(SCHEDULER action){
     _demoTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
-    _demoTicker.attach_scheduled(DEMO_TIMEOUT, std::bind(&LAMP::demoNext, this));
+    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, nullptr));
     break;
   case SCHEDULER::T_RESET :
     if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); }// тут же сбросим и будильник

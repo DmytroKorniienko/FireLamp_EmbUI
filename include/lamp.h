@@ -41,6 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "OTA.h"
 #include "timeProcessor.h"
+#include "events.h"
 #include <Ticker.h>
 
 #ifdef MIC_EFFECTS
@@ -62,14 +63,6 @@ typedef enum _LAMPMODE {
   MODE_ALARMCLOCK,
   MODE_OTA
 } LAMPMODE;
-
-#ifdef AUX_PIN
-typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE, AUX_ON, AUX_OFF, AUX_TOGGLE} EVENT_TYPE;
-#else
-typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE} EVENT_TYPE;
-#endif
-
-const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 
 // смена эффекта
 typedef enum _EFFSWITCH {
@@ -106,303 +99,6 @@ typedef enum _SCHEDULER {
 #define LED_SHOW_DELAY 1
 
 
-struct EVENT {
-    union {
-        struct {
-            bool isEnabled:1;
-            bool d1:1;
-            bool d2:1;
-            bool d3:1;
-            bool d4:1;
-            bool d5:1;
-            bool d6:1;
-            bool d7:1;
-        };
-        uint8_t raw_data;
-    };
-    uint8_t repeat;
-    uint8_t stopat;
-    uint32_t unixtime;
-    EVENT_TYPE event;
-    char *message;
-    EVENT *next = nullptr;
-    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
-    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
-    const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
-    String getDateTime(int offset = 0) {
-        char tmpBuf[]="9999-99-99T99:99";
-        time_t tm = unixtime+offset;
-        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
-        return String(tmpBuf);
-    }
-
-    String getName(int offset = 0) {
-        String buffer;
-        char tmpBuf[]="9999-99-99T99:99";
-        String day_buf(T_EVENT_DAYS);
-
-        buffer.concat(isEnabled?F("+"):F("-"));
-
-        switch (event)
-        {
-        case EVENT_TYPE::ON:
-            buffer.concat(F("ON"));
-            break;
-        case EVENT_TYPE::OFF:
-            buffer.concat(F("OFF"));
-            break;
-        case EVENT_TYPE::ALARM:
-            buffer.concat(F("ALARM"));
-            break;
-        case EVENT_TYPE::DEMO_ON:
-            buffer.concat(F("DEMO ON"));
-            break;
-        case EVENT_TYPE::LAMP_CONFIG_LOAD:
-            buffer.concat(F("LMP_GFG"));
-            break;
-        case EVENT_TYPE::EFF_CONFIG_LOAD:
-            buffer.concat(F("EFF_GFG"));
-            break;
-        case EVENT_TYPE::EVENTS_CONFIG_LOAD:
-            buffer.concat(F("EVT_GFG"));
-            break;
-        case EVENT_TYPE::SEND_TEXT:
-            buffer.concat(F("TEXT"));
-            break;
-        case EVENT_TYPE::PIN_STATE:
-            buffer.concat(F("PIN"));
-            break;
-#ifdef AUX_PIN
-        case EVENT_TYPE::AUX_ON:
-            buffer.concat(F("AUX ON"));
-            break;
-        case EVENT_TYPE::AUX_OFF:
-            buffer.concat(F("AUX OFF"));
-            break;
-        case EVENT_TYPE::AUX_TOGGLE:
-            buffer.concat(F("AUX TOGGLE"));
-            break;
-#endif
-        default:
-            break;
-        }
-        buffer.concat(F(","));
-
-        time_t tm = unixtime+offset;
-        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
-        buffer.concat(tmpBuf); buffer.concat(F(","));
-
-        if(repeat) {buffer.concat(repeat); buffer.concat(F(","));}
-        if(repeat && stopat) {buffer.concat(stopat); buffer.concat(F(","));}
-
-        uint8_t t_raw_data = raw_data>>1;
-        for(uint8_t i=1;i<8; i++){
-            if(t_raw_data&1){
-                buffer.concat(day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
-                buffer.concat(F(","));
-            }
-            t_raw_data >>= 1;
-        }
-
-        // if(message[0]){
-        //     memcpy(tmpBuf,message,5*2);
-        //     strcpy_P(tmpBuf+5*2,PSTR("..."));
-        // }
-        // buffer.concat(tmpBuf);
-        return buffer;
-    }
-};
-
-class EVENT_MANAGER {
-private:
-    EVENT_MANAGER(const EVENT_MANAGER&);  // noncopyable
-    EVENT_MANAGER& operator=(const EVENT_MANAGER&);  // noncopyable
-    EVENT *root = nullptr;
-    void(*cb_func)(const EVENT *) = nullptr; // функция обратного вызова
-
-    void check_event(EVENT *event, time_t current_time, int offset){
-        if(!event->isEnabled) return;
-        time_t eventtime = event->unixtime;// + offset;
-
-        //LOG(printf_P, PSTR("%d %d\n"),current_time, eventtime);
-        if(eventtime>current_time) return;
-
-        if(eventtime==current_time) // точно попадает в период времени 1 минута, для однократных событий
-        {
-            if(cb_func!=nullptr) cb_func(event); // сработало событие
-            return;
-        }
-
-        // если сегодня + периодический
-        if(event->repeat && eventtime<=current_time && year(eventtime)==year(current_time) && month(eventtime)==month(current_time) && day(eventtime)==day(current_time)){
-            //LOG(printf_P, PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
-            if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
-                if(((hour(current_time)*60+minute(current_time))<(hour(eventtime)*60+minute(eventtime)+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
-                    if(cb_func!=nullptr) cb_func(event); // сработало событие
-                    return;
-                }
-            }
-        }
-
-        uint8_t cur_day = dayOfWeek(current_time)-1; // 1 == Sunday
-        if(!cur_day) cur_day = 7; // 7 = Sunday
-
-        if((event->raw_data>>cur_day)&1) { // обрабатывать сегодня
-            if(eventtime<=current_time){ // время события было раньше/равно текущего
-                //LOG(printf_P, PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
-                if(hour(eventtime)==hour(current_time) && minute(eventtime)==minute(current_time)){ // точное совпадение
-                    if(cb_func!=nullptr) cb_func(event); // сработало событие
-                    return;
-                }
-                if(event->repeat && hour(eventtime)<=hour(current_time)){ // периодический в сегодняшний день
-                    if(!(((hour(current_time)*60+minute(current_time))-(hour(eventtime)*60+minute(eventtime)))%event->repeat)){
-                        if(((hour(current_time)*60+minute(current_time))<(hour(eventtime)*60+minute(eventtime)+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
-                            if(cb_func!=nullptr) cb_func(event); // сработало событие
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-public:
-    EVENT_MANAGER() {}
-    ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
-    void addEvent(const EVENT&event) {
-        EVENT *next=root;
-        EVENT *new_event = new EVENT(event);
-        if(event.message!=nullptr){
-            new_event->message = (char *)malloc(strlen(event.message)+1);
-            strcpy(new_event->message, event.message);
-        }
-        if(next!=nullptr){
-            while(next->next!=nullptr){
-                next=next->next;
-            }
-            next->next = new_event;
-        }
-        else {
-            root = new_event;
-        }
-    }
-
-    void delEvent(const EVENT&event) {
-        EVENT *next=root;
-        EVENT *prev=root;
-        if(next!=nullptr){
-            while(next){
-                EVENT *tmp_next = next->next;
-                if(*next==event){
-                    if(next->message!=nullptr)
-                        free(next->message);
-                    delete next;
-                    if(next==root) root=tmp_next; else prev->next=tmp_next;
-                } else {
-                    prev = next;
-                }
-                next=tmp_next;
-            }
-        }
-    }
-
-    void setEventCallback(void(*func)(const EVENT *))
-    {
-        cb_func = func;
-    }
-
-    EVENT *getNextEvent(EVENT *next=nullptr)
-    {
-        if(next==nullptr) return root; else return next->next;
-    }
-
-    void events_handle(time_t current_time, int offset)
-    {
-        EVENT *next = getNextEvent(nullptr);
-        while (next!=nullptr)
-        {
-            check_event(next, current_time, offset);
-            next = getNextEvent(next);
-        }
-    }
-
-    void loadConfig(const char *cfg = nullptr) {
-        if (LittleFS.begin()) {
-            File configFile;
-            if (cfg == nullptr) {
-                LOG(println, F("Load default events config file"));
-                configFile = LittleFS.open(F("/events_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
-            } else {
-                LOG(printf_P, PSTR("Load %s events config file\n"), cfg);
-                configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
-            }
-			String cfg_str = configFile.readString();
-            configFile.close();
-
-            if (cfg_str == F("")){
-                LOG(println, F("Failed to open events config file"));
-                saveConfig();
-                return;
-            }
-
-            LOG(println, F("\nStart desialization of events\n\n"));
-
-            DynamicJsonDocument doc(8192);
-            DeserializationError error = deserializeJson(doc, cfg_str);
-            if (error) {
-                LOG(print, F("deserializeJson error: "));
-                LOG(println, error.code());
-                LOG(println, cfg_str);
-                return;
-            }
-
-            JsonArray arr = doc.as<JsonArray>();
-            EVENT event;
-            for (size_t i=0; i<arr.size(); i++) {
-                JsonObject item = arr[i];
-                event.raw_data = item[F("raw")].as<int>();
-                event.unixtime = item[F("ut")].as<unsigned long>();
-                event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
-                event.repeat = item[F("rp")].as<int>();
-                event.stopat = item[F("sa")].as<int>();
-                String tmpStr = item[F("msg")].as<String>();
-                event.message = (char *)tmpStr.c_str();
-                addEvent(event);
-                LOG(printf_P, PSTR("[%u - %u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
-            }
-            doc.clear();
-        }
-    }
-
-    void saveConfig(const char *cfg = nullptr) {
-        if (LittleFS.begin()) {
-            File configFile;
-            if (cfg == nullptr) {
-                LOG(println, F("Save default events config file"));
-                configFile = LittleFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
-            } else {
-                LOG(printf_P, PSTR("Save %s events config file\n"), cfg);
-                configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
-            }
-            configFile.print("[");
-            EVENT *next=root;
-            int i=1;
-            while(next!=nullptr){
-                configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
-                    ((next->message!=nullptr)?next->message:(char*)F("")));
-                LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
-                    ((next->message!=nullptr)?next->message:(char*)F("")));
-                i++;
-                next=next->next;
-            }
-            configFile.print("]");
-            configFile.flush();
-            configFile.close();
-        }
-    }
-};
 
 class LAMP {
 private:
@@ -506,15 +202,10 @@ private:
 
     void doPrintStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool fillStringManual(const char* text,  const CRGB &letterColor, bool stopText = false, bool isInverse = false, int32_t pos = 0, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT); // -2147483648
-    void drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, int8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
+    void drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
     uint8_t getFont(uint8_t asciiCode, uint8_t row);
 
     void alarmWorker();
-
-    /*
-     * Смена эффекта в демо по таймеру
-     */
-    void demoNext() { RANDOM_DEMO ? switcheffect(SW_RND, isFaderON) : switcheffect(SW_NEXT_DEMO, isFaderON);}
 
     /*
      * вывод готового кадра на матрицу,
@@ -551,7 +242,7 @@ public:
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
-    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness())/255);}
+    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightnessS())/255);}
     void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightnessS(brg);} }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
@@ -560,7 +251,7 @@ public:
     LAMPMODE getMode() {return mode;}
 
     TimeProcessor timeProcessor;
-    void refreshTimeManual() { timeProcessor.handleTime(true); }
+    void refreshTimeManual() { timeProcessor.timerefresh(); }
 
     void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
@@ -588,7 +279,7 @@ public:
     void periodicTimeHandle();
 
     void startAlarm();
-    void startDemoMode();
+    void startDemoMode(byte tmout = DEMO_TIMEOUT);
     void startNormalMode();
 #ifdef OTA
     void startOTAUpdate();
@@ -661,14 +352,15 @@ public:
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
      * @param fade - переключаться через фейдер или сразу
      * @param effnb - номер эффекта
+     * skip - системное поле - пропуск фейдера
      */
-    void switcheffect(EFFSWITCH action = SW_NONE, bool fade=FADE, EFF_ENUM effnb = EFF_ENUM::EFF_NONE);
+    void switcheffect(EFFSWITCH action = SW_NONE, bool fade = FADE, EFF_ENUM effnb = EFF_ENUM::EFF_NONE, bool skip = false);
 
     /*
      * включает/выключает "демо"-таймер
      * @param TICKER action - enable/disable/reset
      */
-    void demoTimer(SCHEDULER action);
+    void demoTimer(SCHEDULER action, byte tmout = DEMO_TIMEOUT);
 
     /*
      * включает/выключает "эффект"-таймер

@@ -597,7 +597,7 @@ boolean FtpServer::processCommand()
 		file = LittleFS.open(path, "w");
       if( !file)
         client.println( "451 Can't open/create " +String(parameters) );
-      else if( ! dataConnect())
+      else if( ! dataConnect() && ! data.available())
       {
         client.println( "425 No data connection");
         file.close();

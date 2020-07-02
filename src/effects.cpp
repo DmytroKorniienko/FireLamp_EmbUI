@@ -2930,6 +2930,8 @@ bool EffectTime::run(CRGB *ledarr, const char *opt){
     return true;
   } else {
     lastrun = millis();
+    if (myLamp.isPrintingNow()) // если выводится бегущая строка, то эффект приостанавливаем! Специально обученный костыль, т.к. вывод статического и динамического текста одноверенно не совместимы
+      return true;
   }
   // if (dryrun())
   //   return false;

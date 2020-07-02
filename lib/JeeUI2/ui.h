@@ -93,13 +93,14 @@ class Interface {
 
         void json_section_menu();
         void json_section_content();
-        void json_section_line();
+        void json_section_line(const String &name = "");
         void json_section_main(const String &name, const String &label);
         void json_section_hidden(const String &name, const String &label);
         void json_section_begin(const String &name, const String &label = "", bool main = false, bool hidden = false, bool line = false);
         void json_section_begin(const String &name, const String &label, bool main, bool hidden, bool line, JsonObject obj);
         void json_section_end();
 
+        void value(const String &id, bool html = false);
         void value(const String &id, const String &val, bool html = false);
         void hidden(const String &id);
         void hidden(const String &id, const String &value);

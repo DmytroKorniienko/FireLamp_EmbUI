@@ -162,7 +162,7 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifndef FADE
-#define FADE                  true                          // fade by default on brightness change
+#define FADE                  (true)                        // fade by default on brightness change
 #endif
 #ifndef FADE_STEPTIME
 #define FADE_STEPTIME         (50U)                         // default time between fade steps, ms (2 seconds with max steps)
@@ -178,7 +178,7 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifndef RANDOM_DEMO
-#define RANDOM_DEMO           (1)                           // 0,1 - последовательный (0)/рандомный (1) выбор режима демо
+#define RANDOM_DEMO           (true)                        // false - последовательный, true - рандомный
 #endif
 #ifndef DEMO_TIMEOUT
 #define DEMO_TIMEOUT          (33)                          // время в секундах для смены режима DEMO
@@ -211,13 +211,15 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 #endif
 
-#ifndef TIME_SYNC_INTERVAL
-#define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
+// настройки времени
+//#ifndef TZONE
+//#define TZONE                 ("AUTO")
+//#endif
+#ifndef HTTPTIME_SYNC_INTERVAL
+ #define HTTPTIME_SYNC_INTERVAL    (4)                           // интервал синхронизации времени по http, час
 #endif
-#ifndef NTPADDRESS
-#define NTPADDRESS            ("ntp2.colocall.net")         // сервер времени для NTP (альтернативный метод), можно также попробовать "ntp2.colocall.net, pool.ntp.org, europe.pool.ntp.org" и т.д.
-#endif
-const char NTP_ADDRESS[] PROGMEM = NTPADDRESS;
+
+
 
 #ifndef TEXT_OFFSET
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)

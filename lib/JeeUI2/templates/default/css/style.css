@@ -2,7 +2,8 @@ label {white-space: nowrap;}
 .left-block{margin-top: 25px; padding-top: 25px; border-top: 1px solid #777; font-weight: bold;}
 .left-block div {display: flex; padding: 5px 10px 5px 5px; justify-content: space-between;}
 .menu-value {color: #fff;}
-.checkbox-label{margin-left: 60px; position: relative; top: -2px;}
+.checkbox-label{margin-left: 3em; position: relative; top: -2px;}
+.switch-block {margin: 20px 0px 15px 0px;}
 .header-block {color: #ccc;}
 .nested {padding: 0px 10px 0px 10px; border: 1px solid #ccc;}
 .mr {margin: 15px 0px 15px 0px !important;}

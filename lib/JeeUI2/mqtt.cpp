@@ -1,4 +1,5 @@
 #include "JeeUI2.h"
+#include "interface.h"
 
 bool jeeui2::mqtt_connected = false;
 bool jeeui2::mqtt_connect = false;
@@ -171,6 +172,10 @@ void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessagePro
         jee.publish(F("jee/get/cfg"), jee.deb(), false);
     } else
     if (mqtt_remotecontrol && tpc.startsWith(F("jee/set/"))) {
+       String cmd = tpc.substring(8);
+       httpCallback(tpc.substring(8), String(payload));
+    } else
+    if (mqtt_remotecontrol && tpc.startsWith(F("jee/jsset/"))) {
         DynamicJsonDocument doc(1024);
         deserializeJson(doc, payload, len);
         jee.post(doc.as<JsonObject>());
