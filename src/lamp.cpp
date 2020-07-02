@@ -38,7 +38,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 #include "main.h"
 #include "misc.h"
-#include "interface.h"
 
 extern LAMP myLamp; // Объект лампы
 
@@ -191,64 +190,23 @@ void LAMP::buttonTick()
       numHold = 0;
   }
 
-  if (!ONflag) { // Обработка из выключенного состояния
-    if (touch.isDouble()) { // Демо-режим, с переключением каждые 30 секунд для двойного клика в выключенном состоянии
-      remote_action(RA::RA_DEMO, nullptr);
-      return;
-    }
-
-    if (touch.isHolded()) {
-      LOG(printf_P, PSTR("Удержание кнопки из выключенного состояния\n"));
-      numHold = 1;
-      int clicks = touch.getHoldClicks();
-      if (!clicks) {
-        // Включаем белую лампу в полную яркость
-        brightDirection = 1;
-        mode = MODE_WHITELAMP;
-        switcheffect(SW_WHITE_HI);
-      } else {
-        // Включаем белую лампу в минимальную яркость
-        brightDirection = 0;
-        mode = MODE_WHITELAMP;
-        switcheffect(SW_WHITE_LO);
-      }
-      LOG(printf_P, PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
-
-      startButtonHolding = true;
-      setDirectionTimeout = false;
-
-      tmNumHoldTimer.reset();
-      tmChangeDirectionTimer.reset();
-
-      return;
-    }
-  }
+  bool hold = touch.isHolded();
 
   // кнопка только начала удерживаться
-  if (ONflag && (touch.isHolded())){
+  if (hold){
     int clicks = touch.getHoldClicks();
     LOG( printf_P, PSTR("touch.getHoldClicks()=%d\n"), clicks);
     startButtonHolding = true;
     setDirectionTimeout = false;
     isFirstHoldingPress = true;
-    switch (clicks){
-      case 0U: {
-        if(!numHold){
-          numHold = 1;
-        }
-        break;
-      }
-      case 1U: {
-        //if(!numHold)
-          numHold = 2;
-        break;
-      }
-      case 2U: {
-        //if(!numHold)
-          numHold = 3;
-        break;
-      }
-    }
+    if (clicks) numHold = clicks + 1;
+    else if (!numHold) numHold = 1;
+  }
+
+  uint8_t click = hold? numHold : touch.hasClicks() ? touch.getClicks() : 0;
+  Button btn(ONflag, hold, click);
+  for (int i = 0; i < buttons.size(); i++) {
+    if (btn == *buttons[i]) break;
   }
 
   // кнопка нажата и удерживается
@@ -639,7 +597,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+LAMP::LAMP() : buttons(), docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
 #ifdef ESP_USE_BUTTON
     , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
     , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки

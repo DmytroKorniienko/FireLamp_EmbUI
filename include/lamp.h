@@ -43,6 +43,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "timeProcessor.h"
 #include "events.h"
 #include <Ticker.h>
+#include "../../include/LList.h"
+#include "interface.h"
 
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
@@ -130,6 +132,7 @@ private:
  };
  #pragma pack(pop)
     //Button
+    LList<Button*> buttons;
     byte numHold = 0; // режим удержания
     byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов

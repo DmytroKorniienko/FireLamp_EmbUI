@@ -56,3 +56,22 @@ typedef enum _remote_action {
 
 void remote_action(RA action, const char *value);
 void httpCallback(const String &param, const String &value);
+
+class Button{
+    typedef union _bflags {
+        uint8_t mask;
+        struct {
+            uint8_t on:1;
+            uint8_t hold:1;
+            uint8_t click:3;
+        };
+    } btnflags;
+    btnflags flags;
+
+    friend bool operator== (const Button &f1, const Button &f2) { return (f1.flags.mask == f2.flags.mask); }
+    friend bool operator!= (const Button &f1, const Button &f2) { return (f1.flags.mask != f2.flags.mask); }
+
+    public:
+        Button(uint8_t on, uint8_t hold, uint8_t click) { flags.on = on; flags.hold = hold; flags.click = click; }
+};
+
