@@ -103,7 +103,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     confEff->isFavorite = ((*data)[F("eff_fav")] == F("true"));
 
     // myLamp.effects.saveConfig();
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
         myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
     }
 }
@@ -201,7 +201,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
         myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
     }
 }
@@ -213,7 +213,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), myLamp.effects.getSpeedS());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
         myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
     }
 }
@@ -225,7 +225,7 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), myLamp.effects.getScaleS());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
         myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
     }
 }
@@ -233,12 +233,12 @@ void set_effects_scale(Interface *interf, JsonObject *data){
 void set_effects_extra(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    const char *extra = (*data)[FPSTR(extraR)].as<String>().c_str();
-    myLamp.effects.setValue(myLamp.effects.getSelected()->param, F("R"), extra);
-    LOG(printf_P, PSTR("Новое значение R: %s\n"), extra);
+    String extra = (*data)[FPSTR(extraR)];
+    myLamp.effects.setValue(myLamp.effects.getSelected()->param, F("R"), extra.c_str());
+    LOG(printf_P, PSTR("Новое значение R: %s\n"), extra.c_str());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
         myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
     }
 }
