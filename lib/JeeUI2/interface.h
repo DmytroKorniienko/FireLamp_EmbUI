@@ -50,10 +50,12 @@ typedef enum _remote_action {
     obj[key] = val; \
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
     call(interf, &obj); \
-    interf->json_frame_value(); \
-    interf->value(key, val, false); \
-    interf->json_frame_flush(); \
-    if (interf) delete interf; \
+    if (interf) { \
+        interf->json_frame_value(); \
+        interf->value(key, val, false); \
+        interf->json_frame_flush(); \
+        delete interf; \
+    } \
 }
 
 void remote_action(RA action, const char *value);

@@ -941,7 +941,6 @@ void section_main_frame(Interface *interf, JsonObject *data){
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
 #endif
 
-    LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
     interf->json_frame_interface(F(("Огненная лампа")));
 
     block_menu(interf, data);
@@ -1115,7 +1114,7 @@ void sync_parameters(){
     set_settings_other(nullptr, &obj);
     obj.clear();
 
-    if (myLamp.IsGlobalBrightness()) {
+    if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
         CALLSETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
     }
 }

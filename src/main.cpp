@@ -78,7 +78,6 @@ void setup() {
 #endif
 
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-    sync_parameters();
 
     if (myLamp.timeProcessor.isDirtyTime()) {
       myLamp.setIsEventsHandled(false);
@@ -86,6 +85,7 @@ void setup() {
 
     myLamp.events.setEventCallback(event_worker);
 
+    sync_parameters();
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 
 #ifdef ESP_USE_BUTTON
