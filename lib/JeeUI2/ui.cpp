@@ -66,6 +66,24 @@ void Interface::number(const String &id, const String &label){
     number(id, (int)jee->param(id).toInt(), label);
 }
 
+void Interface::number(const String &id, float value, const String &label, float step){
+    StaticJsonDocument<256> obj;
+    obj[F("html")] = F("input");
+    obj[F("type")] = F("number");
+    obj[F("id")] = id;
+    obj[F("value")] = value;
+    obj[F("step")] = step;
+    obj[F("label")] = label;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        number(id, value, label, step);
+    }
+}
+
+void Interface::number(const String &id, const String &label, float step){
+    number(id, jee->param(id).toFloat(), label, step);
+}
+
 void Interface::time(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");

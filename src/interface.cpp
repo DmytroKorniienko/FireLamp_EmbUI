@@ -501,8 +501,8 @@ void block_settings_mic(Interface *interf, JsonObject *data){
 
     interf->checkbox(F("Mic"), F("Микрофон"), true);
     if (!iGLOBAL.isMicCal) {
-        interf->number(F("micScale"), F("Коэф. коррекции нуля"));
-        interf->number(F("micNoise"), F("Уровень шума, ед"));
+        interf->number(F("micScale"), F("Коэф. коррекции нуля"), 0.01);
+        interf->number(F("micNoise"), F("Уровень шума, ед"), 0.01);
         interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
