@@ -101,7 +101,7 @@
 			<h2 class="spacer">{{label}}</h2>
 		{{/if}}
 		{{#if html == "select"}}
-			<label id="{{id}}-val">{{label}}</label>
+			<span>{{label}}</span>
 			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-1"
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			>
@@ -118,7 +118,9 @@
 			</div>
 		{{/if}}
 		{{#if html == "input" && type != "checkbox"}}
-			<label id="{{id}}-val">{{label}}{{#if2 type == "range" || type == "color"}}: {{value}}{{/if2}}</label>
+			<span>{{label}}</span>
+			{{#if2 type == "range" || type == "color"}}<span id="{{id}}-val">: {{value}}</span>{{/if2}}
+			{{#if2 type == "text" || type == "password"}}<span id="{{id}}-val"> ({{calc value.length || 0}})</span>{{/if2}}
 			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1"
 				{{#if2 min}}min="{{min}}"{{/if2}}
 				{{#if2 max}}max="{{max}}"{{/if2}}
@@ -127,7 +129,7 @@
 				{{#if2 placeholder}}placeholder="{{placeholder}}"{{/if2}}
 				{{#if2 type == "color"}}style="height: 50px"{{/if2}}
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
-				{{onevent "input", "on_input", id, label}}
+				{{onevent "input", "on_input", id}}
 			>
 		{{/if}}
 		{{#if html != "select" && block}}{{>tmpl_section _this}}{{/if}}
