@@ -501,8 +501,8 @@ void block_settings_mic(Interface *interf, JsonObject *data){
 
     interf->checkbox(F("Mic"), F("Микрофон"), true);
     if (!iGLOBAL.isMicCal) {
-        interf->number(F("micScale"), F("Коэф. коррекции нуля"), 0.01);
-        interf->number(F("micNoise"), F("Уровень шума, ед"), 0.01);
+        interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
+        interf->number(F("micNoise"), myLamp.getMicNoise(), F("Уровень шума, ед"), 0.01);
         interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
@@ -545,11 +545,9 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
     } else
     if (myLamp.isMicCalibration()) {
         myLamp.sendStringToLamp(String(F("... в процессе ...")).c_str(), CRGB::Red);
-    } else {
-        jee.var(F("micScale"), String(myLamp.getMicScale()));
-        jee.var(F("micNoise"), String(myLamp.getMicNoise()));
-        iGLOBAL.isMicCal = false;
     }
+
+    show_settings_mic(interf, data);
 }
 #endif
 
@@ -1174,6 +1172,9 @@ void remote_action(RA action, const char *value){
             break;
         case RA::RA_EXTRA:
             CALLINTERF(FPSTR(extraR), value, set_effects_extra);
+            break;
+        case RA::RA_MIC:
+            CALLINTERF(F("mic_cal"), value, show_settings_mic);
             break;
         case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());

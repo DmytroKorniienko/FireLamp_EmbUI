@@ -27,6 +27,7 @@ typedef enum _remote_action {
     RA_SPEED,
     RA_SCALE,
     RA_EXTRA,
+    RA_MIC,
     RA_EFFECT,
     RA_SEND_TEXT,
     RA_SEND_TIME,
