@@ -997,6 +997,7 @@ public:
             configFile.print("]");
             configFile.flush();
             configFile.close();
+            LOG(println,"");
         }
     }
 

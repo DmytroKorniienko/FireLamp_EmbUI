@@ -103,6 +103,9 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     confEff->isFavorite = ((*data)[F("eff_fav")] == F("true"));
 
     // myLamp.effects.saveConfig();
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void block_effects_config(Interface *interf, JsonObject *data){
@@ -184,6 +187,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     }
 
     show_effects_param(interf, data);
+    myLamp.demoTimer(T_RESET);
 }
 
 void set_effects_bright(Interface *interf, JsonObject *data){
@@ -197,6 +201,9 @@ void set_effects_bright(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void set_effects_speed(Interface *interf, JsonObject *data){
@@ -206,6 +213,9 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), myLamp.effects.getSpeedS());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void set_effects_scale(Interface *interf, JsonObject *data){
@@ -215,6 +225,9 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), myLamp.effects.getScaleS());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void set_effects_extra(Interface *interf, JsonObject *data){
@@ -225,6 +238,9 @@ void set_effects_extra(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение R: %s\n"), extra);
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд 
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void block_main_flags(Interface *interf, JsonObject *data){
@@ -1131,6 +1147,7 @@ void remote_action(RA action, const char *value){
             CALLINTERF(F("ONflag"), F("false"), set_onflag);
             break;
         case RA::RA_DEMO:
+            CALLINTERF(F("ONflag"), F("true"), set_onflag); // включим, если было отключено
             CALLINTERF(F("Demo"), F("true"), set_demoflag);
             break;
         case RA::RA_DEMO_NEXT:
