@@ -61,6 +61,11 @@ void pubCallback(Interface *interf){
     interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(F("pMem"), String(ESP.getFreeHeap()), true);
     interf->json_frame_flush();
+
+    if(!myLamp.isMicCalibration() && iGLOBAL.isMicCal){
+        iGLOBAL.isMicCal = false;
+        remote_action(RA::RA_MIC, nullptr);
+    }
 }
 
 void block_menu(Interface *interf, JsonObject *data){
