@@ -134,9 +134,8 @@ void EffectCalc::palettesload(){
  * @param _pals - набор с палитрами
  */
 void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
-
   if (!_pals.size()) {
-    LOG(println,F("No palettes loaded!"));
+    LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
 
@@ -148,7 +147,7 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val)
   curPalette = _pals.at(--pos); // Устанавливаем выбранную палитру,  -1 т.к. индекс массива начинается с 0-ля
   palettescale = _val-ptPallete*(pos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-  //LOG(printf_P,PSTR("Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), pos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
+  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), pos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
 /**
@@ -2656,17 +2655,54 @@ bool EffectCube2d::run(CRGB *ledarr, const char *opt){
   if (dryrun())
     return false;
 
-  cubesize();
+  if (csum != (scale^rval))
+    cubesize();
+
   return cube2dRoutine(*&ledarr, &*opt);
 }
 
 void EffectCube2d::load(){
   palettesload();    // подгружаем дефолтные палитры
-
-  FastLED.clear();
-  CRGB color;
-  uint8_t x, y;
   cubesize();
+}
+
+// задаем размерность кубов
+void EffectCube2d::cubesize(){
+
+  if (curPalette == nullptr) {
+    return;
+  }
+
+  //uint8_t anim0 = 0;
+  fieldY = 0; fieldX = 0; 
+
+  //cubesize();
+  FastLED.clear();
+
+  sizeX = map(scale, 1, 260, 7, 56) / 7; // Ресайзим шкалу до  сегмента (7 вариантов ширины Х 7 вариантов высоты)= 49 шагов
+  sizeY = (sizeX * 7 - map(scale, 1, 260, 8 , 57)) * -1; // Высчитываем высоту кубика, из позиции в сегиенте, шкала специально отресайзина до 260, чтобы обнулить варианти 8хN
+
+  cntY = HEIGHT / (sizeY + 1U);
+	if (cntY < 2U)
+		cntY = 2U;
+	uint8_t y = HEIGHT / cntY - 1U;
+	if (sizeY > y)
+		sizeY = y;
+	fieldY = (sizeY + 1U) * cntY;
+	cntX = WIDTH / (sizeX + 1U);
+	if (cntX < 2U)
+		cntX = 2U;
+	uint8_t x = WIDTH / cntX - 1U;
+	if (sizeX > x)
+		sizeX = x;
+	fieldX = (sizeX + 1U) * cntX;
+	seamlessX = (fieldX == WIDTH);
+
+  // init
+  gX=0, gY=0, globalShiftX=0, globalShiftY = 0U;
+  x=0, y = 0;
+  CRGB color;
+
   for (uint8_t j = 0U; j < cntY; j++)
   {
     y = j * (sizeY + 1U); // + gY т.к. оно =0U
@@ -2682,49 +2718,22 @@ void EffectCube2d::load(){
           myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
     }
   }
-}
-
-// задаем размерность кубов
-void EffectCube2d::cubesize(){
-  	//if (curVal) { // что за ерунда? curVal это или scale или R, т.е. он всегда тру???
-    sizeY = (map(scale, 1, 254, 2, 14) / 2);
-//  } else {
-//    sizeY = (scale - 1U) % 11U + 1U; // размер ячейки от 1 до 11 пикселей для каждой из 9 палитр
-//	}
-	sizeX = sizeY;
-
-  // --- Я хз на счет идеи как-то смешивать, совмещенный со цветом, масштаб еще и со скоростью. Лучше уж пускай на масштабе живет.
-  // if (myLamp.effects.getSpeed() & 0x01) // по идее, ячейки не обязательно должны быть квадратными, поэтому можно тут поизвращаться
-	//  sizeY = (sizeY << 1U) + 1U;
-  // ------ По мере передвижения ползунка по шкале масштаба, попеременно увеличиваем одну из сторон сегмента
-  if (map(scale, 1, 254, 2, 14) % 2 > 0) sizeY = sizeY + 1;
-
-  uint8_t x, y;
-  cntY = HEIGHT / (sizeY + 1U);
-	if (cntY < 2U)
-		cntY = 2U;
-	y = HEIGHT / cntY - 1U;
-	if (sizeY > y)
-		sizeY = y;
-	fieldY = (sizeY + 1U) * cntY;
-	cntX = WIDTH / (sizeX + 1U);
-	if (cntX < 2U)
-		cntX = 2U;
-	x = WIDTH / cntX - 1U;
-	if (sizeX > x)
-		sizeX = x;
-	fieldX = (sizeX + 1U) * cntX;
-	seamlessX = (fieldX == WIDTH);
+  currentStep = 4U; // текущий шаг сдвига первоначально с перебором (от 0 до GSHMEM.shiftSteps-1)
+  shiftSteps = 4U; // всего шагов сдвига (от 3 до 4)
+  pauseSteps = 0U; // осталось шагов паузы
+  csum = scale^rval;
+  //end
 
 }
 
 bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
 {
-  uint8_t x, y;
-  uint8_t anim0; // будем считать тут начальный пиксель для анимации сдвига строки/колонки
-  int8_t shift, shiftAll; // какое-то расчётное направление сдвига (-1, 0, +1)
-  CRGB color, color2;
+  if (curPalette == nullptr) {
+    return false;
+  }
 
+  CRGB color, color2;
+  uint8_t x, y, anim0, shift;
   //двигаем, что получилось...
   if (pauseSteps == 0 && currentStep < shiftSteps) // если пауза закончилась, а цикл вращения ещё не завершён
   {
@@ -2737,7 +2746,7 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
         if (storage[i][0] > 0) // в нулевой ячейке храним оставшееся количество ходов прокрутки
         {
           storage[i][0]--;
-          shift = storage[i][1] - 1; // в первой ячейке храним направление прокрутки
+            shift = storage[i][1] - 1; // в первой ячейке храним направление прокрутки
 
           if (globalShiftY == 0)
             anim0 = (gY == 0U) ? 0U : gY - 1U;
@@ -2836,7 +2845,7 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
       globalShiftX = 0;
 
       //пришла пора выбрать следующие параметры вращения
-      shiftAll = 0;
+      uint8_t shiftAll = 0;
       direction = random8(2U);
       if (direction) // идём по горизонтали, крутим по вертикали (столбцы двигаются)
       {
@@ -2893,14 +2902,6 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
         else
           shiftSteps = sizeX + ((gX - shiftAll >= 0 && gX - shiftAll + fieldX < (int)WIDTH) ? random8(2U) : 1U);
 
-/*        if (shiftAll == 0) // пытался сделать, чтобы при совпадении "весь кубик стоит" сдвинуть его весь на пиксель, но заколебался
-        {
-          shiftSteps = sizeX;
-          shiftAll = (random8(2)) ? 1 : -1;
-          if (gX - shiftAll < 0 || gX - shiftAll + fieldX >= (int)WIDTH)
-            shiftAll = 0 - shiftAll;
-        }
-*/
         if (shiftSteps == sizeX) // значит полюбому shiftAll было = (-1, 0, +1) - и для нуля в том числе мы двигаем весь куб на 1 пиксель
         {
           globalShiftX = 1 - shiftAll; //временно на единичку больше, чем надо

@@ -853,12 +853,13 @@ private:
   uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
   uint8_t fieldX, fieldY; // размер всего поля по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
   bool seamlessX; // получилось ли сделать поле по Х бесшовным
+  uint8_t csum;   // reload checksum
 
   bool direction; // направление вращения в данный момент
-  uint8_t pauseSteps=0U; // осталось шагов паузы
-  uint8_t currentStep=4U; // текущий шаг сдвига (от 0 до GSHMEM.shiftSteps-1)
-  uint8_t shiftSteps=4U; // всего шагов сдвига (от 3 до 4)
-  uint8_t gX=0, gY=0; // глобальный X и глобальный Y нашего "кубика"
+  uint8_t pauseSteps; // осталось шагов паузы
+  uint8_t currentStep; // текущий шаг сдвига (от 0 до GSHMEM.shiftSteps-1)
+  uint8_t shiftSteps; // всего шагов сдвига (от 3 до 4)
+  uint8_t gX, gY; // глобальный X и глобальный Y нашего "кубика"
   int8_t globalShiftX=0, globalShiftY=0; // нужно ли сдвинуть всё поле по окончаии цикла и в каком из направлений (-1, 0, +1)
   uint8_t storage[WIDTH][HEIGHT];
 
@@ -1189,6 +1190,8 @@ public:
     }
 
     void setValue(const char *src, const __FlashStringHelper *type, const char *val){
+        if (!strlen(val))
+            return;
         DynamicJsonDocument doc(PARAM_BUFSIZE);
         deserializeJson(doc,String(FPSTR(src)));
         JsonArray arr = doc.as<JsonArray>();
@@ -1205,6 +1208,7 @@ public:
 
         // устанавливаем переменну 'rval' если задается ключ 'R'
         if (!strcmp_P("R", (PGM_P)type) && worker) {
+            //LOG(printf_P, PSTR("TRY to set Rval=%s\n"), val);
             worker->setrval(atoi(val));
         }
     }
