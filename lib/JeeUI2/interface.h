@@ -41,13 +41,13 @@ typedef enum _remote_action {
     call; \
 }
 
-#define CALLSETTER(key, val, call) { \
+#define CALL_SETTER(key, val, call) { \
     obj[key] = val; \
     call(nullptr, &obj); \
     obj.clear(); \
 }
 
-#define CALLINTERF(key, val, call) { \
+#define CALL_INTF(key, val, call) { \
     obj[key] = val; \
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
     call(interf, &obj); \
@@ -59,5 +59,18 @@ typedef enum _remote_action {
     } \
 }
 
-void remote_action(RA action, const char *value);
+#define CALL_INTF_OBJ(call) { \
+    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
+    call(interf, &obj); \
+    if (interf) { \
+        interf->json_frame_value(); \
+        for (JsonPair kv : obj) { \
+            interf->value(kv.key().c_str(), kv.value(), false); \
+        } \
+        interf->json_frame_flush(); \
+        delete interf; \
+    } \
+}
+
+void remote_action(RA action, ...);
 void httpCallback(const String &param, const String &value);
