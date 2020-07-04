@@ -592,6 +592,7 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_settings_wifi(interf, data);
     interf->json_frame_flush();
+    myLamp.setForceWifi(true);
 }
 
 void set_settings_wifi(Interface *interf, JsonObject *data){
@@ -614,7 +615,7 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     SETPARAM(F("m_user"), strncpy(jee.m_user, jee.param(F("m_user")).c_str(), sizeof(jee.m_user)-1));
     SETPARAM(F("m_pass"), strncpy(jee.m_pass, jee.param(F("m_pass")).c_str(), sizeof(jee.m_pass)-1));
     SETPARAM(F("m_port"), jee.m_port = jee.param(F("m_port")).toInt());
-    SETPARAM(F("mqtt_int"), iGLOBAL.mqtt_int = (*data)[F("mqtt_int")]);
+    SETPARAM(F("mqtt_int"), myLamp.semqtt_int((*data)[F("mqtt_int")]));
     //m_pref
 
     jee.save();
@@ -959,11 +960,6 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 
 void section_main_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
-    if(!jee.connected && !iGLOBAL.isAPMODE){
-        // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
-        show_settings_wifi(interf, data);
-        return;
-    }
 
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
@@ -975,6 +971,11 @@ void section_main_frame(Interface *interf, JsonObject *data){
     block_effects_main(interf, data);
 
     interf->json_frame_flush();
+
+    if(!jee.connected && myLamp.isForceWifi()){
+        // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
+        show_settings_wifi(interf, data);
+    }
 
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)

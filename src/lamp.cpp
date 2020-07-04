@@ -666,6 +666,8 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
+      pinTransition = true;
+      isForcedWifi = true;
       _brt =0;
       _steps = 0;
       _brtincrement = 0;

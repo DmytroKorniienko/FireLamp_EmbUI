@@ -47,7 +47,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // глобальные переменные для работы с ними в программе
 SHARED_MEM GSHMEM; // глобальная общая память эффектов
-INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
 Ticker _isrHelper;       // планировщик для обработки прерываний
@@ -112,9 +111,9 @@ void sendData(){
   static unsigned long i;
   static unsigned int in;
 
-  if(i + (in * 1000) > millis() || iGLOBAL.mqtt_int == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
+  if(i + (in * 1000) > millis() || myLamp.getmqtt_int() == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
   i = millis();
-  in = iGLOBAL.mqtt_int;
+  in = myLamp.getmqtt_int();
   // всё, что ниже будет выполняться через интервалы
 
 
@@ -131,9 +130,9 @@ void sendData(){
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
   detachInterrupt(BTN_PIN);
-  _isrHelper.once_ms(0, buttonhelper, iGLOBAL.pinTransition);   // вместо флага используем тикер :)
-  iGLOBAL.pinTransition = !iGLOBAL.pinTransition;
-  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, iGLOBAL.pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+  _isrHelper.once_ms(0, buttonhelper, myLamp.getpinTransition());   // вместо флага используем тикер :)
+  myLamp.setpinTransition(!myLamp.getpinTransition());
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, myLamp.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
 }
 
 /*

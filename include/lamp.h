@@ -122,6 +122,8 @@ private:
     bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
+    bool pinTransition:1;  // ловим "нажатие" кнопки
+    bool isForcedWifi:1; // в случае режима AP один раз до нажатия "Выйти из настроек" форсируем переключение на вкладку WiFi, дальше этого не делаем
 #ifdef MIC_EFFECTS
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isMicOn:1; // глобальное включение/выключение микрофона
@@ -136,6 +138,8 @@ private:
 #ifdef LAMP_DEBUG
     uint8_t fps = 0;    // fps counter
 #endif
+    int mqtt_int;
+    
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
@@ -247,6 +251,13 @@ public:
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
+
+    bool getpinTransition() {return pinTransition;}
+    void setpinTransition(bool val) {pinTransition=val;}
+    bool isForceWifi() {return isForcedWifi;}
+    void setForceWifi(bool val) {isForcedWifi=val;}
+    int getmqtt_int() {return mqtt_int;}
+    void semqtt_int(int val) {mqtt_int=val;}
 
     LAMPMODE getMode() {return mode;}
 
