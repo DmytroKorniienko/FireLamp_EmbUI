@@ -65,7 +65,7 @@ void jeeui2::wifi_connect()
             WiFi.mode(WIFI_AP);
             WiFi.softAP(param(F("ap_ssid")).c_str(), param(F("ap_pass")).c_str(), 6, 0, 4);
             LOG(println, F("Start Wi-Fi AP mode!"));
-            save();
+            //save();
             _wifi_connected = false;
             break;
         }

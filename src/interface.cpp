@@ -562,6 +562,12 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_main(F("settings_wifi"), F("WiFi"));
     // форма настроек Wi-Fi
     interf->json_section_hidden(F("set_wifi"), F("WiFi"));
+
+    interf->select(F("wifi"), F("Режим WiFi"));
+    interf->option(F("STA"), F("STA"));
+    interf->option(F("AP"), F("AP"));
+    interf->json_section_end();
+
     interf->text(F("ap_ssid"), F("AP/mDNS"));
     interf->text(F("ssid"), F("SSID"));
     interf->password(F("pass"), F("Password"));
@@ -597,9 +603,12 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
     SETPARAM(F("ssid"));
     SETPARAM(F("pass"));
 
-    jee.var(F("wifi"), F("STA"));
+    SETPARAM(F("wifi"));
+    //jee.var(F("wifi"), F("STA"));
     jee.save();
-    ESP.restart();
+    //ESP.restart();
+    if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
+        jee.wifi_connect();
 }
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
@@ -612,7 +621,9 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     //m_pref
 
     jee.save();
-    ESP.restart();
+    //ESP.restart();
+    if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
+        jee.wifi_connect();
 }
 
 void block_settings_other(Interface *interf, JsonObject *data){
