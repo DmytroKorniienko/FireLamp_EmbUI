@@ -79,11 +79,8 @@ void setup() {
 
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
 
-    if (myLamp.timeProcessor.isDirtyTime()) {
-      myLamp.setIsEventsHandled(false);
-    }
-
     myLamp.events.setEventCallback(event_worker);
+    myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, true));
 
     sync_parameters();
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!

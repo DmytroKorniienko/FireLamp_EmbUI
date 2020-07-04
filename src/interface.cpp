@@ -61,6 +61,12 @@ void pubCallback(Interface *interf){
     interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(F("pMem"), String(ESP.getFreeHeap()), true);
     interf->json_frame_flush();
+#ifdef MIC_EFFECTS
+    if(!myLamp.isMicCalibration() && iGLOBAL.isMicCal){
+        iGLOBAL.isMicCal = false;
+        remote_action(RA::RA_MIC, nullptr);
+    }
+#endif
 }
 
 void block_menu(Interface *interf, JsonObject *data){
@@ -803,7 +809,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
     Serial.println( tmEvent);   //debug
     Serial.println( tmEvent.substring(0,4).c_str());
     tm->tm_year=tmEvent.substring(0,4).toInt()-TM_BASE_YEAR;
-    tm->tm_mon=tmEvent.substring(5,7).toInt();
+    tm->tm_mon = tmEvent.substring(5,7).toInt()-1;
     tm->tm_mday=tmEvent.substring(8,10).toInt();
     tm->tm_hour=tmEvent.substring(11,13).toInt();
     tm->tm_min=tmEvent.substring(14,16).toInt();
@@ -1185,9 +1191,11 @@ void remote_action(RA action, ...){
         case RA::RA_EXTRA:
             CALL_INTF(FPSTR(extraR), value, set_effects_extra);
             break;
+#ifdef MIC_EFFECTS
         case RA::RA_MIC:
             CALL_INTF_OBJ(show_settings_mic);
             break;
+#endif
         case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());

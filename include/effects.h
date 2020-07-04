@@ -106,10 +106,6 @@ EFF_TIME = (98)                               // Часы (служебный, �
  * заглушка для "старых" эффектов
  */
 void stubRoutine(CRGB *, const char *);
-#ifdef MIC_EFFECTS
-void freqAnalyseRoutine(CRGB*, const char*);
-#endif
-void timePrintRoutine(CRGB*, const char *);
 //-------------------------------------------------
 
 #pragma pack(push,1)
@@ -217,7 +213,6 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, stubRoutine, ((char *)_R255)}, // очень хреновое приведение типов, но дальше это разрулим :)
     {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, stubRoutine, nullptr},
-//    {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, fire2012Routine, nullptr},
     {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAIN, T_RAIN, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_COLORRAIN, T_COLORRAIN, stubRoutine, nullptr},
@@ -227,9 +222,9 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_CUBE2, T_CUBE2, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, stubRoutine, ((char *)_R255)},  // очень хреновое приведение типов, но дальше это разрулим :)
     {true, true, 127, 127, 127, EFF_TIME, T_TIME, stubRoutine, nullptr}
-// #ifdef MIC_EFFECTS
-//     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
-// #endif
+#ifdef MIC_EFFECTS
+     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, stubRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
+ #endif
 };
 
 class SHARED_MEM {
@@ -258,8 +253,10 @@ public:
     byte brightness;
     byte speed;
     byte scale;
-    uint8_t rval;               /**< загадочная R */
+    uint8_t rval=0;             /**< загадочная R, если 0 - то не используется */
     uint8_t palettescale;       /**< странная переменная шкалы внутри палитры */
+    float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    uint8_t palettepos;         // позиция в массиве указателей паллитр
 
 
     /** флаг, включает использование палитр в эффекте.

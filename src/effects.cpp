@@ -106,10 +106,11 @@ void EffectCalc::setscl(byte _scl){
  * должна вызываться внешним методом при смене рвал в гуе или где-там...
  */
 void EffectCalc::setrval(const uint8_t _rval){
+  if(!_rval) return;
   rval = _rval;
   // при смене Rval меняем палитру
   if (usepalettes)
-    palettemap(palettes, _rval);
+    palettemap(palettes, rval);
 }
 
 // Load palletes into array
@@ -138,16 +139,12 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val)
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
+  ptPallete = (MAX_RANGE+0.1)/_pals.size();     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  palettepos = (uint8_t)((float)_val/ptPallete);
+  curPalette = _pals.at(palettepos);
+  palettescale = _val-ptPallete*(palettepos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-  uint8_t ptPallete;    // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-  uint8_t pos;        // позиция в массиве указателей паллитр
-
-  ptPallete = MAX_RANGE/_pals.size() + !!(MAX_RANGE%_pals.size());     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-  pos = _val/ptPallete + !!(_val%ptPallete);
-  curPalette = _pals.at(--pos); // Устанавливаем выбранную палитру,  -1 т.к. индекс массива начинается с 0-ля
-  palettescale = _val-ptPallete*(pos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
-
-  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), pos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
+  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
 /**
@@ -1832,6 +1829,7 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, const char *param)
   uint8_t freqDiv = 2U-scale/128; //1...2
 
   MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
+
   samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
   last_min_peak = mw->getMinPeak();
   last_max_peak = mw->getMaxPeak()*2;
@@ -1848,7 +1846,26 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, const char *param)
 //   LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv], scale);
 // }
 // #endif
-  int curVal, ptPallete, pos; // TODO: убрать, временная загрушка
+
+  TProgmemRGBPalette16 const *_curPalette;
+  float _ptPallete; // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  uint8_t _pos; // позиция в массиве указателей паллитр
+  uint8_t _curVal; // curVal == либо var как есть, либо getScale
+  if(rval){
+    _ptPallete = ptPallete;
+    _pos = palettepos;
+    _curVal = rval;
+  } else {
+    _ptPallete = ptPallete/2.0;
+    _pos = (uint8_t)((float)(scale%128)/_ptPallete);
+    _curVal = scale%128;
+  }
+
+  // EVERY_N_SECONDS(1){
+  //   LOG(printf_P,PSTR("palettepos: %d\n"),_pos);
+  // }
+
+  _curPalette = palettes.at(_pos); // выбираем из доп. регулятора
 
   for(uint8_t xpos=0; xpos<WIDTH/freqDiv; xpos++){
     for(uint8_t ypos=0; ypos<HEIGHT; ypos++){
@@ -1865,10 +1882,10 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, const char *param)
         //color=color<<8;
         if(color){
           CRGB tColor;
-          if(!(curVal%(uint8_t)(ptPallete*(pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
-            tColor = ColorFromPalette(*curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+          if(!(_curVal%(uint8_t)(_ptPallete*(_pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
+            tColor = ColorFromPalette(*_curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
           else
-            tColor = ColorFromPalette(*curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+            tColor = ColorFromPalette(*_curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
           color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
         }
       }
@@ -1899,10 +1916,10 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, const char *param)
       //color=color<<8;
       if(color){
           CRGB tColor;
-          if(!(curVal%(uint8_t)(ptPallete*(pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
-            tColor = ColorFromPalette(*curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+          if(!(_curVal%(uint8_t)(_ptPallete*(_pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
+            tColor = ColorFromPalette(*_curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
           else
-            tColor = ColorFromPalette(*curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+            tColor = ColorFromPalette(*_curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
           color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
       }
     }
