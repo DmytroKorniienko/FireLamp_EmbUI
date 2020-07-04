@@ -61,12 +61,6 @@ void pubCallback(Interface *interf){
     interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(F("pMem"), String(ESP.getFreeHeap()), true);
     interf->json_frame_flush();
-#ifdef MIC_EFFECTS
-    if(!myLamp.isMicCalibration() && iGLOBAL.isMicCal){
-        iGLOBAL.isMicCal = false;
-        remote_action(RA::RA_MIC, nullptr);
-    }
-#endif
 }
 
 void block_menu(Interface *interf, JsonObject *data){
@@ -1107,21 +1101,21 @@ void sync_parameters(){
     DynamicJsonDocument doc(512);
     JsonObject obj = doc.to<JsonObject>();
 
-    CALLSETTER(F("effList"), jee.param(F("effList")), set_effects_list);
-    CALLSETTER(F("Events"), jee.param(F("Events")), set_eventflag);
-    CALLSETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
+    CALL_SETTER(F("effList"), jee.param(F("effList")), set_effects_list);
+    CALL_SETTER(F("Events"), jee.param(F("Events")), set_eventflag);
+    CALL_SETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
 
 #ifdef RESTORE_STATE
-    CALLSETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
-    CALLSETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
+    CALL_SETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
+    CALL_SETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
 #endif
 
 #ifdef AUX_PIN
-    CALLSETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
+    CALL_SETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
 #endif
 
 #ifdef MIC_EFFECTS
-    CALLSETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
+    CALL_SETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
 
     obj[F("micScale")] = jee.param(F("micScale"));
     obj[F("micNoise")] = jee.param(F("micNoise"));
@@ -1146,24 +1140,36 @@ void sync_parameters(){
     obj.clear();
 
     if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
-        CALLSETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
+        CALL_SETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
     }
 }
 
-void remote_action(RA action, const char *value){
-    LOG(printf_P, PSTR("RA: %d (%s)\n"), action, String(value).c_str());
+void remote_action(RA action, ...){
+    LOG(printf_P, PSTR("RA: %d:"), action);
     StaticJsonDocument<128> doc;
     JsonObject obj = doc.to<JsonObject>();
+
+    va_list prm;
+    char *key = NULL, *val = NULL, *value = NULL;
+    va_start(prm, action);
+    while ((key = (char *)va_arg(prm, char *)) && (val = (char *)va_arg(prm, char *))) {
+        obj[key] = val;
+    }
+    va_end(prm);
+    if (key && !val) {
+        value = key;
+    }
+
     switch (action) {
         case RA::RA_ON:
-            CALLINTERF(F("ONflag"), F("true"), set_onflag);
+            CALL_INTF(F("ONflag"), F("true"), set_onflag);
             break;
         case RA::RA_OFF:
-            CALLINTERF(F("ONflag"), F("false"), set_onflag);
+            CALL_INTF(F("ONflag"), F("false"), set_onflag);
             break;
         case RA::RA_DEMO:
-            CALLINTERF(F("ONflag"), F("true"), set_onflag); // включим, если было отключено
-            CALLINTERF(F("Demo"), F("true"), set_demoflag);
+            CALL_INTF(F("ONflag"), F("true"), set_onflag); // включим, если было отключено
+            CALL_INTF(F("Demo"), F("true"), set_demoflag);
             break;
         case RA::RA_DEMO_NEXT:
             if (jee.param(F("DRand")) == F("true")) {
@@ -1173,26 +1179,26 @@ void remote_action(RA action, const char *value){
             }
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_EFFECT: {
-            CALLINTERF(F("effList"), value, set_effects_list);
+            CALL_INTF(F("effList"), value, set_effects_list);
             break;
         }
         case RA::RA_BRIGHT_NF:
             obj[F("nofade")] = true;
         case RA::RA_BRIGHT:
-            CALLINTERF(F("bright"), value, set_effects_bright);
+            CALL_INTF(F("bright"), value, set_effects_bright);
             break;
         case RA::RA_SPEED:
-            CALLINTERF(F("speed"), value, set_effects_speed);
+            CALL_INTF(F("speed"), value, set_effects_speed);
             break;
         case RA::RA_SCALE:
-            CALLINTERF(F("scale"), value, set_effects_scale);
+            CALL_INTF(F("scale"), value, set_effects_scale);
             break;
         case RA::RA_EXTRA:
-            CALLINTERF(FPSTR(extraR), value, set_effects_extra);
+            CALL_INTF(FPSTR(extraR), value, set_effects_extra);
             break;
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
-            CALLINTERF(F("mic_cal"), value, show_settings_mic);
+            CALL_INTF_OBJ(show_settings_mic);
             break;
 #endif
         case RA::RA_EFF_NEXT:

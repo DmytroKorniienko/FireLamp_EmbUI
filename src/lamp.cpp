@@ -1111,6 +1111,9 @@ void LAMP::micHandler()
       isCalibrationRequest = false; // завершили
       delete mw;
       mw = nullptr;
+
+      iGLOBAL.isMicCal = false;
+      remote_action(RA::RA_MIC, nullptr);
     }
   }
 }
