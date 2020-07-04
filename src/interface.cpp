@@ -500,14 +500,17 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     interf->json_section_main(F("set_mic"), F("Микрофон"));
 
     interf->checkbox(F("Mic"), F("Микрофон"), true);
-    if (!iGLOBAL.isMicCal) {
+    //if (!iGLOBAL.isMicCal) {
+    if (!myLamp.isMicCalibration()) {
         interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
         interf->number(F("micNoise"), myLamp.getMicNoise(), F("Уровень шума, ед"), 0.01);
         interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
     interf->spacer();
-    interf->button(F("mic_cal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
+    //interf->button(F("mic_cal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
+    interf->button(F("mic_cal"), F("Калибровка микрофона"), myLamp.isMicCalibration()? F("grey") : F("red"));
+    
 
     interf->spacer();
     interf->button(F("settings"), F("Выход"));
@@ -538,12 +541,12 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
     if (!myLamp.isMicOnOff()) {
         myLamp.sendStringToLamp(String(F("Включите микрофон")).c_str(), CRGB::Red);
     } else
-    if(!iGLOBAL.isMicCal) {
+    //if(!iGLOBAL.isMicCal) {
+    if(!myLamp.isMicCalibration()) {
         myLamp.sendStringToLamp(String(F("Калибровка микрофона")).c_str(), CRGB::Red);
         myLamp.setMicCalibration();
-        iGLOBAL.isMicCal = true;
-    } else
-    if (myLamp.isMicCalibration()) {
+        //iGLOBAL.isMicCal = true;
+    } else {
         myLamp.sendStringToLamp(String(F("... в процессе ...")).c_str(), CRGB::Red);
     }
 

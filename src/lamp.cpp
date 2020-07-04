@@ -126,7 +126,7 @@ void LAMP::handle()
 {
 #ifdef MIC_EFFECTS
   static unsigned long mic_check;
-  if(isMicOn && ONflag && (!dawnFlag) && mic_check + MIC_POLLRATE < millis()){
+  if(isMicOn && (ONflag || isMicCalibration()) && (!dawnFlag) && mic_check + MIC_POLLRATE < millis()){
     micHandler();
     mic_check = millis();
   }
@@ -1112,7 +1112,7 @@ void LAMP::micHandler()
       delete mw;
       mw = nullptr;
 
-      iGLOBAL.isMicCal = false;
+      //iGLOBAL.isMicCal = false;
       remote_action(RA::RA_MIC, nullptr);
     }
   }

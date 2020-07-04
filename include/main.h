@@ -53,14 +53,14 @@ class INTRFACE_GLOBALS{
 public:
 #pragma pack(push,1)
  struct { // набор глобальных флагов
-    bool isMicCal:1;
+    //bool isMicCal:1;
     bool pinTransition:1;  // ловим "нажатие" кнопки
     bool isAPMODE:1; // в случае режима AP один раз до нажатия "Выйти из настроек" форсируем переключение на вкладку WiFi, дальше этого не делаем
  };
  #pragma pack(pop)
  int mqtt_int; // интервал отправки данных по MQTT в секундах
  INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
-    isMicCal = false;
+    //isMicCal = false;
     pinTransition = true;
     isAPMODE = false;
 }
