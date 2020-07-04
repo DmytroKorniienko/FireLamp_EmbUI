@@ -107,7 +107,7 @@ void TimeProcessor::setTime(String &timestr){
     tm *tm=&t;
 
     tm->tm_year = timestr.substring(0,4).toInt() - TM_BASE_YEAR;
-    tm->tm_mon = timestr.substring(5,7).toInt();
+    tm->tm_mon = timestr.substring(5,7).toInt()-1;
     tm->tm_mday = timestr.substring(8,10).toInt();
     tm->tm_hour= timestr.substring(11,13).toInt();
     tm->tm_min = timestr.substring(14,16).toInt();
@@ -265,8 +265,7 @@ void TimeProcessor::timeavailable(){
 void TimeProcessor::getDateTimeString(String &buf){
   char tmpBuf[17];
   const tm* tm = localtime(now());
-  sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"), tm->tm_year + TM_BASE_YEAR, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
-  //  long int a = getOffset();  LOG(printf_P, PSTR("DT: %s, TZoffset:%d\n"), tmpBuf, a);
+  sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"), tm->tm_year + TM_BASE_YEAR, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   buf.concat(tmpBuf);
 }
 
@@ -294,6 +293,6 @@ void TimeProcessor::setcustomntp(const char* ntp){
         sntp_setservername(CUSTOM_NTP_INDEX, (char*)ntp);
 }
 
-void TimeProcessor::attach_callback(std::function<void(void)> callback){
+void TimeProcessor::attach_callback(callback_function_t callback){
     _timecallback = std::move(callback);
 }

@@ -164,7 +164,7 @@ public:
      */
     void setOffset(const int val);
 
-    void attach_callback(std::function<void(void)> callback);
+    void attach_callback(callback_function_t callback);
 
     void dettach_callback(){
         _timecallback = nullptr;
@@ -223,13 +223,6 @@ public:
         else
           return true;
     }
-
-
-    // не знаю что делают эти функции, оставлю заглушки для совместимости
-    // пока идут измения в interfaces.cpp
-    bool getIsSyncOnline() {return false;}
-    void setIsSyncOnline(bool val) {}
-
 
 };
 #endif

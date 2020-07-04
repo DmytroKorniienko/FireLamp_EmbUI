@@ -27,12 +27,13 @@ typedef enum _remote_action {
     RA_SPEED,
     RA_SCALE,
     RA_EXTRA,
+    RA_MIC,
     RA_EFFECT,
     RA_SEND_TEXT,
     RA_SEND_TIME,
     RA_SEND_IP,
     RA_WHITE_HI,
-    RA_WHITE_LO,
+    RA_WHITE_LO
 } RA;
 
 #define SETPARAM(key, call...) if (data->containsKey(key)) { \
@@ -40,21 +41,25 @@ typedef enum _remote_action {
     call; \
 }
 
-#define CALLSETTER(key, val, call) { \
+#define CALL_SETTER(key, val, call) { \
     obj[key] = val; \
     call(nullptr, &obj); \
     obj.clear(); \
 }
 
-#define CALLINTERF(key, val, call, prm...) { \
+#define CALL_INTF(key, val, call) { \
     obj[key] = val; \
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
     call(interf, &obj); \
-    prm; \
-    if (interf) delete interf; \
+    if (interf) { \
+        interf->json_frame_value(); \
+        interf->value(key, val, false); \
+        interf->json_frame_flush(); \
+        delete interf; \
+    } \
 }
 
-void remote_action(RA action, const char *value);
+void remote_action(RA action, ...);
 void httpCallback(const String &param, const String &value);
 
 class Button{

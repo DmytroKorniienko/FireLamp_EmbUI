@@ -106,10 +106,6 @@ EFF_TIME = (98)                               // Часы (служебный, �
  * заглушка для "старых" эффектов
  */
 void stubRoutine(CRGB *, const char *);
-#ifdef MIC_EFFECTS
-void freqAnalyseRoutine(CRGB*, const char*);
-#endif
-void timePrintRoutine(CRGB*, const char *);
 //-------------------------------------------------
 
 #pragma pack(push,1)
@@ -217,7 +213,6 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, stubRoutine, ((char *)_R255)}, // очень хреновое приведение типов, но дальше это разрулим :)
     {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, stubRoutine, nullptr},
-//    {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, fire2012Routine, nullptr},
     {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAIN, T_RAIN, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_COLORRAIN, T_COLORRAIN, stubRoutine, nullptr},
@@ -227,9 +222,9 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_CUBE2, T_CUBE2, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, stubRoutine, ((char *)_R255)},  // очень хреновое приведение типов, но дальше это разрулим :)
     {true, true, 127, 127, 127, EFF_TIME, T_TIME, stubRoutine, nullptr}
-// #ifdef MIC_EFFECTS
-//     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, freqAnalyseRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
-// #endif
+#ifdef MIC_EFFECTS
+     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, stubRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
+ #endif
 };
 
 class SHARED_MEM {
@@ -258,8 +253,10 @@ public:
     byte brightness;
     byte speed;
     byte scale;
-    uint8_t rval;               /**< загадочная R */
+    uint8_t rval=0;             /**< загадочная R, если 0 - то не используется */
     uint8_t palettescale;       /**< странная переменная шкалы внутри палитры */
+    float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    uint8_t palettepos;         // позиция в массиве указателей паллитр
 
 
     /** флаг, включает использование палитр в эффекте.
@@ -853,12 +850,13 @@ private:
   uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
   uint8_t fieldX, fieldY; // размер всего поля по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
   bool seamlessX; // получилось ли сделать поле по Х бесшовным
+  uint8_t csum;   // reload checksum
 
   bool direction; // направление вращения в данный момент
-  uint8_t pauseSteps=0U; // осталось шагов паузы
-  uint8_t currentStep=4U; // текущий шаг сдвига (от 0 до GSHMEM.shiftSteps-1)
-  uint8_t shiftSteps=4U; // всего шагов сдвига (от 3 до 4)
-  uint8_t gX=0, gY=0; // глобальный X и глобальный Y нашего "кубика"
+  uint8_t pauseSteps; // осталось шагов паузы
+  uint8_t currentStep; // текущий шаг сдвига (от 0 до GSHMEM.shiftSteps-1)
+  uint8_t shiftSteps; // всего шагов сдвига (от 3 до 4)
+  uint8_t gX, gY; // глобальный X и глобальный Y нашего "кубика"
   int8_t globalShiftX=0, globalShiftY=0; // нужно ли сдвинуть всё поле по окончаии цикла и в каком из направлений (-1, 0, +1)
   uint8_t storage[WIDTH][HEIGHT];
 
@@ -997,6 +995,7 @@ public:
             configFile.print("]");
             configFile.flush();
             configFile.close();
+            LOG(println,"");
         }
     }
 
@@ -1188,6 +1187,8 @@ public:
     }
 
     void setValue(const char *src, const __FlashStringHelper *type, const char *val){
+        if (!strlen(val))
+            return;
         DynamicJsonDocument doc(PARAM_BUFSIZE);
         deserializeJson(doc,String(FPSTR(src)));
         JsonArray arr = doc.as<JsonArray>();
@@ -1204,6 +1205,7 @@ public:
 
         // устанавливаем переменну 'rval' если задается ключ 'R'
         if (!strcmp_P("R", (PGM_P)type) && worker) {
+            //LOG(printf_P, PSTR("TRY to set Rval=%s\n"), val);
             worker->setrval(atoi(val));
         }
     }

@@ -168,12 +168,16 @@ void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessagePro
     String tpc = String(topic);
     if (*m_pref) tpc = tpc.substring(strlen(m_pref) + 1, tpc.length());
 
+    if (tpc.equals(F("jee/get/config"))) {
+        jee.publish(F("jee/pub/config"), jee.deb(), false);    
+    } else
     if (tpc.startsWith(F("jee/get/"))) {
-        jee.publish(F("jee/get/cfg"), jee.deb(), false);
+       String param = tpc.substring(8);
+       jee.publish(String(F("jee/pub/")) + param, jee.param(param), false);
     } else
     if (mqtt_remotecontrol && tpc.startsWith(F("jee/set/"))) {
        String cmd = tpc.substring(8);
-       httpCallback(tpc.substring(8), String(payload));
+       httpCallback(cmd, String(buffer)); // нельзя напряму передавать payload, это не ASCIIZ
     } else
     if (mqtt_remotecontrol && tpc.startsWith(F("jee/jsset/"))) {
         DynamicJsonDocument doc(1024);
@@ -186,51 +190,6 @@ void jeeui2::onMqttMessage(char* topic, char* payload, AsyncMqttClientMessagePro
 
 void jeeui2::subscribeAll(){
     mqttClient.subscribe(id(F("jee/#")).c_str(), 0);
-/*
-    mqttClient.subscribe(id(F("jee/get/")).c_str(), 0);
-    mqttClient.subscribe(id(F("jee/get/refresh")).c_str(), 0);
-    JsonObject root = cfg.as<JsonObject>();
-    for (JsonPair kv : root) {
-        String key = String(kv.key().c_str());
-        int retry=3;
-        if(
-            key != F("wifi" )       &&
-            key != F("m_pref")      &&
-            key != F("ssid" )       &&
-            key != F("pass")        &&
-            key != F("ap_ssid")     &&
-            key != F("ap_pass")     &&
-            key != F("m_host")      &&
-            key != F("m_port")      &&
-            key != F("m_user")      &&
-            key != F("m_pass")
-            ){
-            LOG(println, id(String(F("jee/set/")) + key));
-            delay(33); // задержка на отправку предыдущих пакетов
-            while(!mqttClient.subscribe(id(String(F("jee/set/")) + key).c_str(), 0) && retry--){
-                delay(33); // доп. задержка на отправку предыдущих пакетов
-            }
-            if(dbg && retry<=0)
-                Serial.println(id(String(F("-> jee/set/")) + key + F(" not subscribed!")));
-            retry=3;
-        }
-    }
-    //LOG(println, btn_id.as<String>());
-    LOG(println,  String(F("BTN =>")));
-    JsonArray arr = btn_id.as<JsonArray>();
-    for (size_t i=0; i<arr.size(); i++) {
-        JsonObject var=arr[i]; // извлекаем очередной
-        String item = id(F("jee/set/")) + String(F("BTN_")) + var[F("b")].as<String>();
-        LOG(println, item);
-
-        int retry=2;
-        delay(33); // задержка на отправку предыдущих пакетов
-        while(!mqttClient.subscribe(item.c_str(), 0) && retry--){
-            delay(33); // доп. задержка на отправку предыдущих пакетов
-        }
-        if(dbg && retry<=0)Serial.println(String(F("-> ")) + item + F(" not subscribed!"));
-    }
-*/
     LOG(println, F("Subscribe All"));
 }
 

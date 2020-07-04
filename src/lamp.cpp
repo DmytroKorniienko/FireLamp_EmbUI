@@ -988,14 +988,11 @@ void LAMP::newYearMessageHandle()
 
 void LAMP::periodicTimeHandle()
 {
-  static bool cancel = false;
-
   const tm* t = localtime(timeProcessor.now());
   //LOG(println, tm);
-  if( t->tm_sec ) {cancel=false; return;}
-  if(cancel) return;
+  if(! t->tm_sec )
+    return;
 
-  cancel = true; // только раз в минуту срабатываем, на первую секунду
   time_t tm = t->tm_hour * 60 + t->tm_min;
 
   switch (enPeriodicTimePrint)
@@ -1072,6 +1069,9 @@ void LAMP::micHandler()
       isCalibrationRequest = false; // завершили
       delete mw;
       mw = nullptr;
+
+      iGLOBAL.isMicCal = false;
+      remote_action(RA::RA_MIC, nullptr);
     }
   }
 }

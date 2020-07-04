@@ -103,6 +103,9 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     confEff->isFavorite = ((*data)[F("eff_fav")] == F("true"));
 
     // myLamp.effects.saveConfig();
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void block_effects_config(Interface *interf, JsonObject *data){
@@ -184,6 +187,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     }
 
     show_effects_param(interf, data);
+    myLamp.demoTimer(T_RESET);
 }
 
 void set_effects_bright(Interface *interf, JsonObject *data){
@@ -197,6 +201,9 @@ void set_effects_bright(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void set_effects_speed(Interface *interf, JsonObject *data){
@@ -206,6 +213,9 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), myLamp.effects.getSpeedS());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void set_effects_scale(Interface *interf, JsonObject *data){
@@ -215,16 +225,22 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), myLamp.effects.getScaleS());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void set_effects_extra(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    const char *extra = (*data)[FPSTR(extraR)].as<String>().c_str();
-    myLamp.effects.setValue(myLamp.effects.getSelected()->param, F("R"), extra);
-    LOG(printf_P, PSTR("Новое значение R: %s\n"), extra);
+    String extra = (*data)[FPSTR(extraR)];
+    myLamp.effects.setValue(myLamp.effects.getSelected()->param, F("R"), extra.c_str());
+    LOG(printf_P, PSTR("Новое значение R: %s\n"), extra.c_str());
 
     myLamp.demoTimer(T_RESET);
+    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
+        myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
+    }
 }
 
 void block_main_flags(Interface *interf, JsonObject *data){
@@ -485,8 +501,8 @@ void block_settings_mic(Interface *interf, JsonObject *data){
 
     interf->checkbox(F("Mic"), F("Микрофон"), true);
     if (!iGLOBAL.isMicCal) {
-        interf->number(F("micScale"), F("Коэф. коррекции нуля"));
-        interf->number(F("micNoise"), F("Уровень шума, ед"));
+        interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
+        interf->number(F("micNoise"), myLamp.getMicNoise(), F("Уровень шума, ед"), 0.01);
         interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
@@ -529,11 +545,9 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
     } else
     if (myLamp.isMicCalibration()) {
         myLamp.sendStringToLamp(String(F("... в процессе ...")).c_str(), CRGB::Red);
-    } else {
-        jee.var(F("micScale"), String(myLamp.getMicScale()));
-        jee.var(F("micNoise"), String(myLamp.getMicNoise()));
-        iGLOBAL.isMicCal = false;
     }
+
+    show_settings_mic(interf, data);
 }
 #endif
 
@@ -789,7 +803,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
     Serial.println( tmEvent);   //debug
     Serial.println( tmEvent.substring(0,4).c_str());
     tm->tm_year=tmEvent.substring(0,4).toInt()-TM_BASE_YEAR;
-    tm->tm_mon=tmEvent.substring(5,7).toInt();
+    tm->tm_mon = tmEvent.substring(5,7).toInt()-1;
     tm->tm_mday=tmEvent.substring(8,10).toInt();
     tm->tm_hour=tmEvent.substring(11,13).toInt();
     tm->tm_min=tmEvent.substring(14,16).toInt();
@@ -941,7 +955,6 @@ void section_main_frame(Interface *interf, JsonObject *data){
     myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
 #endif
 
-    LOG(println, F("Внимание: Создание интерфейса! Такие вызовы должны быть минимизированы."));
     interf->json_frame_interface(F(("Огненная лампа")));
 
     block_menu(interf, data);
@@ -1077,21 +1090,21 @@ void sync_parameters(){
     DynamicJsonDocument doc(512);
     JsonObject obj = doc.to<JsonObject>();
 
-    CALLSETTER(F("effList"), jee.param(F("effList")), set_effects_list);
-    CALLSETTER(F("Events"), jee.param(F("Events")), set_eventflag);
-    CALLSETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
+    CALL_SETTER(F("effList"), jee.param(F("effList")), set_effects_list);
+    CALL_SETTER(F("Events"), jee.param(F("Events")), set_eventflag);
+    CALL_SETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
 
 #ifdef RESTORE_STATE
-    CALLSETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
-    CALLSETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
+    CALL_SETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
+    CALL_SETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
 #endif
 
 #ifdef AUX_PIN
-    CALLSETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
+    CALL_SETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
 #endif
 
 #ifdef MIC_EFFECTS
-    CALLSETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
+    CALL_SETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
 
     obj[F("micScale")] = jee.param(F("micScale"));
     obj[F("micNoise")] = jee.param(F("micNoise"));
@@ -1115,24 +1128,37 @@ void sync_parameters(){
     set_settings_other(nullptr, &obj);
     obj.clear();
 
-    if (myLamp.IsGlobalBrightness()) {
-        CALLSETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
+    if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
+        CALL_SETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
     }
 }
 
-void remote_action(RA action, const char *value){
-    LOG(printf_P, PSTR("RA: %d (%s)\n"), action, String(value).c_str());
+void remote_action(RA action, ...){
+    LOG(printf_P, PSTR("RA: %d:"), action);
     StaticJsonDocument<128> doc;
     JsonObject obj = doc.to<JsonObject>();
+
+    va_list prm;
+    char *key = NULL, *val = NULL, *value = NULL;
+    va_start(prm, action);
+    while ((key = (char *)va_arg(prm, char *)) && (val = (char *)va_arg(prm, char *))) {
+        obj[key] = val;
+    }
+    va_end(prm);
+    if (key && !val) {
+        value = key;
+    }
+
     switch (action) {
         case RA::RA_ON:
-            CALLINTERF(F("ONflag"), true, set_onflag);
+            CALL_INTF(F("ONflag"), F("true"), set_onflag);
             break;
         case RA::RA_OFF:
-            CALLINTERF(F("ONflag"), false, set_onflag);
+            CALL_INTF(F("ONflag"), F("false"), set_onflag);
             break;
         case RA::RA_DEMO:
-            CALLINTERF(F("Demo"), true, set_demoflag);
+            CALL_INTF(F("ONflag"), F("true"), set_onflag); // включим, если было отключено
+            CALL_INTF(F("Demo"), F("true"), set_demoflag);
             break;
         case RA::RA_DEMO_NEXT:
             if (jee.param(F("DRand")) == F("true")) {
@@ -1142,27 +1168,28 @@ void remote_action(RA action, const char *value){
             }
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_EFFECT: {
-            CALLINTERF(F("effList"), value, set_effects_list, ({
-                interf->json_frame_value();
-                interf->value(F("effList"), String(myLamp.effects.getSelected()->eff_nb));
-                interf->json_frame_flush();
-            }));
+            CALL_INTF(F("effList"), value, set_effects_list);
             break;
         }
         case RA::RA_BRIGHT_NF:
             obj[F("nofade")] = true;
         case RA::RA_BRIGHT:
-            CALLINTERF(F("bright"), value, set_effects_bright);
+            CALL_INTF(F("bright"), value, set_effects_bright);
             break;
         case RA::RA_SPEED:
-            CALLINTERF(F("speed"), value, set_effects_speed);
+            CALL_INTF(F("speed"), value, set_effects_speed);
             break;
         case RA::RA_SCALE:
-            CALLINTERF(F("scale"), value, set_effects_scale);
+            CALL_INTF(F("scale"), value, set_effects_scale);
             break;
         case RA::RA_EXTRA:
-            CALLINTERF(FPSTR(extraR), value, set_effects_extra);
+            CALL_INTF(FPSTR(extraR), value, set_effects_extra);
             break;
+#ifdef MIC_EFFECTS
+        case RA::RA_MIC:
+            CALL_INTF_OBJ(show_settings_mic);
+            break;
+#endif
         case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
@@ -1266,6 +1293,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
     remote_action(action, value.c_str());
+    jee.publish(String(F("jee/pub/")) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
 // обработка эвентов лампы

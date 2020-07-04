@@ -95,11 +95,8 @@ void EVENT_MANAGER::delEvent(const EVENT&event) {
 void EVENT_MANAGER::events_handle()
 {
   // пропускаем все ненулевые секунды
-  if ( localtime(TimeProcessor::now())->tm_sec )
+  if(!TimeProcessor::seconds00())
     return;
-
-  //if(!second(timeProcessor.getUnixTime()) && isEventsHandled) // только на 0 секунду, т.е. 1 раз в минуту и если обработка разрешена
-  //  events.events_handle(timeProcessor.getUnixTime(),timeProcessor.getOffset());
 
     EVENT *next = getNextEvent(nullptr);
     while (next!=nullptr)
