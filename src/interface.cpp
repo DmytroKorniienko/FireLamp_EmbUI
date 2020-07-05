@@ -193,12 +193,15 @@ void set_effects_list(Interface *interf, JsonObject *data){
 void set_effects_bright(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    myLamp.setLampBrightness((*data)[F("bright")]);
-    myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
-    if (myLamp.IsGlobalBrightness()) {
-        jee.var("GlobBRI", (*data)[F("bright")]);
+    byte bright = (*data)[F("bright")];
+    if (myLamp.getNormalizedLampBrightness() != bright) {
+        myLamp.setLampBrightness(bright);
+        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
+        if (myLamp.IsGlobalBrightness()) {
+            jee.var("GlobBRI", (*data)[F("bright")]);
+        }
+        LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
-    LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
 
     myLamp.demoTimer(T_RESET);
     if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
@@ -434,7 +437,10 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
         filename = String(F("/evn/")) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
-
+#ifdef ESP_USE_BUTTON
+        filename = String(F("/btn/")) + name;
+        if (LittleFS.begin()) LittleFS.remove(filename);
+#endif
     } else
     if (act == "load") {
         String filename = String(F("/glb/")) + name;
@@ -445,7 +451,10 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
         filename = String(F("/evn/")) + name;
         myLamp.events.loadConfig(filename.c_str());
-
+#ifdef ESP_USE_BUTTON
+        filename = String(F("/btn/")) + name;
+        myButtons.loadConfig(filename.c_str());
+#endif
         jee.var(F("fileName"), name);
     } else {
         String filename = String(F("/glb/")) + name;
@@ -456,6 +465,10 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
         filename = String(F("/evn/")) + name;
         myLamp.events.saveConfig(filename.c_str());
+#ifdef ESP_USE_BUTTON
+        filename = String(F("/btn/")) + name;
+        myButtons.saveConfig(filename.c_str());
+#endif
     }
 
     show_lamp_config(interf, data);
@@ -510,7 +523,7 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     interf->spacer();
     //interf->button(F("mic_cal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
     interf->button(F("mic_cal"), F("Калибровка микрофона"), myLamp.isMicCalibration()? F("grey") : F("red"));
-    
+
 
     interf->spacer();
     interf->button(F("settings"), F("Выход"));
@@ -679,7 +692,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
 
 #ifdef ESP_USE_BUTTON
-    SETPARAM(F("isBtnOn"), myLamp.setButtonOn((*data)[F("isBtnOn")] == F("true")));
+    SETPARAM(F("isBtnOn"), myButtons.setButtonOn((*data)[F("isBtnOn")] == F("true")));
 #endif
 
     SETPARAM(F("txtSpeed"), myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
@@ -920,6 +933,13 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
+void show_settings_butt(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_frame_interface();
+    block_settings_event(interf, data);
+    interf->json_frame_flush();
+}
+
 void section_effects_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface(F(("Огненная лампа")));
@@ -950,6 +970,8 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 #endif
 
     interf->button(F("show_event"), F("События"));
+
+    interf->button(F("show_butt"), F("Кнопка"));
 
     interf->spacer();
     block_settings_update(interf, data);
@@ -1092,13 +1114,14 @@ void create_parameters(){
     jee.section_handle_add(F("Mic"), set_micflag);
     jee.section_handle_add(F("mic_cal"), set_settings_mic_calib);
 #endif
-
     jee.section_handle_add(F("show_event"), show_settings_event);
     jee.section_handle_add(F("event_conf"), show_event_conf);
     jee.section_handle_add(F("evconf*"), show_event_conf);
     jee.section_handle_add(F("set_event"), set_event_conf);
     jee.section_handle_add(F("Events"), set_eventflag);
-
+#ifdef ESP_USE_BUTTON
+    jee.section_handle_add(F("show_butt"), show_settings_butt);
+#endif
 }
 
 void sync_parameters(){
@@ -1222,6 +1245,9 @@ void remote_action(RA action, ...){
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
         case RA::RA_ALARM:
             myLamp.startAlarm();
+            break;
+        case RA::RA_ALARM_OFF:
+            myLamp.stopAlarm();
             break;
         case RA::RA_REBOOT:
             ESP.restart(); // так лучше :)
@@ -1364,3 +1390,23 @@ void event_worker(const EVENT *event){
 
     remote_action(action, event->message);
 }
+#ifdef ESP_USE_BUTTON
+void default_buttons(){
+    // Выключена
+    myButtons.buttons.add(new Button(false, false, 1, BA::BA_ON)); // 1 клик - ON
+    myButtons.buttons.add(new Button(false, false, 2, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons.buttons.add(new Button(false, true, 0, BA::BA_DEMO)); // удержание Включаем белую лампу в полную яркость
+    myButtons.buttons.add(new Button(false, true, 1, BA::BA_DEMO)); // удержание + 1 клик Включаем белую лампу в мин яркость
+
+    // Включена
+    myButtons.buttons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
+    myButtons.buttons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons.buttons.add(new Button(true, false, 3, BA::BA_EFF_NEXT)); // 3 клика - пред эффект
+    myButtons.buttons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
+    myButtons.buttons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons.buttons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons.buttons.add(new Button(true, true, 0, BA::BA_BRIGHT)); // удержание яркость
+    myButtons.buttons.add(new Button(true, true, 1, BA::BA_SPEED)); // удержание + 1 клие скорость
+    myButtons.buttons.add(new Button(true, true, 2, BA::BA_SCALE)); // удержание + 2 клика масштаб
+}
+#endif

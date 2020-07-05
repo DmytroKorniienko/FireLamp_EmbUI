@@ -40,6 +40,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "JeeUI2.h"
 #include "config.h"
 #include "lamp.h"
+#include "buttons.h"
 #include "main.h"
 #ifdef USE_FTP
 #include "ftpServer.h"
@@ -50,6 +51,9 @@ SHARED_MEM GSHMEM; // глобальная общая память эффект�
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
 Ticker _isrHelper;       // планировщик для обработки прерываний
+#ifdef ESP_USE_BUTTON
+Buttons myButtons;
+#endif
 
 void setup() {
     Serial.begin(115200);
@@ -66,6 +70,7 @@ void setup() {
 #endif
 
     jee.init();
+    create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
 
     myLamp.effects.loadConfig();
     myLamp.events.loadConfig();
@@ -75,8 +80,9 @@ void setup() {
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
-
-    create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
+#ifdef ESP_USE_BUTTON
+    default_buttons();
+#endif
 
     myLamp.events.setEventCallback(event_worker);
     myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, true));
@@ -125,14 +131,15 @@ void sendData(){
 
 }
 
+#ifdef ESP_USE_BUTTON
 /*
  *  Button pin interrupt handler
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
   detachInterrupt(BTN_PIN);
-  _isrHelper.once_ms(0, buttonhelper, myLamp.getpinTransition());   // вместо флага используем тикер :)
-  myLamp.setpinTransition(!myLamp.getpinTransition());
-  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, myLamp.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+  _isrHelper.once_ms(0, buttonhelper, myButtons.getpinTransition());   // вместо флага используем тикер :)
+  myButtons.setpinTransition(!myButtons.getpinTransition());
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, myButtons.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
 }
 
 /*
@@ -141,5 +148,6 @@ ICACHE_RAM_ATTR void buttonpinisr(){
  * 2) Тикер не может дернуть нестатический метод класса
  */
 void buttonhelper(bool state){
-  myLamp.buttonPress(state);
+  myButtons.buttonPress(state);
 }
+#endif

@@ -7,6 +7,7 @@ typedef enum _remote_action {
     RA_DEMO,
     RA_DEMO_NEXT,
     RA_ALARM,
+    RA_ALARM_OFF,
     RA_LAMP_CONFIG,
     RA_EFF_CONFIG,
     RA_EVENTS_CONFIG,
@@ -59,24 +60,21 @@ typedef enum _remote_action {
     } \
 }
 
+#define CALL_INTF_OBJ(call) { \
+    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 1000) : nullptr; \
+    call(interf, &obj); \
+    if (interf) { \
+        interf->json_frame_value(); \
+        for (JsonPair kv : obj) { \
+            interf->value(kv.key().c_str(), kv.value(), false); \
+        } \
+        interf->json_frame_flush(); \
+        delete interf; \
+    } \
+}
+
 void remote_action(RA action, ...);
 void httpCallback(const String &param, const String &value);
-
-class Button{
-    typedef union _bflags {
-        uint8_t mask;
-        struct {
-            uint8_t on:1;
-            uint8_t hold:1;
-            uint8_t click:3;
-        };
-    } btnflags;
-    btnflags flags;
-
-    friend bool operator== (const Button &f1, const Button &f2) { return (f1.flags.mask == f2.flags.mask); }
-    friend bool operator!= (const Button &f1, const Button &f2) { return (f1.flags.mask != f2.flags.mask); }
-
-    public:
-        Button(uint8_t on, uint8_t hold, uint8_t click) { flags.on = on; flags.hold = hold; flags.click = click; }
-};
-
+#ifdef ESP_USE_BUTTON
+void default_buttons();
+#endif
