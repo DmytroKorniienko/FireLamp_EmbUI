@@ -49,26 +49,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define BUTTON_RELEASE_TRANSITION RISING
 #endif
 
-class INTRFACE_GLOBALS{
-public:
-#pragma pack(push,1)
- struct { // набор глобальных флагов
-    bool isMicCal:1;
-    bool pinTransition:1;  // ловим "нажатие" кнопки
-    bool isAPMODE:1; // в случае режима AP один раз до нажатия "Выйти из настроек" форсируем переключение на вкладку WiFi, дальше этого не делаем
- };
- #pragma pack(pop)
- int mqtt_int; // интервал отправки данных по MQTT в секундах
- INTRFACE_GLOBALS() { // инициализация значениями по умолчанию
-    isMicCal = false;
-    pinTransition = true;
-    isAPMODE = false;
-}
-};
-
 // глобальные переменные для работы с ними в программе
 extern SHARED_MEM GSHMEM; // Глобальная разделяемая память эффектов
-extern INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
 extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 extern LAMP myLamp; // Объект лампы
 #ifdef ESP_USE_BUTTON

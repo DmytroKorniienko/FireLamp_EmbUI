@@ -125,7 +125,7 @@ void LAMP::handle()
 {
 #ifdef MIC_EFFECTS
   static unsigned long mic_check;
-  if(isMicOn && ONflag && (!dawnFlag) && mic_check + MIC_POLLRATE < millis()){
+  if(isMicOn && (ONflag || isMicCalibration()) && (!dawnFlag) && mic_check + MIC_POLLRATE < millis()){
     micHandler();
     mic_check = millis();
   }
@@ -624,6 +624,8 @@ LAMP::LAMP() : buttons(), docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTim
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
+      pinTransition = true;
+      isForcedWifi = true;
       _brt =0;
       _steps = 0;
       _brtincrement = 0;
@@ -1070,7 +1072,7 @@ void LAMP::micHandler()
       delete mw;
       mw = nullptr;
 
-      iGLOBAL.isMicCal = false;
+      //iGLOBAL.isMicCal = false;
       remote_action(RA::RA_MIC, nullptr);
     }
   }

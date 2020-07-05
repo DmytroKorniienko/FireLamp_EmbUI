@@ -108,7 +108,8 @@ class jeeui2
     void publish(const String &topic, const String &payload, bool retained);
 
     void remControl();
-
+    void wifi_connect();
+    
     void post(JsonObject data);
     void send_pub();
 
@@ -127,7 +128,6 @@ class jeeui2
     char m_pass[64];
 
   private:
-    void wifi_connect();
     void led_handle();
     void nonWifiVar();
     void led_on();

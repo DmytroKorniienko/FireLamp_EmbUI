@@ -57,6 +57,7 @@ void jeeui2::wifi_connect()
     String wifi = param(F("wifi"));
     if (wifi == F("AP")) wifi_mode = 1;
     if (wifi == F("STA")) wifi_mode = 2;
+    if (wifi == F("TMP_AP")) {wifi_mode = 1; var(F("wifi"), F("STA"));}
     switch (wifi_mode)
     {
         case 1:
@@ -65,7 +66,7 @@ void jeeui2::wifi_connect()
             WiFi.mode(WIFI_AP);
             WiFi.softAP(param(F("ap_ssid")).c_str(), param(F("ap_pass")).c_str(), 6, 0, 4);
             LOG(println, F("Start Wi-Fi AP mode!"));
-            save();
+            //save();
             _wifi_connected = false;
             break;
         }
@@ -126,7 +127,8 @@ void jeeui2::wifi_connect()
     }
     if (wf){
         LOG(println, F("RECONNECT AP"));
-        var(F("wifi"), F("AP"));
+        if (wifi == F("STA"))
+            var(F("wifi"), F("TMP_AP"));
         wifi_connect();
     }
     WiFi.scanNetworks(true);
