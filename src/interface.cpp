@@ -504,13 +504,13 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     if (!myLamp.isMicCalibration()) {
         interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
         interf->number(F("micNoise"), myLamp.getMicNoise(), F("Уровень шума, ед"), 0.01);
-        interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
+        interf->range(F("micnRdcLvl"), myLamp.getMicNoiseRdcLevel(), 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
     interf->spacer();
     //interf->button(F("mic_cal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
     interf->button(F("mic_cal"), F("Калибровка микрофона"), myLamp.isMicCalibration()? F("grey") : F("red"));
-    
+
 
     interf->spacer();
     interf->button(F("settings"), F("Выход"));
