@@ -193,7 +193,7 @@ void LAMP::buttonTick()
 
   if (!ONflag) { // Обработка из выключенного состояния
     if (touch.isDouble()) { // Демо-режим, с переключением каждые 30 секунд для двойного клика в выключенном состоянии
-      remote_action(RA::RA_DEMO, nullptr);
+      remote_action(RA::RA_DEMO, NULL);
       return;
     }
 
@@ -281,18 +281,18 @@ void LAMP::buttonTick()
          newval = constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255);
          // не мелькаем яркостью там где не надо
          if (getNormalizedLampBrightness() != newval) {
-           remote_action(RA::RA_BRIGHT_NF, String(newval).c_str());
+           remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
          }
          break;
 
       case 2:
         newval = constrain(effects.getSpeed() + (effects.getSpeed() / 25 + 1) * (speedDirection * 2 - 1), 1 , 255);
-        remote_action(RA::RA_SPEED, String(newval).c_str());
+        remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
         break;
 
       case 3:
         newval = constrain(effects.getScale() + (effects.getScale() / 25 + 1) * (scaleDirection * 2 - 1), 1 , 255);
-        remote_action(RA::RA_SCALE, String(newval).c_str());
+        remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
         break;
     }
     return;
@@ -326,37 +326,37 @@ if (touch.isHold() || !touch.isHolded()) {
       }
 
       if (ONflag) {
-        remote_action(RA::RA_OFF, nullptr);
+        remote_action(RA::RA_OFF, NULL);
       } else {
-        remote_action(RA::RA_ON, nullptr);
+        remote_action(RA::RA_ON, NULL);
       }
     }
 
     // двухкратное нажатие  - следующий эффект
     if (ONflag && clickCount == 2U) {
-      remote_action(RA::RA_EFF_NEXT, nullptr);
+      remote_action(RA::RA_EFF_NEXT, NULL);
     }
 
     // трёхкратное нажатие - предыдущий эффект
     if (ONflag && clickCount == 3U) {
-      remote_action(RA::RA_EFF_PREV, nullptr);
+      remote_action(RA::RA_EFF_PREV, NULL);
     }
 
 #ifdef OTA
     // четырёхкратное нажатие - запуск сервиса ОТА
     if (clickCount == 4U) {
-      remote_action(RA::RA_OTA, nullptr);
+      remote_action(RA::RA_OTA, NULL);
     }
 #endif
 
     // пятикратное нажатие - вывод IP на лампу
     if (clickCount == 5U) {
-        remote_action(RA::RA_SEND_IP, nullptr);
+        remote_action(RA::RA_SEND_IP, NULL);
     }
 
     // шестикратное нажатие - вывод текущего времени бегущей строкой
     if (clickCount == 6U) {
-        remote_action(RA::RA_SEND_TIME, nullptr);
+        remote_action(RA::RA_SEND_TIME, NULL);
     }
   }
 }
@@ -757,7 +757,7 @@ void LAMP::startDemoMode(byte tmout)
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
-  remote_action(RA::RA_DEMO_NEXT, nullptr);
+  remote_action(RA::RA_DEMO_NEXT, NULL);
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
   demoTimer(T_ENABLE, tmout);
 }
@@ -767,10 +767,10 @@ void LAMP::startNormalMode()
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   if (storedEffect != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    remote_action(RA::RA_EFFECT, String(storedEffect).c_str());
+    remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
   } else
   if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    remote_action(RA::RA_EFF_RAND, nullptr);
+    remote_action(RA::RA_EFF_RAND, NULL);
   }
 }
 #ifdef OTA
@@ -1115,7 +1115,7 @@ void LAMP::micHandler()
       mw = nullptr;
 
       //iGLOBAL.isMicCal = false;
-      remote_action(RA::RA_MIC, nullptr);
+      remote_action(RA::RA_MIC, NULL);
     }
   }
 }
@@ -1307,7 +1307,7 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
     _demoTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
-    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, nullptr));
+    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
     break;
   case SCHEDULER::T_RESET :
     if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); }// тут же сбросим и будильник

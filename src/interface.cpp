@@ -1149,20 +1149,23 @@ void sync_parameters(){
 }
 
 void remote_action(RA action, ...){
-    LOG(printf_P, PSTR("RA: %d:"), action);
+    LOG(printf_P, PSTR("RA %d: "), action);
     StaticJsonDocument<128> doc;
     JsonObject obj = doc.to<JsonObject>();
 
-    va_list prm;
     char *key = NULL, *val = NULL, *value = NULL;
+    va_list prm;
     va_start(prm, action);
     while ((key = (char *)va_arg(prm, char *)) && (val = (char *)va_arg(prm, char *))) {
+        LOG(printf_P, PSTR("%s = %s"), key, val);
         obj[key] = val;
     }
     va_end(prm);
     if (key && !val) {
         value = key;
+        LOG(printf_P, PSTR("%s"), value);
     }
+    LOG(println, PSTR(""));
 
     switch (action) {
         case RA::RA_ON:
@@ -1181,7 +1184,7 @@ void remote_action(RA action, ...){
             } else {
                 myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
             }
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_EFFECT: {
             CALL_INTF(F("effList"), value, set_effects_list);
             break;
@@ -1207,19 +1210,19 @@ void remote_action(RA action, ...){
 #endif
         case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_EFF_PREV:
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_EFF_RAND:
             myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_WHITE_HI:
             myLamp.switcheffect(SW_WHITE_HI);
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_WHITE_LO:
             myLamp.switcheffect(SW_WHITE_LO);
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_ALARM:
             myLamp.startAlarm();
             break;
@@ -1307,7 +1310,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("aux_off"))  action = RA_AUX_OFF;
     else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
-    remote_action(action, value.c_str());
+    remote_action(action, value.c_str(), NULL);
     jee.publish(String(F("jee/pub/")) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
@@ -1362,5 +1365,5 @@ void event_worker(const EVENT *event){
     default:;
     }
 
-    remote_action(action, event->message);
+    remote_action(action, event->message, NULL);
 }
