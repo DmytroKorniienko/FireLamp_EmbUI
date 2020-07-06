@@ -517,7 +517,7 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     if (!myLamp.isMicCalibration()) {
         interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
         interf->number(F("micNoise"), myLamp.getMicNoise(), F("Уровень шума, ед"), 0.01);
-        interf->range(F("micnRdcLvl"), 0, 4, 1, F("Шумодав"));
+        interf->range(F("micnRdcLvl"), myLamp.getMicNoiseRdcLevel(), 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
     interf->spacer();
@@ -1172,20 +1172,23 @@ void sync_parameters(){
 }
 
 void remote_action(RA action, ...){
-    LOG(printf_P, PSTR("RA: %d:"), action);
+    LOG(printf_P, PSTR("RA %d: "), action);
     StaticJsonDocument<128> doc;
     JsonObject obj = doc.to<JsonObject>();
 
-    va_list prm;
     char *key = NULL, *val = NULL, *value = NULL;
+    va_list prm;
     va_start(prm, action);
     while ((key = (char *)va_arg(prm, char *)) && (val = (char *)va_arg(prm, char *))) {
+        LOG(printf_P, PSTR("%s = %s"), key, val);
         obj[key] = val;
     }
     va_end(prm);
     if (key && !val) {
         value = key;
+        LOG(printf_P, PSTR("%s"), value);
     }
+    LOG(println, PSTR(""));
 
     switch (action) {
         case RA::RA_ON:
@@ -1204,7 +1207,7 @@ void remote_action(RA action, ...){
             } else {
                 myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
             }
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_EFFECT: {
             CALL_INTF(F("effList"), value, set_effects_list);
             break;
@@ -1230,19 +1233,19 @@ void remote_action(RA action, ...){
 #endif
         case RA::RA_EFF_NEXT:
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_EFF_PREV:
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_EFF_RAND:
             myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_WHITE_HI:
             myLamp.switcheffect(SW_WHITE_HI);
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_WHITE_LO:
             myLamp.switcheffect(SW_WHITE_LO);
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str());
+            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()->eff_nb).c_str(), NULL);
         case RA::RA_ALARM:
             myLamp.startAlarm();
             break;
@@ -1333,7 +1336,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("aux_off"))  action = RA_AUX_OFF;
     else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
 #endif
-    remote_action(action, value.c_str());
+    remote_action(action, value.c_str(), NULL);
     jee.publish(String(F("jee/pub/")) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
@@ -1388,25 +1391,26 @@ void event_worker(const EVENT *event){
     default:;
     }
 
-    remote_action(action, event->message);
+    remote_action(action, event->message, NULL);
 }
 #ifdef ESP_USE_BUTTON
 void default_buttons(){
+    myButtons.clear();
     // Выключена
-    myButtons.buttons.add(new Button(false, false, 1, BA::BA_ON)); // 1 клик - ON
-    myButtons.buttons.add(new Button(false, false, 2, BA::BA_DEMO)); // 2 клика - Демо
-    myButtons.buttons.add(new Button(false, true, 0, BA::BA_DEMO)); // удержание Включаем белую лампу в полную яркость
-    myButtons.buttons.add(new Button(false, true, 1, BA::BA_DEMO)); // удержание + 1 клик Включаем белую лампу в мин яркость
+    myButtons.add(new Button(false, false, 1, BA::BA_ON)); // 1 клик - ON
+    myButtons.add(new Button(false, false, 2, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons.add(new Button(false, true, 0, BA::BA_DEMO)); // удержание Включаем белую лампу в полную яркость
+    myButtons.add(new Button(false, true, 1, BA::BA_DEMO)); // удержание + 1 клик Включаем белую лампу в мин яркость
 
     // Включена
-    myButtons.buttons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
-    myButtons.buttons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
-    myButtons.buttons.add(new Button(true, false, 3, BA::BA_EFF_NEXT)); // 3 клика - пред эффект
-    myButtons.buttons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
-    myButtons.buttons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
-    myButtons.buttons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени
-    myButtons.buttons.add(new Button(true, true, 0, BA::BA_BRIGHT)); // удержание яркость
-    myButtons.buttons.add(new Button(true, true, 1, BA::BA_SPEED)); // удержание + 1 клие скорость
-    myButtons.buttons.add(new Button(true, true, 2, BA::BA_SCALE)); // удержание + 2 клика масштаб
+    myButtons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
+    myButtons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons.add(new Button(true, false, 3, BA::BA_EFF_NEXT)); // 3 клика - пред эффект
+    myButtons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
+    myButtons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons.add(new Button(true, true, 0, BA::BA_BRIGHT)); // удержание яркость
+    myButtons.add(new Button(true, true, 1, BA::BA_SPEED)); // удержание + 1 клие скорость
+    myButtons.add(new Button(true, true, 2, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
 #endif

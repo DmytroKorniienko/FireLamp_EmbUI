@@ -123,7 +123,7 @@ private:
     uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
 #endif
  };
- #pragma pack(pop
+ #pragma pack(pop)
     byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 #ifdef LAMP_DEBUG

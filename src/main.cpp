@@ -75,13 +75,17 @@ void setup() {
     myLamp.effects.loadConfig();
     myLamp.events.loadConfig();
 
+#ifdef ESP_USE_BUTTON
+    if (!myButtons.loadConfig()) {
+      default_buttons();
+      myButtons.saveConfig();
+    }
+#endif
+
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
 
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
-#endif
-#ifdef ESP_USE_BUTTON
-    default_buttons();
 #endif
 
     myLamp.events.setEventCallback(event_worker);
@@ -133,6 +137,15 @@ void sendData(){
 
 #ifdef ESP_USE_BUTTON
 /*
+ * Используем обертку и тикер ибо:
+ * 1) убираем функции с ICACHE из класса лампы
+ * 2) Тикер не может дернуть нестатический метод класса
+ */
+void buttonhelper(bool state){
+  myButtons.buttonPress(state);
+}
+
+/*
  *  Button pin interrupt handler
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
@@ -140,14 +153,5 @@ ICACHE_RAM_ATTR void buttonpinisr(){
   _isrHelper.once_ms(0, buttonhelper, myButtons.getpinTransition());   // вместо флага используем тикер :)
   myButtons.setpinTransition(!myButtons.getpinTransition());
   attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, myButtons.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
-}
-
-/*
- * Используем обертку и тикер ибо:
- * 1) убираем функции с ICACHE из класса лампы
- * 2) Тикер не может дернуть нестатический метод класса
- */
-void buttonhelper(bool state){
-  myButtons.buttonPress(state);
 }
 #endif

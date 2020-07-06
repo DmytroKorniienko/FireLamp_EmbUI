@@ -66,4 +66,3 @@ void create_parameters();
 void sync_parameters();
 void event_worker(const EVENT *);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
-void buttonhelper(bool state);
