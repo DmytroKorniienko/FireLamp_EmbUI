@@ -139,7 +139,7 @@ private:
     uint8_t fps = 0;    // fps counter
 #endif
     int mqtt_int;
-    
+
     const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
@@ -294,7 +294,6 @@ public:
     void startNormalMode();
 #ifdef OTA
     void startOTAUpdate();
-    void startOTA() { otaManager.RequestOtaUpdate(); if (otaManager.RequestOtaUpdate()) { startOTAUpdate(); } }
 #endif
     void newYearMessageHandle();
     void setNYMessageTimer(int in){ tmNewYearMessage.setInterval(in*60*1000); tmNewYearMessage.reset(); }

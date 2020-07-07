@@ -332,7 +332,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
 
 #ifdef OTA
 void set_otaflag(Interface *interf, JsonObject *data){
-    myLamp.startOTA();
+    myLamp.startOTAUpdate();
 
     interf->json_frame_interface();
     interf->json_section_content();
@@ -1266,7 +1266,7 @@ void remote_action(RA action, ...){
             break;
 #ifdef OTA
         case RA::RA_OTA:
-            myLamp.startOTA();
+            myLamp.startOTAUpdate();
             break;
 #endif
 #ifdef AUX_PIN
