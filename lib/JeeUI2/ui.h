@@ -110,10 +110,10 @@ class Interface {
         void text(const String &id, const String &value, const String &label);
         void password(const String &id, const String &label);
         void password(const String &id, const String &value, const String &label);
-        void number(const String &id, const String &label);
-        void number(const String &id, int value, const String &label);
-        void number(const String &id, const String &label, float step);
-        void number(const String &id, float value, const String &label, float step);
+        void number(const String &id, const String &label, int min = 0, int max = 0);
+        void number(const String &id, int value, const String &label, int min = 0, int max = 0);
+        void number(const String &id, const String &label, float step, int min = 0, int max = 0);
+        void number(const String &id, float value, const String &label, float step, int min = 0, int max = 0);
         void time(const String &id, const String &label);
         void time(const String &id, const String &value, const String &label);
         void date(const String &id, const String &label);

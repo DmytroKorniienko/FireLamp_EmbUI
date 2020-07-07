@@ -2,9 +2,30 @@
 #ifdef ESP_USE_BUTTON
 #include "main.h"
 
+const char *btn_get_desc(BA action){
+	switch (action) {
+		case BA_BRIGHT: return PSTR("BRIGHT");
+		case BA_SPEED: return PSTR("SPEED");
+		case BA_SCALE: return PSTR("SCALE");
+		case BA_ON: return PSTR("ON");
+		case BA_OFF: return PSTR("OFF");
+		case BA_DEMO: return PSTR("DEMO");
+		case BA_AUX_TOGLE: return PSTR("AUX");
+		case BA_OTA: return PSTR("OTA");
+		case BA_EFF_NEXT: return PSTR("NEXT");
+		case BA_EFF_PREV: return PSTR("PREV");
+		case BA_SEND_TIME: return PSTR("TIME");
+		case BA_SEND_IP: return PSTR("IP");
+		case BA_WHITE_HI: return PSTR("WHITE_HI");
+		case BA_WHITE_LO: return PSTR("WHITE_LO");
+		default:;
+	}
+	return PSTR("");
+}
+
 void Button::activate(bool reverse){
 		uint8_t newval;
-		RA action = RA_UNKNOWN;
+		RA ract = RA_UNKNOWN;
 		if (reverse) direction = !direction;
 		switch (action) {
 			case BA_BRIGHT:
@@ -22,25 +43,45 @@ void Button::activate(bool reverse){
 				if (newval == 1 || newval == 255) direction = !direction;
 				remote_action(RA::RA_SCALE, String(newval).c_str());
 				return;
-			case BA_ON: action = RA_ON; break;
-			case BA_OFF: action = RA_OFF; break;
-			case BA_DEMO: action = RA_DEMO; break;
+			case BA_ON: ract = RA_ON; break;
+			case BA_OFF: ract = RA_OFF; break;
+			case BA_DEMO: ract = RA_DEMO; break;
 #ifdef AUX_PIN
-			case BA_AUX_TOGLE: action = RA_AUX_TOGLE; break;
+			case BA_AUX_TOGLE: ract = RA_AUX_TOGLE; break;
 #endif
 #ifdef OTA
-			case BA_OTA: action = RA_OTA; break;
+			case BA_OTA: ract = RA_OTA; break;
 #endif
-			case BA_EFF_NEXT: action = RA_EFF_NEXT; break;
-			case BA_EFF_PREV: action = RA_EFF_PREV; break;
-			case BA_SEND_TIME: action = RA_SEND_TIME; break;
-			case BA_SEND_IP: action = RA_SEND_IP; break;
-			case BA_WHITE_HI: action = RA_WHITE_HI; break;
-			case BA_WHITE_LO: action = RA_WHITE_LO; break;
+			case BA_EFF_NEXT: ract = RA_EFF_NEXT; break;
+			case BA_EFF_PREV: ract = RA_EFF_PREV; break;
+			case BA_SEND_TIME: ract = RA_SEND_TIME; break;
+			case BA_SEND_IP: ract = RA_SEND_IP; break;
+			case BA_WHITE_HI: ract = RA_WHITE_HI; break;
+			case BA_WHITE_LO: ract = RA_WHITE_LO; break;
 			default:;
 		}
-		remote_action(action, nullptr);
+		remote_action(ract, nullptr);
 }
+
+String Button::getName(){
+		String buffer;
+		buffer.concat(flags.on? F("ON: ") : F("OFF: "));
+		if (flags.hold) {
+			if (flags.click) {
+				buffer.concat(String(flags.click));
+				buffer.concat(F(" Click "));
+			}
+			buffer.concat(F("HOLD - "));
+		} else
+		if (flags.click) {
+			buffer.concat(String(flags.click));
+			buffer.concat(F(" Click - "));
+		}
+
+		buffer.concat(String(btn_get_desc(action)));
+
+		return buffer;
+};
 
 Buttons::Buttons(): buttons(), tmNumHoldTimer(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, NORM_OPEN){
 	holding = false;

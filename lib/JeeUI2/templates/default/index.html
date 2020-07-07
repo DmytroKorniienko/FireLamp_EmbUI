@@ -122,9 +122,9 @@
 			{{#if2 type == "range" || type == "color"}}<span id="{{id}}-val">: {{value}}</span>{{/if2}}
 			{{#if2 type == "text" || type == "password"}}<span id="{{id}}-val"> ({{calc value.length || 0}})</span>{{/if2}}
 			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1" value="{{value}}"
-				{{#if2 min}}min="{{min}}"{{/if2}}
-				{{#if2 max}}max="{{max}}"{{/if2}}
-				{{#if2 step}}step="{{step}}"{{/if2}}
+				{{#if2 (min || min === 0)}}min="{{min}}"{{/if2}}
+				{{#if2 (max || max === 0)}}max="{{max}}"{{/if2}}
+				{{#if2 (step || step === 0)}}step="{{step}}"{{/if2}}
 				{{#if2 placeholder}}placeholder="{{placeholder}}"{{/if2}}
 				{{#if2 type == "color"}}style="height: 50px"{{/if2}}
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
