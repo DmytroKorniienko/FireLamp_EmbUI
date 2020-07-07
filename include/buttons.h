@@ -20,8 +20,11 @@ typedef enum _button_action {
 	BA_SEND_TIME,
 	BA_SEND_IP,
 	BA_WHITE_HI,
-	BA_WHITE_LO
+	BA_WHITE_LO,
+	BA_END			// признак конца enum
 } BA;
+
+const char *btn_get_desc(BA action);
 
 class Button{
 	typedef union _bflags {
@@ -41,22 +44,15 @@ class Button{
 
 	public:
 		Button(uint8_t on, uint8_t hold, uint8_t click, BA act = BA_NONE) { direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; action = act; }
+
 		void activate(bool reverse);
+		String getName();
 
 		BA action;
 		btnflags flags;
 };
 
 class Buttons {
-	struct _ba_t {
-		BA action;
-		const char *desk;
-	};
-	// button[] = {
-	//     {BA_BRIGHT, "Яркость"},
-	//     {BA_SPEED, "Скорость"},
-	//     {BA_SCALE, "Масштаб"}
-	// };
 	private:
 #pragma pack(push,1)
  struct {

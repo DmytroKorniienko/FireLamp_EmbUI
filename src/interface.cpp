@@ -453,7 +453,10 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         myLamp.events.loadConfig(filename.c_str());
 #ifdef ESP_USE_BUTTON
         filename = String(F("/btn/")) + name;
-        myButtons.loadConfig(filename.c_str());
+        myButtons.clear();
+        if (!myButtons.loadConfig()) {
+            default_buttons();
+        }
 #endif
         jee.var(F("fileName"), name);
     } else {
@@ -766,7 +769,7 @@ void block_settings_event(Interface *interf, JsonObject *data){
     int num = 1;
     EVENT *next = nullptr;
     while ((next = myLamp.events.getNextEvent(next)) != nullptr) {
-        String name = "evconf" + String(num);
+        String name = "event" + String(num);
         interf->json_section_begin(name, next->getName(), false, false, true);
         interf->button_submit_value(name, F("edit"), F("Редактировать"), F("green"));
         interf->button_submit_value(name, F("del"), F("Удалить"), F("red"));
@@ -840,7 +843,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
     event.unixtime = mktime(tm);;
-    String tmpMsg(jee.param(F("msg")));
+    String tmpMsg = (*data)[F("msg")];
     event.message = (char*)(tmpMsg.c_str());
 
     myLamp.events.addEvent(event);
@@ -860,7 +863,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
         num = (*data)[F("event")];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
-        act = (*data)["evconf" + String(num)].as<String>();
+        act = (*data)["event" + String(num)].as<String>();
         event = *curr;
         edit = true;
     }
@@ -921,9 +924,9 @@ void show_event_conf(Interface *interf, JsonObject *data){
 
     if (edit) {
         interf->hidden(F("save"), F("true"));
-        interf->button_submit(F("set_event"), F("Обновить событие"));
+        interf->button_submit(F("set_event"), F("Обновить"));
     } else {
-        interf->button_submit(F("set_event"), F("Добавить событие"), F("green"));
+        interf->button_submit(F("set_event"), F("Добавить"), F("green"));
     }
 
     interf->spacer();
@@ -932,14 +935,124 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_section_end();
     interf->json_frame_flush();
 }
+#ifdef ESP_USE_BUTTON
+void block_settings_butt(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_section_main(F("show_button"), F("Кнопка"));
+
+    for (int i = 0; i < myButtons.buttons.size(); i++) {
+        String name = "butt" + String(i);
+        Button *btn = myButtons.buttons[i];
+        interf->json_section_begin(name, btn->getName(), false, false, true);
+        interf->button_submit_value(name, F("edit"), F("Редактировать"), F("green"));
+        interf->button_submit_value(name, F("del"), F("Удалить"), F("red"));
+        interf->hidden(F("button"), String(i));
+        interf->json_section_end();
+    }
+
+    interf->button(F("butt_conf"), F("Добавить"));
+
+    interf->spacer();
+    interf->button(F("settings"), F("Выход"));
+
+    interf->json_section_end();
+}
 
 void show_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface();
-    block_settings_event(interf, data);
+    block_settings_butt(interf, data);
     interf->json_frame_flush();
 }
 
+void set_butt_conf(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    Button *btn = nullptr;
+    bool on = ((*data)[F("on")] == F("true"));
+    bool hold = ((*data)[F("hold")] == F("true"));
+    uint8_t clicks = (*data)[F("clicks")];
+    BA action = (BA)(*data)[F("btnList")].as<long>();
+
+    if (data->containsKey(F("button"))) {
+        int num = (*data)[F("button")];
+        if (num < myButtons.buttons.size()) {
+            btn = myButtons.buttons[num];
+        }
+    }
+    if (btn) {
+        btn->action = action;
+        btn->flags.on = on;
+        btn->flags.hold = hold;
+        btn->flags.click = clicks;
+    } else {
+        myButtons.add(new Button(on, hold, clicks, action));
+    }
+
+    myButtons.saveConfig();
+    show_settings_butt(interf, data);
+}
+
+void show_butt_conf(Interface *interf, JsonObject *data){
+    if (!interf) return;
+
+    Button *btn = nullptr;
+    String act;
+    int num = 0;
+
+    if (data->containsKey(F("button"))) {
+        num = (*data)[F("button")];
+        if (num < myButtons.buttons.size()) {
+            act = (*data)["butt" + String(num)].as<String>();
+            btn = myButtons.buttons[num];
+        }
+    }
+
+    if (act == F("del")) {
+        myButtons.buttons.remove(num);
+        myButtons.saveConfig();
+        show_settings_butt(interf, data);
+        return;
+    } else
+    if (data->containsKey(F("save"))) {
+        set_butt_conf(interf, data);
+        return;
+    }
+
+
+    interf->json_frame_interface();
+
+    if (btn) {
+        interf->json_section_main(F("set_butt"), F("Редактировать"));
+        interf->constant(F("button"), String(num), btn->getName());
+    } else {
+        interf->json_section_main(F("set_butt"), F("Добавить"));
+    }
+
+    interf->select(F("btnList"), String(btn? btn->action : 0), F("Действие"), false);
+    for (int i = 1; i < BA::BA_END; i++) {
+        interf->option(String(i), btn_get_desc((BA)i));
+    }
+    interf->json_section_end();
+
+    interf->checkbox(F("on"), (btn? btn->flags.on : 0)? F("true") : F("false"), F("ON/OFF"), false);
+    interf->checkbox(F("hold"), (btn? btn->flags.hold : 0)? F("true") : F("false"), F("Удержание"), false);
+    interf->number(F("clicks"), (btn? btn->flags.click : 0), F("Нажатия"));
+
+    if (btn) {
+        interf->hidden(F("save"), F("true"));
+        interf->button_submit(F("set_butt"), F("Обновить"));
+    } else {
+        interf->button_submit(F("set_butt"), F("Добавить"), F("green"));
+    }
+
+    interf->spacer();
+    interf->button(F("show_butt"), F("Выход"));
+
+    interf->json_section_end();
+    interf->json_frame_flush();
+}
+#endif
 void section_effects_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface(F(("Огненная лампа")));
@@ -1115,12 +1228,13 @@ void create_parameters(){
     jee.section_handle_add(F("mic_cal"), set_settings_mic_calib);
 #endif
     jee.section_handle_add(F("show_event"), show_settings_event);
-    jee.section_handle_add(F("event_conf"), show_event_conf);
-    jee.section_handle_add(F("evconf*"), show_event_conf);
+    jee.section_handle_add(F("event*"), show_event_conf);
     jee.section_handle_add(F("set_event"), set_event_conf);
     jee.section_handle_add(F("Events"), set_eventflag);
 #ifdef ESP_USE_BUTTON
     jee.section_handle_add(F("show_butt"), show_settings_butt);
+    jee.section_handle_add(F("butt*"), show_butt_conf);
+    jee.section_handle_add(F("set_butt"), set_butt_conf);
 #endif
 }
 
@@ -1399,13 +1513,13 @@ void default_buttons(){
     // Выключена
     myButtons.add(new Button(false, false, 1, BA::BA_ON)); // 1 клик - ON
     myButtons.add(new Button(false, false, 2, BA::BA_DEMO)); // 2 клика - Демо
-    myButtons.add(new Button(false, true, 0, BA::BA_DEMO)); // удержание Включаем белую лампу в полную яркость
-    myButtons.add(new Button(false, true, 1, BA::BA_DEMO)); // удержание + 1 клик Включаем белую лампу в мин яркость
+    myButtons.add(new Button(false, true, 0, BA::BA_WHITE_HI)); // удержание Включаем белую лампу в полную яркость
+    myButtons.add(new Button(false, true, 1, BA::BA_WHITE_LO)); // удержание + 1 клик Включаем белую лампу в мин яркость
 
     // Включена
     myButtons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
     myButtons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
-    myButtons.add(new Button(true, false, 3, BA::BA_EFF_NEXT)); // 3 клика - пред эффект
+    myButtons.add(new Button(true, false, 3, BA::BA_EFF_PREV)); // 3 клика - пред эффект
     myButtons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
     myButtons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
     myButtons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени

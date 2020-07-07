@@ -2,6 +2,27 @@
 #ifdef ESP_USE_BUTTON
 #include "main.h"
 
+const char *btn_get_desc(BA action){
+	switch (action) {
+		case BA_BRIGHT: return PSTR("BRIGHT");
+		case BA_SPEED: return PSTR("SPEED");
+		case BA_SCALE: return PSTR("SCALE");
+		case BA_ON: return PSTR("ON");
+		case BA_OFF: return PSTR("OFF");
+		case BA_DEMO: return PSTR("DEMO");
+		case BA_AUX_TOGLE: return PSTR("AUX");
+		case BA_OTA: return PSTR("OTA");
+		case BA_EFF_NEXT: return PSTR("NEXT");
+		case BA_EFF_PREV: return PSTR("PREV");
+		case BA_SEND_TIME: return PSTR("TIME");
+		case BA_SEND_IP: return PSTR("IP");
+		case BA_WHITE_HI: return PSTR("WHITE_HI");
+		case BA_WHITE_LO: return PSTR("WHITE_LO");
+		default:;
+	}
+	return PSTR("");
+}
+
 void Button::activate(bool reverse){
 		uint8_t newval;
 		RA action = RA_UNKNOWN;
@@ -41,6 +62,26 @@ void Button::activate(bool reverse){
 		}
 		remote_action(action, nullptr);
 }
+
+String Button::getName(){
+		String buffer;
+		buffer.concat(flags.on? F("ON: ") : F("OFF: "));
+		if (flags.hold) {
+			if (flags.click) {
+				buffer.concat(String(flags.click));
+				buffer.concat(F(" Click "));
+			}
+			buffer.concat(F("HOLD - "));
+		} else
+		if (flags.click) {
+			buffer.concat(String(flags.click));
+			buffer.concat(F(" Click - "));
+		}
+
+		buffer.concat(String(btn_get_desc(action)));
+
+		return buffer;
+};
 
 Buttons::Buttons(): buttons(), tmNumHoldTimer(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, NORM_OPEN){
 	holding = false;
