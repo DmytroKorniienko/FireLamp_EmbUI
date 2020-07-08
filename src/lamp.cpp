@@ -485,10 +485,9 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       }
     }
 
-void LAMP::startAlarm(){
-  if (mode != LAMPMODE::MODE_ALARMCLOCK) {
-    storedMode = mode;
-  }
+void LAMP::startAlarm()
+{
+  storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
 }
 
@@ -514,7 +513,7 @@ void LAMP::startDemoMode(byte tmout)
   storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
-  remote_action(RA::RA_DEMO_NEXT, nullptr);
+  remote_action(RA::RA_DEMO_NEXT, NULL);
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
   demoTimer(T_ENABLE, tmout);
 }
@@ -527,17 +526,21 @@ void LAMP::startNormalMode()
     remote_action(RA::RA_EFFECT, String(storedEffect).c_str());
   } else
   if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    remote_action(RA::RA_EFF_RAND, nullptr);
+    remote_action(RA::RA_EFF_RAND, NULL);
   }
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
 {
-  mode = MODE_OTA;
+  if (mode == LAMPMODE::MODE_OTA) return;
+  storedMode = mode;
+  mode = LAMPMODE::MODE_OTA;
+
   effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
   changePower(true);
   sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
+  otaManager.startOtaUpdate();
 }
 #endif
 bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int32_t pos, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)

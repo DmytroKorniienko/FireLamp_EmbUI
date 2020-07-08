@@ -326,7 +326,7 @@ void jeeui2::begin(){
     // server all files from LittleFS root
     server.serveStatic("/", LittleFS, "/")
         .setDefaultFile("index.html")
-        .setCacheControl("max-age=864000");
+        .setCacheControl("max-age=14400");
 
     server.onNotFound(notFound);
 

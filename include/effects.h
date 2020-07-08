@@ -178,7 +178,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
     {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_COLORS, T_COLORS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, stubRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, stubRoutine, ((char *)_R255)},
     {true, true, 127, 127, 127, EFF_SPARKLES, T_SPARKLES, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SNOW, T_SNOW, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, stubRoutine, nullptr},
@@ -211,7 +211,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, stubRoutine, ((char *)_R255)}, // очень хреновое приведение типов, но дальше это разрулим :)
-    {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, stubRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, stubRoutine, ((char *)_R255)},
     {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_RAIN, T_RAIN, stubRoutine, nullptr},
@@ -384,6 +384,13 @@ public:
   static void MoveFractionalNoise(bool scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift = 0);
   static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
   static void fader(uint8_t step);
+  static uint8_t ceil8(const uint8_t a, const uint8_t b);
+
+  /** аналог ардуино функции map(), но только для float
+   */
+  static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max){
+      return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  }
 };
 
 #ifdef MIC_EFFECTS
@@ -575,10 +582,14 @@ private:
 
   // COOLING: How much does the air cool as it rises?
   // Less cooling = taller flames.  More cooling = shorter flames.
-  uint8_t cooling = 70;
+  const uint8_t cooling = 70;
   // SPARKING: What chance (out of 255) is there that a new spark will be lit?
   // Higher chance = more roaring fire.  Lower chance = more flickery fire.
-  uint8_t sparking = 130;
+  const uint8_t sparking = 130;
+  // SMOOTHING; How much blending should be done between frames
+  // Lower = more blending and smoother flames. Higher = less blending and flickery flames
+  const uint8_t fireSmoothing = 90;
+
 
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
@@ -848,17 +859,14 @@ class EffectCube2d : public EffectCalc {
 private:
   uint8_t sizeX, sizeY; // размеры ячеек по горизонтали / вертикали
   uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
-  uint8_t fieldX, fieldY; // размер всего поля по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
-  bool seamlessX; // получилось ли сделать поле по Х бесшовным
+  uint8_t fieldX, fieldY; // размер всего поля блоков по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
   uint8_t csum;   // reload checksum
 
-  bool direction; // направление вращения в данный момент
   uint8_t pauseSteps; // осталось шагов паузы
-  uint8_t currentStep; // текущий шаг сдвига (от 0 до GSHMEM.shiftSteps-1)
   uint8_t shiftSteps; // всего шагов сдвига (от 3 до 4)
-  uint8_t gX, gY; // глобальный X и глобальный Y нашего "кубика"
-  int8_t globalShiftX=0, globalShiftY=0; // нужно ли сдвинуть всё поле по окончаии цикла и в каком из направлений (-1, 0, +1)
-  uint8_t storage[WIDTH][HEIGHT];
+  uint8_t moveItem;     // индекс перемещаемого элемента
+  bool movedirection;   // направление смещения
+  bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
 
   void cubesize();
   bool cube2dRoutine(CRGB *leds, const char *param);
@@ -1187,8 +1195,8 @@ public:
     }
 
     void setValue(const char *src, const __FlashStringHelper *type, const char *val){
-        if (!strlen(val))
-            return;
+        if (!val || !*val)
+             return;
         DynamicJsonDocument doc(PARAM_BUFSIZE);
         deserializeJson(doc,String(FPSTR(src)));
         JsonArray arr = doc.as<JsonArray>();

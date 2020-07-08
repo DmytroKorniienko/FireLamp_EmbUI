@@ -653,4 +653,11 @@ class Boid {
     }
 };
 
+// ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
+// (c) SottNick
+// refactored by Vortigont
+#define CUBE2D_MAX_SIZE 7       // максимальный размер обрабатываемых квадратов (AxA)
+#define CUBE2D_PAUSE_FRAMES 20   // число кадров паузы между трансформациями 
+
+
 #endif

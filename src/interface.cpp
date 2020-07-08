@@ -57,6 +57,7 @@ void AUX_toggle(bool key)
 #endif
 
 void pubCallback(Interface *interf){
+    return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
     interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(F("pMem"), String(ESP.getFreeHeap()), true);
@@ -114,9 +115,9 @@ void block_effects_config(Interface *interf, JsonObject *data){
     interf->json_section_main(F("effects_config"), F("Конфигурирование"));
 
     EFFECT enEff; enEff.setNone();
-    confEff = myLamp.effects.enumNextEffect(&enEff);
+    confEff = myLamp.effects.getSelected();
 
-    interf->select(F("effListConf"), String((int)enEff.eff_nb), F("Эффект"), true);
+    interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
     while ((enEff = *myLamp.effects.enumNextEffect(&enEff)).eff_nb != EFF_NONE) {
         interf->option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
     }
@@ -335,7 +336,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
 
 #ifdef OTA
 void set_otaflag(Interface *interf, JsonObject *data){
-    myLamp.startOTA();
+    myLamp.startOTAUpdate();
 
     interf->json_frame_interface();
     interf->json_section_content();
@@ -513,9 +514,11 @@ void block_lamp(Interface *interf, JsonObject *data){
 #ifdef MIC_EFFECTS
 void block_settings_mic(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("set_mic"), F("Микрофон"));
+    interf->json_section_main(F("settings_mic"), F("Микрофон"));
 
     interf->checkbox(F("Mic"), F("Микрофон"), true);
+
+    interf->json_section_begin(F("set_mic"));
     //if (!iGLOBAL.isMicCal) {
     if (!myLamp.isMicCalibration()) {
         interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
@@ -523,6 +526,8 @@ void block_settings_mic(Interface *interf, JsonObject *data){
         interf->range(F("micnRdcLvl"), myLamp.getMicNoiseRdcLevel(), 4, 1, F("Шумодав"));
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
+    interf->json_section_end();
+
     interf->spacer();
     //interf->button(F("mic_cal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
     interf->button(F("mic_cal"), F("Калибровка микрофона"), myLamp.isMicCalibration()? F("grey") : F("red"));
@@ -1406,7 +1411,7 @@ void remote_action(RA action, ...){
             break;
 #ifdef OTA
         case RA::RA_OTA:
-            myLamp.startOTA();
+            myLamp.startOTAUpdate();
             break;
 #endif
 #ifdef AUX_PIN

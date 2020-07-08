@@ -211,6 +211,15 @@ void EffectMath::MoveFractionalNoise(bool _scale, const uint8_t noise3d[][WIDTH]
   memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);
 }
 
+/**
+ * Возвращает частное от а,б округленное до большего целого
+ */
+uint8_t EffectMath::ceil8(const uint8_t a, const uint8_t b){
+  return a/b + !!(a%b);
+}
+
+
+
 // новый фейдер
 void EffectMath::fadePixel(uint8_t i, uint8_t j, uint8_t step)
 {
@@ -255,27 +264,25 @@ bool EffectSparcles::run(CRGB *ledarr, const char *opt){
 bool EffectSparcles::sparklesRoutine(CRGB *leds, const char *param)
 {
 
-#ifdef MIC_EFFECTS
-  #define SPEED _speed
-  #define SCALE _scale
-  uint8_t mmf = myLamp.getMicMapFreq();
-  uint8_t mmp = myLamp.getMicMapMaxPeak();
-  uint8_t _scale = constrain(scale*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?3.0:(mmp?0.012*mmp:1.0)),1,255);
-  uint8_t _speed = constrain(speed*(mmf>0?(1.5*(mmf/255.0)+0.33):1),1,255);
-// #if defined(LAMP_DEBUG) && defined(MIC_EFFECTS)
-// EVERY_N_SECONDS(1){
-//   LOG.printf_P(PSTR("MF: %5.2f MMF: %d MMP: %d scale %d speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, scale, speed);
-// }
-// #endif
+#ifndef MIC_EFFECTS
+  #define _SPEED speed
+  #define _SCALE scale
 #else
-  #define SPEED speed
-  #define SCALE scale
+  #define _SPEED _speed
+  #define _SCALE _scale
+  uint8_t _scale = scale, _speed = speed;
+
+  if (myLamp.isMicOnOff()){
+    uint8_t mmf = myLamp.getMicMapFreq();
+    uint8_t mmp = myLamp.getMicMapMaxPeak();
+    _scale = constrain(scale*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?3.0:(mmp?0.012*mmp:1.0)),1,255);
+    _speed = constrain(speed*(mmf>0?(1.5*(mmf/255.0)+0.33):1),1,255);
+    EffectMath::fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)_SCALE)/255)+1);
+  } else
 #endif
+    EffectMath::fader(map(_SCALE, 1, 255, 50, 0));
 
-  EffectMath::fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)SCALE)/255)+1);
-
-  //EVERY_N_MILLIS(500){
-  for (uint8_t i = 0; i < (uint8_t)round(2.5*(SPEED/255.0)+1); i++){
+  for (uint8_t i = 0; i < (uint8_t)round(2.5*(_SPEED/255.0)+1); i++){
       uint8_t x = random(0U, WIDTH);
       uint8_t y = random(0U, HEIGHT);
       if (myLamp.getPixColorXY(x, y) == 0U){
@@ -501,7 +508,7 @@ bool EffectPulse::pulseRoutine(CRGB *leds, const char *param) {
 bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 {
 #ifdef MIC_EFFECTS
-  hue += (4 * (myLamp.getMicMapMaxPeak()>50?5*(myLamp.getMicMapFreq()/255.0):1));
+  hue += (4 * (myLamp.getMicMapMaxPeak()>map(rval, 1, 255, 80, 10)?5*(myLamp.getMicMapFreq()/255.0):1));
 #else
   hue += 4;
 #endif
@@ -549,9 +556,9 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
   {
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
-      float twirlFactor = 3.0F * (scale / 30.0F);      // на сколько оборотов будет закручена матрица, [0..3]
+      float twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
 #ifdef MIC_EFFECTS
-      twirlFactor *= myLamp.getMicMapMaxPeak()>50?1.5*(myLamp.getMicMapFreq()/255.0):1;
+      twirlFactor *= myLamp.getMicMapMaxPeak() > map(rval, 1, 255, 80, 10) ? 1.5 * (myLamp.getMicMapFreq() / 255.0) : 1;
 #endif
       CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)myLamp.getmaxDim())), 255, 255);
       myLamp.drawPixelXY(i, j, thisColor);
@@ -576,8 +583,8 @@ bool EffectColors::colorsRoutine(CRGB *leds, const char *param)
   static unsigned int step = 0; // доп. задержка
   unsigned int delay = (speed==1)?4294967294:255-speed+1; // на скорости 1 будет очень долгое ожидание)))
 
-    step=(step+1)%(delay+1);
-    if(step!=delay) {
+  step=(step+1)%(delay+1);
+  if(step!=delay) {
 
 #ifdef MIC_EFFECTS
   uint16_t mmf = myLamp.getMicMapFreq();
@@ -588,37 +595,33 @@ EVERY_N_SECONDS(1){
   LOG(printf_P,PSTR("MF: %5.2f MMF: %d MMP: %d scale %d speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, scale, speed);
 }
 #endif
-      if(myLamp.isMicOnOff()){
-        // включен микрофон
-        if(scale>127){
-          uint8_t pos = (round(3.0*(mmf+(25.0*speed/255.0))/255.0))*HEIGHT/8; // двигаем частоты по диапазону в зависимости от скорости и делим на 4 части 0...3
-          for(uint8_t y=pos;y<pos+HEIGHT/8;y++){
-            for(uint8_t x=0; x<WIDTH; x++){
-              //if(mmp>MIN_PEAK_LEVEL/2 || pos==3){ // в половину минимальной амплитуды уже пропускаем :)
-                myLamp.setLeds(myLamp.getPixelNumber(x,y),CHSV(mmf/1.5, 255U, constrain(mmp*(2.0*(scale>>1)/127.0+0.33),1,255)));
-                myLamp.setLeds(myLamp.getPixelNumber(x,HEIGHT-1-y),CHSV(mmf/1.5, 255U, constrain(mmp*(2.0*(scale>>1)/127.0+0.33),1,255)));
-                //myLamp.SetLeds(myLamp.getPixelXY(x,y+HIGHT/4-1),CHSV(mmf, 255U, 255));
-              //}
-            }
-          }
-          myLamp.dimAll(254); // плавно гасим
-        } else {
-          if(mmp>scale) // если амплитуда превышает масштаб
-            myLamp.fillAll(CHSV(constrain(mmf*(2.0*speed/255.0),1,255), 255U, constrain(mmp*(2.0*scale/127.0+1.5),1,255))); // превышает минимаьный уровень громкости, значит выводим текущую частоту
-          else
-            myLamp.dimAll(252); // плавно гасим
+  if(myLamp.isMicOnOff()){
+    // включен микрофон
+    if(scale>=127){
+      uint8_t pos = (round(3.0*(mmf+(25.0*speed/255.0))/255.0))*HEIGHT/8; // двигаем частоты по диапазону в зависимости от скорости и делим на 4 части 0...3
+      for(uint8_t y=pos;y<pos+HEIGHT/8;y++){
+        for(uint8_t x=0; x<WIDTH; x++){
+          myLamp.setLeds(myLamp.getPixelNumber(x, y), CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
+          myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
         }
-      } else {
-        // выключен микрофон
-        myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
       }
+      myLamp.dimAll(254); // плавно гасим
+    } else {
+      if(mmp>scale) // если амплитуда превышает масштаб
+        myLamp.fillAll(CHSV(constrain(mmf*(2.0*speed/255.0),1,255), 255U, constrain(mmp*(2.0*scale/127.0+1.5),1,255))); // превышает минимаьный уровень громкости, значит выводим текущую частоту
+      else
+        myLamp.dimAll(252); // плавно гасим
+    }
+  } else {
+    // выключен микрофон
+    myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+  }
 #else
-      myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+  myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
 #endif
-    }
-    else {
-      ihue += scale; // смещаемся на следущий
-    }
+  } else {
+    ihue += scale; // смещаемся на следущий
+  }
   return true;
 }
 
@@ -2033,7 +2036,7 @@ bool EffectRadar::radarRoutine(CRGB *leds, const char *param)
   }
 
   myLamp.blur2d(beatsin8(5U, 3U, 10U));
-  myLamp.dimAll(255U - (0 + scale*3));
+  myLamp.dimAll(map(scale, 1, 255, 170, 255));
 
   for (uint8_t offset = 0U; offset < WIDTH / 2U - 1U; offset++)
   {
@@ -2136,6 +2139,8 @@ void EffectFire2012::load(){
 }
 
 bool EffectFire2012::run(CRGB *ledarr, const char *opt){
+  if (dryrun())
+    return false;
 
   return fire2012Routine(*&ledarr, &*opt);
 }
@@ -2151,11 +2156,6 @@ bool EffectFire2012::fire2012Routine(CRGB *ledarr, const char *opt)
 #else
   #define FIRE_BASE HEIGHT / 6 + 1
 #endif
-
-  // SMOOTHING; How much blending should be done between frames
-  // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-  uint8_t fireSmoothing = 80*2.0*speed/255.0+10;
-  //const uint8_t fireSmoothing =90; // random8(50, 120); //map(myLamp.effects.getSpeed(), 1, 255, 20, 100);
 
   // Loop for each column individually
   for (uint8_t x = 0; x < WIDTH; x++)
@@ -2657,16 +2657,7 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, const char *param)
 
 // ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
 // (c) SottNick
-
-#define PAUSE_MAX 7
-
-//uint8_t storage[WIDTH][HEIGHT];
-//uint8_t pauseSteps; // осталось шагов паузы
-//uint8_t currentStep; // текущий шаг сдвига (от 0 до shiftSteps-1)
-//uint8_t shiftSteps; // всего шагов сдвига (от 3 до 4)
-//uint8_t gX, gY; // глобальный X и глобальный Y нашего "кубика"
-// int8_t globalShiftX, globalShiftY; // нужно ли сдвинуть всё поле по окончаии цикла и в каком из направлений (-1, 0, +1)
-// bool direction; // направление вращения в данный момент
+// refactored by Vortigont
 
 bool EffectCube2d::run(CRGB *ledarr, const char *opt){
   if (dryrun())
@@ -2690,57 +2681,48 @@ void EffectCube2d::cubesize(){
     return;
   }
 
-  //uint8_t anim0 = 0;
-  fieldY = 0; fieldX = 0; 
-
-  //cubesize();
   FastLED.clear();
+  uint8_t cubeScaleX = EffectMath::ceil8(MAX_RANGE, CUBE2D_MAX_SIZE);       // масштаб "шкалы" в макс. размерность прямоугольника по X
+  sizeX = EffectMath::ceil8(scale, cubeScaleX);
 
-  sizeX = map(scale, 1, 260, 7, 56) / 7; // Ресайзим шкалу до  сегмента (7 вариантов ширины Х 7 вариантов высоты)= 49 шагов
-  sizeY = (sizeX * 7 - map(scale, 1, 260, 8 , 57)) * -1; // Высчитываем высоту кубика, из позиции в сегиенте, шкала специально отресайзина до 260, чтобы обнулить варианти 8хN
+  uint8_t cubeScaleY = EffectMath::ceil8(cubeScaleX, CUBE2D_MAX_SIZE);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
+  uint8_t scaleY = scale%cubeScaleX;
+  ++scaleY;   // начинаем шкалу с "1"
+  sizeY = EffectMath::ceil8(scaleY, cubeScaleY);
 
   cntY = HEIGHT / (sizeY + 1U);
-	if (cntY < 2U)
-		cntY = 2U;
-	uint8_t y = HEIGHT / cntY - 1U;
-	if (sizeY > y)
-		sizeY = y;
 	fieldY = (sizeY + 1U) * cntY;
-	cntX = WIDTH / (sizeX + 1U);
-	if (cntX < 2U)
-		cntX = 2U;
-	uint8_t x = WIDTH / cntX - 1U;
-	if (sizeX > x)
-		sizeX = x;
-	fieldX = (sizeX + 1U) * cntX;
-	seamlessX = (fieldX == WIDTH);
 
-  // init
-  gX=0, gY=0, globalShiftX=0, globalShiftY = 0U;
-  x=0, y = 0;
+  cntX = WIDTH / (sizeX + 1U);
+	fieldX = (sizeX + 1U) * cntX;
+  //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
+
+  uint8_t x=0, y = 0;
   CRGB color;
 
   for (uint8_t j = 0U; j < cntY; j++)
   {
-    y = j * (sizeY + 1U); // + gY т.к. оно =0U
+    y = j * (sizeY + 1U);
     for (uint8_t i = 0U; i < cntX; i++)
     {
-      x = i * (sizeX + 1U); // + gX т.к. оно =0U
+      x = i * (sizeX + 1U);
       if (scale == 255U)
         color = CHSV(45U, 0U, 128U + random8(128U));
-      else
-        color = ColorFromPalette(*curPalette, random8());
-      for (uint8_t k = 0U; k < sizeY; k++)
-        for (uint8_t m = 0U; m < sizeX; m++)
-          myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
+      else {
+          color = ColorFromPalette(*curPalette, random8());
+        for (uint8_t k = 0U; k < sizeY; k++){
+          for (uint8_t m = 0U; m < sizeX; m++){
+            myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
+          }
+        }
+      }
     }
   }
-  currentStep = 4U; // текущий шаг сдвига первоначально с перебором (от 0 до GSHMEM.shiftSteps-1)
-  shiftSteps = 4U; // всего шагов сдвига (от 3 до 4)
-  pauseSteps = 0U; // осталось шагов паузы
+
+  pauseSteps = CUBE2D_PAUSE_FRAMES; // осталось шагов паузы
+  shiftSteps = 0;
   csum = scale^rval;
   //end
-
 }
 
 bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
@@ -2748,196 +2730,85 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
   if (curPalette == nullptr) {
     return false;
   }
+  if (!pauseSteps){
+    pauseSteps--;
+    return false; // пропускаем кадры после прокрутки кубика (делаем паузу)
+  }
 
   CRGB color, color2;
-  uint8_t x, y, anim0, shift;
-  //двигаем, что получилось...
-  if (pauseSteps == 0 && currentStep < shiftSteps) // если пауза закончилась, а цикл вращения ещё не завершён
-  {
-    currentStep++;
-    if (direction)
-    {
-      for (uint8_t i = 0U; i < cntX; i++)
-      {
-        x = (gX + i * (sizeX + 1U)) % WIDTH;
-        if (storage[i][0] > 0) // в нулевой ячейке храним оставшееся количество ходов прокрутки
-        {
-          storage[i][0]--;
-            shift = storage[i][1] - 1; // в первой ячейке храним направление прокрутки
+  uint16_t x, y, anim0;
 
-          if (globalShiftY == 0)
-            anim0 = (gY == 0U) ? 0U : gY - 1U;
-          else if (globalShiftY > 0)
-            anim0 = gY;
-          else
-            anim0 = gY - 1U;
-
-          if (shift < 0) // если крутим столбец вниз
-          {
-            color = myLamp.getPixColorXY(x, anim0);                                   // берём цвет от нижней строчки
-            for (uint8_t k = anim0; k < anim0+fieldY-1; k++)
-            {
-              color2 = myLamp.getPixColorXY(x,k+1);                                   // берём цвет от строчки над нашей
-              for (uint8_t m = x; m < x + sizeX; m++)
-                myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH,k), color2);                           // копируем его на всю нашу строку
-            }
-            for   (uint8_t m = x; m < x + sizeX; m++)
-              myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH,anim0+fieldY-1), color);                  // цвет нижней строчки копируем на всю верхнюю
-          }
-          else if (shift > 0) // если крутим столбец вверх
-          {
-            color = myLamp.getPixColorXY(x,anim0+fieldY-1);                            // берём цвет от верхней строчки
-            for (uint8_t k = anim0+fieldY-1; k > anim0 ; k--)
-            {
-              color2 = myLamp.getPixColorXY(x,k-1);                                   // берём цвет от строчки под нашей
-              for (uint8_t m = x; m < x + sizeX; m++)
-                myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH,k), color2);                           // копируем его на всю нашу строку
-            }
-            for   (uint8_t m = x; m < x + sizeX; m++)
-              myLamp.setLeds(myLamp.getPixelNumber(m % WIDTH, anim0), color);                         // цвет верхней строчки копируем на всю нижнюю
-          }
-        }
-      }
-    }
-    else
-    {
-      for (uint8_t j = 0U; j < cntY; j++)
-      {
-        y = gY + j * (sizeY + 1U);
-        if (storage[0][j] > 0) // в нулевой ячейке храним оставшееся количество ходов прокрутки
-        {
-          storage[0][j]--;
-          shift = storage[1][j] - 1; // в первой ячейке храним направление прокрутки
-
-          if (seamlessX)
-            anim0 = 0U;
-          else if (globalShiftX == 0)
-            anim0 = (gX == 0U) ? 0U : gX - 1U;
-          else if (globalShiftX > 0)
-            anim0 = gX;
-          else
-            anim0 = gX - 1U;
-
-          if (shift < 0) // если крутим строку влево
-          {
-            color = myLamp.getPixColorXY(anim0, y);                            // берём цвет от левой колонки (левого пикселя)
-            for (uint8_t k = anim0; k < anim0+fieldX-1; k++)
-            {
-              color2 = myLamp.getPixColorXY(k+1, y);                           // берём цвет от колонки (пикселя) правее
-              for (uint8_t m = y; m < y + sizeY; m++)
-                myLamp.setLeds(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
-            }
-            for   (uint8_t m = y; m < y + sizeY; m++)
-              myLamp.setLeds(myLamp.getPixelNumber(anim0+fieldX-1, m), color);                  // цвет левой колонки копируем на всю правую
-          }
-          else if (shift > 0) // если крутим столбец вверх
-          {
-            color = myLamp.getPixColorXY(anim0+fieldX-1, y);                    // берём цвет от правой колонки
-            for (uint8_t k = anim0+fieldX-1; k > anim0 ; k--)
-            {
-              color2 = myLamp.getPixColorXY(k-1, y);                           // берём цвет от колонки левее
-              for (uint8_t m = y; m < y + sizeY; m++)
-                myLamp.setLeds(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
-            }
-            for   (uint8_t m = y; m < y + sizeY; m++)
-              myLamp.setLeds(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
-          }
-        }
-      }
-    }
-
+  if (!shiftSteps) {  // если цикл вращения завершён
+    // ====== определяем направление прокруток на будущий цикл
+    pauseSteps = CUBE2D_PAUSE_FRAMES;
+    direction = random8()%2;  // сдвиг 0 - строки, 1 - столбцы
+    moveItem = random8()%(direction ? cntX : cntY);
+    movedirection = random8()%2;  // 1 - fwd, 0 - bkwd
+    shiftSteps = ((direction ? sizeY : sizeX)+1) * random8(direction ? cntY : cntX);  // такой рандом добавляет случайную задержку в паузу, попадая на "0"
+    return false;
   }
-  else if (pauseSteps != 0U) // пропускаем кадры после прокрутки кубика (делаем паузу)
-    pauseSteps--;
 
-  if (currentStep >= shiftSteps) // если цикл вращения завершён, меняем местами соотвествующие ячейки (цвет в них) и точку первой ячейки
+  //LOG(printf_P, PSTR("Cube2D Move: dir=%d, steps=%d, movdir=%d\n"), direction, shiftSteps, movedirection);
+  //двигаем, что получилось...
+  shiftSteps--;
+  if (direction)  // идём по горизонтали, крутим по вертикали (столбцы двигаются)
+  {
+      x = moveItem * (sizeX + 1U);
+      anim0 = 0;
+      if (!movedirection) // если крутим столбец вниз
+        {
+          color = myLamp.getPixColorXY(x, anim0);                                   // берём цвет от нижней строчки
+          for (uint8_t k = anim0; k < anim0+fieldY-1; k++)
+          {
+            color2 = myLamp.getPixColorXY(x,k+1);                                   // берём цвет от строчки над нашей
+            for (uint8_t m = x; m < x + sizeX; m++)
+              myLamp.setLeds(myLamp.getPixelNumber(m,k), color2);                           // копируем его на всю нашу строку
+          }
+          for   (uint8_t m = x; m < x + sizeX; m++)
+            myLamp.setLeds(myLamp.getPixelNumber(m, anim0+fieldY-1), color);                  // цвет нижней строчки копируем на всю верхнюю
+          return true;
+        }
+      // shift > 0 крутим столбец вверх
+      color = myLamp.getPixColorXY(x,anim0+fieldY-1);                            // берём цвет от верхней строчки
+      for (uint8_t k = anim0+fieldY-1; k > anim0 ; k--)
+      {
+        color2 = myLamp.getPixColorXY(x,k-1);                                   // берём цвет от строчки под нашей
+        for (uint8_t m = x; m < x + sizeX; m++)
+          myLamp.setLeds(myLamp.getPixelNumber(m,k), color2);                           // копируем его на всю нашу строку
+      }
+      for   (uint8_t m = x; m < x + sizeX; m++)
+        myLamp.setLeds(myLamp.getPixelNumber(m, anim0), color);                         // цвет верхней строчки копируем на всю нижнюю
+      return true;
+  }
+
+  // идём по вертикали, крутим по горизонтали (строки двигаются)
+  y = moveItem * (sizeY + 1U);
+  anim0 = 0;
+  if (!movedirection) // если крутим строку влево
+  {
+    color = myLamp.getPixColorXY(anim0, y);                            // берём цвет от левой колонки (левого пикселя)
+    for (uint8_t k = anim0; k < anim0+fieldX-1; k++)
     {
-      currentStep = 0U;
-      pauseSteps = PAUSE_MAX;
-      //если часть ячеек двигалась на 1 пиксель, пододвигаем глобальные координаты начала
-      gY = gY + globalShiftY; //+= globalShiftY;
-      globalShiftY = 0;
-      //gX += globalShiftX; для бесшовной не годится
-      gX = (WIDTH + gX + globalShiftX) % WIDTH;
-      globalShiftX = 0;
+      color2 = myLamp.getPixColorXY(k+1, y);                           // берём цвет от колонки (пикселя) правее
+      for (uint8_t m = y; m < y + sizeY; m++)
+        myLamp.setLeds(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+    }
+    for   (uint8_t m = y; m < y + sizeY; m++)
+      myLamp.setLeds(myLamp.getPixelNumber(anim0+fieldX-1, m), color);                  // цвет левой колонки копируем на всю правую
+    return true;
+  }
 
-      //пришла пора выбрать следующие параметры вращения
-      uint8_t shiftAll = 0;
-      direction = random8(2U);
-      if (direction) // идём по горизонтали, крутим по вертикали (столбцы двигаются)
-      {
-        for (uint8_t i = 0U; i < cntX; i++)
-        {
-          storage[i][1] = random8(3);
-          shift = storage[i][1] - 1; // в первой ячейке храним направление прокрутки
-          if (shiftAll == 0)
-            shiftAll = shift;
-          else if (shift != 0 && shiftAll != shift)
-            shiftAll = 50;
-        }
-        shiftSteps = sizeY + ((gY - shiftAll >= 0 && gY - shiftAll + fieldY < (int)HEIGHT) ? random8(2U) : 1U);
+  //  крутим строку вправо
+  color = myLamp.getPixColorXY(anim0+fieldX-1, y);                    // берём цвет от правой колонки
+  for (uint8_t k = anim0+fieldX-1; k > anim0 ; k--)
+  {
+    color2 = myLamp.getPixColorXY(k-1, y);                           // берём цвет от колонки левее
+    for (uint8_t m = y; m < y + sizeY; m++)
+      myLamp.setLeds(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+  }
+  for   (uint8_t m = y; m < y + sizeY; m++)
+    myLamp.setLeds(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
 
-/*        if (shiftAll == 0) // пытался сделать, чтобы при совпадении "весь кубик стоит" сдвинуть его весь на пиксель, но заколебался
-        {
-          shiftSteps = sizeY;
-          shiftAll = (random8(2)) ? 1 : -1;
-          if (gY - shiftAll < 0 || gY - shiftAll + fieldY >= (int)HEIGHT)
-            shiftAll = 0 - shiftAll;
-        }
-*/
-        if (shiftSteps == sizeY) // значит полюбому shiftAll было = (-1, 0, +1) - и для нуля в том числе мы двигаем весь куб на 1 пиксель
-        {
-          globalShiftY = 1 - shiftAll; //временно на единичку больше, чем надо
-          for (uint8_t i = 0U; i < cntX; i++)
-            if (storage[i][1] == 1U) // если ячейка никуда не планировала двигаться
-            {
-              storage[i][1] = globalShiftY;
-              storage[i][0] = 1U; // в нулевой ячейке храним количество ходов сдвига
-            }
-            else
-              storage[i][0] = shiftSteps; // в нулевой ячейке храним количество ходов сдвига
-          globalShiftY--;
-        }
-        else
-          for (uint8_t i = 0U; i < cntX; i++)
-            if (storage[i][1] != 1U)
-              storage[i][0] = shiftSteps; // в нулевой ячейке храним количество ходов сдвига
-      }
-      else // идём по вертикали, крутим по горизонтали (строки двигаются)
-      {
-        for (uint8_t j = 0U; j < cntY; j++)
-        {
-          storage[1][j] = random8(3);
-          shift = storage[1][j] - 1; // в первой ячейке храним направление прокрутки
-          if (shiftAll == 0)
-            shiftAll = shift;
-          else if (shift != 0 && shiftAll != shift)
-            shiftAll = 50;
-        }
-        if (seamlessX)
-          shiftSteps = sizeX + ((shiftAll < 50) ? random8(2U) : 1U);
-        else
-          shiftSteps = sizeX + ((gX - shiftAll >= 0 && gX - shiftAll + fieldX < (int)WIDTH) ? random8(2U) : 1U);
-
-        if (shiftSteps == sizeX) // значит полюбому shiftAll было = (-1, 0, +1) - и для нуля в том числе мы двигаем весь куб на 1 пиксель
-        {
-          globalShiftX = 1 - shiftAll; //временно на единичку больше, чем надо
-          for (uint8_t j = 0U; j < cntY; j++)
-            if (storage[1][j] == 1U) // если ячейка никуда не планировала двигаться
-            {
-              storage[1][j] = globalShiftX;
-              storage[0][j] = 1U; // в нулевой ячейке храним количество ходов сдвига
-            }
-            else
-              storage[0][j] = shiftSteps; // в нулевой ячейке храним количество ходов сдвига
-          globalShiftX--;
-        }
-        else
-          for (uint8_t j = 0U; j < cntY; j++)
-            if (storage[1][j] != 1U)
-              storage[0][j] = shiftSteps; // в нулевой ячейке храним количество ходов сдвига
-      }
-   }
   return true;
 }
 
