@@ -115,9 +115,9 @@ void block_effects_config(Interface *interf, JsonObject *data){
     interf->json_section_main(F("effects_config"), F("Конфигурирование"));
 
     EFFECT enEff; enEff.setNone();
-    confEff = myLamp.effects.enumNextEffect(&enEff);
+    confEff = myLamp.effects.getSelected();
 
-    interf->select(F("effListConf"), String((int)enEff.eff_nb), F("Эффект"), true);
+    interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
     while ((enEff = *myLamp.effects.enumNextEffect(&enEff)).eff_nb != EFF_NONE) {
         interf->option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
     }
