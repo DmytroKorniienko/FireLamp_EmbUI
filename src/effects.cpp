@@ -270,12 +270,13 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, const char *param)
 #else
   #define _SPEED _speed
   #define _SCALE _scale
+  uint8_t _scale = scale, _speed = speed;
 
   if (myLamp.isMicOnOff()){
     uint8_t mmf = myLamp.getMicMapFreq();
     uint8_t mmp = myLamp.getMicMapMaxPeak();
-    uint8_t _scale = constrain(scale*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?3.0:(mmp?0.012*mmp:1.0)),1,255);
-    uint8_t _speed = constrain(speed*(mmf>0?(1.5*(mmf/255.0)+0.33):1),1,255);
+    _scale = constrain(scale*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?3.0:(mmp?0.012*mmp:1.0)),1,255);
+    _speed = constrain(speed*(mmf>0?(1.5*(mmf/255.0)+0.33):1),1,255);
     EffectMath::fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)_SCALE)/255)+1);
   } else
 #endif

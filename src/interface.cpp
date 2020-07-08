@@ -57,6 +57,7 @@ void AUX_toggle(bool key)
 #endif
 
 void pubCallback(Interface *interf){
+    return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
     interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(F("pMem"), String(ESP.getFreeHeap()), true);
