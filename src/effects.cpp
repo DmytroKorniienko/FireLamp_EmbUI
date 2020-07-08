@@ -264,27 +264,24 @@ bool EffectSparcles::run(CRGB *ledarr, const char *opt){
 bool EffectSparcles::sparklesRoutine(CRGB *leds, const char *param)
 {
 
-#ifdef MIC_EFFECTS
-  #define SPEED _speed
-  #define SCALE _scale
-  uint8_t mmf = myLamp.getMicMapFreq();
-  uint8_t mmp = myLamp.getMicMapMaxPeak();
-  uint8_t _scale = constrain(scale*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?3.0:(mmp?0.012*mmp:1.0)),1,255);
-  uint8_t _speed = constrain(speed*(mmf>0?(1.5*(mmf/255.0)+0.33):1),1,255);
-// #if defined(LAMP_DEBUG) && defined(MIC_EFFECTS)
-// EVERY_N_SECONDS(1){
-//   LOG.printf_P(PSTR("MF: %5.2f MMF: %d MMP: %d scale %d speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, scale, speed);
-// }
-// #endif
+#ifndef MIC_EFFECTS
+  #define _SPEED speed
+  #define _SCALE scale
 #else
-  #define SPEED speed
-  #define SCALE scale
+  #define _SPEED _speed
+  #define _SCALE _scale
+
+  if (myLamp.isMicOnOff()){
+    uint8_t mmf = myLamp.getMicMapFreq();
+    uint8_t mmp = myLamp.getMicMapMaxPeak();
+    uint8_t _scale = constrain(scale*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?3.0:(mmp?0.012*mmp:1.0)),1,255);
+    uint8_t _speed = constrain(speed*(mmf>0?(1.5*(mmf/255.0)+0.33):1),1,255);
+    EffectMath::fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)_SCALE)/255)+1);
+  } else
 #endif
+    EffectMath::fader(map(_SCALE, 1, 255, 50, 0));
 
-  EffectMath::fader((uint8_t)(EFF_FADE_OUT_SPEED*((float)SCALE)/255)+1);
-
-  //EVERY_N_MILLIS(500){
-  for (uint8_t i = 0; i < (uint8_t)round(2.5*(SPEED/255.0)+1); i++){
+  for (uint8_t i = 0; i < (uint8_t)round(2.5*(_SPEED/255.0)+1); i++){
       uint8_t x = random(0U, WIDTH);
       uint8_t y = random(0U, HEIGHT);
       if (myLamp.getPixColorXY(x, y) == 0U){
@@ -510,7 +507,7 @@ bool EffectPulse::pulseRoutine(CRGB *leds, const char *param) {
 bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 {
 #ifdef MIC_EFFECTS
-  hue += (4 * (myLamp.getMicMapMaxPeak()>50?5*(myLamp.getMicMapFreq()/255.0):1));
+  hue += (4 * (myLamp.getMicMapMaxPeak()>map(rval, 1, 255, 80, 10)?5*(myLamp.getMicMapFreq()/255.0):1));
 #else
   hue += 4;
 #endif
@@ -558,9 +555,9 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
   {
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
-      float twirlFactor = 3.0F * (scale / 30.0F);      // на сколько оборотов будет закручена матрица, [0..3]
+      float twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
 #ifdef MIC_EFFECTS
-      twirlFactor *= myLamp.getMicMapMaxPeak()>50?1.5*(myLamp.getMicMapFreq()/255.0):1;
+      twirlFactor *= myLamp.getMicMapMaxPeak() > map(rval, 1, 255, 80, 10) ? 1.5 * (myLamp.getMicMapFreq() / 255.0) : 1;
 #endif
       CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)myLamp.getmaxDim())), 255, 255);
       myLamp.drawPixelXY(i, j, thisColor);
@@ -585,8 +582,8 @@ bool EffectColors::colorsRoutine(CRGB *leds, const char *param)
   static unsigned int step = 0; // доп. задержка
   unsigned int delay = (speed==1)?4294967294:255-speed+1; // на скорости 1 будет очень долгое ожидание)))
 
-    step=(step+1)%(delay+1);
-    if(step!=delay) {
+  step=(step+1)%(delay+1);
+  if(step!=delay) {
 
 #ifdef MIC_EFFECTS
   uint16_t mmf = myLamp.getMicMapFreq();
@@ -597,37 +594,33 @@ EVERY_N_SECONDS(1){
   LOG(printf_P,PSTR("MF: %5.2f MMF: %d MMP: %d scale %d speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, scale, speed);
 }
 #endif
-      if(myLamp.isMicOnOff()){
-        // включен микрофон
-        if(scale>=127){
-          uint8_t pos = (round(3.0*(mmf+(25.0*speed/255.0))/255.0))*HEIGHT/8; // двигаем частоты по диапазону в зависимости от скорости и делим на 4 части 0...3
-          for(uint8_t y=pos;y<pos+HEIGHT/8;y++){
-            for(uint8_t x=0; x<WIDTH; x++){
-              //if(mmp>MIN_PEAK_LEVEL/2 || pos==3){ // в половину минимальной амплитуды уже пропускаем :)
-                myLamp.setLeds(myLamp.getPixelNumber(x,y),CHSV(mmf/1.5, 255U, constrain(mmp*(2.0*(scale>>1)/127.0+0.33),1,255)));
-                myLamp.setLeds(myLamp.getPixelNumber(x,HEIGHT-1-y),CHSV(mmf/1.5, 255U, constrain(mmp*(2.0*(scale>>1)/127.0+0.33),1,255)));
-                //myLamp.SetLeds(myLamp.getPixelXY(x,y+HIGHT/4-1),CHSV(mmf, 255U, 255));
-              //}
-            }
-          }
-          myLamp.dimAll(254); // плавно гасим
-        } else {
-          if(mmp>scale) // если амплитуда превышает масштаб
-            myLamp.fillAll(CHSV(constrain(mmf*(2.0*speed/255.0),1,255), 255U, constrain(mmp*(2.0*scale/127.0+1.5),1,255))); // превышает минимаьный уровень громкости, значит выводим текущую частоту
-          else
-            myLamp.dimAll(252); // плавно гасим
+  if(myLamp.isMicOnOff()){
+    // включен микрофон
+    if(scale>=127){
+      uint8_t pos = (round(3.0*(mmf+(25.0*speed/255.0))/255.0))*HEIGHT/8; // двигаем частоты по диапазону в зависимости от скорости и делим на 4 части 0...3
+      for(uint8_t y=pos;y<pos+HEIGHT/8;y++){
+        for(uint8_t x=0; x<WIDTH; x++){
+          myLamp.setLeds(myLamp.getPixelNumber(x, y), CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
+          myLamp.setLeds(myLamp.getPixelNumber(x, HEIGHT - 1 - y), CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
         }
-      } else {
-        // выключен микрофон
-        myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
       }
+      myLamp.dimAll(254); // плавно гасим
+    } else {
+      if(mmp>scale) // если амплитуда превышает масштаб
+        myLamp.fillAll(CHSV(constrain(mmf*(2.0*speed/255.0),1,255), 255U, constrain(mmp*(2.0*scale/127.0+1.5),1,255))); // превышает минимаьный уровень громкости, значит выводим текущую частоту
+      else
+        myLamp.dimAll(252); // плавно гасим
+    }
+  } else {
+    // выключен микрофон
+    myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+  }
 #else
-      myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+  myLamp.fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
 #endif
-    }
-    else {
-      ihue += scale; // смещаемся на следущий
-    }
+  } else {
+    ihue += scale; // смещаемся на следущий
+  }
   return true;
 }
 

@@ -178,7 +178,7 @@ static EFFECT _EFFECTS_ARR[] = {
     {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
     {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_COLORS, T_COLORS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, stubRoutine, nullptr},
+    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, stubRoutine, ((char *)_R255)},
     {true, true, 127, 127, 127, EFF_SPARKLES, T_SPARKLES, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SNOW, T_SNOW, stubRoutine, nullptr},
     {true, true, 127, 127, 127, EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, stubRoutine, nullptr},
@@ -1195,8 +1195,8 @@ public:
     }
 
     void setValue(const char *src, const __FlashStringHelper *type, const char *val){
-        if (!strlen(val))
-            return;
+        if (!val || !*val)
+             return;
         DynamicJsonDocument doc(PARAM_BUFSIZE);
         deserializeJson(doc,String(FPSTR(src)));
         JsonArray arr = doc.as<JsonArray>();
