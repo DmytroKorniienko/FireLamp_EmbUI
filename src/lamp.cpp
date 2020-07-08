@@ -523,7 +523,7 @@ void LAMP::startNormalMode()
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   if (storedEffect != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    remote_action(RA::RA_EFFECT, String(storedEffect).c_str());
+    remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
   } else
   if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
     remote_action(RA::RA_EFF_RAND, NULL);
@@ -875,7 +875,7 @@ void LAMP::micHandler()
       mw = nullptr;
 
       //iGLOBAL.isMicCal = false;
-      remote_action(RA::RA_MIC, nullptr);
+      remote_action(RA::RA_MIC, NULL);
     }
   }
 }
@@ -1042,7 +1042,7 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
     _demoTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
-    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, nullptr));
+    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
     break;
   case SCHEDULER::T_RESET :
     if (isAlarm()) stopAlarm(); // тут же сбросим и будильник

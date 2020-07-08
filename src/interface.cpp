@@ -945,9 +945,9 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("show_button"), F("Кнопка"));
 
-    for (int i = 0; i < myButtons.buttons.size(); i++) {
+    for (int i = 0; i < myButtons.size(); i++) {
         String name = "butt" + String(i);
-        Button *btn = myButtons.buttons[i];
+        Button *btn = myButtons[i];
         interf->json_section_begin(name, btn->getName(), false, false, true);
         interf->button_submit_value(name, F("edit"), F("Редактировать"), F("green"));
         interf->button_submit_value(name, F("del"), F("Удалить"), F("red"));
@@ -981,8 +981,8 @@ void set_butt_conf(Interface *interf, JsonObject *data){
 
     if (data->containsKey(F("button"))) {
         int num = (*data)[F("button")];
-        if (num < myButtons.buttons.size()) {
-            btn = myButtons.buttons[num];
+        if (num < myButtons.size()) {
+            btn = myButtons[num];
         }
     }
     if (btn) {
@@ -1007,14 +1007,14 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     if (data->containsKey(F("button"))) {
         num = (*data)[F("button")];
-        if (num < myButtons.buttons.size()) {
+        if (num < myButtons.size()) {
             act = (*data)["butt" + String(num)].as<String>();
-            btn = myButtons.buttons[num];
+            btn = myButtons[num];
         }
     }
 
     if (act == F("del")) {
-        myButtons.buttons.remove(num);
+        myButtons.remove(num);
         myButtons.saveConfig();
         show_settings_butt(interf, data);
         return;

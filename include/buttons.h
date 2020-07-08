@@ -64,9 +64,9 @@ class Buttons {
 
 	byte clicks = 0;
 	Ticker _buttonTicker; // планировщик кнопки
+	LList<Button*> buttons;
 
 	public:
-	LList<Button*> buttons;
 	timerMinim tmNumHoldTimer; // таймаут удержания кнопки в мс
 
 	bool getpinTransition() {return pinTransition;}
@@ -74,7 +74,11 @@ class Buttons {
 
 	void setButtonOn(bool flag) {buttonEnabled = flag;}
 
-	void add(Button *btn);
+	inline Button* operator[](int i) { return buttons[i]; }
+
+	int size(){ return buttons.size(); }
+	void add(Button *btn) { buttons.add(btn); }
+	void remove(int i) { buttons.remove(i); }
 	void clear();
 
 	/*

@@ -31,17 +31,17 @@ void Button::activate(bool reverse){
 			case BA_BRIGHT:
 				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
-				remote_action(RA::RA_BRIGHT_NF, String(newval).c_str());
+				remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
 				return;
 			case BA_SPEED:
 				newval = constrain(myLamp.effects.getSpeed() + (myLamp.effects.getSpeed() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
-				remote_action(RA::RA_SPEED, String(newval).c_str());
+				remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
 				return;
 			case BA_SCALE:
 				newval = constrain(myLamp.effects.getScale() + (myLamp.effects.getScale() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
-				remote_action(RA::RA_SCALE, String(newval).c_str());
+				remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
 				return;
 			case BA_ON: ract = RA_ON; break;
 			case BA_OFF: ract = RA_OFF; break;
@@ -60,7 +60,7 @@ void Button::activate(bool reverse){
 			case BA_WHITE_LO: ract = RA_WHITE_LO; break;
 			default:;
 		}
-		remote_action(ract, nullptr);
+		remote_action(ract, NULL);
 }
 
 String Button::getName(){
@@ -174,14 +174,10 @@ void Buttons::buttonTick(){
 	// }
 }
 
-void Buttons::add(Button *btn) {
-	buttons.add(btn);
-}
-
 void Buttons::clear() {
 	while (buttons.size()) {
-			Button *btn = buttons.shift();
-			delete btn;
+		Button *btn = buttons.shift();
+		delete btn;
 	}
 }
 
@@ -238,10 +234,10 @@ void Buttons::saveConfig(const char *cfg){
 		for (int i = 0; i < buttons.size(); i++) {
 			Button *btn = buttons[i];
 			configFile.printf_P(PSTR("%s{\"flg\":%u,\"ac\":%u}"),
-				(char*)(i > 1? F(",") : F("")), btn->flags.mask, btn->action
+				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action
 			);
 			LOG(printf_P, PSTR("%s{\"flg\":%u,\"ac\":%u}"),
-				(char*)(i > 1? F(",") : F("")), btn->flags.mask, btn->action
+				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action
 			);
 		}
 		configFile.print("]");
