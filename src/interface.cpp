@@ -287,6 +287,11 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->button(F("show_flags"), F("Режимы"));
     interf->json_section_end();
 
+    interf->json_section_line(F("mode"));
+    interf->button(F("eff_prev"), F("<<<"), F("#708090"));
+    interf->button(F("eff_next"), F(">>>"), F("#5f9ea0"));
+    interf->json_section_end();
+
     EFFECT enEff; enEff.setNone();
     interf->select(F("effList"), F("Эффект"), true);
     while ((enEff = *myLamp.effects.enumNextEffect(&enEff)).eff_nb != EFF_NONE) {
@@ -301,6 +306,16 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->button(F("effects_config"), F("Конфигурирование"));
 
     interf->json_section_end();
+}
+
+void set_eff_prev(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    remote_action(RA::RA_EFF_PREV, NULL);
+}
+
+void set_eff_next(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    remote_action(RA::RA_EFF_NEXT, NULL);
 }
 
 void set_onflag(Interface *interf, JsonObject *data){
@@ -1209,6 +1224,9 @@ void create_parameters(){
     jee.section_handle_add(F("speed"), set_effects_speed);
     jee.section_handle_add(F("scale"), set_effects_scale);
     jee.section_handle_add(FPSTR(extraR), set_effects_extra);
+
+    jee.section_handle_add(F("eff_prev"), set_eff_prev);
+    jee.section_handle_add(F("eff_next"), set_eff_next);
 
     jee.section_handle_add(F("effects_config"), show_effects_config);
     jee.section_handle_add(F("effListConf"), set_effects_config_list);

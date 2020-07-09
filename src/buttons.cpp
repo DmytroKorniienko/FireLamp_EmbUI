@@ -136,7 +136,7 @@ void Buttons::buttonTick(){
 	if ((holding = touch.isStep())) {
 
 	} else
-	if (!(clicks = touch.getClicks())) {
+	if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		return;
 	}
 
@@ -153,26 +153,6 @@ void Buttons::buttonTick(){
 			// break; // Не выходим после первого найденного совпадения. Можем делать макросы из нажатий
 		}
 	}
-
-
-	// if (tmNumHoldTimer.isReady() && !startButtonHolding) { // сброс текущей комбинации в обычном режиме, если уже не нажата
-	//     numHold = 0;
-	// }
-	// кнопка нажата и удерживается
-	// if (touch.isStep()) {
-	//   if (numHold != 0) {
-	//     tmNumHoldTimer.reset();
-	//   }
-	//   return;
-	// }
-	//
-	// if (!touch.isHold() && startButtonHolding) {
-	//   // кнопка отпущена после удерживания
-	//   startButtonHolding = false;
-
-	//   direction = !direction;
-	//   return;
-	// }
 }
 
 void Buttons::clear() {

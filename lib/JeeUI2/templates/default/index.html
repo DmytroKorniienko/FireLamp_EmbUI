@@ -79,7 +79,7 @@
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "button"}}
-			<div id="{{id}}" style="background-color: {{color}}" class="pure-u-1 pure-button pure-button-primary mr"
+			<div id="{{id}}" {{#if2 color}}style="background-color: {{color}}"{{/if2}} class="pure-u-1 pure-button pure-button-primary mr"
 				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}
 				{{#if2 !submit}}{{onevent "click", "on_change", id}}{{/if2}}
 			>
