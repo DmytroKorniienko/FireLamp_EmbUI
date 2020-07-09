@@ -49,38 +49,42 @@ void Interface::text(const String &id, const String &label){
     text(id, jee->param(id), label);
 }
 
-void Interface::number(const String &id, int value, const String &label){
+void Interface::number(const String &id, int value, const String &label, int min, int max){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("number");
     obj[F("id")] = id;
     obj[F("value")] = value;
     obj[F("label")] = label;
+    obj[F("min")] = min;
+    if (max) obj[F("max")] = max;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        number(id, value, label);
+        number(id, value, label, min, max);
     }
 }
 
-void Interface::number(const String &id, const String &label){
-    number(id, (int)jee->param(id).toInt(), label);
+void Interface::number(const String &id, const String &label, int min, int max){
+    number(id, (int)jee->param(id).toInt(), label, min, max);
 }
 
-void Interface::number(const String &id, float value, const String &label, float step){
+void Interface::number(const String &id, float value, const String &label, float step, int min, int max){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("number");
     obj[F("id")] = id;
     obj[F("value")] = value;
-    obj[F("step")] = step;
     obj[F("label")] = label;
+    obj[F("min")] = min;
+    if (max) obj[F("max")] = max;
+    if (step) obj[F("step")] = step;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
-        number(id, value, label, step);
+        number(id, value, label, step, min, max);
     }
 }
 
-void Interface::number(const String &id, const String &label, float step){
+void Interface::number(const String &id, const String &label, float step, int min, int max){
     number(id, jee->param(id).toFloat(), label, step);
 }
 

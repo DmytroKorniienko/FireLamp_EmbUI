@@ -43,6 +43,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "timeProcessor.h"
 #include "events.h"
 #include <Ticker.h>
+#include "../../include/LList.h"
+#include "interface.h"
 
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
@@ -108,21 +110,12 @@ private:
     bool MIRR_H:1; // отзрекаливание по H
     bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
     bool ONflag:1; // флаг включения/выключения
-    bool manualOff:1; // будильник, разпознавание действия пользователя во время работы будильника, либо факта окончания действия рассвета
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
-    bool isFirstHoldingPress:1; // флаг: только начали удерживать?
-    bool startButtonHolding:1; // кнопка удерживается
-    bool buttonEnabled:1; // кнопка обрабатывается если true
-    bool brightDirection:1; // направление изменения яркости для кнопки
-    bool speedDirection:1; // направление изменения скорости для кнопки
-    bool scaleDirection:1; // направление изменения масштаба для кнопки
-    bool setDirectionTimeout:1; // флаг: начало отсчета таймаута на смену направления регулировки
     bool isStringPrinting:1; // печатается ли прямо сейчас строка?
     bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
-    bool pinTransition:1;  // ловим "нажатие" кнопки
     bool isForcedWifi:1; // в случае режима AP один раз до нажатия "Выйти из настроек" форсируем переключение на вкладку WiFi, дальше этого не делаем
 #ifdef MIC_EFFECTS
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
@@ -131,8 +124,6 @@ private:
 #endif
  };
  #pragma pack(pop)
-    //Button
-    byte numHold = 0; // режим удержания
     byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 #ifdef LAMP_DEBUG
@@ -165,7 +156,6 @@ private:
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
-    timerMinim tmNumHoldTimer;      // таймаут удержания кнопки в мс
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
 
@@ -176,21 +166,12 @@ private:
     int8_t _brtincrement;
     Ticker _fadeTicker;             // планировщик асинхронного фейдера
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
-    Ticker _buttonTicker;           // планировщик кнопки
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     Ticker _effectsTicker;          // планировщик обработки эффектов
     //Ticker _nextLoop;               // планировщик для тасок на ближайший луп
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 
-
-#ifdef ESP_USE_BUTTON
-    GButton touch;
-    void buttonTick(); // обработчик кнопки
-    timerMinim tmChangeDirectionTimer;     // таймаут смены направления увеличение-уменьшение при удержании кнопки
-    void changeDirection(byte numHold);
-    void debugPrint();
-#endif
     void effectsTick(); // обработчик эффектов
 
 #ifdef VERTGAUGE
@@ -245,19 +226,17 @@ public:
 #endif
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
-    byte getLampBrightness() { return (mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
+    byte getLampBrightness() { return (mode == MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
     byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightnessS())/255);}
-    void setLampBrightness(byte brg) { if(mode==MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightnessS(brg);} }
+    void setLampBrightness(byte brg) { if(mode == MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightnessS(brg);} }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
-
-    bool getpinTransition() {return pinTransition;}
-    void setpinTransition(bool val) {pinTransition=val;}
     bool isForceWifi() {return isForcedWifi;}
-    void setForceWifi(bool val) {isForcedWifi=val;}
+    bool isAlarm() {return mode == MODE_ALARMCLOCK;}
+    void setForceWifi(bool val) {isForcedWifi = val;}
     int getmqtt_int() {return mqtt_int;}
-    void semqtt_int(int val) {mqtt_int=val;}
+    void semqtt_int(int val) {mqtt_int = val;}
 
     LAMPMODE getMode() {return mode;}
 
@@ -275,7 +254,6 @@ public:
     void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
     void setFaderFlag(bool flag) {isFaderON = flag;}
     bool getFaderFlag() {return isFaderON;}
-    void setButtonOn(bool flag) {buttonEnabled = flag;}
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
@@ -290,6 +268,7 @@ public:
     void periodicTimeHandle();
 
     void startAlarm();
+    void stopAlarm();
     void startDemoMode(byte tmout = DEMO_TIMEOUT);
     void startNormalMode();
 #ifdef OTA
@@ -349,12 +328,6 @@ public:
      */
     void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
 
-    /*
-     * крючёк для обработки нажатия кнопки по прерываниям
-     * вызов метода, готоврит о том что состояние пина изменилось, нужно его перечитать
-     * @param bool state - true, кнопку "нажали", false - "отпустили"
-     */
-    void buttonPress(bool state);
 
     /*
      * переключатель эффектов для других методов,

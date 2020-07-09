@@ -18,7 +18,6 @@ static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
 static const char PGhdrcachec[] PROGMEM = "Cache-Control";
 static const char PGgzip[] PROGMEM = "gzip";
 static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";    // 10 days cache
-static const char PGpmaxage[] PROGMEM = "public, max-age=864000";    // 10 days cache
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){

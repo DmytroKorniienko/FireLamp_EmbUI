@@ -148,7 +148,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_begin(F("effects_param"));
     if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
-        interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Глобальная яркость"), true);
+        interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Глоб. яркость"), true);
     } else {
         interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Яркость"), true);
     }
@@ -194,12 +194,15 @@ void set_effects_list(Interface *interf, JsonObject *data){
 void set_effects_bright(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    myLamp.setLampBrightness((*data)[F("bright")]);
-    myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
-    if (myLamp.IsGlobalBrightness()) {
-        jee.var("GlobBRI", (*data)[F("bright")]);
+    byte bright = (*data)[F("bright")];
+    if (myLamp.getNormalizedLampBrightness() != bright) {
+        myLamp.setLampBrightness(bright);
+        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
+        if (myLamp.IsGlobalBrightness()) {
+            jee.var("GlobBRI", (*data)[F("bright")]);
+        }
+        LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
-    LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
 
     myLamp.demoTimer(T_RESET);
     if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
@@ -258,8 +261,9 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #endif
 #ifdef AUX_PIN
     interf->checkbox(F("AUX"), F("AUX"), true);
-#else
-    interf->hidden("nil");
+#endif
+#ifdef ESP_USE_BUTTON
+    interf->checkbox(F("Btn"), myButtons.isButtonOn()? F("true") : F("false"), F("Кнопка"), true);
 #endif
     interf->json_section_end();
 }
@@ -283,6 +287,11 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->button(F("show_flags"), F("Режимы"));
     interf->json_section_end();
 
+    interf->json_section_line(F("mode"));
+    interf->button(F("eff_prev"), F("<<<"), F("#708090"));
+    interf->button(F("eff_next"), F(">>>"), F("#5f9ea0"));
+    interf->json_section_end();
+
     EFFECT enEff; enEff.setNone();
     interf->select(F("effList"), F("Эффект"), true);
     while ((enEff = *myLamp.effects.enumNextEffect(&enEff)).eff_nb != EFF_NONE) {
@@ -297,6 +306,16 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->button(F("effects_config"), F("Конфигурирование"));
 
     interf->json_section_end();
+}
+
+void set_eff_prev(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    remote_action(RA::RA_EFF_PREV, NULL);
+}
+
+void set_eff_next(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    remote_action(RA::RA_EFF_NEXT, NULL);
 }
 
 void set_onflag(Interface *interf, JsonObject *data){
@@ -337,7 +356,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
 
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->button(F("OTA"), F("Обновление по ОТА-PIO"), F("grey"));
+    interf->button(F("OTA"), F("Ожидает..."), F("grey"));
     interf->json_section_end();
     interf->json_frame_flush();
 }
@@ -435,7 +454,10 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
         filename = String(F("/evn/")) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
-
+#ifdef ESP_USE_BUTTON
+        filename = String(F("/btn/")) + name;
+        if (LittleFS.begin()) LittleFS.remove(filename);
+#endif
     } else
     if (act == "load") {
         String filename = String(F("/glb/")) + name;
@@ -446,7 +468,13 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
         filename = String(F("/evn/")) + name;
         myLamp.events.loadConfig(filename.c_str());
-
+#ifdef ESP_USE_BUTTON
+        filename = String(F("/btn/")) + name;
+        myButtons.clear();
+        if (!myButtons.loadConfig()) {
+            default_buttons();
+        }
+#endif
         jee.var(F("fileName"), name);
     } else {
         String filename = String(F("/glb/")) + name;
@@ -457,6 +485,10 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
         filename = String(F("/evn/")) + name;
         myLamp.events.saveConfig(filename.c_str());
+#ifdef ESP_USE_BUTTON
+        filename = String(F("/btn/")) + name;
+        myButtons.saveConfig(filename.c_str());
+#endif
     }
 
     show_lamp_config(interf, data);
@@ -490,7 +522,6 @@ void block_lamp(Interface *interf, JsonObject *data){
     interf->json_section_main(F("lamp"), F("Лампа"));
 
     block_lamp_textsend(interf, data);
-    block_lamp_config(interf, data);
 
     interf->json_section_end();
 }
@@ -500,7 +531,7 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("settings_mic"), F("Микрофон"));
 
-    interf->checkbox(F("Mic"), F("Микрофон"), true);
+    interf->checkbox(F("Mic"), F("Микрофон активен"), true);
 
     interf->json_section_begin(F("set_mic"));
     //if (!iGLOBAL.isMicCal) {
@@ -638,9 +669,6 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(F("isFaderON"), F("Плавное переключение эффектов"));
     interf->checkbox(F("DRand"), F("Случайный эффект в Демо"));
     interf->range(F("DTimer"), 30, 250, 10, F("Время в секундах для смены режима"));
-#ifdef ESP_USE_BUTTON
-    interf->checkbox(F("isBtnOn"), F("Кнопка активна"));
-#endif
 
     interf->spacer(F("Вывод текста"));
     interf->range(F("txtSpeed"), 10, 100, 10, F("Задержка прокрутки текста"));
@@ -682,10 +710,6 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
     SETPARAM(F("DRand"));
     SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
-
-#ifdef ESP_USE_BUTTON
-    SETPARAM(F("isBtnOn"), myLamp.setButtonOn((*data)[F("isBtnOn")] == F("true")));
-#endif
 
     SETPARAM(F("txtSpeed"), myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
     SETPARAM(F("txtOf"), myLamp.setTextOffset((*data)[F("txtOf")]));
@@ -741,7 +765,7 @@ void block_settings_update(Interface *interf, JsonObject *data){
     if (myLamp.getMode() != MODE_OTA) {
         interf->button(F("OTA"), F("Начать"), F("blue"));
     } else {
-        interf->button(F("OTA"), F("Включено"), F("grey"));
+        interf->button(F("OTA"), F("Ожидает..."), F("grey"));
     }
 #endif
     interf->spacer(F("Загрузка прошивки"));
@@ -753,21 +777,26 @@ void block_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("show_event"), F("События"));
 
-    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
+    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События активны"), true);
 
     int num = 1;
     EVENT *next = nullptr;
+    interf->json_section_begin(F("event_conf"));
+    interf->select(F("eventList"), String(0), F("Событие"), false);
     while ((next = myLamp.events.getNextEvent(next)) != nullptr) {
-        String name = "evconf" + String(num);
-        interf->json_section_begin(name, next->getName(), false, false, true);
-        interf->button_submit_value(name, F("edit"), F("Редактировать"), F("green"));
-        interf->button_submit_value(name, F("del"), F("Удалить"), F("red"));
-        interf->hidden(F("event"), String(num));
-        interf->json_section_end();
+        interf->option(String(num), next->getName());
         ++num;
     }
+    interf->json_section_end();
 
-    interf->button(F("event_conf"), F("Добавить событие"));
+    interf->json_section_line();
+    interf->button_submit_value(F("event_conf"), F("edit"), F("Редактировать"), F("green"));
+    interf->button_submit_value(F("event_conf"), F("del"), F("Удалить"), F("red"));
+    interf->json_section_end();
+
+    interf->json_section_end();
+
+    interf->button(F("event_conf"), F("Добавить"));
 
     interf->spacer();
     interf->button(F("settings"), F("Выход"));
@@ -792,9 +821,9 @@ void set_event_conf(Interface *interf, JsonObject *data){
     String act;
     if (!data) return;
 
-    if (data->containsKey(F("event"))) {
+    if (data->containsKey(F("eventList"))) {
         EVENT *curr = nullptr;
-        int i = 1, num = (*data)[F("event")];
+        int i = 1, num = (*data)[F("eventList")];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
         myLamp.events.delEvent(*curr);
@@ -832,7 +861,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
     event.unixtime = mktime(tm);;
-    String tmpMsg(jee.param(F("msg")));
+    String tmpMsg = (*data)[F("msg")];
     event.message = (char*)(tmpMsg.c_str());
 
     myLamp.events.addEvent(event);
@@ -847,12 +876,12 @@ void show_event_conf(Interface *interf, JsonObject *data){
     int i = 1, num = 0;
     if (!interf) return;
 
-    if (data->containsKey(F("event"))) {
+    if (data->containsKey(F("eventList"))) {
         EVENT *curr = nullptr;
-        num = (*data)[F("event")];
+        num = (*data)[F("eventList")];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
-        act = (*data)["evconf" + String(num)].as<String>();
+        act = (*data)[F("event_conf")].as<String>();
         event = *curr;
         edit = true;
     }
@@ -872,11 +901,11 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
 
     if (edit) {
-        interf->json_section_main(F("set_event"), F("Редактировать событие"));
-        interf->constant(F("event"), String(num), event.getName());
+        interf->json_section_main(F("set_event"), F("Редактировать"));
+        interf->constant(F("eventList"), String(num), event.getName());
         interf->checkbox(F("enabled"), (event.isEnabled? F("true") : F("false")), F("Активно"), false);
     } else {
-        interf->json_section_main(F("set_event"), F("Добавить событие"));
+        interf->json_section_main(F("set_event"), F("Добавить"));
     }
 
     interf->select(F("evList"), String(event.event), F("Тип события"), false);
@@ -913,9 +942,9 @@ void show_event_conf(Interface *interf, JsonObject *data){
 
     if (edit) {
         interf->hidden(F("save"), F("true"));
-        interf->button_submit(F("set_event"), F("Обновить событие"));
+        interf->button_submit(F("set_event"), F("Обновить"));
     } else {
-        interf->button_submit(F("set_event"), F("Добавить событие"), F("green"));
+        interf->button_submit(F("set_event"), F("Добавить"), F("green"));
     }
 
     interf->spacer();
@@ -924,7 +953,135 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_section_end();
     interf->json_frame_flush();
 }
+#ifdef ESP_USE_BUTTON
+void block_settings_butt(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_section_main(F("show_button"), F("Кнопка"));
 
+    interf->checkbox(F("Btn"), myButtons.isButtonOn()? F("true") : F("false"), F("Кнопка активна"), true);
+
+    interf->json_section_begin(F("butt_conf"));
+    interf->select(F("buttList"), String(0), F("Действие"), false);
+    for (int i = 0; i < myButtons.size(); i++) {
+        interf->option(String(i), myButtons[i]->getName());
+    }
+    interf->json_section_end();
+
+    interf->json_section_line();
+    interf->button_submit_value(F("butt_conf"), F("edit"), F("Редактировать"), F("green"));
+    interf->button_submit_value(F("butt_conf"), F("del"), F("Удалить"), F("red"));
+    interf->json_section_end();
+
+    interf->json_section_end();
+
+    interf->button(F("butt_conf"), F("Добавить"));
+
+    interf->spacer();
+    interf->button(F("settings"), F("Выход"));
+
+    interf->json_section_end();
+}
+
+void show_settings_butt(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_frame_interface();
+    block_settings_butt(interf, data);
+    interf->json_frame_flush();
+}
+
+void set_butt_conf(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    Button *btn = nullptr;
+    bool on = ((*data)[F("on")] == F("true"));
+    bool hold = ((*data)[F("hold")] == F("true"));
+    uint8_t clicks = (*data)[F("clicks")];
+    BA action = (BA)(*data)[F("bactList")].as<long>();
+
+    if (data->containsKey(F("buttList"))) {
+        int num = (*data)[F("buttList")];
+        if (num < myButtons.size()) {
+            btn = myButtons[num];
+        }
+    }
+    if (btn) {
+        btn->action = action;
+        btn->flags.on = on;
+        btn->flags.hold = hold;
+        btn->flags.click = clicks;
+    } else {
+        myButtons.add(new Button(on, hold, clicks, action));
+    }
+
+    myButtons.saveConfig();
+    show_settings_butt(interf, data);
+}
+
+void show_butt_conf(Interface *interf, JsonObject *data){
+    if (!interf) return;
+
+    Button *btn = nullptr;
+    String act;
+    int num = 0;
+
+    if (data->containsKey(F("buttList"))) {
+        num = (*data)[F("buttList")];
+        if (num < myButtons.size()) {
+            act = (*data)[F("butt_conf")].as<String>();
+            btn = myButtons[num];
+        }
+    }
+
+    if (act == F("del")) {
+        myButtons.remove(num);
+        myButtons.saveConfig();
+        show_settings_butt(interf, data);
+        return;
+    } else
+    if (data->containsKey(F("save"))) {
+        set_butt_conf(interf, data);
+        return;
+    }
+
+
+    interf->json_frame_interface();
+
+    if (btn) {
+        interf->json_section_main(F("set_butt"), F("Редактировать"));
+        interf->constant(F("buttList"), String(num), btn->getName());
+    } else {
+        interf->json_section_main(F("set_butt"), F("Добавить"));
+    }
+
+    interf->select(F("bactList"), String(btn? btn->action : 0), F("Действие"), false);
+    for (int i = 1; i < BA::BA_END; i++) {
+        interf->option(String(i), btn_get_desc((BA)i));
+    }
+    interf->json_section_end();
+
+    interf->checkbox(F("on"), (btn? btn->flags.on : 0)? F("true") : F("false"), F("ON/OFF"), false);
+    interf->checkbox(F("hold"), (btn? btn->flags.hold : 0)? F("true") : F("false"), F("Удержание"), false);
+    interf->number(F("clicks"), (btn? btn->flags.click : 0), F("Нажатия"));
+
+    if (btn) {
+        interf->hidden(F("save"), F("true"));
+        interf->button_submit(F("set_butt"), F("Обновить"));
+    } else {
+        interf->button_submit(F("set_butt"), F("Добавить"), F("green"));
+    }
+
+    interf->spacer();
+    interf->button(F("show_butt"), F("Выход"));
+
+    interf->json_section_end();
+    interf->json_frame_flush();
+}
+
+void set_btnflag(Interface *interf, JsonObject *data){
+    if (!data) return;
+    SETPARAM(F("Btn"), myButtons.setButtonOn((*data)[F("Btn")] == F("true")));
+}
+#endif
 void section_effects_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface(F(("Огненная лампа")));
@@ -955,6 +1112,10 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 #endif
 
     interf->button(F("show_event"), F("События"));
+
+    interf->button(F("show_butt"), F("Кнопка"));
+
+    block_lamp_config(interf, data);
 
     interf->spacer();
     block_settings_update(interf, data);
@@ -1010,7 +1171,7 @@ void create_parameters(){
     jee.var_create(F("MIRR_H"), F("false"));
     jee.var_create(F("MIRR_V"), F("false"));
 #ifdef ESP_USE_BUTTON
-    jee.var_create(F("isBtnOn"), F("true"));
+    jee.var_create(F("Btn"), F("true"));
 #endif
 #ifdef AUX_PIN
     jee.var_create(F("AUX"), F("false"));
@@ -1064,6 +1225,9 @@ void create_parameters(){
     jee.section_handle_add(F("scale"), set_effects_scale);
     jee.section_handle_add(FPSTR(extraR), set_effects_extra);
 
+    jee.section_handle_add(F("eff_prev"), set_eff_prev);
+    jee.section_handle_add(F("eff_next"), set_eff_next);
+
     jee.section_handle_add(F("effects_config"), show_effects_config);
     jee.section_handle_add(F("effListConf"), set_effects_config_list);
     jee.section_handle_add(F("set_effect_prm"), set_effects_config_param);
@@ -1097,13 +1261,16 @@ void create_parameters(){
     jee.section_handle_add(F("Mic"), set_micflag);
     jee.section_handle_add(F("mic_cal"), set_settings_mic_calib);
 #endif
-
     jee.section_handle_add(F("show_event"), show_settings_event);
     jee.section_handle_add(F("event_conf"), show_event_conf);
-    jee.section_handle_add(F("evconf*"), show_event_conf);
     jee.section_handle_add(F("set_event"), set_event_conf);
     jee.section_handle_add(F("Events"), set_eventflag);
-
+#ifdef ESP_USE_BUTTON
+    jee.section_handle_add(F("show_butt"), show_settings_butt);
+    jee.section_handle_add(F("butt_conf"), show_butt_conf);
+    jee.section_handle_add(F("set_butt"), set_butt_conf);
+    jee.section_handle_add(F("Btn"), set_btnflag);
+#endif
 }
 
 void sync_parameters(){
@@ -1134,7 +1301,7 @@ void sync_parameters(){
 #endif
 
 #ifdef ESP_USE_BUTTON
-    obj[F("isBtnOn")] = jee.param(F("isBtnOn"));
+    CALL_SETTER(F("Btn"), jee.param(F("Btn")), set_btnflag);
 #endif
 
     obj[F("isFaderON")] = jee.param(F("isFaderON"));
@@ -1231,6 +1398,9 @@ void remote_action(RA action, ...){
         case RA::RA_ALARM:
             myLamp.startAlarm();
             break;
+        case RA::RA_ALARM_OFF:
+            myLamp.stopAlarm();
+            break;
         case RA::RA_REBOOT:
             ESP.restart(); // так лучше :)
             break;
@@ -1307,6 +1477,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("move_prev")) action = RA_EFF_PREV;
     else if (param == F("move_rnd")) action = RA_EFF_RAND;
     else if (param == F("reboot")) action = RA_REBOOT;
+    else if (param == F("alarm")) action = RA_ALARM;
 #ifdef OTA
     else if (param == F("OTA")) action = RA_OTA;
 #endif
@@ -1372,3 +1543,24 @@ void event_worker(const EVENT *event){
 
     remote_action(action, event->message, NULL);
 }
+#ifdef ESP_USE_BUTTON
+void default_buttons(){
+    myButtons.clear();
+    // Выключена
+    myButtons.add(new Button(false, false, 1, BA::BA_ON)); // 1 клик - ON
+    myButtons.add(new Button(false, false, 2, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons.add(new Button(false, true, 0, BA::BA_WHITE_HI)); // удержание Включаем белую лампу в полную яркость
+    myButtons.add(new Button(false, true, 1, BA::BA_WHITE_LO)); // удержание + 1 клик Включаем белую лампу в мин яркость
+
+    // Включена
+    myButtons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
+    myButtons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons.add(new Button(true, false, 3, BA::BA_EFF_PREV)); // 3 клика - пред эффект
+    myButtons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
+    myButtons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons.add(new Button(true, true, 0, BA::BA_BRIGHT)); // удержание яркость
+    myButtons.add(new Button(true, true, 1, BA::BA_SPEED)); // удержание + 1 клие скорость
+    myButtons.add(new Button(true, true, 2, BA::BA_SCALE)); // удержание + 2 клика масштаб
+}
+#endif

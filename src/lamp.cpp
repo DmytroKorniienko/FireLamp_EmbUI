@@ -38,7 +38,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 #include "main.h"
 #include "misc.h"
-#include "interface.h"
 
 extern LAMP myLamp; // Объект лампы
 
@@ -77,20 +76,6 @@ void LAMP::lamp_init()
   }
 #endif
 
-#ifdef ESP_USE_BUTTON
-  #if (PULL_MODE == LOW_PULL)
-    pinMode(BTN_PIN, INPUT);
-  #else
-    pinMode(BTN_PIN, INPUT_PULLUP);
-  #endif
-  touch.setTickMode(MANUAL);    // мы сами говорим когда опрашивать пин
-  touch.setStepTimeout(BUTTON_STEP_TIMEOUT);
-  touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
-  touch.setTimeout(BUTTON_TIMEOUT);
-  touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
-  _buttonTicker.attach_scheduled(1, std::bind(&LAMP::buttonTick, this));   // "ленивый" опрос 1 раз в сек
-#endif
-
 #ifdef VERTGAUGE
       if(VERTGAUGE){
         xStep = WIDTH / 4;
@@ -126,7 +111,7 @@ void LAMP::handle()
 {
 #ifdef MIC_EFFECTS
   static unsigned long mic_check;
-  if(isMicOn && (ONflag || isMicCalibration()) && (!dawnFlag) && mic_check + MIC_POLLRATE < millis()){
+  if(isMicOn && (ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
     micHandler();
     mic_check = millis();
   }
@@ -176,208 +161,26 @@ EVERY_N_SECONDS(15){
   //timeProcessor.handleTime();                         // Обновление времени
 
   // обработчик событий (пока не выкину в планировщик)
-  if ( isEventsHandled)
+  if (isEventsHandled) {
     events.events_handle();
+  }
+
 }
 
-#ifdef ESP_USE_BUTTON
-void LAMP::buttonTick()
-{
-  //LOG.printf("Key: %u\n", millis());
-
-  touch.tick();
-
-  if (tmNumHoldTimer.isReady() && !startButtonHolding) { // сброс текущей комбинации в обычном режиме, если уже не нажата
-      numHold = 0;
-  }
-
-  if (!ONflag) { // Обработка из выключенного состояния
-    if (touch.isDouble()) { // Демо-режим, с переключением каждые 30 секунд для двойного клика в выключенном состоянии
-      remote_action(RA::RA_DEMO, NULL);
-      return;
-    }
-
-    if (touch.isHolded()) {
-      LOG(printf_P, PSTR("Удержание кнопки из выключенного состояния\n"));
-      numHold = 1;
-      int clicks = touch.getHoldClicks();
-      if (!clicks) {
-        // Включаем белую лампу в полную яркость
-        brightDirection = 1;
-        mode = MODE_WHITELAMP;
-        switcheffect(SW_WHITE_HI);
-      } else {
-        // Включаем белую лампу в минимальную яркость
-        brightDirection = 0;
-        mode = MODE_WHITELAMP;
-        switcheffect(SW_WHITE_LO);
-      }
-      LOG(printf_P, PSTR("lamp mode: %d, storedEffect: %d, LampBrightness=%d\n"), mode, storedEffect, getNormalizedLampBrightness());
-
-      startButtonHolding = true;
-      setDirectionTimeout = false;
-
-      tmNumHoldTimer.reset();
-      tmChangeDirectionTimer.reset();
-
-      return;
-    }
-  }
-
-  // кнопка только начала удерживаться
-  if (ONflag && (touch.isHolded())){
-    int clicks = touch.getHoldClicks();
-    LOG( printf_P, PSTR("touch.getHoldClicks()=%d\n"), clicks);
-    startButtonHolding = true;
-    setDirectionTimeout = false;
-    isFirstHoldingPress = true;
-    switch (clicks){
-      case 0U: {
-        if(!numHold){
-          numHold = 1;
-        }
-        break;
-      }
-      case 1U: {
-        //if(!numHold)
-          numHold = 2;
-        break;
-      }
-      case 2U: {
-        //if(!numHold)
-          numHold = 3;
-        break;
-      }
-    }
-  }
-
-  // кнопка нажата и удерживается
-  if (ONflag && touch.isStep()) {
-    if (!isFirstHoldingPress && (((getLampBrightness() == BRIGHTNESS || getLampBrightness() <= 1) && numHold == 1)
-      || ((effects.getSpeed() == 255 || effects.getSpeed() <= 1) && numHold == 2)
-      || ((effects.getScale() == 255 || effects.getScale() <= 1) && numHold == 3))
-    ){
-      if (!setDirectionTimeout) {
-        LOG(printf_P, PSTR("Граничное значение! numHold: %d brightness: %d speed: %d scale: %d\n"), numHold,getLampBrightness(), effects.getSpeed(), effects.getScale());
-        tmChangeDirectionTimer.reset(); // пауза на смену направления
-        setDirectionTimeout = true;
-      } else {
-        changeDirection(numHold);
-      }
-    }
-
-    // Для второго входа, сбрасываем флаг
-    isFirstHoldingPress = false;
-
-    debugPrint(); // отладка
-    if (numHold != 0) {
-      tmNumHoldTimer.reset();
-      demoTimer(T_RESET); // сбрасываем таймер переключения, если регулируем яркость/скорость/масштаб
-    }
-
-    uint8_t newval;
-    switch (numHold) {
-      case 1:
-         newval = constrain(getLampBrightness() + (getLampBrightness() / 25 + 1) * (brightDirection * 2 - 1), 1 , 255);
-         // не мелькаем яркостью там где не надо
-         if (getNormalizedLampBrightness() != newval) {
-           remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
-         }
-         break;
-
-      case 2:
-        newval = constrain(effects.getSpeed() + (effects.getSpeed() / 25 + 1) * (speedDirection * 2 - 1), 1 , 255);
-        remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
-        break;
-
-      case 3:
-        newval = constrain(effects.getScale() + (effects.getScale() / 25 + 1) * (scaleDirection * 2 - 1), 1 , 255);
-        remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
-        break;
-    }
-    return;
-  }
-
-  if (ONflag && !touch.isHold() && startButtonHolding) {
-    // кнопка отпущена после удерживания
-    startButtonHolding = false;
-    setDirectionTimeout = false;
-
-    changeDirection(numHold);
-    return;
-  }
-
-// ---------------------- обработка одиночных нажатий без удержания ----------------
-
-if (touch.isHold() || !touch.isHolded()) {
-    uint8_t clickCount = touch.hasClicks() ? touch.getClicks() : 0U;
-
-    // однократное нажатие
-    if (clickCount == 1U) {
-      LOG(printf_P, PSTR("Одиночное нажатие, current: %d, storedEffect: %d\n"), effects.getEn(), storedEffect);
-
-      if (dawnFlag) {
-        // нажатие во время будильника
-        manualOff = true;
-        dawnFlag = false;
-        setBrightness(getNormalizedLampBrightness(), false, false); // восстановить яркость
-        mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
-        return;
-      }
-
-      if (ONflag) {
-        remote_action(RA::RA_OFF, NULL);
-      } else {
-        remote_action(RA::RA_ON, NULL);
-      }
-    }
-
-    // двухкратное нажатие  - следующий эффект
-    if (ONflag && clickCount == 2U) {
-      remote_action(RA::RA_EFF_NEXT, NULL);
-    }
-
-    // трёхкратное нажатие - предыдущий эффект
-    if (ONflag && clickCount == 3U) {
-      remote_action(RA::RA_EFF_PREV, NULL);
-    }
-
-#ifdef OTA
-    // четырёхкратное нажатие - запуск сервиса ОТА
-    if (clickCount == 4U) {
-      remote_action(RA::RA_OTA, NULL);
-    }
-#endif
-
-    // пятикратное нажатие - вывод IP на лампу
-    if (clickCount == 5U) {
-        remote_action(RA::RA_SEND_IP, NULL);
-    }
-
-    // шестикратное нажатие - вывод текущего времени бегущей строкой
-    if (clickCount == 6U) {
-        remote_action(RA::RA_SEND_TIME, NULL);
-    }
-  }
-}
-#endif
-
-void LAMP::alarmWorker() // обработчик будильника "рассвет"
-{
+// обработчик будильника "рассвет"
+void LAMP::alarmWorker(){
     // static CHSV GSHMEM.dawnColorMinus[6];                                            // цвет "рассвета"
     // static uint8_t GSHMEM.dawnCounter = 0;                                           // счётчик первых шагов будильника
     // static time_t GSHMEM.startmillis;
 
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
       dawnFlag = false;
-      manualOff = false;
       return;
     }
 
     // проверка рассвета, первый вход в функцию
-    if (mode == LAMPMODE::MODE_ALARMCLOCK && !dawnFlag){
+    if (!dawnFlag){
       GSHMEM.startmillis = millis();
-      manualOff = false;
       memset(GSHMEM.dawnColorMinus,0,sizeof(GSHMEM.dawnColorMinus));
       GSHMEM.dawnCounter = 0;
       FastLED.clear();
@@ -386,22 +189,14 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
       int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
       GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
-                        map(dawnPosition, 0, 255, 255, 170),
-                        map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
+        map(dawnPosition, 0, 255, 255, 170),
+        map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
+      );
     }
 
-    if(LAMPMODE::MODE_ALARMCLOCK && ((millis()-GSHMEM.startmillis)/1000>(5+DAWN_TIMEOUT)*60+30 || manualOff)){ // рассвет закончился
-      mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL);
-      // не время будильника (ещё не начался или закончился по времени)
-      if (dawnFlag)
-      {
-        dawnFlag = false;
-        manualOff = false;
-        if(!ONflag){
-          FastLED.clear();
-          FastLED.show();
-        }
-      }
+    if (((millis() - GSHMEM.startmillis) / 1000 > (5 + DAWN_TIMEOUT) * 60+30)) {
+      // рассвет закончился
+      stopAlarm();
       // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
       // digitalWrite(ALARM_PIN, !ALARM_LEVEL);
       // #endif
@@ -409,65 +204,42 @@ void LAMP::alarmWorker() // обработчик будильника "расс�
       // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
       // digitalWrite(MOSFET_PIN, ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL);
       // #endif
-
-      LOG(println, F("Отключение будильника рассвет."));
-      brightness(getNormalizedLampBrightness());
-      return; // на выход
+      return;
     }
-
-    //blur2d(25);
 
     // проверка рассвета
-    if (mode == LAMPMODE::MODE_ALARMCLOCK)
-    {
-      if (!manualOff)                                                   // будильник не был выключен вручную (из приложения или кнопкой)
-      {
-        EVERY_N_SECONDS(10){
-          // величина рассвета 0-255
-          int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
-          dawnPosition = constrain(dawnPosition, 0, 255);
-          GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
-                          map(dawnPosition, 0, 255, 255, 170),
-                          map(dawnPosition, 0, 255, 10, DAWN_BRIGHT));
-          GSHMEM.dawnCounter++; //=GSHMEM.dawnCounter%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))+1;
+    EVERY_N_SECONDS(10){
+      // величина рассвета 0-255
+      int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+      dawnPosition = constrain(dawnPosition, 0, 255);
+      GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
+        map(dawnPosition, 0, 255, 255, 170),
+        map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
+      );
+      GSHMEM.dawnCounter++; //=GSHMEM.dawnCounter%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))+1;
 
-          for(uint8_t i=sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV)-1; i>0U; i--){
-              GSHMEM.dawnColorMinus[i]=((GSHMEM.dawnCounter > i)?GSHMEM.dawnColorMinus[i-1]:GSHMEM.dawnColorMinus[i]);
-          }
-        }
+      for (uint8_t i = sizeof(GSHMEM.dawnColorMinus) / sizeof(CHSV) - 1; i > 0U; i--){
+          GSHMEM.dawnColorMinus[i]=((GSHMEM.dawnCounter > i)?GSHMEM.dawnColorMinus[i-1]:GSHMEM.dawnColorMinus[i]);
+      }
+    }
 
 #ifdef PRINT_ALARM_TIME
-        EVERY_N_SECONDS(1){
-          if(timeProcessor.seconds00()){
-            CRGB letterColor;
-            hsv2rgb_rainbow(GSHMEM.dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-            sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
-          }
-        }
+    EVERY_N_SECONDS(1){
+      if (timeProcessor.seconds00()) {
+        CRGB letterColor;
+        hsv2rgb_rainbow(GSHMEM.dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
+        sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
+      }
+    }
 #endif
 
-        // fill_solid(leds, NUM_LEDS, dawnColor);
-        for (uint16_t i = 0U; i < NUM_LEDS; i++)
-            leds[i] = GSHMEM.dawnColorMinus[i%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))];
-        dawnFlag = true;
-        if (!ONflag) effectsTimer(T_ENABLE);  // наверное нужен для печати какой-то строки, todo: вопрос где его потом выключить (не обязательно)
-      }
-
-      // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
-      // if (thisTime == alarms[thisDay].Time)                             // установка, только в минуту, на которую заведён будильник
-      // {
-      //   digitalWrite(ALARM_PIN, manualOff ? !ALARM_LEVEL : ALARM_LEVEL);// установка сигнала в зависимости от того, был ли отключен будильник вручную
-      // }
-      // #endif
-
-      // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, матрица должна быть включена на время работы будильника
-      // digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
-      // #endif
+    for (uint16_t i = 0U; i < NUM_LEDS; i++) {
+        leds[i] = GSHMEM.dawnColorMinus[i%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))];
     }
+    dawnFlag = true;
 }
 
-void LAMP::effectsTick()
-{
+void LAMP::effectsTick(){
   /*
    * Здесь имеет место странная специфика тикера,
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
@@ -476,7 +248,7 @@ void LAMP::effectsTick()
   if (!_effectsTicker.active() ) return;
 
   uint32_t _begin = millis();
-  if(dawnFlag){
+  if (isAlarm()) {
     doPrintStringToLamp(); // обработчик печати строки
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
     return;
@@ -506,7 +278,6 @@ void LAMP::effectsTick()
   }
 
 }
-// end of void LAMP::effectsTick()
 
 /*
  * вывод готового кадра на матрицу,
@@ -540,29 +311,11 @@ void LAMP::frameShow(const uint32_t ticktime){
 #endif
 }
 
-
-#ifdef ESP_USE_BUTTON
-    void LAMP::changeDirection(byte numHold){
-      if(!startButtonHolding || (tmChangeDirectionTimer.isReady() && setDirectionTimeout)){
-        switch(numHold){
-          case 1: brightDirection = !brightDirection; break;
-          case 2: speedDirection = !speedDirection; break;
-          case 3: scaleDirection = !scaleDirection; break;
-        }
-        setDirectionTimeout = false;
-      }
-      LOG(printf_P, PSTR("changeDirection %d, %d, %d\n"), brightDirection, speedDirection, scaleDirection);
-    }
-
-  void LAMP::debugPrint(){
-      LOG(printf_P, PSTR("lampMode: %d numHold: %d currentMode: %d brightness: %d speed: %d scale: %d\n"), mode, numHold, effects.getEn(), getLampBrightness(), effects.getSpeed(), effects.getScale());
-  }
-#endif
-
 #ifdef VERTGAUGE
     void LAMP::GaugeShow() {
       byte ind;
-      if(!startButtonHolding) return;
+/*
+      // if(!startButtonHolding) return;
 
       switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
 #if (VERTGAUGE==1)
@@ -635,15 +388,12 @@ void LAMP::frameShow(const uint32_t ticktime){
           break;
 #endif
       }
+  */
     }
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_TIME), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
-#ifdef ESP_USE_BUTTON
-    , touch(BTN_PIN, PULL_MODE, NORM_OPEN)
-    , tmChangeDirectionTimer(NUMHOLD_TIME)     // таймаут смены направления увеличение-уменьшение при удержании кнопки
-#endif
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
 #ifdef OTA
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
@@ -652,21 +402,13 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmNumHoldTimer(NUMHOLD_
       MIRR_H = false; // отзрекаливание по H
       dawnFlag = false; // флаг устанавливается будильником "рассвет"
       ONflag = false; // флаг включения/выключения
-      manualOff = false;
       isFaderON = true; // признак того, что используется фейдер для смены эффектов
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
-      isFirstHoldingPress = false; // флаг: только начали удерживать?
-      startButtonHolding = false; // кнопка удерживается
-      buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
-      brightDirection = false;
-      speedDirection = false;
-      scaleDirection = false;
-      setDirectionTimeout = false; // флаг: начало отсчета таймаута на смену направления регулировки
+
       isStringPrinting = false; // печатается ли прямо сейчас строка?
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
-      pinTransition = true;
       isForcedWifi = true;
       _brt =0;
       _steps = 0;
@@ -684,7 +426,7 @@ void LAMP::changePower() {changePower(!ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
-  manualOff = true;            // любая активность в интерфейсе - отключаем будильник
+  stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == ONflag) return;  // пропускаем холостые вызовы
   LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
   ONflag = flag;
@@ -743,10 +485,25 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       }
     }
 
-void LAMP::startAlarm()
-{
+void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
+  effectsTimer(T_ENABLE);
+}
+
+void LAMP::stopAlarm(){
+  dawnFlag = false;
+  if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
+
+  myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
+  mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
+  LOG(println, F("Отключение будильника рассвет."));
+  if (!ONflag) {
+      effectsTimer(T_DISABLE);
+      FastLED.clear();
+      FastLED.show();
+  }
+  brightness(getNormalizedLampBrightness());
 }
 
 /*
@@ -920,7 +677,7 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
 
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
 {
-  if((!ONflag && !forcePrint) || (dawnFlag && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
+  if((!ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
   if(textOffset==-128) textOffset=this->txtOffset;
 
   if(text==nullptr){ // текст пустой
@@ -987,7 +744,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, dawnFlag, fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm(), fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -996,7 +753,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true, dawnFlag, fixedPos, (fixedPos? 0 : LET_SPACE), offs);
+    fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm(), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
   }
 }
 
@@ -1212,31 +969,6 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
 }
 
 /*
- * buttonPress - управление планировщиком опроса кнопки
- * оберка нужна т.к. touch.tick() нельзя положить в ICACHE_RAM
- * по наступлению прерывания "нажато" врубаем опрос событий кнопки не реже чем BUTTON_STEP_TIMEOUT/2 чтобы отловить "удержание"
- *
- * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
- * чтобы не он забыл зачем живет :)
- */
-#ifdef ESP_USE_BUTTON
-void LAMP::buttonPress(bool state){
-
-  if (!buttonEnabled)   // события кнопки не обрабатываются, если она заблокирована
-  {
-    _buttonTicker.detach();
-    return;
-  }
-
-  LOG(printf_P, PSTR("Button %s: %lu\n"), state ? PSTR("press") : PSTR("release"), millis());
-
-  _buttonTicker.attach_ms_scheduled(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&LAMP::buttonTick, this));
-
-  buttonTick();   // обрабатываем текущее нажатие вне очереди
-}
-#endif
-
-/*
  * переключатель эффектов для других методов,
  * может использовать фейдер, выбирать случайный эффект для демо
  * @param EFFSWITCH action - вид переключения (пред, след, случ.)
@@ -1314,7 +1046,7 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
     _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
     break;
   case SCHEDULER::T_RESET :
-    if(dawnFlag) { mode = (storedMode!=LAMPMODE::MODE_ALARMCLOCK?storedMode:LAMPMODE::MODE_NORMAL); manualOff = true; dawnFlag = false; FastLED.clear(); FastLED.show(); }// тут же сбросим и будильник
+    if (isAlarm()) stopAlarm(); // тут же сбросим и будильник
     if (_demoTicker.active() ) demoTimer(T_ENABLE);
     break;
   default:

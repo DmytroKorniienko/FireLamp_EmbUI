@@ -7,6 +7,7 @@ typedef enum _remote_action {
     RA_DEMO,
     RA_DEMO_NEXT,
     RA_ALARM,
+    RA_ALARM_OFF,
     RA_LAMP_CONFIG,
     RA_EFF_CONFIG,
     RA_EVENTS_CONFIG,
@@ -74,3 +75,6 @@ typedef enum _remote_action {
 
 void remote_action(RA action, ...);
 void httpCallback(const String &param, const String &value);
+#ifdef ESP_USE_BUTTON
+void default_buttons();
+#endif
