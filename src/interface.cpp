@@ -1477,6 +1477,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == F("move_prev")) action = RA_EFF_PREV;
     else if (param == F("move_rnd")) action = RA_EFF_RAND;
     else if (param == F("reboot")) action = RA_REBOOT;
+    else if (param == F("alarm")) action = RA_ALARM;
 #ifdef OTA
     else if (param == F("OTA")) action = RA_OTA;
 #endif

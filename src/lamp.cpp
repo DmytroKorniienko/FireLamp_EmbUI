@@ -485,13 +485,13 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       }
     }
 
-void LAMP::startAlarm()
-{
+void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
+  effectsTimer(T_ENABLE);
 }
 
-void LAMP::stopAlarm() {
+void LAMP::stopAlarm(){
   dawnFlag = false;
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
 
@@ -499,6 +499,7 @@ void LAMP::stopAlarm() {
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
   LOG(println, F("Отключение будильника рассвет."));
   if (!ONflag) {
+      effectsTimer(T_DISABLE);
       FastLED.clear();
       FastLED.show();
   }
