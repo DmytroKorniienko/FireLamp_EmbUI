@@ -148,7 +148,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_begin(F("effects_param"));
     if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
-        interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Глобальная яркость"), true);
+        interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Глоб. яркость"), true);
     } else {
         interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Яркость"), true);
     }
@@ -261,8 +261,9 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #endif
 #ifdef AUX_PIN
     interf->checkbox(F("AUX"), F("AUX"), true);
-#else
-    interf->hidden("nil");
+#endif
+#ifdef ESP_USE_BUTTON
+    interf->checkbox(F("Btn"), myButtons.isButtonOn()? F("true") : F("false"), F("Кнопка"), true);
 #endif
     interf->json_section_end();
 }
@@ -340,7 +341,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
 
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->button(F("OTA"), F("Обновление по ОТА-PIO"), F("grey"));
+    interf->button(F("OTA"), F("Ожидает..."), F("grey"));
     interf->json_section_end();
     interf->json_frame_flush();
 }
@@ -506,7 +507,6 @@ void block_lamp(Interface *interf, JsonObject *data){
     interf->json_section_main(F("lamp"), F("Лампа"));
 
     block_lamp_textsend(interf, data);
-    block_lamp_config(interf, data);
 
     interf->json_section_end();
 }
@@ -516,7 +516,7 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("settings_mic"), F("Микрофон"));
 
-    interf->checkbox(F("Mic"), F("Микрофон"), true);
+    interf->checkbox(F("Mic"), F("Микрофон активен"), true);
 
     interf->json_section_begin(F("set_mic"));
     //if (!iGLOBAL.isMicCal) {
@@ -654,9 +654,6 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(F("isFaderON"), F("Плавное переключение эффектов"));
     interf->checkbox(F("DRand"), F("Случайный эффект в Демо"));
     interf->range(F("DTimer"), 30, 250, 10, F("Время в секундах для смены режима"));
-#ifdef ESP_USE_BUTTON
-    interf->checkbox(F("isBtnOn"), F("Кнопка активна"));
-#endif
 
     interf->spacer(F("Вывод текста"));
     interf->range(F("txtSpeed"), 10, 100, 10, F("Задержка прокрутки текста"));
@@ -698,10 +695,6 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
     SETPARAM(F("DRand"));
     SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
-
-#ifdef ESP_USE_BUTTON
-    SETPARAM(F("isBtnOn"), myButtons.setButtonOn((*data)[F("isBtnOn")] == F("true")));
-#endif
 
     SETPARAM(F("txtSpeed"), myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
     SETPARAM(F("txtOf"), myLamp.setTextOffset((*data)[F("txtOf")]));
@@ -757,7 +750,7 @@ void block_settings_update(Interface *interf, JsonObject *data){
     if (myLamp.getMode() != MODE_OTA) {
         interf->button(F("OTA"), F("Начать"), F("blue"));
     } else {
-        interf->button(F("OTA"), F("Включено"), F("grey"));
+        interf->button(F("OTA"), F("Ожидает..."), F("grey"));
     }
 #endif
     interf->spacer(F("Загрузка прошивки"));
@@ -769,21 +762,26 @@ void block_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("show_event"), F("События"));
 
-    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
+    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События активны"), true);
 
     int num = 1;
     EVENT *next = nullptr;
+    interf->json_section_begin(F("event_conf"));
+    interf->select(F("eventList"), String(0), F("Событие"), false);
     while ((next = myLamp.events.getNextEvent(next)) != nullptr) {
-        String name = "event" + String(num);
-        interf->json_section_begin(name, next->getName(), false, false, true);
-        interf->button_submit_value(name, F("edit"), F("Редактировать"), F("green"));
-        interf->button_submit_value(name, F("del"), F("Удалить"), F("red"));
-        interf->hidden(F("event"), String(num));
-        interf->json_section_end();
+        interf->option(String(num), next->getName());
         ++num;
     }
+    interf->json_section_end();
 
-    interf->button(F("event_conf"), F("Добавить событие"));
+    interf->json_section_line();
+    interf->button_submit_value(F("event_conf"), F("edit"), F("Редактировать"), F("green"));
+    interf->button_submit_value(F("event_conf"), F("del"), F("Удалить"), F("red"));
+    interf->json_section_end();
+
+    interf->json_section_end();
+
+    interf->button(F("event_conf"), F("Добавить"));
 
     interf->spacer();
     interf->button(F("settings"), F("Выход"));
@@ -808,9 +806,9 @@ void set_event_conf(Interface *interf, JsonObject *data){
     String act;
     if (!data) return;
 
-    if (data->containsKey(F("event"))) {
+    if (data->containsKey(F("eventList"))) {
         EVENT *curr = nullptr;
-        int i = 1, num = (*data)[F("event")];
+        int i = 1, num = (*data)[F("eventList")];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
         myLamp.events.delEvent(*curr);
@@ -863,12 +861,12 @@ void show_event_conf(Interface *interf, JsonObject *data){
     int i = 1, num = 0;
     if (!interf) return;
 
-    if (data->containsKey(F("event"))) {
+    if (data->containsKey(F("eventList"))) {
         EVENT *curr = nullptr;
-        num = (*data)[F("event")];
+        num = (*data)[F("eventList")];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
-        act = (*data)["event" + String(num)].as<String>();
+        act = (*data)[F("event_conf")].as<String>();
         event = *curr;
         edit = true;
     }
@@ -888,11 +886,11 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
 
     if (edit) {
-        interf->json_section_main(F("set_event"), F("Редактировать событие"));
-        interf->constant(F("event"), String(num), event.getName());
+        interf->json_section_main(F("set_event"), F("Редактировать"));
+        interf->constant(F("eventList"), String(num), event.getName());
         interf->checkbox(F("enabled"), (event.isEnabled? F("true") : F("false")), F("Активно"), false);
     } else {
-        interf->json_section_main(F("set_event"), F("Добавить событие"));
+        interf->json_section_main(F("set_event"), F("Добавить"));
     }
 
     interf->select(F("evList"), String(event.event), F("Тип события"), false);
@@ -945,15 +943,21 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("show_button"), F("Кнопка"));
 
+    interf->checkbox(F("Btn"), myButtons.isButtonOn()? F("true") : F("false"), F("Кнопка активна"), true);
+
+    interf->json_section_begin(F("butt_conf"));
+    interf->select(F("buttList"), String(0), F("Действие"), false);
     for (int i = 0; i < myButtons.size(); i++) {
-        String name = "butt" + String(i);
-        Button *btn = myButtons[i];
-        interf->json_section_begin(name, btn->getName(), false, false, true);
-        interf->button_submit_value(name, F("edit"), F("Редактировать"), F("green"));
-        interf->button_submit_value(name, F("del"), F("Удалить"), F("red"));
-        interf->hidden(F("button"), String(i));
-        interf->json_section_end();
+        interf->option(String(i), myButtons[i]->getName());
     }
+    interf->json_section_end();
+
+    interf->json_section_line();
+    interf->button_submit_value(F("butt_conf"), F("edit"), F("Редактировать"), F("green"));
+    interf->button_submit_value(F("butt_conf"), F("del"), F("Удалить"), F("red"));
+    interf->json_section_end();
+
+    interf->json_section_end();
 
     interf->button(F("butt_conf"), F("Добавить"));
 
@@ -977,10 +981,10 @@ void set_butt_conf(Interface *interf, JsonObject *data){
     bool on = ((*data)[F("on")] == F("true"));
     bool hold = ((*data)[F("hold")] == F("true"));
     uint8_t clicks = (*data)[F("clicks")];
-    BA action = (BA)(*data)[F("btnList")].as<long>();
+    BA action = (BA)(*data)[F("bactList")].as<long>();
 
-    if (data->containsKey(F("button"))) {
-        int num = (*data)[F("button")];
+    if (data->containsKey(F("buttList"))) {
+        int num = (*data)[F("buttList")];
         if (num < myButtons.size()) {
             btn = myButtons[num];
         }
@@ -1005,10 +1009,10 @@ void show_butt_conf(Interface *interf, JsonObject *data){
     String act;
     int num = 0;
 
-    if (data->containsKey(F("button"))) {
-        num = (*data)[F("button")];
+    if (data->containsKey(F("buttList"))) {
+        num = (*data)[F("buttList")];
         if (num < myButtons.size()) {
-            act = (*data)["butt" + String(num)].as<String>();
+            act = (*data)[F("butt_conf")].as<String>();
             btn = myButtons[num];
         }
     }
@@ -1029,12 +1033,12 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     if (btn) {
         interf->json_section_main(F("set_butt"), F("Редактировать"));
-        interf->constant(F("button"), String(num), btn->getName());
+        interf->constant(F("buttList"), String(num), btn->getName());
     } else {
         interf->json_section_main(F("set_butt"), F("Добавить"));
     }
 
-    interf->select(F("btnList"), String(btn? btn->action : 0), F("Действие"), false);
+    interf->select(F("bactList"), String(btn? btn->action : 0), F("Действие"), false);
     for (int i = 1; i < BA::BA_END; i++) {
         interf->option(String(i), btn_get_desc((BA)i));
     }
@@ -1056,6 +1060,11 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     interf->json_section_end();
     interf->json_frame_flush();
+}
+
+void set_btnflag(Interface *interf, JsonObject *data){
+    if (!data) return;
+    SETPARAM(F("Btn"), myButtons.setButtonOn((*data)[F("Btn")] == F("true")));
 }
 #endif
 void section_effects_frame(Interface *interf, JsonObject *data){
@@ -1090,6 +1099,8 @@ void section_settings_frame(Interface *interf, JsonObject *data){
     interf->button(F("show_event"), F("События"));
 
     interf->button(F("show_butt"), F("Кнопка"));
+
+    block_lamp_config(interf, data);
 
     interf->spacer();
     block_settings_update(interf, data);
@@ -1145,7 +1156,7 @@ void create_parameters(){
     jee.var_create(F("MIRR_H"), F("false"));
     jee.var_create(F("MIRR_V"), F("false"));
 #ifdef ESP_USE_BUTTON
-    jee.var_create(F("isBtnOn"), F("true"));
+    jee.var_create(F("Btn"), F("true"));
 #endif
 #ifdef AUX_PIN
     jee.var_create(F("AUX"), F("false"));
@@ -1233,13 +1244,14 @@ void create_parameters(){
     jee.section_handle_add(F("mic_cal"), set_settings_mic_calib);
 #endif
     jee.section_handle_add(F("show_event"), show_settings_event);
-    jee.section_handle_add(F("event*"), show_event_conf);
+    jee.section_handle_add(F("event_conf"), show_event_conf);
     jee.section_handle_add(F("set_event"), set_event_conf);
     jee.section_handle_add(F("Events"), set_eventflag);
 #ifdef ESP_USE_BUTTON
     jee.section_handle_add(F("show_butt"), show_settings_butt);
-    jee.section_handle_add(F("butt*"), show_butt_conf);
+    jee.section_handle_add(F("butt_conf"), show_butt_conf);
     jee.section_handle_add(F("set_butt"), set_butt_conf);
+    jee.section_handle_add(F("Btn"), set_btnflag);
 #endif
 }
 
@@ -1271,7 +1283,7 @@ void sync_parameters(){
 #endif
 
 #ifdef ESP_USE_BUTTON
-    obj[F("isBtnOn")] = jee.param(F("isBtnOn"));
+    CALL_SETTER(F("Btn"), jee.param(F("Btn")), set_btnflag);
 #endif
 
     obj[F("isFaderON")] = jee.param(F("isFaderON"));

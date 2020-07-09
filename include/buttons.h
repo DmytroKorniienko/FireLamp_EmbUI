@@ -44,6 +44,7 @@ class Button{
 
 	public:
 		Button(uint8_t on, uint8_t hold, uint8_t click, BA act = BA_NONE) { direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; action = act; }
+		Button(uint8_t mask, BA act = BA_NONE) { direction = false; flags.mask = mask; action = act; }
 
 		void activate(bool reverse);
 		String getName();
@@ -69,10 +70,11 @@ class Buttons {
 	public:
 	timerMinim tmNumHoldTimer; // таймаут удержания кнопки в мс
 
-	bool getpinTransition() {return pinTransition;}
-	void setpinTransition(bool val) {pinTransition = val;}
+	bool getpinTransition() { return pinTransition; }
+	void setpinTransition(bool val) { pinTransition = val; }
 
-	void setButtonOn(bool flag) {buttonEnabled = flag;}
+	void setButtonOn(bool flag) { buttonEnabled = flag; }
+	bool isButtonOn() { return buttonEnabled; }
 
 	inline Button* operator[](int i) { return buttons[i]; }
 

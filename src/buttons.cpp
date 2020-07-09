@@ -69,7 +69,7 @@ String Button::getName(){
 		if (flags.hold) {
 			if (flags.click) {
 				buffer.concat(String(flags.click));
-				buffer.concat(F(" Click "));
+				buffer.concat(F(" Click + "));
 			}
 			buffer.concat(F("HOLD - "));
 		} else
@@ -126,6 +126,7 @@ void Buttons::buttonPress(bool state){
 }
 
 void Buttons::buttonTick(){
+	if (!buttonEnabled) return;
 	touch.tick();
 	bool reverse = false;
 	if ((holding = touch.isHolded())) {
@@ -149,7 +150,7 @@ void Buttons::buttonTick(){
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
 			buttons[i]->activate(reverse);
-			break;
+			// break; // Не выходим после первого найденного совпадения. Можем делать макросы из нажатий
 		}
 	}
 
@@ -208,11 +209,9 @@ int Buttons::loadConfig(const char *cfg){
 		JsonArray arr = doc.as<JsonArray>();
 		for (size_t i = 0; i < arr.size(); i++) {
 			JsonObject item = arr[i];
-			uint8_t on = item[F("on")].as<int>();
-			uint8_t hd = item[F("hd")].as<unsigned long>();
-			uint8_t cl = (EVENT_TYPE)(item[F("cl")].as<int>());
+			uint8_t mask = item[F("flg")].as<uint8_t>();
 			BA ac = (BA)item[F("ac")].as<int>();
-			buttons.add(new Button(on, hd, cl, ac));
+			buttons.add(new Button(mask, ac));
 		}
 		doc.clear();
 	}
