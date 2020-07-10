@@ -555,6 +555,7 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
 }
 #endif
 
+// формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("settings_wifi"), F("WiFi"));
@@ -562,12 +563,12 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_hidden(F("set_wifi"), F("WiFi"));
 
     interf->select(F("wifi"), F("Режим WiFi"));
-    interf->option(F("STA"), F("STA"));
-    interf->option(F("AP"), F("AP"));
+    interf->option(F("AUTO"), F("Auto AP/Station"));
+    interf->option(F("AP"), F("AP Only"));
     interf->json_section_end();
 
-    interf->text(F("ap_ssid"), F("AP/mDNS"));
-    interf->text(F("ssid"), F("SSID"));
+    interf->text(F("ap_ssid"), F("Hostname/mDNS Internal AP"));
+    interf->text(F("ssid"), F("WiFi SSID"));
     interf->password(F("pass"), F("Password"));
     interf->button_submit(F("set_wifi"), F("Connect"), F("gray"));
     interf->json_section_end();
@@ -593,7 +594,7 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_settings_wifi(interf, data);
     interf->json_frame_flush();
-    myLamp.setForceWifi(true);
+    //myLamp.setForceWifi(true);
 }
 
 void set_settings_wifi(Interface *interf, JsonObject *data){
@@ -603,11 +604,10 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
     SETPARAM(F("pass"));
 
     SETPARAM(F("wifi"));
-    //jee.var(F("wifi"), F("STA"));
     jee.save();
     //ESP.restart();
-    if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
-        jee.wifi_connect();
+    //if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
+    jee.wifi_connect(true);
 }
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){

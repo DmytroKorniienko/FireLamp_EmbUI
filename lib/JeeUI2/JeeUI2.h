@@ -56,9 +56,9 @@ class jeeui2
 
   public:
     jeeui2() : cfg(4096), section_handle(), server(80), ws("/ws"){
-      *ip='\0';
+//      *ip='\0';
       *mc='\0';
-      *mac='\0';
+//      *mac='\0';
       *m_pref='\0';
       *m_host='\0';
       *m_user='\0';
@@ -108,14 +108,14 @@ class jeeui2
     void publish(const String &topic, const String &payload, bool retained);
 
     void remControl();
-    void wifi_connect();
+    void wifi_connect(bool usecfg=false);   // usecfg - использовать креды из конфига (иначе использовать сохраненные точки фреймворка)
     
     void post(JsonObject data);
     void send_pub();
 
-    char ip[16]; //"255.255.255.255"
+//    char ip[16]; //"255.255.255.255"
     char mc[13]; // id "ffffffffffff"
-    char mac[18]; // "ff:ff:ff:ff:ff:ff"
+//    char mac[18]; // "ff:ff:ff:ff:ff:ff"
 
     bool connected = false;
 
@@ -144,7 +144,7 @@ class jeeui2
     void mqtt_handle();
     bool mqtt_enable = false;
 
-    void _connected();
+    //void _connected();
     void subscribeAll();
 
     char udpRemoteIP[16];
@@ -155,14 +155,20 @@ class jeeui2
     bool isNeedSave = false;
     unsigned long astimer;
 
-    uint8_t wifi_mode;
+    // WiFi related
+    WiFiEventHandler e1, e2, e3;
+    WiFiMode wifi_mode;
+    bool wf = false;
+    void onSTAConnected(WiFiEventStationModeConnected ipInfo);
+    void onSTAGotIP(WiFiEventStationModeGotIP ipInfo);
+    void onSTADisconnected(WiFiEventStationModeDisconnected event_info);
+
     int LED_PIN = -1;
     bool LED_INVERT = false;
     uint8_t mn = 0;
     unsigned long a_ap = 0;
-    bool wf = false;
     uint8_t pg = 0;
-    char udpMessage[65]; // Обмен по UDP
+    char udpMessage[65]; // буфер для сообщений Обмена по UDP
 
     void connectToMqtt();
     void onMqttConnect();
