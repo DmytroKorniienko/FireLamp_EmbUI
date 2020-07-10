@@ -565,7 +565,7 @@ void set_settings_mic(Interface *interf, JsonObject *data){
     if (!data) return;
     SETPARAM(F("micScale"), myLamp.setMicScale((*data)[F("micScale")].as<float>()));
     SETPARAM(F("micNoise"), myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
-    SETPARAM(F("micnRdcLvl"), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>()));
+    SETPARAM(F("micnRdcLvl"), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micnRdcLvl")].as<long>()));
 }
 
 void set_micflag(Interface *interf, JsonObject *data){
