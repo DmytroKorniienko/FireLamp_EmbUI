@@ -47,6 +47,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef ESP8266
  #include <ESP8266WiFi.h>
 #endif
+#include "TimeLib.h"
 
 #ifdef CONTRY
     #define NTP2ADDRESS        COUNTRY "." "pool.ntp.org"    // пул серверов времени для NTP

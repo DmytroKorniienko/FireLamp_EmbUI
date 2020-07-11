@@ -86,27 +86,27 @@ struct EVENT {
     EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
     const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
     String getDateTime(int offset = 0) {
-        String tmpBuf;
-        TimeProcessor::getDateTimeString(tmpBuf);
-        /*
-        char tmpBuf[]="9999-99-99T99:99";
+        //String tmpBuf;
+        //TimeProcessor::getDateTimeString(tmpBuf);
+        
+        char tmpBuf[]="9999-99-99T99:99"; // тут будет дата/время события, а не текущая
         time_t tm = unixtime+offset;
         sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
         return String(tmpBuf);
-        */
-        return tmpBuf;
+        
+        //return tmpBuf;
     }
 
     String getName(int offset = 0) {
         String buffer;
-        //char tmpBuf[]="9999-99-99T99:99";
+        char tmpBuf[]="9999-99-99T99:99";
         String day_buf(T_EVENT_DAYS);
 
         buffer.concat(isEnabled?F(" "):F("!"));
-        //time_t tm = unixtime+offset;
-        //sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
-        //buffer.concat(tmpBuf);
-        TimeProcessor::getDateTimeString(buffer);
+        
+        time_t tm = unixtime+offset; // дата/время события
+        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
+        buffer.concat(tmpBuf);
         buffer.concat(F(","));
 
         switch (event)
@@ -140,17 +140,17 @@ struct EVENT {
             break;
         case EVENT_TYPE::PIN_STATE:
             buffer.concat(F("PIN"));
-            break;
+            break; 
 #ifdef AUX_PIN
         case EVENT_TYPE::AUX_ON:
             buffer.concat(F("AUX ON"));
-            break;
+            break; 
         case EVENT_TYPE::AUX_OFF:
             buffer.concat(F("AUX OFF"));
-            break;
+            break; 
         case EVENT_TYPE::AUX_TOGGLE:
             buffer.concat(F("AUX TOGGLE"));
-            break;
+            break; 
 #endif
         default:
             break;
@@ -165,18 +165,20 @@ struct EVENT {
             if(t_raw_data&1){
                 //Serial.println, day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
                 buffer.concat(day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
-                buffer.concat(F(","));
+                if(t_raw_data >> 1)
+                    buffer.concat(F(",")); // кроме последнего
             }
             t_raw_data >>= 1;
         }
         //return buffer;
-        char tmpBuf[]="9999-99-99T99:99";
-        if(message[0]){     // что делает эта секция, зачем копировать время второй раз??
+
+        if(message[0]){     // время тут никто и не копирует, а усекается текст
             memcpy(tmpBuf,message,5*2);
             strcpy_P(tmpBuf+5*2,PSTR("..."));
+            buffer.concat(F(","));
+            buffer.concat(tmpBuf);
         }
-        buffer.concat(tmpBuf);
-
+                
         return buffer;
     }
 };
@@ -195,21 +197,21 @@ public:
     ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
 
     void addEvent(const EVENT&event);
-
+    
     void delEvent(const EVENT&event);
 
     void setEventCallback(void(*func)(const EVENT *))
     {
         cb_func = func;
     }
-
+    
     EVENT *getNextEvent(EVENT *next=nullptr)
     {
         if(next==nullptr) return root; else return next->next;
     }
 
     void events_handle();
-
+    
     void loadConfig(const char *cfg = nullptr);
 
     void saveConfig(const char *cfg = nullptr);
