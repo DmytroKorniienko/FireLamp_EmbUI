@@ -144,7 +144,7 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val)
   curPalette = _pals.at(palettepos);
   palettescale = _val-ptPallete*(palettepos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
 
-  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
+  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%4.2f, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
 /**

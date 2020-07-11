@@ -669,7 +669,7 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
       setOffAfterText();
       changePower(true);
       setBrightness(1, false, false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
-      sendStringToLamp(text, letterColor);
+      sendStringToLamp(text, letterColor, true);
   } else {
       sendStringToLamp(text, letterColor);
   }
