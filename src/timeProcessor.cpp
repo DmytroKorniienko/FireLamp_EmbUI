@@ -274,7 +274,8 @@ void TimeProcessor::getDateTimeString(String &buf){
  */
 void TimeProcessor::setOffset(const int val){
     LOG(printf_P, PSTR("Set time zone offset to: %d\n"), val);
-    sntp_set_timezone_in_seconds(-1*val);   // в правилах смещение имеет обратный знак (TZ-OffSet=UTC)
+    //sntp_set_timezone_in_seconds(-1*val);   // в правилах смещение имеет обратный знак (TZ-OffSet=UTC)
+    sntp_set_timezone_in_seconds(val);   // шаманство намба ван!
 }
 
 /**
