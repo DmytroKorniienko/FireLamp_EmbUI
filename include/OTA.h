@@ -149,8 +149,6 @@ class OtaManager
       id.replace(F(":"), F(""));
       sprintf_P(espHostName, PSTR("%s%s"),(char*)__IDPREFIX, id.c_str());
 
-      OtaFlag = OtaPhase::GotSecondConfirm;
-
       ArduinoOTA.setPort(ESP_OTA_PORT);
       ArduinoOTA.setHostname(espHostName);
       ArduinoOTA.setPassword(OTA_PASS);
@@ -223,6 +221,7 @@ class OtaManager
       ArduinoOTA.setRebootOnSuccess(true);
       ArduinoOTA.begin();
       OtaFlag = OtaPhase::InProgress;
+      momentOfOtaStart = millis();
 
       LOG(printf_P,PSTR("Для обновления в Arduino IDE выберите пункт меню Инструменты - Порт - '%s at "), espHostName);
       LOG(print,WiFi.localIP());
