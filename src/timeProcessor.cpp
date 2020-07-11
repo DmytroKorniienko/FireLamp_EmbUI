@@ -129,6 +129,7 @@ void TimeProcessor::setTime(String &timestr){
  * https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h
  */
 void TimeProcessor::tzsetup(const char* tz){
+    // https://stackoverflow.com/questions/56412864/esp8266-timezone-issues
     setenv("TZ", tz, 1/*overwrite*/);
     tzset();
 }

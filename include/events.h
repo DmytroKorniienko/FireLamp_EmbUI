@@ -90,7 +90,8 @@ struct EVENT {
         //TimeProcessor::getDateTimeString(tmpBuf);
         
         char tmpBuf[]="9999-99-99T99:99"; // тут будет дата/время события, а не текущая
-        time_t tm = unixtime+offset;
+        // time_t tm = unixtime+offset;
+        time_t tm = unixtime+10800; // пока забиваю гвоздями, поскольку поломано
         sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
         return String(tmpBuf);
         
@@ -104,11 +105,12 @@ struct EVENT {
 
         buffer.concat(isEnabled?F(" "):F("!"));
         
-        time_t tm = unixtime+offset; // дата/время события
+        // time_t tm = unixtime+offset; // дата/время события
+        time_t tm = unixtime+10800; // пока забиваю гвоздями, поскольку поломано
         sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
         buffer.concat(tmpBuf);
-        buffer.concat(F(","));
 
+        buffer.concat(F(","));
         switch (event)
         {
         case EVENT_TYPE::ON:
@@ -155,12 +157,13 @@ struct EVENT {
         default:
             break;
         }
-        buffer.concat(F(","));
 
-        if(repeat) {buffer.concat(repeat); buffer.concat(F(","));}
-        if(repeat && stopat) {buffer.concat(stopat); buffer.concat(F(","));}
+        if(repeat) {buffer.concat(F(",")); buffer.concat(repeat);}
+        if(repeat && stopat) { buffer.concat(F(",")); buffer.concat(stopat);}
 
         uint8_t t_raw_data = raw_data>>1;
+        if(t_raw_data)
+            buffer.concat(F(","));
         for(uint8_t i=1;i<8; i++){
             if(t_raw_data&1){
                 //Serial.println, day_buf.substring((i-1)*2*2,i*2*2)); // по 2 байта на символ UTF16
