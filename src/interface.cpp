@@ -69,7 +69,7 @@ void block_menu(Interface *interf, JsonObject *data){
     interf->json_section_menu();
 
     interf->option(F("effects"), F("Эффекты"));
-    interf->option(F("lamp"), F("Лампа"));
+    interf->option(F("lamp"), F("Вывод текста"));
     interf->option(F("settings"), F("Настройки"));
 
     interf->json_section_end();
@@ -521,7 +521,7 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
 void block_lamp(Interface *interf, JsonObject *data){
     //Страница "Управление лампой"
     if (!interf) return;
-    interf->json_section_main(F("lamp"), F("Лампа"));
+    interf->json_section_main(F("lamp"), F("Вывод текста"));
 
     block_lamp_textsend(interf, data);
 
@@ -670,8 +670,9 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
 
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("set_other"), F("Разные"));
+    interf->json_section_main(F("set_other"), F("Настройки"));
 
+    interf->spacer(F("Отображение"));
     interf->checkbox(F("MIRR_H"), F("Отзеркаливание H"));
     interf->checkbox(F("MIRR_V"), F("Отзеркаливание V"));
     interf->checkbox(F("isFaderON"), F("Плавное переключение эффектов"));
@@ -730,7 +731,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
 
 void block_settings_time(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("set_time"), F("Настройка времени"));
+    interf->json_section_main(F("set_time"), F("Время"));
 
     interf->time(F("time"), F("Время"));
     interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
@@ -1115,9 +1116,7 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 
     interf->json_section_main(F("settings"), F("Настройки"));
 
-    interf->button(F("show_time"), F("Настройка времени"));
-
-    interf->button(F("show_other"), F("Разные"));
+    interf->button(F("show_time"), F("Время"));
 
     interf->button(F("show_wifi"), F("WiFi & MQTT"));
 #ifdef MIC_EFFECTS
@@ -1127,6 +1126,8 @@ void section_settings_frame(Interface *interf, JsonObject *data){
     interf->button(F("show_event"), F("События"));
 
     interf->button(F("show_butt"), F("Кнопка"));
+
+    interf->button(F("show_other"), F("Другие"));
 
     block_lamp_config(interf, data);
 
