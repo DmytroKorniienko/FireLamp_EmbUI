@@ -40,11 +40,24 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "timeProcessor.h"
 //#include <Ticker.h>
 
+// закрепляем за событиями номера, чтобы они не ломались после сборки с другими дефайнами
+typedef enum _EVENT_TYPE {
+    ON                      = 1,
+    OFF                     = 2,
+    ALARM                   = 3,
+    DEMO_ON                 = 4,
+    LAMP_CONFIG_LOAD        = 5,
+    EFF_CONFIG_LOAD         = 6,
+    EVENTS_CONFIG_LOAD      = 7,
+    SEND_TEXT               = 8,
+    SEND_TIME               = 9,
+    PIN_STATE               = 10,
 #ifdef AUX_PIN
-typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE, AUX_ON, AUX_OFF, AUX_TOGGLE} EVENT_TYPE;
-#else
-typedef enum _EVENT_TYPE {ON, OFF, ALARM, DEMO_ON, LAMP_CONFIG_LOAD, EFF_CONFIG_LOAD, EVENTS_CONFIG_LOAD, SEND_TEXT, PIN_STATE} EVENT_TYPE;
+    AUX_ON                  = 11,
+    AUX_OFF                 = 12,
+    AUX_TOGGLE              = 13,
 #endif
+} EVENT_TYPE;
 
 static const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
 
@@ -83,7 +96,7 @@ struct EVENT {
         */
         return tmpBuf;
     }
-    
+
     String getName(int offset = 0) {
         String buffer;
         //char tmpBuf[]="9999-99-99T99:99";
@@ -122,19 +135,22 @@ struct EVENT {
         case EVENT_TYPE::SEND_TEXT:
             buffer.concat(F("TEXT"));
             break;
+        case EVENT_TYPE::SEND_TIME:
+            buffer.concat(F("TIME"));
+            break;
         case EVENT_TYPE::PIN_STATE:
             buffer.concat(F("PIN"));
-            break; 
+            break;
 #ifdef AUX_PIN
         case EVENT_TYPE::AUX_ON:
             buffer.concat(F("AUX ON"));
-            break; 
+            break;
         case EVENT_TYPE::AUX_OFF:
             buffer.concat(F("AUX OFF"));
-            break; 
+            break;
         case EVENT_TYPE::AUX_TOGGLE:
             buffer.concat(F("AUX TOGGLE"));
-            break; 
+            break;
 #endif
         default:
             break;
@@ -160,7 +176,7 @@ struct EVENT {
             strcpy_P(tmpBuf+5*2,PSTR("..."));
         }
         buffer.concat(tmpBuf);
-        
+
         return buffer;
     }
 };
@@ -179,21 +195,21 @@ public:
     ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
 
     void addEvent(const EVENT&event);
-    
+
     void delEvent(const EVENT&event);
 
     void setEventCallback(void(*func)(const EVENT *))
     {
         cb_func = func;
     }
-    
+
     EVENT *getNextEvent(EVENT *next=nullptr)
     {
         if(next==nullptr) return root; else return next->next;
     }
 
     void events_handle();
-    
+
     void loadConfig(const char *cfg = nullptr);
 
     void saveConfig(const char *cfg = nullptr);

@@ -107,12 +107,14 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
         myLamp.ConfigSaveSetup(60*1000); //через минуту сработает еще попытка записи и так до успеха
     }
+
+    section_main_frame(interf, data);
 }
 
 void block_effects_config(Interface *interf, JsonObject *data){
     if (!interf) return;
 
-    interf->json_section_main(F("effects_config"), F("Конфигурирование"));
+    interf->json_section_main(F("effects_config"), F("Управление"));
 
     EFFECT enEff; enEff.setNone();
     confEff = myLamp.effects.getSelected();
@@ -293,7 +295,7 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     EFFECT enEff; enEff.setNone();
-    interf->select(F("effList"), F("Эффект"), true);
+    interf->select(F("effList"), String(myLamp.effects.getSelected()->eff_nb), F("Эффект"), true);
     while ((enEff = *myLamp.effects.enumNextEffect(&enEff)).eff_nb != EFF_NONE) {
         if (enEff.canBeSelected) {
             interf->option(String((int)enEff.eff_nb), FPSTR(enEff.eff_name));
@@ -303,7 +305,7 @@ void block_effects_main(Interface *interf, JsonObject *data){
 
     block_effects_param(interf, data);
 
-    interf->button(F("effects_config"), F("Конфигурирование"));
+    interf->button(F("effects_config"), F("Управление"));
 
     interf->json_section_end();
 }
@@ -320,7 +322,7 @@ void set_eff_next(Interface *interf, JsonObject *data){
 
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    bool newpower = (*data)[F("ONflag")] == F("true");
+    bool newpower = TOGLE_STATE((*data)[F("ONflag")], myLamp.isLampOn());
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
@@ -337,7 +339,7 @@ void set_onflag(Interface *interf, JsonObject *data){
 void set_demoflag(Interface *interf, JsonObject *data){
     if (!data) return;
     // Специально не сохраняем, считаю что демо при старте не должно запускаться
-    bool newdemo = (*data)[F("Demo")] == F("true");
+    bool newdemo = TOGLE_STATE((*data)[F("Demo")], (myLamp.getMode() == MODE_DEMO));
     switch (myLamp.getMode()) {
         case MODE_NORMAL:
             if (newdemo) myLamp.startDemoMode(jee.param(F("DTimer")).toInt()); break;
@@ -566,6 +568,8 @@ void set_settings_mic(Interface *interf, JsonObject *data){
     SETPARAM(F("micScale"), myLamp.setMicScale((*data)[F("micScale")].as<float>()));
     SETPARAM(F("micNoise"), myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
     SETPARAM(F("micnRdcLvl"), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micNoise")].as<long>()));
+
+    section_settings_frame(interf, data);
 }
 
 void set_micflag(Interface *interf, JsonObject *data){
@@ -643,6 +647,8 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
     //ESP.restart();
     if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
         jee.wifi_connect();
+
+    section_settings_frame(interf, data);
 }
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
@@ -658,6 +664,8 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     //ESP.restart();
     if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
         jee.wifi_connect();
+
+    section_settings_frame(interf, data);
 }
 
 void block_settings_other(Interface *interf, JsonObject *data){
@@ -716,6 +724,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("perTime"), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[F("perTime")].as<long>()));
     SETPARAM(F("ny_period"), myLamp.setNYMessageTimer((*data)[F("ny_period")]));
     SETPARAM(F("ny_unix"), myLamp.setNYUnixTime((*data)[F("ny_unix")]));
+
+    section_settings_frame(interf, data);
 }
 
 void block_settings_time(Interface *interf, JsonObject *data){
@@ -755,6 +765,8 @@ void set_settings_time(Interface *interf, JsonObject *data){
     }
 */
     myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
+
+    section_settings_frame(interf, data);
 }
 
 void block_settings_update(Interface *interf, JsonObject *data){
@@ -917,6 +929,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
     interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
     interf->option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
+    interf->option(String(EVENT_TYPE::SEND_TIME), F("Вывести время"));
     interf->option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
 #ifdef AUX_PIN
     interf->option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
@@ -1504,6 +1517,7 @@ void event_worker(const EVENT *event){
     case EVENT_TYPE::EFF_CONFIG_LOAD:  action = RA_EFF_CONFIG; break;
     case EVENT_TYPE::EVENTS_CONFIG_LOAD: action = RA_EVENTS_CONFIG; break;
     case EVENT_TYPE::SEND_TEXT:  action = RA_SEND_TEXT; break;
+    case EVENT_TYPE::SEND_TIME:  action = RA_SEND_TIME; break;
 #ifdef AUX_PIN
     case EVENT_TYPE::AUX_ON: action = RA_AUX_ON; break;
     case EVENT_TYPE::AUX_OFF: action = RA_AUX_OFF; break;

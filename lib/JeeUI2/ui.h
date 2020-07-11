@@ -140,7 +140,4 @@ class Interface {
         void spacer(const String &label = "");
 };
 
-void section_main_frame(Interface *interf, JsonObject *data);
-void pubCallback(Interface *interf);
-
 #endif

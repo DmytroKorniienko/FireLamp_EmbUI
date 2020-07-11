@@ -37,6 +37,8 @@ typedef enum _remote_action {
     RA_WHITE_LO
 } RA;
 
+#define TOGLE_STATE(val, curr) (val == F("true"))? true : (val == F("false"))? false : !curr;
+
 #define SETPARAM(key, call...) if (data->containsKey(key)) { \
     jee.var(key, (*data)[key]); \
     call; \
@@ -72,6 +74,13 @@ typedef enum _remote_action {
         delete interf; \
     } \
 }
+
+void section_main_frame(Interface *interf, JsonObject *data);
+void section_effects_frame(Interface *interf, JsonObject *data);
+void section_lamp_frame(Interface *interf, JsonObject *data);
+void section_settings_frame(Interface *interf, JsonObject *data);
+void pubCallback(Interface *interf);
+
 
 void remote_action(RA action, ...);
 void httpCallback(const String &param, const String &value);
