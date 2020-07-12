@@ -74,9 +74,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define MIN_RANGE 1     // заложим дейфан пока нет динамических ползунков
 #define MAX_RANGE 255   // заложим дейфан пока нет динамических ползунков
 
-static const char R[] PROGMEM = "R";
-static const char extraR[] PROGMEM = "extraR";
-
 /**
  * типы/определения для палитр
  */
@@ -143,8 +140,8 @@ static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {
 #define AVAILABLE_BOID_COUNT   (10U)                // стая, кол-во птиц
 
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
-#define e_com_TAILSPEED             (500)         // скорость смещения хвоста 
-#define e_com_BLUR                  (24U)         // размытие хвоста 
+#define e_com_TAILSPEED             (500)         // скорость смещения хвоста
+#define e_com_BLUR                  (24U)         // размытие хвоста
 #define e_com_3DCOLORSPEED          (5U)          // скорость случайного изменения цвета (0й - режим)
 
 // ------------- светлячки со шлейфом -------------
@@ -226,7 +223,7 @@ public:
         y = v.y;
         return *this;
     }
-    
+
     bool isEmpty() {
         return x == 0 && y == 0;
     }
@@ -269,7 +266,7 @@ public:
     Vector2 operator/(double s) {
         return Vector2(x / s, y / s);
     }
-    
+
     Vector2& operator+=(double s) {
         x += s;
         y += s;
@@ -657,7 +654,7 @@ class Boid {
 // (c) SottNick
 // refactored by Vortigont
 #define CUBE2D_MAX_SIZE 7       // максимальный размер обрабатываемых квадратов (AxA)
-#define CUBE2D_PAUSE_FRAMES 20   // число кадров паузы между трансформациями 
+#define CUBE2D_PAUSE_FRAMES 20   // число кадров паузы между трансформациями
 
 
 #endif

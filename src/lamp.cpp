@@ -256,7 +256,7 @@ void LAMP::effectsTick(){
 
   if(!isEffectsDisabledUntilText){
     // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-    if(effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param)) {
+    if(effects.worker->run(getUnsafeLedsArray(), nullptr/* effects.getCurrent() */)) {
 #ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
@@ -975,7 +975,11 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
  * @param fade - переключаться через фейдер или сразу
  */
 void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) {
-  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
+  switcheffectIdx(action, fade, effects.getBy(effnb), skip);
+}
+
+void LAMP::switcheffectIdx(EFFSWITCH action, bool fade, int idx, bool skip) {
+  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, idx=%d\n"), action, fade, idx);
 
   if (!skip) {
     switch (action) {
@@ -989,7 +993,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) 
         effects.setSelected(effects.getPrev());
         break;
     case EFFSWITCH::SW_SPECIFIC :
-        effects.setSelected(effects.getBy(effnb));
+        effects.setSelected(effects.getByIdx(idx));
         break;
     case EFFSWITCH::SW_RND :
         effects.setSelected(effects.getBy(random(0, effects.getModeAmount())));
@@ -1005,7 +1009,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) 
     }
     // тухнем "вниз" только на включенной лампе
     if (fade && ONflag) {
-      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffectIdx, this, action, fade, idx, true));
       return;
     }
   }
@@ -1027,7 +1031,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) 
   }
 
   // отрисовать текущий эффект
-  effects.worker->run(getUnsafeLedsArray(), effects.getCurrent()->param);
+  effects.worker->run(getUnsafeLedsArray(), nullptr/* effects.getCurrent() */);
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
 

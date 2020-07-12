@@ -37,6 +37,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "main.h"
 
+byte globEffIdx = 0;
+
 void EffectCalc::init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl){
   effect=_eff;
   brightness=_brt;
@@ -158,10 +160,8 @@ void EffectCalc::scale2pallete(){
   if (!usepalettes)
     return;
 
-  String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
-  if(!var.isEmpty()){
-    rval = var.toInt();
-    palettemap(palettes, rval);
+  if (myLamp.effects.isRval()) {
+    palettemap(palettes, myLamp.effects.getRval());
   } else {
     palettemap(palettes, scale);
   }
