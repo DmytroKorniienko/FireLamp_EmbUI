@@ -437,12 +437,6 @@ bool EffectPulse::pulseRoutine(CRGB *leds, const char *param) {
 
   CRGBPalette16 palette;
   CRGB _pulse_color;
-  uint8_t currentRadius = 4;
-  uint8_t centerX = random8(WIDTH - 5U) + 3U;
-  uint8_t centerY = random8(HEIGHT - 5U) + 3U;
-  //uint16_t _rc;
-  uint8_t _pulse_hue = 0;
-  uint8_t _pulse_hueall = 0;
   uint8_t _pulse_delta = 0;
 
   palette = RainbowColors_p;
@@ -514,7 +508,7 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 #endif
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
-    CHSV thisColor = CHSV((uint8_t)(hue + i * scale%86), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
+    CHSV thisColor = CHSV((uint8_t)(hue + i * scale%170), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
     for (uint8_t j = 0U; j < (isVertical?HEIGHT:WIDTH); j++)
     {
       myLamp.drawPixelXY((isVertical?i:j), (isVertical?j:i), thisColor);
