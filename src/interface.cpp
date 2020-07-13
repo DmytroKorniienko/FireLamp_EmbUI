@@ -1441,10 +1441,13 @@ void remote_action(RA action, ...){
             break;
         case RA::RA_SEND_TEXT: {
             String tmpStr = jee.param(F("txtColor"));
-            tmpStr.replace(F("#"),F("0x"));
-            CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0);
+            if (value && *value) {
+                String tmpStr = jee.param(F("txtColor"));
+                tmpStr.replace(F("#"),F("0x"));
+                CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0);
 
-            myLamp.sendString(value, color);
+                myLamp.sendString(value, color);
+            }
             break;
         }
         case RA::RA_SEND_IP:
