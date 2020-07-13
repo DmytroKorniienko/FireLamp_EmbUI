@@ -149,7 +149,7 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 void block_effects_param(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_begin(F("effects_param"));
-    if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
+    if (myLamp.IsGlobalBrightness() {
         interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Глоб. яркость"), true);
     } else {
         interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Яркость"), true);
@@ -1329,7 +1329,7 @@ void sync_parameters(){
     set_settings_other(nullptr, &obj);
     obj.clear();
 
-    if (myLamp.IsGlobalBrightness() || myLamp.getMode() == MODE_DEMO) {
+    if (myLamp.IsGlobalBrightness()) {
         CALL_SETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
     }
 }

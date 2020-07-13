@@ -226,9 +226,9 @@ public:
 #endif
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
-    byte getLampBrightness() { return (mode == MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightness();}
-    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS)*((mode==MODE_DEMO || isGlobalBrightness)?globalBrightness:effects.getBrightnessS())/255);}
-    void setLampBrightness(byte brg) { if(mode == MODE_DEMO || isGlobalBrightness) {setGlobalBrightness(brg);} else {effects.setBrightnessS(brg);} }
+    byte getLampBrightness() { return isGlobalBrightness? globalBrightness : effects.getBrightness();}
+    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS) * (isGlobalBrightness? globalBrightness : effects.getBrightnessS()) / 255);}
+    void setLampBrightness(byte brg) { if (isGlobalBrightness) setGlobalBrightness(brg); else effects.setBrightnessS(brg); }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
