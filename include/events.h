@@ -176,8 +176,34 @@ struct EVENT {
         //return buffer;
 
         if(message[0]){     // время тут никто и не копирует, а усекается текст
-            memcpy(tmpBuf,message,5*2);
-            strcpy_P(tmpBuf+5*2,PSTR("..."));
+            uint8_t UTFNsymbols = 0; // кол-во симоволов UTF-8 уже скопированных
+            uint8_t i = 0;
+            while(UTFNsymbols < 5 && message[i] && i < sizeof(tmpBuf)-4)
+            {
+                if(message[i]&0x80){
+                    // это префикс многобайтного
+                    uint8_t nbS = 0; uint8_t chk = message[i];
+                    //LOG(printf_P,PSTR("nbS=%d,%x\n"),nbS,chk);
+                    while(chk&0x80) {
+                        chk=chk<<1; // проверяем сколько символов нужно копировать
+                        nbS++;
+                    }
+                    //LOG(printf_P,PSTR("nbS=%d\n"),nbS);
+                    while(nbS){
+                        tmpBuf[i]=message[i];
+                        nbS--; i++;
+                    }
+                    //LOG(printf_P,PSTR("UTF8 lastchar=%d, UTFNsymbols=%d\n"),i, UTFNsymbols);
+                    UTFNsymbols++; // один UTF-8 скопировали
+                } else {
+                    tmpBuf[i]=message[i];
+                    //LOG(printf_P,PSTR("ASCII lastchar=%d, UTFNsymbols=%d\n"),i, UTFNsymbols);
+                    UTFNsymbols++; // один UTF-8 скопировали
+                    i++;
+                }
+            }
+            strcpy_P(tmpBuf+i,PSTR("..."));
+            //LOG(printf_P,PSTR("lastchar=%d, UTFNsymbols=%d, message=%s\n"),i, UTFNsymbols,tmpBuf);
             buffer.concat(F(","));
             buffer.concat(tmpBuf);
         }
