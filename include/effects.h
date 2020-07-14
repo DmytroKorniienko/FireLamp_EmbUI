@@ -521,7 +521,7 @@ public:
 
 class EffectRainbow : public EffectCalc {
 private:
-    uint8_t hue;
+    float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
     bool rainbowHorVertRoutine(bool isVertical);
     bool rainbowDiagonalRoutine(CRGB *leds, const char *param);
 

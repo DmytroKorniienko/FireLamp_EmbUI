@@ -515,7 +515,7 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
     jee.var(F("msg"), (*data)[F("msg")]);
 
     tmpStr.replace(F("#"), F("0x"));
-    myLamp.sendStringToLamp((*data)[F("msg")], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
+    myLamp.sendString((*data)[F("msg")], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
 }
 
 void block_lamp(Interface *interf, JsonObject *data){

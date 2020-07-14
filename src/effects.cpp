@@ -501,14 +501,14 @@ bool EffectPulse::pulseRoutine(CRGB *leds, const char *param) {
 //uint8_t hue;
 bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 {
-#ifdef MIC_EFFECTS
-  hue += (4 * (myLamp.getMicMapMaxPeak()>map(rval, 1, 255, 80, 10)?5*(myLamp.getMicMapFreq()/255.0):1));
-#else
-  hue += 4;
-#endif
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
-    CHSV thisColor = CHSV((uint8_t)(hue + i * scale%170), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
+#ifdef MIC_EFFECTS
+    uint8_t micPeak = myLamp.getMicMapMaxPeak();
+    CHSV thisColor = CHSV((uint8_t)(hue + i * (micPeak > map(speed, 1, 255, 100, 10) ? (scale - micPeak) : scale) % 170), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
+#else
+    CHSV thisColor = CHSV((uint8_t)(hue + i * scale%170), 255, 255);
+#endif
     for (uint8_t j = 0U; j < (isVertical?HEIGHT:WIDTH); j++)
     {
       myLamp.drawPixelXY((isVertical?i:j), (isVertical?j:i), thisColor);
@@ -519,23 +519,13 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 
 // ------------- радуга диагональная -------------
 bool EffectRainbow::run(CRGB *ledarr, const char *opt){
-  // if (dryrun())
-  //   return false;
   return rainbowDiagonalRoutine(*&ledarr, &*opt);
 }
 
 bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
 {
-  if((millis() - lastrun - EFFECTS_RUN_TIMER)
-#ifdef MIC_EFFECTS
-    < (unsigned)(255-speed)*((myLamp.getMicMapMaxPeak()>scale%86+50)?(2.0*(50.0/myLamp.getMicMapMaxPeak())):1) ){
-#else
-    < (unsigned)(255-speed)){
-#endif
-    return false;
-  } else {
-    lastrun=millis();
-  }
+  // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
+  hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
 
   if(scale<85){
     rainbowHorVertRoutine(false);
@@ -545,14 +535,13 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
     return true;
   }
 
-  hue += 4;
   for (uint8_t i = 0U; i < WIDTH; i++)
   {
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
       float twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
 #ifdef MIC_EFFECTS
-      twirlFactor *= myLamp.getMicMapMaxPeak() > map(rval, 1, 255, 80, 10) ? 1.5 * (myLamp.getMicMapFreq() / 255.0) : 1;
+      twirlFactor *= myLamp.getMicMapMaxPeak() > map(speed, 1, 255, 80, 10) ? 1.5f * ((float)myLamp.getMicMapFreq() / 255.0f) : 1.0f;
 #endif
       CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)myLamp.getmaxDim())), 255, 255);
       myLamp.drawPixelXY(i, j, thisColor);
@@ -560,6 +549,7 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
   }
   return true;
 }
+
 
 // ------------- цвета -----------------
 void EffectColors::load(){
