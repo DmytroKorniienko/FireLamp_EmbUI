@@ -256,7 +256,7 @@ void LAMP::effectsTick(){
 
   if(!isEffectsDisabledUntilText){
     // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-    if(effects.worker->run(getUnsafeLedsArray(), nullptr/* effects.getCurrent() */)) {
+    if(effects.worker->run(getUnsafeLedsArray(), effects.getCurrent())) {
 #ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
@@ -1031,7 +1031,7 @@ void LAMP::switcheffectIdx(EFFSWITCH action, bool fade, int idx, bool skip) {
   }
 
   // отрисовать текущий эффект
-  effects.worker->run(getUnsafeLedsArray(), nullptr/* effects.getCurrent() */);
+  effects.worker->run(getUnsafeLedsArray(), effects.getCurrent());
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
 

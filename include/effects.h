@@ -316,7 +316,7 @@ public:
      * @param ledarr - указатель на массив, пока не используется
      * @param opt - опция, пока не используется, вероятно нужно заменить на какую-нибудь расширяемую структуру
     */
-    virtual bool run(CRGB* ledarr, const char *opt=nullptr);
+    virtual bool run(CRGB* ledarr, EffectDesc *opt=nullptr);
 
     /**
      * drynrun метод, всеми любимая затычка-проверка на "пустой" вызов
@@ -413,10 +413,10 @@ public:
 class EffectFreq : public EffectCalc {
 private:
     int8_t peakX[2][WIDTH];
-    bool freqAnalyseRoutine(CRGB *leds, const char *param);
+    bool freqAnalyseRoutine(CRGB *leds, EffectDesc *param);
     void load() override;
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 #endif
 
@@ -426,26 +426,26 @@ private:
     float curTimePos; // текущая позиция вывода
     CRGB hColor[1]; // цвет часов и минут
     CRGB mColor[1]; // цвет часов и минут
-    bool timePrintRoutine(CRGB *leds, const char *param);
+    bool timePrintRoutine(CRGB *leds, EffectDesc *param);
     void load() override;
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectMetaBalls : public EffectCalc {
 private:
-    bool metaBallsRoutine(CRGB *leds, const char *param);
+    bool metaBallsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSinusoid3 : public EffectCalc {
 private:
-    bool sinusoid3Routine(CRGB *leds, const char *param);
+    bool sinusoid3Routine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectBBalls : public EffectCalc {
@@ -461,19 +461,19 @@ private:
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
-    bool bBallsRoutine(CRGB *leds, const char *param);
+    bool bBallsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load();
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectLightBalls : public EffectCalc {
 private:
-    bool lightBallsRoutine(CRGB *leds, const char *param);
+    bool lightBallsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFire : public EffectCalc {
@@ -488,11 +488,11 @@ private:
     void drawFrame(uint8_t pcnt, bool isColored);
     void generateLine();
     void shiftUp();
-    bool fireRoutine(CRGB *leds, const char *param);
+    bool fireRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectPulse : public EffectCalc {
@@ -504,10 +504,10 @@ private:
     uint8_t currentRadius = 4;
     uint8_t _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
-    bool pulseRoutine(CRGB *leds, const char *param);
+    bool pulseRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectBall : public EffectCalc {
@@ -516,11 +516,11 @@ private:
     int16_t ballColor;
     int8_t vectorB[2U];
     float coordB[2U];
-    bool ballRoutine(CRGB *leds, const char *param);
+    bool ballRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load();
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectLighterTracers : public EffectCalc {
@@ -528,73 +528,73 @@ private:
     int8_t vector[BALLS_AMOUNT][2U];
     float coord[BALLS_AMOUNT][2U];
     int16_t ballColors[BALLS_AMOUNT];
-    bool lighterTracersRoutine(CRGB *leds, const char *param);
+    bool lighterTracersRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRainbow : public EffectCalc {
 private:
     uint8_t hue;
     bool rainbowHorVertRoutine(bool isVertical);
-    bool rainbowDiagonalRoutine(CRGB *leds, const char *param);
+    bool rainbowDiagonalRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectColors : public EffectCalc {
 private:
     uint8_t ihue;
-    bool colorsRoutine(CRGB *leds, const char *param);
+    bool colorsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectWhiteColorStripe : public EffectCalc {
 private:
-    bool whiteColorStripeRoutine(CRGB *leds, const char *param);
+    bool whiteColorStripeRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectMatrix : public EffectCalc {
 private:
-    bool matrixRoutine(CRGB *leds, const char *param);
+    bool matrixRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSnow : public EffectCalc {
 private:
-    bool snowRoutine(CRGB *leds, const char *param);
+    bool snowRoutine(CRGB *leds, EffectDesc *param);
     float snowShift = 0.0; // сдвиг снега
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSparcles : public EffectCalc {
 private:
-    bool sparklesRoutine(CRGB *leds, const char *param);
+    bool sparklesRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
-    bool fire2012WithPalette(CRGB *leds, const char *param);
+    bool fire2012WithPalette(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFire2012 : public EffectCalc {
@@ -614,20 +614,20 @@ private:
 
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
-  bool fire2012Routine(CRGB *leds, const char *param);
+  bool fire2012Routine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectStarFall : public EffectCalc {
 private:
-    bool snowStormStarfallRoutine(CRGB *leds, const char *param);
+    bool snowStormStarfallRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override {FastLED.clear();}
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectLighters : public EffectCalc {
@@ -637,11 +637,11 @@ private:
     uint8_t lightersColor[LIGHTERS_AM];
     float lightersPos[2U][LIGHTERS_AM];
 
-    bool lightersRoutine(CRGB *leds, const char *param);
+    bool lightersRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class Effect3DNoise : public EffectCalc {
@@ -665,7 +665,7 @@ private:
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSpiro : public EffectCalc {
@@ -688,22 +688,22 @@ private:
   float spirotheta1 = 0;
   float spirotheta2 = 0;
 
-  bool spiroRoutine(CRGB *leds, const char *param);
+  bool spiroRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectPrismata : public EffectCalc {
 private:
   byte spirohueoffset = 0;
 
-  bool prismataRoutine(CRGB *leds, const char *param);
+  bool prismataRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFlock : public EffectCalc {
@@ -715,11 +715,11 @@ private:
   bool predatorPresent;
   uint8_t hueoffset;
 
-  bool flockRoutine(CRGB *leds, const char *param);
+  bool flockRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 
@@ -747,21 +747,21 @@ private:
 
     void drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2, CRGB color);
     void FillNoise(int8_t layer);
-    bool rainbowCometRoutine(CRGB *leds, const char *param);
-    bool rainbowComet3Routine(CRGB *leds, const char *param);
+    bool rainbowCometRoutine(CRGB *leds, EffectDesc *param);
+    bool rainbowComet3Routine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSwirl : public EffectCalc {
 private:
-    bool swirlRoutine(CRGB *leds, const char *param);
+    bool swirlRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectDrift : public EffectCalc {
@@ -769,12 +769,12 @@ private:
   uint8_t dri_phase;
   uint8_t _dri_speed;
   uint8_t _dri_delta;
-  bool incrementalDriftRoutine(CRGB *leds, const char *param);
-  bool incrementalDriftRoutine2(CRGB *leds, const char *param);
+  bool incrementalDriftRoutine(CRGB *leds, EffectDesc *param);
+  bool incrementalDriftRoutine2(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectTwinkles : public EffectCalc {
@@ -782,11 +782,11 @@ private:
   uint8_t thue = 0U;
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
-  bool twinklesRoutine(CRGB *leds, const char *param);
+  bool twinklesRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectWaves : public EffectCalc {
@@ -796,22 +796,22 @@ private:
   uint8_t waveRotation;
   uint8_t whue;
   uint8_t waveTheta;
-  bool wavesRoutine(CRGB *leds, const char *param);
+  bool wavesRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRadar : public EffectCalc {
 private:
   uint8_t eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
   uint8_t eff_theta;         // глобальная переменная угла для работы эффектов
-  bool radarRoutine(CRGB *leds, const char *param);
+  bool radarRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectMStreamSmoke : public EffectCalc {
@@ -829,10 +829,10 @@ private:
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
   void FillNoise(int8_t layer);     // TODO: join with Comet's
-  bool multipleStreamSmokeRoutine(CRGB *leds, const char *param);
+  bool multipleStreamSmokeRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFire2018 : public EffectCalc {
@@ -848,10 +848,10 @@ private:
   uint8_t fire18heat[NUM_LEDS];
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
-  bool fire2018Routine(CRGB *leds, const char *param);
+  bool fire2018Routine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRingsLock : public EffectCalc {
@@ -869,11 +869,11 @@ private:
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
 
   void ringsSet();
-  bool ringsRoutine(CRGB *leds, const char *param);
+  bool ringsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectCube2d : public EffectCalc {
@@ -890,11 +890,11 @@ private:
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
 
   void cubesize();
-  bool cube2dRoutine(CRGB *leds, const char *param);
+  bool cube2dRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRain : public EffectCalc {
@@ -908,12 +908,12 @@ private:
 
   uint8_t myScale8(uint8_t x);
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC = false);
-  bool coloredRainRoutine(CRGB *leds, const char *param);
-  bool stormyRainRoutine(CRGB *leds, const char *param);
-  bool simpleRainRoutine(CRGB *leds, const char *param);
+  bool coloredRainRoutine(CRGB *leds, EffectDesc *param);
+  bool stormyRainRoutine(CRGB *leds, EffectDesc *param);
+  bool simpleRainRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 
