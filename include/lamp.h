@@ -131,7 +131,6 @@ private:
 #endif
     int mqtt_int;
 
-    const int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
 
@@ -338,6 +337,7 @@ public:
      * skip - системное поле - пропуск фейдера
      */
     void switcheffect(EFFSWITCH action = SW_NONE, bool fade = FADE, EFF_ENUM effnb = EFF_ENUM::EFF_NONE, bool skip = false);
+    void switcheffectIdx(EFFSWITCH action = SW_NONE, bool fade = FADE, int idx = 0, bool skip = false);
 
     /*
      * включает/выключает "демо"-таймер

@@ -150,7 +150,7 @@ void show_settings_event(Interface *interf, JsonObject *data){
 void set_effects_config_list(Interface *interf, JsonObject *data){
     if (!interf || !data) return;
     EFF_ENUM num = (EFF_ENUM)(*data)[F("effListConf")];
-    confEff = myLamp.effects.getEffectBy(num);
+    confEff = myLamp.effects.getEffect(num);
     show_effects_config_param(interf, data);
 }
 

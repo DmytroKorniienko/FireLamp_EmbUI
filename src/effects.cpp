@@ -37,6 +37,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "main.h"
 
+byte globEffIdx = 0;
+
 void EffectCalc::init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl){
   effect=_eff;
   brightness=_brt;
@@ -51,7 +53,7 @@ void EffectCalc::init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl){
  */
 void EffectCalc::load(){}
 
-bool EffectCalc::run(CRGB* ledarr, const char *opt){
+bool EffectCalc::run(CRGB* ledarr, EffectDesc *opt){
   return false;
 }
 
@@ -158,10 +160,8 @@ void EffectCalc::scale2pallete(){
   if (!usepalettes)
     return;
 
-  String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
-  if(!var.isEmpty()){
-    rval = var.toInt();
-    palettemap(palettes, rval);
+  if (myLamp.effects.isRval()) {
+    palettemap(palettes, myLamp.effects.getRval());
   } else {
     palettemap(palettes, scale);
   }
@@ -253,7 +253,7 @@ void EffectMath::fader(uint8_t step)
 // ============= ЭФФЕКТЫ ===============
 
 // ------------- конфетти --------------
-bool EffectSparcles::run(CRGB *ledarr, const char *opt){
+bool EffectSparcles::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
@@ -261,7 +261,7 @@ bool EffectSparcles::run(CRGB *ledarr, const char *opt){
 }
 
 #define EFF_FADE_OUT_SPEED        (15U)                         // скорость затухания
-bool EffectSparcles::sparklesRoutine(CRGB *leds, const char *param)
+bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectDesc *param)
 {
 
 #ifndef MIC_EFFECTS
@@ -293,13 +293,13 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, const char *param)
 }
 
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
-bool EffectWhiteColorStripe::run(CRGB *ledarr, const char *opt){
+bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectDesc *opt){
   // if (dryrun()) // для этого эффекта задержка не нужна в общем-то...
   //   return false;
   return whiteColorStripeRoutine(*&ledarr, &*opt);
 }
 
-bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, const char *param)
+bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectDesc *param)
 {
     if(scale<127){
         uint8_t centerY = max((uint8_t)round(HEIGHT / 2.0F) - 1, 0);
@@ -351,7 +351,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, const char *par
 void EffectEverythingFall::load(){
     palettesload();    // подгружаем дефолтные палитры
 }
-bool EffectEverythingFall::run(CRGB *ledarr, const char *opt){
+bool EffectEverythingFall::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
   return fire2012WithPalette(*&ledarr, &*opt);
@@ -361,7 +361,7 @@ bool EffectEverythingFall::run(CRGB *ledarr, const char *opt){
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 #define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
-bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, const char *param) {
+bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectDesc *param) {
   uint8_t coolingnew = constrain((uint16_t)scale * palettes.size() / HEIGHT + 7, 1, 255) ;
 
   myLamp.blur2d(20);
@@ -398,7 +398,7 @@ bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, const char *param) {
 
 // --------------------------- эффект пульс ----------------------
 // Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp
-bool EffectPulse::run(CRGB *ledarr, const char *opt){
+bool EffectPulse::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
   return pulseRoutine(*&ledarr, &*opt);
@@ -433,7 +433,7 @@ void drawCircle(int16_t x0, int16_t y0, uint16_t radius, const CRGB & color){
   }
 }
 
-bool EffectPulse::pulseRoutine(CRGB *leds, const char *param) {
+bool EffectPulse::pulseRoutine(CRGB *leds, EffectDesc *param) {
 
   CRGBPalette16 palette;
   CRGB _pulse_color;
@@ -518,13 +518,13 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 }
 
 // ------------- радуга диагональная -------------
-bool EffectRainbow::run(CRGB *ledarr, const char *opt){
+bool EffectRainbow::run(CRGB *ledarr, EffectDesc *opt){
   // if (dryrun())
   //   return false;
   return rainbowDiagonalRoutine(*&ledarr, &*opt);
 }
 
-bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, const char *param)
+bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectDesc *param)
 {
   if((millis() - lastrun - EFFECTS_RUN_TIMER)
 #ifdef MIC_EFFECTS
@@ -566,13 +566,13 @@ void EffectColors::load(){
     myLamp.fillAll(CHSV(scale, 255U, 55U)); // еще не наступила смена цвета, поэтому выводим текущий
 }
 
-bool EffectColors::run(CRGB *ledarr, const char *opt){
+bool EffectColors::run(CRGB *ledarr, EffectDesc *opt){
   // if (dryrun())
   //   return false;
   return colorsRoutine(*&ledarr, &*opt);
 }
 
-bool EffectColors::colorsRoutine(CRGB *leds, const char *param)
+bool EffectColors::colorsRoutine(CRGB *leds, EffectDesc *param)
 {
   static unsigned int step = 0; // доп. задержка
   unsigned int delay = (speed==1)?4294967294:255-speed+1; // на скорости 1 будет очень долгое ожидание)))
@@ -620,13 +620,13 @@ EVERY_N_SECONDS(1){
 }
 
 // ------------- матрица ---------------
-bool EffectMatrix::run(CRGB *ledarr, const char *opt){
+bool EffectMatrix::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
   return matrixRoutine(*&ledarr, &*opt);
 }
 
-bool EffectMatrix::matrixRoutine(CRGB *leds, const char *param)
+bool EffectMatrix::matrixRoutine(CRGB *leds, EffectDesc *param)
 {
   for (uint8_t x = 0U; x < WIDTH; x++)
   {
@@ -678,12 +678,12 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, const char *param)
 }
 
 // ------------- снегопад ----------
-bool EffectSnow::run(CRGB *ledarr, const char *opt){
+bool EffectSnow::run(CRGB *ledarr, EffectDesc *opt){
   return snowRoutine(*&ledarr, &*opt);
 }
 
 #define SNOW_SCALE (1.25) //0.25...5.0
-bool EffectSnow::snowRoutine(CRGB *leds, const char *param)
+bool EffectSnow::snowRoutine(CRGB *leds, EffectDesc *param)
 {
 
   snowShift = snowShift + speed/255.0;
@@ -721,13 +721,13 @@ bool EffectSnow::snowRoutine(CRGB *leds, const char *param)
 // ------------- метель -------------
 
 // ------------- звездопад/метель -------------
-bool EffectStarFall::run(CRGB *ledarr, const char *opt){
+bool EffectStarFall::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
   return snowStormStarfallRoutine(*&ledarr, &*opt);
 }
 
-bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, const char *param)
+bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectDesc *param)
 {
   // заполняем головами комет левую и верхнюю линию
   for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
@@ -789,11 +789,11 @@ void EffectLighters::load(){
 
 }
 
-bool EffectLighters::run(CRGB *ledarr, const char *opt){
+bool EffectLighters::run(CRGB *ledarr, EffectDesc *opt){
   return lightersRoutine(*&ledarr, &*opt);
 }
 
-bool EffectLighters::lightersRoutine(CRGB *leds, const char *param)
+bool EffectLighters::lightersRoutine(CRGB *leds, EffectDesc *param)
 {
 
   float speedfactor = speed/4096.0+0.001;
@@ -857,7 +857,7 @@ void EffectLighterTracers::load(){
 }
 
 
-bool EffectLighterTracers::run(CRGB *ledarr, const char *opt){
+bool EffectLighterTracers::run(CRGB *ledarr, EffectDesc *opt){
   // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
   //   return;
   // } else {
@@ -867,7 +867,7 @@ bool EffectLighterTracers::run(CRGB *ledarr, const char *opt){
   return lighterTracersRoutine(*&ledarr, &*opt);
 }
 
-bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, const char *param)
+bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectDesc *param)
 {
   float speedfactor = speed/2048.0+0.01;
 
@@ -915,12 +915,12 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, const char *param)
 }
 
 // ------------- пейнтбол -------------
-bool EffectLightBalls::run(CRGB *ledarr, const char *opt){
+bool EffectLightBalls::run(CRGB *ledarr, EffectDesc *opt){
   return lightBallsRoutine(*&ledarr, &*opt);
 }
 
 #define BORDERTHICKNESS       (1U)                          // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
-bool EffectLightBalls::lightBallsRoutine(CRGB *leds, const char *param)
+bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectDesc *param)
 {
   const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
   const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
@@ -961,11 +961,11 @@ void EffectBall::load(){
   }
 }
 
-bool EffectBall::run(CRGB *ledarr, const char *opt){
+bool EffectBall::run(CRGB *ledarr, EffectDesc *opt){
   return ballRoutine(*&ledarr, &*opt);
 }
 
-bool EffectBall::ballRoutine(CRGB *leds, const char *param)
+bool EffectBall::ballRoutine(CRGB *leds, EffectDesc *param)
 {
   ballSize = map(scale, 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
 
@@ -1150,7 +1150,7 @@ void Effect3DNoise::load(){
 
 }
 
-bool Effect3DNoise::run(CRGB *ledarr, const char *opt){
+bool Effect3DNoise::run(CRGB *ledarr, EffectDesc *opt){
   #ifdef MIC_EFFECTS
     uint8_t mmf = myLamp.getMicMapFreq();
     uint8_t mmp = myLamp.getMicMapMaxPeak();
@@ -1204,11 +1204,11 @@ void EffectBBalls::load(){
     }
 }
 
-bool EffectBBalls::run(CRGB *ledarr, const char *opt){
+bool EffectBBalls::run(CRGB *ledarr, EffectDesc *opt){
   return bBallsRoutine(*&ledarr, &*opt);
 }
 
-bool EffectBBalls::bBallsRoutine(CRGB *leds, const char *param)
+bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectDesc *param)
 {
   bballsNUM_BALLS =  map(scale, 0, 255, 1, bballsMaxNUM_BALLS);
 
@@ -1257,11 +1257,11 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, const char *param)
   Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
-bool EffectSinusoid3::run(CRGB *ledarr, const char *opt){
+bool EffectSinusoid3::run(CRGB *ledarr, EffectDesc *opt){
   return sinusoid3Routine(*&ledarr, &*opt);
 }
 
-bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, const char *param)
+bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectDesc *param)
 {
   const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2) ;
@@ -1305,11 +1305,11 @@ bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, const char *param)
 
 // ***** METABALLS / МЕТАШАРИКИ *****
 // v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
-bool EffectMetaBalls::run(CRGB *ledarr, const char *opt){
+bool EffectMetaBalls::run(CRGB *ledarr, EffectDesc *opt){
   return metaBallsRoutine(*&ledarr, &*opt);
 }
 
-bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, const char *param)
+bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, EffectDesc *param)
 {
   float _speed = speed/127.0;
 
@@ -1371,12 +1371,12 @@ void EffectSpiro::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectSpiro::run(CRGB *ledarr, const char *opt){
+bool EffectSpiro::run(CRGB *ledarr, EffectDesc *opt){
   return spiroRoutine(*&ledarr, &*opt);
 }
 
 // ***** Эффект "Спираль"     ****
-bool EffectSpiro::spiroRoutine(CRGB *leds, const char *param)
+bool EffectSpiro::spiroRoutine(CRGB *leds, EffectDesc *param)
 {
 
   // страхуемся от креша
@@ -1475,7 +1475,7 @@ void EffectComet::load(){
     eNs_noisesmooth = random(0, 200*(uint_fast16_t)speed/255); // степень сглаженности шума 0...200
 }
 
-bool EffectComet::run(CRGB *ledarr, const char *opt){
+bool EffectComet::run(CRGB *ledarr, EffectDesc *opt){
   switch (effect)
   {
   case EFF_ENUM::EFF_RAINBOWCOMET :
@@ -1489,7 +1489,7 @@ bool EffectComet::run(CRGB *ledarr, const char *opt){
   }
 }
 
-bool EffectComet::rainbowCometRoutine(CRGB *leds, const char *param)
+bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectDesc *param)
 { // Rainbow Comet by PalPalych
 /*
   Follow the Rainbow Comet Efect by PalPalych
@@ -1527,7 +1527,7 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, const char *param)
   return true;
 }
 
-bool EffectComet::rainbowComet3Routine(CRGB *leds, const char *param)
+bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectDesc *param)
 { // Rainbow Comet by PalPalych
 /*
   Follow the Rainbow Comet Efect by PalPalych
@@ -1570,11 +1570,11 @@ void EffectPrismata::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectPrismata::run(CRGB *ledarr, const char *opt){
+bool EffectPrismata::run(CRGB *ledarr, EffectDesc *opt){
   return prismataRoutine(*&ledarr, &*opt);
 }
 
-bool EffectPrismata::prismataRoutine(CRGB *leds, const char *param)
+bool EffectPrismata::prismataRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1616,11 +1616,11 @@ void EffectFlock::load(){
 
 }
 
-bool EffectFlock::run(CRGB *ledarr, const char *opt){
+bool EffectFlock::run(CRGB *ledarr, EffectDesc *opt){
   return flockRoutine(*&ledarr, &*opt);
 }
 
-bool EffectFlock::flockRoutine(CRGB *leds, const char *param) {
+bool EffectFlock::flockRoutine(CRGB *leds, EffectDesc *param) {
   if (curPalette == nullptr) {
     return false;
   }
@@ -1682,12 +1682,12 @@ void EffectSwirl::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectSwirl::run(CRGB *ledarr, const char *opt){
+bool EffectSwirl::run(CRGB *ledarr, EffectDesc *opt){
   return swirlRoutine(*&ledarr, &*opt);
 }
 
 #define e_swi_BORDER (1U)  // размытие экрана за активный кадр
-bool EffectSwirl::swirlRoutine(CRGB *leds, const char *param)
+bool EffectSwirl::swirlRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1732,7 +1732,7 @@ void EffectDrift::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectDrift::run(CRGB *ledarr, const char *opt){
+bool EffectDrift::run(CRGB *ledarr, EffectDesc *opt){
   myLamp.blur2d(beatsin8(3U, 5, 10 + scale*3));
   myLamp.dimAll(beatsin8(2U, 246, 252));
   _dri_speed = map8(speed, 1U, 20U);
@@ -1754,7 +1754,7 @@ bool EffectDrift::run(CRGB *ledarr, const char *opt){
   }
 }
 
-bool EffectDrift::incrementalDriftRoutine(CRGB *leds, const char *param)
+bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1773,7 +1773,7 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, const char *param)
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
 // v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
 // https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift2.h
-bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, const char *param)
+bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1809,14 +1809,14 @@ void EffectFreq::load()
   memset(peakX,0,sizeof(peakX));
 }
 
-bool EffectFreq::run(CRGB *ledarr, const char *opt){
+bool EffectFreq::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
   myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   return freqAnalyseRoutine(*&ledarr, &*opt);
 }
 
-bool EffectFreq::freqAnalyseRoutine(CRGB *leds, const char *param)
+bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectDesc *param)
 {
   float samp_freq;
   double last_freq;
@@ -1954,14 +1954,14 @@ void EffectTwinkles::load(){
 
 }
 
-bool EffectTwinkles::run(CRGB *ledarr, const char *opt){
+bool EffectTwinkles::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
   return twinklesRoutine(*&ledarr, &*opt);
 }
 
-bool EffectTwinkles::twinklesRoutine(CRGB *leds, const char *param)
+bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2019,11 +2019,11 @@ void EffectRadar::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectRadar::run(CRGB *ledarr, const char *opt){
+bool EffectRadar::run(CRGB *ledarr, EffectDesc *opt){
   return radarRoutine(*&ledarr, &*opt);
 }
 
-bool EffectRadar::radarRoutine(CRGB *leds, const char *param)
+bool EffectRadar::radarRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2056,7 +2056,7 @@ void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectWaves::run(CRGB *ledarr, const char *opt){
+bool EffectWaves::run(CRGB *ledarr, EffectDesc *opt){
 
   waveCount = speed % 2;
   waveRotation = palettescale/8;  // тут ерунда какая-то...
@@ -2065,7 +2065,7 @@ bool EffectWaves::run(CRGB *ledarr, const char *opt){
   return wavesRoutine(*&ledarr, &*opt);
 }
 
-bool EffectWaves::wavesRoutine(CRGB *leds, const char *param)
+bool EffectWaves::wavesRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2132,14 +2132,14 @@ void EffectFire2012::load(){
   random16_add_entropy(random(256));
 }
 
-bool EffectFire2012::run(CRGB *ledarr, const char *opt){
+bool EffectFire2012::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
   return fire2012Routine(*&ledarr, &*opt);
 }
 
-bool EffectFire2012::fire2012Routine(CRGB *ledarr, const char *opt)
+bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectDesc *opt)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2198,7 +2198,7 @@ bool EffectFire2012::fire2012Routine(CRGB *ledarr, const char *opt)
 // Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
 // uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
 // uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
-bool EffectRain::run(CRGB *ledarr, const char *opt){
+bool EffectRain::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
@@ -2399,7 +2399,7 @@ uint8_t EffectRain::myScale8(uint8_t x)
   return (253U - x4 * 72U); // 253U = 255U - 2U
 }
 
-bool EffectRain::coloredRainRoutine(CRGB *leds, const char *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
+bool EffectRain::coloredRainRoutine(CRGB *leds, EffectDesc *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   CRGB randomRainColor = CHSV(random(1,255), 255U, 255U);
@@ -2417,7 +2417,7 @@ bool EffectRain::coloredRainRoutine(CRGB *leds, const char *param) // внима
   return true;
 }
 
-bool EffectRain::simpleRainRoutine(CRGB *leds, const char *param)
+bool EffectRain::simpleRainRoutine(CRGB *leds, EffectDesc *param)
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
@@ -2427,7 +2427,7 @@ bool EffectRain::simpleRainRoutine(CRGB *leds, const char *param)
   return true;
 }
 
-bool EffectRain::stormyRainRoutine(CRGB *leds, const char *param)
+bool EffectRain::stormyRainRoutine(CRGB *leds, EffectDesc *param)
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
@@ -2442,13 +2442,13 @@ bool EffectRain::stormyRainRoutine(CRGB *leds, const char *param)
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
-bool EffectFire2018::run(CRGB *ledarr, const char *opt){
+bool EffectFire2018::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
   return fire2018Routine(*&ledarr, &*opt);
 }
 
-bool EffectFire2018::fire2018Routine(CRGB *leds, const char *param)
+bool EffectFire2018::fire2018Routine(CRGB *leds, EffectDesc *param)
 {
   // some changing values
   uint16_t ctrl1 = inoise16(11 * millis(), 0, 0);
@@ -2557,7 +2557,7 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, const char *param)
 ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
 //uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
 //uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
-bool EffectRingsLock::run(CRGB *ledarr, const char *opt){
+bool EffectRingsLock::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
@@ -2590,7 +2590,7 @@ void EffectRingsLock::load(){
   }
 }
 
-bool EffectRingsLock::ringsRoutine(CRGB *leds, const char *param)
+bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectDesc *param)
 {
   uint8_t h, x, y;
 
@@ -2653,7 +2653,7 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, const char *param)
 // (c) SottNick
 // refactored by Vortigont
 
-bool EffectCube2d::run(CRGB *ledarr, const char *opt){
+bool EffectCube2d::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
@@ -2719,7 +2719,7 @@ void EffectCube2d::cubesize(){
   //end
 }
 
-bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
+bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2807,7 +2807,7 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, const char *param)
 }
 
 //--------------
-bool EffectTime::run(CRGB *ledarr, const char *opt){
+bool EffectTime::run(CRGB *ledarr, EffectDesc *opt){
   if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
       myLamp.dimAll(254);
     return true;
@@ -2832,7 +2832,7 @@ void EffectTime::load(){
   }
 }
 
-bool EffectTime::timePrintRoutine(CRGB *leds, const char *param)
+bool EffectTime::timePrintRoutine(CRGB *leds, EffectDesc *param)
 {
   if (speed==1 || speed==255){
     EVERY_N_SECONDS(5){
@@ -2867,7 +2867,7 @@ bool EffectTime::timePrintRoutine(CRGB *leds, const char *param)
 }
 
 // ------------------------------ ЭФФЕКТ ДЫМ ----------------------
-bool EffectMStreamSmoke::run(CRGB *ledarr, const char *opt){
+bool EffectMStreamSmoke::run(CRGB *ledarr, EffectDesc *opt){
   return multipleStreamSmokeRoutine(*&ledarr, &*opt);
 }
 
@@ -2891,7 +2891,7 @@ void EffectMStreamSmoke::FillNoise(int8_t layer) {
 
 // (c) SottNick
 // Относительно стартовой версии - переписан 20200521
-bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, const char *param)
+bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectDesc *param)
 {
   CRGB color;
 
@@ -2993,14 +2993,14 @@ void EffectFire::load(){
   generateLine();
 }
 
-bool EffectFire::run(CRGB *ledarr, const char *opt){
+bool EffectFire::run(CRGB *ledarr, EffectDesc *opt){
   if (dryrun())
     return false;
 
   return fireRoutine(*&ledarr, &*opt);
 }
 
-bool EffectFire::fireRoutine(CRGB *leds, const char *param)
+bool EffectFire::fireRoutine(CRGB *leds, EffectDesc *param)
 {
   if (pcnt >= 30) {                                  // внутренний делитель кадров для поднимающегося пламени
     shiftUp();                                              // смещение кадра вверх
