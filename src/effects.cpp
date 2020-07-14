@@ -2719,27 +2719,44 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
     return false; // пропускаем кадры после прокрутки кубика (делаем паузу)
   }
 
-  CRGB color, color2;
-  uint16_t x, y, anim0;
-
   if (!shiftSteps) {  // если цикл вращения завершён
     // ====== определяем направление прокруток на будущий цикл
     pauseSteps = CUBE2D_PAUSE_FRAMES;
     direction = random8()%2;  // сдвиг 0 - строки, 1 - столбцы
-    moveItem = random8()%(direction ? cntX : cntY);
-    movedirection = random8()%2;  // 1 - fwd, 0 - bkwd
+    moveItems.resize(direction ? cntX : cntY, 0);
+
+    for (uint8_t i=0; i<(direction ? cntX : cntY); i++){
+      moveItems.at(i)= random8()%3; // 1 - fwd, 0 - bkw, 2 - none 
+    }
+
     shiftSteps = ((direction ? sizeY : sizeX)+1) * random8(direction ? cntY : cntX);  // такой рандом добавляет случайную задержку в паузу, попадая на "0"
     return false;
   }
 
-  //LOG(printf_P, PSTR("Cube2D Move: dir=%d, steps=%d, movdir=%d\n"), direction, shiftSteps, movedirection);
+
   //двигаем, что получилось...
   shiftSteps--;
-  if (direction)  // идём по горизонтали, крутим по вертикали (столбцы двигаются)
-  {
+
+  for (uint8_t i=0; i<(direction ? cntX : cntY); i++){
+    if (moveItems.at(i)==2) // skip some items
+      continue;
+
+    direction ? cube2dmoveCols(i, moveItems.at(i)) : cube2dmoveRows(i, moveItems.at(i));
+  }
+
+  return true;
+}
+
+// идём по горизонтали, крутим по вертикали (столбцы двигаются)
+void EffectCube2d::cube2dmoveCols(uint8_t moveItem, bool movedirection){
+      uint16_t x, y, anim0;
+  CRGB color, color2;
+
       x = moveItem * (sizeX + 1U);
       anim0 = 0;
-      if (!movedirection) // если крутим столбец вниз
+
+      // если крутим столбец вниз
+      if (!movedirection)
         {
           color = myLamp.getPixColorXY(x, anim0);                                   // берём цвет от нижней строчки
           for (uint8_t k = anim0; k < anim0+fieldY-1; k++)
@@ -2750,9 +2767,10 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
           }
           for   (uint8_t m = x; m < x + sizeX; m++)
             myLamp.setLeds(myLamp.getPixelNumber(m, anim0+fieldY-1), color);                  // цвет нижней строчки копируем на всю верхнюю
-          return true;
+          return;
         }
-      // shift > 0 крутим столбец вверх
+
+      // крутим столбец вверх
       color = myLamp.getPixColorXY(x,anim0+fieldY-1);                            // берём цвет от верхней строчки
       for (uint8_t k = anim0+fieldY-1; k > anim0 ; k--)
       {
@@ -2762,13 +2780,18 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
       }
       for   (uint8_t m = x; m < x + sizeX; m++)
         myLamp.setLeds(myLamp.getPixelNumber(m, anim0), color);                         // цвет верхней строчки копируем на всю нижнюю
-      return true;
-  }
+}
 
-  // идём по вертикали, крутим по горизонтали (строки двигаются)
+// идём по вертикали, крутим по горизонтали (строки двигаются)
+void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
+  uint16_t x, y, anim0;
+  CRGB color, color2;
+
   y = moveItem * (sizeY + 1U);
   anim0 = 0;
-  if (!movedirection) // если крутим строку влево
+
+  // крутим строку влево
+  if (!movedirection)
   {
     color = myLamp.getPixColorXY(anim0, y);                            // берём цвет от левой колонки (левого пикселя)
     for (uint8_t k = anim0; k < anim0+fieldX-1; k++)
@@ -2779,7 +2802,7 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
     }
     for   (uint8_t m = y; m < y + sizeY; m++)
       myLamp.setLeds(myLamp.getPixelNumber(anim0+fieldX-1, m), color);                  // цвет левой колонки копируем на всю правую
-    return true;
+    return;
   }
 
   //  крутим строку вправо
@@ -2793,7 +2816,6 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
   for   (uint8_t m = y; m < y + sizeY; m++)
     myLamp.setLeds(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
 
-  return true;
 }
 
 //--------------

@@ -884,13 +884,15 @@ private:
   uint8_t csum;   // reload checksum
 
   uint8_t pauseSteps; // осталось шагов паузы
-  uint8_t shiftSteps; // всего шагов сдвига (от 3 до 4)
-  uint8_t moveItem;     // индекс перемещаемого элемента
-  bool movedirection;   // направление смещения
+  uint8_t shiftSteps=0; // всего шагов сдвига
+  std::vector<int8_t> moveItems;     // индекс перемещаемого элемента
+  //bool movedirection;   // направление смещения
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
 
   void cubesize();
   bool cube2dRoutine(CRGB *leds, EffectDesc *param);
+  void cube2dmoveCols(uint8_t moveItem, bool movedirection);
+  void cube2dmoveRows(uint8_t moveItem, bool movedirection);
 
 public:
     void load() override;
