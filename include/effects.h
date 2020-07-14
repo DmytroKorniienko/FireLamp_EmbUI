@@ -43,6 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <string.h>
 #include "LittleFS.h"
 #include "effects_types.h"
+#include "../../include/LList.h"
 
 #define DEFAULT_SLIDER 127
 #define PARAM_BUFSIZE 128
@@ -96,9 +97,9 @@ EFF_FIRE2018,                                 // Огонь 2018
 EFF_RINGS,                                    // Кодовый замок
 EFF_CUBE2,                                    // Куб 2D
 EFF_SMOKE,                                    // Дым
-EFF_TIME = (98)                               // Часы (служебный, смещаем в конец)
+EFF_TIME                                      // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
-,EFF_FREQ = (99U)                             // Частотный анализатор (служебный, смещаем в конец)
+,EFF_FREQ                             // Частотный анализатор (служебный, смещаем в конец)
 #endif
 } EFF_ENUM;
 
@@ -108,20 +109,88 @@ EFF_TIME = (98)                               // Часы (служебный, �
 void stubRoutine(CRGB *, const char *);
 //-------------------------------------------------
 
-#pragma pack(push,1)
-typedef struct _EFFECT {
-    bool canBeSelected:1;
-    bool isFavorite:1;
-    byte brightness;
-    byte speed;
-    byte scale;
-    EFF_ENUM eff_nb;
-    const char *eff_name;
-    void (*func)(CRGB*,const char*);
-    char *param;
-    void setNone(){ eff_nb=EFF_NONE; eff_name=nullptr; brightness=127; speed=127; scale=127; canBeSelected=false; isFavorite=false; func=nullptr; param=nullptr; }
-} EFFECT;
-#pragma pack(pop)
+extern byte globEffIdx;
+
+typedef union _effflags {
+    byte mask;
+    struct {
+        bool init:1;
+        bool copy:1;
+        bool canBeSelected:1;
+        bool isFavorite:1;
+        bool isRval:1;
+    };
+} effflags;
+
+class EffectDesc{
+    public:
+    #pragma pack(push,1)
+    struct {
+        byte idx;
+        effflags flags;
+        EFF_ENUM eff_nb;
+        byte brightness;
+        byte speed;
+        byte scale;
+        byte rval;
+        const char *eff_name;
+    };
+    #pragma pack(pop)
+
+    EffectDesc(EFF_ENUM nb, const char *name, byte mask){
+        idx = globEffIdx++;
+        eff_nb = nb;
+        flags.mask = mask;
+        brightness = speed = scale = 127;
+        rval = flags.isRval? 127 : 0;
+        eff_name = name;
+    }
+    EffectDesc(EffectDesc *base){
+        idx = globEffIdx++;
+        eff_nb = base->eff_nb;
+        flags = base->flags;
+        flags.copy = true;
+        brightness = base->brightness;
+        speed = base->speed;
+        scale = base->scale;
+        rval = base->rval;
+
+        if (base->flags.copy) {
+            eff_name = (char *)calloc(strlen(base->eff_name) + 1, 1);
+            strcpy((char *)eff_name, base->eff_name);
+        } else {
+            const String &tmp = FPSTR(base->eff_name);
+            eff_name = (char *)calloc(tmp.length() + 1, 1);
+            strcpy((char *)eff_name, tmp.c_str());
+        }
+    }
+    ~EffectDesc(){
+        if (flags.copy) {
+            delete eff_name;
+        }
+    }
+    bool canBeSelected(){ return flags.canBeSelected; }
+    void canBeSelected(bool val){ flags.canBeSelected = val; }
+    bool isFavorite(){ return flags.isFavorite; }
+    void isFavorite(bool val){ flags.isFavorite = val; }
+    bool isRval(){ return flags.isRval; }
+    String getName() {
+        if (!flags.copy) return FPSTR(eff_name);
+        String buffer;
+        buffer.concat(eff_name);
+        buffer.concat(F(" #"));
+        buffer.concat(String(idx));
+        return buffer;
+    }
+};
+
+#define EFF_FLG_INIT    (1 << 0)
+#define EFF_FLG_COPY    (1 << 1)
+#define EFF_FLG_SEL     (1 << 2)
+#define EFF_FLG_FAV     (1 << 3)
+#define EFF_FLG_RVAL    (1 << 4)
+#define EFF_ENABLED (EFF_FLG_INIT | EFF_FLG_SEL | EFF_FLG_FAV)
+#define EFF_ENABLED_R (EFF_ENABLED | EFF_FLG_RVAL)
 
 const char T_SPARKLES[] PROGMEM = "Конфетти";
 const char T_FIRE[] PROGMEM = "Огненная лампа";
@@ -173,59 +242,6 @@ const char T_SMOKE[] PROGMEM = "Дым";
 #ifdef MIC_EFFECTS
 const char T_FREQ[] PROGMEM = "Частотный анализатор";
 #endif
-
-static EFFECT _EFFECTS_ARR[] = {
-    {false, false, 127, 127, 127, EFF_NONE, nullptr, nullptr, nullptr},
-    {true, true, 127, 127, 127, EFF_WHITE_COLOR, T_WHITE_COLOR, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_COLORS, T_COLORS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOW_2D, T_RAINBOW_2D, stubRoutine, ((char *)_R255)},
-    {true, true, 127, 127, 127, EFF_SPARKLES, T_SPARKLES, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SNOW, T_SNOW, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_MATRIX, T_MATRIX, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_LIGHTERS, T_LIGHTERS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_LIGHTER_TRACES, T_LIGHTER_TRACES, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_CUBE, T_CUBE, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PULSE, T_PULSE, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FIRE, T_FIRE, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PAINTBALL, T_PAINTBALL, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_MADNESS, T_MADNESS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_CLOUDS, T_CLOUDS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_LAVA, T_LAVA, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PLASMA, T_PLASMA, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOW, T_RAINBOW, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOW_STRIPE, T_RAINBOW_STRIPE, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_ZEBRA, T_ZEBRA, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FOREST, T_FOREST, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_OCEAN, T_OCEAN, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_BBALS, T_BBALS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SINUSOID3, T_SINUSOID3, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_METABALLS, T_METABALLS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SPIRO, T_SPIRO, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOWCOMET, T_RAINBOWCOMET, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAINBOWCOMET3, T_RAINBOWCOMET3, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_PRIZMATA, T_PRIZMATA, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FLOCK, T_FLOCK, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SWIRL, T_SWIRL, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_DRIFT, T_DRIFT, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_DRIFT2, T_DRIFT2, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_TWINKLES, T_TWINKLES, stubRoutine, ((char *)_R255)}, // очень хреновое приведение типов, но дальше это разрулим :)
-    {true, true, 127, 127, 127, EFF_RADAR, T_RADAR, stubRoutine, ((char *)_R255)},
-    {true, true, 127, 127, 127, EFF_WAVES, T_WAVES, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FIRE2012, T_FIRE2012, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RAIN, T_RAIN, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_COLORRAIN, T_COLORRAIN, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_STORMYRAIN, T_STORMYRAIN, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_FIRE2018, T_FIRE2018, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_RINGS, T_RINGS, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_CUBE2, T_CUBE2, stubRoutine, nullptr},
-    {true, true, 127, 127, 127, EFF_SMOKE, T_SMOKE, stubRoutine, ((char *)_R255)},  // очень хреновое приведение типов, но дальше это разрулим :)
-    {true, true, 127, 127, 127, EFF_TIME, T_TIME, stubRoutine, nullptr}
-#ifdef MIC_EFFECTS
-     ,{true, true, 127, 127, 127, EFF_FREQ, T_FREQ, stubRoutine, ((char *)_R255)} // очень хреновое приведение типов, но дальше это разрулим :)
- #endif
-};
 
 class SHARED_MEM {
 public:
@@ -300,7 +316,7 @@ public:
      * @param ledarr - указатель на массив, пока не используется
      * @param opt - опция, пока не используется, вероятно нужно заменить на какую-нибудь расширяемую структуру
     */
-    virtual bool run(CRGB* ledarr, const char *opt=nullptr);
+    virtual bool run(CRGB* ledarr, EffectDesc *opt=nullptr);
 
     /**
      * drynrun метод, всеми любимая затычка-проверка на "пустой" вызов
@@ -397,10 +413,10 @@ public:
 class EffectFreq : public EffectCalc {
 private:
     int8_t peakX[2][WIDTH];
-    bool freqAnalyseRoutine(CRGB *leds, const char *param);
+    bool freqAnalyseRoutine(CRGB *leds, EffectDesc *param);
     void load() override;
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 #endif
 
@@ -410,26 +426,26 @@ private:
     float curTimePos; // текущая позиция вывода
     CRGB hColor[1]; // цвет часов и минут
     CRGB mColor[1]; // цвет часов и минут
-    bool timePrintRoutine(CRGB *leds, const char *param);
+    bool timePrintRoutine(CRGB *leds, EffectDesc *param);
     void load() override;
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectMetaBalls : public EffectCalc {
 private:
-    bool metaBallsRoutine(CRGB *leds, const char *param);
+    bool metaBallsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSinusoid3 : public EffectCalc {
 private:
-    bool sinusoid3Routine(CRGB *leds, const char *param);
+    bool sinusoid3Routine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectBBalls : public EffectCalc {
@@ -445,19 +461,19 @@ private:
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
-    bool bBallsRoutine(CRGB *leds, const char *param);
+    bool bBallsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load();
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectLightBalls : public EffectCalc {
 private:
-    bool lightBallsRoutine(CRGB *leds, const char *param);
+    bool lightBallsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFire : public EffectCalc {
@@ -472,11 +488,11 @@ private:
     void drawFrame(uint8_t pcnt, bool isColored);
     void generateLine();
     void shiftUp();
-    bool fireRoutine(CRGB *leds, const char *param);
+    bool fireRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectPulse : public EffectCalc {
@@ -488,10 +504,10 @@ private:
     uint8_t currentRadius = 4;
     uint8_t _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
-    bool pulseRoutine(CRGB *leds, const char *param);
+    bool pulseRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectBall : public EffectCalc {
@@ -500,11 +516,11 @@ private:
     int16_t ballColor;
     int8_t vectorB[2U];
     float coordB[2U];
-    bool ballRoutine(CRGB *leds, const char *param);
+    bool ballRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load();
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectLighterTracers : public EffectCalc {
@@ -512,73 +528,73 @@ private:
     int8_t vector[BALLS_AMOUNT][2U];
     float coord[BALLS_AMOUNT][2U];
     int16_t ballColors[BALLS_AMOUNT];
-    bool lighterTracersRoutine(CRGB *leds, const char *param);
+    bool lighterTracersRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRainbow : public EffectCalc {
 private:
     float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
     bool rainbowHorVertRoutine(bool isVertical);
-    bool rainbowDiagonalRoutine(CRGB *leds, const char *param);
+    bool rainbowDiagonalRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectColors : public EffectCalc {
 private:
     uint8_t ihue;
-    bool colorsRoutine(CRGB *leds, const char *param);
+    bool colorsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectWhiteColorStripe : public EffectCalc {
 private:
-    bool whiteColorStripeRoutine(CRGB *leds, const char *param);
+    bool whiteColorStripeRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectMatrix : public EffectCalc {
 private:
-    bool matrixRoutine(CRGB *leds, const char *param);
+    bool matrixRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSnow : public EffectCalc {
 private:
-    bool snowRoutine(CRGB *leds, const char *param);
+    bool snowRoutine(CRGB *leds, EffectDesc *param);
     float snowShift = 0.0; // сдвиг снега
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSparcles : public EffectCalc {
 private:
-    bool sparklesRoutine(CRGB *leds, const char *param);
+    bool sparklesRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
-    bool fire2012WithPalette(CRGB *leds, const char *param);
+    bool fire2012WithPalette(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFire2012 : public EffectCalc {
@@ -598,20 +614,20 @@ private:
 
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
-  bool fire2012Routine(CRGB *leds, const char *param);
+  bool fire2012Routine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectStarFall : public EffectCalc {
 private:
-    bool snowStormStarfallRoutine(CRGB *leds, const char *param);
+    bool snowStormStarfallRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override {FastLED.clear();}
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectLighters : public EffectCalc {
@@ -621,11 +637,11 @@ private:
     uint8_t lightersColor[LIGHTERS_AM];
     float lightersPos[2U][LIGHTERS_AM];
 
-    bool lightersRoutine(CRGB *leds, const char *param);
+    bool lightersRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class Effect3DNoise : public EffectCalc {
@@ -649,7 +665,7 @@ private:
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSpiro : public EffectCalc {
@@ -672,22 +688,22 @@ private:
   float spirotheta1 = 0;
   float spirotheta2 = 0;
 
-  bool spiroRoutine(CRGB *leds, const char *param);
+  bool spiroRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectPrismata : public EffectCalc {
 private:
   byte spirohueoffset = 0;
 
-  bool prismataRoutine(CRGB *leds, const char *param);
+  bool prismataRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFlock : public EffectCalc {
@@ -699,11 +715,11 @@ private:
   bool predatorPresent;
   uint8_t hueoffset;
 
-  bool flockRoutine(CRGB *leds, const char *param);
+  bool flockRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 
@@ -731,21 +747,21 @@ private:
 
     void drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2, CRGB color);
     void FillNoise(int8_t layer);
-    bool rainbowCometRoutine(CRGB *leds, const char *param);
-    bool rainbowComet3Routine(CRGB *leds, const char *param);
+    bool rainbowCometRoutine(CRGB *leds, EffectDesc *param);
+    bool rainbowComet3Routine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectSwirl : public EffectCalc {
 private:
-    bool swirlRoutine(CRGB *leds, const char *param);
+    bool swirlRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectDrift : public EffectCalc {
@@ -753,12 +769,12 @@ private:
   uint8_t dri_phase;
   uint8_t _dri_speed;
   uint8_t _dri_delta;
-  bool incrementalDriftRoutine(CRGB *leds, const char *param);
-  bool incrementalDriftRoutine2(CRGB *leds, const char *param);
+  bool incrementalDriftRoutine(CRGB *leds, EffectDesc *param);
+  bool incrementalDriftRoutine2(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectTwinkles : public EffectCalc {
@@ -766,11 +782,11 @@ private:
   uint8_t thue = 0U;
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
-  bool twinklesRoutine(CRGB *leds, const char *param);
+  bool twinklesRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectWaves : public EffectCalc {
@@ -780,22 +796,22 @@ private:
   uint8_t waveRotation;
   uint8_t whue;
   uint8_t waveTheta;
-  bool wavesRoutine(CRGB *leds, const char *param);
+  bool wavesRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRadar : public EffectCalc {
 private:
   uint8_t eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
   uint8_t eff_theta;         // глобальная переменная угла для работы эффектов
-  bool radarRoutine(CRGB *leds, const char *param);
+  bool radarRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectMStreamSmoke : public EffectCalc {
@@ -813,10 +829,10 @@ private:
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
   void FillNoise(int8_t layer);     // TODO: join with Comet's
-  bool multipleStreamSmokeRoutine(CRGB *leds, const char *param);
+  bool multipleStreamSmokeRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectFire2018 : public EffectCalc {
@@ -832,10 +848,10 @@ private:
   uint8_t fire18heat[NUM_LEDS];
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
-  bool fire2018Routine(CRGB *leds, const char *param);
+  bool fire2018Routine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRingsLock : public EffectCalc {
@@ -853,11 +869,11 @@ private:
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
 
   void ringsSet();
-  bool ringsRoutine(CRGB *leds, const char *param);
+  bool ringsRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectCube2d : public EffectCalc {
@@ -874,11 +890,11 @@ private:
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
 
   void cubesize();
-  bool cube2dRoutine(CRGB *leds, const char *param);
+  bool cube2dRoutine(CRGB *leds, EffectDesc *param);
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 class EffectRain : public EffectCalc {
@@ -892,24 +908,23 @@ private:
 
   uint8_t myScale8(uint8_t x);
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC = false);
-  bool coloredRainRoutine(CRGB *leds, const char *param);
-  bool stormyRainRoutine(CRGB *leds, const char *param);
-  bool simpleRainRoutine(CRGB *leds, const char *param);
+  bool coloredRainRoutine(CRGB *leds, EffectDesc *param);
+  bool stormyRainRoutine(CRGB *leds, EffectDesc *param);
+  bool simpleRainRoutine(CRGB *leds, EffectDesc *param);
 
 public:
-    bool run(CRGB *ledarr, const char *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectDesc *opt=nullptr) override;
 };
 
 
 class EffectWorker {
 private:
-    const unsigned int MODE_AMOUNT = sizeof(_EFFECTS_ARR)/sizeof(EFFECT);     // количество режимов
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     EFF_ENUM curEff = EFF_NONE;     ///< энумератор текущего эффекта
-    unsigned int workIdx = 0;       ///< абсолютный номер эффекта по порядку (исполняемый)
-    unsigned int selectIdx = 0;     ///< абсолютный номер эффекта по порядку (выбраный)
-    EFFECT* effects = _EFFECTS_ARR; ///< массив настроек всех эффектов
+    int workIdx = 0;       ///< абсолютный номер эффекта по порядку (исполняемый)
+    int selectIdx = 0;     ///< абсолютный номер эффекта по порядку (выбраный)
+    LList<EffectDesc*> effects;
 
     /**
      * создает и инициализирует экземпляр класса выбранного эффекта
@@ -920,8 +935,71 @@ private:
     EffectWorker(const EffectWorker&);  // noncopyable
     EffectWorker& operator=(const EffectWorker&);  // noncopyable
 
+    void clear() {
+        while (effects.size()) {
+            EffectDesc *eff = effects.shift();
+            if (eff->flags.copy) delete eff;
+        }
+    }
+
+    void initDefault() {
+        clear();
+        globEffIdx = 0;
+        effects.add(new EffectDesc(EFF_NONE, nullptr, 0));
+        effects.add(new EffectDesc(EFF_WHITE_COLOR, T_WHITE_COLOR, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_COLORS, T_COLORS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RAINBOW_2D, T_RAINBOW_2D, EFF_ENABLED_R));
+        effects.add(new EffectDesc(EFF_SPARKLES, T_SPARKLES, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_SNOW, T_SNOW, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_SNOWSTORMSTARFALL, T_SNOWSTORMSTARFALL, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_MATRIX, T_MATRIX, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_LIGHTERS, T_LIGHTERS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_LIGHTER_TRACES, T_LIGHTER_TRACES, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_CUBE, T_CUBE, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_PULSE, T_PULSE, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_EVERYTHINGFALL, T_EVERYTHINGFALL, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_FIRE, T_FIRE, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_PAINTBALL, T_PAINTBALL, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_MADNESS, T_MADNESS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_CLOUDS, T_CLOUDS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_LAVA, T_LAVA, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_PLASMA, T_PLASMA, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RAINBOW, T_RAINBOW, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RAINBOW_STRIPE, T_RAINBOW_STRIPE, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_ZEBRA, T_ZEBRA, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_FOREST, T_FOREST, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_OCEAN, T_OCEAN, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_BBALS, T_BBALS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_SINUSOID3, T_SINUSOID3, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_METABALLS, T_METABALLS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_SPIRO, T_SPIRO, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RAINBOWCOMET, T_RAINBOWCOMET, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RAINBOWCOMET3, T_RAINBOWCOMET3, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_PRIZMATA, T_PRIZMATA, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_FLOCK, T_FLOCK, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_SWIRL, T_SWIRL, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_DRIFT, T_DRIFT, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_DRIFT2, T_DRIFT2, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_TWINKLES, T_TWINKLES, EFF_ENABLED_R));
+        effects.add(new EffectDesc(EFF_RADAR, T_RADAR, EFF_ENABLED_R));
+        effects.add(new EffectDesc(EFF_WAVES, T_WAVES, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_FIRE2012, T_FIRE2012, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RAIN, T_RAIN, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_COLORRAIN, T_COLORRAIN, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_STORMYRAIN, T_STORMYRAIN, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_FIRE2018, T_FIRE2018, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_RINGS, T_RINGS, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_CUBE2, T_CUBE2, EFF_ENABLED));
+        effects.add(new EffectDesc(EFF_SMOKE, T_SMOKE, EFF_ENABLED_R));
+        effects.add(new EffectDesc(EFF_TIME, T_TIME, EFF_ENABLED));
+#ifdef MIC_EFFECTS
+        effects.add(new EffectDesc(EFF_FREQ, T_FREQ, EFF_ENABLED));
+#endif
+    }
+
 public:
-    EffectWorker() {
+    EffectWorker(): effects() {
+        initDefault();
         workerset(EFF_NONE);
     }
 
@@ -959,25 +1037,28 @@ public:
             }
 
             JsonArray arr = doc.as<JsonArray>();
-            EFFECT *eff;
-            for (size_t i=0; i<arr.size(); i++) {
+            EffectDesc *eff;
+            for (size_t i = 0; i < arr.size(); i++) {
                 JsonObject item = arr[i];
 
-                EFF_ENUM nb = (EFF_ENUM)(item[F("nb")].as<int>());
-                eff = getEffectBy(nb);
-                if(eff->eff_nb!=EFF_NONE){
-                    eff->brightness = item[F("br")].as<int>();
-                    eff->speed = item[F("sp")].as<int>();
-                    eff->scale = item[F("sc")].as<int>();
-                    eff->isFavorite = (bool)(item[F("isF")].as<int>());
-                    eff->canBeSelected = (bool)(item[F("cbS")].as<int>());
-                    String tmp = item[F("prm")];
-                    if(eff->param!=nullptr && cfg != nullptr) // так некрасиво, но сойдет пока что... (т.е. не освобождаем память, если читаем основной конфиг, чтобы не грохнуть PROGMEM указатели)
-                        delete [] eff->param;
-                    eff->param = new char[tmp.length()+1];
-                    strcpy(eff->param, tmp.c_str());
+                EFF_ENUM nb = (EFF_ENUM)(item[F("nb")].as<byte>());
+                effflags flg; flg.mask = item[F("flg")].as<byte>();
+                EffectDesc *tmp = getEffect(nb);
+                if (tmp->eff_nb == EFF_NONE) continue;
+                if (flg.copy) {
+                    eff = new EffectDesc(tmp);
+                    effects.add(eff);
+                } else {
+                    eff = tmp;
+                    if (flg.mask) eff->flags.mask = flg.mask;
                 }
-                LOG(printf_P, PSTR("(%d - %d - %d - %d - %d - %d - %s)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->isFavorite, eff->canBeSelected, eff->param!=nullptr?FPSTR(eff->param):FPSTR(F("")));
+
+                eff->brightness = item[F("br")].as<byte>();
+                eff->speed = item[F("sp")].as<byte>();
+                eff->scale = item[F("sc")].as<byte>();
+                eff->rval = item[F("rv")].as<byte>();
+
+                LOG(printf_P, PSTR("(%d-%d-%d-%d-%d-%d-%d)\n"), nb, eff->brightness, eff->speed, eff->scale, eff->flags.isFavorite, eff->flags.canBeSelected, eff->flags.copy);
             }
             doc.clear();
         }
@@ -993,17 +1074,16 @@ public:
                 LOG(printf_P, PSTR("Save %s effects config file\n"), cfg);
                 configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
             }
-            EFFECT *cur_eff;
+
+            EffectDesc *cur_eff;
 
             configFile.print("[");
-            for(unsigned int i=1; i<MODE_AMOUNT; i++){ // EFF_NONE не сохраняем
-                cur_eff = &(effects[i]);
-                configFile.printf_P( PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
-                    ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
-                LOG(printf_P, PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"isF\":%d,\"cbS\":%d,\"prm\":\"%s\"}"),
-                    (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, (int)cur_eff->isFavorite, (int)cur_eff->canBeSelected,
-                    ((cur_eff->param!=nullptr)?FPSTR(cur_eff->param):FPSTR(F(""))));
+            for (int i = 1; i < effects.size(); i++){ // EFF_NONE не сохраняем
+                cur_eff = effects[i];
+                configFile.printf_P(PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"rv\":%d,\"flg\":%d}"),
+                    (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, cur_eff->rval, (int)cur_eff->flags.mask);
+                LOG(printf_P, PSTR("%s{\"nb\":%d,\"br\":%d,\"sp\":%d,\"sc\":%d,\"rv\":%d,\"flg\":%d}"),
+                    (char*)(i>1?F(","):F("")), cur_eff->eff_nb, cur_eff->brightness, cur_eff->speed, cur_eff->scale, cur_eff->rval, (int)cur_eff->flags.mask);
             }
             configFile.print("]");
             configFile.flush();
@@ -1023,84 +1103,100 @@ public:
         return true; // сохранились
     }
 
-    byte getModeAmount() {return MODE_AMOUNT;}
+    byte getModeAmount() {return effects.size();}
 
-    void setBrightness(byte val) {effects[workIdx].brightness = val; if (worker) worker->setbrt(val);}
-    void setSpeed(byte val) {effects[workIdx].speed = val; if (worker) worker->setspd(val);}
-    void setScale(byte val) {effects[workIdx].scale = val; if (worker) worker->setscl(val);}
-    byte getBrightness() { return effects[workIdx].brightness; }
-    byte getSpeed() { return effects[workIdx].speed; }
-    byte getScale() { return effects[workIdx].scale; }
-    const char *getName() {return effects[workIdx].eff_name;}
-    const EFF_ENUM getEn() {return effects[workIdx].eff_nb;}
+    void setBrightness(byte val) {effects[workIdx]->brightness = val; if (worker) worker->setbrt(val);}
+    void setSpeed(byte val) {effects[workIdx]->speed = val; if (worker) worker->setspd(val);}
+    void setScale(byte val) {effects[workIdx]->scale = val; if (worker) worker->setscl(val);}
+    void setRval(byte val) {effects[workIdx]->rval = val; if (worker) worker->setrval(val);}
+    byte getBrightness() { return effects[workIdx]->brightness; }
+    byte getSpeed() { return effects[workIdx]->speed; }
+    byte getScale() { return effects[workIdx]->scale; }
+    byte getRval() { return effects[workIdx]->rval; }
+    byte isRval() { return effects[workIdx]->isRval(); }
+    const char *getName() {return effects[workIdx]->eff_name;}
+    const EFF_ENUM getEn() {return effects[workIdx]->eff_nb;}
 
-    void setBrightnessS(byte val) {effects[selectIdx].brightness = val; if (worker && isSelected()) worker->setbrt(val);}
-    void setSpeedS(byte val) {effects[selectIdx].speed = val; if (worker && isSelected()) worker->setspd(val);}
-    void setScaleS(byte val) {effects[selectIdx].scale = val; if (worker && isSelected()) worker->setscl(val);}
-    byte getBrightnessS() { return effects[selectIdx].brightness; }
-    byte getSpeedS() { return effects[selectIdx].speed; }
-    byte getScaleS() { return effects[selectIdx].scale; }
-    const char *getNameS() {return effects[selectIdx].eff_name;}
-    const EFF_ENUM getEnS() {return effects[selectIdx].eff_nb;}
+    void setBrightnessS(byte val) {effects[selectIdx]->brightness = val; if (worker && isSelected()) worker->setbrt(val);}
+    void setSpeedS(byte val) {effects[selectIdx]->speed = val; if (worker && isSelected()) worker->setspd(val);}
+    void setScaleS(byte val) {effects[selectIdx]->scale = val; if (worker && isSelected()) worker->setscl(val);}
+    void setRvalS(byte val) {effects[selectIdx]->rval = val; if (worker && isSelected()) worker->setrval(val);}
+    byte getBrightnessS() { return effects[selectIdx]->brightness; }
+    byte getSpeedS() { return effects[selectIdx]->speed; }
+    byte getScaleS() { return effects[selectIdx]->scale; }
+    byte getRvalS() { return effects[selectIdx]->rval; }
+    const char *getNameS() {return effects[selectIdx]->eff_name;}
+    const EFF_ENUM getEnS() {return effects[selectIdx]->eff_nb;}
 
-    unsigned getNext() { // следующий эффект, кроме canBeSelected==false
-        unsigned i;
-        for (i = workIdx + 1; i < MODE_AMOUNT; i++) {
-            if (effects[i].canBeSelected) return i;
+    int getNext() { // следующий эффект, кроме canBeSelected==false
+        int i;
+        for (i = selectIdx + 1; i < effects.size(); i++) {
+            if (effects[i]->canBeSelected()) return i;
         }
-        for (i = 1; i < MODE_AMOUNT; i++) {
-            if (effects[i].canBeSelected) return i;
+        for (i = 1; i < effects.size(); i++) {
+            if (effects[i]->canBeSelected()) return i;
         }
         return 0;
     }
 
     void moveNext() { // следующий эффект, кроме canBeSelected==false
         workIdx = selectIdx = getNext();
-        curEff = effects[workIdx].eff_nb;
+        curEff = effects[workIdx]->eff_nb;
         workerset(curEff);
     }
 
-    unsigned getPrev() { // предыдущий эффект, кроме canBeSelected==false
-        unsigned i;
+    int getPrev() { // предыдущий эффект, кроме canBeSelected==false
+        int i;
         for (i = selectIdx - 1; i > 0; i--) {
-            if (effects[i].canBeSelected) return i;
+            if (effects[i]->canBeSelected()) return i;
         }
-        for (i = MODE_AMOUNT - 1; i >= 0; i--){
-            if (effects[i].canBeSelected) return i;
+        for (i = effects.size() - 1; i >= 0; i--){
+            if (effects[i]->canBeSelected()) return i;
         }
         return 0;
     }
 
     void movePrev() { // предыдущий эффект, кроме canBeSelected==false
         workIdx = selectIdx = getPrev();
-        curEff = effects[workIdx].eff_nb;
+        curEff = effects[workIdx]->eff_nb;
         workerset(curEff);
     }
 
-    unsigned getBy(EFF_ENUM select){ // перейти по перечислению
-        for (unsigned i = MODE_AMOUNT - 1; i >= 0; i--) {
-            if (effects[i].eff_nb == select) return i;
+    int getBy(EFF_ENUM select){ // перейти по перечислению
+        for (int i = 1; i < effects.size(); i++) {
+            if (effects[i]->eff_nb == select) return i;
         }
+        return 0;
     }
 
     void moveBy(EFF_ENUM select){ // перейти по перечислению
         workIdx = selectIdx = getBy(select);
-        curEff = effects[workIdx].eff_nb;
+        curEff = effects[workIdx]->eff_nb;
+        workerset(curEff);
+    }
+
+    int getByIdx(int idx){ // перейти по перечислению
+        return (idx < effects.size())? idx : 0;
+    }
+
+    void moveByIdx(int idx){ // перейти по перечислению
+        workIdx = selectIdx = getByIdx(idx);
+        curEff = effects[workIdx]->eff_nb;
         workerset(curEff);
     }
 
     void moveSelected(){ // перейти по предворительно выбранному
         workIdx = selectIdx;
-        curEff = effects[workIdx].eff_nb;
+        curEff = effects[workIdx]->eff_nb;
         workerset(curEff);
     }
 
-    unsigned getBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
-        unsigned i = (selectIdx + cnt) % MODE_AMOUNT; // смещаемся на нужное число шагов, но не больше лимита эффектов
-        unsigned tmp = i; // запомним позицию
+    int getBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
+        int i = (selectIdx + cnt) % effects.size(); // смещаемся на нужное число шагов, но не больше лимита эффектов
+        int tmp = i; // запомним позицию
 
-        while (!effects[i].isFavorite) { // если не избранный, то будем перебирать по +1
-            if (++i == MODE_AMOUNT) i = 0;
+        while (!effects[i]->isFavorite()) { // если не избранный, то будем перебирать по +1
+            if (++i == effects.size()) i = 0;
             if (i == tmp) break; // круг прошли, но не нашли, на выход
         }
         return i;
@@ -1108,40 +1204,39 @@ public:
 
     void moveBy(byte cnt){ // перейти на количество шагов, к ближайшему большему (для DEMO)
         workIdx = selectIdx = getBy(cnt);
-        curEff = effects[workIdx].eff_nb;
+        curEff = effects[workIdx]->eff_nb;
         workerset(curEff);
     }
 
-    EFFECT *enumNextEffect(EFFECT *current){
-        for(unsigned int i=0; i<MODE_AMOUNT; i++){
-            if(effects[i].eff_nb == current->eff_nb){
-                if((i+1)!=MODE_AMOUNT)
-                    return &effects[i+1];
-                else
-                    return &effects[0]; // NONE
+    EffectDesc *getEffectByIdx(int idx){
+        if (idx < effects.size()) {
+            return effects[idx];
+        }
+        return effects[0]; // NONE
+    }
+
+    EffectDesc *getNextEffect(EffectDesc *current){
+        return getEffectByIdx(current->idx + 1);
+    }
+
+    EffectDesc *getEffect(EFF_ENUM select){
+        for (int i = 0; i < effects.size(); i++) {
+            if (effects[i]->eff_nb == select) {
+                return effects[i];
             }
         }
-        return &effects[0]; // NONE
+        return effects[0]; // NONE
     }
 
-    EFFECT *getEffectBy(EFF_ENUM select){
-        for(int i=MODE_AMOUNT-1; i>=0; i--){
-            if(effects[i].eff_nb == select){
-                return &(effects[i]);
-            }
-        }
-        return &(effects[0]); // NONE
+    EffectDesc *getCurrent(){ // вернуть текущий
+        return effects[workIdx];
     }
 
-    EFFECT *getCurrent(){ // вернуть текущий
-        return &(effects[workIdx]);
+    EffectDesc *getSelected(){ // вернуть текущий
+        return effects[selectIdx];
     }
 
-    EFFECT *getSelected(){ // вернуть текущий
-        return &(effects[selectIdx]);
-    }
-
-    void setSelected(unsigned idx){
+    void setSelected(int idx){
         selectIdx = idx;
     }
 
@@ -1149,80 +1244,26 @@ public:
         return (selectIdx == workIdx);
     }
 
-    // ой как не нравятся мне джейсоны :()
-    String getParam() {
-        if (effects[selectIdx].param != nullptr) {
-            size_t slen = strlen_P(effects[selectIdx].param);
-            char buffer[slen + 4]; memset(buffer, 0, slen+4);
-            strcpy_P(buffer, effects[selectIdx].param); // Обход Exeption 3, это шаманство из-за корявого использования указателя, он одновременно может быть и на PROGMEM, и на RAM
-            String tmp = buffer;
-            return tmp;
-        }
-        return String(); // empty
+    void copyEffect(int idx){
+        if (idx >= effects.size()) return;
+        EffectDesc *curr = effects[idx];
+        EffectDesc *copy = new EffectDesc(curr);
+        effects.add(copy);
     }
 
-    void updateParam(const char *str) {
-        if (effects[selectIdx].param != nullptr && effects[workIdx].param != _R255) {
-            // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
-            delete [] effects[selectIdx].param;
+    void deleteEffect(int idx){
+        if (idx >= effects.size()) return;
+        if (idx == workIdx || idx == selectIdx) {
+            movePrev();
         }
-        effects[selectIdx].param = new char[strlen(str)+1];
-        strcpy(effects[selectIdx].param, str);
-    }
+        EffectDesc *curr = effects[idx];
+        delete curr;
+        effects.remove(idx);
 
-    void updateParam(EFFECT *eff, const char *str) {
-        if (eff->param != nullptr && eff->param != _R255) {
-            // херовая проверка, надобно будет потом выяснить как безопасно разпознать указатель на PROGMEM или на RAM
-            delete [] eff->param;
-        }
-        eff->param = new char[strlen(str)+1];
-        strcpy(eff->param, str);
-    }
-
-    String getValue(const char *src, const _PTR type){
-        if(src==nullptr)
-            return String(); // empty
-        String tmp(FPSTR(src)); // разве сюда в src прилетат указатель на чары из структуры конфига, не нa флеш??
-        //String tmp(src);
-        if (tmp.length()==0)
-            return String(); // empty
-        DynamicJsonDocument doc(PARAM_BUFSIZE);
-        tmp.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
-        deserializeJson(doc,tmp);
-        JsonArray arr = doc.as<JsonArray>();
-        for (size_t i=0; i<arr.size(); i++) {
-            JsonObject item = arr[i];
-            if(item.containsKey(FPSTR(type))){
-                return item[FPSTR(type)].as<String>();
-            }
-        }
-        return String(); // empty
-    }
-
-    void setValue(const char *src, const __FlashStringHelper *type, const char *val){
-        if (!val || !*val)
-             return;
-        DynamicJsonDocument doc(PARAM_BUFSIZE);
-        deserializeJson(doc,String(FPSTR(src)));
-        JsonArray arr = doc.as<JsonArray>();
-        for (size_t i=0; i<arr.size(); i++) {
-            JsonObject item = arr[i];
-            if(item.containsKey(FPSTR(type))){
-                item[FPSTR(type)]=FPSTR(val);
-            }
-        }
-        String tmp;
-        serializeJson(doc,tmp);
-        tmp.replace(F("\""),F("'")); // так делать не красиво, но шопаделаешь...
-        updateParam(tmp.c_str());
-
-        // устанавливаем переменну 'rval' если задается ключ 'R'
-        if (!strcmp_P("R", (PGM_P)type) && worker) {
-            //LOG(printf_P, PSTR("TRY to set Rval=%s\n"), val);
-            worker->setrval(atoi(val));
+        for (globEffIdx = 0; globEffIdx < effects.size(); globEffIdx++) {
+            effects[globEffIdx]->idx = globEffIdx;
         }
     }
-
 };
 
 typedef enum _PERIODICTIME {
