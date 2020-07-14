@@ -164,7 +164,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
     }
     interf->range(F("speed"), myLamp.effects.getSpeedS(), 1, 255, 1, F("Скорость"), true);
     interf->range(F("scale"), myLamp.effects.getScaleS(), 1, 255, 1, F("Масштаб"), true);
-    if (myLamp.effects.isRval()) {
+    if (myLamp.effects.isRvalS()) {
         interf->range(F("rval"), myLamp.effects.getRvalS(), 1, 255, 1, F("Масштаб"), true);
     }
 
@@ -468,6 +468,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 #endif
     } else
     if (act == "load") {
+        myLamp.changePower(false);
         String filename = String(F("/glb/")) + name;
         jee.load(filename.c_str());
 
@@ -484,6 +485,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         }
 #endif
         jee.var(F("fileName"), name);
+        sync_parameters();
+        myLamp.changePower(true);
     } else {
         String filename = String(F("/glb/")) + name;
         jee.save(filename.c_str(), true);

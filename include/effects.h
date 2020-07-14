@@ -166,7 +166,7 @@ class EffectDesc{
     }
     ~EffectDesc(){
         if (flags.copy) {
-            delete eff_name;
+            free((void *)eff_name);
         }
     }
     bool canBeSelected(){ return flags.canBeSelected; }
@@ -935,16 +935,27 @@ private:
     EffectWorker(const EffectWorker&);  // noncopyable
     EffectWorker& operator=(const EffectWorker&);  // noncopyable
 
-    void clear() {
+    void clearAll() {
         while (effects.size()) {
             EffectDesc *eff = effects.shift();
-            if (eff->flags.copy) delete eff;
+            delete eff;
         }
+        globEffIdx = effects.size();
+    }
+
+    void clearCopy() {
+        for (int i = 0; i < effects.size(); i++) {
+            EffectDesc *eff = effects[i];
+            if (!eff->flags.copy) continue;
+            delete eff;
+            effects.remove(i--);
+        }
+        globEffIdx = effects.size();
     }
 
     void initDefault() {
-        clear();
-        globEffIdx = 0;
+        clearAll();
+
         effects.add(new EffectDesc(EFF_NONE, nullptr, 0));
         effects.add(new EffectDesc(EFF_WHITE_COLOR, T_WHITE_COLOR, EFF_ENABLED));
         effects.add(new EffectDesc(EFF_COLORS, T_COLORS, EFF_ENABLED));
@@ -1036,6 +1047,8 @@ public:
                 return;
             }
 
+            clearCopy();
+
             JsonArray arr = doc.as<JsonArray>();
             EffectDesc *eff;
             for (size_t i = 0; i < arr.size(); i++) {
@@ -1125,6 +1138,7 @@ public:
     byte getSpeedS() { return effects[selectIdx]->speed; }
     byte getScaleS() { return effects[selectIdx]->scale; }
     byte getRvalS() { return effects[selectIdx]->rval; }
+    byte isRvalS() { return effects[selectIdx]->isRval(); }
     const char *getNameS() {return effects[selectIdx]->eff_name;}
     const EFF_ENUM getEnS() {return effects[selectIdx]->eff_nb;}
 
