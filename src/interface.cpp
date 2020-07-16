@@ -385,6 +385,7 @@ void set_gbrflag(Interface *interf, JsonObject *data){
     if (myLamp.isLampOn()) {
         myLamp.setBrightness(myLamp.getNormalizedLampBrightness());
     }
+    show_effects_param(interf, data);
 }
 
 void block_lamp_config(Interface *interf, JsonObject *data){
@@ -547,9 +548,9 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     interf->json_section_begin(F("set_mic"));
     //if (!iGLOBAL.isMicCal) {
     if (!myLamp.isMicCalibration()) {
-        interf->number(F("micScale"), myLamp.getMicScale(), F("Коэф. коррекции нуля"), 0.01);
-        interf->number(F("micNoise"), myLamp.getMicNoise(), F("Уровень шума, ед"), 0.01);
-        interf->range(F("micnRdcLvl"), myLamp.getMicNoiseRdcLevel(), 4, 1, F("Шумодав"));
+        interf->number(F("micScale"), (float)(round(myLamp.getMicScale() * 100) / 100), F("Коэф. коррекции нуля"), 0.01);
+        interf->number(F("micNoise"), (float)(round(myLamp.getMicNoise() * 100) / 100), F("Уровень шума, ед"), 0.01);
+        interf->range(F("micnRdcLvl"), (int)myLamp.getMicNoiseRdcLevel(), 0, 4, (float)1.0, F("Шумодав"), false);
     }
     interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
     interf->json_section_end();
@@ -1304,6 +1305,10 @@ void sync_parameters(){
     CALL_SETTER(F("Events"), jee.param(F("Events")), set_eventflag);
     CALL_SETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
 
+    if (myLamp.IsGlobalBrightness()) {
+        CALL_SETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
+    }
+
 #ifdef RESTORE_STATE
     CALL_SETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
     CALL_SETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
@@ -1337,10 +1342,6 @@ void sync_parameters(){
     obj[F("ny_unix")] = jee.param(F("ny_unix"));
     set_settings_other(nullptr, &obj);
     obj.clear();
-
-    if (myLamp.IsGlobalBrightness()) {
-        CALL_SETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
-    }
 }
 
 void remote_action(RA action, ...){
