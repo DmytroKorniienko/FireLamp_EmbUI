@@ -152,7 +152,7 @@ void jeeui2::section_handle_add(const String &name, buttonCallback response)
 
 /**
  * Возвращает указатель на строку со значением параметра из конфига
- * В случае отсутствующего параметра возвращает пустой указатель 
+ * В случае отсутствующего параметра возвращает пустой указатель
  */
 const char* jeeui2::param(const char* key)
 {
@@ -166,7 +166,7 @@ const char* jeeui2::param(const char* key)
 
 /**
  * обертка над param в виде String
- * В случае несуществующего ключа возвращает пустую строку 
+ * В случае несуществующего ключа возвращает пустую строку
  */
 String jeeui2::param(const String &key)
 {
@@ -196,6 +196,17 @@ void jeeui2::init(){
     WiFi.persistent(false);     // не сохраняем креды от WiFi во флеш, т.к. они у нас уже лежат в конфиге
     wifi_connect();
     LOG(println, String(F("MAC: ")) + jee.mac);
+}
+
+void uploadProgress(size_t len, size_t total){
+    static int prev = 0;
+    float part = total / 50.0;
+    int curr = len / part;
+    if (curr != prev) {
+        prev = curr;
+        for (int i = 0; i < curr; i++) Serial.print(F("="));
+        Serial.print(F("\n"));
+    }
 }
 
 void jeeui2::begin(){
@@ -281,31 +292,39 @@ void jeeui2::begin(){
 
     server.on(PSTR("/update"), HTTP_POST, [](AsyncWebServerRequest *request){
         __shouldReboot = !Update.hasError();
-        AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), (__shouldReboot?F("OK"):F("FAIL")));
-        response->addHeader(F("Connection"), F("close"));
-        request->send(response);
+        if (__shouldReboot) {
+            request->redirect(F("/"));
+        } else {
+            AsyncWebServerResponse *response = request->beginResponse(200, FPSTR(PGmimetxt), F("FAIL"));
+            response->addHeader(F("Connection"), F("close"));
+            request->send(response);
+        }
     },[](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
-        if(!index){
-            Serial.printf_P(PSTR("Update Start: %s\n"), filename.c_str());
+        if (!index) {
 #ifndef ESP32
             Update.runAsync(true);
 #endif
-            if(!Update.begin((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000)){
+            int type = (data[0] == 0xe9 || data[0] == 0x1f)? U_FLASH : U_FS;
+            size_t size = (type == U_FLASH)? ((ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000) : (uintptr_t)&_FS_end - (uintptr_t)&_FS_start;
+            Serial.printf_P(PSTR("Update %s Start (%u)\n"), (type == U_FLASH)? F("FLASH") : F("FS"), request->contentLength());
+
+            if (!Update.begin(size, type)) {
                 Update.printError(Serial);
             }
         }
-        if(!Update.hasError()){
+        if (!Update.hasError()) {
             if(Update.write(data, len) != len){
                 Update.printError(Serial);
             }
         }
-        if(final){
+        if (final) {
             if(Update.end(true)){
                 Serial.printf_P(PSTR("Update Success: %uB\n"), index+len);
             } else {
                 Update.printError(Serial);
             }
         }
+        uploadProgress(index + len, request->contentLength());
     });
 
     //First request will return 0 results unless you start scan from somewhere else (loop/setup)
