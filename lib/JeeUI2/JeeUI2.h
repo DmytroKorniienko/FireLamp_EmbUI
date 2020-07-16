@@ -75,6 +75,7 @@ class jeeui2
     void var(const String &key, const String &value, bool force = false);
     void var_create(const String &key, const String &value);
     void section_handle_add(const String &btn, buttonCallback response);
+    const char* param(const char* key);
     String param(const String &key);
     void led(uint8_t pin, bool invert);
     String deb();

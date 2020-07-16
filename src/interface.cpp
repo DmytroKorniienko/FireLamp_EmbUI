@@ -742,10 +742,10 @@ void block_settings_time(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("set_time"), F("Время"));
 
-    interf->time(F("time"), F("Время"));
-    interf->number(F("tm_offs"), F("Смещение времени в секундах для NTP"));
-    interf->text(F("timezone"), F("Часовой пояс (http://worldtimeapi.org/api/timezone/)"));
-    interf->checkbox(F("isTmSync"), F("Включить синхронизацию"));
+    interf->spacer(F("Правила TZSET учета поясного/сезонного времени (напр 'MSK-3' для Europe/Moscow) брать тут https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h)"));
+    interf->text(F("TZSET"), F("правило TZone (рекоммендуется задать!)"));
+    interf->text(F("userntp"), F("резервный NTP-сервер (не обязательно)"));
+    interf->text(F("setdatetime"), F("Дата/время в формате YYYY-MM-DDThh:mm:ss (если нет интернета)"));
     interf->button_submit(F("set_time"), F("Сохранить"), F("gray"));
 
     interf->spacer();
@@ -763,17 +763,14 @@ void show_settings_time(Interface *interf, JsonObject *data){
 
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
-/*
-    // пока решаем чего хотим в этом месте
-    SETPARAM(F("tm_offs"), myLamp.timeProcessor.setOffset((*data)[F("tm_offs")]));
-    SETPARAM(F("timezone"), myLamp.timeProcessor.setTimezone((*data)[F("timezone")]));
-    SETPARAM(F("time"), myLamp.timeProcessor.setTime((*data)[F("time")]));
-    SETPARAM(F("isTmSync"), myLamp.timeProcessor.setIsSyncOnline((*data)[F("isTmSync")] == F("true")));
 
-    if (myLamp.timeProcessor.getIsSyncOnline()) {
-        myLamp.refreshTimeManual(); // принудительное обновление времени
-    }
-*/
+        String datetime=(*data)[F("setdatetime")];
+        if (datetime.length())
+            myLamp.timeProcessor.setTime(datetime);
+
+    SETPARAM(F("TZSET"), myLamp.timeProcessor.tzsetup((*data)[F("TZSET")]));
+    SETPARAM(F("userntp"), myLamp.timeProcessor.setcustomntp((*data)[F("userntp")]));
+
     myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
 
     section_settings_frame(interf, data);
@@ -1208,10 +1205,13 @@ void create_parameters(){
     jee.var_create(F("GBR"), F("false"));
     jee.var_create(F("GlobBRI"), F("127"));
 
-    jee.var_create(F("isTmSync"), F("true"));
-    jee.var_create(F("time"), F("00:00"));
-    jee.var_create(F("timezone"), F(""));
-    jee.var_create(F("tm_offs"), F("0"));
+    // date/time related vars
+    //jee.var_create(F("isTmSync"), F("true"));
+    //jee.var_create(F("time"), F("00:00"));
+    //jee.var_create(F("timezone"), F(""));
+    //jee.var_create(F("tm_offs"), F("0"));
+    jee.var_create(F("TZSET"), "");
+    jee.var_create(F("userntp"), "");
 
     jee.var_create(F("ny_period"), F("0"));
     jee.var_create(F("ny_unix"), F("1609459200"));

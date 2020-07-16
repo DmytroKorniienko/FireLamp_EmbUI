@@ -143,10 +143,7 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             addEvent(event);
             LOG(printf_P, PSTR("[%u - %u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
         }
-        // JsonArray::iterator it;
-        // for (it=arr.begin(); it!=arr.end(); ++it) {
-        //     const JsonObject& elem = *it;
-        // }
+
         LOG(println, F("Events config loaded"));
         doc.clear();
     }

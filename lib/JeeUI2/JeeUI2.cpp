@@ -150,11 +150,27 @@ void jeeui2::section_handle_add(const String &name, buttonCallback response)
     LOG(printf_P, PSTR("REGISTER: %s\n"), name.c_str());
 }
 
+/**
+ * Возвращает указатель на строку со значением параметра из конфига
+ * В случае отсутствующего параметра возвращает пустой указатель 
+ */
+const char* jeeui2::param(const char* key)
+{
+    const char* value = cfg[key];
+    if (value){
+        LOG(printf_P, PSTR("READ key (%s) value (%s) MEM: %u\n"), key, value, ESP.getFreeHeap());
+    }
+
+    return value;
+}
+
+/**
+ * обертка над param в виде String
+ * В случае несуществующего ключа возвращает пустую строку 
+ */
 String jeeui2::param(const String &key)
 {
-    String value = cfg[key].as<String>();
-    LOG(print, F("READ: "));
-    LOG(printf_P, PSTR("key (%s) value (%s) MEM: %u\n"), key.c_str(), value.c_str(), ESP.getFreeHeap());
+    String value(param(key.c_str()));
     return value;
 }
 

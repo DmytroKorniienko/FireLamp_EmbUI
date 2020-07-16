@@ -98,7 +98,7 @@ void TimeProcessor::setTime(const char *timestr){
     setTime(_str);
 }
 
-void TimeProcessor::setTime(String &timestr){
+void TimeProcessor::setTime(const String &timestr){
     //"YYYY-MM-DDThh:mm:ss"    [19]
     if (timestr.length()<DATETIME_STRLEN)
         return;
@@ -130,8 +130,14 @@ void TimeProcessor::setTime(String &timestr){
  */
 void TimeProcessor::tzsetup(const char* tz){
     // https://stackoverflow.com/questions/56412864/esp8266-timezone-issues
+    if (!tz || !*tz)
+             return;
+
     setenv("TZ", tz, 1/*overwrite*/);
     tzset();
+    tzone = ""; // сбрасываем костыльную зону
+    usehttpzone = false;  // запрещаем использование http
+    LOG(printf_P, PSTR("TZSET rules changed to: %s\n"), tz);
 }
 
 #ifndef TZONE
@@ -158,6 +164,9 @@ unsigned int TimeProcessor::getHttpData(String &payload, const String &url)
 
 void TimeProcessor::getTimeHTTP()
 {
+    if (!usehttpzone)
+        return;     // выходим если не выставлено разрешение на использование http
+
     String result((char *)0);
     result.reserve(TIMEAPI_BUFSIZE);
     if(tzone.length()){
@@ -206,8 +215,10 @@ void TimeProcessor::getTimeHTTP()
 }
 
 void TimeProcessor::httprefreshtimer(const uint32_t delay){
-    if (!usehttpzone)
+    if (!usehttpzone){
+        _wrk.detach();
         return;     // выходим если не выставлено разрешение на использование http
+    }
 
     time_t timer;
 
@@ -275,8 +286,9 @@ void TimeProcessor::getDateTimeString(String &buf){
  */
 void TimeProcessor::setOffset(const int val){
     LOG(printf_P, PSTR("Set time zone offset to: %d\n"), val);
-    //sntp_set_timezone_in_seconds(-1*val);   // в правилах смещение имеет обратный знак (TZ-OffSet=UTC)
-    sntp_set_timezone_in_seconds(val);   // шаманство намба ван!
+    sntp_set_timezone_in_seconds(val);
+    //sntp_set_timezone_in_seconds(-1*val);   // в правилах TZSET смещение имеет обратный знак (TZ-OffSet=UTC)
+                                              // возможно это нужно будет учесть если задавать смещение для tz из правил (на будущее)
 }
 
 /**
@@ -291,8 +303,11 @@ long int TimeProcessor::getOffset(){
 }
 
 void TimeProcessor::setcustomntp(const char* ntp){
-    if (ntp)
-        sntp_setservername(CUSTOM_NTP_INDEX, (char*)ntp);
+    if (!ntp || !*ntp)
+             return;
+
+    sntp_setservername(CUSTOM_NTP_INDEX, (char*)ntp);
+    LOG(printf_P, PSTR("Set custom NTP to: %s\n"), ntp);
 }
 
 void TimeProcessor::attach_callback(callback_function_t callback){
