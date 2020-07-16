@@ -138,6 +138,7 @@ class Interface {
         void button_submit(const String &section, const String &label, const String &color = "");
         void button_submit_value(const String &section, const String &value, const String &label, const String &color = "");
         void spacer(const String &label = "");
+        void comment(const String &label = "");
 };
 
 #endif

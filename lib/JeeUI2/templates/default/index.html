@@ -91,6 +91,9 @@
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			></textarea>
 		{{/if}}
+		{{#if html == "comment"}}
+			<div class="comment">{{label}}</div>
+		{{/if}}
 		{{#if html == "file"}}
 			<form method="POST" action="/{{action}}" enctype="multipart/form-data" class="pure-form pure-g mr">
 				<input type="file" name="{{name}}" class="pure-u-2-3">

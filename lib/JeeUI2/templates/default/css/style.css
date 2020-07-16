@@ -8,3 +8,4 @@ label {white-space: nowrap;}
 .nested {padding: 0px 10px 0px 10px; border: 1px solid #ccc;}
 .mr {margin: 15px 0px 15px 0px !important;}
 .spacer {text-align: center; font-weight: 300; color: #ccc; padding-bottom: 10px; margin: 15px 0px 15px 0px; border-bottom: 1px solid #ccc;}
+.comment {margin: 1em 0;}

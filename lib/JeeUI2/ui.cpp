@@ -319,6 +319,16 @@ void Interface::spacer(const String &label){
     }
 }
 
+void Interface::comment(const String &label){
+    StaticJsonDocument<512> obj;
+    obj[F("html")] = F("comment");
+    if (label != "") obj[F("label")] = label;
+
+    if (!json_frame_add(obj.as<JsonObject>())) {
+        comment(label);
+    }
+}
+
 void Interface::textarea(const String &id, const String &value, const String &label){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("textarea");

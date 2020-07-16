@@ -743,8 +743,7 @@ void block_settings_time(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("set_time"), F("Время"));
 
-    interf->spacer(F("Правила TZSET учета поясного/сезонного времени (напр 'MSK-3' для Europe/Moscow)"));
-    interf->spacer(F("Нужную строку можно взять тут https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h)"));
+    interf->comment(F("Правила TZSET учета поясного/сезонного времени (напр 'MSK-3' для Europe/Moscow) Нужную строку можно взять тут https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h"));
     interf->text(F("TZSET"), F("правило TZone (рекоммендуется задать!)"));
     interf->text(F("userntp"), F("резервный NTP-сервер (не обязательно)"));
     interf->text(F("setdatetime"), F("Дата/время в формате YYYY-MM-DDThh:mm:ss (если нет интернета)"));
