@@ -34,7 +34,8 @@ typedef enum _remote_action {
     RA_SEND_TIME,
     RA_SEND_IP,
     RA_WHITE_HI,
-    RA_WHITE_LO
+    RA_WHITE_LO,
+    RA_WIFI_REC
 } RA;
 
 #define TOGLE_STATE(val, curr) (val == F("true"))? true : (val == F("false"))? false : !curr;

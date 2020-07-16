@@ -16,8 +16,9 @@ const char *btn_get_desc(BA action){
 		case BA_EFF_PREV: return PSTR("PREV");
 		case BA_SEND_TIME: return PSTR("TIME");
 		case BA_SEND_IP: return PSTR("IP");
-		case BA_WHITE_HI: return PSTR("WHITE_HI");
-		case BA_WHITE_LO: return PSTR("WHITE_LO");
+		case BA_WHITE_HI: return PSTR("WHITE HI");
+		case BA_WHITE_LO: return PSTR("WHITE LO");
+		case BA_WIFI_REC: return PSTR("WIFI REC");
 		default:;
 	}
 	return PSTR("");
@@ -58,6 +59,7 @@ void Button::activate(bool reverse){
 			case BA_SEND_IP: ract = RA_SEND_IP; break;
 			case BA_WHITE_HI: ract = RA_WHITE_HI; break;
 			case BA_WHITE_LO: ract = RA_WHITE_LO; break;
+			case BA_WIFI_REC: ract = RA_WIFI_REC; break;
 			default:;
 		}
 		remote_action(ract, NULL);

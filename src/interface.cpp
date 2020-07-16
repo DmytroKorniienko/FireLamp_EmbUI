@@ -1428,6 +1428,9 @@ void remote_action(RA action, ...){
         case RA::RA_REBOOT:
             ESP.restart(); // так лучше :)
             break;
+        case RA::RA_WIFI_REC:
+            CALL_INTF(F("wifi"), F("STA"), set_settings_wifi);
+            break;
         case RA::RA_LAMP_CONFIG:
             if (value && *value) {
                 String filename = String(F("/glb/"));

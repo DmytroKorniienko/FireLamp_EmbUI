@@ -21,6 +21,7 @@ typedef enum _button_action {
 	BA_SEND_IP,
 	BA_WHITE_HI,
 	BA_WHITE_LO,
+	BA_WIFI_REC,
 	BA_END			// признак конца enum
 } BA;
 
