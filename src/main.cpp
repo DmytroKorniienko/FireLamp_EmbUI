@@ -88,15 +88,18 @@ void setup() {
     ftp_setup(); // запуск ftp-сервера
 #endif
 
-    myLamp.events.setEventCallback(event_worker);
-    myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, true));
-
     sync_parameters();
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 
 #ifdef ESP_USE_BUTTON
     attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
 #endif
+
+    // восстанавливаем настройки времени
+    myLamp.timeProcessor.tzsetup((jee.param(F("TZSET")).c_str()));
+    myLamp.timeProcessor.setcustomntp((jee.param(F("userntp")).c_str()));
+    myLamp.events.setEventCallback(event_worker);
+    myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, true));
 }
 
 void loop() {

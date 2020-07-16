@@ -40,6 +40,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "timeProcessor.h"
 //#include <Ticker.h>
 
+#define EVENT_TSTAMP_LENGTH 17  // для строки вида "YYYY-MM-DDThh:mm"
+
 // закрепляем за событиями номера, чтобы они не ломались после сборки с другими дефайнами
 typedef enum _EVENT_TYPE {
     ON                      = 1,
@@ -85,28 +87,22 @@ struct EVENT {
     EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
     EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
     const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
-    String getDateTime(int offset = 0) {
-        //String tmpBuf;
-        //TimeProcessor::getDateTimeString(tmpBuf);
-        
-        char tmpBuf[]="9999-99-99T99:99"; // тут будет дата/время события, а не текущая
-        // time_t tm = unixtime+offset;
-        time_t tm = unixtime+10800; // пока забиваю гвоздями, поскольку поломано
+
+    String getDateTime() {
+        char tmpBuf[EVENT_TSTAMP_LENGTH]; // тут будет дата/время события, а не текущая
+        time_t tm = unixtime;
         sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
         return String(tmpBuf);
-        
-        //return tmpBuf;
     }
 
-    String getName(int offset = 0) {
+    String getName() {
         String buffer;
-        char tmpBuf[]="9999-99-99T99:99";
+        char tmpBuf[EVENT_TSTAMP_LENGTH];
         String day_buf(T_EVENT_DAYS);
 
         buffer.concat(isEnabled?F(" "):F("!"));
         
-        // time_t tm = unixtime+offset; // дата/время события
-        time_t tm = unixtime+10800; // пока забиваю гвоздями, поскольку поломано
+        time_t tm = unixtime; // дата/время события
         sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
         buffer.concat(tmpBuf);
 

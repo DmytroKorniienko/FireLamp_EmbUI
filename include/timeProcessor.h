@@ -136,7 +136,7 @@ public:
      * "YYYY-MM-DDThh:mm:ss"
      */
     static void setTime(const char *timestr);
-    static void setTime(String &timestr);
+    static void setTime(const String &timestr);
 
     /**
      * установки системной временной зоны/правил сезонного времени.
@@ -148,7 +148,7 @@ public:
      * набор отформатированных строк зон под прогмем лежит тут
      * https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h
      */
-    static void tzsetup(const char* tz);
+    void tzsetup(const char* tz);
 
     /**
      * установка пользовательского ntp-сервера
