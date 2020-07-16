@@ -264,8 +264,6 @@ void block_main_flags(Interface *interf, JsonObject *data){
     interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
 #ifdef MIC_EFFECTS
     interf->checkbox(F("Mic"), F("Микр."), true);
-#else
-    interf->hidden("nil");
 #endif
 #ifdef AUX_PIN
     interf->checkbox(F("AUX"), F("AUX"), true);
@@ -1082,7 +1080,7 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     interf->checkbox(F("on"), (btn? btn->flags.on : 0)? F("true") : F("false"), F("ON/OFF"), false);
     interf->checkbox(F("hold"), (btn? btn->flags.hold : 0)? F("true") : F("false"), F("Удержание"), false);
-    interf->number(F("clicks"), (btn? btn->flags.click : 0), F("Нажатия"));
+    interf->number(F("clicks"), (btn? btn->flags.click : 0), F("Нажатия"), 0, 7);
 
     if (btn) {
         interf->hidden(F("save"), F("true"));
@@ -1595,3 +1593,17 @@ void default_buttons(){
     myButtons.add(new Button(true, true, 2, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
 #endif
+
+void uploadProgress(size_t len, size_t total){
+    static int prev = 0;
+    float part = total / 50.0;
+    int curr = len / part;
+    if (curr != prev) {
+        prev = curr;
+        for (int i = 0; i < curr; i++) Serial.print(F("="));
+        Serial.print(F("\n"));
+    }
+#ifdef VERTGAUGE
+    myLamp.GaugeShow(len, total, 100);
+#endif
+}

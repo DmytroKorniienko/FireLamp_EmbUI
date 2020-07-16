@@ -32,16 +32,25 @@ void Button::activate(bool reverse){
 			case BA_BRIGHT:
 				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
+#ifdef VERTGAUGE
+				myLamp.GaugeShow(newval, 255, 10);
+#endif
 				remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
 				return;
 			case BA_SPEED:
 				newval = constrain(myLamp.effects.getSpeed() + (myLamp.effects.getSpeed() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
+#ifdef VERTGAUGE
+				myLamp.GaugeShow(newval, 255, 100);
+#endif
 				remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
 				return;
 			case BA_SCALE:
 				newval = constrain(myLamp.effects.getScale() + (myLamp.effects.getScale() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
+#ifdef VERTGAUGE
+				myLamp.GaugeShow(newval, 255, 150);
+#endif
 				remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
 				return;
 			case BA_ON: ract = RA_ON; break;
