@@ -94,7 +94,7 @@ String Button::getName(){
 		return buffer;
 };
 
-Buttons::Buttons(): buttons(), tmNumHoldTimer(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, NORM_OPEN){
+Buttons::Buttons(): buttons(), holdtm(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, NORM_OPEN){
 	holding = false;
 	buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
 	pinTransition = true;
@@ -141,11 +141,13 @@ void Buttons::buttonTick(){
 	touch.tick();
 	bool reverse = false;
 	if ((holding = touch.isHolded())) {
-		clicks = touch.getHoldClicks();
+		if (holdtm.isReady()) {
+			clicks = touch.getHoldClicks();
+		}
 		reverse = true;
 	} else
 	if ((holding = touch.isStep())) {
-
+		holdtm.reset();
 	} else
 	if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		return;

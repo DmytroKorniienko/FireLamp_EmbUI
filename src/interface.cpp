@@ -1585,7 +1585,9 @@ void default_buttons(){
     myButtons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
     myButtons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
     myButtons.add(new Button(true, false, 3, BA::BA_EFF_PREV)); // 3 клика - пред эффект
+#ifdef OTA
     myButtons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
+#endif
     myButtons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
     myButtons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени
     myButtons.add(new Button(true, true, 0, BA::BA_BRIGHT)); // удержание яркость

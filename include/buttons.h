@@ -67,10 +67,9 @@ class Buttons {
 	byte clicks = 0;
 	Ticker _buttonTicker; // планировщик кнопки
 	LList<Button*> buttons;
+	timerMinim holdtm; // таймаут удержания кнопки в мс
 
 	public:
-	timerMinim tmNumHoldTimer; // таймаут удержания кнопки в мс
-
 	bool getpinTransition() { return pinTransition; }
 	void setpinTransition(bool val) { pinTransition = val; }
 
