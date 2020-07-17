@@ -116,8 +116,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define VERTGAUGE             (1U)                          // вертикальный/горизонтальный(1/0) индикатор, закомментировано - отключен (дефолтное поведение в config.h - отключен)
 // #define NUMHOLD_TIME          (3000U)                       // время запоминания последней комбинации яркости/скорости/масштаба в мс
 
-// #define FADERTIMEOUT          (1000U)                       // длительность всего фейдера в мс (плавное затухание эффекта при смене в DEMO)
-// #define FADERSTEPTIME         (50U)                         // длительность шага фейдера, мс
+// #define FADE_TIME             (1000U)                       // длительность всего фейдера в мс (плавное затухание эффекта при смене в DEMO)
+// #define FADE_STEPTIME         (20U)                         // длительность шага фейдера, мс
 
 // #define RANDOM_DEMO           (true)                        // false - последовательный, true - рандомный
 // #define DEMO_TIMEOUT          (33)                          // время в секундах для смены режима DEMO
