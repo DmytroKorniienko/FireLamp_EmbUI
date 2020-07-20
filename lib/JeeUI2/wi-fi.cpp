@@ -1,45 +1,56 @@
 
-bool _wifi_connected = false;
+//bool _wifi_connected = false;
 #include "JeeUI2.h"
+#include "user_interface.h"
+#include "wi-fi.h"
 
 
 #ifdef ESP8266
-void onSTAConnected(WiFiEventStationModeConnected ipInfo)
+void jeeui2::onSTAConnected(WiFiEventStationModeConnected ipInfo)
 {
-    Serial.printf_P(PSTR("Connected to %s\r\n"), ipInfo.ssid.c_str());
+    LOG(printf_P, PSTR("WiFi: connected to %s\r\n"), ipInfo.ssid.c_str());
 }
 
-void onSTAGotIP(WiFiEventStationModeGotIP ipInfo)
+void jeeui2::onSTAGotIP(WiFiEventStationModeGotIP ipInfo)
 {
-    Serial.printf_P(PSTR("Got IP: %s\r\n"), ipInfo.ip.toString().c_str());
-    Serial.printf_P(PSTR("Connected: %s\r\n"), WiFi.status() == WL_CONNECTED ? F("yes") : F("no"));
-    _wifi_connected = true;
+    wifi_setmode(WIFI_STA);            // Shutdown internal Access Point
+    wifi_sta = true;
+    jeeschedw.detach();
+    LOG(printf_P, PSTR("WiFi: Got IP: %s\r\n"), ipInfo.ip.toString().c_str());
 }
 
-void onSTADisconnected(WiFiEventStationModeDisconnected event_info)
+void jeeui2::onSTADisconnected(WiFiEventStationModeDisconnected event_info)
 {
-    Serial.printf_P(PSTR("Disconnected from SSID: %s\n"), event_info.ssid.c_str());
-    Serial.printf_P(PSTR("Reason: %d\n"), event_info.reason);
-    _wifi_connected = false;
+    wifi_sta = false;
+    LOG(printf_P, PSTR("WiFi: Disconnected from SSID: %s, reason: %d\n"), event_info.ssid.c_str(), event_info.reason);
+    if (jeeschedw.active() && WiFi.getMode()==WIFI_AP)
+        return;
+
+    jeeschedw.once_scheduled(WIFI_CONNECT_TIMEOUT, [this](){
+            LOG(println, F("WiFi: enabling internal AP"));
+            wifi_setmode(WIFI_AP);  // Enable internal AP if station connection is lost
+            jeeschedw.once_scheduled(WIFI_RECONNECT_TIMER, [this](){wifi_setmode(WIFI_AP_STA); WiFi.begin();} );
+            } );
 }
 #else
+// need to test it under ESP32 (might not need any scheduler to handle both Client and AP at the same time)
 void WiFiEvent(WiFiEvent_t event, system_event_info_t info)
 {
     switch (event)
     {
     case SYSTEM_EVENT_STA_START:
-        Serial.println(F("Station Mode Started"));
+        LOG(println, F("Station Mode Started"));
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
-        Serial.println("Connected to :" + String(WiFi.SSID()));
-        Serial.print(F("Got IP: "));
-        Serial.println(WiFi.localIP());
-        _wifi_connected = true;
+        WiFi.mode(WIFI_STA);            // Shutdown internal Access Point
+        LOG(printf_P, PSTR("Connected to: %s, got IP: %s\n", WiFi.SSID(), WiFi.localIP());
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
-        Serial.println(F("Disconnected from station, attempting reconnection"));
-        WiFi.reconnect();
-        _wifi_connected = false;
+        LOG(printf_P, PSTR("Disconnected from SSID: %s, reason: %d\n"), event_info.ssid.c_str(), event_info.reason);
+        if(wifi_get_opmode() != WIFI_AP_STA){
+            WiFi.mode(WIFI_AP_STA);         // Enable internal AP if station connection is lost
+            LOG(println, F("Enabling internal AP"));
+        }
         break;
     default:
         break;
@@ -47,93 +58,64 @@ void WiFiEvent(WiFiEvent_t event, system_event_info_t info)
 }
 #endif
 
- void jeeui2::_connected(){
-     connected = _wifi_connected;
- }
-
-void jeeui2::wifi_connect()
+void jeeui2::wifi_connect(const char *ssid, const char *pwd)
 {
-    bool wf = false;
-    String wifi = param(F("wifi"));
-    if (wifi == F("AP")) wifi_mode = 1;
-    if (wifi == F("STA")) wifi_mode = 2;
-    if (wifi == F("TMP_AP")) {wifi_mode = 1; var(F("wifi"), F("STA"));}
-    switch (wifi_mode)
-    {
-        case 1:
-        {
-            WiFi.disconnect();
-            WiFi.mode(WIFI_AP);
-            WiFi.softAP(param(F("ap_ssid")).c_str(), param(F("ap_pass")).c_str(), 6, 0, 4);
-            LOG(println, F("Start Wi-Fi AP mode!"));
-            //save();
-            _wifi_connected = false;
-            break;
-        }
-        case 2:
-        {
-#ifdef ESP8266
-            static WiFiEventHandler e1, e2, e3;
-            e1 = WiFi.onStationModeGotIP(onSTAGotIP);
-            e2 = WiFi.onStationModeDisconnected(onSTADisconnected);
-            e3 = WiFi.onStationModeConnected(onSTAConnected);
-#else
-            WiFi.onEvent(WiFiEvent);
-#endif
-            WiFi.disconnect();
-            //WiFi.mode(WIFI_OFF);
-            WiFi.mode(WIFI_STA);
-            WiFi.hostname(param(F("ap_ssid")).c_str());
-            WiFi.begin(param(F("ssid")).c_str(), param(F("pass")).c_str());
-            LOG(println, F("Connecting STA"));
-            save();
+    String hn = param(F("hostname"));
+    String appwd = param(F("APpwd"));
 
-            unsigned long interval = millis();
-            while (WiFi.status() != WL_CONNECTED)
-            {
-                delay(1);
-                if (LED_PIN != -1) {
-                    delay(50);
-                    digitalWrite(LED_PIN, HIGH);
-                    delay(50);
-                    digitalWrite(LED_PIN, LOW);
-                }
-                else
-                {
-                    delay(500);
-                }
+    if (!hn.length())
+        var(F("hostname"), String(__IDPREFIX) + mc, true);
+    WiFi.hostname(hn);
 
+    if (appwd.length()<WIFI_PSK_MIN_LENGTH)
+        appwd = "";
 
-                btn();
-                if(a_ap + interval < millis() && a_ap != 0){
-                    wf = true;
-                    break;
-                }
-            }
+    LOG(printf_P, PSTR("WiFi: set AP params to SSID:%s, pwd:%s\n"), hn.c_str(), appwd.c_str());
+    WiFi.softAP(hn.c_str(), appwd.c_str());
 
-            uint8_t macaddr[6];
-            WiFi.macAddress(macaddr);
-            String _mac;
-            for (byte i = 0; i < 6; ++i) {
-                _mac += String(macaddr[i], HEX);
-                if (i < 5)
-                    _mac += ':';
-            }
-            strncpy(mac,_mac.c_str(),sizeof(mac)-1);
-            strncpy(ip,WiFi.localIP().toString().c_str(),sizeof(ip)-1);
-            LOG(println, );
-            break;
+    String apmode = param(F("APonly"));
+
+    LOG(print, F("WiFi: start in "));
+    if (apmode == F("true")){
+        LOG(println, F("AP-only mode"));
+        wifi_setmode(WIFI_AP);
+
+    } else {
+        LOG(println, F("AP/STA mode"));
+        wifi_setmode(WIFI_AP_STA);
+
+        if (ssid) {
+            WiFi.begin(ssid, pwd);
+            LOG(printf_P, PSTR("WiFi: client connecting to SSID:%s, pwd:%s\n"), ssid, pwd ? pwd : "");
+        } else {
+            WiFi.begin();   // use internaly stored last known credentials for connection
+            LOG(println, F("WiFi reconecting..."));
         }
     }
-    if (wf){
-        LOG(println, F("RECONNECT AP"));
-        if (wifi == F("STA"))
-            var(F("wifi"), F("TMP_AP"));
-        wifi_connect();
-    }
-    WiFi.scanNetworks(true);
 }
 
-void jeeui2::ap(unsigned long interval){
-    a_ap = interval;
+void jeeui2::wifi_setmode(WiFiMode mode){
+    LOG(printf_P, PSTR("WiFi: set mode: %d\n"), mode);
+    WiFi.mode(mode);
+}
+
+/**
+ * формирует chipid из MAC-адреса вида aabbccddeeff
+ */
+void jeeui2::getAPmac(){
+    if(*mc) return;
+/*
+    #ifdef ESP32
+    WiFi.mode(WIFI_MODE_AP);
+    #else
+    WiFi.mode(WIFI_AP);
+    #endif
+    String _mac(WiFi.softAPmacAddress());
+    _mac.replace(F(":"), F(""));
+    strncpy(mc, _mac.c_str(), sizeof(mc)-1);
+*/
+    uint8_t _mac[6];
+    wifi_get_macaddr(SOFTAP_IF, _mac);
+
+    sprintf_P(mc, PSTR("%02X%02X%02X%02X%02X%02X"), _mac[0], _mac[1], _mac[2], _mac[3], _mac[4], _mac[5]);
 }

@@ -116,7 +116,6 @@ private:
     bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
-    bool isForcedWifi:1; // в случае режима AP один раз до нажатия "Выйти из настроек" форсируем переключение на вкладку WiFi, дальше этого не делаем
 #ifdef MIC_EFFECTS
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isMicOn:1; // глобальное включение/выключение микрофона
@@ -239,9 +238,7 @@ public:
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return isGlobalBrightness;}
-    bool isForceWifi() {return isForcedWifi;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
-    void setForceWifi(bool val) {isForcedWifi = val;}
     int getmqtt_int() {return mqtt_int;}
     void semqtt_int(int val) {mqtt_int = val;}
 
