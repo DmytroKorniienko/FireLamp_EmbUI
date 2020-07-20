@@ -186,16 +186,24 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void jeeui2::init(){
-#ifdef LAMP_DEBUG
-    nonWifiVar();
+//#ifdef LAMP_DEBUG
+//    nonWifiVar();
     load();
     LOG(println, String(F("CONFIG: ")) + jee.deb());
-#endif
-    ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
+//#endif
+    //ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
 
-    WiFi.persistent(false);     // не сохраняем креды от WiFi во флеш, т.к. они у нас уже лежат в конфиге
+    //WiFi.persistent(false);     // не сохраняем креды от WiFi во флеш, т.к. они у нас уже лежат в конфиге
+    #ifdef ESP8266
+        e1 = WiFi.onStationModeGotIP(std::bind(&jeeui2::onSTAGotIP, this, std::placeholders::_1));
+        e2 = WiFi.onStationModeDisconnected(std::bind(&jeeui2::onSTADisconnected, this, std::placeholders::_1));
+        e3 = WiFi.onStationModeConnected(std::bind(&jeeui2::onSTAConnected, this, std::placeholders::_1));
+    #else
+        WiFi.onEvent(std::bind(&jeeui2::WiFiEvent, this, std::placeholders::_1));
+    #endif
+
     wifi_connect();
-    LOG(println, String(F("MAC: ")) + jee.mac);
+    //LOG(println, String(F("MAC: ")) + jee.mac);
 }
 
 void uploadProgress(size_t len, size_t total){
@@ -384,7 +392,7 @@ void jeeui2::handle(){
 #ifdef ESP8266
     MDNS.update();
 #endif
-    _connected();
+    //_connected();
     mqtt_handle();
     udpLoop();
 
@@ -404,6 +412,7 @@ void jeeui2::handle(){
     send_pub();
 }
 
+/*
 void jeeui2::nonWifiVar(){
     getAPmac();
     if(param(F("wifi")) == F("null")) var(F("wifi"), F("AP"), true);
@@ -412,15 +421,4 @@ void jeeui2::nonWifiVar(){
     if(param(F("ap_ssid")) == F("null")) var(F("ap_ssid"), String(__IDPREFIX) + mc, true);
     if(param(F("ap_pass")) == F("null")) var(F("ap_pass"), "", true);
 }
-
-void jeeui2::getAPmac(){
-    if(*mc) return;
-    #ifdef ESP32
-    WiFi.mode(WIFI_MODE_AP);
-    #else
-    WiFi.mode(WIFI_AP);
-    #endif
-    String _mac(WiFi.softAPmacAddress());
-    _mac.replace(F(":"), F(""));
-    strncpy(mc, _mac.c_str(), sizeof(mc)-1);
-}
+*/

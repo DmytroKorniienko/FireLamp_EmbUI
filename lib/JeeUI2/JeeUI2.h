@@ -26,6 +26,8 @@
 #include <Update.h>
 #endif
 
+#include <Ticker.h>   // esp планировщик
+
 #include <AsyncMqttClient.h>
 #include "../../include/LList.h"
 #include "../../include/misc.h"
@@ -56,9 +58,9 @@ class jeeui2
 
   public:
     jeeui2() : cfg(4096), section_handle(), server(80), ws("/ws"){
-      *ip='\0';
+//      *ip='\0';
       *mc='\0';
-      *mac='\0';
+//      *mac='\0';
       *m_pref='\0';
       *m_host='\0';
       *m_user='\0';
@@ -79,7 +81,6 @@ class jeeui2
     String param(const String &key);
     void led(uint8_t pin, bool invert);
     String deb();
-    void ap(unsigned long interval);
     void init();
     void begin();
     void handle();
@@ -103,22 +104,24 @@ class jeeui2
     void mqtt(const String &pref, const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) ());
     void mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) ());
     void mqtt(const String &host, int port, const String &user, const String &pass, void (*mqttFunction) (const String &topic, const String &payload), void (*mqttConnect) (), bool remotecontrol);
+    void mqtt_reconnect();
 
     void subscribe(const String &topic);
     void publish(const String &topic, const String &payload);
     void publish(const String &topic, const String &payload, bool retained);
 
     void remControl();
-    void wifi_connect();
-    
+
+    /**
+     * Подключение к WiFi AP в клиентском режиме
+     */
+    void wifi_connect(const char *ssid=nullptr, const char *pwd=nullptr);
+    bool wifi_sta = false;    // флаг успешного подключения к нешне WiFi-AP, (TODO: переделать на события с коллбеками)
+
     void post(JsonObject data);
     void send_pub();
 
-    char ip[16]; //"255.255.255.255"
-    char mc[13]; // id "ffffffffffff"
-    char mac[18]; // "ff:ff:ff:ff:ff:ff"
-
-    bool connected = false;
+    char mc[13]; // id из mac-адреса "ffffffffffff"
 
     String id(const String &tpoic);
 
@@ -130,7 +133,7 @@ class jeeui2
 
   private:
     void led_handle();
-    void nonWifiVar();
+    //void nonWifiVar();
     void led_on();
     void led_off();
     void led_inv();
@@ -145,7 +148,7 @@ class jeeui2
     void mqtt_handle();
     bool mqtt_enable = false;
 
-    void _connected();
+    //void _connected();
     void subscribeAll();
 
     char udpRemoteIP[16];
@@ -156,14 +159,23 @@ class jeeui2
     bool isNeedSave = false;
     unsigned long astimer;
 
-    uint8_t wifi_mode;
+    // WiFi related
+    WiFiEventHandler e1, e2, e3;
+    WiFiMode wifi_mode;
+    void onSTAConnected(WiFiEventStationModeConnected ipInfo);
+    void onSTAGotIP(WiFiEventStationModeGotIP ipInfo);
+    void onSTADisconnected(WiFiEventStationModeDisconnected event_info);
+    /**
+      * устанавлием режим WiFi
+      */
+    void wifi_setmode(WiFiMode mode);
+
     int LED_PIN = -1;
     bool LED_INVERT = false;
     uint8_t mn = 0;
     unsigned long a_ap = 0;
-    bool wf = false;
     uint8_t pg = 0;
-    char udpMessage[65]; // Обмен по UDP
+    char udpMessage[65]; // буфер для сообщений Обмена по UDP
 
     void connectToMqtt();
     void onMqttConnect();
@@ -173,11 +185,12 @@ class jeeui2
     static void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
     static void onMqttPublish(uint16_t packetId);
     static void _onMqttConnect(bool sessionPresent);
-    void check_wifi_state();
 
     static bool mqtt_connected;
     static bool mqtt_connect;
     static bool mqtt_remotecontrol;
+
+    Ticker jeeschedw;        // планировщик WiFi
 };
 
 #endif

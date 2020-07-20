@@ -127,6 +127,10 @@ class Interface {
         void select(const String &id, const String &label, bool directly = false);
         void select(const String &id, const String &value, const String &label, bool directly = false);
         void option(const String &value, const String &label);
+        /**
+         * элемент интерфейса checkbox
+         * @param directly - значение чекбокса при изменении сразу передается на сервер без отправки формы
+         */
         void checkbox(const String &id, const String &label, bool directly = false);
         void checkbox(const String &id, const String &value, const String &label, bool directly = false);
         void color(const String &id, const String &label);

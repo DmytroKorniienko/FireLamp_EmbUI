@@ -126,16 +126,19 @@ void jeeui2::mqtt(const String &host, int port, const String &user, const String
 }
 
 void jeeui2::mqtt_handle(){
-    if (!connected || !*m_host) return;
+    if (!wifi_sta || !*m_host) return;
     if (mqtt_connect) onMqttConnect();
-    check_wifi_state();
+    mqtt_reconnect();
 }
 
-void jeeui2::check_wifi_state(){
+/*
+ * TODO: убрать этот бардак в планировщик
+ */
+void jeeui2::mqtt_reconnect(){
     static unsigned long tmout = 0;
-    if (tmout + 5000 > millis()) return;
+    if (tmout + 15000 > millis()) return;
     tmout = millis();
-    if (connected && !mqtt_connected) connectToMqtt();
+    if ( wifi_sta && !mqtt_connected) connectToMqtt();
 }
 
 void jeeui2::onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
@@ -194,12 +197,12 @@ void jeeui2::subscribeAll(){
 }
 
 void jeeui2::publish(const String &topic, const String &payload, bool retained){
-    if (!connected || !mqtt_enable) return;
+    if (!wifi_sta || !mqtt_enable) return;
     mqttClient.publish(id(topic).c_str(), 0, retained, payload.c_str());
 }
 
 void jeeui2::publish(const String &topic, const String &payload){
-    if (!connected || !mqtt_enable) return;
+    if (!wifi_sta || !mqtt_enable) return;
     mqttClient.publish(id(topic).c_str(), 0, false, payload.c_str());
 }
 

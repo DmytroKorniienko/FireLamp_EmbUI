@@ -409,7 +409,6 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       isEffectsDisabledUntilText = false;
       isOffAfterText = false;
       isEventsHandled = true;
-      isForcedWifi = true;
       _brt =0;
       _steps = 0;
       _brtincrement = 0;

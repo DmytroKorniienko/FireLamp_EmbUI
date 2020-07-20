@@ -604,21 +604,27 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
 }
 #endif
 
+// формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(F("settings_wifi"), F("WiFi"));
     // форма настроек Wi-Fi
-    interf->json_section_hidden(F("set_wifi"), F("WiFi"));
 
-    interf->select(F("wifi"), F("Режим WiFi"));
-    interf->option(F("STA"), F("STA"));
-    interf->option(F("AP"), F("AP"));
+    interf->json_section_hidden(F("set_wifi"), F("WiFi Client"));
+    interf->spacer(F("Настройки WiFi-клиента"));
+    interf->text(F("hostname"), F("Имя лампы (mDNS Hostname/AP-SSID)"));
+    interf->text(F("wcssid"), F("WiFi SSID"));
+    interf->password(F("wcpass"), F("Password"));
+    interf->button_submit(F("set_wifi"), F("Подключиться"), F("gray"));
     interf->json_section_end();
 
-    interf->text(F("ap_ssid"), F("AP/mDNS"));
-    interf->text(F("ssid"), F("SSID"));
-    interf->password(F("pass"), F("Password"));
-    interf->button_submit(F("set_wifi"), F("Connect"), F("gray"));
+    interf->json_section_hidden(F("set_wifiAP"), F("WiFi AP"));
+    interf->text(F("hostname"), F("Имя лампы (mDNS Hostname/AP-SSID)"));
+    interf->spacer(F("Настройки WiFi-точки доступа"));
+    interf->comment(F("В режиме AP-only лампа всегда работает как точка доступа и не будет подключаться к другим WiFi-сетям"));
+    interf->checkbox(F("APonly"), F("Режим AP-only"), false);
+    interf->password(F("APpwd"), F("Защитить AP паролем"));
+    interf->button_submit(F("set_wifiAP"), F("Сохранить"), F("gray"));
     interf->json_section_end();
 
     // форма настроек MQTT
@@ -642,21 +648,37 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_settings_wifi(interf, data);
     interf->json_frame_flush();
-    myLamp.setForceWifi(true);
+}
+
+void set_settings_wifiAP(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    SETPARAM(F("hostname"));
+    SETPARAM(F("APonly"));
+    SETPARAM(F("APpwd"));
+
+    jee.save();
+    jee.wifi_connect();
+
+    section_settings_frame(interf, data);
 }
 
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("ap_ssid"));
-    SETPARAM(F("ssid"));
-    SETPARAM(F("pass"));
 
-    SETPARAM(F("wifi"));
-    //jee.var(F("wifi"), F("STA"));
-    jee.save();
-    //ESP.restart();
-    if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
-        jee.wifi_connect();
+    SETPARAM(F("hostname"));
+
+    String ssids = (*data)[F("wcssid")];
+    String pwds = (*data)[F("wcpass")];
+
+    const char *ssid = (*data)[F("wcssid")];
+    const char *pwd = (*data)[F("wcpass")];
+
+    if(ssid){
+        jee.wifi_connect(ssid, pwd);
+    } else {
+        LOG(println, F("WiFi: No SSID defined!"));
+    }
 
     section_settings_frame(interf, data);
 }
@@ -671,9 +693,8 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     //m_pref
 
     jee.save();
-    //ESP.restart();
-    if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
-        jee.wifi_connect();
+    //if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
+        //jee.wifi_connect();
 
     section_settings_frame(interf, data);
 }
@@ -1159,8 +1180,8 @@ void section_main_frame(Interface *interf, JsonObject *data){
 
     interf->json_frame_flush();
 
-    if(!jee.connected && myLamp.isForceWifi()){
-        // только для первого раза форсируем выбор вкладки настройки WiFi, дальше этого не делаем
+    if(!jee.wifi_sta){
+        // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
         show_settings_wifi(interf, data);
     }
 
@@ -1173,9 +1194,14 @@ void section_main_frame(Interface *interf, JsonObject *data){
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
-    jee.var_create(F("wifi"), F("STA")); // режим работы WiFi по умолчанию ("STA" или "AP")  (параметр в энергонезависимой памяти)
-    jee.var_create(F("ssid"), F("")); // имя точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
-    jee.var_create(F("pass"), F("")); // пароль точки доступа к которой подключаемся (параметр в энергонезависимой памяти)
+
+    //WiFi
+    jee.var_create(F("hostname"), F(""));
+    jee.var_create(F("APonly"), F(""));     // режим AP-only (только точка доступа)
+    jee.var_create(F("APpwd"), F(""));      // пароль внутренней точки доступа
+//    jee.var_create(F("ssid"), F(""));     // режим AP-only (только точка доступа)
+//    jee.var_create(F("pass"), F(""));      // пароль внутренней точки доступа
+
 
     // параметры подключения к MQTT
     jee.var_create(F("m_host"), F("")); // Дефолтные настройки для MQTT
@@ -1207,10 +1233,6 @@ void create_parameters(){
     jee.var_create(F("GlobBRI"), F("127"));
 
     // date/time related vars
-    //jee.var_create(F("isTmSync"), F("true"));
-    //jee.var_create(F("time"), F("00:00"));
-    //jee.var_create(F("timezone"), F(""));
-    //jee.var_create(F("tm_offs"), F("0"));
     jee.var_create(F("TZSET"), "");
     jee.var_create(F("userntp"), "");
 
@@ -1274,6 +1296,7 @@ void create_parameters(){
     jee.section_handle_add(F("settings"), section_settings_frame);
     jee.section_handle_add(F("show_wifi"), show_settings_wifi);
     jee.section_handle_add(F("set_wifi"), set_settings_wifi);
+    jee.section_handle_add(F("set_wifiAP"), set_settings_wifiAP);
     jee.section_handle_add(F("set_mqtt"), set_settings_mqtt);
     jee.section_handle_add(F("show_other"), show_settings_other);
     jee.section_handle_add(F("set_other"), set_settings_other);
