@@ -402,42 +402,91 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 }
 
 
-    uint32_t LAMP::getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
-    {
-      if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-      {
-        return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
-      }
-      else                                                      // если нечётная строка
-      {
-        return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
-      }
-    }
+uint32_t LAMP::getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
+{
+  if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+  {
+    return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
+  }
+  else                                                      // если нечётная строка
+  {
+    return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
+  }
+}
 
-    uint32_t LAMP::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
-    {
-      uint32_t thisPixel = thisSegm * SEGMENTS;
-      if (thisPixel > NUM_LEDS - 1) return 0;
-      return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
-    }
+uint32_t LAMP::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
+{
+  uint32_t thisPixel = thisSegm * SEGMENTS;
+  if (thisPixel > NUM_LEDS - 1) return 0;
+  return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
+}
 
-    void LAMP::fillAll(CRGB color) // залить все
-    {
-      for (int32_t i = 0; i < NUM_LEDS; i++)
-      {
-        leds[i] = color;
-      }
-    }
+void LAMP::fillAll(CRGB color) // залить все
+{
+  for (int32_t i = 0; i < NUM_LEDS; i++)
+  {
+    leds[i] = color;
+  }
+}
 
-    void LAMP::drawPixelXY(int16_t x, int16_t y, CRGB color) // функция отрисовки точки по координатам X Y
-    {
-      if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
-      uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
-      for (uint16_t i = 0; i < SEGMENTS; i++)
-      {
-        leds[thisPixel + i] = color;
+void LAMP::drawPixelXY(int16_t x, int16_t y, CRGB color) // функция отрисовки точки по координатам X Y
+{
+  if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
+  uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
+  for (uint16_t i = 0; i < SEGMENTS; i++)
+  {
+    leds[thisPixel + i] = color;
+  }
+}
+
+void LAMP::drawLine(int x1, int y1, int x2, int y2, CRGB color){
+  int deltaX = abs(x2 - x1);
+  int deltaY = abs(y2 - y1);
+  int signX = x1 < x2 ? 1 : -1;
+  int signY = y1 < y2 ? 1 : -1;
+  int error = deltaX - deltaY;
+
+  drawPixelXY(x2, y2, color);
+  while (x1 != x2 || y1 != y2) {
+      drawPixelXY(x1, y1, color);
+      int error2 = error * 2;
+      if (error2 > -deltaY) {
+          error -= deltaY;
+          x1 += signX;
       }
+      if (error2 < deltaX) {
+          error += deltaX;
+          y1 += signY;
+      }
+  }
+}
+
+void LAMP::drawCircle(int x0, int y0, int radius, CRGB color){
+  int x = 0, y = radius, error = 0;
+  int delta = 1 - 2 * radius;
+
+  while (y >= 0) {
+    drawPixelXY(x0 + x, y0 + y, color);
+    drawPixelXY(x0 + x, y0 - y, color);
+    drawPixelXY(x0 - x, y0 + y, color);
+    drawPixelXY(x0 - x, y0 - y, color);
+    error = 2 * (delta + y) - 1;
+    if (delta < 0 && error <= 0) {
+      ++x;
+      delta += 2 * x + 1;
+      continue;
     }
+    error = 2 * (delta - x) - 1;
+    if (delta > 0 && error > 0) {
+      --y;
+      delta += 1 - 2 * y;
+      continue;
+    }
+    ++x;
+    delta += 2 * (x - y);
+    --y;
+  }
+}
 
 void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
