@@ -611,7 +611,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_hidden(F("set_wifi"), F("WiFi Client"));
     interf->spacer(F("Настройки WiFi-клиента"));
     interf->text(F("hostname"), F("Имя лампы (mDNS Hostname/AP-SSID)"));
-    interf->text(F("wcssid"), F("WiFi SSID"));
+    interf->text(F("wcssid"), WiFi.SSID(), F("WiFi SSID"));
     interf->password(F("wcpass"), F("Password"));
     interf->button_submit(F("set_wifi"), F("Подключиться"), F("gray"));
     interf->json_section_end();
