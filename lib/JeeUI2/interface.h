@@ -88,3 +88,5 @@ void httpCallback(const String &param, const String &value);
 #ifdef ESP_USE_BUTTON
 void default_buttons();
 #endif
+
+void uploadProgress(size_t len, size_t total);

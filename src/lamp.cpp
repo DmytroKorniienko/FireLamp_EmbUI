@@ -266,7 +266,7 @@ void LAMP::effectsTick(){
 
   doPrintStringToLamp(); // обработчик печати строки
 #ifdef VERTGAUGE
-  GaugeShow();
+  GaugeMix();
 #endif
 
   if (isEffectsDisabledUntilText || effects.worker->status()) {
@@ -312,83 +312,37 @@ void LAMP::frameShow(const uint32_t ticktime){
 }
 
 #ifdef VERTGAUGE
-    void LAMP::GaugeShow() {
-      byte ind;
-/*
-      // if(!startButtonHolding) return;
+    void LAMP::GaugeShow(unsigned val, unsigned max, byte hue) {
+      gauge_time = millis();
+      gauge_val = val;
+      gauge_max = max;
+      gauge_hue = hue;
+    }
 
-      switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
+    void LAMP::GaugeMix() {
+      if (gauge_time + 3000 < millis()) return;
+
 #if (VERTGAUGE==1)
-        case 1:
-          ind = (byte)((getLampBrightness()+1)*HEIGHT/255.0+1);
-          for (byte x = 0; x <= xCol*(xStep-1) ; x+=xStep) {
-            for (byte y = 0; y < HEIGHT ; y++) {
-              if (ind > y)
-                drawPixelXY(x, y, CHSV(10, 255, 255));
-              else
-                drawPixelXY(x, y,  0);
-            }
-          }
-          break;
-        case 2:
-          ind = (byte)((effects.getSpeed()+1)*HEIGHT/255.0+1);
-          for (byte x = 0; x <= xCol*(xStep-1) ; x+=xStep) {
-            for (byte y = 0; y < HEIGHT ; y++) {
-              if (ind > y)
-                drawPixelXY(x, y, CHSV(100, 255, 255));
-              else
-                drawPixelXY(x, y,  0);
-            }
-          }
-          break;
-        case 3:
-          ind = (byte)((effects.getScale()+1)*HEIGHT/255.0+1);
-          for (byte x = 0; x <= xCol*(xStep-1) ; x+=xStep) {
-            for (byte y = 0; y < HEIGHT ; y++) {
-              if (ind > y)
-                drawPixelXY(x, y, CHSV(150, 255, 255));
-              else
-                drawPixelXY(x, y,  0);
-            }
-          }
-          break;
-#else
-        case 1:
-          ind = (byte)((getLampBrightness()+1)*HEIGHT/255.0+1);
-          for (byte y = 0; y <= yCol*(yStep-1) ; y+=yStep) {
-            for (byte x = 0; x < WIDTH ; x++) {
-              if (ind > x)
-                drawPixelXY((x+y)%WIDTH, y, CHSV(10, 255, 255));
-              else
-                drawPixelXY((x+y)%WIDTH, y,  0);
-            }
-          }
-          break;
-        case 2:
-          ind = (byte)((effects.getSpeed()+1)*HEIGHT/255.0+1);
-          for (byte y = 0; y <= yCol*(yStep-1) ; y+=yStep) {
-            for (byte x = 0; x < WIDTH ; x++) {
-              if (ind > x)
-                drawPixelXY((x+y)%WIDTH, y, CHSV(100, 255, 255));
-              else
-                drawPixelXY((x+y)%WIDTH, y,  0);
-            }
-          }
-          break;
-        case 3:
-          ind = (byte)((effects.getScale()+1)*HEIGHT/255.0+1);
-          for (byte y = 0; y <= yCol*(yStep-1) ; y+=yStep) {
-            for (byte x = 0; x < WIDTH ; x++) {
-              if (ind > x)
-                drawPixelXY((x+y)%WIDTH, y, CHSV(150, 255, 255));
-              else
-                drawPixelXY((x+y)%WIDTH, y,  0);
-            }
-          }
-          break;
-#endif
+      byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+      for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
+        for (byte y = 0; y < HEIGHT ; y++) {
+          if (ind > y)
+            drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
+          else
+            drawPixelXY(x, y,  0);
+        }
       }
-  */
+#else
+      byte ind = (byte)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
+      for (byte y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
+        for (byte x = 0; x < WIDTH ; x++) {
+          if (ind > x)
+            drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
+          else
+            drawPixelXY((x + y) % WIDTH, y,  0);
+        }
+      }
+#endif
     }
 #endif
 

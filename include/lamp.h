@@ -174,7 +174,11 @@ private:
 
 #ifdef VERTGAUGE
     byte xStep; byte xCol; byte yStep; byte yCol; // для индикатора
-    void GaugeShow();
+    unsigned long gauge_time = 0;
+    unsigned gauge_val = 0;
+    unsigned gauge_max = 0;
+    byte gauge_hue = 0;
+    void GaugeMix();
 #endif
     void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) {if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
 
@@ -221,6 +225,10 @@ public:
     void setMicOnOff(bool val) {isMicOn = val;}
     bool isMicOnOff() {return isMicOn;}
     void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
+#endif
+
+#ifdef VERTGAUGE
+    void GaugeShow(unsigned val, unsigned max, byte hue = 10);
 #endif
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)

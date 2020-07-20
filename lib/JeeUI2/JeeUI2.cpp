@@ -206,17 +206,6 @@ void jeeui2::init(){
     //LOG(println, String(F("MAC: ")) + jee.mac);
 }
 
-void uploadProgress(size_t len, size_t total){
-    static int prev = 0;
-    float part = total / 50.0;
-    int curr = len / part;
-    if (curr != prev) {
-        prev = curr;
-        for (int i = 0; i < curr; i++) Serial.print(F("="));
-        Serial.print(F("\n"));
-    }
-}
-
 void jeeui2::begin(){
     /*use mdns for host name resolution*/
     char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
