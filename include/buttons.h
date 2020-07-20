@@ -47,7 +47,7 @@ class Button{
 		Button(uint8_t on, uint8_t hold, uint8_t click, BA act = BA_NONE) { direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; action = act; }
 		Button(uint8_t mask, BA act = BA_NONE) { direction = false; flags.mask = mask; action = act; }
 
-		void activate(bool reverse);
+		bool activate(bool reverse);
 		String getName();
 
 		BA action;

@@ -24,9 +24,10 @@ const char *btn_get_desc(BA action){
 	return PSTR("");
 }
 
-void Button::activate(bool reverse){
+bool Button::activate(bool reverse){
 		uint8_t newval;
 		RA ract = RA_UNKNOWN;
+		bool ret = false;
 		if (reverse) direction = !direction;
 		switch (action) {
 			case BA_BRIGHT:
@@ -36,7 +37,7 @@ void Button::activate(bool reverse){
 				myLamp.GaugeShow(newval, 255, 10);
 #endif
 				remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
-				return;
+				return true;
 			case BA_SPEED:
 				newval = constrain(myLamp.effects.getSpeed() + (myLamp.effects.getSpeed() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
@@ -44,7 +45,7 @@ void Button::activate(bool reverse){
 				myLamp.GaugeShow(newval, 255, 100);
 #endif
 				remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
-				return;
+				return true;
 			case BA_SCALE:
 				newval = constrain(myLamp.effects.getScale() + (myLamp.effects.getScale() / 25 + 1) * (direction * 2 - 1), 1 , 255);
 				if (newval == 1 || newval == 255) direction = !direction;
@@ -52,7 +53,7 @@ void Button::activate(bool reverse){
 				myLamp.GaugeShow(newval, 255, 150);
 #endif
 				remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
-				return;
+				return true;
 			case BA_ON: ract = RA_ON; break;
 			case BA_OFF: ract = RA_OFF; break;
 			case BA_DEMO: ract = RA_DEMO; break;
@@ -72,6 +73,7 @@ void Button::activate(bool reverse){
 			default:;
 		}
 		remote_action(ract, NULL);
+		return ret;
 }
 
 String Button::getName(){
@@ -162,7 +164,10 @@ void Buttons::buttonTick(){
 	Button btn(myLamp.isLampOn(), holding, clicks);
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
-			buttons[i]->activate(reverse);
+			if (!buttons[i]->activate(reverse)) {
+				// действие не подразумевает повтора
+				touch.resetStates();
+			}
 			// break; // Не выходим после первого найденного совпадения. Можем делать макросы из нажатий
 		}
 	}
