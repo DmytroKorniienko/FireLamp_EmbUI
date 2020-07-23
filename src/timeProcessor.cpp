@@ -271,12 +271,12 @@ void TimeProcessor::timeavailable(){
 }
 
 /**
- * функция допечатывает в переданную строку текущие дату/время в формате "YYYY-MM-DDThh:mm:ss"
- * 
+ * функция допечатывает в переданную строку заданный таймстамп в дату/время в формате "9999-99-99T99:99"
+ * @param _tstamp - преобразовать заданный таймстамп, если не задан используется текущее локальное время
  */
-void TimeProcessor::getDateTimeString(String &buf){
-  char tmpBuf[17];
-  const tm* tm = localtime(now());
+void TimeProcessor::getDateTimeString(String &buf, const time_t _tstamp){
+  char tmpBuf[DATETIME_STRLEN];
+  const tm* tm = localtime(  _tstamp ? &_tstamp : now());
   sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"), tm->tm_year + TM_BASE_YEAR, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min);
   buf.concat(tmpBuf);
 }

@@ -116,7 +116,7 @@ class jeeui2
      * Подключение к WiFi AP в клиентском режиме
      */
     void wifi_connect(const char *ssid=nullptr, const char *pwd=nullptr);
-    bool wifi_sta = false;    // флаг успешного подключения к нешне WiFi-AP, (TODO: переделать на события с коллбеками)
+    bool wifi_sta = false;    // флаг успешного подключения к внешней WiFi-AP, (TODO: переделать на события с коллбеками)
 
     void post(JsonObject data);
     void send_pub();
@@ -133,7 +133,6 @@ class jeeui2
 
   private:
     void led_handle();
-    //void nonWifiVar();
     void led_on();
     void led_off();
     void led_inv();
@@ -148,7 +147,6 @@ class jeeui2
     void mqtt_handle();
     bool mqtt_enable = false;
 
-    //void _connected();
     void subscribeAll();
 
     char udpRemoteIP[16];
@@ -161,7 +159,7 @@ class jeeui2
 
     // WiFi related
     WiFiEventHandler e1, e2, e3;
-    WiFiMode wifi_mode;
+    WiFiMode wifi_mode;   // используется в gpio led_handle (to be removed)
     void onSTAConnected(WiFiEventStationModeConnected ipInfo);
     void onSTAGotIP(WiFiEventStationModeGotIP ipInfo);
     void onSTADisconnected(WiFiEventStationModeDisconnected event_info);
@@ -172,9 +170,6 @@ class jeeui2
 
     int LED_PIN = -1;
     bool LED_INVERT = false;
-    uint8_t mn = 0;
-    unsigned long a_ap = 0;
-    uint8_t pg = 0;
     char udpMessage[65]; // буфер для сообщений Обмена по UDP
 
     void connectToMqtt();

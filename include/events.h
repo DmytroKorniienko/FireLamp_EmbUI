@@ -38,7 +38,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #pragma once
 #include "misc.h"
 #include "timeProcessor.h"
-//#include <Ticker.h>
 
 #define EVENT_TSTAMP_LENGTH 17  // для строки вида "YYYY-MM-DDThh:mm"
 
@@ -79,8 +78,7 @@ struct EVENT {
     };
     uint8_t repeat;
     uint8_t stopat;
-    //uint32_t unixtime;
-    time_t unixtime;
+    time_t unixtime;    // timestamp для события в локальной часовой зоне
     EVENT_TYPE event;
     char *message;
     EVENT *next = nullptr;
@@ -89,22 +87,18 @@ struct EVENT {
     const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
 
     String getDateTime() {
-        char tmpBuf[EVENT_TSTAMP_LENGTH]; // тут будет дата/время события, а не текущая
-        time_t tm = unixtime;
-        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
-        return String(tmpBuf);
+        String tmpBuf((char *)0);
+        TimeProcessor::getDateTimeString(tmpBuf, unixtime);
+        return tmpBuf;
     }
 
     String getName() {
         String buffer;
-        char tmpBuf[EVENT_TSTAMP_LENGTH];
         String day_buf(T_EVENT_DAYS);
 
         buffer.concat(isEnabled?F(" "):F("!"));
         
-        time_t tm = unixtime; // дата/время события
-        sprintf_P(tmpBuf,PSTR("%04u-%02u-%02uT%02u:%02u"),year(tm),month(tm),day(tm),hour(tm),minute(tm));
-        buffer.concat(tmpBuf);
+        TimeProcessor::getDateTimeString(buffer, unixtime);
 
         buffer.concat(F(","));
         switch (event)
@@ -169,11 +163,11 @@ struct EVENT {
             }
             t_raw_data >>= 1;
         }
-        //return buffer;
 
         if(message[0]){     // время тут никто и не копирует, а усекается текст
             uint8_t UTFNsymbols = 0; // кол-во симоволов UTF-8 уже скопированных
             uint8_t i = 0;
+            char tmpBuf[EVENT_TSTAMP_LENGTH];
             while(UTFNsymbols < 5 && message[i] && i < sizeof(tmpBuf)-4)
             {
                 if(message[i]&0x80){

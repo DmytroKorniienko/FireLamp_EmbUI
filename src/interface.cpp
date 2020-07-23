@@ -648,6 +648,9 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
+/**
+ * настройка подключения WiFi в режиме AP
+ */
 void set_settings_wifiAP(Interface *interf, JsonObject *data){
     if (!data) return;
 
@@ -661,13 +664,13 @@ void set_settings_wifiAP(Interface *interf, JsonObject *data){
     section_settings_frame(interf, data);
 }
 
+/**
+ * настройка подключения WiFi в режиме клиента
+ */
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
 
     SETPARAM(F("hostname"));
-
-    String ssids = (*data)[F("wcssid")];
-    String pwds = (*data)[F("wcpass")];
 
     const char *ssid = (*data)[F("wcssid")];
     const char *pwd = (*data)[F("wcpass")];

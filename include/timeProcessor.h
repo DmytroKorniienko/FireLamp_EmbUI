@@ -47,7 +47,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef ESP8266
  #include <ESP8266WiFi.h>
 #endif
-#include "TimeLib.h"
 
 #ifdef CONTRY
     #define NTP2ADDRESS        COUNTRY "." "pool.ntp.org"    // пул серверов времени для NTP
@@ -61,7 +60,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define TIMEAPI_BUFSIZE     600
 #define TM_BASE_YEAR        1900
 #define DAYSECONDS          (86400U)
-#define DATETIME_STRLEN     (19U)
+#define DATETIME_STRLEN     (20U)   // buffer for data/time string "YYYY-MM-DDThh:mm:ss"
 #define HTTPSYNC_DELAY      5
 #define HTTP_REFRESH_HRS    3     // время суток для обновления часовой зоны
 #define HTTP_REFRESH_MIN    3
@@ -201,9 +200,10 @@ public:
     bool isDirtyTime() {return !isSynced;}
 
     /**
-     * функция допечатывает в переданную строку текущие дату/время в формате "9999-99-99T99:99"
+     * функция допечатывает в переданную строку заданный таймстамп в дату/время в формате "9999-99-99T99:99"
+     * @param _tstamp - преобразовать заданный таймстамп, если не задан используется текущее локальное время
      */
-    static void getDateTimeString(String &buf);
+    static void getDateTimeString(String &buf, const time_t _tstamp = NULL);
 
     /**
      * returns pointer to current unixtime
