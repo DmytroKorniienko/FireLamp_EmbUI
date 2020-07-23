@@ -1007,7 +1007,7 @@ public:
     void initDefault(); // пусть вызывается позже и явно
     ~EffectWorker() { clearEffectList(); clearControlsList(); }
 
-    LList<UIControl*>&getControls() { return isSelected() ? selcontrols : controls; }
+    LList<UIControl*>&getControls() { return isSelected() ? controls : selcontrols; }
 
     // дефолтный конструктор
     EffectWorker() : effects(), controls(), selcontrols() {
