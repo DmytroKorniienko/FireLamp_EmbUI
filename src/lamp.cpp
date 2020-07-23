@@ -247,6 +247,7 @@ void LAMP::effectsTick(){
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
   if (!_effectsTicker.active() ) return;
+  if(millis()<5000) return; // затычка до выяснения
 
   uint32_t _begin = millis();
   if (isAlarm()) {

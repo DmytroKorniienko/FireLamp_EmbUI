@@ -163,7 +163,7 @@ void EffectCalc::scale2pallete(){
   // тут фигня понаписана, ну да ладно, пока поменяю влоб, т.е. если контролов > 3, то следующий типа палитра
   // но на деле нужно читать кто есть кто... т.е. имя контрола
   if (myLamp.effects.getControls().size()>3) {
-    palettemap(palettes, myLamp.effects.getControls()[4]->getVal().toInt());
+    palettemap(palettes, myLamp.effects.getControls()[3]->getVal().toInt());
   } else {
     palettemap(palettes, scale);
   }

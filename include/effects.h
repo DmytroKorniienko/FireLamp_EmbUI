@@ -135,7 +135,7 @@ class EffectListElem{
     void isFavorite(bool val){ flags.isFavorite = val; }
 };
 
-// Полный формат для пользовательского (id=3...7) параметра имеет вид: {\"id\":3,\"t\":0,\"val\":127,\"min\":1,\"max\":255,\"nm\":\"Параметр\"}
+// Полный формат для пользовательского (id=3...7) параметра имеет вид: {\"id\":3,\"t\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр\"}
 // @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта
 static const char DEFAULT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}]}";
 
@@ -331,6 +331,7 @@ public:
 };
 #endif
 
+static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"t\":0,\"val\":1,\"min\":1,\"max\":15,\"step\":1,\"name\":\"Палитра\"}]}";
 class EffectTime : public EffectCalc {
 private:
     bool timeShiftDir; // направление сдвига
@@ -339,6 +340,8 @@ private:
     CRGB mColor[1]; // цвет часов и минут
 
     const String getName() override {return String(FPSTR(T_TIME));}
+    const String defaultuiconfig(){ return String(FPSTR(EFF_TIME_CFG)); } // использую кастомный конфиг
+    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
