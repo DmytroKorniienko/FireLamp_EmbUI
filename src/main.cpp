@@ -43,11 +43,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "buttons.h"
 #include "main.h"
 #ifdef USE_FTP
-#include "ftpServer.h"
+#include "ftpSrv.h"
 #endif
 
 // глобальные переменные для работы с ними в программе
-SHARED_MEM GSHMEM; // глобальная общая память эффектов
 jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
 Ticker _isrHelper;       // планировщик для обработки прерываний
@@ -69,9 +68,12 @@ void setup() {
 #endif
 
     jee.init();
+    
+    myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
+
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
 
-    myLamp.effects.loadConfig();
+    //myLamp.effects.loadConfig();
     myLamp.events.loadConfig();
 
 #ifdef ESP_USE_BUTTON

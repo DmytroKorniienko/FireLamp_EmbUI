@@ -53,7 +53,7 @@ void EffectCalc::init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl){
  */
 void EffectCalc::load(){}
 
-bool EffectCalc::run(CRGB* ledarr, EffectDesc *opt){
+bool EffectCalc::run(CRGB* ledarr, EffectWorker *opt){
   return false;
 }
 
@@ -160,8 +160,10 @@ void EffectCalc::scale2pallete(){
   if (!usepalettes)
     return;
 
-  if (myLamp.effects.isRval()) {
-    palettemap(palettes, myLamp.effects.getRval());
+  // тут фигня понаписана, ну да ладно, пока поменяю влоб, т.е. если контролов > 3, то следующий типа палитра
+  // но на деле нужно читать кто есть кто... т.е. имя контрола
+  if (myLamp.effects.getControls().size()>3) {
+    palettemap(palettes, myLamp.effects.getControls()[3]->getVal().toInt());
   } else {
     palettemap(palettes, scale);
   }
@@ -253,7 +255,7 @@ void EffectMath::fader(uint8_t step)
 // ============= ЭФФЕКТЫ ===============
 
 // ------------- конфетти --------------
-bool EffectSparcles::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
@@ -261,7 +263,7 @@ bool EffectSparcles::run(CRGB *ledarr, EffectDesc *opt){
 }
 
 #define EFF_FADE_OUT_SPEED        (15U)                         // скорость затухания
-bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectDesc *param)
+bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 {
 
 #ifndef MIC_EFFECTS
@@ -293,13 +295,13 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectDesc *param)
 }
 
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
-bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectWorker *opt){
   // if (dryrun()) // для этого эффекта задержка не нужна в общем-то...
   //   return false;
   return whiteColorStripeRoutine(*&ledarr, &*opt);
 }
 
-bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectDesc *param)
+bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *param)
 {
     if(scale<127){
         uint8_t centerY = max((uint8_t)round(HEIGHT / 2.0F) - 1, 0);
@@ -351,7 +353,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectDesc *par
 void EffectEverythingFall::load(){
     palettesload();    // подгружаем дефолтные палитры
 }
-bool EffectEverythingFall::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
   return fire2012WithPalette(*&ledarr, &*opt);
@@ -361,7 +363,7 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectDesc *opt){
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 #define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
-bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectDesc *param) {
+bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
   uint8_t coolingnew = constrain((uint16_t)scale * palettes.size() / HEIGHT + 7, 1, 255) ;
 
   myLamp.blur2d(20);
@@ -398,7 +400,7 @@ bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectDesc *param) {
 
 // --------------------------- эффект пульс ----------------------
 // Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp
-bool EffectPulse::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectPulse::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
   return pulseRoutine(*&ledarr, &*opt);
@@ -433,7 +435,7 @@ void drawCircle(int16_t x0, int16_t y0, uint16_t radius, const CRGB & color){
   }
 }
 
-bool EffectPulse::pulseRoutine(CRGB *leds, EffectDesc *param) {
+bool EffectPulse::pulseRoutine(CRGB *leds, EffectWorker *param) {
 
   CRGBPalette16 palette;
   CRGB _pulse_color;
@@ -518,11 +520,11 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 }
 
 // ------------- радуга диагональная -------------
-bool EffectRainbow::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectRainbow::run(CRGB *ledarr, EffectWorker *opt){
   return rainbowDiagonalRoutine(*&ledarr, &*opt);
 }
 
-bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectDesc *param)
+bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param)
 {
   // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
   hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
@@ -556,13 +558,13 @@ void EffectColors::load(){
     myLamp.fillAll(CHSV(scale, 255U, 55U)); // еще не наступила смена цвета, поэтому выводим текущий
 }
 
-bool EffectColors::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectColors::run(CRGB *ledarr, EffectWorker *opt){
   // if (dryrun())
   //   return false;
   return colorsRoutine(*&ledarr, &*opt);
 }
 
-bool EffectColors::colorsRoutine(CRGB *leds, EffectDesc *param)
+bool EffectColors::colorsRoutine(CRGB *leds, EffectWorker *param)
 {
   static unsigned int step = 0; // доп. задержка
   unsigned int delay = (speed==1)?4294967294:255-speed+1; // на скорости 1 будет очень долгое ожидание)))
@@ -610,13 +612,13 @@ EVERY_N_SECONDS(1){
 }
 
 // ------------- матрица ---------------
-bool EffectMatrix::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
   return matrixRoutine(*&ledarr, &*opt);
 }
 
-bool EffectMatrix::matrixRoutine(CRGB *leds, EffectDesc *param)
+bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
   for (uint8_t x = 0U; x < WIDTH; x++)
   {
@@ -668,12 +670,12 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectDesc *param)
 }
 
 // ------------- снегопад ----------
-bool EffectSnow::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectSnow::run(CRGB *ledarr, EffectWorker *opt){
   return snowRoutine(*&ledarr, &*opt);
 }
 
 #define SNOW_SCALE (1.25) //0.25...5.0
-bool EffectSnow::snowRoutine(CRGB *leds, EffectDesc *param)
+bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 {
 
   snowShift = snowShift + speed/255.0;
@@ -711,13 +713,13 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectDesc *param)
 // ------------- метель -------------
 
 // ------------- звездопад/метель -------------
-bool EffectStarFall::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectStarFall::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
   return snowStormStarfallRoutine(*&ledarr, &*opt);
 }
 
-bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectDesc *param)
+bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
   // заполняем головами комет левую и верхнюю линию
   for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
@@ -779,11 +781,11 @@ void EffectLighters::load(){
 
 }
 
-bool EffectLighters::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectLighters::run(CRGB *ledarr, EffectWorker *opt){
   return lightersRoutine(*&ledarr, &*opt);
 }
 
-bool EffectLighters::lightersRoutine(CRGB *leds, EffectDesc *param)
+bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
 {
 
   float speedfactor = speed/4096.0+0.001;
@@ -847,7 +849,7 @@ void EffectLighterTracers::load(){
 }
 
 
-bool EffectLighterTracers::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
   // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
   //   return;
   // } else {
@@ -857,7 +859,7 @@ bool EffectLighterTracers::run(CRGB *ledarr, EffectDesc *opt){
   return lighterTracersRoutine(*&ledarr, &*opt);
 }
 
-bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectDesc *param)
+bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param)
 {
   float speedfactor = speed/2048.0+0.01;
 
@@ -867,7 +869,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectDesc *param)
   }
   else                                                      // режим со следами
   {
-    myLamp.blur2d(myLamp.effects.getSpeed()/10);
+    myLamp.blur2d(speed/10); // точно нужен прямой доступ??? 
     EffectMath::fader(TRACK_STEP);
   }
 
@@ -905,12 +907,12 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectDesc *param)
 }
 
 // ------------- пейнтбол -------------
-bool EffectLightBalls::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectLightBalls::run(CRGB *ledarr, EffectWorker *opt){
   return lightBallsRoutine(*&ledarr, &*opt);
 }
 
 #define BORDERTHICKNESS       (1U)                          // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
-bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectDesc *param)
+bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
 {
   const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
   const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
@@ -951,11 +953,11 @@ void EffectBall::load(){
   }
 }
 
-bool EffectBall::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectBall::run(CRGB *ledarr, EffectWorker *opt){
   return ballRoutine(*&ledarr, &*opt);
 }
 
-bool EffectBall::ballRoutine(CRGB *leds, EffectDesc *param)
+bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 {
   ballSize = map(scale, 0U, 255U, 2U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 2));
 
@@ -1140,7 +1142,7 @@ void Effect3DNoise::load(){
 
 }
 
-bool Effect3DNoise::run(CRGB *ledarr, EffectDesc *opt){
+bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
   #ifdef MIC_EFFECTS
     uint8_t mmf = myLamp.getMicMapFreq();
     uint8_t mmp = myLamp.getMicMapMaxPeak();
@@ -1194,11 +1196,11 @@ void EffectBBalls::load(){
     }
 }
 
-bool EffectBBalls::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectBBalls::run(CRGB *ledarr, EffectWorker *opt){
   return bBallsRoutine(*&ledarr, &*opt);
 }
 
-bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectDesc *param)
+bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 {
   bballsNUM_BALLS =  map(scale, 0, 255, 1, bballsMaxNUM_BALLS);
 
@@ -1247,11 +1249,11 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectDesc *param)
   Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
-bool EffectSinusoid3::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectSinusoid3::run(CRGB *ledarr, EffectWorker *opt){
   return sinusoid3Routine(*&ledarr, &*opt);
 }
 
-bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectDesc *param)
+bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectWorker *param)
 {
   const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2) ;
@@ -1295,11 +1297,11 @@ bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectDesc *param)
 
 // ***** METABALLS / МЕТАШАРИКИ *****
 // v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
-bool EffectMetaBalls::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectMetaBalls::run(CRGB *ledarr, EffectWorker *opt){
   return metaBallsRoutine(*&ledarr, &*opt);
 }
 
-bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, EffectDesc *param)
+bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, EffectWorker *param)
 {
   float _speed = speed/127.0;
 
@@ -1361,12 +1363,12 @@ void EffectSpiro::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectSpiro::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectSpiro::run(CRGB *ledarr, EffectWorker *opt){
   return spiroRoutine(*&ledarr, &*opt);
 }
 
 // ***** Эффект "Спираль"     ****
-bool EffectSpiro::spiroRoutine(CRGB *leds, EffectDesc *param)
+bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
 {
 
   // страхуемся от креша
@@ -1465,7 +1467,7 @@ void EffectComet::load(){
     eNs_noisesmooth = random(0, 200*(uint_fast16_t)speed/255); // степень сглаженности шума 0...200
 }
 
-bool EffectComet::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
   switch (effect)
   {
   case EFF_ENUM::EFF_RAINBOWCOMET :
@@ -1479,7 +1481,7 @@ bool EffectComet::run(CRGB *ledarr, EffectDesc *opt){
   }
 }
 
-bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectDesc *param)
+bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
 { // Rainbow Comet by PalPalych
 /*
   Follow the Rainbow Comet Efect by PalPalych
@@ -1517,7 +1519,7 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectDesc *param)
   return true;
 }
 
-bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectDesc *param)
+bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
 { // Rainbow Comet by PalPalych
 /*
   Follow the Rainbow Comet Efect by PalPalych
@@ -1560,11 +1562,11 @@ void EffectPrismata::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectPrismata::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectPrismata::run(CRGB *ledarr, EffectWorker *opt){
   return prismataRoutine(*&ledarr, &*opt);
 }
 
-bool EffectPrismata::prismataRoutine(CRGB *leds, EffectDesc *param)
+bool EffectPrismata::prismataRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1606,11 +1608,11 @@ void EffectFlock::load(){
 
 }
 
-bool EffectFlock::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectFlock::run(CRGB *ledarr, EffectWorker *opt){
   return flockRoutine(*&ledarr, &*opt);
 }
 
-bool EffectFlock::flockRoutine(CRGB *leds, EffectDesc *param) {
+bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
   if (curPalette == nullptr) {
     return false;
   }
@@ -1672,12 +1674,12 @@ void EffectSwirl::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectSwirl::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectSwirl::run(CRGB *ledarr, EffectWorker *opt){
   return swirlRoutine(*&ledarr, &*opt);
 }
 
 #define e_swi_BORDER (1U)  // размытие экрана за активный кадр
-bool EffectSwirl::swirlRoutine(CRGB *leds, EffectDesc *param)
+bool EffectSwirl::swirlRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1722,7 +1724,7 @@ void EffectDrift::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectDrift::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
   myLamp.blur2d(beatsin8(3U, 5, 10 + scale*3));
   myLamp.dimAll(beatsin8(2U, 246, 252));
   _dri_speed = map8(speed, 1U, 20U);
@@ -1744,7 +1746,7 @@ bool EffectDrift::run(CRGB *ledarr, EffectDesc *opt){
   }
 }
 
-bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectDesc *param)
+bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1763,7 +1765,7 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectDesc *param)
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
 // v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
 // https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift2.h
-bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectDesc *param)
+bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -1799,14 +1801,14 @@ void EffectFreq::load()
   memset(peakX,0,sizeof(peakX));
 }
 
-bool EffectFreq::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
   myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   return freqAnalyseRoutine(*&ledarr, &*opt);
 }
 
-bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectDesc *param)
+bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 {
   float samp_freq;
   double last_freq;
@@ -1944,14 +1946,14 @@ void EffectTwinkles::load(){
 
 }
 
-bool EffectTwinkles::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
   return twinklesRoutine(*&ledarr, &*opt);
 }
 
-bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectDesc *param)
+bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2009,11 +2011,11 @@ void EffectRadar::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectRadar::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
   return radarRoutine(*&ledarr, &*opt);
 }
 
-bool EffectRadar::radarRoutine(CRGB *leds, EffectDesc *param)
+bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2046,7 +2048,7 @@ void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectWaves::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
 
   waveCount = speed % 2;
   waveRotation = palettescale/8;  // тут ерунда какая-то...
@@ -2055,7 +2057,7 @@ bool EffectWaves::run(CRGB *ledarr, EffectDesc *opt){
   return wavesRoutine(*&ledarr, &*opt);
 }
 
-bool EffectWaves::wavesRoutine(CRGB *leds, EffectDesc *param)
+bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2122,14 +2124,14 @@ void EffectFire2012::load(){
   random16_add_entropy(random(256));
 }
 
-bool EffectFire2012::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectFire2012::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
   return fire2012Routine(*&ledarr, &*opt);
 }
 
-bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectDesc *opt)
+bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectWorker *opt)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2188,7 +2190,7 @@ bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectDesc *opt)
 // Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
 // uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
 // uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
-bool EffectRain::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectRain::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
@@ -2389,7 +2391,7 @@ uint8_t EffectRain::myScale8(uint8_t x)
   return (253U - x4 * 72U); // 253U = 255U - 2U
 }
 
-bool EffectRain::coloredRainRoutine(CRGB *leds, EffectDesc *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
+bool EffectRain::coloredRainRoutine(CRGB *leds, EffectWorker *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   CRGB randomRainColor = CHSV(random(1,255), 255U, 255U);
@@ -2407,7 +2409,7 @@ bool EffectRain::coloredRainRoutine(CRGB *leds, EffectDesc *param) // внима
   return true;
 }
 
-bool EffectRain::simpleRainRoutine(CRGB *leds, EffectDesc *param)
+bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
@@ -2417,7 +2419,7 @@ bool EffectRain::simpleRainRoutine(CRGB *leds, EffectDesc *param)
   return true;
 }
 
-bool EffectRain::stormyRainRoutine(CRGB *leds, EffectDesc *param)
+bool EffectRain::stormyRainRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
@@ -2432,13 +2434,13 @@ bool EffectRain::stormyRainRoutine(CRGB *leds, EffectDesc *param)
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
-bool EffectFire2018::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectFire2018::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
   return fire2018Routine(*&ledarr, &*opt);
 }
 
-bool EffectFire2018::fire2018Routine(CRGB *leds, EffectDesc *param)
+bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
 {
   // some changing values
   uint16_t ctrl1 = inoise16(11 * millis(), 0, 0);
@@ -2510,7 +2512,8 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectDesc *param)
     {
       uint8_t dim = noise3dx[0][x][y];
       // high value = high flames
-      dim = dim / 1.7 * constrain(0.05*myLamp.effects.getBrightness()+0.01,0.01,1.0);
+      //dim = dim / 1.7 * constrain(0.05*myLamp.effects.getBrightness()+0.01,0.01,1.0); //точно нужен прямой доступ?
+      dim = dim / 1.7 * constrain(0.05*brightness+0.01,0.01,1.0);
       dim = 255 - dim;
       fire18heat[myLamp.getPixelNumber(x, y)] = scale8(fire18heat[myLamp.getPixelNumber(x, y)], dim);
     }
@@ -2547,7 +2550,7 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectDesc *param)
 ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
 //uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
 //uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
-bool EffectRingsLock::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectRingsLock::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
@@ -2580,7 +2583,7 @@ void EffectRingsLock::load(){
   }
 }
 
-bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectDesc *param)
+bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
 {
   uint8_t h, x, y;
 
@@ -2643,7 +2646,7 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectDesc *param)
 // (c) SottNick
 // refactored by Vortigont
 
-bool EffectCube2d::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
@@ -2709,7 +2712,7 @@ void EffectCube2d::cubesize(){
   //end
 }
 
-bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectDesc *param)
+bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2819,7 +2822,7 @@ void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
 }
 
 //--------------
-bool EffectTime::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
   if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
       myLamp.dimAll(254);
     return true;
@@ -2844,7 +2847,7 @@ void EffectTime::load(){
   }
 }
 
-bool EffectTime::timePrintRoutine(CRGB *leds, EffectDesc *param)
+bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
 {
   if (speed==1 || speed==255){
     EVERY_N_SECONDS(5){
@@ -2879,7 +2882,7 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectDesc *param)
 }
 
 // ------------------------------ ЭФФЕКТ ДЫМ ----------------------
-bool EffectMStreamSmoke::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectMStreamSmoke::run(CRGB *ledarr, EffectWorker *opt){
   return multipleStreamSmokeRoutine(*&ledarr, &*opt);
 }
 
@@ -2903,7 +2906,7 @@ void EffectMStreamSmoke::FillNoise(int8_t layer) {
 
 // (c) SottNick
 // Относительно стартовой версии - переписан 20200521
-bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectDesc *param)
+bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB color;
 
@@ -3005,14 +3008,14 @@ void EffectFire::load(){
   generateLine();
 }
 
-bool EffectFire::run(CRGB *ledarr, EffectDesc *opt){
+bool EffectFire::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
   return fireRoutine(*&ledarr, &*opt);
 }
 
-bool EffectFire::fireRoutine(CRGB *leds, EffectDesc *param)
+bool EffectFire::fireRoutine(CRGB *leds, EffectWorker *param)
 {
   if (pcnt >= 30) {                                  // внутренний делитель кадров для поднимающегося пламени
     shiftUp();                                              // смещение кадра вверх
@@ -3053,12 +3056,14 @@ void EffectFire::shiftUp() {                                            //под
 void EffectFire::drawFrame(uint8_t pcnt, bool isColored) {                  // прорисовка нового кадра
   int32_t nextv;
 #ifdef UNIVERSE_FIRE                                            // если определен универсальный огонь
-  uint8_t baseHue = (myLamp.effects.getScale() - 1U) * 2.6;
+  //uint8_t baseHue = (myLamp.effects.getControls()[2]->getVal().toInt() - 1U) * 2.6; // точно нужен прямой доступ???
+  uint8_t baseHue = (scale - 1U) * 2.6; // может так хватит?
 #else
   uint8_t baseHue = isColored ? 255U : 0U;
 #endif
-  uint8_t baseSat = (myLamp.effects.getScale() < 255) ? 255U : 0U;  // вычисление базового оттенка
-
+  //uint8_t baseSat = ( myLamp.effects.getControls()[2]->getVal().toInt() < 255) ? 255U : 0U;  // вычисление базового оттенка // точно нужен прямой доступ???
+  uint8_t baseSat = ( scale < 255) ? 255U : 0U;  // вычисление базового оттенка // может так хватит?
+  
   uint8_t deltaValue = random8(0U, 3U) ? constrain (shiftValue[0] + random8(0U, 2U) - random8(0U, 2U), 15, 17) : shiftValue[0]; // random(0U, 3U)= скорость смещения очага чем больше 3U - тем медленнее                          // текущее смещение пламени (hueValue)
 
   //first row interpolates with the "next" line
@@ -3126,141 +3131,3 @@ void EffectFire::drawFrame(uint8_t pcnt, bool isColored) {                  // �
     }
   }
 }
-
-
-
-/*
- * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
- */
-void EffectWorker::workerset(EFF_ENUM effect){
-  switch (effect)
-  {
-  case EFF_ENUM::EFF_TIME :
-    worker = std::unique_ptr<EffectTime>(new EffectTime());
-    break;
-  case EFF_ENUM::EFF_SWIRL :
-    worker = std::unique_ptr<EffectSwirl>(new EffectSwirl());
-    break;
-  case EFF_ENUM::EFF_RAINBOWCOMET :
-  case EFF_ENUM::EFF_RAINBOWCOMET3 :
-    worker = std::unique_ptr<EffectComet>(new EffectComet());
-    break;
-  case EFF_ENUM::EFF_FLOCK :
-    worker = std::unique_ptr<EffectFlock>(new EffectFlock());
-    break;
-  case EFF_ENUM::EFF_PRIZMATA :
-    worker = std::unique_ptr<EffectPrismata>(new EffectPrismata());
-    break;
-  case EFF_ENUM::EFF_SPIRO :
-    worker = std::unique_ptr<EffectSpiro>(new EffectSpiro());
-    break;
-  case EFF_ENUM::EFF_METABALLS :
-    worker = std::unique_ptr<EffectMetaBalls>(new EffectMetaBalls());
-    break;
-  case EFF_ENUM::EFF_SINUSOID3 :
-    worker = std::unique_ptr<EffectSinusoid3>(new EffectSinusoid3());
-    break;
-  case EFF_ENUM::EFF_BBALS :
-    worker = std::unique_ptr<EffectBBalls>(new EffectBBalls());
-    break;
-  case EFF_ENUM::EFF_PAINTBALL :
-    worker = std::unique_ptr<EffectLightBalls>(new EffectLightBalls());
-    break;
-  case EFF_ENUM::EFF_FIRE :
-    worker = std::unique_ptr<EffectFire>(new EffectFire());
-    break;
-  case EFF_ENUM::EFF_PULSE :
-    worker = std::unique_ptr<EffectPulse>(new EffectPulse());
-    break;
-  case EFF_ENUM::EFF_CUBE :
-    worker = std::unique_ptr<EffectBall>(new EffectBall());
-    break;
-  case EFF_ENUM::EFF_LIGHTER_TRACES :
-    worker = std::unique_ptr<EffectLighterTracers>(new EffectLighterTracers());
-    break;
-  case EFF_ENUM::EFF_RAINBOW_2D :
-    worker = std::unique_ptr<EffectRainbow>(new EffectRainbow());
-    break;
-  case EFF_ENUM::EFF_COLORS :
-    worker = std::unique_ptr<EffectColors>(new EffectColors());
-    break;
-  case EFF_ENUM::EFF_WHITE_COLOR :
-    worker = std::unique_ptr<EffectWhiteColorStripe>(new EffectWhiteColorStripe());
-    break;
-  case EFF_ENUM::EFF_MATRIX :
-    worker = std::unique_ptr<EffectMatrix>(new EffectMatrix());
-    break;
-  case EFF_ENUM::EFF_SNOW :
-    worker = std::unique_ptr<EffectSnow>(new EffectSnow());
-    break;
-  case EFF_ENUM::EFF_SPARKLES :
-    worker = std::unique_ptr<EffectSparcles>(new EffectSparcles());
-    break;
-  case EFF_ENUM::EFF_EVERYTHINGFALL :
-    worker = std::unique_ptr<EffectEverythingFall>(new EffectEverythingFall());
-    break;
-  case EFF_ENUM::EFF_FIRE2012 :
-    worker = std::unique_ptr<EffectFire2012>(new EffectFire2012());
-    break;
-  case EFF_ENUM::EFF_SNOWSTORMSTARFALL :
-    worker = std::unique_ptr<EffectStarFall>(new EffectStarFall());
-    break;
-  case EFF_ENUM::EFF_LIGHTERS :
-    worker = std::unique_ptr<EffectLighters>(new EffectLighters());
-    break;
-  case EFF_ENUM::EFF_MADNESS :
-  case EFF_ENUM::EFF_CLOUDS :
-  case EFF_ENUM::EFF_LAVA :
-  case EFF_ENUM::EFF_PLASMA :
-  case EFF_ENUM::EFF_RAINBOW :
-  case EFF_ENUM::EFF_RAINBOW_STRIPE :
-  case EFF_ENUM::EFF_ZEBRA :
-  case EFF_ENUM::EFF_FOREST :
-  case EFF_ENUM::EFF_OCEAN :
-    worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());
-    break;
-  case EFF_ENUM::EFF_DRIFT :
-  case EFF_ENUM::EFF_DRIFT2 :
-    worker = std::unique_ptr<EffectDrift>(new EffectDrift());
-    break;
-  case EFF_ENUM::EFF_TWINKLES :
-    worker = std::unique_ptr<EffectTwinkles>(new EffectTwinkles());
-    break;
-  case EFF_ENUM::EFF_WAVES :
-    worker = std::unique_ptr<EffectWaves>(new EffectWaves());
-    break;
-  case EFF_ENUM::EFF_RADAR :
-    worker = std::unique_ptr<EffectRadar>(new EffectRadar());
-    break;
-  case EFF_ENUM::EFF_SMOKE :
-    worker = std::unique_ptr<EffectMStreamSmoke>(new EffectMStreamSmoke());
-    break;
-  case EFF_ENUM::EFF_FIRE2018 :
-    worker = std::unique_ptr<EffectFire2018>(new EffectFire2018());
-    break;
-  case EFF_ENUM::EFF_RINGS :
-    worker = std::unique_ptr<EffectRingsLock>(new EffectRingsLock());
-    break;
-  case EFF_ENUM::EFF_CUBE2 :
-    worker = std::unique_ptr<EffectCube2d>(new EffectCube2d());
-    break;
-  case EFF_ENUM::EFF_RAIN :
-  case EFF_ENUM::EFF_COLORRAIN :
-  case EFF_ENUM::EFF_STORMYRAIN :
-    worker = std::unique_ptr<EffectRain>(new EffectRain());
-    break;
-#ifdef MIC_EFFECTS
-  case EFF_ENUM::EFF_FREQ :
-    worker = std::unique_ptr<EffectFreq>(new EffectFreq());
-    break;
-#endif
-
-  default:
-    worker = std::unique_ptr<EffectCalc>(new EffectCalc());
-  }
-
-  worker->init(effect, myLamp.effects.getBrightness(), myLamp.effects.getSpeed(), myLamp.effects.getScale());
-
-}
-
-void stubRoutine(CRGB *, const char *){}

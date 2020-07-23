@@ -153,7 +153,7 @@ class jeeui2
     unsigned int localUdpPort = 4243;
     char incomingPacket[64];
 
-    unsigned int asave = 1000;
+    unsigned int asave = 10000; // зачем так часто записывать конфиг? Ставлю раз в 10 секунд, вместо раза в секунду
     bool isNeedSave = false;
     unsigned long astimer;
 

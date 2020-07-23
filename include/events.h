@@ -231,7 +231,7 @@ public:
 
     void events_handle();
     
+    // конфиги событий
     void loadConfig(const char *cfg = nullptr);
-
     void saveConfig(const char *cfg = nullptr);
 };
