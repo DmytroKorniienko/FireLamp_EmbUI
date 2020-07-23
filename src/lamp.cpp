@@ -169,9 +169,10 @@ EVERY_N_SECONDS(15){
 
 // обработчик будильника "рассвет"
 void LAMP::alarmWorker(){
-    // static CHSV GSHMEM.dawnColorMinus[6];                                            // цвет "рассвета"
-    // static uint8_t GSHMEM.dawnCounter = 0;                                           // счётчик первых шагов будильника
-    // static time_t GSHMEM.startmillis;
+    // временно статикой, дальше нужно будет переписать
+    static CHSV dawnColorMinus[6];                                            // цвет "рассвета"
+    static uint8_t dawnCounter = 0;                                           // счётчик первых шагов будильника
+    static time_t startmillis;
 
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
       dawnFlag = false;
@@ -180,21 +181,21 @@ void LAMP::alarmWorker(){
 
     // проверка рассвета, первый вход в функцию
     if (!dawnFlag){
-      GSHMEM.startmillis = millis();
-      memset(GSHMEM.dawnColorMinus,0,sizeof(GSHMEM.dawnColorMinus));
-      GSHMEM.dawnCounter = 0;
+      startmillis = millis();
+      memset(dawnColorMinus,0,sizeof(dawnColorMinus));
+      dawnCounter = 0;
       FastLED.clear();
       brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
-      GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
+      dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
         map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
       );
     }
 
-    if (((millis() - GSHMEM.startmillis) / 1000 > (5 + DAWN_TIMEOUT) * 60+30)) {
+    if (((millis() - startmillis) / 1000 > (5 + DAWN_TIMEOUT) * 60+30)) {
       // рассвет закончился
       stopAlarm();
       // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -210,16 +211,16 @@ void LAMP::alarmWorker(){
     // проверка рассвета
     EVERY_N_SECONDS(10){
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-GSHMEM.startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
-      GSHMEM.dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
+      dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
         map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
       );
-      GSHMEM.dawnCounter++; //=GSHMEM.dawnCounter%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))+1;
+      dawnCounter++; //=dawnCounter%(sizeof(dawnColorMinus)/sizeof(CHSV))+1;
 
-      for (uint8_t i = sizeof(GSHMEM.dawnColorMinus) / sizeof(CHSV) - 1; i > 0U; i--){
-          GSHMEM.dawnColorMinus[i]=((GSHMEM.dawnCounter > i)?GSHMEM.dawnColorMinus[i-1]:GSHMEM.dawnColorMinus[i]);
+      for (uint8_t i = sizeof(dawnColorMinus) / sizeof(CHSV) - 1; i > 0U; i--){
+          dawnColorMinus[i]=((dawnCounter > i)?dawnColorMinus[i-1]:dawnColorMinus[i]);
       }
     }
 
@@ -227,14 +228,14 @@ void LAMP::alarmWorker(){
     EVERY_N_SECONDS(1){
       if (timeProcessor.seconds00()) {
         CRGB letterColor;
-        hsv2rgb_rainbow(GSHMEM.dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
+        hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
         sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), letterColor, true);
       }
     }
 #endif
 
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
-        leds[i] = GSHMEM.dawnColorMinus[i%(sizeof(GSHMEM.dawnColorMinus)/sizeof(CHSV))];
+        leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
     }
     dawnFlag = true;
 }
@@ -256,7 +257,7 @@ void LAMP::effectsTick(){
 
   if(!isEffectsDisabledUntilText){
     // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-    if(effects.worker->run(getUnsafeLedsArray(), effects.getCurrent())) {
+    if(effects.worker->run(getUnsafeLedsArray(), &effects)) {
 #ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
@@ -381,7 +382,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 {
   stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == ONflag) return;  // пропускаем холостые вызовы
-  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? "ON": "Off");
+  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? F("ON"): F("Off"));
   ONflag = flag;
 
   if (flag){
@@ -513,7 +514,7 @@ void LAMP::stopAlarm(){
  */
 void LAMP::startDemoMode(byte tmout)
 {
-  storedEffect = ((effects.getEn() == EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+  storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
   remote_action(RA::RA_DEMO_NEXT, NULL);
@@ -525,10 +526,10 @@ void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
-  if (storedEffect != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
+  if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
   } else
-  if(effects.getEn() == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
+  if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
     remote_action(RA::RA_EFF_RAND, NULL);
   }
 }
@@ -539,7 +540,7 @@ void LAMP::startOTAUpdate()
   storedMode = mode;
   mode = LAMPMODE::MODE_OTA;
 
-  effects.moveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
+  effects.directMoveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
   changePower(true);
   sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
@@ -976,12 +977,8 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
  * @param EFFSWITCH action - вид переключения (пред, след, случ.)
  * @param fade - переключаться через фейдер или сразу
  */
-void LAMP::switcheffect(EFFSWITCH action, bool fade, EFF_ENUM effnb, bool skip) {
-  switcheffectIdx(action, fade, effects.getBy(effnb), skip);
-}
-
-void LAMP::switcheffectIdx(EFFSWITCH action, bool fade, int idx, bool skip) {
-  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, idx=%d\n"), action, fade, idx);
+void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) {
+  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
 
   if (!skip) {
     switch (action) {
@@ -995,7 +992,7 @@ void LAMP::switcheffectIdx(EFFSWITCH action, bool fade, int idx, bool skip) {
         effects.setSelected(effects.getPrev());
         break;
     case EFFSWITCH::SW_SPECIFIC :
-        effects.setSelected(effects.getByIdx(idx));
+        effects.setSelected(effects.getBy(effnb));
         break;
     case EFFSWITCH::SW_RND :
         effects.setSelected(effects.getBy(random(0, effects.getModeAmount())));
@@ -1011,12 +1008,14 @@ void LAMP::switcheffectIdx(EFFSWITCH action, bool fade, int idx, bool skip) {
     }
     // тухнем "вниз" только на включенной лампе
     if (fade && ONflag) {
-      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffectIdx, this, action, fade, idx, true));
+      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
   }
 
-  changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
+  // Не-не-не, я против того чтобы за пользователя решать когда ему включать лампу
+  // поскольку настройки НУЖНО разрешить крутить и при выключенной лампе.
+  // changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
   effects.moveSelected();
 
   bool natural = true;
@@ -1032,8 +1031,9 @@ void LAMP::switcheffectIdx(EFFSWITCH action, bool fade, int idx, bool skip) {
   default:;
   }
 
-  // отрисовать текущий эффект
-  effects.worker->run(getUnsafeLedsArray(), effects.getCurrent());
+  // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
+  if(ONflag)
+    effects.worker->run(getUnsafeLedsArray(), &effects);
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
 

@@ -20,6 +20,7 @@ void jeeui2::save(const char *_cfg, bool force){
         cfg.garbageCollect();
         isNeedSave = false;
     }
+    delay(10); // задержка после записи
 }
 
 void jeeui2::autosave(){
