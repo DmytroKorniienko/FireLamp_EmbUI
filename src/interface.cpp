@@ -1194,10 +1194,6 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 void section_main_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
 
-#ifdef MIC_EFFECTS
-    myLamp.setMicAnalyseDivider(0); // отключить микрофон на время прорисовки интерфейса
-#endif
-
     interf->json_frame_interface(F(("Огненная лампа")));
 
     block_menu(interf, data);
@@ -1209,10 +1205,6 @@ void section_main_frame(Interface *interf, JsonObject *data){
         // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
         show_settings_wifi(interf, data);
     }
-
-#ifdef MIC_EFFECTS
-    myLamp.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
-#endif
 }
 
 
@@ -1349,7 +1341,6 @@ void sync_parameters(){
     DynamicJsonDocument doc(512);
     JsonObject obj = doc.to<JsonObject>();
 
-    CALL_SETTER(F("effList"), jee.param(F("effList")), set_effects_list);
     CALL_SETTER(F("Events"), jee.param(F("Events")), set_eventflag);
     CALL_SETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
 
@@ -1361,6 +1352,8 @@ void sync_parameters(){
     CALL_SETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
     CALL_SETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
 #endif
+
+    CALL_SETTER(F("effList"), jee.param(F("effList")), set_effects_list);
 
 #ifdef AUX_PIN
     CALL_SETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
@@ -1421,6 +1414,7 @@ void remote_action(RA action, ...){
         case RA::RA_DEMO:
             CALL_INTF(F("ONflag"), F("true"), set_onflag); // включим, если было отключено
             CALL_INTF(F("Demo"), F("true"), set_demoflag);
+            myLamp.startDemoMode();
             break;
         case RA::RA_DEMO_NEXT:
             if (jee.param(F("DRand")) == F("true")) {

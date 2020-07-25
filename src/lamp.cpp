@@ -49,7 +49,7 @@ void LAMP::lamp_init()
     FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
   }
   FastLED.clear();                                            // очистка матрицы
-  //FastLED.show(); // для ESP32 вызывает перезагрузку циклическую!!!
+  FastLED.show(); // для ESP32 вызывает перезагрузку циклическую!!! Значит надобно будет глядеть на ESP32, а тут - очистим
   // ПИНЫ
 #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
   pinMode(MOSFET_PIN, OUTPUT);
@@ -247,7 +247,7 @@ void LAMP::effectsTick(){
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
   if (!_effectsTicker.active() ) return;
-  if(millis()<5000) return; // затычка до выяснения
+  //if(millis()<5000) return; // затычка до выяснения
 
   uint32_t _begin = millis();
   if (isAlarm()) {
@@ -322,7 +322,7 @@ void LAMP::frameShow(const uint32_t ticktime){
     }
 
     void LAMP::GaugeMix() {
-      if (gauge_time + 3000 < millis()) return;
+      if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
 #if (VERTGAUGE==1)
       byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
@@ -373,7 +373,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       isMicOn = true; // глобальное испльзование микрофона
       micAnalyseDivider = 1; // анализ каждый раз
 #endif
-
+      gauge_time = millis();
       lamp_init(); // инициализация и настройка лампы
     }
 
@@ -981,13 +981,17 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
 void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) {
   LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
 
+#ifdef MIC_EFFECTS
+    setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
+#endif
+
   if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :
         effects.setSelected(effects.getNext());
         break;
     case EFFSWITCH::SW_NEXT_DEMO :
-        effects.setSelected(effects.getBy(1));
+        effects.setSelected(effects.getByCnt(1));
         break;
     case EFFSWITCH::SW_PREV :
         effects.setSelected(effects.getPrev());
@@ -996,7 +1000,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
         effects.setSelected(effects.getBy(effnb));
         break;
     case EFFSWITCH::SW_RND :
-        effects.setSelected(effects.getBy(random(0, effects.getModeAmount())));
+        effects.setSelected(effects.getByCnt(random(0, effects.getModeAmount())));
         break;
     case EFFSWITCH::SW_WHITE_HI:
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
@@ -1024,10 +1028,12 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   case EFFSWITCH::SW_WHITE_HI:
       setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
       natural = false;
+      changePower(true);  // принудительно включаем лампу
       break;
   case EFFSWITCH::SW_WHITE_LO:
       setLampBrightness(1); // здесь яркость ползунка в UI, т.е. ставим 1 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
       fade = natural = false;
+      changePower(true);  // принудительно включаем лампу
       break;
   default:;
   }
