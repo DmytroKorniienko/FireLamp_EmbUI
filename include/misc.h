@@ -284,12 +284,17 @@ class timerMinim
       _timer = millis();
     }
 
-    void setInterval(uint32_t interval)	                  // установка интервала работы таймера
+    uint32_t getInterval()	                  						 // получение интервала работы таймера
+    {
+    	return _interval;
+    }
+
+    void setInterval(uint32_t interval)	                   // установка интервала работы таймера
     {
       _interval = interval;
     }
 
-    bool isReady()						                              // возвращает true, когда пришло время. Сбрасывается в false сам (AUTO) или вручную (MANUAL)
+    bool isReady()						                             // возвращает true, когда пришло время. Сбрасывается в false сам (AUTO) или вручную (MANUAL)
     {
       if ((uint32_t)millis() - _timer >= _interval && _interval!=0){
         _timer = millis();

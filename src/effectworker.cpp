@@ -180,7 +180,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     if(isCfgProceed){ // читаем конфиг только если это требуется, для индекса - пропускаем
       loadeffconfig(effect);
       // окончательная инициализация эффекта тут
-      worker->init(static_cast<EFF_ENUM>(effect%256), (getControls()[0]->getVal()).toInt(), (getControls()[1]->getVal()).toInt(), (getControls()[2]->getVal()).toInt());
+      worker->init(static_cast<EFF_ENUM>(effect%256), getControls()[0]->getVal().toInt(), getControls()[1]->getVal().toInt(), getControls()[2]->getVal().toInt());
     }
   }
 }
@@ -534,12 +534,13 @@ void EffectWorker::makeIndexFile(const char *folder)
   delay(50); // задержка после записи
 }
 
-bool EffectWorker::autoSaveConfig() {
-  static unsigned long i;
-  if(i + (30 * 1000) > millis()){  // если не пришло время - выходим из функции и сбрасываем счетчик (ожидаем бездействия в 30 секунд относительно последней записи)
+bool EffectWorker::autoSaveConfig(bool force, bool reset) {
+  static unsigned long i; // getConfigSaveTimeout()
+  if((i + (CFG_AUTOSAVE_TIMEOUT - 1000) > millis() || reset) && !force){  // если не пришло время - выходим из функции и сбрасываем счетчик (ожидаем бездействия в 30 секунд относительно последней записи)
       i = millis();
       return false;
   }
+  LOG(printf_P,PSTR("Сохраняется конфигурация эффекта: %d\n"),curEff);
   saveeffconfig(curEff);
   //saveConfig();
   i = millis();

@@ -180,7 +180,7 @@ private:
     byte gauge_hue = 0;
     void GaugeMix();
 #endif
-    void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) {if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
+    void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) { if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
 
 #ifdef OTA
     OtaManager otaManager;
@@ -255,7 +255,7 @@ public:
     void handle();          // главная функция обработки эффектов
     void lamp_init();       // первичная инициализация Лампы
 
-    void ConfigSaveSetup(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); }
+    void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
     void setFaderFlag(bool flag) {isFaderON = flag;}
     bool getFaderFlag() {return isFaderON;}
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}

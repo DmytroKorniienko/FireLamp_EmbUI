@@ -17,7 +17,8 @@ void jeeui2::save(const char *_cfg, bool force){
         configFile.flush();
         configFile.close();
 
-        cfg.garbageCollect();
+        //cfg.garbageCollect(); // несколько раз ловил Exception (3) предположительно тут, возвращаю пока проверенный способ
+        deserializeJson(cfg, cfg_str);
         isNeedSave = false;
     }
     delay(10); // задержка после записи

@@ -219,7 +219,9 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
  #define HTTPTIME_SYNC_INTERVAL    (4)                           // интервал синхронизации времени по http, час
 #endif
 
-
+#ifndef CFG_AUTOSAVE_TIMEOUT
+#define CFG_AUTOSAVE_TIMEOUT       (15*1000U)                   // таймаут сохранения конфигурации эффекта, по умолчанию - 15 секунд
+#endif
 
 #ifndef TEXT_OFFSET
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)

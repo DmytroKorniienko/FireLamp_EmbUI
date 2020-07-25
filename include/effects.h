@@ -135,7 +135,7 @@ class EffectListElem{
     void isFavorite(bool val){ flags.isFavorite = val; }
 };
 
-// Полный формат для пользовательского (id=3...7) параметра имеет вид: {\"id\":3,\"t\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр\"}
+// Полный формат для пользовательского (id=3...7) параметра имеет вид: {\"id\":3,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр\"}
 // @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта
 static const char DEFAULT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}]}";
 
@@ -158,7 +158,6 @@ public:
     uint8_t palettescale;       /**< странная переменная шкалы внутри палитры */
     float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
     uint8_t palettepos;         // позиция в массиве указателей паллитр
-
 
     /** флаг, включает использование палитр в эффекте.
      *  влияет на:
@@ -331,7 +330,7 @@ public:
 };
 #endif
 
-static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"t\":0,\"val\":1,\"min\":1,\"max\":15,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":15,\"step\":1,\"name\":\"Палитра\"}]}";
 class EffectTime : public EffectCalc {
 private:
     bool timeShiftDir; // направление сдвига
@@ -1046,39 +1045,18 @@ public:
     EffectWorker(const EffectListElem* eff, bool fast=true);
 
     // отложенная запись конфига текущего эффекта
-    bool autoSaveConfig();
+    bool autoSaveConfig(bool force=false, bool reset=false);
 
     // пересоздает индекс с текущего списка эффектов
     void makeIndexFileFromList(const char *folder = nullptr);
 
     byte getModeAmount() {return effects.size();}
 
-    //void setBrightness(byte val) {controls[0]->setVal(String(val)); if (worker) worker->setbrt(val);}
-    //void setSpeed(byte val) {controls[1]->setVal(String(val)); if (worker) worker->setspd(val);}
-    //void setScale(byte val) {controls[2]->setVal(String(val)); if (worker) worker->setscl(val);}
-    //void setRval(byte val) {controls[3]->setVal(String(val)); if (worker) worker->setrval(val);}
-    //byte getBrightness() { return controls.size()>=1 ? controls[0]->getVal().toInt() : 0; }
-    //byte getSpeed() { return controls.size()>=2 ? controls[1]->getVal().toInt() : 0; }
-    //byte getScale() { return controls.size()>=3 ? controls[2]->getVal().toInt() : 0; }
-    //byte getRval() { return controls.size()>=4 ? controls[3]->getVal().toInt() : 0; } // фигня конечно, пока все это как затычки...
-    //byte isRval() { return controls.size()>=4; } // фигня конечно, пока все это как затычки...
-
     const String &getEffectName() {return effectName;}
     const String &getOriginalNameName() {return originalName;}
     
     // текущий эффект или его копия
     const uint16_t getEn() {return curEff;}
-
-    //void setBrightnessS(byte val) {selcontrols[0]->setVal(String(val)); if (worker && isSelected()) worker->setbrt(val);}
-    //void setSpeedS(byte val) {selcontrols[1]->setVal(String(val)); if (worker && isSelected()) worker->setspd(val);}
-    //void setScaleS(byte val) {selcontrols[2]->setVal(String(val)); if (worker && isSelected()) worker->setscl(val);}
-    //void setRvalS(byte val) {selcontrols[3]->setVal(String(val)); if (worker && isSelected()) worker->setrval(val);}
-    //byte getBrightnessS() { return selcontrols.size()>=1 ? selcontrols[0]->getVal().toInt() : 0; }
-    //byte getSpeedS() { return selcontrols.size()>=2 ? selcontrols[1]->getVal().toInt() : 0; }
-    //byte getScaleS() { return selcontrols.size()>=3 ? selcontrols[2]->getVal().toInt() : 0; }
-    //byte getRvalS() { return selcontrols.size()>=4 ? selcontrols[3]->getVal().toInt() : 0; } // фигня конечно, пока все это как затычки...
-    //byte isRvalS() { return selcontrols.size()>=4; } // фигня конечно, пока все это как затычки...
-    //const uint16_t getEnS() {return selEff;}
 
     // следующий эффект, кроме canBeSelected==false
     uint16_t getNext();

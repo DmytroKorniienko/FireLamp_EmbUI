@@ -112,9 +112,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         confEff->isFavorite((*data)[F("eff_fav")] == F("true"));
     }
 
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
-        myLamp.ConfigSaveSetup(10*1000); //через 10 секунд сработает еще попытка записи и так до успеха
-    }
+    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
     myLamp.effects.makeIndexFileFromList(); // обновить индексный файл после возможных изменений
     section_main_frame(interf, data);
 }
@@ -234,7 +232,8 @@ void set_effects_bright(Interface *interf, JsonObject *data){
     byte bright = (*data)[F("bright")];
     if (myLamp.getNormalizedLampBrightness() != bright) {
         myLamp.setLampBrightness(bright);
-        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
+        if(myLamp.isLampOn())
+            myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
         if (myLamp.IsGlobalBrightness()) {
             jee.var("GlobBRI", (*data)[F("bright")]);
         }
@@ -242,9 +241,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
     }
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
-        myLamp.ConfigSaveSetup(10*1000); //через 10 секунд сработает еще попытка записи и так до успеха
-    }
+    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
 
 void set_effects_speed(Interface *interf, JsonObject *data){
@@ -255,9 +252,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[F("speed")].as<byte>());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
-        myLamp.ConfigSaveSetup(10*1000); //через 10 секунд сработает еще попытка записи и так до успеха
-    }
+    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
 
 void set_effects_scale(Interface *interf, JsonObject *data){
@@ -268,9 +263,7 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[F("scale")].as<byte>());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
-        myLamp.ConfigSaveSetup(10*1000); //через 10 секунд сработает еще попытка записи и так до успеха
-    }
+    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
 
 void set_effects_rval(Interface *interf, JsonObject *data){
@@ -281,9 +274,7 @@ void set_effects_rval(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Новое значение R: %d\n"), (*data)[F("rval")].as<byte>());
 
     myLamp.demoTimer(T_RESET);
-    if(!myLamp.effects.autoSaveConfig()){ // отложенная запись, не чаще чем однократно в 30 секунд
-        myLamp.ConfigSaveSetup(10*1000); //через 10 секунд сработает еще попытка записи и так до успеха
-    }
+    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
 
 void block_main_flags(Interface *interf, JsonObject *data){
@@ -364,10 +355,11 @@ void set_onflag(Interface *interf, JsonObject *data){
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
-            myLamp.changePower(newpower);
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
+            myLamp.changePower(newpower);
         } else {
             myLamp.changePower(newpower);
+            myLamp.effects.autoSaveConfig(true); // принудительное сохранение конфига текущего эффекта при выключении питания
         }
     }
 #ifdef RESTORE_STATE
