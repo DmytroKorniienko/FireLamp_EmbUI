@@ -174,7 +174,8 @@ void block_effects_param(Interface *interf, JsonObject *data){
         for(int i=0; i<controls.size();i++){
             interf->range(
             //String(controls[i]->getId())
-            controls[i]->getId()==0 ? F("bright") : controls[i]->getId()==1 ? F("speed") : controls[i]->getId()==2 ? F("scale") : String(F("dynCtrl3"))//+String(controls[i]->getId()) // временная заглушка
+            controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
+                : String(F("dynCtrl")) + String(controls[i]->getId())
             ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
             ,controls[i]->getMin().toInt()
             ,controls[i]->getMax().toInt()
