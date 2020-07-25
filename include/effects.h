@@ -146,8 +146,7 @@ static const char DEFAULT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 */
 class EffectCalc {
 private:
-
-public:
+protected:
     bool active=0;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
     EFF_ENUM effect;        /**< энумератор эффекта */
@@ -168,6 +167,8 @@ public:
     bool usepalettes=false;
     std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
     TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
+
+public:
 
     /** полезные обертки **/
     uint8_t wrapX(int8_t x){ return (x + WIDTH) % WIDTH; }

@@ -174,7 +174,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
         for(int i=0; i<controls.size();i++){
             interf->range(
             //String(controls[i]->getId())
-            controls[i]->getId()==0 ? F("bright") : controls[i]->getId()==1 ? F("speed") : controls[i]->getId()==2 ? F("scale") : String(controls[i]->getId())
+            controls[i]->getId()==0 ? F("bright") : controls[i]->getId()==1 ? F("speed") : controls[i]->getId()==2 ? F("scale") : String(F("dynCtrl3"))//+String(controls[i]->getId()) // временная заглушка
             ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
             ,controls[i]->getMin().toInt()
             ,controls[i]->getMax().toInt()
@@ -237,6 +237,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
         if (myLamp.IsGlobalBrightness()) {
             jee.var("GlobBRI", (*data)[F("bright")]);
         }
+        myLamp.effects.worker->setbrt((*data)[F("bright")].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
 
@@ -249,6 +250,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
 
     //myLamp.effects.setSpeedS((*data)[F("speed")]);
     myLamp.effects.getControls()[1]->setVal((*data)[F("speed")]);
+    myLamp.effects.worker->setspd((*data)[F("speed")].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[F("speed")].as<byte>());
 
     myLamp.demoTimer(T_RESET);
@@ -260,18 +262,20 @@ void set_effects_scale(Interface *interf, JsonObject *data){
 
     //myLamp.effects.setScaleS((*data)[F("scale")]);
     myLamp.effects.getControls()[2]->setVal((*data)[F("scale")]);
+    myLamp.effects.worker->setscl((*data)[F("scale")].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[F("scale")].as<byte>());
 
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
 
-void set_effects_rval(Interface *interf, JsonObject *data){
+void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
     //myLamp.effects.setRvalS((*data)[F("rval")]);
-    myLamp.effects.getControls()[3]->setVal((*data)[F("rval")]);
-    LOG(printf_P, PSTR("Новое значение R: %d\n"), (*data)[F("rval")].as<byte>());
+    myLamp.effects.getControls()[3]->setVal((*data)[F("dynCtrl3")]);
+    myLamp.effects.worker->setscl((*data)[F("dynCtrl3")].as<byte>()); // передача значения в эффект
+    LOG(printf_P, PSTR("Новое значение дин. контрола: %d\n"), (*data)[F("dynCtrl3")].as<byte>());
 
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
@@ -1297,7 +1301,7 @@ void create_parameters(){
     jee.section_handle_add(F("bright"), set_effects_bright);
     jee.section_handle_add(F("speed"), set_effects_speed);
     jee.section_handle_add(F("scale"), set_effects_scale);
-    jee.section_handle_add(F("rval"), set_effects_rval);
+    jee.section_handle_add(F("dynCtrl*"), set_effects_dynCtrl);
 
     jee.section_handle_add(F("eff_prev"), set_eff_prev);
     jee.section_handle_add(F("eff_next"), set_eff_next);
@@ -1448,7 +1452,7 @@ void remote_action(RA action, ...){
             CALL_INTF(F("scale"), value, set_effects_scale);
             break;
         case RA::RA_EXTRA:
-            CALL_INTF(F("rval"), value, set_effects_rval);
+            CALL_INTF(F("rval"), value, set_effects_dynCtrl);
             break;
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
