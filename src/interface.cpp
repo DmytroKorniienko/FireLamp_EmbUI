@@ -183,18 +183,6 @@ void block_effects_param(Interface *interf, JsonObject *data){
             ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
             , true);
         }
-
-    // if (myLamp.IsGlobalBrightness()) {
-    //     interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Глоб. яркость"), true);
-    // } else {
-    //     interf->range(F("bright"), myLamp.getNormalizedLampBrightness(), 1, 255, 1, F("Яркость"), true);
-    // }
-    // interf->range(F("speed"), myLamp.effects.getSpeedS(), 1, 255, 1, F("Скорость"), true);
-    // interf->range(F("scale"), myLamp.effects.getScaleS(), 1, 255, 1, F("Масштаб"), true);
-    // if (myLamp.effects.isRval()) {
-    //     interf->range(F("rval"), myLamp.effects.getRvalS(), 1, 255, 1, F("Дополнительный"), true);
-    // }
-
     interf->json_section_end();
 }
 
@@ -274,10 +262,14 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
     //myLamp.effects.setRvalS((*data)[F("rval")]);
-    myLamp.effects.getControls()[3]->setVal((*data)[F("dynCtrl3")]);
-    myLamp.effects.worker->setscl((*data)[F("dynCtrl3")].as<byte>()); // передача значения в эффект
-    LOG(printf_P, PSTR("Новое значение дин. контрола: %d\n"), (*data)[F("dynCtrl3")].as<byte>());
 
+    LList<UIControl*>&controls = myLamp.effects.getControls();
+    for(int i=3; i<controls.size();i++){
+        controls[i]->setVal((*data)[String(F("dynCtrl"))+String(i)]);
+        if(i==3)
+            myLamp.effects.worker->setrval((*data)[String(F("dynCtrl"))+String(i)].as<byte>()); // передача значения в эффект (пока заглушка)
+        LOG(printf_P, PSTR("Новое значение дин. контрола %d: %d\n"), i, (*data)[String(F("dynCtrl"))+String(i)].as<byte>());
+    }
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
