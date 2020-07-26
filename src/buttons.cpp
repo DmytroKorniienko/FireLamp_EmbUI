@@ -24,7 +24,7 @@ const char *btn_get_desc(BA action){
 	return PSTR("");
 }
 
-bool Button::activate(bool reverse){
+bool Button::activate(btnflags& flg, bool reverse){
 		uint8_t newval;
 		RA ract = RA_UNKNOWN;
 		bool ret = false;
@@ -76,7 +76,10 @@ bool Button::activate(bool reverse){
 			case BA_WIFI_REC: ract = RA_WIFI_REC; break;
 			default:;
 		}
-		remote_action(ract, NULL);
+		if(!(flg.onetime&2)){ // только если не установлен бит сработавшего однократного события
+			LOG(printf_P,PSTR("Button send action: %d\n"), ract);
+			remote_action(ract, NULL);
+		}
 		return ret;
 }
 
@@ -102,6 +105,7 @@ String Button::getName(){
 
 Buttons::Buttons(): buttons(), holdtm(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, NORM_OPEN){
 	holding = false;
+	holded = false;
 	buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
 	pinTransition = true;
 
@@ -144,18 +148,35 @@ void Buttons::buttonPress(bool state){
 
 void Buttons::buttonTick(){
 	if (!buttonEnabled) return;
+	
+	static bool startLampState = myLamp.isLampOn();
+	
 	touch.tick();
 	bool reverse = false;
+
 	if ((holding = touch.isHolded())) {
 		if (holdtm.isReady()) {
+			holded = true;
 			clicks = touch.getHoldClicks();
+			startLampState = myLamp.isLampOn(); // получить начальный статус
 		}
 		reverse = true;
 	} else
 	if ((holding = touch.isStep())) {
 		holdtm.reset();
-	} else
+	} else 
 	if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
+
+		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
+			LOG(println,F("Сброс состояния кнопки после окончания действий"));
+			touch.resetStates();
+			startLampState = myLamp.isLampOn();
+			holded = false;
+			for (int i = 0; i < buttons.size(); i++) {
+				buttons[i]->flags.onetime&=1;
+			}
+		}
+
 		return;
 	}
 
@@ -165,12 +186,19 @@ void Buttons::buttonTick(){
 		return;
 	}
 
-	Button btn(myLamp.isLampOn(), holding, clicks);
+	Button btn(startLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
-			if (!buttons[i]->activate(reverse)) {
+			//if(buttons[i]->action==1) continue; // отладка, отключить действие увеличения яркости
+			if (!buttons[i]->activate(buttons[i]->flags, reverse)) {
+				//LOG(println,buttons[i]->action); // отладка
 				// действие не подразумевает повтора
-				touch.resetStates();
+				if(buttons[i]->flags.onetime && touch.isHold()){ // в процессе удержания
+					buttons[i]->flags.onetime|=3; // установить старший бит сработавшего действия
+				} else {
+					touch.resetStates();
+					startLampState = myLamp.isLampOn();
+				}
 			}
 			// break; // Не выходим после первого найденного совпадения. Можем делать макросы из нажатий
 		}

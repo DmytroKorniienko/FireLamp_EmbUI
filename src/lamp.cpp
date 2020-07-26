@@ -1027,7 +1027,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   switch (action) {
   case EFFSWITCH::SW_WHITE_HI:
       setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
-      natural = false;
+      fade = natural = false;
       changePower(true);  // принудительно включаем лампу
       break;
   case EFFSWITCH::SW_WHITE_LO:

@@ -1062,6 +1062,7 @@ void set_butt_conf(Interface *interf, JsonObject *data){
     Button *btn = nullptr;
     bool on = ((*data)[F("on")] == F("true"));
     bool hold = ((*data)[F("hold")] == F("true"));
+    bool onetime = ((*data)[F("onetime")] == F("true"));
     uint8_t clicks = (*data)[F("clicks")];
     BA action = (BA)(*data)[F("bactList")].as<long>();
 
@@ -1076,8 +1077,9 @@ void set_butt_conf(Interface *interf, JsonObject *data){
         btn->flags.on = on;
         btn->flags.hold = hold;
         btn->flags.click = clicks;
+        btn->flags.onetime = onetime;
     } else {
-        myButtons.add(new Button(on, hold, clicks, action));
+        myButtons.add(new Button(on, hold, clicks, onetime, action));
     }
 
     myButtons.saveConfig();
@@ -1126,9 +1128,10 @@ void show_butt_conf(Interface *interf, JsonObject *data){
     }
     interf->json_section_end();
 
-    interf->checkbox(F("on"), (btn? btn->flags.on : 0)? F("true") : F("false"), F("ON/OFF"), false);
+    interf->checkbox(F("on"), (btn? btn->flags.on : 0)? F("true") : F("false"), F("OFF/ON"), false);
     interf->checkbox(F("hold"), (btn? btn->flags.hold : 0)? F("true") : F("false"), F("Удержание"), false);
     interf->number(F("clicks"), (btn? btn->flags.click : 0), F("Нажатия"), 0, 7);
+    interf->checkbox(F("onetime"), (btn? btn->flags.onetime&1 : 0)? F("true") : F("false"), F("Однократно"), false);
 
     if (btn) {
         interf->hidden(F("save"), F("true"));
@@ -1620,23 +1623,25 @@ void event_worker(const EVENT *event){
 void default_buttons(){
     myButtons.clear();
     // Выключена
-    myButtons.add(new Button(false, false, 1, BA::BA_ON)); // 1 клик - ON
-    myButtons.add(new Button(false, false, 2, BA::BA_DEMO)); // 2 клика - Демо
-    myButtons.add(new Button(false, true, 0, BA::BA_WHITE_HI)); // удержание Включаем белую лампу в полную яркость
-    myButtons.add(new Button(false, true, 1, BA::BA_WHITE_LO)); // удержание + 1 клик Включаем белую лампу в мин яркость
+    myButtons.add(new Button(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
+    myButtons.add(new Button(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons.add(new Button(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
+    myButtons.add(new Button(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
+    myButtons.add(new Button(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+    myButtons.add(new Button(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
 
     // Включена
-    myButtons.add(new Button(true, false, 1, BA::BA_OFF)); // 1 клик - OFF
-    myButtons.add(new Button(true, false, 2, BA::BA_EFF_NEXT)); // 2 клика - след эффект
-    myButtons.add(new Button(true, false, 3, BA::BA_EFF_PREV)); // 3 клика - пред эффект
+    myButtons.add(new Button(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
+    myButtons.add(new Button(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons.add(new Button(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
 #ifdef OTA
-    myButtons.add(new Button(true, false, 4, BA::BA_OTA)); // 4 клика - OTA
+    myButtons.add(new Button(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
 #endif
-    myButtons.add(new Button(true, false, 5, BA::BA_SEND_IP)); // 5 клика - показ IP
-    myButtons.add(new Button(true, false, 6, BA::BA_SEND_TIME)); // 6 клика - показ времени
-    myButtons.add(new Button(true, true, 0, BA::BA_BRIGHT)); // удержание яркость
-    myButtons.add(new Button(true, true, 1, BA::BA_SPEED)); // удержание + 1 клие скорость
-    myButtons.add(new Button(true, true, 2, BA::BA_SCALE)); // удержание + 2 клика масштаб
+    myButtons.add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons.add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons.add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
+    myButtons.add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клие скорость
+    myButtons.add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
 #endif
 

@@ -34,20 +34,21 @@ class Button{
 			uint8_t on:1;
 			uint8_t hold:1;
 			uint8_t click:3;
+			uint8_t onetime:2; // признак однократного срабатывания при удержании и старший бит - то что срабатывание уже было
 		};
 	} btnflags;
 
 	bool direction; // направление изменения
 
 
-	friend bool operator== (const Button &f1, const Button &f2) { return (f1.flags.mask == f2.flags.mask); }
-	friend bool operator!= (const Button &f1, const Button &f2) { return (f1.flags.mask != f2.flags.mask); }
+	friend bool operator== (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) == (f2.flags.mask&0x1F)); }
+	friend bool operator!= (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) != (f2.flags.mask&0x1F)); }
 
 	public:
-		Button(uint8_t on, uint8_t hold, uint8_t click, BA act = BA_NONE) { direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; action = act; }
+		Button(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE) { direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; flags.onetime=onetime; action = act; }
 		Button(uint8_t mask, BA act = BA_NONE) { direction = false; flags.mask = mask; action = act; }
 
-		bool activate(bool reverse);
+		bool activate(btnflags& flg, bool reverse);
 		String getName();
 
 		BA action;
@@ -60,6 +61,7 @@ class Buttons {
  struct {
 	bool buttonEnabled:1; // кнопка обрабатывается если true
 	bool holding:1; // кнопка удерживается
+	bool holded:1; // кнопка удерживалась (touch.isHolded() можно проверить только однократно!!!)
 	bool pinTransition:1;  // ловим "нажатие" кнопки
  };
  #pragma pack(pop)
