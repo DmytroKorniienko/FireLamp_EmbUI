@@ -226,7 +226,8 @@ void set_effects_bright(Interface *interf, JsonObject *data){
         if (myLamp.IsGlobalBrightness()) {
             jee.var("GlobBRI", (*data)[F("bright")]);
         }
-        myLamp.effects.worker->setbrt((*data)[F("bright")].as<byte>()); // передача значения в эффект
+        if(myLamp.effects.worker)
+            myLamp.effects.worker->setbrt((*data)[F("bright")].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
 
