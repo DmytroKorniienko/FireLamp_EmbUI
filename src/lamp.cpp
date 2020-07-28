@@ -44,12 +44,13 @@ extern LAMP myLamp; // Объект лампы
 void LAMP::lamp_init()
 {
   FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)  /*.setCorrection(TypicalLEDStrip)*/;
-  brightness(0, false);                          // начинаем с полностью потушеной матрицы 0-й яркости
+  brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
   if (CURRENT_LIMIT > 0){
     FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
   }
-  FastLED.clear();                                            // очистка матрицы
-  FastLED.show(); // для ESP32 вызывает перезагрузку циклическую!!! Значит надобно будет глядеть на ESP32, а тут - очистим
+  FastLED.clearData();
+  //FastLED.clear();                                            // очистка матрицы
+  //FastLED.show(); // для ESP32 вызывает перезагрузку циклическую!!! Убираю, т.к. при 160Мгц вызывает бросок тока и яркости!!! Не включать и оставить как напоминание!
   // ПИНЫ
 #ifdef MOSFET_PIN                                         // инициализация пина, управляющего MOSFET транзистором в состояние "выключен"
   pinMode(MOSFET_PIN, OUTPUT);
