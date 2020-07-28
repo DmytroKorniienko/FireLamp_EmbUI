@@ -434,7 +434,7 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
       configFile.flush();
       configFile.close();
   }
-  delay(10); // задержка после записи
+  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
@@ -468,7 +468,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
       configFile.flush();
       configFile.close();
   }
-  delay(10); // задержка после записи   
+  delay(DELAY_AFTER_FS_WRITING); // задержка после записи   
 }
 
 void EffectWorker::makeIndexFile(const char *folder)
@@ -531,7 +531,7 @@ void EffectWorker::makeIndexFile(const char *folder)
       indexFile.close();
       // LOG(println,"");
   }
-  delay(50); // задержка после записи
+  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 
 bool EffectWorker::autoSaveConfig(bool force, bool reset) {
@@ -621,7 +621,7 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
       indexFile.close();
   }
   LOG(println,F("Индекс эффектов обновлен!"));
-  delay(50); // задержка после записи
+  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 // создать или обновить текущий индекс эффекта
 void EffectWorker::updateIndexFile()

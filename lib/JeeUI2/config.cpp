@@ -21,7 +21,7 @@ void jeeui2::save(const char *_cfg, bool force){
         deserializeJson(cfg, cfg_str);
         isNeedSave = false;
     }
-    delay(10); // задержка после записи
+    delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 
 void jeeui2::autosave(){

@@ -38,6 +38,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #pragma once
 #include <Arduino.h>
 
+// Задержка после записи в ФС, не менять, если не сказано дополнительно!
+#ifndef DELAY_AFTER_FS_WRITING
+#define DELAY_AFTER_FS_WRITING       (50U)                        // 50мс, меньшие значения могут повлиять на стабильность
+#endif
+
 // шрифты для вывода текста
 const uint8_t fontHEX[][5] PROGMEM = {
 	{0x00, 0x00, 0x00, 0x00, 0x00}, //   0x20 32
@@ -373,42 +378,4 @@ void handleTelnetClient()
 }
 
 #endif
-//----------------------------------------------------
-// устарело
-/*
-class TimerManager
-{
-  public:
-    static bool TimerRunning;                               // флаг "таймер взведён"
-    static bool TimerHasFired;                              // флаг "таймер отработал"
-    static uint8_t TimerOption;                             // индекс элемента в списке List Picker'а
-    static uint64_t TimeToFire;                             // время, в которое должен сработать таймер (millis)
-
-    static void HandleTimer(                                // функция, обрабатывающая срабатывание таймера, гасит матрицу
-      bool* ONflag,
-      bool* settChanged,
-      uint32_t* eepromTimeout,
-      void (*changePower)())
-    {
-      if (!TimerManager::TimerHasFired &&
-           TimerManager::TimerRunning &&
-           millis() >= TimerManager::TimeToFire)
-      {
-        #ifdef GENERAL_DEBUG
-        LOG.print(F("Выключение по таймеру\n\n"));
-        #endif
-
-        TimerManager::TimerRunning = false;
-        TimerManager::TimerHasFired = true;
-        FastLED.clear();
-        delay(2);
-        FastLED.show();
-        *ONflag = !(*ONflag);
-        changePower();
-        *settChanged = true;
-        *eepromTimeout = millis();
-      }
-    }
-};
-*/
 
