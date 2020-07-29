@@ -1050,6 +1050,8 @@ public:
 
     // пересоздает индекс с текущего списка эффектов
     void makeIndexFileFromList(const char *folder = nullptr);
+    // пересоздает индекс с конфигов в ФС
+    void makeIndexFileFromFS(const char *fromfolder = nullptr, const char *tofolder = nullptr);
 
     byte getModeAmount() {return effects.size();}
 

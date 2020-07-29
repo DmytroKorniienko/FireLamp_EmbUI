@@ -89,6 +89,8 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
         interf->button_submit_value(F("set_effect"), F("del"), F("Удалить"), F("red"));
     }
 
+    interf->button_submit_value(F("set_effect"), F("makeidx"), F("Пересоздать индекс из ФС"), F("black"));
+
     interf->json_section_end();
 }
 
@@ -107,6 +109,10 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     } else
     if (act == F("del")) {
         myLamp.effects.deleteEffect(confEff); // удаляем текущий
+    }if (act == F("makeidx")) {
+        myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
+        section_main_frame(interf, data);
+        return;
     } else {
         confEff->canBeSelected((*data)[F("eff_sel")] == F("true"));
         confEff->isFavorite((*data)[F("eff_fav")] == F("true"));

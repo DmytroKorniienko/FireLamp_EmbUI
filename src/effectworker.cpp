@@ -623,6 +623,69 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
   LOG(println,F("Индекс эффектов обновлен!"));
   delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
+
+void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
+{
+  if (LittleFS.begin()) {
+      File indexFile;
+      String idx;
+      String filename;
+      String sourcedir;
+      if (tofolder != nullptr) {
+          filename.concat(F("/"));
+          filename.concat(tofolder);
+      }
+      filename.concat(F("/eff_index.json"));
+      LittleFS.remove(filename); // удаляем имеющийся индекс
+      
+      if (fromfolder != nullptr) {
+          sourcedir.concat(F("/"));
+          sourcedir.concat(fromfolder);
+      }
+      sourcedir.concat(F("/eff"));
+      Dir dir = LittleFS.openDir(sourcedir);
+      String cfg_str;
+      File configFile;
+      DynamicJsonDocument doc(2048);
+      DeserializationError error;
+      
+      String fn;
+      bool firstLine = true;
+      idx.concat(F("["));
+      
+      while (dir.next()) {
+          fn=dir.fileName();
+          //LOG(println,fn);
+          configFile = LittleFS.open(sourcedir+String(F("/"))+fn, "r"); // PSTR("r") использовать нельзя, будет исключение!
+          cfg_str = configFile.readString();
+          configFile.close();
+          error = deserializeJson(doc, cfg_str);
+          if (error || doc[F("nb")].as<String>()=="0") {
+            continue;
+          }
+
+          if(!firstLine) idx.concat(F(","));
+          idx.concat(F("{\"nb\":"));
+          idx.concat(doc[F("nb")].as<String>());
+          idx.concat(F(",\"fl\":"));
+          idx.concat(doc[F("flags")].as<uint8_t>());
+          idx.concat(F("}"));
+          firstLine = false; // сбрасываю признак первой строки
+          doc.clear();
+          cfg_str.clear();
+      }
+      idx.concat(F("]"));
+      indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+      //LOG(println,idx);
+      indexFile.print(idx);
+      indexFile.flush();
+      indexFile.close();
+  }
+  LOG(println,F("Индекс эффектов создан из FS!"));
+  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
+  initDefault(); // перечитаем вновь созданный индекс
+}
+
 // создать или обновить текущий индекс эффекта
 void EffectWorker::updateIndexFile()
 {
