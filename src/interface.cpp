@@ -177,18 +177,18 @@ void block_effects_param(Interface *interf, JsonObject *data){
     // Нужно подумать...
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
-        for(int i=0; i<controls.size();i++){
-            interf->range(
-            //String(controls[i]->getId())
-            controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
-                : String(F("dynCtrl")) + String(controls[i]->getId())
-            ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
-            ,controls[i]->getMin().toInt()
-            ,controls[i]->getMax().toInt()
-            ,controls[i]->getStep().toInt()
-            ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
-            , true);
-        }
+    for(int i=0; i<controls.size();i++){
+        interf->range(
+        //String(controls[i]->getId())
+        controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
+            : String(F("dynCtrl")) + String(controls[i]->getId())
+        ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
+        ,controls[i]->getMin().toInt()
+        ,controls[i]->getMax().toInt()
+        ,controls[i]->getStep().toInt()
+        ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
+        , true);
+    }
     interf->json_section_end();
 }
 
@@ -267,8 +267,6 @@ void set_effects_scale(Interface *interf, JsonObject *data){
 
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
-
-    //myLamp.effects.setRvalS((*data)[F("rval")]);
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=3; i<controls.size();i++){
@@ -1449,7 +1447,7 @@ void remote_action(RA action, ...){
             CALL_INTF(F("scale"), value, set_effects_scale);
             break;
         case RA::RA_EXTRA:
-            CALL_INTF(F("rval"), value, set_effects_dynCtrl);
+            CALL_INTF(F("dynCtrl"), value, set_effects_dynCtrl);
             break;
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:

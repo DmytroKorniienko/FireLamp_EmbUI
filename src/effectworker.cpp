@@ -259,7 +259,7 @@ void EffectWorker::initDefault()
       }
       // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
       // если такая сортировка не нужна, то закомментировать строку ниже, если требуется пользовательская сортировка, то потом подумаю над реализацией, сейчас лень
-      effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8+((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8;});
+      effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((a->eff_nb&0xFF) - ((b->eff_nb&0xFF))<<8) + ((a->eff_nb&0xFF00) - ((b->eff_nb&0xFF00))>>8);});
   }
 }
 
@@ -677,6 +677,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
           firstLine = false; // сбрасываю признак первой строки
           doc.clear();
           cfg_str.clear();
+          ESP.wdtFeed(); // сброс вотчдога при итерациях
       }
       idx.concat(F("]"));
       indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!

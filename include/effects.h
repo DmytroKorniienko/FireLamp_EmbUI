@@ -331,7 +331,7 @@ public:
 };
 #endif
 
-static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":15,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
 class EffectTime : public EffectCalc {
 private:
     bool timeShiftDir; // направление сдвига
@@ -341,7 +341,7 @@ private:
 
     const String getName() override {return String(FPSTR(T_TIME));}
     const String defaultuiconfig(){ return String(FPSTR(EFF_TIME_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
+    const String getversion() { return String(F("0.2")); } // обновим эффект, т.к. версия изменилась
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
