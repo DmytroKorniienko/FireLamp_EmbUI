@@ -125,7 +125,8 @@ static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {
   CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black
 };
 
-
+// Добавил "белую" палитру для "Огонь 2012", в самом конце 4-го ползунка, огонь горит белым цветом, - красиво для белой динамической подсветки 
+static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, CRGB::Gray, CRGB::White, CRGB::WhiteSmoke};
 // ==== Константы для эффектов ====
 
 // 3D Noise

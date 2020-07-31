@@ -164,6 +164,14 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_STORMYRAIN :
     worker = std::unique_ptr<EffectRain>(new EffectRain());
     break;
+  case EFF_ENUM::EFF_PICASSO :
+  case EFF_ENUM::EFF_PICASSO2 :
+  case EFF_ENUM::EFF_PICASSO3 :
+    worker = std::unique_ptr<EffectPicasso>(new EffectPicasso());
+    break;
+  case EFF_ENUM::EFF_LEAPERS :
+    worker = std::unique_ptr<EffectLeapers>(new EffectLeapers());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_FREQ :
     worker = std::unique_ptr<EffectFreq>(new EffectFreq());

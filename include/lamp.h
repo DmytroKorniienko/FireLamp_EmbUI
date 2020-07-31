@@ -294,8 +294,11 @@ public:
     uint32_t getPixColorXY(uint16_t x, uint16_t y) { return getPixColor(getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
     void fillAll(CRGB color); // залить все
     void drawPixelXY(int16_t x, int16_t y, CRGB color); // функция отрисовки точки по координатам X Y
+    void drawPixelXYF(float x, float y, CRGB color);
     void drawLine(int x1, int y1, int x2, int y2, CRGB color);
+    void drawLineF(float x1, float y1, float x2, float y2, CRGB color);
     void drawCircle(int x0, int y0, int radius, CRGB color);
+    void drawCircleF(float x0, float y0, float radius, CRGB color);
     CRGB *getUnsafeLedsArray(){return leds;}
     CRGB *setLeds(uint16_t idx, CHSV val) { leds[idx] = val; return &leds[idx]; }
     CRGB *setLeds(uint16_t idx, CRGB val) { leds[idx] = val; return &leds[idx]; }

@@ -96,6 +96,10 @@ EFF_FIRE2018,                                 // Огонь 2018
 EFF_RINGS,                                    // Кодовый замок
 EFF_CUBE2,                                    // Куб 2D
 EFF_SMOKE,                                    // Дым
+EFF_PICASSO,                                  // Пикассо
+EFF_PICASSO2,                                 // Пикассо2
+EFF_PICASSO3,                                 // Пикассо3
+EFF_LEAPERS,                                  // Прыгуны
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -331,7 +335,8 @@ public:
 };
 #endif
 
-static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
+// Думаю пример все поглядели, возвертаю часы в режим с 3 ползунками, а то масштаб вообще не работает :)
+//static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
 class EffectTime : public EffectCalc {
 private:
     bool timeShiftDir; // направление сдвига
@@ -340,8 +345,8 @@ private:
     CRGB mColor[1]; // цвет часов и минут
 
     const String getName() override {return String(FPSTR(T_TIME));}
-    const String defaultuiconfig(){ return String(FPSTR(EFF_TIME_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.2")); } // обновим эффект, т.к. версия изменилась
+    //const String defaultuiconfig(){ return String(FPSTR(EFF_TIME_CFG)); } // использую кастомный конфиг
+    const String getversion() { return String(F("0.0")); } // обновим эффект, т.к. версия изменилась
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
@@ -791,6 +796,13 @@ private:
   const String getName() {return String(FPSTR(T_WAVES));}
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
 
+  /**
+    * Vpalletemap - меняет указатель на текущую палитру из набора в соответствие с N-ным значением 
+    * @param _val - N-ное значение 0-7
+    * @param _pals - набор с палитрами
+*/
+virtual void WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val);
+
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -863,6 +875,7 @@ private:
   ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
+  uint8_t csum;   // reload checksum
 
   const String getName() {return String(FPSTR(T_RINGS));}
   void ringsSet();
@@ -928,6 +941,64 @@ private:
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+class EffectPicasso : public EffectCalc {
+    typedef struct Particle{
+        float position_x = 0;
+        float position_y = 0;
+        float speed_x = 0;
+        float speed_y = 0;
+        CHSV color;
+        uint8_t hue_next = 0;
+        int8_t hue_step = 0;
+    } Particle;
+private:
+    Particle particles[20];
+    unsigned numParticles = 0;
+    void generate(bool reset = false);
+    void position();
+    bool picassoRoutine(CRGB *leds, EffectWorker *param);
+    bool picassoRoutine2(CRGB *leds, EffectWorker *param);
+    bool picassoRoutine3(CRGB *leds, EffectWorker *param);
+    const String getName() //override
+    {
+        switch (effect)
+        {
+        case EFF_ENUM::EFF_PICASSO:
+            return String(FPSTR(T_PICASSO));
+        case EFF_ENUM::EFF_PICASSO2:
+            return String(FPSTR(T_PICASSO2));
+        case EFF_ENUM::EFF_PICASSO3:
+            return String(FPSTR(T_PICASSO3));
+        default:
+            return EffectCalc::getName();
+        }
+    }
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+class EffectLeapers : public EffectCalc {
+    typedef struct Leaper{
+        float x, y;
+        float xd, yd;
+        CHSV color;
+    } Leaper;
+private:
+    Leaper leapers[20];
+    unsigned numParticles = 0;
+    void generate(bool reset = false);
+    void restart_leaper(Leaper * l);
+    void move_leaper(Leaper * l);
+    void wu_pixel(uint32_t x, uint32_t y, CRGB col);
+    bool leapersRoutine(CRGB *leds, EffectWorker *param);
+    const String getName() {return String(FPSTR(T_LEAPERS));}
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------- конец секции эффектов 
 
 typedef enum : uint8_t {RANGE,EDIT,CHECKBOX} CONTROL_TYPE;
 
