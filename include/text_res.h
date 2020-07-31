@@ -86,7 +86,7 @@ const char T_SMOKE[] PROGMEM = "Дым";
 const char T_PICASSO[] PROGMEM = "Пикассо";
 const char T_PICASSO2[] PROGMEM = "Пикассо2";
 const char T_PICASSO3[] PROGMEM = "Пикассо3";
-const char T_LEAPERS[] PROGMEM = "Акробаты";
+const char T_LEAPERS[] PROGMEM = "Прыгуны"; // Автор сказал прыгуны, значит по дефолту будут прыгуны :)
 const char T_TIME[] PROGMEM = "Часы";
 
 #ifdef MIC_EFFECTS
