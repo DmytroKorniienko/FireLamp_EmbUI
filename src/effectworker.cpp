@@ -640,6 +640,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       }
       filename.concat(F("/eff_index.json"));
       LittleFS.remove(filename); // удаляем имеющийся индекс
+      makeIndexFile(tofolder); // создать дефолтный набор прежде всего
       
       if (fromfolder != nullptr) {
           sourcedir.concat(F("/"));
