@@ -3287,7 +3287,7 @@ bool EffectPicasso::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 // -------- Эффект "Прыгуны" (c) obliterator
-void EffectLeapers::restart_leaper(Leaper * l) {
+void EffectLeapers::restart_leaper(EffectLeapers::Leaper * l) {
   // leap up and to the side with some random component
   l->xd = (1 * (float)random(1, 100) / 100);
   l->yd = (2 * (float)random(1, 100) / 100);
@@ -3304,20 +3304,23 @@ void EffectLeapers::restart_leaper(Leaper * l) {
   }
 }
 
-void EffectLeapers::move_leaper(Leaper * l) {
+void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
 #define GRAVITY            0.06
 #define SETTLED_THRESHOLD  0.1
 #define WALL_FRICTION      0.95
 #define WIND               0.95    // wind resistance
 
-  l->x += l->xd;
-  l->y += l->yd;
+  float speedfactor = (speed/512.0);
+  float speedfactor2 = speedfactor + 0.33;
+  
+  l->x += l->xd*speedfactor2;
+  l->y += l->yd*speedfactor2;
 
   // bounce off the floor and ceiling?
   if (l->y < 0 || l->y > HEIGHT - 1) {
     l->yd = (-l->yd * WALL_FRICTION);
     l->xd = ( l->xd * WALL_FRICTION);
-    l->y += l->yd;
+    l->y += l->yd*speedfactor;
     if (l->y < 0) l->y = 0;
     // settled on the floor?
     if (l->y <= SETTLED_THRESHOLD && abs(l->yd) <= SETTLED_THRESHOLD) {
@@ -3329,7 +3332,7 @@ void EffectLeapers::move_leaper(Leaper * l) {
   if (l->x <= 0 || l->x >= WIDTH - 1) {
     l->xd = (-l->xd * WALL_FRICTION);
     if (l->x <= 0) {
-      l->x = l->xd;
+      l->x = l->xd*speedfactor;
     } else {
       l->x = WIDTH - 1 - l->xd;
     }
@@ -3368,7 +3371,7 @@ bool EffectLeapers::leapersRoutine(CRGB *leds, EffectWorker *param){
 }
 
 bool EffectLeapers::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
+  // if (dryrun())
+  //   return false;
   return leapersRoutine(*&ledarr, &*opt);
 }
