@@ -3201,6 +3201,7 @@ void EffectPicasso::generate(bool reset){
 }
 
 void EffectPicasso::position(){
+  float speedfactor = speed/255.0+0.1;
   for (unsigned i = 0; i < numParticles; i++) {
     Particle *curr = (Particle *)&particles[i];
     if (curr->position_x + curr->speed_x > WIDTH || curr->position_x + curr->speed_x < 0) {
@@ -3211,8 +3212,8 @@ void EffectPicasso::position(){
       curr->speed_y = -curr->speed_y;
     }
 
-    curr->position_x += curr->speed_x;
-    curr->position_y += curr->speed_y;
+    curr->position_x += curr->speed_x*speedfactor;
+    curr->position_y += curr->speed_y*speedfactor;
   };
 }
 
@@ -3275,8 +3276,8 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
 }
 
 bool EffectPicasso::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
+  // if (dryrun())
+  //   return false;
   if (effect == EFF_PICASSO) {
     return picassoRoutine(*&ledarr, &*opt);
   }
