@@ -1044,6 +1044,7 @@ public:
 
 class EffectWorker {
 private:
+    uint8_t effSort; // порядок сортировки в UI
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     EFFFLAGS flags; // подумать нужен ли он здесь...
@@ -1116,12 +1117,15 @@ public:
       selcontrols = controls;
     } // initDefault(); убрал из конструктора, т.к. крайне неудобно становится отлаживать..
 
+    // тип сортировки
+    void setEffSortType(uint8_t type) {effSort = type;}
+
     // конструктор копий эффектов
     EffectWorker(const EffectListElem* base, const EffectListElem* copy);
     // Конструктор для отложенного эффекта
     EffectWorker(uint16_t delayeffnb);
     // конструктор текущего эффекта, для fast=true вычитываетсяч только имя
-    EffectWorker(const EffectListElem* eff, bool fast=true);
+    EffectWorker(const EffectListElem* eff, bool fast=false);
 
     // отложенная запись конфига текущего эффекта
     bool autoSaveConfig(bool force=false, bool reset=false);

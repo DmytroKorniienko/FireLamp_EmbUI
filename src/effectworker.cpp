@@ -233,7 +233,7 @@ void EffectWorker::initDefault()
       idx = indexFile.readString();
       indexFile.close();
       error = deserializeJson(doc, idx);
-      LOG(print, idx);
+      LOG(println, idx);
 
       if (error) {
           LOG(print, F("Index deserialize error: "));
@@ -265,9 +265,15 @@ void EffectWorker::initDefault()
         }
         chk = effects[i]->eff_nb;
       }
-      // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
-      // если такая сортировка не нужна, то закомментировать строку ниже, если требуется пользовательская сортировка, то потом подумаю над реализацией, сейчас лень
-      effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((a->eff_nb&0xFF) - ((b->eff_nb&0xFF))<<8) + ((a->eff_nb&0xFF00) - ((b->eff_nb&0xFF00))>>8);});
+      if(effSort==0) // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
+        effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
+      else if(effSort==1){ // сортирую окончательно, так чтобы копии были в конце :)
+        //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((int32_t)(((a->eff_nb&0xFF)<<8) | ((a->eff_nb&0xFF00)>>8)) - (((b->eff_nb&0xFF)<<8) | ((b->eff_nb&0xFF00)>>8)));});
+        //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (a->eff_nb&0xFF00) - (b->eff_nb&0xFF00) + (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
+      }
+      else if(effSort==2){ // в порядке следования внутри индекса
+        // не реализовано пока
+      }
   }
 }
 
@@ -582,7 +588,7 @@ EffectWorker::EffectWorker(const EffectListElem* eff, bool fast) : effects(), co
     workerset(curEff, false);
   }
   if(fast){
-    loadeffname(eff->eff_nb); // вычитываем только имя, если что-то не так, то используем дефолтное
+    //loadeffname(eff->eff_nb); // вычитываем только имя, если что-то не так, то используем дефолтное
   } else {
     loadeffconfig(eff->eff_nb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
     //updateIndexFile();

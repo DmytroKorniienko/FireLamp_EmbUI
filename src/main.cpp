@@ -68,12 +68,11 @@ void setup() {
 #endif
 
     jee.init();
-    
-    myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-
+   
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-
-    //myLamp.effects.loadConfig();
+    myLamp.effects.setEffSortType(jee.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
+    myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
+    
     myLamp.events.loadConfig();
 
 #ifdef ESP_USE_BUTTON

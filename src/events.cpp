@@ -120,7 +120,7 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             saveConfig();
             return;
         }
-        LOG(println, F("\nStart desialization of events\n\n"));
+        //LOG(println, F("\nStart desialization of events\n\n"));
         DynamicJsonDocument doc(8192);
         DeserializationError error = deserializeJson(doc, cfg_str);
         if (error) {

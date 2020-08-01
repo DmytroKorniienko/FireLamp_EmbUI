@@ -123,17 +123,21 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     section_main_frame(interf, data);
 }
 
-void block_effects_config(Interface *interf, JsonObject *data){
+void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     if (!interf) return;
 
     interf->json_section_main(F("effects_config"), F("Управление"));
     confEff = myLamp.effects.getSelectedListElement();
     interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
-    EffectListElem *eff = nullptr;
-    while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-        EffectWorker *tmpeffect = new EffectWorker(eff);
-        interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-        delete tmpeffect;
+    if(fast){
+        interf->option(String(confEff->eff_nb), myLamp.effects.getEffectName());
+    } else {
+        EffectListElem *eff = nullptr;
+        while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+            EffectWorker *tmpeffect = new EffectWorker(eff, true);
+            interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
+            delete tmpeffect;
+        }
     }
     interf->json_section_end();
 
@@ -144,11 +148,27 @@ void block_effects_config(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+// Ticker show_effects_config_optionsTicker;          // планировщик заполнения списка
+// void show_effects_config_ext(Interface *interf, JsonObject *data){
+//     if (!interf) return;
+//     interf->json_frame_interface();
+//     block_effects_config(interf, data, false);
+//     interf->json_frame_flush();
+// }
+
+// void delayedcall_show_effects_config(Interface *interf, JsonObject *data){
+//     LOG(println, F("Fire!!!"));
+//     StaticJsonDocument<128> doc;
+//     JsonObject obj = doc.to<JsonObject>();
+//     CALL_INTF_OBJ(show_effects_config_ext);
+// }
+
 void show_effects_config(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface();
-    block_effects_config(interf, data);
+    block_effects_config(interf, data, false);
     interf->json_frame_flush();
+    //show_effects_config_optionsTicker.once(3,std::bind(delayedcall_show_effects_config, interf, data));
 }
 
 void set_effects_config_list(Interface *interf, JsonObject *data){
@@ -329,7 +349,7 @@ void block_effects_main(Interface *interf, JsonObject *data){
     EffectListElem *eff = nullptr;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         if (eff->canBeSelected()) {
-            EffectWorker *tmpeffect = new EffectWorker(eff);
+            EffectWorker *tmpeffect = new EffectWorker(eff, true);
             interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
             delete tmpeffect;
         }
@@ -743,6 +763,12 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(F("DRand"), F("Случайный эффект в Демо"));
     interf->range(F("DTimer"), 30, 250, 10, F("Время в секундах для смены режима"));
 
+    interf->select(F("effSort"), F("Сортировка эффектов"));
+    interf->option(String(0), F("Копии под базовым"));
+    interf->option(String(1), F("Копии в конце"));
+    interf->option(String(2), F("В порядке индекса"));
+    interf->json_section_end();
+
     interf->spacer(F("Вывод текста"));
     interf->range(F("txtSpeed"), 10, 100, 10, F("Задержка прокрутки текста"));
     interf->range(F("txtOf"), -1, 10, 1, F("Смещение вывода текста"));
@@ -783,6 +809,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
     SETPARAM(F("DRand"));
     SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
+    SETPARAM(F("effSort"), myLamp.effects.setEffSortType((*data)[F("effSort")].as<uint8_t>()));
 
     SETPARAM(F("txtSpeed"), myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
     SETPARAM(F("txtOf"), myLamp.setTextOffset((*data)[F("txtOf")]));
@@ -1255,7 +1282,9 @@ void create_parameters(){
     jee.var_create(F("txtColor"), F("#ffffff"));
     jee.var_create(F("txtSpeed"), F("100"));
     jee.var_create(F("txtOf"), F("0"));
-    jee.var_create(F("perTime"), F("1"));
+    jee.var_create(F("perTime"), F("0"));
+
+    jee.var_create(F("effSort"), F("1"));
 
     jee.var_create(F("GBR"), F("false"));
     jee.var_create(F("GlobBRI"), F("127"));
@@ -1349,7 +1378,7 @@ void create_parameters(){
 }
 
 void sync_parameters(){
-    DynamicJsonDocument doc(512);
+    DynamicJsonDocument doc(1024);
     JsonObject obj = doc.to<JsonObject>();
 
     CALL_SETTER(F("Events"), jee.param(F("Events")), set_eventflag);
@@ -1387,6 +1416,7 @@ void sync_parameters(){
     obj[F("isFaderON")] = jee.param(F("isFaderON"));
     obj[F("MIRR_H")] = jee.param(F("MIRR_H"));
     obj[F("MIRR_V")] = jee.param(F("MIRR_V"));
+    obj[F("effSort")] = jee.param(F("effSort"));
     obj[F("txtSpeed")] = jee.param(F("txtSpeed"));
     obj[F("txtOf")] = jee.param(F("txtOf"));
     obj[F("perTime")] = jee.param(F("perTime"));
