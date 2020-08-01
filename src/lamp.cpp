@@ -423,7 +423,7 @@ uint32_t LAMP::getPixColor(uint32_t thisSegm) // функция получени
   return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
 }
 
-void LAMP::fillAll(CRGB color) // залить все
+void LAMP::fillAll(const CRGB &color) // залить все
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
@@ -431,7 +431,7 @@ void LAMP::fillAll(CRGB color) // залить все
   }
 }
 
-void LAMP::drawPixelXY(int16_t x, int16_t y, CRGB color) // функция отрисовки точки по координатам X Y
+void LAMP::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
 {
   if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
   uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
@@ -441,7 +441,7 @@ void LAMP::drawPixelXY(int16_t x, int16_t y, CRGB color) // функция от�
   }
 }
 
-void LAMP::drawPixelXYF(float x, float y, CRGB color)
+void LAMP::drawPixelXYF(float x, float y, const CRGB &color)
 {
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -460,7 +460,7 @@ void LAMP::drawPixelXYF(float x, float y, CRGB color)
   }
 }
 
-void LAMP::drawLine(int x1, int y1, int x2, int y2, CRGB color){
+void LAMP::drawLine(int x1, int y1, int x2, int y2, const CRGB &color){
   int deltaX = abs(x2 - x1);
   int deltaY = abs(y2 - y1);
   int signX = x1 < x2 ? 1 : -1;
@@ -482,7 +482,7 @@ void LAMP::drawLine(int x1, int y1, int x2, int y2, CRGB color){
   }
 }
 
-void LAMP::drawLineF(float x1, float y1, float x2, float y2, CRGB color){
+void LAMP::drawLineF(float x1, float y1, float x2, float y2, const CRGB &color){
   float deltaX = std::abs(x2 - x1);
   float deltaY = std::abs(y2 - y1);
   float error = deltaX - deltaY;
@@ -506,7 +506,7 @@ void LAMP::drawLineF(float x1, float y1, float x2, float y2, CRGB color){
   }
 }
 
-void LAMP::drawCircle(int x0, int y0, int radius, CRGB color){
+void LAMP::drawCircle(int x0, int y0, int radius, const CRGB &color){
   int x = 0, y = radius, error = 0;
   int delta = 1 - 2 * radius;
 
@@ -533,7 +533,7 @@ void LAMP::drawCircle(int x0, int y0, int radius, CRGB color){
   }
 }
 
-void LAMP::drawCircleF(float x0, float y0, float radius, CRGB color){
+void LAMP::drawCircleF(float x0, float y0, float radius, const CRGB &color){
   float x = 0, y = radius, error = 0;
   float delta = 1 - 2 * radius;
 
