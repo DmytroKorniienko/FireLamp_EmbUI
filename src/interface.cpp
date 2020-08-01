@@ -178,6 +178,8 @@ void block_effects_param(Interface *interf, JsonObject *data){
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=0; i<controls.size();i++){
+        if(controls[i]->getType()==CONTROL_TYPE::MIC_RANGE && !myLamp.isMicOnOff()) continue;
+        
         interf->range(
         //String(controls[i]->getId())
         controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
@@ -612,6 +614,7 @@ void set_settings_mic(Interface *interf, JsonObject *data){
 void set_micflag(Interface *interf, JsonObject *data){
     if (!data) return;
     SETPARAM(F("Mic"), myLamp.setMicOnOff((*data)[F("Mic")] == F("true")));
+    show_effects_param(interf,data);
 }
 
 void set_settings_mic_calib(Interface *interf, JsonObject *data){

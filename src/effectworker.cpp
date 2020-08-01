@@ -464,7 +464,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
       {
           JsonObject var = arr.createNestedObject();
           var[F("id")]=controls[i]->getId();
-          var[F("type")]=controls[i]->gettype();
+          var[F("type")]=controls[i]->getType();
           var[F("name")]=controls[i]->getName();
           var[F("val")]=controls[i]->getVal();
           var[F("min")]=controls[i]->getMin();

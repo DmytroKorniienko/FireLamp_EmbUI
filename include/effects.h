@@ -521,8 +521,15 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+#ifdef MIC_EFFECTS
+static const char EFF_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":10,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Эффект\"}]}";
+#endif
 class EffectSparcles : public EffectCalc {
 private:
+#ifdef MIC_EFFECTS
+    const String defaultuiconfig(){ return String(FPSTR(EFF_SPARCLES_CFG)); } // использую кастомный конфиг
+    const String getversion() { return String(F("mic1.0")); } // обновим эффект, т.к. версия изменилась
+#endif
     const String getName() override {return String(FPSTR(T_SPARKLES));}
     bool sparklesRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1000,7 +1007,7 @@ public:
 
 // --------- конец секции эффектов 
 
-typedef enum : uint8_t {RANGE,EDIT,CHECKBOX} CONTROL_TYPE;
+typedef enum : uint8_t {RANGE,EDIT,CHECKBOX,MIC_RANGE=10} CONTROL_TYPE;
 
 class UIControl{
 private:
@@ -1025,7 +1032,7 @@ public:
     }
     UIControl() : id(0), ctype(CONTROL_TYPE::RANGE), control_name(), val(), min(), max(), step() {}
     const uint8_t getId() {return id;}
-    const CONTROL_TYPE gettype() {return ctype;}
+    const CONTROL_TYPE getType() {return ctype;}
     const String &getName() {return control_name;}
     const String &getVal() {return val;}
     const String &getMin() {return min;}
