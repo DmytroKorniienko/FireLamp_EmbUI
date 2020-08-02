@@ -207,14 +207,17 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 
 void block_effects_param(Interface *interf, JsonObject *data){
     if (!interf) return;
+#ifdef MIC_EFFECTS
     interf->json_section_begin(F("effects_param"));
-    
+#endif
     // В общем пробовал я передавать id как есть с заменой во всех местах (работает за мелкими исключениями), но хз... может для системных 0...2 лучше так как есть
     // Нужно подумать...
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=0; i<controls.size();i++){
+#ifdef MIC_EFFECTS
         if(controls[i]->getType()==CONTROL_TYPE::MIC_RANGE && !myLamp.isMicOnOff()) continue;
+#endif
         
         interf->range(
         //String(controls[i]->getId())
