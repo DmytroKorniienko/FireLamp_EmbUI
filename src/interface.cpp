@@ -40,6 +40,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "ui.h"
 
+Ticker optionsTicker;          // планировщик заполнения списка
+
 #ifdef AUX_PIN
 void AUX_toggle(bool key)
 {
@@ -148,27 +150,41 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     interf->json_section_end();
 }
 
-// Ticker show_effects_config_optionsTicker;          // планировщик заполнения списка
-// void show_effects_config_ext(Interface *interf, JsonObject *data){
-//     if (!interf) return;
-//     interf->json_frame_interface();
-//     block_effects_config(interf, data, false);
-//     interf->json_frame_flush();
-// }
-
-// void delayedcall_show_effects_config(Interface *interf, JsonObject *data){
-//     LOG(println, F("Fire!!!"));
-//     StaticJsonDocument<128> doc;
-//     JsonObject obj = doc.to<JsonObject>();
-//     CALL_INTF_OBJ(show_effects_config_ext);
-// }
+void delayedcall_show_effects_config(){
+    // LOG(println, F("Fire!!!"));
+    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 3000) : nullptr;
+    if (!interf) return;
+    interf->json_frame_interface();
+    interf->json_section_content();
+    interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
+    EffectListElem *eff = nullptr;
+    while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+        EffectWorker *tmpeffect = new EffectWorker(eff, true);
+        interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
+        delete tmpeffect;
+    }
+    interf->json_section_end();
+    interf->json_section_end();
+    interf->json_frame_flush();
+    delete interf;
+    if(optionsTicker.active())
+        optionsTicker.detach();
+}
 
 void show_effects_config(Interface *interf, JsonObject *data){
+#ifdef DELAYED_EFFECTS
+    if (!interf) return;
+    interf->json_frame_interface();
+    block_effects_config(interf, data);
+    interf->json_frame_flush();
+    if(!optionsTicker.active())
+        optionsTicker.once(10,std::bind(delayedcall_show_effects_config));
+#else
     if (!interf) return;
     interf->json_frame_interface();
     block_effects_config(interf, data, false);
     interf->json_frame_flush();
-    //show_effects_config_optionsTicker.once(3,std::bind(delayedcall_show_effects_config, interf, data));
+#endif
 }
 
 void set_effects_config_list(Interface *interf, JsonObject *data){
@@ -329,7 +345,35 @@ void show_main_flags(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
-void block_effects_main(Interface *interf, JsonObject *data){
+void delayedcall_effects_main(){
+    // LOG(println, F("Fire!!!"));
+    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 3000) : nullptr;
+    if (!interf) return;
+    interf->json_frame_interface();
+    interf->json_section_content();
+    interf->select(F("effList"), String(myLamp.effects.getSelected()), F("Эффект"), true);
+    EffectListElem *eff = nullptr;
+    while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+        if (eff->canBeSelected()) {
+            EffectWorker *tmpeffect = new EffectWorker(eff, true);
+            interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
+            delete tmpeffect;
+        }
+    }
+    interf->json_section_end();
+    interf->json_section_end();
+    interf->json_frame_flush();
+    delete interf;
+    if(optionsTicker.active())
+        optionsTicker.detach();
+}
+
+
+void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
+#ifndef DELAYED_EFFECTS
+    fast=false;
+#endif
+
     // Страница "Управление эффектами"
     if (!interf) return;
     interf->json_section_main(F("effects"), F("Эффекты"));
@@ -347,11 +391,15 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->select(F("effList"), String(myLamp.effects.getSelected()), F("Эффект"), true);
     LOG(printf_P,PSTR("Создаю список эффектов (%d):\n"),myLamp.effects.getModeAmount());
     EffectListElem *eff = nullptr;
-    while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-        if (eff->canBeSelected()) {
-            EffectWorker *tmpeffect = new EffectWorker(eff, true);
-            interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-            delete tmpeffect;
+    if(fast){
+        interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
+    } else {
+        while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+            if (eff->canBeSelected()) {
+                EffectWorker *tmpeffect = new EffectWorker(eff, true);
+                interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
+                delete tmpeffect;
+            }
         }
     }
     interf->json_section_end();
@@ -361,6 +409,10 @@ void block_effects_main(Interface *interf, JsonObject *data){
     interf->button(F("effects_config"), F("Управление"));
 
     interf->json_section_end();
+#ifdef DELAYED_EFFECTS
+    if(!optionsTicker.active())
+        optionsTicker.once(10,std::bind(delayedcall_effects_main));
+#endif
 }
 
 void set_eff_prev(Interface *interf, JsonObject *data){
@@ -1188,6 +1240,8 @@ void set_btnflag(Interface *interf, JsonObject *data){
 }
 #endif
 void section_effects_frame(Interface *interf, JsonObject *data){
+    if(optionsTicker.active())
+        optionsTicker.detach();
     if (!interf) return;
     interf->json_frame_interface(F(("Огненная лампа")));
     block_effects_main(interf, data);

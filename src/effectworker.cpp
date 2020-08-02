@@ -588,7 +588,7 @@ EffectWorker::EffectWorker(const EffectListElem* eff, bool fast) : effects(), co
     workerset(curEff, false);
   }
   if(fast){
-    //loadeffname(eff->eff_nb); // вычитываем только имя, если что-то не так, то используем дефолтное
+    loadeffname(eff->eff_nb); // вычитываем только имя, если что-то не так, то используем дефолтное
   } else {
     loadeffconfig(eff->eff_nb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
     //updateIndexFile();
