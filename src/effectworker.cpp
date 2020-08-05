@@ -488,6 +488,10 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   delay(DELAY_AFTER_FS_WRITING); // задержка после записи   
 }
 
+/**
+ *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов 
+ * 
+ */
 void EffectWorker::makeIndexFile(const char *folder)
 {
   if (LittleFS.begin()) {
@@ -507,46 +511,47 @@ void EffectWorker::makeIndexFile(const char *folder)
       // DynamicJsonDocument doc(4096); // для списка нужно больше 2кб... будем формировать наверное ручками :)
       // JsonArray arr = doc.to<JsonArray>();
       bool firstLine = true;
-      bool nameFromConfig = false;
-      idx.concat(F("["));
+      //bool nameFromConfig = false;    // судя по коду ниже это не актуально (ЕМ)
+      indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+      indexFile.print("[");
+
+      char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
+
       for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){ // EFF_NONE & EFF_NONE_LAST не сохраняем
-          workerset(i,false); // пропускаем сохранение конфигов
-          if(worker->getName()!=String(F("@name@"))){
+          //workerset(i,false); // пропускаем сохранение конфигов
               String cfgfilename = geteffectpathname(i, folder);
               if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
                   savedefaulteffconfig(i, cfgfilename);
-                  nameFromConfig = false;
-              } else { // конфиг существует, тогда читаем его
-                  loadeffconfig(i, folder);
-                  nameFromConfig = true;
               }
-
-              // JsonObject var = arr.createNestedObject();
-              // var[F("nb")] = i;
-              // var[F("nm")] = nameFromConfig ? effectName.c_str() : worker->getName();
+              // не соображу зачем нужно флаги хранить И в индексе И в конфиге эффекта, если индекс определяет "набор текущих любимых эффектов", возможно не прав (ЕМ)
+              // если нужно "восстанавливать" флаги в поврежденный индекс, то это не решает проблему существования множества индексов с разными флагами
+              // проще уж делать его копию на файловом уровне, это будет быстрее/менее затратно по ресурсам
+              /*
+               else { // конфиг существует, тогда читаем его
+                  loadeffconfig(i, folder);
+              }
 
               if(!firstLine) idx.concat(F(",")); // собираем JSON, чтобы записать его за один раз
               idx.concat(F("{\"nb\":"));
               idx.concat(i);
-              idx.concat(F(",\"fl\":"));
-              idx.concat(nameFromConfig ? flags.mask : 255); // от хранения имени в индексе отказался, т.к. он становится очень большим...
-              idx.concat(F("}"));
+              idx.concat(F(",\"fl\":255}"));
+              //idx.concat(nameFromConfig ? flags.mask : 255); // от хранения имени в индексе отказался, т.к. он становится очень большим...
+              */
 
+              indexFile.printf_P(buff, PSTR("%s{\"nb\":%d,\"fl\":255}"), firstLine ? "" : ",", i);
               firstLine = false; // сбрасываю признак перовой строки
-          }
-          ESP.wdtFeed(); // сброс вотчдога при итерациях
+          //ESP.wdtFeed(); // сброс вотчдога при итерациях
       }
-      idx.concat(F("]"));
-      indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-      indexFile.print(idx);
+      //idx.concat(F("]"));
+      //indexFile.print(idx);
+      indexFile.print("]");
       // String cfg_str;
       // serializeJson(doc, cfg_str);
       // //LOG(println,cfg_str);
       // indexFile.print(cfg_str);
       // doc.clear();
-      indexFile.flush();
+      //indexFile.flush();
       indexFile.close();
-      // LOG(println,"");
   }
   delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
