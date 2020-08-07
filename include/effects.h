@@ -210,12 +210,12 @@ public:
     /*
     *  получить имя эффекта
     */
-    virtual const String getName() { return String(F("@name@")); }
+//    virtual const String getName() { return String(F("@name@")); }
 
     /*
     *  получить версию эффекта, используется для форсирования пересоздания конфига, даже если он уже существует, перенакрыть функцию и изменить версию
     */
-    virtual const String getversion() { return String(F("@ver@")); }
+//    virtual const String getversion() { return String(F("@ver@")); }
 
     /**
      * load метод, по умолчанию пустой. Вызывается автоматом из init(), в дочернем классе можно заменять на процедуру первой загрузки эффекта (вместо того что выполняется под флагом load)
@@ -1065,7 +1065,7 @@ private:
 
     String originalName; // имя эффекта дефолтное
     String effectName; // имя эффекта (предварительно заданное или из конфига)
-    String version; // версия эффекта
+    uint8_t version; // версия эффекта
 
     LList<EffectListElem*> effects; // список эффектов с флагами из индекса
     LList<UIControl*> controls; // список контроллов текущего эффекта
@@ -1086,6 +1086,11 @@ private:
     //void initDefault();
 
     int loadeffconfig(const uint16_t nb, const char *folder=nullptr);
+
+    /**
+     * вычитать только имя эффект из конфиг-файла
+     * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
+     */
     void loadeffname(const uint16_t nb, const char *folder=nullptr);
     // получение пути и имени файла конфига эффекта
     const String geteffectpathname(const uint16_t nb, const char *folder=nullptr);
@@ -1103,6 +1108,12 @@ private:
     void updateIndexFile();
     // удалить эффект из индексного файла
     void deleteFromIndexFile(const uint16_t effect);
+
+    /**
+     * получить версию эффекта из "прошивки" по его ENUM
+     */
+    const uint8_t geteffcodeversion(const uint8_t id);
+
 public:
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
     void initDefault(); // пусть вызывается позже и явно

@@ -184,7 +184,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
 
   if(worker){
     worker->pre_init(static_cast<EFF_ENUM>(effect%256));
-    originalName = effectName = worker->getName(); // сначла заполним дефолтным именем, а затем лишь вычитаем из конфига
+    originalName = effectName = FPSTR(T_EFFNAMEID[(uint8_t)effect]); // сначла заполним дефолтным именем, а затем лишь вычитаем из конфига
     if(isCfgProceed){ // читаем конфиг только если это требуется, для индекса - пропускаем
       loadeffconfig(effect);
       // окончательная инициализация эффекта тут
@@ -277,22 +277,25 @@ void EffectWorker::initDefault()
   }
 }
 
+/**
+ * вычитать только имя эффект из конфиг-файла
+ * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
+ */
 void EffectWorker::loadeffname(const uint16_t nb, const char *folder)
 {
   if (LittleFS.begin()) {
-      File configFile;
       String filename = geteffectpathname(nb,folder);
-      String cfg_str;
       DynamicJsonDocument doc(2048);
 
-      configFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
-      cfg_str = configFile.readString();
+      File configFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
+      DeserializationError error = deserializeJson(doc, configFile);
       configFile.close();
-      DeserializationError error = deserializeJson(doc, cfg_str);
-      if (error) {
-        return;
+
+      if (error || not doc[F("name")] && (nb < 255)){
+        effectName = FPSTR(T_EFFNAMEID[nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
+      } else {
+        effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
       }
-      effectName = doc.containsKey(F("name")) && doc[F("name")].as<String>()!="" ? doc[F("name")].as<String>() : effectName; // перенакрываем именем из конфига, если есть
   }
 }
 
@@ -339,19 +342,20 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           }
       }
 
-      version = doc[F("ver")].as<String>();
-      if(worker->getversion()!=version){
+      version = doc[F("ver")].as<int>();
+      if(geteffcodeversion((uint8_t)nb) != version){
           doc.clear();
-          LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%s vs %s)\n"), version.c_str(), worker->getversion().c_str());
+          LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%d vs %d)\n"), version, geteffcodeversion((uint8_t)nb));
           savedefaulteffconfig(nb, filename);
           goto READALLAGAIN;
       }
 
       curEff = doc[F("nb")].as<uint16_t>();
       flags.mask = doc.containsKey(F("flags")) ? doc[F("flags")].as<uint8_t>() : 255;
-      effectName = doc.containsKey(F("name")) && doc[F("name")].as<String>()!="" ? doc[F("name")].as<String>() : worker->getName();
-      
-      LOG(printf_P, PSTR("Load MEM: %s - CFG: %s - DEF: %s\n"), effectName.c_str(), doc[F("name")].as<String>().c_str(), worker->getName().c_str());
+      const char* name = doc[F("name")];
+
+      effectName = name ? name : (String)(FPSTR(T_EFFNAMEID[(uint8_t)nb]));
+      //LOG(printf_P, PSTR("Load MEM: %s - CFG: %s - DEF: %s\n"), effectName.c_str(), doc[F("name")].as<String>().c_str(), worker->getName().c_str());
 
       // вычитываею список контроллов
       // повторные - скипаем, нехватающие - создаем
@@ -446,16 +450,13 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   if (LittleFS.begin()) {
       File configFile;
       String  cfg = worker->defaultuiconfig();
-      // workerset(nb,false); // пропускаем сохранение конфигов
-      // LOG(println,worker->getName());
       cfg.replace(F("@name@"), efname);
-      cfg.replace(F("@ver@"),worker->getversion());
+      cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
       cfg.replace(F("@nb@"), String(nb));
       configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
       configFile.print(cfg);
       configFile.close();
   }
-  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
@@ -1038,3 +1039,10 @@ void EffectWorker::moveSelected(){
   //LOG(printf_P,PSTR("%d %d\n"),controls.size(), selcontrols.size());
 }
 
+
+/**
+ * получить версию эффекта из "прошивки" по его ENUM
+ */
+const uint8_t EffectWorker::geteffcodeversion(const uint8_t id){
+    uint8_t ver = pgm_read_byte(T_EFFVER + id);
+}
