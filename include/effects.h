@@ -48,7 +48,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
-#define IDX_ITEMBUFFSIZE    25  // буфер для джейсон элемента индекса
+#define IDX_ITEMBUFFSIZE    25      // буфер для джейсон элемента индекса
+#define FILEIO_BUFFSIZE     512     // буфер записи для файла
 
 typedef enum : uint8_t {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
@@ -1088,6 +1089,13 @@ private:
     void loadeffname(const uint16_t nb, const char *folder=nullptr);
     // получение пути и имени файла конфига эффекта
     const String geteffectpathname(const uint16_t nb, const char *folder=nullptr);
+
+    /**
+     * проверка на существование "дефолтных" конфигов для всех статичных эффектов
+     * 
+     */
+    void chckdefconfigs(const char *folder);
+
     void savedefaulteffconfig(uint16_t nb, String &filename);
     void saveeffconfig(uint16_t nb, char *folder=nullptr);
     void makeIndexFile(const char *folder = nullptr);
