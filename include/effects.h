@@ -42,8 +42,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <ArduinoJson.h>
 #include <string.h>
 #include "LittleFS.h"
-#include "effects_types.h"
 #include "text_res.h"
+#include "effects_types.h"
 #include "../../include/LList.h"
 
 // #define DEFAULT_SLIDER 127
@@ -141,10 +141,6 @@ class EffectListElem{
     void isFavorite(bool val){ flags.isFavorite = val; }
 };
 
-// Полный формат для пользовательского (id=3...7) параметра имеет вид: {\"id\":3,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр\"}
-// @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта
-static const char DEFAULT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}]}";
-
 //! Basic Effect Calc class
 /**
  * Базовый класс эффекта с основными переменными и методами общими для всех эффектов
@@ -199,23 +195,6 @@ public:
      *
     */
     void init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl);
-
-    /*
-    *  получить дефолтный конфиг для эффекта
-    */
-    virtual const String defaultuiconfig(){
-        return String(FPSTR(DEFAULT_CFG));
-    }
-
-    /*
-    *  получить имя эффекта
-    */
-//    virtual const String getName() { return String(F("@name@")); }
-
-    /*
-    *  получить версию эффекта, используется для форсирования пересоздания конфига, даже если он уже существует, перенакрыть функцию и изменить версию
-    */
-//    virtual const String getversion() { return String(F("@ver@")); }
 
     /**
      * load метод, по умолчанию пустой. Вызывается автоматом из init(), в дочернем классе можно заменять на процедуру первой загрузки эффекта (вместо того что выполняется под флагом load)
@@ -346,9 +325,6 @@ private:
     CRGB hColor[1]; // цвет часов и минут
     CRGB mColor[1]; // цвет часов и минут
 
-    //const String getName() override {return String(FPSTR(T_TIME));}
-    //const String defaultuiconfig(){ return String(FPSTR(EFF_TIME_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.0")); } // обновим эффект, т.к. версия изменилась
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
@@ -523,16 +499,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-#ifdef MIC_EFFECTS
-static const char EFF_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":10,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Эффект\"}]}";
-#endif
 class EffectSparcles : public EffectCalc {
 private:
-#ifdef MIC_EFFECTS
-    const String defaultuiconfig(){ return String(FPSTR(EFF_SPARCLES_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("mic1.0")); } // обновим эффект, т.к. версия изменилась
-#endif
-    //const String getName() override {return String(FPSTR(T_SPARKLES));}
     bool sparklesRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1063,9 +1031,9 @@ private:
     uint16_t curEff = (uint16_t)EFF_NONE;     ///< энумератор текущего эффекта
     uint16_t selEff = (uint16_t)EFF_NONE;     ///< энумератор выбранного эффекта (для отложенного перехода)
 
-    String originalName; // имя эффекта дефолтное
-    String effectName; // имя эффекта (предварительно заданное или из конфига)
-    uint8_t version; // версия эффекта
+    String originalName;    // имя эффекта дефолтное
+    String effectName;      // имя эффекта (предварительно заданное или из конфига)
+    uint8_t version;        // версия эффекта
 
     LList<EffectListElem*> effects; // список эффектов с флагами из индекса
     LList<UIControl*> controls; // список контроллов текущего эффекта

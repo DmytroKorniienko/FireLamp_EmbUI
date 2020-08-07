@@ -342,7 +342,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           }
       }
 
-      version = doc[F("ver")].as<int>();
+      version = doc[F("ver")].as<uint8_t>();
       if(geteffcodeversion((uint8_t)nb) != version){
           doc.clear();
           LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%d vs %d)\n"), version, geteffcodeversion((uint8_t)nb));
@@ -438,18 +438,13 @@ const String EffectWorker::geteffectpathname(const uint16_t nb, const char *fold
 }
 
 void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
-  // если конфиг не найден, то создаем дефолтный
-  // при этом предполагаем, что worker указывает на нужный эффект!!!
-  // не будем предполагать, пересоздаем экземпляр пока не убрана привязка к версии эффекта 
-  //if(!worker)
-    workerset(nb,false);
   
   const String efname(FPSTR(T_EFFNAMEID[nb])); // выдергиваем имя эффекта из таблицы
   LOG(printf_P,PSTR("Create default config: %d %s\n"), nb, efname.c_str());
 
   if (LittleFS.begin()) {
       File configFile;
-      String  cfg = worker->defaultuiconfig();
+      String  cfg(FPSTR(T_EFFUICFG[(uint8_t)nb]));
       cfg.replace(F("@name@"), efname);
       cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
       cfg.replace(F("@nb@"), String(nb));
@@ -527,7 +522,6 @@ void EffectWorker::makeIndexFile(const char *folder)
   char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
 
   for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){ // EFF_NONE & EFF_NONE_LAST не сохраняем
-    //workerset(i,false); // пропускаем сохранение конфигов
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
 
@@ -978,8 +972,6 @@ uint16_t EffectWorker::getPrev()
       }
   }
   return firstfound;
-  // workerset(firstfound);
-  // curEff = firstfound;
 }
 
 // следующий эффект, кроме canBeSelected==false
@@ -1005,8 +997,6 @@ uint16_t EffectWorker::getNext()
       }
   }
   return firstfound;
-  // workerset(firstfound);
-  // curEff = firstfound;
 }
 
 // выбор нового эффекта с отложенной сменой, на время смены эффекта читаем его список контроллов отдельно
@@ -1045,4 +1035,5 @@ void EffectWorker::moveSelected(){
  */
 const uint8_t EffectWorker::geteffcodeversion(const uint8_t id){
     uint8_t ver = pgm_read_byte(T_EFFVER + id);
+    return ver;
 }
