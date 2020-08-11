@@ -49,7 +49,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
 #define IDX_ITEMBUFFSIZE    25      // буфер для джейсон элемента индекса
-#define FILEIO_BUFFSIZE    256      // буфер IO для работы с файлами
+//#define FILEIO_BUFFSIZE    256      // буфер IO для работы с файлами (делаем равный странице littlefs)
+
+static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
 
 typedef enum : uint8_t {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
@@ -1090,6 +1092,12 @@ private:
      */
     bool deserializeFile(DynamicJsonDocument& doc, const char* filepath);
 
+    /**
+     * процедура открывает индекс-файл на запись в переданный хендл,
+     * возвращает хендл 
+     */
+    bool openIndexFile(File& fhandle, const char *folder);
+
 
 public:
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
@@ -1102,8 +1110,8 @@ public:
     EffectWorker() : effects(), controls(), selcontrols() {
 
       if (!LittleFS.begin()){
-          LOG(println, F("ERROR: Can't mount filesystem!"));
-            return;
+          //LOG(println, F("ERROR: Can't mount filesystem!"));
+          return;
       }
 
       for(int8_t id=0;id<3;id++){

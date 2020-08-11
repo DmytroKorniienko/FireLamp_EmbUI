@@ -289,11 +289,14 @@ bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepat
   if (!filepath || !*filepath)
     return false;
 
+  //uint32_t timest = millis();
+
   File jfile = LittleFS.open(filepath, "r");
   DeserializationError error;
   if (jfile){
-    ReadBufferingStream jbuff{jfile, FILEIO_BUFFSIZE};
-    error = deserializeJson(doc, jbuff);
+    //ReadBufferingStream jbuff{jfile, FILEIO_BUFFSIZE};
+    //error = deserializeJson(doc, jbuff);
+    error = deserializeJson(doc, jfile);
     jfile.close();
   } else {
     return false;
@@ -304,6 +307,7 @@ bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepat
     LOG(println, error.code());
     return false;
   }
+  //LOG(printf_P,PSTR("File: %s deserialization took %d ms\n"), filepath, millis() - timest);
   return true;
 }
 
@@ -426,6 +430,11 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   cfg.replace(F("@nb@"), String(nb));
   File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   if (configFile){
+    /*
+    WriteBufferingStream buff(configFile, FILEIO_BUFFSIZE);
+    buff.write(cfg.c_str());
+    buff.flush();
+    */
     configFile.write(cfg.c_str());
     configFile.close();
   }
@@ -433,17 +442,16 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
 
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
-  if (LittleFS.begin()) {
-      File configFile;
-      String filename = geteffectpathname(nb,folder);
-      configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-      DynamicJsonDocument doc(2048);
-      doc[F("nb")] = nb;
-      doc[F("flags")] = flags.mask;
-      doc[F("name")] = effectName;
-      doc[F("ver")] = version;
-      JsonArray arr = doc.createNestedArray(F("ctrls"));
-      for (int i = 0; i < controls.size(); i++)
+  File configFile;
+  String filename = geteffectpathname(nb,folder);
+  configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+  DynamicJsonDocument doc(2048);
+  doc[F("nb")] = nb;
+  doc[F("flags")] = flags.mask;
+  doc[F("name")] = effectName;
+  doc[F("ver")] = version;
+  JsonArray arr = doc.createNestedArray(F("ctrls"));
+  for (int i = 0; i < controls.size(); i++)
       {
           JsonObject var = arr.createNestedObject();
           var[F("id")]=controls[i]->getId();
@@ -454,78 +462,15 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
           var[F("max")]=controls[i]->getMax();
           var[F("step")]=controls[i]->getStep();
       }
-      String cfg_str;
-      serializeJson(doc, cfg_str);
-      //LOG(println,cfg_str);
-      configFile.print(cfg_str);
-      doc.clear();
-      configFile.close();
-  }
+  String cfg_str;
+  serializeJson(doc, cfg_str);
+  //LOG(println,cfg_str);
+  configFile.print(cfg_str);
+  doc.clear();
+  configFile.close();
 }
 
-/**
- *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов 
- * 
- */
-void EffectWorker::makeIndexFile(const char *folder)
-{
-  uint32_t timest = millis();
 
-  // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношерстные операции во времени
-  // сначала проверяем наличие дефолтных конфигов для всех эффектов
-  chckdefconfigs(folder);
-
-  File indexFile;
-  String filename;
-  if (folder != nullptr) {
-      filename.concat(F("/"));
-      filename.concat(folder);
-  }
-  filename.concat(F("/eff_index.json"));
-  if(LittleFS.exists(filename)){ // если индексный файл существует, то на выход
-      return;
-  }
-  LOG(println, F("Rebuilding Index file..."));
-  bool firstLine = true;
-  //bool nameFromConfig = false;    // судя по коду ниже это не актуально (ЕМ)
-  indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-
-  BufferingPrint outbuff{indexFile, FILEIO_BUFFSIZE};
-
-  outbuff.print("[");
-  //char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
-
-  for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){ // EFF_NONE & EFF_NONE_LAST не сохраняем
-    if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
-      continue;
-
-    //LOG(printf_P,PSTR("rebuild idx for id: %d\n"), i);
-    // не соображу зачем нужно флаги хранить И в индексе И в конфиге эффекта, если индекс определяет "набор текущих любимых эффектов", возможно не прав (ЕМ)
-    // если нужно "восстанавливать" флаги в поврежденный индекс, то это не решает проблему существования множества индексов с разными флагами
-    // проще делать его копию на файловом уровне, это будет быстрее/менее затратно по ресурсам
-    // тут скорее вопрос принадлежности флагов. Если это характеристика текущего "набора" эффектов, то ей не место в конфигах самих эффектов
-    /*
-     else { // конфиг существует, тогда читаем его
-        loadeffconfig(i, folder);
-    }
-    if(!firstLine) idx.concat(F(",")); // собираем JSON, чтобы записать его за один раз
-    idx.concat(F("{\"nb\":"));
-    idx.concat(i);
-    idx.concat(F(",\"fl\":255}"));
-    //idx.concat(nameFromConfig ? flags.mask : 255); // от хранения имени в индексе отказался, т.к. он становится очень большим...
-    */
-    outbuff.printf_P(PSTR("%s{\"nb\":%d,\"fl\":255}"), firstLine ? "" : ",", i);
-    firstLine = false; // сбрасываю признак перовой строки
-    yield();
-  }
-  
-  outbuff.print("]");
-  outbuff.flush();
-  indexFile.close();
-
-  LOG(printf_P,PSTR("rebuilding took %d ms\n"), millis() - timest);
-
-}
 
 /**
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
@@ -538,9 +483,9 @@ void EffectWorker::chckdefconfigs(const char *folder){
 
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
-        savedefaulteffconfig(i, cfgfilename);
+      savedefaulteffconfig(i, cfgfilename);
+      yield();
     }
-    yield();
   }
 }
 
@@ -600,53 +545,121 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
   ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
 }
 
+/**
+ * процедура открывает индекс-файл на запись в переданный хендл,
+ * возвращает хендл 
+ */
+bool EffectWorker::openIndexFile(File& fhandle, const char *folder){
+
+  String filename((char *)0);
+
+  if (!folder || !*folder){
+    filename.concat("/");
+    filename.concat(folder);
+  }
+
+  filename.concat(F("/eff_index.json"));
+  fhandle = LittleFS.open(filename, "w");
+  return fhandle;
+}
+
+
+/**
+ *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов 
+ * 
+ */
+void EffectWorker::makeIndexFile(const char *folder)
+{
+  uint32_t timest = millis();
+
+  // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношерстные операции во времени
+  // сначала проверяем наличие дефолтных конфигов для всех эффектов
+  chckdefconfigs(folder);
+
+  File indexFile;
+  /*
+  String filename;
+  if (folder != nullptr) {
+      filename.concat(F("/"));
+      filename.concat(folder);
+  }
+  filename.concat(F("/eff_index.json"));
+  */
+
+  /*  по-моему файл везде перезаписывается
+  if(LittleFS.exists(filename)){ // если индексный файл существует, то на выход
+      return;
+  }
+  */
+  LOG(println, F("Rebuilding Index file..."));
+  bool firstLine = true;
+  //bool nameFromConfig = false;    // судя по коду ниже это не актуально (ЕМ)
+  //indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+  openIndexFile(indexFile, folder);
+  //BufferingPrint outbuff{indexFile, FILEIO_BUFFSIZE};
+
+  //outbuff.print("[");
+  indexFile.print("[");
+  //char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
+
+  for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){ // EFF_NONE & EFF_NONE_LAST не сохраняем
+    if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
+      continue;
+
+    //LOG(printf_P,PSTR("rebuild idx for id: %d\n"), i);
+    // не соображу зачем нужно флаги хранить И в индексе И в конфиге эффекта, если индекс определяет "набор текущих любимых эффектов", возможно не прав (ЕМ)
+    // если нужно "восстанавливать" флаги в поврежденный индекс, то это не решает проблему существования множества индексов с разными флагами
+    // проще делать его копию на файловом уровне, это будет быстрее/менее затратно по ресурсам
+    // тут скорее вопрос принадлежности флагов. Если это характеристика текущего "набора" эффектов, то ей не место в конфигах самих эффектов
+    /*
+     else { // конфиг существует, тогда читаем его
+        loadeffconfig(i, folder);
+    }
+    if(!firstLine) idx.concat(F(",")); // собираем JSON, чтобы записать его за один раз
+    idx.concat(F("{\"nb\":"));
+    idx.concat(i);
+    idx.concat(F(",\"fl\":255}"));
+    //idx.concat(nameFromConfig ? flags.mask : 255); // от хранения имени в индексе отказался, т.к. он становится очень большим...
+    */
+    //outbuff.printf_P(PSTR("%s{\"nb\":%d,\"fl\":255}"), firstLine ? "" : ",", i);
+    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, 255);
+    firstLine = false; // сбрасываю признак перовой строки
+    //yield();
+  }
+
+/*  
+  outbuff.print("]");
+  outbuff.flush();
+*/
+  indexFile.print("]");
+  indexFile.close();
+
+  LOG(printf_P,PSTR("rebuilding took %d ms\n"), millis() - timest);
+
+}
+
 void EffectWorker::makeIndexFileFromList(const char *folder)
 {
-  if (LittleFS.begin()) {
       File indexFile;
-      String idx;
-      String filename;
-      if (folder != nullptr) {
-          filename.concat(F("/"));
-          filename.concat(folder);
-      }
-      filename.concat(F("/eff_index.json"));
+
+      openIndexFile(indexFile, folder);
 
       bool firstLine = true;
-      idx.concat(F("["));
+      indexFile.print("[");
       for (uint8_t i = 0; i < effects.size(); i++){
-              if(!firstLine) idx.concat(F(","));
-              idx.concat(F("{\"nb\":"));
-              idx.concat(effects[i]->eff_nb);
-              idx.concat(F(",\"fl\":"));
-              idx.concat(effects[i]->flags.mask);
-              idx.concat(F("}"));
-
-              firstLine = false; // сбрасываю признак первой строки
+        indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", effects[i]->eff_nb, effects[i]->flags.mask);
+        firstLine = false; // сбрасываю признак первой строки
       }
-      idx.concat(F("]"));
-      indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-      indexFile.print(idx);
-      indexFile.flush();
+      indexFile.print("]");
       indexFile.close();
-  }
+
   LOG(println,F("Индекс эффектов обновлен!"));
-  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 
 void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
 {
-  if (LittleFS.begin()) {
       File indexFile;
-      String idx;
-      String filename;
       String sourcedir;
-      if (tofolder != nullptr) {
-          filename.concat(F("/"));
-          filename.concat(tofolder);
-      }
-      filename.concat(F("/eff_index.json"));
-      LittleFS.remove(filename); // удаляем имеющийся индекс
       makeIndexFile(tofolder); // создать дефолтный набор прежде всего
       
       if (fromfolder != nullptr) {
@@ -659,8 +672,9 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       DynamicJsonDocument doc(2048);
       
       String fn;
+      openIndexFile(indexFile, tofolder);
       bool firstLine = true;
-      idx.concat(F("["));
+      indexFile.print("[");
       
       while (dir.next()) {
           fn=sourcedir + "/" + dir.fileName();
@@ -669,25 +683,23 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
             continue;
           }
 
+          indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
+        /*
           if(!firstLine) idx.concat(F(","));
           idx.concat(F("{\"nb\":"));
           idx.concat(doc[F("nb")].as<String>());
           idx.concat(F(",\"fl\":"));
           idx.concat(doc[F("flags")].as<uint8_t>());
           idx.concat(F("}"));
+        */
           firstLine = false; // сбрасываю признак первой строки
           doc.clear();
           yield(); // сброс вотчдога при итерациях
       }
-      idx.concat(F("]"));
-      indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-      //LOG(println,idx);
-      indexFile.print(idx);
-      indexFile.flush();
+      indexFile.print("]");
       indexFile.close();
-  }
+
   LOG(println,F("Индекс эффектов создан из FS!"));
-  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
   initDefault(); // перечитаем вновь созданный индекс
 }
 
