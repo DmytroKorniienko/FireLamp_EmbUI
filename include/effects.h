@@ -49,7 +49,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
 #define IDX_ITEMBUFFSIZE    25      // буфер для джейсон элемента индекса
-#define FILEIO_BUFFSIZE     512     // буфер записи для файла
+#define FILEIO_BUFFSIZE    256      // буфер IO для работы с файлами
 
 typedef enum : uint8_t {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
@@ -1082,6 +1082,15 @@ private:
      */
     const uint8_t geteffcodeversion(const uint8_t id);
 
+    /**
+     *  метод загружает и пробует десериализовать джейсон из файла в предоставленный документ,
+     *  возвращает true если загрузка и десериализация прошла успешно
+     *  @param doc - DynamicJsonDocument куда будет загружен джейсон
+     *  @param jsonfile - файл, для загрузки
+     */
+    bool deserializeFile(DynamicJsonDocument& doc, const char* filepath);
+
+
 public:
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
     void initDefault(); // пусть вызывается позже и явно
@@ -1091,6 +1100,12 @@ public:
 
     // дефолтный конструктор
     EffectWorker() : effects(), controls(), selcontrols() {
+
+      if (!LittleFS.begin()){
+          LOG(println, F("ERROR: Can't mount filesystem!"));
+            return;
+      }
+
       for(int8_t id=0;id<3;id++){
         controls.add(new UIControl(
             id,                                     // id

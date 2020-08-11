@@ -37,6 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "effects.h"
 #include "misc.h"
+#include <StreamUtils.h>
 
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
@@ -215,210 +216,187 @@ void EffectWorker::clearControlsList()
 
 void EffectWorker::initDefault()
 {
-  //Serial.begin(115200);
-  if (LittleFS.begin()) {
-      File indexFile;
-      String idx;
-      String filename;
-      filename.concat(F("/eff_index.json"));
-      DeserializationError error;
-      DynamicJsonDocument doc(4096); // отожрет много памяти, но имена все равно не храним, так что хрен с ним, писать ручной парсер как-то лень
+  String filename(F("/eff_index.json"));
+  DynamicJsonDocument doc(4096); // отожрет много памяти, но имена все равно не храним, так что хрен с ним, писать ручной парсер как-то лень
 
-      TRYAGAIN:
-      if(!LittleFS.exists(filename)){ // если индексный файл не существует, то создать
-          makeIndexFile();
+
+  TRYAGAIN:
+  if (!deserializeFile(doc, filename.c_str())){
+    LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
+      makeIndexFile();
+      if (!deserializeFile(doc, filename.c_str())){
+        LOG(println, F("ERROR: Can't rebuild Index file"));
+        return;   // пересоздание индекса не помогло
       }
 
-      indexFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
-      idx = indexFile.readString();
-      indexFile.close();
-      error = deserializeJson(doc, idx);
-      LOG(println, idx);
+  }
 
-      if (error) {
-          LOG(print, F("Index deserialize error: "));
-          LOG(println, error.c_str()); //error.code
-          LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
-          goto TRYAGAIN;
-      }
-
-      JsonArray arr = doc.as<JsonArray>();
-      if(arr.isNull() || arr.size()==0){
+  JsonArray arr = doc.as<JsonArray>();
+  if(arr.isNull() || arr.size()==0){
           LOG(print, F("Index corrupted... "));
           LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
           goto TRYAGAIN;
-      }
-
-      //LOG(printf_P,PSTR("Создаю список эффектов конструктор (%d): %s\n"),arr.size(),idx.c_str());
-      clearEffectList();
-      for (size_t i=0; i<arr.size(); i++) {
-          JsonObject item = arr[i];
-          effects.add(new EffectListElem(item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>()));
-          //LOG(printf_P,PSTR("%d : %d\n"),item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>());
-      }
-      effects.sort([](EffectListElem *&a, EffectListElem *&b){ return a->eff_nb - b->eff_nb;}); // сортирую по eff_nb
-      uint16_t chk = 0; // удаляю дубликаты
-      for(int i=0; i<effects.size(); i++){
-        if(effects[i]->eff_nb==chk){
+  }
+  //LOG(printf_P,PSTR("Создаю список эффектов конструктор (%d): %s\n"),arr.size(),idx.c_str());
+  clearEffectList();
+  for (size_t i=0; i<arr.size(); i++) {
+      JsonObject item = arr[i];
+      effects.add(new EffectListElem(item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>()));
+      //LOG(printf_P,PSTR("%d : %d\n"),item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>());
+  }
+  effects.sort([](EffectListElem *&a, EffectListElem *&b){ return a->eff_nb - b->eff_nb;}); // сортирую по eff_nb
+  uint16_t chk = 0; // удаляю дубликаты
+  for(int i=0; i<effects.size(); i++){
+    if(effects[i]->eff_nb==chk){
           delete effects.remove(i);
           continue;
         }
-        chk = effects[i]->eff_nb;
-      }
-      if(effSort==0) // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
-        effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
-      else if(effSort==1){ // сортирую окончательно, так чтобы копии были в конце :)
+    chk = effects[i]->eff_nb;
+  }
+  if(effSort==0) // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
+    effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
+  else if(effSort==1){ // сортирую окончательно, так чтобы копии были в конце :)
         //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((int32_t)(((a->eff_nb&0xFF)<<8) | ((a->eff_nb&0xFF00)>>8)) - (((b->eff_nb&0xFF)<<8) | ((b->eff_nb&0xFF00)>>8)));});
         //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (a->eff_nb&0xFF00) - (b->eff_nb&0xFF00) + (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
       }
-      else if(effSort==2){ // в порядке следования внутри индекса
+  else if(effSort==2){ // в порядке следования внутри индекса
         // не реализовано пока
       }
-  }
 }
 
 /**
- * вычитать только имя эффект из конфиг-файла
+ * вычитать только имя эффекта из конфиг-файла
  * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
  */
 void EffectWorker::loadeffname(const uint16_t nb, const char *folder)
 {
-  if (LittleFS.begin()) {
-      String filename = geteffectpathname(nb,folder);
-      DynamicJsonDocument doc(2048);
-
-      File configFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
-      DeserializationError error = deserializeJson(doc, configFile);
-      configFile.close();
-
-      if (error || not doc[F("name")] && (nb < 255)){
-        effectName = FPSTR(T_EFFNAMEID[nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
-      } else {
-        effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
-      }
+  String filename = geteffectpathname(nb,folder);
+  DynamicJsonDocument doc(2048);
+  if (deserializeFile(doc, filename.c_str()) && doc[F("name")]){
+    effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
+  } else {
+    effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
   }
+}
+
+/**
+ *  метод загружает и пробует десериализовать джейсон из файла в предоставленный документ,
+ *  возвращает true если загрузка и десериализация прошла успешно
+ *  @param doc - DynamicJsonDocument куда будет загружен джейсон
+ *  @param jsonfile - файл, для загрузки
+ */
+bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepath){
+  if (!filepath || !*filepath)
+    return false;
+
+  File jfile = LittleFS.open(filepath, "r");
+  DeserializationError error;
+  if (jfile){
+    ReadBufferingStream jbuff{jfile, FILEIO_BUFFSIZE};
+    error = deserializeJson(doc, jbuff);
+    jfile.close();
+  } else {
+    return false;
+  }
+
+  if (error) {
+    LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filepath);
+    LOG(println, error.code());
+    return false;
+  }
+  return true;
 }
 
 int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
 {
   if(worker==nullptr){
-    return 1;
+    return 1;   // ошибка
   }
-  if (LittleFS.begin()) {
-      File configFile;
-      String filename = geteffectpathname(nb,folder);
-      String cfg_str;
-      DynamicJsonDocument doc(2048);
 
-      READALLAGAIN:
+  String filename = geteffectpathname(nb,folder);
+  DynamicJsonDocument doc(2048);
+  READALLAGAIN:
 
-      configFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
-      cfg_str = configFile.readString();
-      configFile.close();
+  if (!deserializeFile(doc, filename.c_str() )){
+    doc.clear();
+    savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
+    if (!deserializeFile(doc, filename.c_str() ))
+      return 1;   // ошибка и в файле и при попытке сгенерить конфиг по-умолчанию - выходим
+  }
 
-      // LOG(printf_P,PSTR("Попытка чтения: %s: %s\n"), filename.c_str(), cfg_str.c_str());
-
-      if (cfg_str == F("")){
-          LOG(printf_P, PSTR("Failed to open effects config file: %s\n"), filename.c_str());
-          savedefaulteffconfig(nb, filename); // сохраняем дефолтный и пробуем снова
-          configFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
-          cfg_str = configFile.readString();
-          configFile.close();
-      }
-
-      DeserializationError error = deserializeJson(doc, cfg_str);
-      if (error) {
-          LOG(print, F("deserializeJson error: "));
-          LOG(println, error.code());
-          savedefaulteffconfig(nb, filename);
-          configFile = LittleFS.open(filename, "r"); // PSTR("r") использовать нельзя, будет исключение!
-          cfg_str = configFile.readString();
-          configFile.close();
-          DeserializationError error = deserializeJson(doc, cfg_str);
-          if (error) {
-              LOG(print, F("deserializeJson error, default corrupted: "));
-              LOG(println, error.code());
-              return 1; // ошибка
-          }
-      }
-
-      version = doc[F("ver")].as<uint8_t>();
-      if(geteffcodeversion((uint8_t)nb) != version){
-          doc.clear();
-          LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%d vs %d)\n"), version, geteffcodeversion((uint8_t)nb));
-          savedefaulteffconfig(nb, filename);
-          goto READALLAGAIN;
-      }
-
-      curEff = doc[F("nb")].as<uint16_t>();
-      flags.mask = doc.containsKey(F("flags")) ? doc[F("flags")].as<uint8_t>() : 255;
-      const char* name = doc[F("name")];
-
-      effectName = name ? name : (String)(FPSTR(T_EFFNAMEID[(uint8_t)nb]));
-      //LOG(printf_P, PSTR("Load MEM: %s - CFG: %s - DEF: %s\n"), effectName.c_str(), doc[F("name")].as<String>().c_str(), worker->getName().c_str());
-
-      // вычитываею список контроллов
-      // повторные - скипаем, нехватающие - создаем
-      // обязательные контролы 0, 1, 2 - яркость, скорость, масштаб, остальные пользовательские
-
-      JsonArray arr = doc[F("ctrls")].as<JsonArray>();
-      clearControlsList();
-      uint8_t id_tst = 0x0; // пустой
-      for (size_t i = 0; i < arr.size(); i++) {
-          JsonObject item = arr[i];
-          uint8_t id = item[F("id")].as<uint8_t>();
-          if(!(id_tst&(1<<id))){ // проверка на существование контрола
-              id_tst |= 1<<item[F("id")].as<uint8_t>(); // закладываемся не более чем на 8 контролов, этого хватит более чем :)
-              String name = item.containsKey(F("name")) ?
-                  item[F("name")].as<String>() 
-                  : id == 0 ? String(F("Яркость"))
-                  : id == 1 ? String(F("Скорость"))
-                  : id == 2 ? String(F("Масштаб"))
-                  : String(F("Доп."))+String(id);
-              String val = item.containsKey(F("val")) ?
-                  item[F("val")].as<String>()
-                  : id < 3 ? String(127)
-                  : String();
-              String min = item.containsKey(F("min")) ?
-                  item[F("min")].as<String>()
-                  : id < 3 ? String(1)
-                  : String();
-              String max = item.containsKey(F("max")) ?
-                  item[F("max")].as<String>()
-                  : id < 3 ? String(255)
-                  : String();
-              String step = item.containsKey(F("step")) ?
-                  item[F("step")].as<String>()
-                  : id < 3 ? String(1)
-                  : String();
-              controls.add(new UIControl(
-                  id,             // id
-                  ((id<3) ? CONTROL_TYPE::RANGE : item[F("type")].as<CONTROL_TYPE>()),     // type
-                  name,           // name
-                  val,            // value
-                  min,            // min
-                  max,            // max
-                  step            // step
-              ));
-          }
-      }
+  version = doc[F("ver")].as<uint8_t>();
+  if(geteffcodeversion((uint8_t)nb) != version){
       doc.clear();
-      // тест стандартных контроллов
-      for(int8_t id=0;id<3;id++){
-          if(!((id_tst>>id)&1)){ // не найден контрол, нужно создать
-              controls.add(new UIControl(
-                  id,                                     // id
-                  CONTROL_TYPE::RANGE,                    // type
-                  id==0 ? F("Яркость") : id==1 ? F("Скорость") : F("Масштаб"),           // name
-                  String(127),                            // value
-                  String(1),                              // min
-                  String(255),                            // max
-                  String(1)                               // step
-              ));
-          }
-      }
-      controls.sort([](UIControl *&a, UIControl *&b){ return a->getId() - b->getId();}); // сортирую по id
+      LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%d vs %d)\n"), version, geteffcodeversion((uint8_t)nb));
+      savedefaulteffconfig(nb, filename);
+      goto READALLAGAIN;
   }
+
+  curEff = doc[F("nb")].as<uint16_t>();
+  flags.mask = doc.containsKey(F("flags")) ? doc[F("flags")].as<uint8_t>() : 255;
+  const char* name = doc[F("name")];
+  effectName = name ? name : (String)(FPSTR(T_EFFNAMEID[(uint8_t)nb]));
+  //LOG(printf_P, PSTR("Load MEM: %s - CFG: %s - DEF: %s\n"), effectName.c_str(), doc[F("name")].as<String>().c_str(), worker->getName().c_str());
+  // вычитываею список контроллов
+  // повторные - скипаем, нехватающие - создаем
+  // обязательные контролы 0, 1, 2 - яркость, скорость, масштаб, остальные пользовательские
+  JsonArray arr = doc[F("ctrls")].as<JsonArray>();
+  clearControlsList();
+  uint8_t id_tst = 0x0; // пустой
+  for (size_t i = 0; i < arr.size(); i++) {
+      JsonObject item = arr[i];
+      uint8_t id = item[F("id")].as<uint8_t>();
+      if(!(id_tst&(1<<id))){ // проверка на существование контрола
+          id_tst |= 1<<item[F("id")].as<uint8_t>(); // закладываемся не более чем на 8 контролов, этого хватит более чем :)
+          String name = item.containsKey(F("name")) ?
+              item[F("name")].as<String>() 
+              : id == 0 ? String(F("Яркость"))
+              : id == 1 ? String(F("Скорость"))
+              : id == 2 ? String(F("Масштаб"))
+              : String(F("Доп."))+String(id);
+          String val = item.containsKey(F("val")) ?
+              item[F("val")].as<String>()
+              : id < 3 ? String(127)
+              : String();
+          String min = item.containsKey(F("min")) ?
+              item[F("min")].as<String>()
+              : id < 3 ? String(1)
+              : String();
+          String max = item.containsKey(F("max")) ?
+              item[F("max")].as<String>()
+              : id < 3 ? String(255)
+              : String();
+          String step = item.containsKey(F("step")) ?
+              item[F("step")].as<String>()
+              : id < 3 ? String(1)
+              : String();
+          controls.add(new UIControl(
+              id,             // id
+              ((id<3) ? CONTROL_TYPE::RANGE : item[F("type")].as<CONTROL_TYPE>()),     // type
+              name,           // name
+              val,            // value
+              min,            // min
+              max,            // max
+              step            // step
+          ));
+      }
+  }
+  doc.clear();
+  // тест стандартных контроллов
+  for(int8_t id=0;id<3;id++){
+      if(!((id_tst>>id)&1)){ // не найден контрол, нужно создать
+          controls.add(new UIControl(
+              id,                                     // id
+              CONTROL_TYPE::RANGE,                    // type
+              id==0 ? F("Яркость") : id==1 ? F("Скорость") : F("Масштаб"),           // name
+              String(127),                            // value
+              String(1),                              // min
+              String(255),                            // max
+              String(1)                               // step
+          ));
+      }
+  }
+  controls.sort([](UIControl *&a, UIControl *&b){ return a->getId() - b->getId();}); // сортирую по id
   return 0; // успешно
 }
 
@@ -438,19 +416,18 @@ const String EffectWorker::geteffectpathname(const uint16_t nb, const char *fold
 }
 
 void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
-  
-  const String efname(FPSTR(T_EFFNAMEID[nb])); // выдергиваем имя эффекта из таблицы
-  LOG(printf_P,PSTR("Create default config: %d %s\n"), nb, efname.c_str());
 
-  if (LittleFS.begin()) {
-      File configFile;
-      String  cfg(FPSTR(T_EFFUICFG[(uint8_t)nb]));
-      cfg.replace(F("@name@"), efname);
-      cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
-      cfg.replace(F("@nb@"), String(nb));
-      configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-      configFile.print(cfg);
-      configFile.close();
+  const String efname(FPSTR(T_EFFNAMEID[(uint8_t)nb])); // выдергиваем имя эффекта из таблицы
+  LOG(printf_P,PSTR("Make default config: %d %s\n"), nb, efname.c_str());
+
+  String  cfg(FPSTR(T_EFFUICFG[(uint8_t)nb]));    // извлекаем конфиг для UI-эффекта по-умолчанию из флеш-таблицы
+  cfg.replace(F("@name@"), efname);
+  cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
+  cfg.replace(F("@nb@"), String(nb));
+  File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+  if (configFile){
+    configFile.write(cfg.c_str());
+    configFile.close();
   }
 }
 
@@ -482,10 +459,8 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
       //LOG(println,cfg_str);
       configFile.print(cfg_str);
       doc.clear();
-      configFile.flush();
       configFile.close();
   }
-  delay(DELAY_AFTER_FS_WRITING); // задержка после записи   
 }
 
 /**
@@ -496,15 +471,11 @@ void EffectWorker::makeIndexFile(const char *folder)
 {
   uint32_t timest = millis();
 
-  if (!LittleFS.begin())
-    return;
-
-  // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношестные операции во времени
+  // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношерстные операции во времени
   // сначала проверяем наличие дефолтных конфигов для всех эффектов
   chckdefconfigs(folder);
 
   File indexFile;
-  String idx;
   String filename;
   if (folder != nullptr) {
       filename.concat(F("/"));
@@ -518,14 +489,17 @@ void EffectWorker::makeIndexFile(const char *folder)
   bool firstLine = true;
   //bool nameFromConfig = false;    // судя по коду ниже это не актуально (ЕМ)
   indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-  indexFile.print("[");
-  char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
+
+  BufferingPrint outbuff{indexFile, FILEIO_BUFFSIZE};
+
+  outbuff.print("[");
+  //char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
 
   for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){ // EFF_NONE & EFF_NONE_LAST не сохраняем
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
 
-    LOG(printf_P,PSTR("rebuild idx for id: %d\n"), i);
+    //LOG(printf_P,PSTR("rebuild idx for id: %d\n"), i);
     // не соображу зачем нужно флаги хранить И в индексе И в конфиге эффекта, если индекс определяет "набор текущих любимых эффектов", возможно не прав (ЕМ)
     // если нужно "восстанавливать" флаги в поврежденный индекс, то это не решает проблему существования множества индексов с разными флагами
     // проще делать его копию на файловом уровне, это будет быстрее/менее затратно по ресурсам
@@ -540,17 +514,17 @@ void EffectWorker::makeIndexFile(const char *folder)
     idx.concat(F(",\"fl\":255}"));
     //idx.concat(nameFromConfig ? flags.mask : 255); // от хранения имени в индексе отказался, т.к. он становится очень большим...
     */
-    indexFile.printf_P(PSTR("%s{\"nb\":%d,\"fl\":255}"), firstLine ? "" : ",", i);
+    outbuff.printf_P(PSTR("%s{\"nb\":%d,\"fl\":255}"), firstLine ? "" : ",", i);
     firstLine = false; // сбрасываю признак перовой строки
     yield();
   }
   
-  indexFile.print("]");
+  outbuff.print("]");
+  outbuff.flush();
   indexFile.close();
 
   LOG(printf_P,PSTR("rebuilding took %d ms\n"), millis() - timest);
 
-  delay(DELAY_AFTER_FS_WRITING); // задержка после записи
 }
 
 /**
@@ -681,23 +655,17 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       }
       sourcedir.concat(F("/eff"));
       Dir dir = LittleFS.openDir(sourcedir);
-      String cfg_str;
-      File configFile;
+
       DynamicJsonDocument doc(2048);
-      DeserializationError error;
       
       String fn;
       bool firstLine = true;
       idx.concat(F("["));
       
       while (dir.next()) {
-          fn=dir.fileName();
+          fn=sourcedir + "/" + dir.fileName();
           //LOG(println,fn);
-          configFile = LittleFS.open(sourcedir+String(F("/"))+fn, "r"); // PSTR("r") использовать нельзя, будет исключение!
-          cfg_str = configFile.readString();
-          configFile.close();
-          error = deserializeJson(doc, cfg_str);
-          if (error || doc[F("nb")].as<String>()=="0") {
+          if (!deserializeFile(doc, fn.c_str()) || doc[F("nb")].as<String>()=="0") {
             continue;
           }
 
@@ -709,8 +677,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
           idx.concat(F("}"));
           firstLine = false; // сбрасываю признак первой строки
           doc.clear();
-          cfg_str.clear();
-          ESP.wdtFeed(); // сброс вотчдога при итерациях
+          yield(); // сброс вотчдога при итерациях
       }
       idx.concat(F("]"));
       indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!

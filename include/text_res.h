@@ -35,7 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-// набор строк с именами эффектов
+/** набор строк с именами эффектов
+ *  ссылки на эти строки собираются во флеш-массив в файле effect_types.h
+ */
 static const char TEFF_000[] PROGMEM = "";  // "пустышка"
 static const char TEFF_001[] PROGMEM = "Белая лампа";
 static const char TEFF_002[] PROGMEM = "Цвета";
