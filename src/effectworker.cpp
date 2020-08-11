@@ -265,10 +265,13 @@ void EffectWorker::initDefault()
 }
 
 /**
- * вычитать только имя эффекта из конфиг-файла
+ * вычитать только имя эффекта из конфиг-файла и записать в предоставленную строку
  * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
+ * @param effectName - String куда записать результат
+ * @param nb  - айди эффекта
+ * @param folder - какой-то префикс для каталога
  */
-void EffectWorker::loadeffname(const uint16_t nb, const char *folder)
+void EffectWorker::loadeffname(String& effectName, const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
   DynamicJsonDocument doc(2048);
@@ -526,12 +529,13 @@ EffectWorker::EffectWorker(const EffectListElem* eff, bool fast) : effects(), co
     workerset(curEff, false);
   }
   if(fast){
-    loadeffname(eff->eff_nb); // вычитываем только имя, если что-то не так, то используем дефолтное
+    loadeffname(effectName, eff->eff_nb); // вычитываем только имя, если что-то не так, то используем дефолтное
   } else {
     loadeffconfig(eff->eff_nb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
     //updateIndexFile();
   }
-  ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
+  //ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
+  // лучше в сам цикл вставлять эти прокладки
 }
 
 // Конструктор для отложенного эффекта, очень не желательно вызывать в цикле!

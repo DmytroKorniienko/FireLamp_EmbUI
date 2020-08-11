@@ -1057,11 +1057,6 @@ private:
 
     int loadeffconfig(const uint16_t nb, const char *folder=nullptr);
 
-    /**
-     * вычитать только имя эффект из конфиг-файла
-     * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
-     */
-    void loadeffname(const uint16_t nb, const char *folder=nullptr);
     // получение пути и имени файла конфига эффекта
     const String geteffectpathname(const uint16_t nb, const char *folder=nullptr);
 
@@ -1160,7 +1155,17 @@ public:
 
     const String &getEffectName() {return effectName;}
     const String &getOriginalNameName() {return originalName;}
-    
+
+    /**
+    * вычитать только имя эффекта из конфиг-файла и записать в предоставленную строку
+    * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
+    * для работы метода не требуется экземпляра класса effectCalc'а
+    * @param effectName - String куда записать результат
+    * @param nb  - айди эффекта
+    * @param folder - какой-то префикс для каталога
+    */
+    void loadeffname(String& effectName, const uint16_t nb, const char *folder=nullptr);
+
     // текущий эффект или его копия
     const uint16_t getEn() {return curEff;}
 
