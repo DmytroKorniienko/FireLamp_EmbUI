@@ -37,7 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "effects.h"
 #include "misc.h"
-#include <StreamUtils.h>
+//#include <StreamUtils.h>
 
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
