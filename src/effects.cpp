@@ -969,7 +969,10 @@ bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
 
 // ------------- эффект "блуждающий кубик" -------------
 void EffectBall::load(){
-  ballSize = map( ((scale<128) ? scale : 255 - scale) , 0, 128, 1, max(((uint8_t)(min(WIDTH,HEIGHT) / 2.5)), (uint8_t)1));
+  byte _scale = getCtrlVal(2).toInt();
+  //LOG(printf_P, PSTR("getCtrlVal(5)=%s, %d\n"), getCtrlVal(5).c_str(), getCtrlVal(5).toInt()); /// провека чтения отсутствующего контрола
+
+  ballSize = map( ((_scale<128) ? _scale : 255 - _scale) , 0, 128, 1, max(((uint8_t)(min(WIDTH,HEIGHT) / 2.5)), (uint8_t)1));
   for (uint8_t i = 0U; i < 2U; i++)
   {
     coordB[i] = i? float(WIDTH - ballSize) / 2 : float(HEIGHT - ballSize) / 2;
@@ -984,7 +987,9 @@ bool EffectBall::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 {
-  ballSize = map( ((scale<128) ? scale : 255 - scale) , 0, 128, 1, max(((uint8_t)(min(WIDTH,HEIGHT) / 2.5)), (uint8_t)1));
+  byte _speed = getCtrlVal(1).toInt();
+  byte _scale = getCtrlVal(2).toInt();
+  ballSize = map( ((_scale<128) ? _scale : 255 - _scale) , 0, 128, 1, max(((uint8_t)(min(WIDTH,HEIGHT) / 2.5)), (uint8_t)1));
 
 // каждые 5 секунд коррекция направления
   EVERY_N_SECONDS(5){
@@ -1005,7 +1010,7 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 0U; i < 2U; i++)
   {
-    coordB[i] += vectorB[i] * ((0.1f * (float)speed) /255.0f);
+    coordB[i] += vectorB[i] * ((0.1f * (float)_speed) /255.0f);
     if ((int8_t)coordB[i] < 0)
     {
       coordB[i] = 0;
@@ -1026,10 +1031,10 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
     if (RANDOM_COLOR) ballColor = CHSV(random8(1, 255), 220, random8(100, 255));
   }
 
-  if (scale <= 127) { // при масштабе до 127 выводим кубик без шлейфа
+  if (_scale <= 127) { // при масштабе до 127 выводим кубик без шлейфа
     memset8( leds, 0, NUM_LEDS * 3);
   } else {
-    fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)speed) /255) + 30); // выводим кубик со шлейфом, длинна которого зависит от скорости.
+    fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)_speed) /255) + 30); // выводим кубик со шлейфом, длинна которого зависит от скорости.
   }
   for (float i = 0.0f; i < (float)ballSize; i+= 0.25f)
   {

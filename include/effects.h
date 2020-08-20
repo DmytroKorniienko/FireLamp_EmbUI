@@ -114,6 +114,40 @@ EFF_TIME = (253U)                             // Часы (служебный, �
 //-------------------------------------------------
 class EffectWorker;
 
+typedef enum : uint8_t {RANGE,EDIT,CHECKBOX,MIC_RANGE=10} CONTROL_TYPE;
+
+class UIControl{
+private:
+    uint8_t id;
+    CONTROL_TYPE ctype;
+    String control_name;
+    String val;
+    String min;
+    String max;
+    String step;
+public:
+    UIControl(const uint8_t id, const CONTROL_TYPE ctype, const String &control_name, const String &val, const String &min, const String &max, const String &step)
+    {
+        this->id=id;
+        this->ctype = ctype;
+        this->control_name = String(control_name);
+
+        this->val = val;
+        this->min = min;
+        this->max = max;
+        this->step = step;
+    }
+    UIControl() : id(0), ctype(CONTROL_TYPE::RANGE), control_name(), val(), min(), max(), step() {}
+    const uint8_t getId() {return id;}
+    const CONTROL_TYPE getType() {return ctype;}
+    const String &getName() {return control_name;}
+    const String &getVal() {return val;}
+    const String &getMin() {return min;}
+    const String &getMax() {return max;}
+    const String &getStep() {return step;}
+
+    void setVal(const String &_val) {val=_val;}
+};
 
 typedef union {
     uint8_t mask;
@@ -150,6 +184,9 @@ class EffectListElem{
 */
 class EffectCalc {
 private:
+    EffectWorker *pworker = nullptr; // указатель на воркер
+    LList<UIControl *> *ctrls;
+    String dummy; // дефолтная затычка для отсутствующего контролла, в случае приведения к целому получится "0"
 protected:
     bool active=0;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
@@ -172,6 +209,10 @@ protected:
     std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
     TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
 
+    const String &getCtrlVal(int idx) {
+        return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
+    }
+
 public:
 
     /** полезные обертки **/
@@ -184,7 +225,7 @@ public:
      * pre_init метод, вызывается отдельно после создания экземпляра эффекта до каких либо иных инициализаций
      * это нужно чтобы объект понимал кто он и возможно было вычитать конфиг для мультиэфектов, никаких иных действий здесь не предполагается
     */
-    void pre_init(EFF_ENUM _eff) {effect = _eff;}
+    void pre_init(EFF_ENUM _eff, EffectWorker *_pworker, LList<UIControl *> *_ctrls) {effect = _eff; pworker = _pworker; ctrls = _ctrls;}
 
     /**
      * intit метод, вызывается отдельно после создания экземпляра эффекта для установки базовых переменных
@@ -990,41 +1031,6 @@ public:
 
 // --------- конец секции эффектов 
 
-typedef enum : uint8_t {RANGE,EDIT,CHECKBOX,MIC_RANGE=10} CONTROL_TYPE;
-
-class UIControl{
-private:
-    uint8_t id;
-    CONTROL_TYPE ctype;
-    String control_name;
-    String val;
-    String min;
-    String max;
-    String step;
-public:
-    UIControl(const uint8_t id, const CONTROL_TYPE ctype, const String &control_name, const String &val, const String &min, const String &max, const String &step)
-    {
-        this->id=id;
-        this->ctype = ctype;
-        this->control_name = String(control_name);
-
-        this->val = val;
-        this->min = min;
-        this->max = max;
-        this->step = step;
-    }
-    UIControl() : id(0), ctype(CONTROL_TYPE::RANGE), control_name(), val(), min(), max(), step() {}
-    const uint8_t getId() {return id;}
-    const CONTROL_TYPE getType() {return ctype;}
-    const String &getName() {return control_name;}
-    const String &getVal() {return val;}
-    const String &getMin() {return min;}
-    const String &getMax() {return max;}
-    const String &getStep() {return step;}
-
-    void setVal(const String &_val) {val=_val;}
-};
-
 class EffectWorker {
 private:
     uint8_t effSort; // порядок сортировки в UI
@@ -1155,7 +1161,7 @@ public:
     byte getModeAmount() {return effects.size();}
 
     const String &getEffectName() {return effectName;}
-    const String &getOriginalNameName() {return originalName;}
+    const String &getOriginalName() {return originalName;}
 
     /**
     * вычитать только имя эффекта из конфиг-файла и записать в предоставленную строку
