@@ -438,11 +438,12 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------- эффект "блуждающий кубик" -------------
 class EffectBall : public EffectCalc {
 private:
     int8_t ballSize;
-    int16_t ballColor;
-    int8_t vectorB[2U];
+    CHSV ballColor;
+    float vectorB[2U];
     float coordB[2U];
 
     const String getName() override {return String(FPSTR(T_CUBE));}
