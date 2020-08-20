@@ -34,61 +34,60 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <string.h>
 
-const char T_SPARKLES[] PROGMEM = "Конфетти";
-const char T_FIRE[] PROGMEM = "Огненная лампа";
-const char T_EVERYTHINGFALL[] PROGMEM = "Эффектопад";
-const char T_RAINBOW_2D[] PROGMEM = "Радуга 2D";
-const char T_COLORS[] PROGMEM = "Цвета";
-const char T_PULSE[] PROGMEM = "Пульс";
-const char T_MATRIX[] PROGMEM = "Матрица";
-const char T_SNOW[] PROGMEM = "Снегопад";
-const char T_SNOWSTORMSTARFALL[] PROGMEM = "Метель + Звездопад";
-const char T_LIGHTERS[] PROGMEM = "Светлячки";
-const char T_LIGHTER_TRACES[] PROGMEM = "Светлячки со шлейфом";
-const char T_PAINTBALL[] PROGMEM = "Пейнтбол";
-const char T_CUBE[] PROGMEM = "Блуждающий кубик";
-const char T_BBALS[] PROGMEM = "Прыгающие мячики";
-const char T_MADNESS[] PROGMEM = "Безумие 3D";
-const char T_RAINBOW[] PROGMEM = "Радуга 3D";
-const char T_RAINBOW_STRIPE[] PROGMEM = "Павлин 3D";
-const char T_ZEBRA[] PROGMEM = "Зебра 3D";
-const char T_FOREST[] PROGMEM = "Лес 3D";
-const char T_OCEAN[] PROGMEM = "Океан 3D";
-const char T_PLASMA[] PROGMEM = "Плазма 3D";
-const char T_CLOUDS[] PROGMEM = "Облака 3D";
-const char T_LAVA[] PROGMEM = "Лава 3D";
-const char T_SINUSOID3[] PROGMEM = "Синусоид 3";
-const char T_METABALLS[] PROGMEM = "Метасферы";
-const char T_SPIRO[] PROGMEM = "Спираль";
-const char T_RAINBOWCOMET[] PROGMEM = "Радужная комета";
-const char T_RAINBOWCOMET3[] PROGMEM = "Три кометы";
-const char T_WHITE_COLOR[] PROGMEM = "Белая лампа";
-const char T_PRIZMATA[] PROGMEM = "Призмата";
-const char T_FLOCK[] PROGMEM = "Стая";
-const char T_SWIRL[] PROGMEM = "Водоворот";
-const char T_DRIFT[] PROGMEM = "Дрифт";
-const char T_DRIFT2[] PROGMEM = "Дрифт 2";
-const char T_TWINKLES[] PROGMEM = "Мерцание";
-const char T_RADAR[] PROGMEM = "Радар";
-const char T_WAVES[] PROGMEM = "Волны";
-const char T_FIRE2012[] PROGMEM = "Огонь 2012";
-const char T_RAIN[] PROGMEM = "Дождь";
-const char T_COLORRAIN[] PROGMEM = "Цветной дождь";
-const char T_STORMYRAIN[] PROGMEM = "Тучка в банке";
-const char T_FIRE2018[] PROGMEM = "Огонь 2018";
-const char T_RINGS[] PROGMEM = "Кодовый замок";
-const char T_CUBE2[] PROGMEM = "Куб 2D";
-const char T_SMOKE[] PROGMEM = "Дым";
-const char T_PICASSO[] PROGMEM = "Пикассо";
-const char T_PICASSO2[] PROGMEM = "Пикассо2";
-const char T_PICASSO3[] PROGMEM = "Пикассо3";
-const char T_LEAPERS[] PROGMEM = "Прыгуны"; // Автор сказал прыгуны, значит по дефолту будут прыгуны :)
-const char T_TIME[] PROGMEM = "Часы";
+/** набор строк с именами эффектов
+ *  ссылки на эти строки собираются во флеш-массив в файле effect_types.h
+ */
+static const char TEFF_000[] PROGMEM = "";  // "пустышка"
+static const char TEFF_001[] PROGMEM = "Белая лампа";
+static const char TEFF_002[] PROGMEM = "Цвета";
+static const char TEFF_003[] PROGMEM = "Радуга 2D";
+static const char TEFF_004[] PROGMEM = "Конфетти";
+static const char TEFF_005[] PROGMEM = "Снегопад";
+static const char TEFF_006[] PROGMEM = "Метель + Звездопад";
+static const char TEFF_007[] PROGMEM = "Матрица";
+static const char TEFF_008[] PROGMEM = "Светлячки";
+static const char TEFF_009[] PROGMEM = "Светлячки со шлейфом";
+static const char TEFF_010[] PROGMEM = "Блуждающий кубик";
+static const char TEFF_011[] PROGMEM = "Пульс";
+static const char TEFF_012[] PROGMEM = "Эффектопад";
+static const char TEFF_013[] PROGMEM = "Огненная лампа";
+static const char TEFF_014[] PROGMEM = "Пейнтбол";
+static const char TEFF_015[] PROGMEM = "Безумие 3D";
+static const char TEFF_016[] PROGMEM = "Облака 3D";
+static const char TEFF_017[] PROGMEM = "Лава 3D";
+static const char TEFF_018[] PROGMEM = "Плазма 3D";
+static const char TEFF_019[] PROGMEM = "Радуга 3D";
+static const char TEFF_020[] PROGMEM = "Павлин 3D";
+static const char TEFF_021[] PROGMEM = "Зебра 3D";
+static const char TEFF_022[] PROGMEM = "Лес 3D";
+static const char TEFF_023[] PROGMEM = "Океан 3D";
+static const char TEFF_024[] PROGMEM = "Прыгающие мячики";
+static const char TEFF_025[] PROGMEM = "Синусоид 3";
+static const char TEFF_026[] PROGMEM = "Метасферы";
+static const char TEFF_027[] PROGMEM = "Спираль";
+static const char TEFF_028[] PROGMEM = "Радужная комета";
+static const char TEFF_029[] PROGMEM = "Три кометы";
+static const char TEFF_030[] PROGMEM = "Призмата";
+static const char TEFF_031[] PROGMEM = "Стая";
+static const char TEFF_032[] PROGMEM = "Водоворот";
+static const char TEFF_033[] PROGMEM = "Дрифт";
+static const char TEFF_034[] PROGMEM = "Дрифт 2";
+static const char TEFF_035[] PROGMEM = "Мерцание";
+static const char TEFF_036[] PROGMEM = "Радар";
+static const char TEFF_037[] PROGMEM = "Волны";
+static const char TEFF_038[] PROGMEM = "Огонь 2012";
+static const char TEFF_039[] PROGMEM = "Дождь";
+static const char TEFF_040[] PROGMEM = "Цветной дождь";
+static const char TEFF_041[] PROGMEM = "Тучка в банке";
+static const char TEFF_042[] PROGMEM = "Огонь 2018";
+static const char TEFF_043[] PROGMEM = "Кодовый замок";
+static const char TEFF_044[] PROGMEM = "Куб 2D";
+static const char TEFF_045[] PROGMEM = "Дым";
+static const char TEFF_046[] PROGMEM = "Пикассо";
+static const char TEFF_047[] PROGMEM = "Пикассо2";
+static const char TEFF_048[] PROGMEM = "Пикассо3";
+static const char TEFF_049[] PROGMEM = "Прыгуны"; // Автор сказал прыгуны, значит по дефолту будут прыгуны :)
+static const char TEFF_253[] PROGMEM = "Часы";
+static const char TEFF_254[] PROGMEM = "Частотный анализатор";
 
-#ifdef MIC_EFFECTS
-const char T_FREQ[] PROGMEM = "Частотный анализатор";
-#endif

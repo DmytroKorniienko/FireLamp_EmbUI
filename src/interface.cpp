@@ -131,17 +131,24 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     interf->json_section_main(F("effects_config"), F("Управление"));
     confEff = myLamp.effects.getSelectedListElement();
     interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
+
+    uint32_t timest = millis();
     if(fast){
         interf->option(String(confEff->eff_nb), myLamp.effects.getEffectName());
     } else {
         EffectListElem *eff = nullptr;
+        LOG(println,F("DBG1: using slow Names generation"));
+        String effname((char *)0);
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-            EffectWorker *tmpeffect = new EffectWorker(eff, true);
-            interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-            delete tmpeffect;
+            //EffectWorker *tmpeffect = new EffectWorker(eff, true);
+            myLamp.effects.loadeffname(effname, eff->eff_nb);
+            interf->option(String(eff->eff_nb), effname);
+            //delete tmpeffect;
+            //ESP.wdtFeed();
         }
     }
     interf->json_section_end();
+    LOG(printf_P,PSTR("DBG1: generating Names list took %d ms\n"), millis() - timest);
 
     block_effects_config_param(interf, nullptr);
 
@@ -390,18 +397,28 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     interf->select(F("effList"), String(myLamp.effects.getSelected()), F("Эффект"), true);
     LOG(printf_P,PSTR("Создаю список эффектов (%d):\n"),myLamp.effects.getModeAmount());
     EffectListElem *eff = nullptr;
+
+    uint32_t timest = millis();
+
     if(fast){
         interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
     } else {
+        LOG(println,F("DBG2: using slow Names generation"));
+        String effname((char *)0);
+
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
-                EffectWorker *tmpeffect = new EffectWorker(eff, true);
-                interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-                delete tmpeffect;
+                myLamp.effects.loadeffname(effname, eff->eff_nb);
+                interf->option(String(eff->eff_nb), effname);
+                //EffectWorker *tmpeffect = new EffectWorker(eff, true);
+                //interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
+                //delete tmpeffect;
+                //yield();
             }
         }
     }
     interf->json_section_end();
+    LOG(printf_P,PSTR("DBG2: generating Names list took %d ms\n"), millis() - timest);
 
     block_effects_param(interf, data);
 
