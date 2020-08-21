@@ -48,6 +48,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
+#define IDX_ITEMBUFFSIZE    25      // буфер для джейсон элемента индекса
+//#define FILEIO_BUFFSIZE    256      // буфер IO для работы с файлами (делаем равный странице littlefs)
+
 //-------------------------------------------------
 class EffectWorker;
 
@@ -352,9 +355,6 @@ private:
     float bballsShift[bballsMaxNUM_BALLS];
     byte csum = 0;
     bool regen = true;
-    const String defaultuiconfig(){ return String(FPSTR(EFF_BBALLS_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.2")); } // обновим эффект, т.к. версия изменилась
-    //const String getName() override {return String(FPSTR(T_BBALS));}
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -380,9 +380,6 @@ private:
   uint8_t shiftValue[HEIGHT];                            // массив дороожки горизонтального смещения пламени (hueValue)
   unsigned char matrixValue[8][16];
 
-    //const String getName() override {return String(FPSTR(T_FIRE));}
-    const String defaultuiconfig(){ return String(FPSTR(EFF_FIRE_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
     void drawFrame(uint8_t pcnt, bool isColored);
     void generateLine();
     void shiftUp();
@@ -467,9 +464,6 @@ public:
 // ------ Эффект "Белая Лампа"
 class EffectWhiteColorStripe : public EffectCalc {
 private:
-    //const String getName() override {return String(FPSTR(T_WHITE_COLOR));}
-    const String defaultuiconfig(){ return String(FPSTR(EFF_WHITE_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
     bool whiteColorStripeRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -650,14 +644,7 @@ public:
 class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
-    const String defaultuiconfig(){ return String(FPSTR(EFF_PRIZMATA_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
-    const String getName() {return String(FPSTR(T_PRIZMATA));}
     bool prismataRoutine(CRGB *leds, EffectWorker *param);
-
-  //const String getName() {return String(FPSTR(T_PRIZMATA));}
-  bool prismataRoutine(CRGB *leds, EffectWorker *param);
-
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -993,9 +980,6 @@ private:
     void move_leaper(Leaper * l);
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool leapersRoutine(CRGB *leds, EffectWorker *param);
-    //const String getName() {return String(FPSTR(T_LEAPERS));}
-    const String defaultuiconfig(){ return String(FPSTR(EFF_LEAPERS_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("mic0.2")); } // обновим эффект, т.к. версия изменилась
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1013,9 +997,6 @@ private:
     static const uint8_t ff_speed = 1; // чем выше этот параметр, тем короче переходы (градиенты) между цветами. 1 - это самое красивое
     static const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
 
-    const String getName() {return String(FPSTR(T_WHIRL));}
-    const String defaultuiconfig(){ return String(FPSTR(EFF_WHIRL_CFG)); } // использую кастомный конфиг
-    const String getversion() { return String(F("mic0.2")); } // обновим эффект, т.к. версия изменилась
     bool whirlRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1033,7 +1014,6 @@ private:
     uint8_t step = 0;
     uint8_t csum = 0;
     bool regen = true;
-    const String getName() {return String(FPSTR(T_AQUARIUM));};
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1060,9 +1040,6 @@ private:
     uint8_t micPick = 0;
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
-    const String getName() {return String(FPSTR(T_STAR));}
-    const String getversion() { return String(F("mic0.1")); } // обновим эффект, т.к. версия изменилась
-    const String defaultuiconfig(){ return String(FPSTR(EFF_STAR_CFG)); } // использую кастомный конфиг
     bool starRoutine(CRGB *leds, EffectWorker *param);
     void drawStar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler);
 
@@ -1077,8 +1054,6 @@ class EffectFireworks : public EffectCalc {
 private:
     uint16_t launchcountdown[SPARK];
     //uint8_t micPick = 0;
-    const String getName() {return String(FPSTR(T_FIREWORKS));}
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
     bool fireworksRoutine(CRGB *leds, EffectWorker *param);
     void sparkGen();
     Dot gDot[SPARK];
@@ -1097,8 +1072,6 @@ public:
 // https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
 class EffectPacific : public EffectCalc {
 private:
-    const String getName() {return String(FPSTR(T_PACIFIC));}
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
     bool pacificRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1106,6 +1079,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+#ifdef MIC_EFFECTS
 //----- Эффект "Осциллограф" (c) kostyamat
 class EffectOsc : public EffectCalc {
 private:
@@ -1115,9 +1089,6 @@ private:
     const float _scaler = 3.3f / 1024;
     CRGB color = CHSV(255, 200, 200);
     const float center = (float)HEIGHT / 2; 
-    const String getName() {return String(FPSTR(T_OSC));}
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
-    const String defaultuiconfig(){ return String(FPSTR(EFF_OSC_CFG)); }
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
@@ -1126,6 +1097,7 @@ public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+#endif
 
 // ------ Эффект "Вышиванка" (с) проект Aurora "Munch"
 class EffectMunch : public EffectCalc {
@@ -1136,10 +1108,6 @@ private:
     byte generation = 0;
     byte mic[2];
 
-    
-    const String getName() override {return String(FPSTR(T_MUNCH));}
-    const String getversion() { return String(F("0.2")); } // обновим эффект, т.к. версия изменилась
-    const String defaultuiconfig(){ return String(FPSTR(EFF_MUNCH_CFG)); }
     bool munchRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1160,9 +1128,6 @@ private:
     uint32_t scale_y[NUM_LAYERS];
     uint8_t  noise[1][16][16];
     
-    const String getName() override {return String(FPSTR(T_NOISE));}
-    const String getversion() { return String(F("0.1")); } // обновим эффект, т.к. версия изменилась
-    const String defaultuiconfig(){ return String(FPSTR(EFF_NOISE_CFG)); }
     bool noiseRoutine(CRGB *leds, EffectWorker *param);
     void adjust_gamma(CRGB *leds)
     {
@@ -1187,9 +1152,6 @@ private:
     CRGB leds2[NUM_LEDS];
     CRGB leds3[NUM_LEDS];
     
-    const String getName() override {return String(FPSTR(T_ANIMO));}
-    const String getversion() { return String(F("0.2")); } // обновим эффект, т.к. версия изменилась
-    //const String defaultuiconfig(){ return String(FPSTR(EFF_ANIMO_CFG)); }
     bool animoRoutine(CRGB *leds, EffectWorker *param);
     void animationA() {
     // running red stripes 
@@ -1280,7 +1242,7 @@ private:
      * процедура открывает индекс-файл на запись в переданный хендл,
      * возвращает хендл 
      */
-    bool openIndexFile(File& fhandle, const char *folder);
+    File& openIndexFile(File& fhandle, const char *folder);
 
 
 public:

@@ -507,7 +507,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
  * 
  */
 void EffectWorker::chckdefconfigs(const char *folder){
-  for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){
+  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
 
@@ -580,7 +580,7 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
  * процедура открывает индекс-файл на запись в переданный хендл,
  * возвращает хендл 
  */
-bool EffectWorker::openIndexFile(File& fhandle, const char *folder){
+File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
 
   String filename((char *)0);
 
@@ -633,7 +633,7 @@ void EffectWorker::makeIndexFile(const char *folder)
   indexFile.print("[");
   //char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
 
-  for (uint8_t i = ((uint8_t)EFF_ENUM::EFF_NONE+1); i < (uint8_t)EFF_ENUM::EFF_NONE_LAST; i++){ // EFF_NONE & EFF_NONE_LAST не сохраняем
+  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // EFF_NONE не сохраняем, перебор до 255 включительно
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
 
@@ -692,7 +692,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       File indexFile;
       String sourcedir;
       makeIndexFile(tofolder); // создать дефолтный набор прежде всего
-      
+  
       if (fromfolder != nullptr) {
           sourcedir.concat(F("/"));
           sourcedir.concat(fromfolder);
@@ -725,7 +725,8 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
         */
           firstLine = false; // сбрасываю признак первой строки
           doc.clear();
-          yield(); // сброс вотчдога при итерациях
+          //yield(); // сброс вотчдога при итерациях // вызывает Panic core_esp8266_main.cpp:133 __yield
+          ESP.wdtFeed();
       }
       indexFile.print("]");
       indexFile.close();

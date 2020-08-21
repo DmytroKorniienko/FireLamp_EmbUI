@@ -35,6 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
+// Здесь строковые константы общего назначения, включая константы из интерфейса, что позволит локализировать при необходимости
+// Ничего иного в данном файле не предполагается
+
 /** набор строк с именами эффектов
  *  ссылки на эти строки собираются во флеш-массив в файле effect_types.h
  */
@@ -87,25 +90,15 @@ static const char TEFF_045[] PROGMEM = "Дым";
 static const char TEFF_046[] PROGMEM = "Пикассо";
 static const char TEFF_047[] PROGMEM = "Пикассо2";
 static const char TEFF_048[] PROGMEM = "Пикассо3";
-static const char TEFF_049[] PROGMEM = "Прыгуны"; // Автор сказал прыгуны, значит по дефолту будут прыгуны :)
+static const char TEFF_049[] PROGMEM = "Прыгуны";
+static const char TEFF_050[] PROGMEM = "Вихри";
+static const char TEFF_051[] PROGMEM = "Звезды";
+static const char TEFF_052[] PROGMEM = "Блики на воде, цвета";
+static const char TEFF_053[] PROGMEM = "Фейерверк";
+static const char TEFF_054[] PROGMEM = "Тихий Океан";
+static const char TEFF_055[] PROGMEM = "Вышиванка";
+static const char TEFF_056[] PROGMEM = "Цветной шум";
+static const char TEFF_057[] PROGMEM = "2D Анимация (Тест. будет удален)";
 static const char TEFF_253[] PROGMEM = "Часы";
 static const char TEFF_254[] PROGMEM = "Частотный анализатор";
-
-#ifdef MIC_EFFECTS
-const char T_OSC[] PROGMEM = "Осциллограф";
-const char T_FREQ[] PROGMEM = "Частотный анализатор";
-#endif
-
-#ifdef MIC_EFFECTS
-static const char EFF_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":10,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Эффект\"}]}";
-#endif
-static const char EFF_LEAPERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":50,\"step\":1,\"name\":\"Жогово!\"}]}";
-static const char EFF_WHIRL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
-static const char EFF_STAR_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
-static const char EFF_OSC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Развертка\"},{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Пульсация\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Уcиление\"}]}";
-static const char EFF_NOISE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
-static const char EFF_MUNCH_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
-static const char EFF_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
-static const char EFF_WHITE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Оттенок\"}]}";
-static const char EFF_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Масштаб\"}]}";
-static const char EFF_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размытие\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
+static const char TEFF_255[] PROGMEM = "Осциллограф";

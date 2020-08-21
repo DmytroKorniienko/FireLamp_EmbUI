@@ -164,7 +164,7 @@ void EffectCalc::scale2pallete(){
   // тут фигня понаписана, ну да ладно, пока поменяю влоб, т.е. если контролов > 3, то следующий типа палитра
   // но на деле нужно читать кто есть кто... т.е. имя контрола
   if (myLamp.effects.getControls().size()>3) {
-    palettemap(palettes, myLamp.effects.getControls()[3]->getVal().toInt());
+    palettemap(palettes, getCtrlVal(3).toInt());
   } else {
     palettemap(palettes, scale);
   }
@@ -1034,6 +1034,7 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 
 // каждые 5 секунд коррекция направления
   EVERY_N_SECONDS(5){
+    //LOG(println,ballSize);
     for (uint8_t i = 0U; i < 2U; i++)
     {
       if(fabs(vectorB[i]) < 12)
@@ -3158,12 +3159,10 @@ void EffectFire::shiftUp() {                                            //под
 void EffectFire::drawFrame(uint8_t pcnt, bool isColored) {                  // прорисовка нового кадра
   int32_t nextv;
 #ifdef UNIVERSE_FIRE                                            // если определен универсальный огонь
-  //uint8_t baseHue = (myLamp.effects.getControls()[2]->getVal().toInt() - 1U) * 2.6; // точно нужен прямой доступ???
   uint8_t baseHue = (scale - 1U) * 2.6; // может так хватит?
 #else
   uint8_t baseHue = isColored ? 255U : 0U;
 #endif
-  //uint8_t baseSat = ( myLamp.effects.getControls()[2]->getVal().toInt() < 255) ? 255U : 0U;  // вычисление базового оттенка // точно нужен прямой доступ???
   uint8_t baseSat = ( scale < 255) ? 255U : 0U;  // вычисление базового оттенка // может так хватит?
   
   uint8_t deltaValue = random8(0U, 3U) ? constrain (shiftValue[0] + random8(0U, 2U) - random8(0U, 2U), 15, 17) : shiftValue[0]; // random(0U, 3U)= скорость смещения очага чем больше 3U - тем медленнее                          // текущее смещение пламени (hueValue)
@@ -3358,9 +3357,9 @@ void EffectLeapers::restart_leaper(EffectLeapers::Leaper * l) {
   // leap up and to the side with some random component
 #ifdef MIC_EFFECTS
   uint8_t mic = myLamp.getMicMaxPeak();
-  uint8_t rand = random8(1, 50 + _rv * 4);
-  l->xd = (1 * (float)(myLamp.isMicOnOff() ? 25 + mic : rand) / 100);
-  l->yd = (2 * (float)(myLamp.isMicOnOff() ? 25 + mic : rand) / 100);
+  float rand = random8(1, 50 + _rv * 4);
+  l->xd = (1 * (float)(myLamp.isMicOnOff() ? 25 + mic : rand) / 100.0);
+  l->yd = (2 * (float)(myLamp.isMicOnOff() ? 25 + mic : rand) / 100.0);
 #else
   l->xd = (1 * (float)random8(1, 50 + _rv * 4) / 100);
   l->yd = (2 * (float)random8(1, 100 + _rv * 3) / 100);
@@ -3385,17 +3384,17 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
 #define WALL_FRICTION      0.95
 #define WIND               0.95    // wind resistance
 
-  //float speedfactor = (speed/512.0);
-  //float speedfactor2 = speedfactor + 0.33;
+  float speedfactor = (speed/512.0);
+  float speedfactor2 = speedfactor + 0.33;
   
-  l->x += l->xd; //*speedfactor2;
-  l->y += l->yd; //*speedfactor2;
+  l->x += l->xd*speedfactor2;
+  l->y += l->yd*speedfactor2;
 
   // bounce off the floor and ceiling?
   if (l->y < 0 || l->y > HEIGHT - 1) {
     l->yd = (-l->yd * WALL_FRICTION);
     l->xd = ( l->xd * WALL_FRICTION);
-    l->y += l->yd; //*speedfactor;
+    l->y += l->yd*speedfactor;
     if (l->y < 0) l->y = 0;
     // settled on the floor?
     if (l->y <= SETTLED_THRESHOLD && abs(l->yd) <= SETTLED_THRESHOLD) {
@@ -3407,7 +3406,7 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
   if (l->x <= 0 || l->x >= WIDTH - 1) {
     l->xd = (-l->xd * WALL_FRICTION);
     if (l->x <= 0) {
-      l->x = l->xd; //*speedfactor;
+      l->x = l->xd*speedfactor;
     } else {
       l->x = WIDTH - 1 - l->xd;
     }
@@ -3432,7 +3431,7 @@ void EffectLeapers::generate(bool reset){
 }
 
 bool EffectLeapers::leapersRoutine(CRGB *leds, EffectWorker *param){
-    _rv = param->getControls()[3]->getVal().toInt();
+  _rv = getCtrlVal(3).toInt() ? getCtrlVal(3).toInt() : 13;
   generate();
 
   myLamp.dimAll(0);
@@ -3447,8 +3446,6 @@ bool EffectLeapers::leapersRoutine(CRGB *leds, EffectWorker *param){
 }
 
 bool EffectLeapers::run(CRGB *ledarr, EffectWorker *opt){
-   if (dryrun())
-     return false;
   return leapersRoutine(*&ledarr, &*opt);
 }
 
@@ -3575,7 +3572,11 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
         if (deltaHue2 > 31U) deltaHue2 = 0U;
       }
     }
+#ifdef MIC_EFFECTS
     byte _video = myLamp.isMicOnOff() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
+#else
+    byte _video = 255;
+#endif
     for (uint8_t x = 0U; x < WIDTH ; x++) {
       for (uint8_t y = 0U; y < HEIGHT; y++) {
         // y%32, x%32 - это для масштабирования эффекта на лампы размером большим, чем размер анимации 32х32, а также для произвольного сдвига текстуры
@@ -3686,6 +3687,8 @@ bool EffectStar::starRoutine(CRGB *leds, EffectWorker *param) {
 //---------- Эффект "Фейерверк" адаптация kostyamat
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 
+
+  // Глобальные переменные??? Что за фигня? Зачем они тут?
   accum88 gBurstx;
   accum88 gBursty;
   saccum78 gBurstxv;
@@ -4006,6 +4009,7 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
+#ifdef MIC_EFFECTS
 //----- Эффект "Осциллограф" (c) kostyamat
 void EffectOsc::load() {
   pointer = myLamp.getMicScale()/ _scaler;
@@ -4056,6 +4060,7 @@ if (spd == 127) {
 
 return true;
 }
+#endif
 
 // ------ Эффект "Вышиванка" (с) проект Aurora "Munch"
 void EffectMunch::load() {
@@ -4093,7 +4098,11 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   }
 
   generation++;
+#ifdef MIC_EFFECTS
   mic[1] = myLamp.isMicOnOff() ? map(myLamp.getMicMapMaxPeak(), 0, 255, 0, WIDTH) : WIDTH;
+#else
+  mic[1] = WIDTH;
+#endif
   return true;
 }
 
