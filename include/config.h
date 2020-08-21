@@ -77,6 +77,10 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define MIC_POLLRATE          (50U)                         // как часто опрашиваем микрофон, мс
 #endif
 
+#ifndef HIGH_MAP_FREQ
+#define HIGH_MAP_FREQ         (20000U)                      // верхняя граница слышимого диапазона, используется для мапинга, дефолтное и общепринятое значение 20000Гц
+#endif
+
 #ifdef FAST_ADC_READ
 #define SAMPLING_FREQ         (18000U*2U)
 #else

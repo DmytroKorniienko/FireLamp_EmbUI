@@ -219,10 +219,7 @@ public:
     float getMicFreq() {return isMicOn?last_freq:0;}
     uint8_t getMicMapFreq() {
         float minFreq=(log((float)(SAMPLING_FREQ>>1)/MICWORKER::samples));
-/*тут ниже явно был ошибка, частота семплирования 10000, результирующая частота (20000) не может быть выше частоты семплирования, 
-установил равную, но не уверен, что это тоже правильно. Лень разбираться, но цвета стали лучше. Ну и к типу float привести 
-нужно было. kostyamat*/
-        float scale = 255.0 / (log((float)SAMPLING_FREQ) - minFreq); 
+        float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
         return (uint8_t)(isMicOn?(log(last_freq)-minFreq)*scale:0);
     }
     void setMicOnOff(bool val) {isMicOn = val;}
