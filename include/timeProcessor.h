@@ -203,7 +203,7 @@ public:
      * функция допечатывает в переданную строку заданный таймстамп в дату/время в формате "9999-99-99T99:99"
      * @param _tstamp - преобразовать заданный таймстамп, если не задан используется текущее локальное время
      */
-    static void getDateTimeString(String &buf, const time_t _tstamp);
+    static void getDateTimeString(String &buf, const time_t _tstamp = 0);
 
     /**
      * returns pointer to current unixtime

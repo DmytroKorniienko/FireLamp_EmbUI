@@ -173,7 +173,34 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_LEAPERS :
     worker = std::unique_ptr<EffectLeapers>(new EffectLeapers());
     break;
+  case EFF_ENUM::EFF_AQUARIUM :
+    worker = std::unique_ptr<EffectAquarium>(new EffectAquarium());
+    break; 
+  case EFF_ENUM::EFF_WHIRL :
+    worker = std::unique_ptr<EffectWhirl>(new EffectWhirl());
+    break;
+  case EFF_ENUM::EFF_STAR :
+    worker = std::unique_ptr<EffectStar>(new EffectStar());
+    break;
+  case EFF_ENUM::EFF_FIREWORKS :
+    worker = std::unique_ptr<EffectFireworks>(new EffectFireworks());
+    break;
+  case EFF_ENUM::EFF_PACIFIC :
+    worker = std::unique_ptr<EffectPacific>(new EffectPacific());
+    break;
+  case EFF_ENUM::EFF_MUNCH :
+    worker = std::unique_ptr<EffectMunch>(new EffectMunch());
+    break;
+  case EFF_ENUM::EFF_NOISE :
+    worker = std::unique_ptr<EffectNoise>(new EffectNoise());
+    break;
+  case EFF_ENUM::EFF_ANIMO :
+    worker = std::unique_ptr<EffectAnimo>(new EffectAnimo());
+    break;
 #ifdef MIC_EFFECTS
+  case EFF_ENUM::EFF_OSC :
+    worker = std::unique_ptr<EffectOsc>(new EffectOsc());
+    break;
   case EFF_ENUM::EFF_FREQ :
     worker = std::unique_ptr<EffectFreq>(new EffectFreq());
     break;
