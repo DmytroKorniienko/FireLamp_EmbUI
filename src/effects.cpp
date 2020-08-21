@@ -180,7 +180,7 @@ void EffectWaves::WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t
   palettepos = _val;
   curPalette = _pals.at(palettepos);
  
-  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
+  //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
 // непустой дефолтный деструктор (если понадобится)
@@ -618,6 +618,7 @@ bool EffectColors::colorsRoutine(CRGB *leds, EffectWorker *param)
   static unsigned int step = 0; // доп. задержка
   unsigned int delay = (speed==1)?4294967294:255-speed+1; // на скорости 1 будет очень долгое ожидание)))
 
+  ihue = (speed==1)?scale:ihue;
   step=(step+1)%(delay+1);
   if(step!=delay) {
 
