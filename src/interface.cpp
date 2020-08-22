@@ -246,20 +246,12 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 , true);
                 break;
             case CONTROL_TYPE::EDIT :
-                interf->text(
-                controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
-                    : String(F("dynCtrl")) + String(controls[i]->getId())
-                ,i ? controls[i]->getVal() : String(myLamp.getNormalizedLampBrightness())
-                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
-                );
-                break;
             case CONTROL_TYPE::CHECKBOX :
-                interf->checkbox(
-                controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
-                    : String(F("dynCtrl")) + String(controls[i]->getId())
-                ,i ? controls[i]->getVal() : String(myLamp.getNormalizedLampBrightness())
-                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
-                , true);
+                interf->text(String(F("dynCtrl")) + String(controls[i]->getId())
+                , controls[i]->getVal()
+                , controls[i]->getName()
+                , true
+                );
                 break;
             default:
                 break;
@@ -348,8 +340,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     for(int i=3; i<controls.size();i++){
         if((*data).containsKey(String(F("dynCtrl"))+String(i))){
             controls[i]->setVal((*data)[String(F("dynCtrl"))+String(i)]);
-            if(i==3)
-                myLamp.effects.worker->setrval((*data)[String(F("dynCtrl"))+String(i)].as<byte>()); // передача значения в эффект (пока заглушка)
+            myLamp.effects.worker->setDynCtrl(controls[i]); // передача значения в эффект (пока заглушка)
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(F("dynCtrl"))+String(i)].as<String>().c_str());
         }
     }
