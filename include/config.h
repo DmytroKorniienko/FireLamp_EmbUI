@@ -82,7 +82,9 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifdef FAST_ADC_READ
+#ifndef SAMPLING_FREQ
 #define SAMPLING_FREQ         (18000U*2U)
+#endif
 #else
 #define SAMPLING_FREQ         (5000U*2U)
 #endif

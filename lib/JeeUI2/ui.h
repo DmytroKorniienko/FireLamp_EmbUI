@@ -106,8 +106,8 @@ class Interface {
         void hidden(const String &id, const String &value);
         void constant(const String &id, const String &label);
         void constant(const String &id, const String &value, const String &label);
-        void text(const String &id, const String &label);
-        void text(const String &id, const String &value, const String &label);
+        void text(const String &id, const String &label, bool directly = false);
+        void text(const String &id, const String &value, const String &label, bool directly = false);
         void password(const String &id, const String &label);
         void password(const String &id, const String &value, const String &label);
         void number(const String &id, const String &label, int min = 0, int max = 0);
@@ -123,7 +123,7 @@ class Interface {
         void email(const String &id, const String &label);
         void email(const String &id, const String &value, const String &label);
         void range(const String &id, int min, int max, float step, const String &label, bool directly = false);
-        void range(const String &id, int value, int min, int max, float step, const String &label, bool directly);
+        void range(const String &id, int value, int min, int max, float step, const String &label, bool directly = false);
         void select(const String &id, const String &label, bool directly = false);
         void select(const String &id, const String &value, const String &label, bool directly = false);
         void option(const String &value, const String &label);

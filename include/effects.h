@@ -54,7 +54,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //-------------------------------------------------
 class EffectWorker;
 
-typedef enum : uint8_t {RANGE,EDIT,CHECKBOX,MIC_RANGE=10} CONTROL_TYPE;
+// младшие 4 бита отдаются на выбор контрола, что даст 16 различных типов контроллов
+// старшие 4 бита используются как набор управляющих кодов, к примеру - отображать при включенном микрофоне, при выключенном и т.д., тоже 16 вариантов
+typedef enum : uint8_t {ALWAYS=0,ISMICON,ISMICOFF} CONTROL_CASE; // старшие 4 бита
+typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4 бита
 
 class UIControl{
 private:

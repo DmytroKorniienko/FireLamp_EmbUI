@@ -134,17 +134,26 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
 
     uint32_t timest = millis();
     if(fast){
-        interf->option(String(confEff->eff_nb), myLamp.effects.getEffectName());
+        // Сначала подгрузим дефолтный список, а затем спустя время - подтянем имена из конфига
+
+        //interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
+        String effname((char *)0);
+        EffectListElem *eff = nullptr;
+        while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+            if (eff->canBeSelected()) {
+                effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
+                interf->option(String(eff->eff_nb), effname);
+                ESP.wdtFeed();
+            }
+        }
     } else {
         EffectListElem *eff = nullptr;
         LOG(println,F("DBG1: using slow Names generation"));
         String effname((char *)0);
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-            //EffectWorker *tmpeffect = new EffectWorker(eff, true);
             myLamp.effects.loadeffname(effname, eff->eff_nb);
             interf->option(String(eff->eff_nb), effname);
-            //delete tmpeffect;
-            //ESP.wdtFeed();
+            ESP.wdtFeed();
         }
     }
     interf->json_section_end();
@@ -217,21 +226,44 @@ void block_effects_param(Interface *interf, JsonObject *data){
     interf->json_section_begin(F("effects_param"));
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
+    uint8_t ctrlCaseType; // тип контрола, старшие 4 бита соответствуют CONTROL_CASE, младшие 4 - CONTROL_TYPE
     for(int i=0; i<controls.size();i++){
+        ctrlCaseType = controls[i]->getType();
 #ifdef MIC_EFFECTS
-        if(controls[i]->getType()==CONTROL_TYPE::MIC_RANGE && !myLamp.isMicOnOff()) continue;
+        if(ctrlCaseType>>4==CONTROL_CASE::ISMICON && !myLamp.isMicOnOff()) continue; // контрол должен быть отображен только при включенном микрофоне
+        if(ctrlCaseType>>4==CONTROL_CASE::ISMICOFF && myLamp.isMicOnOff()) continue; // контрол должен быть отображен только при выключенном микрофоне
 #endif
-        
-        interf->range(
-        //String(controls[i]->getId())
-        controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
-            : String(F("dynCtrl")) + String(controls[i]->getId())
-        ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
-        ,controls[i]->getMin().toInt()
-        ,controls[i]->getMax().toInt()
-        ,controls[i]->getStep().toInt()
-        ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
-        , true);
+        switch(ctrlCaseType&0x0F){
+            case CONTROL_TYPE::RANGE :
+                interf->range(
+                controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
+                    : String(F("dynCtrl")) + String(controls[i]->getId())
+                ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
+                ,controls[i]->getMin().toInt()
+                ,controls[i]->getMax().toInt()
+                ,controls[i]->getStep().toInt()
+                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
+                , true);
+                break;
+            case CONTROL_TYPE::EDIT :
+                interf->text(
+                controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
+                    : String(F("dynCtrl")) + String(controls[i]->getId())
+                ,i ? controls[i]->getVal() : String(myLamp.getNormalizedLampBrightness())
+                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
+                );
+                break;
+            case CONTROL_TYPE::CHECKBOX :
+                interf->checkbox(
+                controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
+                    : String(F("dynCtrl")) + String(controls[i]->getId())
+                ,i ? controls[i]->getVal() : String(myLamp.getNormalizedLampBrightness())
+                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
+                , true);
+                break;
+            default:
+                break;
+        }
     }
     interf->json_section_end();
 }
@@ -314,10 +346,12 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=3; i<controls.size();i++){
-        controls[i]->setVal((*data)[String(F("dynCtrl"))+String(i)]);
-        if(i==3)
-            myLamp.effects.worker->setrval((*data)[String(F("dynCtrl"))+String(i)].as<byte>()); // передача значения в эффект (пока заглушка)
-        LOG(printf_P, PSTR("Новое значение дин. контрола %d: %d\n"), i, (*data)[String(F("dynCtrl"))+String(i)].as<byte>());
+        if((*data).containsKey(String(F("dynCtrl"))+String(i))){
+            controls[i]->setVal((*data)[String(F("dynCtrl"))+String(i)]);
+            if(i==3)
+                myLamp.effects.worker->setrval((*data)[String(F("dynCtrl"))+String(i)].as<byte>()); // передача значения в эффект (пока заглушка)
+            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(F("dynCtrl"))+String(i)].as<String>().c_str());
+        }
     }
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
@@ -401,7 +435,18 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     uint32_t timest = millis();
 
     if(fast){
-        interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
+        // Сначала подгрузим дефолтный список, а затем спустя время - подтянем имена из конфига
+
+        //interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
+        String effname((char *)0);
+
+        while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+            if (eff->canBeSelected()) {
+                effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
+                interf->option(String(eff->eff_nb), effname);
+                ESP.wdtFeed();
+            }
+        }
     } else {
         LOG(println,F("DBG2: using slow Names generation"));
         String effname((char *)0);
@@ -410,10 +455,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
             if (eff->canBeSelected()) {
                 myLamp.effects.loadeffname(effname, eff->eff_nb);
                 interf->option(String(eff->eff_nb), effname);
-                //EffectWorker *tmpeffect = new EffectWorker(eff, true);
-                //interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-                //delete tmpeffect;
-                //yield();
+                ESP.wdtFeed();
             }
         }
     }

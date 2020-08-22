@@ -32,7 +32,7 @@ void Interface::constant(const String &id, const String &label){
     constant(id, jee->param(id), label);
 }
 
-void Interface::text(const String &id, const String &value, const String &label){
+void Interface::text(const String &id, const String &value, const String &label, bool directly){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("input");
     obj[F("type")] = F("text");
@@ -40,13 +40,15 @@ void Interface::text(const String &id, const String &value, const String &label)
     obj[F("value")] = value;
     obj[F("label")] = label;
 
+    if (directly) obj[F("directly")] = true;
+
     if (!json_frame_add(obj.as<JsonObject>())) {
-        text(id, value, label);
+        text(id, value, label, directly);
     }
 }
 
-void Interface::text(const String &id, const String &label){
-    text(id, jee->param(id), label);
+void Interface::text(const String &id, const String &label, bool directly){
+    text(id, jee->param(id), label, directly);
 }
 
 void Interface::number(const String &id, int value, const String &label, int min, int max){
