@@ -97,18 +97,21 @@ void EffectCalc::setscl(byte _scl){
   scale = _scl;
   //LOG(printf, "Worker scale: %d\n", scale);
 
-  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete)))    // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры
+  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete))){   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры
     palettemap(palettes, _scl);
+    paletteIdx = _scl;
+  }
 }
 
 /**
  * setDynCtrl - была смена динамического контрола, idx=3+
  * вызывается в UI, для реализации особого поведения (палитра и т.д.)...
+ * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
  */
 void EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return;
 
-  if (usepalettes && _val->getName()==F("Палитра")){
+  if (usepalettes && _val->getName().startsWith(F("Палитра"))==1){ // Начинается с Палитра
     paletteIdx = _val->getVal().toInt();
     palettemap(palettes, paletteIdx);
     isCtrlPallete = true;
@@ -298,8 +301,8 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 #ifdef MIC_EFFECTS
   uint8_t mic = myLamp.getMicMapMaxPeak();
   uint8_t mic_f = myLamp.getMicMapFreq();
-  uint8_t initBri = constrain(map(paletteIdx, 1, 255, 1, 128), 30, 120); // не самое красивое смещение диапазонов, но шо паделать?
-  uint8_t coeff =  constrain(map(paletteIdx, 1, 255, 100, 1), 10, 100); // за-то работает. :)
+  uint8_t initBri = constrain(map(getCtrlVal(3).toInt(), 1, 255, 1, 128), 30, 120); // не самое красивое смещение диапазонов, но шо паделать?
+  uint8_t coeff =  constrain(map(getCtrlVal(3).toInt(), 1, 255, 100, 1), 10, 100); // за-то работает. :)
   if (myLamp.isMicOnOff()) 
    fadeToBlackBy(leds, NUM_LEDS, 225); // 225
 
@@ -2651,14 +2654,14 @@ bool EffectRingsLock::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
-  if (csum != (scale^paletteIdx))
+  if (csum != (scale^getCtrlVal(3).toInt()))
     ringsSet();
   return ringsRoutine(*&ledarr, &*opt);
 }
 
 void EffectRingsLock::load(){
   palettesload();
-  csum = scale^paletteIdx;
+  csum = scale^getCtrlVal(3).toInt();
   ringsSet();
 }
 
@@ -2667,7 +2670,7 @@ void EffectRingsLock::ringsSet(){
   if (curPalette == nullptr) {
     return;
   }
-  csum = scale^paletteIdx;
+  csum = scale^getCtrlVal(3).toInt();
   ringWidth = map(scale, 1, 255, 1, 8); // толщина кольца от 1 до 8 для каждой из палитр
   ringNb = (float)HEIGHT / ringWidth + ((HEIGHT % ringWidth == 0U) ? 0U : 1U)%HEIGHT; // количество колец
   upRingHue = ringWidth - (ringWidth * ringNb - HEIGHT) / 2U; // толщина верхнего кольца. может быть меньше нижнего
@@ -2754,7 +2757,7 @@ bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
 
-  if (csum != (scale^paletteIdx))
+  if (csum != (scale^getCtrlVal(3).toInt()))
     cubesize();
 
   return cube2dRoutine(*&ledarr, &*opt);
@@ -2812,7 +2815,7 @@ void EffectCube2d::cubesize(){
 
   pauseSteps = CUBE2D_PAUSE_FRAMES; // осталось шагов паузы
   shiftSteps = 0;
-  csum = scale^paletteIdx;
+  csum = scale^getCtrlVal(3).toInt();
   //end
 }
 
@@ -3019,10 +3022,12 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
   //String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
 
   int val;
-  if(paletteIdx){
-    val = ((int)(6*paletteIdx/255.1))%6;
-    xSmokePos=xSmokePos+(paletteIdx%43)/42.0+0.01;
-    xSmokePos2=xSmokePos2+(paletteIdx%43)/84.0+0.01;
+  int ctrl3 = getCtrlVal(3).toInt();
+
+  if(ctrl3){
+    val = ((int)(6*ctrl3/255.1))%6;
+    xSmokePos=xSmokePos+(ctrl3%43)/42.0+0.01;
+    xSmokePos2=xSmokePos2+(ctrl3%43)/84.0+0.01;
   } else {
     val = scale%6;
     xSmokePos=xSmokePos+speed/255.0+0.01;
@@ -4053,8 +4058,8 @@ if (spd == 127) {
     myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 
     y[0] = y[1];
-    y[1] = EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (paletteIdx-1), (pointer * 2) - (paletteIdx-1), 0.0f, float(OSC_HV - 1U)); 
-    //1.0f + EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), float(0U + paletteIdx), float(1024U - paletteIdx), 0.0f, float(OSC_HV - 1U)); 
+    y[1] = EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (getCtrlVal(3).toInt()-1), (pointer * 2) - (getCtrlVal(3).toInt()-1), 0.0f, float(OSC_HV - 1U)); 
+    //1.0f + EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), float(0U + getCtrlVal(3).toInt()), float(1024U - getCtrlVal(3).toInt()), 0.0f, float(OSC_HV - 1U)); 
     delayMicroseconds((uint16_t)((myLamp.isMicOnOff() ? /*512.0f*/ 1024U : 1568U) * div));
   
   }  

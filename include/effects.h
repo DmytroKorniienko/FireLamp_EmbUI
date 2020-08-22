@@ -239,6 +239,7 @@ public:
 
     /**
      * setDynCtrl - обработка для динамических контролов idx=3+
+     * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
      */
     virtual void setDynCtrl(UIControl*_val);
 
