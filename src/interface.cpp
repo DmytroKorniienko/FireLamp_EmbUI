@@ -39,6 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
+#include "text_res.h"
 
 Ticker optionsTicker;          // планировщик заполнения списка
 
@@ -48,12 +49,12 @@ void AUX_toggle(bool key)
     if (key)
     {
         digitalWrite(AUX_PIN, AUX_LEVEL);
-        jee.var(F("AUX"), (F("true")));
+        jee.var(FPSTR(TCONST_000E), (FPSTR(TCONST_FFFF)));
     }
     else
     {
         digitalWrite(AUX_PIN, !AUX_LEVEL);
-        jee.var(F("AUX"), (F("false")));
+        jee.var(FPSTR(TCONST_000E), (FPSTR(TCONST_FFFE)));
     }
 }
 #endif
@@ -61,8 +62,8 @@ void AUX_toggle(bool key)
 void pubCallback(Interface *interf){
     return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
-    interf->value(F("pTime"), myLamp.timeProcessor.getFormattedShortTime(), true);
-    interf->value(F("pMem"), String(ESP.getFreeHeap()), true);
+    interf->value(FPSTR(TCONST_0001), myLamp.timeProcessor.getFormattedShortTime(), true);
+    interf->value(FPSTR(TCONST_0002), String(ESP.getFreeHeap()), true);
     interf->json_frame_flush();
 }
 
@@ -70,9 +71,9 @@ void block_menu(Interface *interf, JsonObject *data){
     // создаем меню
     interf->json_section_menu();
 
-    interf->option(F("effects"), F("Эффекты"));
-    interf->option(F("lamp"), F("Вывод текста"));
-    interf->option(F("settings"), F("Настройки"));
+    interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));
+    interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));
+    interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));
 
     interf->json_section_end();
 }
@@ -81,17 +82,17 @@ static EffectListElem *confEff = nullptr;
 void block_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff) return;
 
-    interf->json_section_begin(F("set_effect"));
-    interf->checkbox(F("eff_sel"), confEff->canBeSelected()? F("true") : F("false"), F("В списке выбора"), false);
-    interf->checkbox(F("eff_fav"), confEff->isFavorite()? F("true") : F("false"), F("В списке демо"), false);
+    interf->json_section_begin(FPSTR(TCONST_0005));
+    interf->checkbox(FPSTR(TCONST_0006), confEff->canBeSelected()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_003), false);
+    interf->checkbox(FPSTR(TCONST_0007), confEff->isFavorite()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_004), false);
 
-    interf->button_submit(F("set_effect"), F("Сохранить"), F("gray"));
-    interf->button_submit_value(F("set_effect"), F("copy"), F("Копировать"));
+    interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0009), FPSTR(TINTF_005));
     if (confEff->eff_nb&0xFF00) { // пока удаление только для копий, но в теории можно удалять что угодно
-        interf->button_submit_value(F("set_effect"), F("del"), F("Удалить"), F("red"));
+        interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
     }
 
-    interf->button_submit_value(F("set_effect"), F("makeidx"), F("Пересоздать индекс из ФС"), F("black"));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(TCONST_000D));
 
     interf->json_section_end();
 }
@@ -105,19 +106,19 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff || !data) return;
 
-    String act = (*data)[F("set_effect")];
-    if (act == F("copy")) {
+    String act = (*data)[FPSTR(TCONST_0005)];
+    if (act == FPSTR(TCONST_0009)) {
         myLamp.effects.copyEffect(confEff); // копируем текущий
     } else
-    if (act == F("del")) {
+    if (act == FPSTR(TCONST_000A)) {
         myLamp.effects.deleteEffect(confEff); // удаляем текущий
-    }if (act == F("makeidx")) {
+    }if (act == FPSTR(TCONST_000B)) {
         myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
         section_main_frame(interf, data);
         return;
     } else {
-        confEff->canBeSelected((*data)[F("eff_sel")] == F("true"));
-        confEff->isFavorite((*data)[F("eff_fav")] == F("true"));
+        confEff->canBeSelected((*data)[FPSTR(TCONST_0006)] == FPSTR(TCONST_FFFF));
+        confEff->isFavorite((*data)[FPSTR(TCONST_0007)] == FPSTR(TCONST_FFFF));
     }
 
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
@@ -128,9 +129,9 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
 void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     if (!interf) return;
 
-    interf->json_section_main(F("effects_config"), F("Управление"));
+    interf->json_section_main(FPSTR(TCONST_000F), FPSTR(TINTF_009));
     confEff = myLamp.effects.getSelectedListElement();
-    interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
+    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), FPSTR(TINTF_00A), true);
 
     uint32_t timest = millis();
     if(fast){
@@ -162,7 +163,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     block_effects_config_param(interf, nullptr);
 
     interf->spacer();
-    interf->button(F("effects"), F("Выход"));
+    interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
     interf->json_section_end();
 }
 
@@ -172,7 +173,7 @@ void delayedcall_show_effects_config(){
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->select(F("effListConf"), String((int)confEff->eff_nb), F("Эффект"), true);
+    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), FPSTR(TINTF_00A), true);
     EffectListElem *eff = nullptr;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         EffectWorker *tmpeffect = new EffectWorker(eff, true);
@@ -205,15 +206,15 @@ void show_effects_config(Interface *interf, JsonObject *data){
 
 void set_effects_config_list(Interface *interf, JsonObject *data){
     if (!interf || !data) return;
-    uint16_t num = (*data)[F("effListConf")].as<uint16_t>();
+    uint16_t num = (*data)[FPSTR(TCONST_0010)].as<uint16_t>();
 
     // Так  нельзя :(, поскольку интерфейс отдаст только effListConf, а не весь блок...
     // А мне хотелось бы попереключать список, сделав несколько изменений в флагах, не нажимая для каждого раза "сохранить"
     // Есть красивый способ это сделать по переключению списка?
     if(confEff){ // если переключаемся, то сохраняем предыдущие признаки в эффект до переключения
-        LOG(printf_P, PSTR("eff_sel: %d eff_fav : %d\n"), (*data)[F("eff_sel")].as<bool>(),(*data)[F("eff_fav")].as<bool>());
-        // confEff->canBeSelected((*data)[F("eff_sel")] == F("true"));
-        // confEff->isFavorite((*data)[F("eff_fav")] == F("true"));
+        LOG(printf_P, PSTR("eff_sel: %d eff_fav : %d\n"), (*data)[FPSTR(TCONST_0006)].as<bool>(),(*data)[FPSTR(TCONST_0007)].as<bool>());
+        // confEff->canBeSelected((*data)[FPSTR(TCONST_0006)] == FPSTR(TCONST_FFFF));
+        // confEff->isFavorite((*data)[FPSTR(TCONST_0007)] == FPSTR(TCONST_FFFF));
     }
 
     confEff = myLamp.effects.getEffect(num);
@@ -223,7 +224,7 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 
 void block_effects_param(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_begin(F("effects_param"));
+    interf->json_section_begin(FPSTR(TCONST_0011));
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     uint8_t ctrlCaseType; // тип контрола, старшие 4 бита соответствуют CONTROL_CASE, младшие 4 - CONTROL_TYPE
@@ -236,18 +237,18 @@ void block_effects_param(Interface *interf, JsonObject *data){
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
                 interf->range(
-                controls[i]->getId()==0 ? String(F("bright")) : controls[i]->getId()==1 ? String(F("speed")) : controls[i]->getId()==2 ? String(F("scale"))
-                    : String(F("dynCtrl")) + String(controls[i]->getId())
+                controls[i]->getId()==0 ? String(FPSTR(TCONST_0012)) : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013)) : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
+                    : String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
                 ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
                 ,controls[i]->getMin().toInt()
                 ,controls[i]->getMax().toInt()
                 ,controls[i]->getStep().toInt()
-                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? F("Глоб. яркость") : F("Яркость")
+                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D)
                 , true);
                 break;
             case CONTROL_TYPE::EDIT :
             case CONTROL_TYPE::CHECKBOX :
-                interf->text(String(F("dynCtrl")) + String(controls[i]->getId())
+                interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
                 , controls[i]->getVal()
                 , controls[i]->getName()
                 , true
@@ -269,7 +270,7 @@ void show_effects_param(Interface *interf, JsonObject *data){
 
 void set_effects_list(Interface *interf, JsonObject *data){
     if (!data) return;
-    uint16_t num = (*data)[F("effList")].as<uint16_t>();
+    uint16_t num = (*data)[FPSTR(TCONST_0016)].as<uint16_t>();
     uint16_t curr = myLamp.effects.getSelected();
     EffectListElem *eff = myLamp.effects.getEffect(num);
     if (!eff) return;
@@ -282,7 +283,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), eff->eff_nb);
         }
 
-        jee.var(F("effList"), (*data)[F("effList")]);
+        jee.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
     }
 
     show_effects_param(interf, data);
@@ -292,16 +293,16 @@ void set_effects_list(Interface *interf, JsonObject *data){
 void set_effects_bright(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    byte bright = (*data)[F("bright")];
+    byte bright = (*data)[FPSTR(TCONST_0012)];
     if (myLamp.getNormalizedLampBrightness() != bright) {
         myLamp.setLampBrightness(bright);
         if(myLamp.isLampOn())
-            myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[F("nofade")]));
+            myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
         if (myLamp.IsGlobalBrightness()) {
-            jee.var("GlobBRI", (*data)[F("bright")]);
+            jee.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
         }
         if(myLamp.effects.worker)
-            myLamp.effects.worker->setbrt((*data)[F("bright")].as<byte>()); // передача значения в эффект
+            myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
 
@@ -312,10 +313,10 @@ void set_effects_bright(Interface *interf, JsonObject *data){
 void set_effects_speed(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    //myLamp.effects.setSpeedS((*data)[F("speed")]);
-    myLamp.effects.getControls()[1]->setVal((*data)[F("speed")]);
-    myLamp.effects.worker->setspd((*data)[F("speed")].as<byte>()); // передача значения в эффект
-    LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[F("speed")].as<byte>());
+    //myLamp.effects.setSpeedS((*data)[FPSTR(TCONST_0013)]);
+    myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
+    myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
+    LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
 
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
@@ -324,10 +325,10 @@ void set_effects_speed(Interface *interf, JsonObject *data){
 void set_effects_scale(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    //myLamp.effects.setScaleS((*data)[F("scale")]);
-    myLamp.effects.getControls()[2]->setVal((*data)[F("scale")]);
-    myLamp.effects.worker->setscl((*data)[F("scale")].as<byte>()); // передача значения в эффект
-    LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[F("scale")].as<byte>());
+    //myLamp.effects.setScaleS((*data)[FPSTR(TCONST_0014)]);
+    myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
+    myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
+    LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
 
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
@@ -338,10 +339,10 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=3; i<controls.size();i++){
-        if((*data).containsKey(String(F("dynCtrl"))+String(i))){
-            controls[i]->setVal((*data)[String(F("dynCtrl"))+String(i)]);
+        if((*data).containsKey(String(FPSTR(TCONST_0015))+String(i))){
+            controls[i]->setVal((*data)[String(FPSTR(TCONST_0015))+String(i)]);
             myLamp.effects.worker->setDynCtrl(controls[i]); // передача значения в эффект (пока заглушка)
-            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(F("dynCtrl"))+String(i)].as<String>().c_str());
+            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(FPSTR(TCONST_0015))+String(i)].as<String>().c_str());
         }
     }
     myLamp.demoTimer(T_RESET);
@@ -350,19 +351,19 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
 void block_main_flags(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_line(F("flags"));
-    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включить"), true);
-    interf->checkbox(F("Demo"), (myLamp.getMode() == MODE_DEMO)? F("true") : F("false"), F("Демо"), true);
-    interf->checkbox(F("GBR"), myLamp.IsGlobalBrightness()? F("true") : F("false"), F("Гл.Яркость"), true);
-    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События"), true);
+    interf->json_section_line(FPSTR(TCONST_0019));
+    interf->checkbox(FPSTR(TCONST_001A), myLamp.isLampOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_00E), true);
+    interf->checkbox(FPSTR(TCONST_001B), (myLamp.getMode() == MODE_DEMO)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_00F), true);
+    interf->checkbox(FPSTR(TCONST_001C), myLamp.IsGlobalBrightness()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_010), true);
+    interf->checkbox(FPSTR(TCONST_001D), myLamp.IsEventsHandled()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_011), true);
 #ifdef MIC_EFFECTS
-    interf->checkbox(F("Mic"), F("Микр."), true);
+    interf->checkbox(FPSTR(TCONST_001E), FPSTR(TINTF_012), true);
 #endif
 #ifdef AUX_PIN
-    interf->checkbox(F("AUX"), F("AUX"), true);
+    interf->checkbox(FPSTR(TCONST_000E), FPSTR(TCONST_000E), true);
 #endif
 #ifdef ESP_USE_BUTTON
-    interf->checkbox(F("Btn"), myButtons.isButtonOn()? F("true") : F("false"), F("Кнопка"), true);
+    interf->checkbox(FPSTR(TCONST_001F), myButtons.isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_013), true);
 #endif
     interf->json_section_end();
 }
@@ -372,7 +373,7 @@ void show_main_flags(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_main_flags(interf, data);
     interf->spacer();
-    interf->button(F("effects"), F("Выход"));
+    interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
     interf->json_frame_flush();
 }
 
@@ -382,7 +383,7 @@ void delayedcall_effects_main(){
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->select(F("effList"), String(myLamp.effects.getSelected()), F("Эффект"), true);
+    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), FPSTR(TINTF_00A), true);
     EffectListElem *eff = nullptr;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         if (eff->canBeSelected()) {
@@ -407,19 +408,19 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
     // Страница "Управление эффектами"
     if (!interf) return;
-    interf->json_section_main(F("effects"), F("Эффекты"));
+    interf->json_section_main(FPSTR(TCONST_0000), FPSTR(TINTF_000));
 
-    interf->json_section_line(F("flags"));
-    interf->checkbox(F("ONflag"), myLamp.isLampOn()? F("true") : F("false"), F("Включить"), true);
-    interf->button(F("show_flags"), F("Режимы"));
+    interf->json_section_line(FPSTR(TCONST_0019));
+    interf->checkbox(FPSTR(TCONST_001A), myLamp.isLampOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_00E), true);
+    interf->button(FPSTR(TCONST_0020), FPSTR(TINTF_014));
     interf->json_section_end();
 
-    interf->json_section_line(F("mode"));
-    interf->button(F("eff_prev"), F("<<<"), F("#708090"));
-    interf->button(F("eff_next"), F(">>>"), F("#5f9ea0"));
+    interf->json_section_line(FPSTR(TCONST_0021));
+    interf->button(FPSTR(TCONST_0022), FPSTR(TINTF_015), FPSTR(TCONST_0024));
+    interf->button(FPSTR(TCONST_0023), FPSTR(TINTF_016), FPSTR(TCONST_0025));
     interf->json_section_end();
 
-    interf->select(F("effList"), String(myLamp.effects.getSelected()), F("Эффект"), true);
+    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), FPSTR(TINTF_00A), true);
     LOG(printf_P,PSTR("Создаю список эффектов (%d):\n"),myLamp.effects.getModeAmount());
     EffectListElem *eff = nullptr;
 
@@ -455,7 +456,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
     block_effects_param(interf, data);
 
-    interf->button(F("effects_config"), F("Управление"));
+    interf->button(FPSTR(TCONST_000F), FPSTR(TINTF_009));
 
     interf->json_section_end();
 #ifdef DELAYED_EFFECTS
@@ -476,7 +477,7 @@ void set_eff_next(Interface *interf, JsonObject *data){
 
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    bool newpower = TOGLE_STATE((*data)[F("ONflag")], myLamp.isLampOn());
+    bool newpower = TOGLE_STATE((*data)[FPSTR(TCONST_001A)], myLamp.isLampOn());
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
@@ -488,23 +489,23 @@ void set_onflag(Interface *interf, JsonObject *data){
         }
     }
 #ifdef RESTORE_STATE
-    jee.var(F("ONflag"), (*data)[F("ONflag")]);
+    jee.var(FPSTR(TCONST_001A), (*data)[FPSTR(TCONST_001A)]);
 #endif
 }
 
 void set_demoflag(Interface *interf, JsonObject *data){
     if (!data) return;
     // Специально не сохраняем, считаю что демо при старте не должно запускаться
-    bool newdemo = TOGLE_STATE((*data)[F("Demo")], (myLamp.getMode() == MODE_DEMO));
+    bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
     switch (myLamp.getMode()) {
         case MODE_NORMAL:
-            if (newdemo) myLamp.startDemoMode(jee.param(F("DTimer")).toInt()); break;
+            if (newdemo) myLamp.startDemoMode(jee.param(FPSTR(TCONST_0026)).toInt()); break;
         case MODE_DEMO:
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
     }
 #ifdef RESTORE_STATE
-    jee.var(F("Demo"), (*data)[F("Demo")]);
+    jee.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
 #endif
 }
 
@@ -514,7 +515,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
 
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->button(F("OTA"), F("Ожидает..."), F("grey"));
+    interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(TCONST_0008));
     interf->json_section_end();
     interf->json_frame_flush();
 }
@@ -523,7 +524,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
 #ifdef AUX_PIN
 void set_auxflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    if (((*data)[F("AUX")] == F("true")) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false)) {
+    if (((*data)[FPSTR(TCONST_000E)] == FPSTR(TCONST_FFFF)) != (digitalRead(AUX_PIN) == AUX_LEVEL ? true : false)) {
         AUX_toggle(!(digitalRead(AUX_PIN) == AUX_LEVEL ? true : false));
     }
 }
@@ -531,7 +532,7 @@ void set_auxflag(Interface *interf, JsonObject *data){
 
 void set_gbrflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("GBR"), myLamp.setIsGlobalBrightness((*data)[F("GBR")] == F("true")));
+    SETPARAM(FPSTR(TCONST_001C), myLamp.setIsGlobalBrightness((*data)[FPSTR(TCONST_001C)] == FPSTR(TCONST_FFFF)));
     if (myLamp.isLampOn()) {
         myLamp.setBrightness(myLamp.getNormalizedLampBrightness());
     }
@@ -540,18 +541,18 @@ void set_gbrflag(Interface *interf, JsonObject *data){
 
 void block_lamp_config(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_hidden(F("lamp_config"), F("Конфигурации"));
+    interf->json_section_hidden(FPSTR(TCONST_0028), FPSTR(TINTF_018));
 
-    interf->json_section_begin(F("edit_lamp_config"));
-    String cfg(F("Конфигурации")); cfg+=" ("; cfg+=jee.param(F("fileName")); cfg+=")";
+    interf->json_section_begin(FPSTR(TCONST_0029));
+    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=jee.param(FPSTR(TCONST_002A)); cfg+=")";
 
-    interf->select(F("fileName"), cfg);
+    interf->select(FPSTR(TCONST_002A), cfg);
     if(LittleFS.begin()){
 #ifdef ESP32
-        File root = LittleFS.open("/cfg");
+        File root = LittleFS.open(FPSTR(TCONST_002B));
         File file = root.openNextFile();
 #else
-        Dir dir = LittleFS.openDir(F("/cfg"));
+        Dir dir = LittleFS.openDir(FPSTR(TCONST_002B));
 #endif
         String fn;
 #ifdef ESP32
@@ -563,7 +564,7 @@ void block_lamp_config(Interface *interf, JsonObject *data){
             fn=dir.fileName();
 #endif
 
-            fn.replace(F("/cfg/"),F(""));
+            fn.replace(FPSTR(TCONST_002C),F(""));
             //LOG(println, fn);
             interf->option(fn, fn);
 #ifdef ESP32
@@ -575,17 +576,17 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     interf->json_section_line();
-    interf->button_submit_value(F("edit_lamp_config"), F("load"), F("Загрузить"), F("green"));
-    interf->button_submit_value(F("edit_lamp_config"), F("save"), F("Сохранить"));
-    interf->button_submit_value(F("edit_lamp_config"), F("del"), F("Удалить"), F("red"));
+    interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(TCONST_002F));
+    interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
+    interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
     interf->json_section_end();
 
     interf->json_section_end();
 
     interf->spacer();
-    interf->json_section_begin(F("add_lamp_config"));
-    interf->text(F("fileName"), F("Конфигурация"));
-    interf->button_submit(F("add_lamp_config"), F("Создать"));
+    interf->json_section_begin(FPSTR(TCONST_0030));
+    interf->text(FPSTR(TCONST_002A), FPSTR(TINTF_01A));
+    interf->button_submit(FPSTR(TCONST_0030), FPSTR(TINTF_01B));
     interf->json_section_end();
 
     interf->json_section_end();
@@ -600,55 +601,55 @@ void show_lamp_config(Interface *interf, JsonObject *data){
 
 void edit_lamp_config(Interface *interf, JsonObject *data){
     // Удаление конфигурации из ФС
-    if (!data || !data->containsKey(F("fileName"))) return;
-    String name = (*data)[F("fileName")];
-    String act = (*data)[F("edit_lamp_config")];
+    if (!data || !data->containsKey(FPSTR(TCONST_002A))) return;
+    String name = (*data)[FPSTR(TCONST_002A)];
+    String act = (*data)[FPSTR(TCONST_0029)];
 
-    if (act == "del") {
-        String filename = String(F("/glb/")) + name;
+    if (act == FPSTR(TCONST_000A)) {
+        String filename = String(FPSTR(TCONST_0031)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 
-        filename = String(F("/cfg/")) + name;
+        filename = String(FPSTR(TCONST_002C)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 
-        filename = String(F("/evn/")) + name;
+        filename = String(FPSTR(TCONST_0032)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 #ifdef ESP_USE_BUTTON
-        filename = String(F("/btn/")) + name;
+        filename = String(FPSTR(TCONST_0033)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 #endif
     } else
-    if (act == "load") {
+    if (act == FPSTR(TCONST_002D)) {
         myLamp.changePower(false);
-        String filename = String(F("/glb/")) + name;
+        String filename = String(FPSTR(TCONST_0031)) + name;
         jee.load(filename.c_str());
 
-        // filename = String(F("/cfg/")) + name;
+        // filename = String(FPSTR(TCONST_002C)) + name;
         // myLamp.effects.loadConfig(filename.c_str());
 
-        filename = String(F("/evn/")) + name;
+        filename = String(FPSTR(TCONST_0032)) + name;
         myLamp.events.loadConfig(filename.c_str());
 #ifdef ESP_USE_BUTTON
-        filename = String(F("/btn/")) + name;
+        filename = String(FPSTR(TCONST_0033)) + name;
         myButtons.clear();
         if (!myButtons.loadConfig()) {
             default_buttons();
         }
 #endif
-        jee.var(F("fileName"), name);
+        jee.var(FPSTR(TCONST_002A), name);
         sync_parameters();
         myLamp.changePower(true);
     } else {
-        String filename = String(F("/glb/")) + name;
+        String filename = String(FPSTR(TCONST_0031)) + name;
         jee.save(filename.c_str(), true);
 
-        // filename = String(F("/cfg/")) + name;
+        // filename = String(FPSTR(TCONST_002C)) + name;
         // myLamp.effects.saveConfig(filename.c_str());
 
-        filename = String(F("/evn/")) + name;
+        filename = String(FPSTR(TCONST_0032)) + name;
         myLamp.events.saveConfig(filename.c_str());
 #ifdef ESP_USE_BUTTON
-        filename = String(F("/btn/")) + name;
+        filename = String(FPSTR(TCONST_0033)) + name;
         myButtons.saveConfig(filename.c_str());
 #endif
     }
@@ -658,30 +659,30 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
 void block_lamp_textsend(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_begin(F("textsend"));
+    interf->json_section_begin(FPSTR(TCONST_0034));
 
-    interf->spacer(F("Вывести на лампе"));
-    interf->text(F("msg"), F("Текст"));
-    interf->color(F("txtColor"), F("Цвет сообщения"));
-    interf->button_submit(F("textsend"), F("Отправить"), F("gray"));
+    interf->spacer(FPSTR(TINTF_01C));
+    interf->text(FPSTR(TCONST_0035), FPSTR(TINTF_01D));
+    interf->color(FPSTR(TCONST_0036), FPSTR(TINTF_01E));
+    interf->button_submit(FPSTR(TCONST_0034), FPSTR(TINTF_01F), FPSTR(TCONST_0008));
 
     interf->json_section_end();
 }
 
 void set_lamp_textsend(Interface *interf, JsonObject *data){
     if (!data) return;
-    String tmpStr = (*data)[F("txtColor")];
-    jee.var(F("txtColor"), tmpStr);
-    jee.var(F("msg"), (*data)[F("msg")]);
+    String tmpStr = (*data)[FPSTR(TCONST_0036)];
+    jee.var(FPSTR(TCONST_0036), tmpStr);
+    jee.var(FPSTR(TCONST_0035), (*data)[FPSTR(TCONST_0035)]);
 
     tmpStr.replace(F("#"), F("0x"));
-    myLamp.sendString((*data)[F("msg")], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
+    myLamp.sendString((*data)[FPSTR(TCONST_0035)], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
 }
 
 void block_lamp(Interface *interf, JsonObject *data){
     //Страница "Управление лампой"
     if (!interf) return;
-    interf->json_section_main(F("lamp"), F("Вывод текста"));
+    interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
 
@@ -691,27 +692,27 @@ void block_lamp(Interface *interf, JsonObject *data){
 #ifdef MIC_EFFECTS
 void block_settings_mic(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("settings_mic"), F("Микрофон"));
+    interf->json_section_main(FPSTR(TCONST_0037), FPSTR(TINTF_020));
 
-    interf->checkbox(F("Mic"), F("Микрофон активен"), true);
+    interf->checkbox(FPSTR(TCONST_001E), FPSTR(TINTF_021), true);
 
-    interf->json_section_begin(F("set_mic"));
+    interf->json_section_begin(FPSTR(TCONST_0038));
     //if (!iGLOBAL.isMicCal) {
     if (!myLamp.isMicCalibration()) {
-        interf->number(F("micScale"), (float)(round(myLamp.getMicScale() * 100) / 100), F("Коэф. коррекции нуля"), 0.01);
-        interf->number(F("micNoise"), (float)(round(myLamp.getMicNoise() * 100) / 100), F("Уровень шума, ед"), 0.01);
-        interf->range(F("micnRdcLvl"), (int)myLamp.getMicNoiseRdcLevel(), 0, 4, (float)1.0, F("Шумодав"), false);
+        interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
+        interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
+        interf->range(FPSTR(TCONST_003B), (int)myLamp.getMicNoiseRdcLevel(), 0, 4, (float)1.0, FPSTR(TINTF_024), false);
     }
-    interf->button_submit(F("set_mic"), F("Сохранить"), F("grey"));
+    interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->json_section_end();
 
     interf->spacer();
-    //interf->button(F("mic_cal"), F("Калибровка микрофона"), iGLOBAL.isMicCal? F("grey") : F("red"));
-    interf->button(F("mic_cal"), F("Калибровка микрофона"), myLamp.isMicCalibration()? F("grey") : F("red"));
+    //interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), iGLOBAL.isMicCal? FPSTR(TCONST_0008) : FPSTR(TCONST_000C));
+    interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), myLamp.isMicCalibration()? FPSTR(TCONST_0008) : FPSTR(TCONST_000C));
 
 
     interf->spacer();
-    interf->button(F("settings"), F("Выход"));
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -725,30 +726,30 @@ void show_settings_mic(Interface *interf, JsonObject *data){
 
 void set_settings_mic(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("micScale"), myLamp.setMicScale((*data)[F("micScale")].as<float>()));
-    SETPARAM(F("micNoise"), myLamp.setMicNoise((*data)[F("micNoise")].as<float>()));
-    SETPARAM(F("micnRdcLvl"), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[F("micnRdcLvl")].as<long>()));
+    SETPARAM(FPSTR(TCONST_0039), myLamp.setMicScale((*data)[FPSTR(TCONST_0039)].as<float>()));
+    SETPARAM(FPSTR(TCONST_003A), myLamp.setMicNoise((*data)[FPSTR(TCONST_003A)].as<float>()));
+    SETPARAM(FPSTR(TCONST_003B), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[FPSTR(TCONST_003B)].as<long>()));
 
     section_settings_frame(interf, data);
 }
 
 void set_micflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("Mic"), myLamp.setMicOnOff((*data)[F("Mic")] == F("true")));
+    SETPARAM(FPSTR(TCONST_001E), myLamp.setMicOnOff((*data)[FPSTR(TCONST_001E)] == FPSTR(TCONST_FFFF)));
     show_effects_param(interf,data);
 }
 
 void set_settings_mic_calib(Interface *interf, JsonObject *data){
     if (!myLamp.isMicOnOff()) {
-        myLamp.sendStringToLamp(String(F("Включите микрофон")).c_str(), CRGB::Red);
+        myLamp.sendStringToLamp(String(FPSTR(TINTF_026)).c_str(), CRGB::Red);
     } else
     //if(!iGLOBAL.isMicCal) {
     if(!myLamp.isMicCalibration()) {
-        myLamp.sendStringToLamp(String(F("Калибровка микрофона")).c_str(), CRGB::Red);
+        myLamp.sendStringToLamp(String(FPSTR(TINTF_025)).c_str(), CRGB::Red);
         myLamp.setMicCalibration();
         //iGLOBAL.isMicCal = true;
     } else {
-        myLamp.sendStringToLamp(String(F("... в процессе ...")).c_str(), CRGB::Red);
+        myLamp.sendStringToLamp(String(FPSTR(TINTF_027)).c_str(), CRGB::Red);
     }
 
     show_settings_mic(interf, data);
@@ -758,38 +759,38 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
 // формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("settings_wifi"), F("WiFi"));
+    interf->json_section_main(FPSTR(TCONST_003D), FPSTR(TINTF_028));
     // форма настроек Wi-Fi
 
-    interf->json_section_hidden(F("set_wifi"), F("WiFi Client"));
-    interf->spacer(F("Настройки WiFi-клиента"));
-    interf->text(F("hostname"), F("Имя лампы (mDNS Hostname/AP-SSID)"));
-    interf->text(F("wcssid"), WiFi.SSID(), F("WiFi SSID"));
-    interf->password(F("wcpass"), F("Password"));
-    interf->button_submit(F("set_wifi"), F("Подключиться"), F("gray"));
+    interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
+    interf->spacer(FPSTR(TINTF_02A));
+    interf->text(FPSTR(TCONST_003F), FPSTR(TINTF_02B));
+    interf->text(FPSTR(TCONST_0040), WiFi.SSID(), FPSTR(TINTF_02C));
+    interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
+    interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(TCONST_0008));
     interf->json_section_end();
 
-    interf->json_section_hidden(F("set_wifiAP"), F("WiFi AP"));
-    interf->text(F("hostname"), F("Имя лампы (mDNS Hostname/AP-SSID)"));
-    interf->spacer(F("Настройки WiFi-точки доступа"));
-    interf->comment(F("В режиме AP-only лампа всегда работает как точка доступа и не будет подключаться к другим WiFi-сетям"));
-    interf->checkbox(F("APonly"), F("Режим AP-only"), false);
-    interf->password(F("APpwd"), F("Защитить AP паролем"));
-    interf->button_submit(F("set_wifiAP"), F("Сохранить"), F("gray"));
+    interf->json_section_hidden(FPSTR(TCONST_0042), FPSTR(TINTF_02F));
+    interf->text(FPSTR(TCONST_003F), FPSTR(TINTF_02B));
+    interf->spacer(FPSTR(TINTF_031));
+    interf->comment(FPSTR(TINTF_032));
+    interf->checkbox(FPSTR(TCONST_0043), FPSTR(TINTF_033), false);
+    interf->password(FPSTR(TCONST_0044), FPSTR(TINTF_034));
+    interf->button_submit(FPSTR(TCONST_0042), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->json_section_end();
 
     // форма настроек MQTT
-    interf->json_section_hidden(F("set_mqtt"), F("MQTT"));
-    interf->text(F("m_host"), F("MQTT host"));
-    interf->number(F("m_port"), F("MQTT port"));
-    interf->text(F("m_user"), F("User"));
-    interf->text(F("m_pass"), F("Password"));
-    interf->number(F("mqtt_int"), F("Интервал mqtt сек."));
-    interf->button_submit(F("set_mqtt"), F("Connect"), F("gray"));
+    interf->json_section_hidden(FPSTR(TCONST_0045), FPSTR(TINTF_035));
+    interf->text(FPSTR(TCONST_0046), FPSTR(TINTF_036));
+    interf->number(FPSTR(TCONST_0047), FPSTR(TINTF_037));
+    interf->text(FPSTR(TCONST_0048), FPSTR(TINTF_038));
+    interf->text(FPSTR(TCONST_0049), FPSTR(TINTF_02D));
+    interf->number(FPSTR(TCONST_004A), FPSTR(TINTF_039));
+    interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(TCONST_0008));
     interf->json_section_end();
 
     interf->spacer();
-    interf->button(F("settings"), F("Выход"));
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -807,9 +808,9 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
 void set_settings_wifiAP(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    SETPARAM(F("hostname"));
-    SETPARAM(F("APonly"));
-    SETPARAM(F("APpwd"));
+    SETPARAM(FPSTR(TCONST_003F));
+    SETPARAM(FPSTR(TCONST_0043));
+    SETPARAM(FPSTR(TCONST_0044));
 
     jee.save();
     jee.wifi_connect();
@@ -823,10 +824,10 @@ void set_settings_wifiAP(Interface *interf, JsonObject *data){
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    SETPARAM(F("hostname"));
+    SETPARAM(FPSTR(TCONST_003F));
 
-    const char *ssid = (*data)[F("wcssid")];
-    const char *pwd = (*data)[F("wcpass")];
+    const char *ssid = (*data)[FPSTR(TCONST_0040)];
+    const char *pwd = (*data)[FPSTR(TCONST_0041)];
 
     if(ssid){
         jee.wifi_connect(ssid, pwd);
@@ -839,11 +840,11 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("m_host"), strncpy(jee.m_host, jee.param(F("m_host")).c_str(), sizeof(jee.m_host)-1));
-    SETPARAM(F("m_user"), strncpy(jee.m_user, jee.param(F("m_user")).c_str(), sizeof(jee.m_user)-1));
-    SETPARAM(F("m_pass"), strncpy(jee.m_pass, jee.param(F("m_pass")).c_str(), sizeof(jee.m_pass)-1));
-    SETPARAM(F("m_port"), jee.m_port = jee.param(F("m_port")).toInt());
-    SETPARAM(F("mqtt_int"), myLamp.semqtt_int((*data)[F("mqtt_int")]));
+    SETPARAM(FPSTR(TCONST_0046), strncpy(jee.m_host, jee.param(FPSTR(TCONST_0046)).c_str(), sizeof(jee.m_host)-1));
+    SETPARAM(FPSTR(TCONST_0048), strncpy(jee.m_user, jee.param(FPSTR(TCONST_0048)).c_str(), sizeof(jee.m_user)-1));
+    SETPARAM(FPSTR(TCONST_0049), strncpy(jee.m_pass, jee.param(FPSTR(TCONST_0049)).c_str(), sizeof(jee.m_pass)-1));
+    SETPARAM(FPSTR(TCONST_0047), jee.m_port = jee.param(FPSTR(TCONST_0047)).toInt());
+    SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
     //m_pref
 
     jee.save();
@@ -855,43 +856,43 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
 
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("set_other"), F("Настройки"));
+    interf->json_section_main(FPSTR(TCONST_004B), FPSTR(TINTF_002));
 
-    interf->spacer(F("Отображение"));
-    interf->checkbox(F("MIRR_H"), F("Отзеркаливание H"));
-    interf->checkbox(F("MIRR_V"), F("Отзеркаливание V"));
-    interf->checkbox(F("isFaderON"), F("Плавное переключение эффектов"));
-    interf->checkbox(F("DRand"), F("Случайный эффект в Демо"));
-    interf->range(F("DTimer"), 30, 250, 10, F("Время в секундах для смены режима"));
+    interf->spacer(FPSTR(TINTF_030));
+    interf->checkbox(FPSTR(TCONST_004C), FPSTR(TINTF_03B));
+    interf->checkbox(FPSTR(TCONST_004D), FPSTR(TINTF_03C));
+    interf->checkbox(FPSTR(TCONST_004E), FPSTR(TINTF_03D));
+    interf->checkbox(FPSTR(TCONST_004F), FPSTR(TINTF_03E));
+    interf->range(FPSTR(TCONST_0026), 30, 250, 10, FPSTR(TINTF_03F));
 
-    interf->select(F("effSort"), F("Сортировка эффектов"));
-    interf->option(String(0), F("Копии под базовым"));
-    interf->option(String(1), F("Копии в конце"));
-    interf->option(String(2), F("В порядке индекса"));
+    interf->select(FPSTR(TCONST_0050), FPSTR(TINTF_040));
+    interf->option(String(0), FPSTR(TINTF_041));
+    interf->option(String(1), FPSTR(TINTF_042));
+    interf->option(String(2), FPSTR(TINTF_043));
     interf->json_section_end();
 
-    interf->spacer(F("Вывод текста"));
-    interf->range(F("txtSpeed"), 10, 100, 10, F("Задержка прокрутки текста"));
-    interf->range(F("txtOf"), -1, 10, 1, F("Смещение вывода текста"));
+    interf->spacer(FPSTR(TINTF_001));
+    interf->range(FPSTR(TCONST_0051), 10, 100, 10, FPSTR(TINTF_044));
+    interf->range(FPSTR(TCONST_0052), -1, 10, 1, FPSTR(TINTF_045));
 
-    interf->select(F("perTime"), F("Периодический вывод времени"));
-    interf->option(String(PERIODICTIME::PT_NOT_SHOW), F("Не выводить"));
-    interf->option(String(PERIODICTIME::PT_EVERY_60), F("Каждый час"));
-    interf->option(String(PERIODICTIME::PT_EVERY_30), F("Каждые полчаса"));
-    interf->option(String(PERIODICTIME::PT_EVERY_15), F("Каждые 15 минут"));
-    interf->option(String(PERIODICTIME::PT_EVERY_10), F("Каждые 10 минут"));
-    interf->option(String(PERIODICTIME::PT_EVERY_5), F("Каждые 5 минут"));
-    interf->option(String(PERIODICTIME::PT_EVERY_1), F("Каждую минуту"));
+    interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
+    interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));
+    interf->option(String(PERIODICTIME::PT_EVERY_60), FPSTR(TINTF_048));
+    interf->option(String(PERIODICTIME::PT_EVERY_30), FPSTR(TINTF_049));
+    interf->option(String(PERIODICTIME::PT_EVERY_15), FPSTR(TINTF_04A));
+    interf->option(String(PERIODICTIME::PT_EVERY_10), FPSTR(TINTF_04B));
+    interf->option(String(PERIODICTIME::PT_EVERY_5), FPSTR(TINTF_04C));
+    interf->option(String(PERIODICTIME::PT_EVERY_1), FPSTR(TINTF_04D));
     interf->json_section_end();
 
-    interf->spacer(F("Новогоднее поздравление"));
-    interf->number(F("ny_period"), F("Период вывода в минутах (0 - не выводить)"));
-    interf->number(F("ny_unix"), F("UNIX дата/время нового года"));
+    interf->spacer(FPSTR(TINTF_04E));
+    interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
+    interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
 
-    interf->button_submit(F("set_other"), F("Сохранить"), F("grey"));
+    interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
     interf->spacer();
-    interf->button(F("settings"), F("Выход"));
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -905,34 +906,34 @@ void show_settings_other(Interface *interf, JsonObject *data){
 
 void set_settings_other(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("MIRR_H"), myLamp.setMIRR_H((*data)[F("MIRR_H")] == F("true")));
-    SETPARAM(F("MIRR_V"), myLamp.setMIRR_V((*data)[F("MIRR_V")] == F("true")));
-    SETPARAM(F("isFaderON"), myLamp.setFaderFlag((*data)[F("isFaderON")] == F("true")));
-    SETPARAM(F("DRand"));
-    SETPARAM(F("DTimer"), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(F("DTimer")).toInt()); }}));
-    SETPARAM(F("effSort"), myLamp.effects.setEffSortType((*data)[F("effSort")].as<uint8_t>()));
+    SETPARAM(FPSTR(TCONST_004C), myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF)));
+    SETPARAM(FPSTR(TCONST_004D), myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF)));
+    SETPARAM(FPSTR(TCONST_004E), myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF)));
+    SETPARAM(FPSTR(TCONST_004F));
+    SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(FPSTR(TCONST_0026)).toInt()); }}));
+    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<uint8_t>()));
 
-    SETPARAM(F("txtSpeed"), myLamp.setTextMovingSpeed((*data)[F("txtSpeed")]));
-    SETPARAM(F("txtOf"), myLamp.setTextOffset((*data)[F("txtOf")]));
-    SETPARAM(F("perTime"), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[F("perTime")].as<long>()));
-    SETPARAM(F("ny_period"), myLamp.setNYMessageTimer((*data)[F("ny_period")]));
-    SETPARAM(F("ny_unix"), myLamp.setNYUnixTime((*data)[F("ny_unix")]));
+    SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
+    SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
+    SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
+    SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
+    SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime((*data)[FPSTR(TCONST_0055)]));
 
     section_settings_frame(interf, data);
 }
 
 void block_settings_time(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("set_time"), F("Время"));
+    interf->json_section_main(FPSTR(TCONST_0056), FPSTR(TINTF_051));
 
-    interf->comment(F("Правила TZSET учета поясного/сезонного времени (напр 'MSK-3' для Europe/Moscow) Нужную строку можно взять тут https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h"));
-    interf->text(F("TZSET"), F("правило TZone (рекоммендуется задать!)"));
-    interf->text(F("userntp"), F("резервный NTP-сервер (не обязательно)"));
-    interf->text(F("setdatetime"), F("Дата/время в формате YYYY-MM-DDThh:mm:ss (если нет интернета)"));
-    interf->button_submit(F("set_time"), F("Сохранить"), F("gray"));
+    interf->comment(FPSTR(TINTF_052));
+    interf->text(FPSTR(TCONST_0057), FPSTR(TINTF_053));
+    interf->text(FPSTR(TCONST_0058), FPSTR(TINTF_054));
+    interf->text(FPSTR(TCONST_0059), FPSTR(TINTF_055));
+    interf->button_submit(FPSTR(TCONST_0056), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
     interf->spacer();
-    interf->button(F("settings"), F("Выход"));
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -947,12 +948,12 @@ void show_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
 
-        String datetime=(*data)[F("setdatetime")];
+        String datetime=(*data)[FPSTR(TCONST_0059)];
         if (datetime.length())
             myLamp.timeProcessor.setTime(datetime);
 
-    SETPARAM(F("TZSET"), myLamp.timeProcessor.tzsetup((*data)[F("TZSET")]));
-    SETPARAM(F("userntp"), myLamp.timeProcessor.setcustomntp((*data)[F("userntp")]));
+    SETPARAM(FPSTR(TCONST_0057), myLamp.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
+    SETPARAM(FPSTR(TCONST_0058), myLamp.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
 
     myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
 
@@ -961,30 +962,30 @@ void set_settings_time(Interface *interf, JsonObject *data){
 
 void block_settings_update(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_hidden(F("update"), F("Обновление"));
+    interf->json_section_hidden(FPSTR(TCONST_005A), FPSTR(TINTF_056));
 #ifdef OTA
-    interf->spacer(F("Обновление по ОТА-PIO"));
+    interf->spacer(FPSTR(TINTF_057));
     if (myLamp.getMode() != MODE_OTA) {
-        interf->button(F("OTA"), F("Начать"), F("blue"));
+        interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_058), FPSTR(TCONST_005B));
     } else {
-        interf->button(F("OTA"), F("Ожидает..."), F("grey"));
+        interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(TCONST_0008));
     }
 #endif
-    interf->spacer(F("Загрузка прошивки"));
-    interf->file(F("update"), F("update"), F("Upload"));
+    interf->spacer(FPSTR(TINTF_059));
+    interf->file(FPSTR(TCONST_005A), FPSTR(TCONST_005A), FPSTR(TINTF_05A));
     interf->json_section_end();
 }
 
 void block_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("show_event"), F("События"));
+    interf->json_section_main(FPSTR(TCONST_005C), FPSTR(TINTF_011));
 
-    interf->checkbox(F("Events"), myLamp.IsEventsHandled()? F("true") : F("false"), F("События активны"), true);
+    interf->checkbox(FPSTR(TCONST_001D), myLamp.IsEventsHandled()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), F("События активны"), true);
 
     int num = 1;
     EVENT *next = nullptr;
-    interf->json_section_begin(F("event_conf"));
-    interf->select(F("eventList"), String(0), F("Событие"), false);
+    interf->json_section_begin(FPSTR(TCONST_005D));
+    interf->select(FPSTR(TCONST_005E), String(0), FPSTR(TINTF_05B), false);
     while ((next = myLamp.events.getNextEvent(next)) != nullptr) {
         interf->option(String(num), next->getName());
         ++num;
@@ -992,16 +993,16 @@ void block_settings_event(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     interf->json_section_line();
-    interf->button_submit_value(F("event_conf"), F("edit"), F("Редактировать"), F("green"));
-    interf->button_submit_value(F("event_conf"), F("del"), F("Удалить"), F("red"));
+    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(TCONST_002F));
+    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
     interf->json_section_end();
 
     interf->json_section_end();
 
-    interf->button(F("event_conf"), F("Добавить"));
+    interf->button(FPSTR(TCONST_005D), FPSTR(TINTF_05D));
 
     interf->spacer();
-    interf->button(F("settings"), F("Выход"));
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -1015,7 +1016,7 @@ void show_settings_event(Interface *interf, JsonObject *data){
 
 void set_eventflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("Events"), myLamp.setIsEventsHandled((*data)[F("Events")] == F("true")));
+    SETPARAM(FPSTR(TCONST_001D), myLamp.setIsEventsHandled((*data)[FPSTR(TCONST_001D)] == FPSTR(TCONST_FFFF)));
 }
 
 void set_event_conf(Interface *interf, JsonObject *data){
@@ -1023,31 +1024,31 @@ void set_event_conf(Interface *interf, JsonObject *data){
     String act;
     if (!data) return;
 
-    if (data->containsKey(F("eventList"))) {
+    if (data->containsKey(FPSTR(TCONST_005E))) {
         EVENT *curr = nullptr;
-        int i = 1, num = (*data)[F("eventList")];
+        int i = 1, num = (*data)[FPSTR(TCONST_005E)];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
         myLamp.events.delEvent(*curr);
     }
 
-    if (data->containsKey(F("enabled"))) {
-        event.isEnabled = ((*data)[F("enabled")] == F("true"));
+    if (data->containsKey(FPSTR(TCONST_0060))) {
+        event.isEnabled = ((*data)[FPSTR(TCONST_0060)] == FPSTR(TCONST_FFFF));
     } else {
         event.isEnabled = true;
     }
 
-    event.d1 = ((*data)[F("d1")] == F("true"));
-    event.d2 = ((*data)[F("d2")] == F("true"));
-    event.d3 = ((*data)[F("d3")] == F("true"));
-    event.d4 = ((*data)[F("d4")] == F("true"));
-    event.d5 = ((*data)[F("d5")] == F("true"));
-    event.d6 = ((*data)[F("d6")] == F("true"));
-    event.d7 = ((*data)[F("d7")] == F("true"));
-    event.event = (EVENT_TYPE)(*data)[F("evList")].as<long>();
-    event.repeat = (*data)[F("repeat")];
-    event.stopat = (*data)[F("stopat")];
-    String tmEvent = (*data)[F("tmEvent")];
+    event.d1 = ((*data)[FPSTR(TCONST_0061)] == FPSTR(TCONST_FFFF));
+    event.d2 = ((*data)[FPSTR(TCONST_0062)] == FPSTR(TCONST_FFFF));
+    event.d3 = ((*data)[FPSTR(TCONST_0063)] == FPSTR(TCONST_FFFF));
+    event.d4 = ((*data)[FPSTR(TCONST_0064)] == FPSTR(TCONST_FFFF));
+    event.d5 = ((*data)[FPSTR(TCONST_0065)] == FPSTR(TCONST_FFFF));
+    event.d6 = ((*data)[FPSTR(TCONST_0066)] == FPSTR(TCONST_FFFF));
+    event.d7 = ((*data)[FPSTR(TCONST_0067)] == FPSTR(TCONST_FFFF));
+    event.event = (EVENT_TYPE)(*data)[FPSTR(TCONST_0068)].as<long>();
+    event.repeat = (*data)[FPSTR(TCONST_0069)];
+    event.stopat = (*data)[FPSTR(TCONST_006A)];
+    String tmEvent = (*data)[FPSTR(TCONST_006B)];
 
     struct tm t;
     tm *tm=&t;
@@ -1063,7 +1064,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
     event.unixtime = mktime(tm);;
-    String tmpMsg = (*data)[F("msg")];
+    String tmpMsg = (*data)[FPSTR(TCONST_0035)];
     event.message = (char*)(tmpMsg.c_str());
 
     myLamp.events.addEvent(event);
@@ -1078,23 +1079,23 @@ void show_event_conf(Interface *interf, JsonObject *data){
     int i = 1, num = 0;
     if (!interf) return;
 
-    if (data->containsKey(F("eventList"))) {
+    if (data->containsKey(FPSTR(TCONST_005E))) {
         EVENT *curr = nullptr;
-        num = (*data)[F("eventList")];
+        num = (*data)[FPSTR(TCONST_005E)];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
-        act = (*data)[F("event_conf")].as<String>();
+        act = (*data)[FPSTR(TCONST_005D)].as<String>();
         event = *curr;
         edit = true;
     }
 
-    if (act == F("del")) {
+    if (act == FPSTR(TCONST_000A)) {
         myLamp.events.delEvent(event);
         myLamp.events.saveConfig();
         show_settings_event(interf, data);
         return;
     } else
-    if (data->containsKey(F("save"))) {
+    if (data->containsKey(FPSTR(TCONST_002E))) {
         set_event_conf(interf, data);
         return;
     }
@@ -1103,55 +1104,55 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
 
     if (edit) {
-        interf->json_section_main(F("set_event"), F("Редактировать"));
-        interf->constant(F("eventList"), String(num), event.getName());
-        interf->checkbox(F("enabled"), (event.isEnabled? F("true") : F("false")), F("Активно"), false);
+        interf->json_section_main(FPSTR(TCONST_006C), FPSTR(TINTF_05C));
+        interf->constant(FPSTR(TCONST_005E), String(num), event.getName());
+        interf->checkbox(FPSTR(TCONST_0060), (event.isEnabled? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_05E), false);
     } else {
-        interf->json_section_main(F("set_event"), F("Добавить"));
+        interf->json_section_main(FPSTR(TCONST_006C), FPSTR(TINTF_05D));
     }
 
-    interf->select(F("evList"), String(event.event), F("Тип события"), false);
-    interf->option(String(EVENT_TYPE::ON), F("Включить лампу"));
-    interf->option(String(EVENT_TYPE::OFF), F("Выключить лампу"));
-    interf->option(String(EVENT_TYPE::DEMO_ON), F("Включить DEMO"));
-    interf->option(String(EVENT_TYPE::ALARM), F("Будильник"));
-    interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), F("Загрузка конф. лампы"));
-    interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), F("Загрузка конф. эффектов"));
-    interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), F("Загрузка конф. событий"));
-    interf->option(String(EVENT_TYPE::SEND_TEXT), F("Вывести текст"));
-    interf->option(String(EVENT_TYPE::SEND_TIME), F("Вывести время"));
-    interf->option(String(EVENT_TYPE::PIN_STATE), F("Состояние пина"));
+    interf->select(FPSTR(TCONST_0068), String(event.event), FPSTR(TINTF_05F), false);
+    interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
+    interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
+    interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
+    interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
+    interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
+    interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
+    interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
+    interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
+    interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
+    interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
 #ifdef AUX_PIN
-    interf->option(String(EVENT_TYPE::AUX_ON), F("Включить AUX"));
-    interf->option(String(EVENT_TYPE::AUX_OFF), F("Выключить AUX"));
-    interf->option(String(EVENT_TYPE::AUX_TOGGLE), F("Переключить AUX"));
+    interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
+    interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
+    interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
 #endif
     interf->json_section_end();
 
-    interf->datetime(F("tmEvent"), event.getDateTime(), F("Дата/время события"));
-    interf->number(F("repeat"), event.repeat, F("Повтор, мин"));
-    interf->number(F("stopat"), event.stopat, F("Остановить через, мин"));
-    interf->text(F("msg"), String(event.message), F("Параметр (текст)"));
+    interf->datetime(FPSTR(TCONST_006B), event.getDateTime(), FPSTR(TINTF_06D));
+    interf->number(FPSTR(TCONST_0069), event.repeat, FPSTR(TINTF_06E));
+    interf->number(FPSTR(TCONST_006A), event.stopat, FPSTR(TINTF_06F));
+    interf->text(FPSTR(TCONST_0035), String(event.message), FPSTR(TINTF_070));
 
-    interf->json_section_hidden(F("repeat"), F("Повтор"));
-    interf->checkbox(F("d1"), (event.d1? F("true") : F("false")), F("Понедельник"), false);
-    interf->checkbox(F("d2"), (event.d1? F("true") : F("false")), F("Вторник"), false);
-    interf->checkbox(F("d3"), (event.d1? F("true") : F("false")), F("Среда"), false);
-    interf->checkbox(F("d4"), (event.d1? F("true") : F("false")), F("Четверг"), false);
-    interf->checkbox(F("d5"), (event.d1? F("true") : F("false")), F("Пятница"), false);
-    interf->checkbox(F("d6"), (event.d1? F("true") : F("false")), F("Суббота"), false);
-    interf->checkbox(F("d7"), (event.d1? F("true") : F("false")), F("Воскресенье"), false);
+    interf->json_section_hidden(FPSTR(TCONST_0069), FPSTR(TINTF_071));
+    interf->checkbox(FPSTR(TCONST_0061), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_072), false);
+    interf->checkbox(FPSTR(TCONST_0062), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_073), false);
+    interf->checkbox(FPSTR(TCONST_0063), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_074), false);
+    interf->checkbox(FPSTR(TCONST_0064), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_075), false);
+    interf->checkbox(FPSTR(TCONST_0065), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_076), false);
+    interf->checkbox(FPSTR(TCONST_0066), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_077), false);
+    interf->checkbox(FPSTR(TCONST_0067), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_078), false);
     interf->json_section_end();
 
     if (edit) {
-        interf->hidden(F("save"), F("true"));
-        interf->button_submit(F("set_event"), F("Обновить"));
+        interf->hidden(FPSTR(TCONST_002E), FPSTR(TCONST_FFFF));
+        interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_079));
     } else {
-        interf->button_submit(F("set_event"), F("Добавить"), F("green"));
+        interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_05D), FPSTR(TCONST_002F));
     }
 
     interf->spacer();
-    interf->button(F("show_event"), F("Выход"));
+    interf->button(FPSTR(TCONST_005C), FPSTR(TINTF_00B));
 
     interf->json_section_end();
     interf->json_frame_flush();
@@ -1159,28 +1160,28 @@ void show_event_conf(Interface *interf, JsonObject *data){
 #ifdef ESP_USE_BUTTON
 void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_main(F("show_button"), F("Кнопка"));
+    interf->json_section_main(FPSTR(TCONST_006D), FPSTR(TINTF_013));
 
-    interf->checkbox(F("Btn"), myButtons.isButtonOn()? F("true") : F("false"), F("Кнопка активна"), true);
+    interf->checkbox(FPSTR(TCONST_001F), myButtons.isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07B), true);
 
-    interf->json_section_begin(F("butt_conf"));
-    interf->select(F("buttList"), String(0), F("Действие"), false);
+    interf->json_section_begin(FPSTR(TCONST_006E));
+    interf->select(FPSTR(TCONST_006F), String(0), FPSTR(TINTF_07A), false);
     for (int i = 0; i < myButtons.size(); i++) {
         interf->option(String(i), myButtons[i]->getName());
     }
     interf->json_section_end();
 
     interf->json_section_line();
-    interf->button_submit_value(F("butt_conf"), F("edit"), F("Редактировать"), F("green"));
-    interf->button_submit_value(F("butt_conf"), F("del"), F("Удалить"), F("red"));
+    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(TCONST_002F));
+    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
     interf->json_section_end();
 
     interf->json_section_end();
 
-    interf->button(F("butt_conf"), F("Добавить"));
+    interf->button(FPSTR(TCONST_006E), FPSTR(TINTF_05D));
 
     interf->spacer();
-    interf->button(F("settings"), F("Выход"));
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -1196,14 +1197,14 @@ void set_butt_conf(Interface *interf, JsonObject *data){
     if (!data) return;
 
     Button *btn = nullptr;
-    bool on = ((*data)[F("on")] == F("true"));
-    bool hold = ((*data)[F("hold")] == F("true"));
-    bool onetime = ((*data)[F("onetime")] == F("true"));
-    uint8_t clicks = (*data)[F("clicks")];
-    BA action = (BA)(*data)[F("bactList")].as<long>();
+    bool on = ((*data)[FPSTR(TCONST_0070)] == FPSTR(TCONST_FFFF));
+    bool hold = ((*data)[FPSTR(TCONST_0071)] == FPSTR(TCONST_FFFF));
+    bool onetime = ((*data)[FPSTR(TCONST_0072)] == FPSTR(TCONST_FFFF));
+    uint8_t clicks = (*data)[FPSTR(TCONST_0073)];
+    BA action = (BA)(*data)[FPSTR(TCONST_0074)].as<long>();
 
-    if (data->containsKey(F("buttList"))) {
-        int num = (*data)[F("buttList")];
+    if (data->containsKey(FPSTR(TCONST_006F))) {
+        int num = (*data)[FPSTR(TCONST_006F)];
         if (num < myButtons.size()) {
             btn = myButtons[num];
         }
@@ -1229,21 +1230,21 @@ void show_butt_conf(Interface *interf, JsonObject *data){
     String act;
     int num = 0;
 
-    if (data->containsKey(F("buttList"))) {
-        num = (*data)[F("buttList")];
+    if (data->containsKey(FPSTR(TCONST_006F))) {
+        num = (*data)[FPSTR(TCONST_006F)];
         if (num < myButtons.size()) {
-            act = (*data)[F("butt_conf")].as<String>();
+            act = (*data)[FPSTR(TCONST_006E)].as<String>();
             btn = myButtons[num];
         }
     }
 
-    if (act == F("del")) {
+    if (act == FPSTR(TCONST_000A)) {
         myButtons.remove(num);
         myButtons.saveConfig();
         show_settings_butt(interf, data);
         return;
     } else
-    if (data->containsKey(F("save"))) {
+    if (data->containsKey(FPSTR(TCONST_002E))) {
         set_butt_conf(interf, data);
         return;
     }
@@ -1252,32 +1253,32 @@ void show_butt_conf(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
 
     if (btn) {
-        interf->json_section_main(F("set_butt"), F("Редактировать"));
-        interf->constant(F("buttList"), String(num), btn->getName());
+        interf->json_section_main(FPSTR(TCONST_0075), FPSTR(TINTF_05C));
+        interf->constant(FPSTR(TCONST_006F), String(num), btn->getName());
     } else {
-        interf->json_section_main(F("set_butt"), F("Добавить"));
+        interf->json_section_main(FPSTR(TCONST_0075), FPSTR(TINTF_05D));
     }
 
-    interf->select(F("bactList"), String(btn? btn->action : 0), F("Действие"), false);
+    interf->select(FPSTR(TCONST_0074), String(btn? btn->action : 0), FPSTR(TINTF_07A), false);
     for (int i = 1; i < BA::BA_END; i++) {
         interf->option(String(i), btn_get_desc((BA)i));
     }
     interf->json_section_end();
 
-    interf->checkbox(F("on"), (btn? btn->flags.on : 0)? F("true") : F("false"), F("OFF/ON"), false);
-    interf->checkbox(F("hold"), (btn? btn->flags.hold : 0)? F("true") : F("false"), F("Удержание"), false);
-    interf->number(F("clicks"), (btn? btn->flags.click : 0), F("Нажатия"), 0, 7);
-    interf->checkbox(F("onetime"), (btn? btn->flags.onetime&1 : 0)? F("true") : F("false"), F("Однократно"), false);
+    interf->checkbox(FPSTR(TCONST_0070), (btn? btn->flags.on : 0)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07C), false);
+    interf->checkbox(FPSTR(TCONST_0071), (btn? btn->flags.hold : 0)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07D), false);
+    interf->number(FPSTR(TCONST_0073), (btn? btn->flags.click : 0), FPSTR(TINTF_07E), 0, 7);
+    interf->checkbox(FPSTR(TCONST_0072), (btn? btn->flags.onetime&1 : 0)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07F), false);
 
     if (btn) {
-        interf->hidden(F("save"), F("true"));
-        interf->button_submit(F("set_butt"), F("Обновить"));
+        interf->hidden(FPSTR(TCONST_002E), FPSTR(TCONST_FFFF));
+        interf->button_submit(FPSTR(TCONST_0075), FPSTR(TINTF_079));
     } else {
-        interf->button_submit(F("set_butt"), F("Добавить"), F("green"));
+        interf->button_submit(FPSTR(TCONST_0075), FPSTR(TINTF_05D), FPSTR(TCONST_002F));
     }
 
     interf->spacer();
-    interf->button(F("show_butt"), F("Выход"));
+    interf->button(FPSTR(TCONST_0076), FPSTR(TINTF_00B));
 
     interf->json_section_end();
     interf->json_frame_flush();
@@ -1285,43 +1286,43 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
 void set_btnflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(F("Btn"), myButtons.setButtonOn((*data)[F("Btn")] == F("true")));
+    SETPARAM(FPSTR(TCONST_001F), myButtons.setButtonOn((*data)[FPSTR(TCONST_001F)] == FPSTR(TCONST_FFFF)));
 }
 #endif
 void section_effects_frame(Interface *interf, JsonObject *data){
     if(optionsTicker.active())
         optionsTicker.detach();
     if (!interf) return;
-    interf->json_frame_interface(F(("Огненная лампа")));
+    interf->json_frame_interface(FPSTR(TINTF_080));
     block_effects_main(interf, data);
     interf->json_frame_flush();
 }
 
 void section_lamp_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_frame_interface(F(("Огненная лампа")));
+    interf->json_frame_interface(FPSTR(TINTF_080));
     block_lamp(interf, data);
     interf->json_frame_flush();
 }
 
 void section_settings_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_frame_interface(F(("Огненная лампа")));
+    interf->json_frame_interface(FPSTR(TINTF_080));
 
-    interf->json_section_main(F("settings"), F("Настройки"));
+    interf->json_section_main(FPSTR(TCONST_0004), FPSTR(TINTF_002));
 
-    interf->button(F("show_time"), F("Время"));
+    interf->button(FPSTR(TCONST_0077), FPSTR(TINTF_051));
 
-    interf->button(F("show_wifi"), F("WiFi & MQTT"));
+    interf->button(FPSTR(TCONST_0078), FPSTR(TINTF_081));
 #ifdef MIC_EFFECTS
-    interf->button(F("show_mic"), F("Микрофон"));
+    interf->button(FPSTR(TCONST_0079), FPSTR(TINTF_020));
 #endif
 
-    interf->button(F("show_event"), F("События"));
+    interf->button(FPSTR(TCONST_005C), FPSTR(TINTF_011));
 
-    interf->button(F("show_butt"), F("Кнопка"));
+    interf->button(FPSTR(TCONST_0076), FPSTR(TINTF_013));
 
-    interf->button(F("show_other"), F("Другие"));
+    interf->button(FPSTR(TCONST_007A), FPSTR(TINTF_082));
 
     block_lamp_config(interf, data);
 
@@ -1335,7 +1336,7 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 void section_main_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
 
-    interf->json_frame_interface(F(("Огненная лампа")));
+    interf->json_frame_interface(FPSTR(TINTF_080));
 
     block_menu(interf, data);
     block_effects_main(interf, data);
@@ -1354,129 +1355,129 @@ void create_parameters(){
     // создаем дефолтные параметры для нашего проекта
 
     //WiFi
-    jee.var_create(F("hostname"), F(""));
-    jee.var_create(F("APonly"), F(""));     // режим AP-only (только точка доступа)
-    jee.var_create(F("APpwd"), F(""));      // пароль внутренней точки доступа
+    jee.var_create(FPSTR(TCONST_003F), F(""));
+    jee.var_create(FPSTR(TCONST_0043), F(""));     // режим AP-only (только точка доступа)
+    jee.var_create(FPSTR(TCONST_0044), F(""));      // пароль внутренней точки доступа
 //    jee.var_create(F("ssid"), F(""));     // режим AP-only (только точка доступа)
 //    jee.var_create(F("pass"), F(""));      // пароль внутренней точки доступа
 
 
     // параметры подключения к MQTT
-    jee.var_create(F("m_host"), F("")); // Дефолтные настройки для MQTT
-    jee.var_create(F("m_port"), F("1883"));
-    jee.var_create(F("m_user"), F(""));
-    jee.var_create(F("m_pass"), F(""));
-    jee.var_create(F("m_pref"), F(""));
-    jee.var_create(F("mqtt_int"), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
+    jee.var_create(FPSTR(TCONST_0046), F("")); // Дефолтные настройки для MQTT
+    jee.var_create(FPSTR(TCONST_0047), F("1883"));
+    jee.var_create(FPSTR(TCONST_0048), F(""));
+    jee.var_create(FPSTR(TCONST_0049), F(""));
+    jee.var_create(FPSTR(TCONST_007B), F(""));
+    jee.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 
-    jee.var_create(F("effList"), F("1"));
+    jee.var_create(FPSTR(TCONST_0016), F("1"));
 
-    jee.var_create(F("fileName"),F("cfg1"));
+    jee.var_create(FPSTR(TCONST_002A),F("cfg1"));
 
-    jee.var_create(F("MIRR_H"), F("false"));
-    jee.var_create(F("MIRR_V"), F("false"));
+    jee.var_create(FPSTR(TCONST_004C), FPSTR(TCONST_FFFE));
+    jee.var_create(FPSTR(TCONST_004D), FPSTR(TCONST_FFFE));
 #ifdef ESP_USE_BUTTON
-    jee.var_create(F("Btn"), F("true"));
+    jee.var_create(FPSTR(TCONST_001F), FPSTR(TCONST_FFFF));
 #endif
 #ifdef AUX_PIN
-    jee.var_create(F("AUX"), F("false"));
+    jee.var_create(FPSTR(TCONST_000E), FPSTR(TCONST_FFFE));
 #endif
-    jee.var_create(F("msg"), F(""));
-    jee.var_create(F("txtColor"), F("#ffffff"));
-    jee.var_create(F("txtSpeed"), F("100"));
-    jee.var_create(F("txtOf"), F("0"));
-    jee.var_create(F("perTime"), F("0"));
+    jee.var_create(FPSTR(TCONST_0035), F(""));
+    jee.var_create(FPSTR(TCONST_0036), FPSTR(TCONST_007C));
+    jee.var_create(FPSTR(TCONST_0051), F("100"));
+    jee.var_create(FPSTR(TCONST_0052), F("0"));
+    jee.var_create(FPSTR(TCONST_0053), F("0"));
 
-    jee.var_create(F("effSort"), F("1"));
+    jee.var_create(FPSTR(TCONST_0050), F("1"));
 
-    jee.var_create(F("GBR"), F("false"));
-    jee.var_create(F("GlobBRI"), F("127"));
+    jee.var_create(FPSTR(TCONST_001C), FPSTR(TCONST_FFFE));
+    jee.var_create(FPSTR(TCONST_0018), F("127"));
 
     // date/time related vars
-    jee.var_create(F("TZSET"), "");
-    jee.var_create(F("userntp"), "");
+    jee.var_create(FPSTR(TCONST_0057), "");
+    jee.var_create(FPSTR(TCONST_0058), "");
 
-    jee.var_create(F("ny_period"), F("0"));
-    jee.var_create(F("ny_unix"), F("1609459200"));
+    jee.var_create(FPSTR(TCONST_0054), F("0"));
+    jee.var_create(FPSTR(TCONST_0055), FPSTR(TCONST_007D));
 
 #ifdef MIC_EFFECTS
-    jee.var_create(F("micScale"),F("1.28"));
-    jee.var_create(F("micNoise"),F("0.00"));
-    jee.var_create(F("micnRdcLvl"),F("0"));
-    jee.var_create(F("Mic"), F("true"));
+    jee.var_create(FPSTR(TCONST_0039),F("1.28"));
+    jee.var_create(FPSTR(TCONST_003A),F("0.00"));
+    jee.var_create(FPSTR(TCONST_003B),F("0"));
+    jee.var_create(FPSTR(TCONST_001E), FPSTR(TCONST_FFFF));
 #endif
 
 #ifdef RESTORE_STATE
-    jee.var_create(F("ONflag"), F("false"));
-    jee.var_create(F("Demo"), F("false"));
+    jee.var_create(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE));
+    jee.var_create(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE));
 #endif
 
-    jee.var_create(F("Events"), F("false"));
+    jee.var_create(FPSTR(TCONST_001D), FPSTR(TCONST_FFFE));
 
-    jee.var_create(F("isFaderON"), (FADE == true? F("true") : F("false")));
-    jee.var_create(F("DRand"), (RANDOM_DEMO == true? F("true") : F("false")));
-    jee.var_create(F("DTimer"), String(DEMO_TIMEOUT).c_str());
+    jee.var_create(FPSTR(TCONST_004E), (FADE == true? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)));
+    jee.var_create(FPSTR(TCONST_004F), (RANDOM_DEMO == true? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)));
+    jee.var_create(FPSTR(TCONST_0026), String(DEMO_TIMEOUT).c_str());
 
 
     // далее идут обработчики параметров
 
-    jee.section_handle_add(F("main"), section_main_frame);
-    jee.section_handle_add(F("show_flags"), show_main_flags);
+    jee.section_handle_add(FPSTR(TCONST_007E), section_main_frame);
+    jee.section_handle_add(FPSTR(TCONST_0020), show_main_flags);
 
-    jee.section_handle_add(F("effects"), section_effects_frame);
-    jee.section_handle_add(F("effects_param"), show_effects_param);
-    jee.section_handle_add(F("effList"), set_effects_list);
-    jee.section_handle_add(F("bright"), set_effects_bright);
-    jee.section_handle_add(F("speed"), set_effects_speed);
-    jee.section_handle_add(F("scale"), set_effects_scale);
-    jee.section_handle_add(F("dynCtrl*"), set_effects_dynCtrl);
+    jee.section_handle_add(FPSTR(TCONST_0000), section_effects_frame);
+    jee.section_handle_add(FPSTR(TCONST_0011), show_effects_param);
+    jee.section_handle_add(FPSTR(TCONST_0016), set_effects_list);
+    jee.section_handle_add(FPSTR(TCONST_0012), set_effects_bright);
+    jee.section_handle_add(FPSTR(TCONST_0013), set_effects_speed);
+    jee.section_handle_add(FPSTR(TCONST_0014), set_effects_scale);
+    jee.section_handle_add(FPSTR(TCONST_007F), set_effects_dynCtrl);
 
-    jee.section_handle_add(F("eff_prev"), set_eff_prev);
-    jee.section_handle_add(F("eff_next"), set_eff_next);
+    jee.section_handle_add(FPSTR(TCONST_0022), set_eff_prev);
+    jee.section_handle_add(FPSTR(TCONST_0023), set_eff_next);
 
-    jee.section_handle_add(F("effects_config"), show_effects_config);
-    jee.section_handle_add(F("effListConf"), set_effects_config_list);
-    jee.section_handle_add(F("set_effect"), set_effects_config_param);
+    jee.section_handle_add(FPSTR(TCONST_000F), show_effects_config);
+    jee.section_handle_add(FPSTR(TCONST_0010), set_effects_config_list);
+    jee.section_handle_add(FPSTR(TCONST_0005), set_effects_config_param);
 
-    jee.section_handle_add(F("ONflag"), set_onflag);
-    jee.section_handle_add(F("Demo"), set_demoflag);
-    jee.section_handle_add(F("GBR"), set_gbrflag);
+    jee.section_handle_add(FPSTR(TCONST_001A), set_onflag);
+    jee.section_handle_add(FPSTR(TCONST_001B), set_demoflag);
+    jee.section_handle_add(FPSTR(TCONST_001C), set_gbrflag);
 #ifdef OTA
-    jee.section_handle_add(F("OTA"), set_otaflag);
+    jee.section_handle_add(FPSTR(TCONST_0027), set_otaflag);
 #endif
 #ifdef AUX_PIN
-    jee.section_handle_add(F("AUX"), set_auxflag);
+    jee.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
 #endif
 
-    jee.section_handle_add(F("lamp"), section_lamp_frame);
-    jee.section_handle_add(F("textsend"), set_lamp_textsend);
-    jee.section_handle_add(F("add_lamp_config"), edit_lamp_config);
-    jee.section_handle_add(F("edit_lamp_config"), edit_lamp_config);
+    jee.section_handle_add(FPSTR(TCONST_0003), section_lamp_frame);
+    jee.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
+    jee.section_handle_add(FPSTR(TCONST_0030), edit_lamp_config);
+    jee.section_handle_add(FPSTR(TCONST_0029), edit_lamp_config);
 
-    jee.section_handle_add(F("settings"), section_settings_frame);
-    jee.section_handle_add(F("show_wifi"), show_settings_wifi);
-    jee.section_handle_add(F("set_wifi"), set_settings_wifi);
-    jee.section_handle_add(F("set_wifiAP"), set_settings_wifiAP);
-    jee.section_handle_add(F("set_mqtt"), set_settings_mqtt);
-    jee.section_handle_add(F("show_other"), show_settings_other);
-    jee.section_handle_add(F("set_other"), set_settings_other);
-    jee.section_handle_add(F("show_time"), show_settings_time);
-    jee.section_handle_add(F("set_time"), set_settings_time);
+    jee.section_handle_add(FPSTR(TCONST_0004), section_settings_frame);
+    jee.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
+    jee.section_handle_add(FPSTR(TCONST_003E), set_settings_wifi);
+    jee.section_handle_add(FPSTR(TCONST_0042), set_settings_wifiAP);
+    jee.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
+    jee.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
+    jee.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
+    jee.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
+    jee.section_handle_add(FPSTR(TCONST_0056), set_settings_time);
 #ifdef MIC_EFFECTS
-    jee.section_handle_add(F("show_mic"), show_settings_mic);
-    jee.section_handle_add(F("set_mic"), set_settings_mic);
-    jee.section_handle_add(F("Mic"), set_micflag);
-    jee.section_handle_add(F("mic_cal"), set_settings_mic_calib);
+    jee.section_handle_add(FPSTR(TCONST_0079), show_settings_mic);
+    jee.section_handle_add(FPSTR(TCONST_0038), set_settings_mic);
+    jee.section_handle_add(FPSTR(TCONST_001E), set_micflag);
+    jee.section_handle_add(FPSTR(TCONST_003C), set_settings_mic_calib);
 #endif
-    jee.section_handle_add(F("show_event"), show_settings_event);
-    jee.section_handle_add(F("event_conf"), show_event_conf);
-    jee.section_handle_add(F("set_event"), set_event_conf);
-    jee.section_handle_add(F("Events"), set_eventflag);
+    jee.section_handle_add(FPSTR(TCONST_005C), show_settings_event);
+    jee.section_handle_add(FPSTR(TCONST_005D), show_event_conf);
+    jee.section_handle_add(FPSTR(TCONST_006C), set_event_conf);
+    jee.section_handle_add(FPSTR(TCONST_001D), set_eventflag);
 #ifdef ESP_USE_BUTTON
-    jee.section_handle_add(F("show_butt"), show_settings_butt);
-    jee.section_handle_add(F("butt_conf"), show_butt_conf);
-    jee.section_handle_add(F("set_butt"), set_butt_conf);
-    jee.section_handle_add(F("Btn"), set_btnflag);
+    jee.section_handle_add(FPSTR(TCONST_0076), show_settings_butt);
+    jee.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
+    jee.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
+    jee.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
 #endif
 }
 
@@ -1484,47 +1485,47 @@ void sync_parameters(){
     DynamicJsonDocument doc(1024);
     JsonObject obj = doc.to<JsonObject>();
 
-    CALL_SETTER(F("Events"), jee.param(F("Events")), set_eventflag);
-    CALL_SETTER(F("GBR"), jee.param(F("GBR")), set_gbrflag);
+    CALL_SETTER(FPSTR(TCONST_001D), jee.param(FPSTR(TCONST_001D)), set_eventflag);
+    CALL_SETTER(FPSTR(TCONST_001C), jee.param(FPSTR(TCONST_001C)), set_gbrflag);
 
     if (myLamp.IsGlobalBrightness()) {
-        CALL_SETTER(F("bright"), jee.param(F("GlobBRI")), set_effects_bright);
+        CALL_SETTER(FPSTR(TCONST_0012), jee.param(FPSTR(TCONST_0018)), set_effects_bright);
     }
 
 #ifdef RESTORE_STATE
-    CALL_SETTER(F("ONflag"), jee.param(F("ONflag")), set_onflag);
-    CALL_SETTER(F("Demo"), jee.param(F("Demo")), set_demoflag);
+    CALL_SETTER(FPSTR(TCONST_001A), jee.param(FPSTR(TCONST_001A)), set_onflag);
+    CALL_SETTER(FPSTR(TCONST_001B), jee.param(FPSTR(TCONST_001B)), set_demoflag);
 #endif
 
-    CALL_SETTER(F("effList"), jee.param(F("effList")), set_effects_list);
+    CALL_SETTER(FPSTR(TCONST_0016), jee.param(FPSTR(TCONST_0016)), set_effects_list);
 
 #ifdef AUX_PIN
-    CALL_SETTER(F("AUX"), jee.param(F("AUX")), set_auxflag);
+    CALL_SETTER(FPSTR(TCONST_000E), jee.param(FPSTR(TCONST_000E)), set_auxflag);
 #endif
 
 #ifdef MIC_EFFECTS
-    CALL_SETTER(F("Mic"), jee.param(F("Mic")), set_micflag);
+    CALL_SETTER(FPSTR(TCONST_001E), jee.param(FPSTR(TCONST_001E)), set_micflag);
 
-    obj[F("micScale")] = jee.param(F("micScale"));
-    obj[F("micNoise")] = jee.param(F("micNoise"));
-    obj[F("micnRdcLvl")] = jee.param(F("micnRdcLvl"));
+    obj[FPSTR(TCONST_0039)] = jee.param(FPSTR(TCONST_0039));
+    obj[FPSTR(TCONST_003A)] = jee.param(FPSTR(TCONST_003A));
+    obj[FPSTR(TCONST_003B)] = jee.param(FPSTR(TCONST_003B));
     set_settings_mic(nullptr, &obj);
     obj.clear();
 #endif
 
 #ifdef ESP_USE_BUTTON
-    CALL_SETTER(F("Btn"), jee.param(F("Btn")), set_btnflag);
+    CALL_SETTER(FPSTR(TCONST_001F), jee.param(FPSTR(TCONST_001F)), set_btnflag);
 #endif
 
-    obj[F("isFaderON")] = jee.param(F("isFaderON"));
-    obj[F("MIRR_H")] = jee.param(F("MIRR_H"));
-    obj[F("MIRR_V")] = jee.param(F("MIRR_V"));
-    obj[F("effSort")] = jee.param(F("effSort"));
-    obj[F("txtSpeed")] = jee.param(F("txtSpeed"));
-    obj[F("txtOf")] = jee.param(F("txtOf"));
-    obj[F("perTime")] = jee.param(F("perTime"));
-    obj[F("ny_period")] = jee.param(F("ny_period"));
-    obj[F("ny_unix")] = jee.param(F("ny_unix"));
+    obj[FPSTR(TCONST_004E)] = jee.param(FPSTR(TCONST_004E));
+    obj[FPSTR(TCONST_004C)] = jee.param(FPSTR(TCONST_004C));
+    obj[FPSTR(TCONST_004D)] = jee.param(FPSTR(TCONST_004D));
+    obj[FPSTR(TCONST_0050)] = jee.param(FPSTR(TCONST_0050));
+    obj[FPSTR(TCONST_0051)] = jee.param(FPSTR(TCONST_0051));
+    obj[FPSTR(TCONST_0052)] = jee.param(FPSTR(TCONST_0052));
+    obj[FPSTR(TCONST_0053)] = jee.param(FPSTR(TCONST_0053));
+    obj[FPSTR(TCONST_0054)] = jee.param(FPSTR(TCONST_0054));
+    obj[FPSTR(TCONST_0055)] = jee.param(FPSTR(TCONST_0055));
     set_settings_other(nullptr, &obj);
     obj.clear();
 }
@@ -1550,40 +1551,40 @@ void remote_action(RA action, ...){
 
     switch (action) {
         case RA::RA_ON:
-            CALL_INTF(F("ONflag"), F("true"), set_onflag);
+            CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag);
             break;
         case RA::RA_OFF:
-            CALL_INTF(F("ONflag"), F("false"), set_onflag);
+            CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE), set_onflag);
             break;
         case RA::RA_DEMO:
-            CALL_INTF(F("ONflag"), F("true"), set_onflag); // включим, если было отключено
-            CALL_INTF(F("Demo"), F("true"), set_demoflag);
+            CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено
+            CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFF), set_demoflag);
             myLamp.startDemoMode();
             break;
         case RA::RA_DEMO_NEXT:
-            if (jee.param(F("DRand")) == F("true")) {
+            if (jee.param(FPSTR(TCONST_004F)) == FPSTR(TCONST_FFFF)) {
                 myLamp.switcheffect(SW_RND, myLamp.getFaderFlag());
             } else {
                 myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
             }
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFFECT: {
-            CALL_INTF(F("effList"), value, set_effects_list);
+            CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list);
             break;
         }
         case RA::RA_BRIGHT_NF:
-            obj[F("nofade")] = true;
+            obj[FPSTR(TCONST_0017)] = true;
         case RA::RA_BRIGHT:
-            CALL_INTF(F("bright"), value, set_effects_bright);
+            CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
             break;
         case RA::RA_SPEED:
-            CALL_INTF(F("speed"), value, set_effects_speed);
+            CALL_INTF(FPSTR(TCONST_0013), value, set_effects_speed);
             break;
         case RA::RA_SCALE:
-            CALL_INTF(F("scale"), value, set_effects_scale);
+            CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
             break;
         case RA::RA_EXTRA:
-            CALL_INTF(F("dynCtrl"), value, set_effects_dynCtrl);
+            CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
             break;
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
@@ -1615,33 +1616,33 @@ void remote_action(RA action, ...){
             ESP.restart(); // так лучше :)
             break;
         case RA::RA_WIFI_REC:
-            CALL_INTF(F("wifi"), F("STA"), set_settings_wifi);
+            CALL_INTF(FPSTR(TINTF_028), FPSTR(TCONST_0080), set_settings_wifi);
             break;
         case RA::RA_LAMP_CONFIG:
             if (value && *value) {
-                String filename = String(F("/glb/"));
+                String filename = String(FPSTR(TCONST_0031));
                 filename.concat(value);
                 jee.load(filename.c_str());
             }
             break;
         case RA::RA_EFF_CONFIG:
             // if (value && *value) {
-            //     String filename = String(F("/cfg/"));
+            //     String filename = String(FPSTR(TCONST_002C));
             //     filename.concat(value);
             //     myLamp.effects.loadConfig(filename.c_str());
             // }
             break;
         case RA::RA_EVENTS_CONFIG:
             if (value && *value) {
-                String filename = String(F("/evn/"));
+                String filename = String(FPSTR(TCONST_0032));
                 filename.concat(value);
                 myLamp.events.loadConfig(filename.c_str());
             }
             break;
         case RA::RA_SEND_TEXT: {
-            String tmpStr = jee.param(F("txtColor"));
+            String tmpStr = jee.param(FPSTR(TCONST_0036));
             if (value && *value) {
-                String tmpStr = jee.param(F("txtColor"));
+                String tmpStr = jee.param(FPSTR(TCONST_0036));
                 tmpStr.replace(F("#"),F("0x"));
                 CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0);
 
@@ -1662,11 +1663,11 @@ void remote_action(RA action, ...){
 #endif
 #ifdef AUX_PIN
         case RA::RA_AUX_ON:
-            obj[F("AUX")] = true;
+            obj[FPSTR(TCONST_000E)] = true;
             set_auxflag(nullptr, &obj);
             break;
         case RA::RA_AUX_OFF:
-            obj[F("AUX")] = false;
+            obj[FPSTR(TCONST_000E)] = false;
             set_auxflag(nullptr, &obj);
             break;
         case RA::RA_AUX_TOGLE:
@@ -1681,29 +1682,29 @@ void httpCallback(const String &param, const String &value){
     RA action = RA_UNKNOWN;
     LOG(printf_P, PSTR("HTTP: %s - %s\n"), param.c_str(), value.c_str());
 
-    if (param == F("on")) action = RA_ON;
-    else if (param == F("off")) action = RA_OFF;
-    else if(param == F("demo")) action = RA_DEMO;
-    else if (param == F("msg")) action = RA_SEND_TEXT;
-    else if (param == F("bright"))  action = RA_BRIGHT;
-    else if (param == F("speed")) action = RA_SPEED;
-    else if (param == F("scale")) action = RA_SCALE;
-    else if (param == F("effect")) action = RA_EFFECT;
-    else if (param == F("move_next")) action = RA_EFF_NEXT;
-    else if (param == F("move_prev")) action = RA_EFF_PREV;
-    else if (param == F("move_rnd")) action = RA_EFF_RAND;
-    else if (param == F("reboot")) action = RA_REBOOT;
-    else if (param == F("alarm")) action = RA_ALARM;
+    if (param == FPSTR(TCONST_0070)) action = RA_ON;
+    else if (param == FPSTR(TCONST_0081)) action = RA_OFF;
+    else if (param == FPSTR(TCONST_001B)) action = RA_DEMO;
+    else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
+    else if (param == FPSTR(TCONST_0012))  action = RA_BRIGHT;
+    else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
+    else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
+    else if (param == FPSTR(TCONST_0082)) action = RA_EFFECT;
+    else if (param == FPSTR(TCONST_0083)) action = RA_EFF_NEXT;
+    else if (param == FPSTR(TCONST_0084)) action = RA_EFF_PREV;
+    else if (param == FPSTR(TCONST_0085)) action = RA_EFF_RAND;
+    else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
+    else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
 #ifdef OTA
-    else if (param == F("OTA")) action = RA_OTA;
+    else if (param == FPSTR(TCONST_0027)) action = RA_OTA;
 #endif
 #ifdef AUX_PIN
-    else if (param == F("aux_on")) action = RA_AUX_ON;
-    else if (param == F("aux_off"))  action = RA_AUX_OFF;
-    else if (param == F("aux_toggle"))  action = RA_AUX_TOGLE;
+    else if (param == FPSTR(TCONST_0088)) action = RA_AUX_ON;
+    else if (param == FPSTR(TCONST_0089))  action = RA_AUX_OFF;
+    else if (param == FPSTR(TCONST_008A))  action = RA_AUX_TOGLE;
 #endif
     remote_action(action, value.c_str(), NULL);
-    jee.publish(String(F("jee/pub/")) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
+    jee.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
 // обработка эвентов лампы
@@ -1736,8 +1737,8 @@ void event_worker(const EVENT *event){
         JsonArray arr = doc.as<JsonArray>();
         for (size_t i = 0; i < arr.size(); i++) {
             JsonObject item = arr[i];
-            uint8_t pin = item[F("pin")].as<int>();
-            String action = item[F("act")].as<String>();
+            uint8_t pin = item[FPSTR(TCONST_008C)].as<int>();
+            String action = item[FPSTR(TCONST_008D)].as<String>();
             pinMode(pin, OUTPUT);
             switch(action.c_str()[0]){
                 case 'H':
