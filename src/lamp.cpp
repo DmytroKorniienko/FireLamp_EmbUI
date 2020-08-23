@@ -131,7 +131,7 @@ void LAMP::handle()
 #ifdef LAMP_DEBUG
 EVERY_N_SECONDS(15){
   // fps counter
-  LOG(printf, "Eff:%d FPS: %u\n", effects.getEn(), fps);
+  LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), fps);
   LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
 }
   fps = 0;

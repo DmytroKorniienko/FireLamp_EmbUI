@@ -21,7 +21,7 @@ static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";  
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
-        LOG(printf, "ws[%s][%u] connect MEM: %u\n", server->url(), client->id(), ESP.getFreeHeap());
+        LOG(printf_P, PSTR("ws[%s][%u] connect MEM: %u\n"), server->url(), client->id(), ESP.getFreeHeap());
 
         Interface *interf = new Interface(&jee, client);
         section_main_frame(interf, nullptr);
@@ -29,13 +29,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
     } else
     if(type == WS_EVT_DISCONNECT){
-        LOG(printf, "ws[%s][%u] disconnect\n", server->url(), client->id());
+        LOG(printf_P, PSTR("ws[%s][%u] disconnect\n"), server->url(), client->id());
     } else
     if(type == WS_EVT_ERROR){
-        LOG(printf, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        LOG(printf_P, PSTR("ws[%s][%u] error(%u): %s\n"), server->url(), client->id(), *((uint16_t*)arg), (char*)data);
     } else
     if(type == WS_EVT_PONG){
-        LOG(printf, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        LOG(printf_P, PSTR("ws[%s][%u] pong[%u]: %s\n"), server->url(), client->id(), len, (len)?(char*)data:"");
     } else
     if(type == WS_EVT_DATA){
         AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -357,8 +357,8 @@ void jeeui2::begin(){
 
     // server all files from LittleFS root
     server.serveStatic("/", LittleFS, "/")
-        .setDefaultFile("index.html")
-        .setCacheControl("max-age=14400");
+        .setDefaultFile(PSTR("index.html"))
+        .setCacheControl(PSTR("max-age=14400"));
 
     server.onNotFound(notFound);
 

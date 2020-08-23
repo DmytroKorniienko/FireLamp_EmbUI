@@ -385,7 +385,7 @@ bool Interface::json_frame_add(JsonObject obj) {
     LOG(printf_P, PSTR("json_frame_add: %u = %u "), obj.memoryUsage(), json.capacity() - json.memoryUsage());
     if (json.capacity() - json.memoryUsage() > obj.memoryUsage() + 40 && section_stack.end()->block.add(obj)) {
         section_stack.end()->idx++;
-        LOG(printf, PSTR("OK [%u]  MEM: %u\n"), section_stack.end()->idx, ESP.getFreeHeap());
+        LOG(printf_P, PSTR("OK [%u]  MEM: %u\n"), section_stack.end()->idx, ESP.getFreeHeap());
         return true;
     }
     LOG(printf_P, PSTR("BAD  MEM: %u\n"), ESP.getFreeHeap());
@@ -474,7 +474,7 @@ void Interface::json_section_begin(const String &name, const String &label, bool
     section->block = obj.createNestedArray(F("block"));
     section->idx = 0;
     section_stack.add(section);
-    LOG(printf, PSTR("section begin %s [%u] %u\n"), name.c_str(), section_stack.size(), json.capacity() - json.memoryUsage());
+    LOG(printf_P, PSTR("section begin %s [%u] %u\n"), name.c_str(), section_stack.size(), json.capacity() - json.memoryUsage());
 }
 
 void Interface::json_section_end(){
@@ -484,6 +484,6 @@ void Interface::json_section_end(){
     if (section_stack.size()) {
         section_stack.end()->idx++;
     }
-    LOG(printf, PSTR("section end %s [%u] MEM: %u\n"), section->name.c_str(), section_stack.size(), ESP.getFreeHeap());
+    LOG(printf_P, PSTR("section end %s [%u] MEM: %u\n"), section->name.c_str(), section_stack.size(), ESP.getFreeHeap());
     delete section;
 }
