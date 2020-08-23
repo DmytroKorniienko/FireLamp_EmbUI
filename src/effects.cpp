@@ -2110,7 +2110,7 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
   }
   //myLamp.blur2d(beatsin8(5U, 3U, 10U));
   //myLamp.dimAll(map(scale, 1, 255, 170, 255));
-  fadeToBlackBy(leds, NUM_LEDS, 30/*map(scale, 1, 255, 170, 255)*/);
+  fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed/255/*map(scale, 1, 255, 170, 255)*/);
 
 
   for (float offset = 0.0f; offset <= (float)(WIDTH-1) / 2U; offset += 0.5f)
@@ -3522,9 +3522,9 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
   if (dryrun())
     return false;
     
-  if (csum != (speed^scale)) {
+  if (csum != (127U^scale)) {
     regen = true;
-    csum = speed^scale;
+    csum = 127U^scale;
   }
   return aquariumRoutine(*&ledarr, &*opt);
 }
@@ -3601,9 +3601,9 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 bool EffectStar::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun())
     return false;
-  if (csum != (speed^scale)) {
+  if (csum != (127U^scale)) {
     regen = true;
-    csum = speed^scale;
+    csum = 127U^scale;
   }
   return starRoutine(*&ledarr, &*opt);
 }
@@ -3622,8 +3622,8 @@ void EffectStar::drawStar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t l
     myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), myLamp.isMicOnOff() ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
 #else
     // две строчки выше - рисуют звезду просто по оттенку, а две строчки ниже - берут цвет из текущей палитры
-    //myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
-    //myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
+    myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
+    myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
 #endif
     }
 }
@@ -4059,8 +4059,7 @@ if (spd == 127) {
 
     y[0] = y[1];
     y[1] = EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (getCtrlVal(3).toInt()-1), (pointer * 2) - (getCtrlVal(3).toInt()-1), 0.0f, float(OSC_HV - 1U)); 
-    //1.0f + EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), float(0U + getCtrlVal(3).toInt()), float(1024U - getCtrlVal(3).toInt()), 0.0f, float(OSC_HV - 1U)); 
-    delayMicroseconds((uint16_t)((myLamp.isMicOnOff() ? /*512.0f*/ 1024U : 1568U) * div));
+    delayMicroseconds((uint16_t)((myLamp.isMicOnOff() ? 1024U : 1568U) * div));
   
   }  
 
