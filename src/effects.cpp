@@ -79,7 +79,7 @@ bool EffectCalc::status(){return active;}
  */
 void EffectCalc::setbrt(const byte _brt){
   brightness = _brt;
-  //LOG(printf, "Worker brt: %d\n", brightness);
+  //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
 }
 
 /**
@@ -87,7 +87,7 @@ void EffectCalc::setbrt(const byte _brt){
  */
 void EffectCalc::setspd(const byte _spd){
   speed = _spd;
-  //LOG(printf, "Worker speed: %d\n", speed);
+  //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
 }
 
 /**
@@ -95,7 +95,7 @@ void EffectCalc::setspd(const byte _spd){
  */
 void EffectCalc::setscl(byte _scl){
   scale = _scl;
-  //LOG(printf, "Worker scale: %d\n", scale);
+  //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
 
   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete))){   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры
     palettemap(palettes, _scl);
@@ -2295,7 +2295,7 @@ bool EffectRain::run(CRGB *ledarr, EffectWorker *opt){
     return false;
 
   EVERY_N_SECONDS(3){
-    LOG(printf, "speed: %d, scale: %d\n", speed, scale);
+    LOG(printf_P, PSTR("speed: %d, scale: %d\n"), speed, scale);
   }
 
   switch (effect)
