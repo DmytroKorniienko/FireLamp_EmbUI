@@ -3618,10 +3618,10 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 
 // ------- Эффект "Звезды"
 bool EffectStar::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
+  // if (dryrun())
+  //   return false;
   if (csum != (127U^scale)) {
-    regen = true;
+    setup = true;
     csum = 127U^scale;
   }
   return starRoutine(*&ledarr, &*opt);
@@ -3631,7 +3631,7 @@ void EffectStar::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-void EffectStar::drawStar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler)// random multipoint star
+void EffectStar::drawStar(float xlocl, float ylocl, float biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler)// random multipoint star
 {
   radius2 = 255 / points;
   for (int i = 0; i < points; i++)
@@ -3648,57 +3648,62 @@ void EffectStar::drawStar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t l
 }
 
 bool EffectStar::starRoutine(CRGB *leds, EffectWorker *param) {
-  if (regen) {
-    byte _speed = speed;
-    counter = 0;
-    driftx = random8(4, WIDTH - 4);//set an initial location for the animation center
-    drifty = random8(4, HEIGHT - 4);// set an initial location for the animation center
-    
-    cangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation gives a float value between -1 and 1
-    sangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation in the y direction gives a float value between -1 and 1
-    //shifty = random (3, 12);//how often the drifter moves будет CENTER_DRIFT_SPEED = 6
+  
+if (setup) { // однократная настройка при старте эффекта
+  float _speed = speed;
+  counter = 0;
+  driftx = random8(4, WIDTH - 4);//set an initial location for the animation center
+  drifty = random8(4, HEIGHT - 4);// set an initial location for the animation center
+  
+  cangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation gives a float value between -1 and 1
+  sangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation in the y direction gives a float value between -1 and 1
+  //shifty = random (3, 12);//how often the drifter moves будет CENTER_DRIFT_SPEED = 6
 
-    bballsNUM = WIDTH / 2U;
-    if (bballsNUM > bballsMaxNUM_BALLS) bballsNUM = bballsMaxNUM_BALLS;
-    for (uint8_t num = 0; num < bballsNUM; num++) {
-      bballsX[num] = random8(3, 9); // количество углов в звезде
-      bballsPos[num] = _speed / 5 + (num << 2) + 1U; // задержка следующего пуска звезды
-      bballsCOLOR[num] = random8();
-    }
-    regen = false;
+  stars_count = WIDTH / 2U;
+  if (stars_count > STARS_NUM) stars_count = STARS_NUM;
+  for (uint8_t num = 0; num < stars_count; num++) {
+    points[num] = random8(3, 9); // количество углов в звезде
+    delay[num] = _speed / 5 + (num << 2) + 1U; // задержка следующего пуска звезды
+    color[num] = random8();
   }
+  setup = false;
+}
+
 #ifdef MIC_EFFECTS
   micPick = myLamp.getMicMaxPeak();
   myLamp.dimAll(myLamp.isMicOnOff() ? micPick*2 : 90);
 #else
   myLamp.dimAll(90);
 #endif
-  counter++;
+
+  float _scalefactor = ((float)speed/512.0+0.01);
+
+  counter+=_scalefactor; // определяет то, с какой скоростью будет приближаться звезда
 
   if (driftx > (WIDTH - spirocenterX / 2U))//change directin of drift if you get near the right 1/4 of the screen
     cangle = 0 - fabs(cangle);
   if (driftx < spirocenterX / 2U)//change directin of drift if you get near the right 1/4 of the screen
     cangle = fabs(cangle);
-  if (counter % CENTER_DRIFT_SPEED == 0)
-    driftx = driftx + cangle;//move the x center every so often
+  if ((uint16_t)counter % CENTER_DRIFT_SPEED == 0)
+    driftx = driftx + (cangle * _scalefactor);//move the x center every so often
 
   if (drifty > ( HEIGHT - spirocenterY / 2U))// if y gets too big, reverse
     sangle = 0 - fabs(sangle);
   if (drifty < spirocenterY / 2U) // if y gets too small reverse
     sangle = fabs(sangle);
   //if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0)
-  if (counter % CENTER_DRIFT_SPEED == 0)
-    drifty =  drifty + sangle;//move the y center every so often
+  if ((uint16_t)counter % CENTER_DRIFT_SPEED == 0)
+    drifty =  drifty + (sangle * _scalefactor);//move the y center every so often
 
-  for (uint8_t num = 0; num < bballsNUM; num++) {
-    if (counter >= bballsPos[num])//(counter >= ringdelay)
+  for (uint8_t num = 0; num < stars_count; num++) {
+    if (counter >= delay[num])//(counter >= ringdelay)
     {
-      if (counter - bballsPos[num] <= WIDTH + 5) { 
-        EffectStar::drawStar(driftx  , drifty, 2 * (counter - bballsPos[num]), (counter - bballsPos[num]), bballsX[num], STAR_BLENDER + bballsCOLOR[num], bballsCOLOR[num] * 2);//, h * 2 + 85);// что, бл, за 85?!
-        bballsCOLOR[num]++;
+      if (counter - delay[num] <= WIDTH + 5) { 
+        EffectStar::drawStar(driftx, drifty, 2 * (counter - delay[num]), (counter - delay[num]), points[num], STAR_BLENDER + color[num], color[num] * 2);//, h * 2 + 85);// что, бл, за 85?!
+        color[num]++;
       }
       else
-        bballsPos[num] = counter + (bballsNUM << 1) + 1U;//random8(50, 99);//modes[currentMode].Scale;//random8(50, 99); // задержка следующего пуска звезды
+        delay[num] = counter + (stars_count << 1) + 1U;//random8(50, 99);//modes[currentMode].Scale;//random8(50, 99); // задержка следующего пуска звезды
     }
   }
 #ifdef MIC_EFFECTS

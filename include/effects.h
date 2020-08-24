@@ -1029,6 +1029,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+#define STARS_NUM (16)
 // ----------- Эффект "Звезды" 
 class EffectStar : public EffectCalc {
 private:
@@ -1037,19 +1038,19 @@ private:
     float cangle;
     float sangle;
     uint8_t radius2;
-    uint8_t bballsNUM;
-    uint8_t bballsCOLOR[bballsMaxNUM_BALLS] ;                   // цвет звезды (используем повторно массив эффекта Мячики)
-    uint8_t bballsX[bballsMaxNUM_BALLS] ;                       // количество углов в звезде (используем повторно массив эффекта Мячики)
-    unsigned int bballsPos[bballsMaxNUM_BALLS] ;                 // задержка пуска звезды относительно счётчика (используем повторно массив эффекта Мячики)
-    //uint8_t bballsNUM;
-    unsigned int counter = 0;                                    // количество звёзд 
+    uint8_t stars_count;
+    uint8_t color[STARS_NUM] ;                        // цвет звезды
+    uint8_t points[STARS_NUM] ;                       // количество углов в звезде
+    unsigned int delay[STARS_NUM] ;                   // задержка пуска звезды относительно счётчика
+
+    float counter = 0;                                // счетчик для реализации смещений, наростания и т.д. 
     uint8_t csum = 0;
-    bool regen = true;
+    bool setup = true;
     uint8_t micPick = 0;
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
     bool starRoutine(CRGB *leds, EffectWorker *param);
-    void drawStar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler);
+    void drawStar(float xlocl, float ylocl, float biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler);
 
 public:
     void load() override;
