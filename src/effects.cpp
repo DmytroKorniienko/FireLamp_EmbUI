@@ -2105,32 +2105,51 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 {
   
-  if (curPalette == nullptr) {
-    return false;
-  }
-  //myLamp.blur2d(beatsin8(5U, 3U, 10U));
-  //myLamp.dimAll(map(scale, 1, 255, 170, 255));
-  fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed/255/*map(scale, 1, 255, 170, 255)*/);
+  // if (curPalette == nullptr) {
+  //   return false;
+  // }
+  // //myLamp.blur2d(beatsin8(5U, 3U, 10U));
+  // //myLamp.dimAll(map(scale, 1, 255, 170, 255));
+  // fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed/255/*map(scale, 1, 255, 170, 255)*/);
 
 
-  for (float offset = 0.0f; offset <= (float)(WIDTH-1) / 2U; offset += 0.5f)
-  {
-    float x = (float)EffectMath::mapsincos8(MAP_COS, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
-    float y = (float)EffectMath::mapsincos8(MAP_SIN, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
-    CRGB color =  ColorFromPalette(*curPalette, hue /*255 - (offset * 16U + eff_offset)*/);
-    myLamp.drawPixelXYF(x, y, color);
+  // for (float offset = 0.0f; offset <= (float)(WIDTH-1) / 2U; offset += 0.5f)
+  // {
+  //   float x = (float)EffectMath::mapsincos8(MAP_COS, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
+  //   float y = (float)EffectMath::mapsincos8(MAP_SIN, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
+  //   CRGB color =  ColorFromPalette(*curPalette, hue /*255 - (offset * 16U + eff_offset)*/);
+  //   myLamp.drawPixelXYF(x, y, color);
     
-    EVERY_N_MILLIS(25)
+  //   EVERY_N_MILLIS(25)
+  //   {
+  //     eff_theta += 5.5f * ((float)(speed) /255.0f)+1;
+  //     eff_offset += 3.5f * ((float)(255 - speed) /255.0f)+1;
+  //     hue = random8();
+  //     hue ++;
+  //   }
+
+  //    //hue = beatsin8(100);
+
+  // }  
+
+  // В случае переделки эффекта на нечто другое, прошу сделать не хуже, чем есть.
+
+  uint8_t scale = palettescale; // диапазоны внутри палитры, влияют на степень размытия хвоста
+  myLamp.blur2d(beatsin8(5U, 3U, 10U));
+  myLamp.dimAll(255U - (0 + scale*3));
+
+  for (uint8_t offset = 0U; offset < WIDTH / 2U - 1U; offset++)
+  {
+    myLamp.setLeds(myLamp.getPixelNumber(EffectMath::mapsincos8(MAP_COS, eff_theta, offset, (WIDTH - 1U)-offset),
+                   EffectMath::mapsincos8(MAP_SIN, eff_theta, offset, (WIDTH - 1U)-offset)),
+                   ColorFromPalette(*curPalette, 255U - (offset * 16U + eff_offset)));
+    
+    EVERY_N_MILLIS(24)
     {
-      eff_theta += 5.5f * ((float)(speed) /255.0f)+1;
-      eff_offset += 3.5f * ((float)(255 - speed) /255.0f)+1;
-      hue = random8();
-      hue ++;
+      eff_theta += 5.5*(speed/255.0)+1;
+      eff_offset += 3.5*((255-speed)/255.0)+1;
     }
-
-     //hue = beatsin8(100);
-
-  }  
+  }
 
   return true;
 }
