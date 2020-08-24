@@ -60,7 +60,7 @@ void AUX_toggle(bool key)
 #endif
 
 void pubCallback(Interface *interf){
-    return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
+    //return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
     interf->value(FPSTR(TCONST_0001), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(FPSTR(TCONST_0002), String(ESP.getFreeHeap()), true);
@@ -1414,9 +1414,9 @@ void create_parameters(){
 
     jee.var_create(FPSTR(TCONST_001D), FPSTR(TCONST_FFFE));
 
-    jee.var_create(FPSTR(TCONST_004E), (FADE == true? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)));
-    jee.var_create(FPSTR(TCONST_004F), (RANDOM_DEMO == true? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)));
-    jee.var_create(FPSTR(TCONST_0026), String(DEMO_TIMEOUT).c_str());
+    jee.var_create(FPSTR(TCONST_004E), FPSTR(TCONST_FFFE));
+    jee.var_create(FPSTR(TCONST_004F), FPSTR(TCONST_FFFE));
+    jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
 
     // далее идут обработчики параметров

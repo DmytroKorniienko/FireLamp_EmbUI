@@ -167,9 +167,6 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 #endif
 
-#ifndef FADE
-#define FADE                  (true)                        // fade by default on brightness change
-#endif
 #ifndef FADE_STEPTIME
 #define FADE_STEPTIME         (50U)                         // default time between fade steps, ms (2 seconds with max steps)
 #endif
@@ -183,12 +180,6 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define FADE_MINCHANGEBRT     (30U)                         // Minimal brightness for effects changer
 #endif
 
-#ifndef RANDOM_DEMO
-#define RANDOM_DEMO           (true)                        // false - последовательный, true - рандомный
-#endif
-#ifndef DEMO_TIMEOUT
-#define DEMO_TIMEOUT          (33)                          // время в секундах для смены режима DEMO
-#endif
 #ifndef USELEDBUF
 #define USELEDBUF                                           // буфер под эффекты, можно закомментировать, в случае если нужно сэкономить память, но будут артефакты обработки
 #endif

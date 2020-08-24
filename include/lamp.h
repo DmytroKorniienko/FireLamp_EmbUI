@@ -273,7 +273,7 @@ public:
 
     void startAlarm();
     void stopAlarm();
-    void startDemoMode(byte tmout = DEMO_TIMEOUT);
+    void startDemoMode(byte tmout = 60); // дефолтное значение, настраивается из UI
     void startNormalMode();
 #ifdef OTA
     void startOTAUpdate();
@@ -318,7 +318,7 @@ public:
      * @param bool fade - use fade effect on brightness change
      * @param bool natural - apply dim8 function for natural brightness controll
      */
-    void setBrightness(const uint8_t _tgtbrt, const bool fade=FADE, const bool natural=true);
+    void setBrightness(const uint8_t _tgtbrt, const bool fade=false, const bool natural=true);
 
     /*
      * Get current brightness
@@ -346,13 +346,13 @@ public:
      * @param effnb - номер эффекта
      * skip - системное поле - пропуск фейдера
      */
-    void switcheffect(EFFSWITCH action = SW_NONE, bool fade = FADE, uint16_t effnb = EFF_ENUM::EFF_NONE, bool skip = false);
+    void switcheffect(EFFSWITCH action = SW_NONE, bool fade = false, uint16_t effnb = EFF_ENUM::EFF_NONE, bool skip = false);
 
     /*
      * включает/выключает "демо"-таймер
      * @param TICKER action - enable/disable/reset
      */
-    void demoTimer(SCHEDULER action, byte tmout = DEMO_TIMEOUT);
+    void demoTimer(SCHEDULER action, byte tmout = 60); // дефолтное значение, настраивается из UI
 
     /*
      * включает/выключает "эффект"-таймер
