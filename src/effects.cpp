@@ -3620,10 +3620,10 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 bool EffectStar::run(CRGB *ledarr, EffectWorker *opt){
   // if (dryrun())
   //   return false;
-  if (csum != (127U^scale)) {
-    setup = true;
-    csum = 127U^scale;
-  }
+  // if (csum != (127U^scale)) {
+  //   setup = true;
+  //   csum = 127U^scale;
+  // }
   return starRoutine(*&ledarr, &*opt);
 }
 
