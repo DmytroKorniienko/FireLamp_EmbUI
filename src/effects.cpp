@@ -3679,9 +3679,11 @@ if (setup) { // однократная настройка при старте э
 
 #ifdef MIC_EFFECTS
   micPick = myLamp.getMicMaxPeak();
-  myLamp.dimAll(myLamp.isMicOnOff() ? micPick*2 : 90);
+  //myLamp.dimAll(myLamp.isMicOnOff() ? micPick*2 : 90);
+  fadeToBlackBy(leds, NUM_LEDS, 255U - (myLamp.isMicOnOff() ? micPick*2 : 90)); // работает быстрее чем dimAll
 #else
-  myLamp.dimAll(90);
+  fadeToBlackBy(leds, NUM_LEDS, 165));
+  //myLamp.dimAll(90);
 #endif
 
   float _scalefactor = ((float)speed/512.0+0.05);
@@ -3715,7 +3717,7 @@ if (setup) { // однократная настройка при старте э
     }
   }
 #ifdef MIC_EFFECTS
-  myLamp.blur2d(myLamp.isMicOnOff() ? micPick : 30U);
+  myLamp.blur2d(myLamp.isMicOnOff() ? micPick/2 : 30U); //fadeToBlackBy() сам блурит, уменьшил блур под микрофон
 #else
   myLamp.blur2d(30U);
 #endif
