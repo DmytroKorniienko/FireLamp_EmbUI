@@ -765,7 +765,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
     interf->text(FPSTR(TCONST_003F), FPSTR(TINTF_02B));
-    interf->text(FPSTR(TCONST_0040), WiFi.SSID(), FPSTR(TINTF_02C));
+    interf->text(FPSTR(TCONST_0040), WiFi.SSID(), FPSTR(TINTF_02C), false);
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(TCONST_0008));
     interf->json_section_end();
@@ -948,9 +948,9 @@ void show_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
 
-        String datetime=(*data)[FPSTR(TCONST_0059)];
-        if (datetime.length())
-            myLamp.timeProcessor.setTime(datetime);
+    String datetime=(*data)[FPSTR(TCONST_0059)];
+    if (datetime.length())
+        myLamp.timeProcessor.setTime(datetime);
 
     SETPARAM(FPSTR(TCONST_0057), myLamp.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
     SETPARAM(FPSTR(TCONST_0058), myLamp.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
@@ -1132,16 +1132,16 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->datetime(FPSTR(TCONST_006B), event.getDateTime(), FPSTR(TINTF_06D));
     interf->number(FPSTR(TCONST_0069), event.repeat, FPSTR(TINTF_06E));
     interf->number(FPSTR(TCONST_006A), event.stopat, FPSTR(TINTF_06F));
-    interf->text(FPSTR(TCONST_0035), String(event.message), FPSTR(TINTF_070));
+    interf->text(FPSTR(TCONST_0035), String(event.message), FPSTR(TINTF_070), false);
 
     interf->json_section_hidden(FPSTR(TCONST_0069), FPSTR(TINTF_071));
     interf->checkbox(FPSTR(TCONST_0061), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_072), false);
-    interf->checkbox(FPSTR(TCONST_0062), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_073), false);
-    interf->checkbox(FPSTR(TCONST_0063), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_074), false);
-    interf->checkbox(FPSTR(TCONST_0064), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_075), false);
-    interf->checkbox(FPSTR(TCONST_0065), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_076), false);
-    interf->checkbox(FPSTR(TCONST_0066), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_077), false);
-    interf->checkbox(FPSTR(TCONST_0067), (event.d1? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_078), false);
+    interf->checkbox(FPSTR(TCONST_0062), (event.d2? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_073), false);
+    interf->checkbox(FPSTR(TCONST_0063), (event.d3? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_074), false);
+    interf->checkbox(FPSTR(TCONST_0064), (event.d4? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_075), false);
+    interf->checkbox(FPSTR(TCONST_0065), (event.d5? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_076), false);
+    interf->checkbox(FPSTR(TCONST_0066), (event.d6? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_077), false);
+    interf->checkbox(FPSTR(TCONST_0067), (event.d7? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), FPSTR(TINTF_078), false);
     interf->json_section_end();
 
     if (edit) {
@@ -1502,6 +1502,9 @@ void sync_parameters(){
 #ifdef AUX_PIN
     CALL_SETTER(FPSTR(TCONST_000E), jee.param(FPSTR(TCONST_000E)), set_auxflag);
 #endif
+
+// do{ yield(); } while (1==0);
+// ниже возникает wdt reset при включенной build_type = debug - причина неустановлена
 
 #ifdef MIC_EFFECTS
     CALL_SETTER(FPSTR(TCONST_001E), jee.param(FPSTR(TCONST_001E)), set_micflag);

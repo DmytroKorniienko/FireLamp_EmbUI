@@ -88,9 +88,6 @@ void setup() {
     ftp_setup(); // запуск ftp-сервера
 #endif
 
-    sync_parameters();
-    jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
-
 #ifdef ESP_USE_BUTTON
     attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
 #endif
@@ -100,16 +97,17 @@ void setup() {
     myLamp.timeProcessor.setcustomntp((jee.param(F("userntp")).c_str()));
     myLamp.events.setEventCallback(event_worker);
     myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, true));
+
+    sync_parameters();
+    jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 }
 
 void loop() {
     jee.handle(); // цикл, необходимый фреймворку
-
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
-
-    // по-моему эта функция уже давно ничего по мкутт не отправляет
-    //sendData(); // цикл отправки данных по MQTT
+    // эта функция будет слать периодическую информацию, но позже, когда до этого руки дойдут
+    sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
 #endif
@@ -129,13 +127,7 @@ void sendData(){
   in = myLamp.getmqtt_int();
   // всё, что ниже будет выполняться через интервалы
 
-
-#ifdef ESP8266
-  LOG(printf_P, PSTR("MQTT send data, MEM: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
-#else
-  LOG(printf_P, PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
-#endif
-
+  // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
 }
 
 #ifdef ESP_USE_BUTTON
