@@ -3686,7 +3686,7 @@ if (setup) { // однократная настройка при старте э
   //myLamp.dimAll(90);
 #endif
 
-  float _scalefactor = ((float)speed/512.0+0.05);
+  float _scalefactor = ((float)speed/380.0+0.05);
 
   counter+=_scalefactor; // определяет то, с какой скоростью будет приближаться звезда
 
