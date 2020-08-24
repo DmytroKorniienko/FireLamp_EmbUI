@@ -1060,6 +1060,7 @@ public:
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 class EffectFireworks : public EffectCalc {
 private:
+    DOTS_STORE store;
     uint16_t launchcountdown[SPARK];
     //uint8_t micPick = 0;
     bool fireworksRoutine(CRGB *leds, EffectWorker *param);

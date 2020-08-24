@@ -3693,18 +3693,7 @@ bool EffectStar::starRoutine(CRGB *leds, EffectWorker *param) {
 //---------- Эффект "Фейерверк" адаптация kostyamat
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 
-
-  // Глобальные переменные??? Что за фигня? Зачем они тут?
-  accum88 gBurstx;
-  accum88 gBursty;
-  saccum78 gBurstxv;
-  saccum78 gBurstyv;
-  CRGB gBurstcolor;
-
-  bool gSkyburst = false;
-
-CRGB& piXY(CRGB *leds, byte x, byte y) {
-  CRGB overrun;
+CRGB &piXY(CRGB *leds, byte x, byte y) {
   x -= PIXEL_X_OFFSET;
   y -= PIXEL_Y_OFFSET;
   if( x < WIDTH && y < HEIGHT) {
@@ -3717,7 +3706,7 @@ CRGB& piXY(CRGB *leds, byte x, byte y) {
       return leds[ (y * HEIGHT) + x ] ;
     }
   } else
-    return overrun;
+    return leds[0];
 }
 
 void screenscale( accum88 a, byte N, byte& screen, byte& screenerr)
@@ -3748,7 +3737,7 @@ void Dot::Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecol
     show = 1;
   }
 
-void Dot::GroundLaunch()
+void Dot::GroundLaunch(DOTS_STORE &store)
   {
     yv = 600 + random16(300 + (25 * HEIGHT));
     if(yv > 1200) yv = 1200;
@@ -3760,7 +3749,7 @@ void Dot::GroundLaunch()
     show = 1;
   }
 
-  void Dot::Move()
+  void Dot::Move(DOTS_STORE &store)
   {
     if( !show) return;
     yv -= gGravity;
@@ -3799,12 +3788,12 @@ void Dot::GroundLaunch()
 
         show = 0;
 
-        gSkyburst = true;
-        gBurstx = x;
-        gBursty = y;
-        gBurstxv = xv;
-        gBurstyv = yv;
-        gBurstcolor = color;        
+        store.gSkyburst = true;
+        store.gBurstx = x;
+        store.gBursty = y;
+        store.gBurstxv = xv;
+        store.gBurstyv = yv;
+        store.gBurstcolor = color;        
       }
     }
     if( theType == 2) {
@@ -3849,10 +3838,10 @@ void Dot::Draw(CRGB *leds)
                      dim8_video( scale8( scale8( color.b, ye), xe))
                      );
 
-    piXY(*&leds, ix, iy) += c00;
-    piXY(*&leds, ix, iy + 1) += c01;
-    piXY(*&leds, ix + 1, iy) += c10;
-    piXY(*&leds, ix + 1, iy + 1) += c11;
+    piXY(leds, ix, iy) += c00;
+    piXY(leds, ix, iy + 1) += c01;
+    piXY(leds, ix + 1, iy) += c10;
+    piXY(leds, ix + 1, iy + 1) += c11;
   }
 
 bool EffectFireworks::run(CRGB *ledarr, EffectWorker *opt) 
@@ -3868,7 +3857,7 @@ void EffectFireworks::sparkGen() {
   for (byte c = 0; c < map(scale, 1, 255, 1, SPARK); c++) {
     if( gDot[c].show == 0 ) {
       if( launchcountdown[c] == 0) {
-        gDot[c].GroundLaunch();
+        gDot[c].GroundLaunch(this->store);
         gDot[c].theType = 1;
         launchcountdown[c] = random16(865 - speed*3) + 1;
       } else {
@@ -3877,11 +3866,11 @@ void EffectFireworks::sparkGen() {
     }
   }
   
-  if( gSkyburst) {
+  if( store.gSkyburst) {
     byte nsparks = random8( NUM_SPARKS / 2, NUM_SPARKS + 1);
     for( byte b = 0; b < nsparks; b++) {
-      gSparks[b].Skyburst( gBurstx, gBursty, gBurstyv, gBurstcolor);
-      gSkyburst = false;
+      gSparks[b].Skyburst( store.gBurstx, store.gBursty, store.gBurstyv, store.gBurstcolor);
+      store.gSkyburst = false;
     }
   }
   //myLamp.blur2d(20);
@@ -3904,11 +3893,11 @@ bool EffectFireworks::fireworksRoutine(CRGB *leds, EffectWorker *param)
 #endif
   
   for (byte a = 0; a < map(scale, 1, 255, 1, SPARK); a++) {
-    gDot[a].Move();
+    gDot[a].Move(store);
     gDot[a].Draw(leds);
   }
   for( byte b = 0; b < NUM_SPARKS; b++) {
-    gSparks[b].Move();
+    gSparks[b].Move(store);
     gSparks[b].Draw(leds);
   }
     return true;

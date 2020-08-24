@@ -1708,6 +1708,15 @@ const saccum78 gGravity = 10;
 const fract8  gBounce = 127;
 const fract8  gDrag = 255;
 
+typedef struct _DOTS_STORE {
+    accum88 gBurstx;
+    accum88 gBursty;
+    saccum78 gBurstxv;
+    saccum78 gBurstyv;
+    CRGB gBurstcolor;
+    bool gSkyburst = false;
+} DOTS_STORE;
+
 class Dot {    // класс для создания снарядов и питард
 public:
   byte    show;
@@ -1731,8 +1740,8 @@ public:
   }
 
   void Draw(CRGB *leds);
-  void Move();
-  void GroundLaunch();
+  void Move(DOTS_STORE &store);
+  void GroundLaunch(DOTS_STORE &store);
   void Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor);
 
 };
