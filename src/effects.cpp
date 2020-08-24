@@ -3631,9 +3631,9 @@ void EffectStar::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-void EffectStar::drawStar(float xlocl, float ylocl, float biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler)// random multipoint star
+void EffectStar::drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler)// random multipoint star
 {
-  radius2 = 255 / points;
+  radius2 = 255.0 / points;
   for (int i = 0; i < points; i++)
   {
 #ifdef MIC_EFFECTS
@@ -3651,10 +3651,14 @@ bool EffectStar::starRoutine(CRGB *leds, EffectWorker *param) {
   
 if (setup) { // однократная настройка при старте эффекта
   float _speed = speed;
-  counter = 0;
-  driftx = random8(4, WIDTH - 4);//set an initial location for the animation center
-  drifty = random8(4, HEIGHT - 4);// set an initial location for the animation center
+  counter = 0.0;
+  // driftx = random8(4, WIDTH - 4);//set an initial location for the animation center
+  // drifty = random8(4, HEIGHT - 4);// set an initial location for the animation center
   
+  // стартуем с центра, раз это единственная причина перезапуска по масштабу :)
+  driftx = (float)WIDTH/2.0;
+  drifty = (float)HEIGHT/2.0;
+
   cangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation gives a float value between -1 and 1
   sangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation in the y direction gives a float value between -1 and 1
   //shifty = random (3, 12);//how often the drifter moves будет CENTER_DRIFT_SPEED = 6
@@ -3676,7 +3680,7 @@ if (setup) { // однократная настройка при старте э
   myLamp.dimAll(90);
 #endif
 
-  float _scalefactor = ((float)speed/512.0+0.01);
+  float _scalefactor = ((float)speed/512.0+0.05);
 
   counter+=_scalefactor; // определяет то, с какой скоростью будет приближаться звезда
 
@@ -3699,8 +3703,8 @@ if (setup) { // однократная настройка при старте э
     if (counter >= delay[num])//(counter >= ringdelay)
     {
       if (counter - delay[num] <= WIDTH + 5) { 
-        EffectStar::drawStar(driftx, drifty, 2 * (counter - delay[num]), (counter - delay[num]), points[num], STAR_BLENDER + color[num], color[num] * 2);//, h * 2 + 85);// что, бл, за 85?!
-        color[num]++;
+        EffectStar::drawStar(driftx, drifty, 2 * (counter - delay[num]), (counter - delay[num]), points[num], STAR_BLENDER + color[num], color[num]);
+        color[num]+=_scalefactor; // в зависимости от знака - направление вращения
       }
       else
         delay[num] = counter + (stars_count << 1) + 1U;//random8(50, 99);//modes[currentMode].Scale;//random8(50, 99); // задержка следующего пуска звезды

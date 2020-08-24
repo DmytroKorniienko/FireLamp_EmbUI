@@ -1037,9 +1037,9 @@ private:
     float drifty;
     float cangle;
     float sangle;
-    uint8_t radius2;
+    float radius2;
     uint8_t stars_count;
-    uint8_t color[STARS_NUM] ;                        // цвет звезды
+    float color[STARS_NUM] ;                        // цвет звезды
     uint8_t points[STARS_NUM] ;                       // количество углов в звезде
     unsigned int delay[STARS_NUM] ;                   // задержка пуска звезды относительно счётчика
 
@@ -1050,7 +1050,7 @@ private:
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
     bool starRoutine(CRGB *leds, EffectWorker *param);
-    void drawStar(float xlocl, float ylocl, float biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler);
+    void drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler);
 
 public:
     void load() override;
