@@ -202,28 +202,11 @@ void jeeui2::init(){
         WiFi.onEvent(std::bind(&jeeui2::WiFiEvent, this, std::placeholders::_1));
     #endif
 
-    wifi_connect();
+    //wifi_connect();
     //LOG(println, String(F("MAC: ")) + jee.mac);
 }
 
 void jeeui2::begin(){
-    /*use mdns for host name resolution*/
-    char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
-    if(param(F("ap_ssid")).length()>0)
-        strncpy_P(tmpbuf,param(F("ap_ssid")).c_str(),sizeof(tmpbuf)-1);
-    else
-        sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);
-    if (!MDNS.begin(tmpbuf)) {
-        Serial.println(F("Error setting up MDNS responder!"));
-        while (1) {
-        delay(1000);
-        }
-    }
-    MDNS.addService(F("http"), F("tcp"), 80);
-    Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
-    // MDNS.setHostname();
-    // Serial.printf_P(PSTR("mDNS responder started: %s.local\n"), hostname);
-
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
 

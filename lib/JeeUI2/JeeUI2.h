@@ -163,6 +163,7 @@ class jeeui2
     void onSTAConnected(WiFiEventStationModeConnected ipInfo);
     void onSTAGotIP(WiFiEventStationModeGotIP ipInfo);
     void onSTADisconnected(WiFiEventStationModeDisconnected event_info);
+    void setup_mDns();
     /**
       * устанавлием режим WiFi
       */

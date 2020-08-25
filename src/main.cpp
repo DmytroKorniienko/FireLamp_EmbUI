@@ -82,8 +82,6 @@ void setup() {
     }
 #endif
 
-    jee.begin(); // Инициализируем JeeUI2 фреймворк.
-
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
@@ -100,6 +98,8 @@ void setup() {
 
     sync_parameters();
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+
+    jee.begin(); // Инициализируем JeeUI2 фреймворк.
 }
 
 void loop() {

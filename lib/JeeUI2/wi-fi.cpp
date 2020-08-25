@@ -17,6 +17,24 @@ void jeeui2::onSTAGotIP(WiFiEventStationModeGotIP ipInfo)
     wifi_sta = true;
     jeeschedw.detach();
     LOG(printf_P, PSTR("WiFi: Got IP: %s\r\n"), ipInfo.ip.toString().c_str());
+    setup_mDns();
+}
+
+void jeeui2::setup_mDns(){
+    /*use mdns for host name resolution*/
+    char tmpbuf[32]; // Используем ap_ssid если задан, иначе конструируем вручную
+    memset(tmpbuf,0,sizeof(tmpbuf));
+    if(param(F("ap_ssid")).length()>0){
+        strncpy_P(tmpbuf,param(F("ap_ssid")).c_str(),sizeof(tmpbuf)-1);
+    }
+    else
+        sprintf_P(tmpbuf,PSTR("%s%s"),(char*)__IDPREFIX, mc);
+    if (!MDNS.begin(tmpbuf, WiFi.softAPIP())) {
+        Serial.println(F("Error setting up MDNS responder!"));
+    } else {
+        MDNS.addService(F("http"), F("tcp"), 80);
+        Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
+    }
 }
 
 void jeeui2::onSTADisconnected(WiFiEventStationModeDisconnected event_info)
@@ -29,7 +47,7 @@ void jeeui2::onSTADisconnected(WiFiEventStationModeDisconnected event_info)
     jeeschedw.once_scheduled(WIFI_CONNECT_TIMEOUT, [this](){
             LOG(println, F("WiFi: enabling internal AP"));
             wifi_setmode(WIFI_AP);  // Enable internal AP if station connection is lost
-            jeeschedw.once_scheduled(WIFI_RECONNECT_TIMER, [this](){wifi_setmode(WIFI_AP_STA); WiFi.begin();} );
+            jeeschedw.once_scheduled(WIFI_RECONNECT_TIMER, [this](){wifi_setmode(WIFI_AP_STA); WiFi.begin(); setup_mDns();} );
             } );
 }
 #else
