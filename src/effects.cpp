@@ -3567,10 +3567,6 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
     //LOG(println,F("тыдыщ"));
     glare = true;
   }
- 
-    if (speed == 1) 
-      hue = scale;
-    else hue ++;
 
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
@@ -3592,7 +3588,6 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
     }
     deltaHue = 0U;
     deltaHue2 = 0U;
-    regen = false;
 
   if (glare) // если регулятор масштаб на минимуме, то будет работать старый эффект "цвет" (без анимации бликов воды)
   {
@@ -3620,18 +3615,24 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 #else
     byte _video = 255;
 #endif
-    for (float x = 0.0f; x < WIDTH ; x+= 0.25f) {
-      for (float y = 0.0f; y < HEIGHT; y+= 0.25f) {
+    for (byte x = 0; x < WIDTH ; x++) {
+      for (byte y = 0; y < HEIGHT; y++) {
         // y%32, x%32 - это для масштабирования эффекта на лампы размером большим, чем размер анимации 32х32, а также для произвольного сдвига текстуры
         /*leds[XY(x, y)] = */ 
-        myLamp.drawPixelXYF(x, y, CHSV(hue, 255U - pgm_read_byte(&aquariumGIF[step][((uint8_t)y + deltaHue2) % 32U][((uint8_t)x + deltaHue) % 32U]) * CAUSTICS_BR / 100U, _video));
+        myLamp.drawPixelXY(x, y, CHSV(hue, 255U - pgm_read_byte(&aquariumGIF[step][(y + deltaHue2) % 32U][(x + deltaHue) % 32U]) * CAUSTICS_BR / 100U, _video));
         // чтобы регулятор Масштаб начал вместо цвета регулировать яркость бликов, нужно закомментировать предыдущую строчку и раскоментировать следующую
         //        leds[XY(x, y)] = CHSV(158U, 255U - pgm_read_byte(&aquariumGIF[step][(y+deltaHue2)%32U][(x+deltaHue)%32U]) * modes[currentMode].Scale / 100U, 255U);
       }
     }
     step++;
   } 
-
+ 
+  if (speed == 1) { 
+    hue = scale;
+  }
+  else {
+    hue +=1;
+  }
   return true;
 }             
 

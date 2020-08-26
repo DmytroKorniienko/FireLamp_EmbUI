@@ -1020,7 +1020,6 @@ private:
     uint8_t deltaHue = 0U;
     uint8_t deltaHue2 = 0U;
     uint8_t step = 0;
-    bool regen = true;
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
