@@ -111,7 +111,7 @@ void EffectCalc::setscl(byte _scl){
 void EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return;
 
-  if (usepalettes && _val->getName().startsWith(F("Палитра"))==1){ // Начинается с Палитра
+  if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     paletteIdx = _val->getVal().toInt();
     palettemap(palettes, paletteIdx);
     isCtrlPallete = true;
