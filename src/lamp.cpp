@@ -360,6 +360,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       dawnFlag = false; // флаг устанавливается будильником "рассвет"
       ONflag = false; // флаг включения/выключения
       isFaderON = true; // признак того, что используется фейдер для смены эффектов
+      isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
 
       isStringPrinting = false; // печатается ли прямо сейчас строка?
@@ -1088,6 +1089,9 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
       return;
     }
   }
+
+  if(isEffClearing)
+    FastLED.clear();
 
   // Не-не-не, я против того чтобы за пользователя решать когда ему включать лампу
   // поскольку настройки НУЖНО разрешить крутить и при выключенной лампе.

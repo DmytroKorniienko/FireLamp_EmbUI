@@ -862,6 +862,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_004C), FPSTR(TINTF_03B));
     interf->checkbox(FPSTR(TCONST_004D), FPSTR(TINTF_03C));
     interf->checkbox(FPSTR(TCONST_004E), FPSTR(TINTF_03D));
+    interf->checkbox(FPSTR(TCONST_008E), FPSTR(TINTF_083));
     interf->checkbox(FPSTR(TCONST_004F), FPSTR(TINTF_03E));
     interf->range(FPSTR(TCONST_0026), 30, 250, 10, FPSTR(TINTF_03F));
 
@@ -909,6 +910,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_004C), myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF)));
     SETPARAM(FPSTR(TCONST_004D), myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF)));
     SETPARAM(FPSTR(TCONST_004E), myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF)));
+    SETPARAM(FPSTR(TCONST_008E), myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == FPSTR(TCONST_FFFF)));
     SETPARAM(FPSTR(TCONST_004F));
     SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(FPSTR(TCONST_0026)).toInt()); }}));
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<uint8_t>()));
@@ -1418,6 +1420,7 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_004F), FPSTR(TCONST_FFFE));
     jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
+    jee.var_create(FPSTR(TCONST_008E), FPSTR(TCONST_FFFE)); // "Очищать лампу при смене эффектов"
 
     // далее идут обработчики параметров
 
@@ -1521,6 +1524,7 @@ void sync_parameters(){
 #endif
 
     obj[FPSTR(TCONST_004E)] = jee.param(FPSTR(TCONST_004E));
+    obj[FPSTR(TCONST_008E)] = jee.param(FPSTR(TCONST_008E));
     obj[FPSTR(TCONST_004C)] = jee.param(FPSTR(TCONST_004C));
     obj[FPSTR(TCONST_004D)] = jee.param(FPSTR(TCONST_004D));
     obj[FPSTR(TCONST_0050)] = jee.param(FPSTR(TCONST_0050));

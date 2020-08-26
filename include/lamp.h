@@ -116,6 +116,7 @@ private:
     bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
+    bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
 #ifdef MIC_EFFECTS
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isMicOn:1; // глобальное включение/выключение микрофона
@@ -258,6 +259,8 @@ public:
     void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
     void setFaderFlag(bool flag) {isFaderON = flag;}
     bool getFaderFlag() {return isFaderON;}
+    void setClearingFlag(bool flag) {isEffClearing = flag;}
+    bool getClearingFlag() {return isEffClearing;}
     void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}

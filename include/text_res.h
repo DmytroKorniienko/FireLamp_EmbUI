@@ -241,7 +241,7 @@ static const char TINTF_07F[] PROGMEM = "Однократно";
 static const char TINTF_080[] PROGMEM = "Огненная лампа";
 static const char TINTF_081[] PROGMEM = "WiFi & MQTT";
 static const char TINTF_082[] PROGMEM = "Другие";
-static const char TINTF_083[] PROGMEM = "";
+static const char TINTF_083[] PROGMEM = "Очищать лампу при смене эффектов";
 static const char TINTF_084[] PROGMEM = "";
 static const char TINTF_085[] PROGMEM = "";
 static const char TINTF_086[] PROGMEM = "";
@@ -402,7 +402,7 @@ static const char TCONST_008A[] PROGMEM = "aux_toggle";
 static const char TCONST_008B[] PROGMEM = "jee/pub/";
 static const char TCONST_008C[] PROGMEM = "pin";
 static const char TCONST_008D[] PROGMEM = "act";
-static const char TCONST_008E[] PROGMEM = "";
+static const char TCONST_008E[] PROGMEM = "isClearing";
 static const char TCONST_008F[] PROGMEM = "";
 static const char TCONST_0090[] PROGMEM = "";
 
