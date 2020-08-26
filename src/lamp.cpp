@@ -508,29 +508,31 @@ void LAMP::drawLineF(float x1, float y1, float x2, float y2, const CRGB &color){
 }
 
 void LAMP::drawCircle(int x0, int y0, int radius, const CRGB &color){
-  int x = 0, y = radius, error = 0;
-  int delta = 1 - 2 * radius;
+  int a = radius, b = 0;
+  int radiusError = 1 - a;
 
-  while (y >= 0) {
-    drawPixelXY(x0 + x, y0 + y, color);
-    drawPixelXY(x0 + x, y0 - y, color);
-    drawPixelXY(x0 - x, y0 + y, color);
-    drawPixelXY(x0 - x, y0 - y, color);
-    error = 2 * (delta + y) - 1;
-    if (delta < 0 && error <= 0) {
-      ++x;
-      delta += 2 * x + 1;
-      continue;
+  if (radius == 0) {
+    myLamp.drawPixelXY(x0, y0, color);
+    return;
+  }
+
+  while (a >= b)  {
+    myLamp.drawPixelXY(a + x0, b + y0, color);
+    myLamp.drawPixelXY(b + x0, a + y0, color);
+    myLamp.drawPixelXY(-a + x0, b + y0, color);
+    myLamp.drawPixelXY(-b + x0, a + y0, color);
+    myLamp.drawPixelXY(-a + x0, -b + y0, color);
+    myLamp.drawPixelXY(-b + x0, -a + y0, color);
+    myLamp.drawPixelXY(a + x0, -b + y0, color);
+    myLamp.drawPixelXY(b + x0, -a + y0, color);
+    b++;
+    if (radiusError < 0)
+      radiusError += 2 * b + 1;
+    else
+    {
+      a--;
+      radiusError += 2 * (b - a + 1);
     }
-    error = 2 * (delta - x) - 1;
-    if (delta > 0 && error > 0) {
-      --y;
-      delta += 1 - 2 * y;
-      continue;
-    }
-    ++x;
-    delta += 2 * (x - y);
-    --y;
   }
 }
 

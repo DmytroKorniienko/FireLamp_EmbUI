@@ -490,10 +490,10 @@ public:
 
 class EffectSnow : public EffectCalc {
 private:
-
     //const String getName() override {return String(FPSTR(T_SNOW));}
     bool snowRoutine(CRGB *leds, EffectWorker *param);
     float snowShift = 0.0; // сдвиг снега
+    
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1020,7 +1020,6 @@ private:
     uint8_t deltaHue = 0U;
     uint8_t deltaHue2 = 0U;
     uint8_t step = 0;
-    uint8_t csum = 0;
     bool regen = true;
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1154,30 +1153,19 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "2D Анимация" 
-// Это не эффект, а так тест. Наверное потом чем нибудь заменю или вообще удалю
-// Интересно было с блендом двух анимаций поиграться
-class EffectAnimo : public EffectCalc {
+// ---- Эффект "Мотыльки" 
+// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49189
+class EffectButterfly : public EffectCalc {
 private:
-    CRGB leds2[NUM_LEDS];
-    CRGB leds3[NUM_LEDS];
+    float butterfly2Pos[2U][LIGHTERS_AM *2];
+    float butterfly2Speed[2U][LIGHTERS_AM *2];
+    float butterfly2Turn[LIGHTERS_AM *2];
+    uint8_t butterfly2Color[LIGHTERS_AM *2];
+    uint8_t light2[LIGHTERS_AM *2];
+    byte step = 0;
+    byte csum = 0;
     
-    bool animoRoutine(CRGB *leds, EffectWorker *param);
-    void animationA() {
-    // running red stripes 
-        for (uint16_t i = 0; i < NUM_LEDS; i++) {
-            uint8_t red = (millis() / 3) + (i * 5);
-        if (red > 128) red = 0;
-            leds2[i] = CRGB(red, 0, 0);
-        }
-    }
-
-    void animationB() {
-    // the moving rainbow
-        for (uint16_t i = 0; i < NUM_LEDS; i++) {
-            leds3[i] = CHSV((millis() / 4) - (i * 3), 255, 255);
-        }
-    }
+    bool butterflyRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     //void load() override;

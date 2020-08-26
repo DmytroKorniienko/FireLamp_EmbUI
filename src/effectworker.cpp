@@ -194,8 +194,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_NOISE :
     worker = std::unique_ptr<EffectNoise>(new EffectNoise());
     break;
-  case EFF_ENUM::EFF_ANIMO :
-    worker = std::unique_ptr<EffectAnimo>(new EffectAnimo());
+  case EFF_ENUM::EFF_BUTTERFLY :
+    worker = std::unique_ptr<EffectButterfly>(new EffectButterfly());
     break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
