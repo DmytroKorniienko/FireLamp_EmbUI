@@ -247,8 +247,14 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 , true);
                 break;
             case CONTROL_TYPE::EDIT :
-            case CONTROL_TYPE::CHECKBOX :
                 interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                , controls[i]->getVal()
+                , controls[i]->getName()
+                , true
+                );
+                break;
+            case CONTROL_TYPE::CHECKBOX :
+                interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
                 , controls[i]->getVal()
                 , controls[i]->getName()
                 , true

@@ -3549,6 +3549,9 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
+  if(getCtrlVal(3)==F("true")) { // переключатель в true
+    //LOG(println,F("тыдыщ"));
+  }
   //if (regen or scale == 1) {
     if (scale != 1 and scale != 255) 
       hue = scale;
