@@ -299,11 +299,13 @@ bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 {
 #ifdef MIC_EFFECTS
+  bool isMicActive = myLamp.isMicOnOff() && getCtrlVal(4)=="true";
+
   uint8_t mic = myLamp.getMicMapMaxPeak();
   uint8_t mic_f = map(myLamp.getMicMapFreq(), LOW_FREQ_MAP_VAL, HI_FREQ_MAP_VAL, 0, 255);
-  if (myLamp.isMicOnOff() and getCtrlVal(3).toInt() > 5) 
+  if (isMicActive and getCtrlVal(3).toInt() > 5) 
     fadeToBlackBy(leds, NUM_LEDS, 255 - mic);
-  EffectMath::fader(myLamp.isMicOnOff() ? map(getCtrlVal(2).toInt(), 1, 255, 100, 1) : map(getCtrlVal(2).toInt(), 1, 255, 50, 1));
+  EffectMath::fader(isMicActive ? map(getCtrlVal(2).toInt(), 1, 255, 100, 1) : map(getCtrlVal(2).toInt(), 1, 255, 50, 1));
 #else
   EffectMath::fader(map(scale, 1, 255, 1, 50));
 #endif
@@ -341,7 +343,7 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 #endif
     if (myLamp.getPixColorXY(x, y) == 0U) {
 #ifdef MIC_EFFECTS
-      if (myLamp.isMicOnOff()) {
+      if (isMicActive) {
         currentHSV = CHSV(mic_f, 255U - myLamp.getMicMapMaxPeak()/3, constrain(mic * 1.25f, 48, 255));
       }
       else

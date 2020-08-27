@@ -233,6 +233,9 @@ void block_effects_param(Interface *interf, JsonObject *data){
 #ifdef MIC_EFFECTS
         if(ctrlCaseType>>4==CONTROL_CASE::ISMICON && !myLamp.isMicOnOff()) continue; // контрол должен быть отображен только при включенном микрофоне
         if(ctrlCaseType>>4==CONTROL_CASE::ISMICOFF && myLamp.isMicOnOff()) continue; // контрол должен быть отображен только при выключенном микрофоне
+#else
+        if(ctrlCaseType>>4==CONTROL_CASE::ISMICON) continue; // при отключенном в прошивке микрофоне - отключить и контролы
+        if(ctrlCaseType>>4==CONTROL_CASE::ISMICOFF) continue; // при отключенном в прошивке микрофоне - отключить и контролы
 #endif
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
