@@ -32,9 +32,9 @@ void jeeui2::setup_mDns(){
     if (!MDNS.begin(tmpbuf, WiFi.softAPIP())) {
         Serial.println(F("Error setting up MDNS responder!"));
     } else {
-        MDNS.addService(F("_http"), F("_tcp"), 80);
-        MDNS.addService(F("_ftp"), F("_tcp"), 21);
-        MDNS.addService(F("_txt"), F("_udp"), 4243);
+        MDNS.addService(F("http"), F("tcp"), 80);
+        MDNS.addService(F("ftp"), F("tcp"), 21);
+        MDNS.addService(F("txt"), F("udp"), 4243);
         Serial.printf_P(PSTR("mDNS responder started: %s.local\n"),tmpbuf);
     }
 }
