@@ -82,7 +82,7 @@ public:
   ~MICWORKER() { delete [] vReal; delete [] vImag; }
   bool isCaliblation() {return _isCaliblation;}
   void calibrate();
-  double process(MIC_NOISE_REDUCE_LEVEL level=MIC_NOISE_REDUCE_LEVEL::NONE);
+  double process(MIC_NOISE_REDUCE_LEVEL level=MIC_NOISE_REDUCE_LEVEL::NR_NONE);
   double analyse();
   float getScale() {return scale;}
   float getNoise() {return noise;}

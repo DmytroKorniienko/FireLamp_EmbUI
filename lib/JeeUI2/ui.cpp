@@ -375,6 +375,7 @@ void Interface::json_frame_interface(const String &name){
     if (name != "") {
         json[F("app")] = name;
         json[F("mc")] = jee->mc;
+        json[F("ver")] = F(VERSION);
     }
     json[F("final")] = false;
 

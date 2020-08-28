@@ -148,7 +148,7 @@ private:
     float samp_freq = 0.0; // часота семплирования
     uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
     uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
-    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NONE; // уровень шумодава
+    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
     void micHandler();
 #endif
 

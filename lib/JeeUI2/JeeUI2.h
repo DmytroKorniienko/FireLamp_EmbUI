@@ -20,10 +20,12 @@
 #include <ESP8266WiFi.h>
 //#include <ESP8266WiFiMulti.h>   // Include the Wi-Fi-Multi library
 #include <ESP8266mDNS.h>        // Include the mDNS library
+#include <ESP8266SSDP.h>
 #else
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <Update.h>
+#include <ESP32SSDP.h>
 #endif
 
 #include <Ticker.h>   // esp планировщик
@@ -39,6 +41,22 @@
 #ifndef __IDPREFIX
 #define __IDPREFIX F("JeeUI2-")
 #endif
+
+static const char PGmimetxt[] PROGMEM  = "text/plain";
+static const char PGmimecss[] PROGMEM  = "text/css";
+static const char PGmimexml[] PROGMEM  = "text/css";
+static const char PGmimehtml[] PROGMEM = "text/html; charset=utf-8";
+static const char PGmimejson[] PROGMEM = "application/json";
+static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
+static const char PGhdrcachec[] PROGMEM = "Cache-Control";
+static const char PGgzip[] PROGMEM = "gzip";
+static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";    // 10 days cache
+
+static const char PGnameModel[] PROGMEM = "FireLamp";
+static const char PGurlModel[] PROGMEM = "https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/";
+static const char PGversion[] PROGMEM = VERSION;
+static const char PGurlManuf[] PROGMEM = "https://github.com/DmytroKorniienko/FireLamp_JeeUI";
+static const char PGnameManuf[] PROGMEM = "kDn";
 
 class Interface;
 
@@ -164,6 +182,86 @@ class jeeui2
     void onSTAGotIP(WiFiEventStationModeGotIP ipInfo);
     void onSTADisconnected(WiFiEventStationModeDisconnected event_info);
     void setup_mDns();
+
+    void ssdp_begin() {
+          uint32_t chipId;
+          #ifdef ESP32
+              chipId = ESP.getEfuseMac();
+          #else
+              chipId = ESP.getChipId();    
+          #endif  
+          SSDP.setDeviceType(F("upnp:rootdevice"));
+          SSDP.setSchemaURL(F("description.xml"));
+          SSDP.setHTTPPort(80);
+          SSDP.setName(param(F("hostname")));
+          SSDP.setSerialNumber(String(chipId));
+          SSDP.setURL(F("/"));
+          SSDP.setModelName(FPSTR(PGnameModel));
+          SSDP.setModelNumber(FPSTR(PGversion));
+          SSDP.setModelURL(String(F("http://"))+(WiFi.status() != WL_CONNECTED ? WiFi.softAPIP().toString() : WiFi.localIP().toString()));
+          SSDP.setManufacturer(FPSTR(PGnameManuf));
+          SSDP.setManufacturerURL(FPSTR(PGurlManuf));
+          SSDP.begin();
+          setHTTPAnswer();
+    }
+    
+    void setHTTPAnswer() {
+        (&server)->on(PSTR("/description.xml"), HTTP_GET, [&](AsyncWebServerRequest *request){
+          request->send(200, FPSTR(PGmimexml), getSSDPSchema());
+        });
+    }
+
+    String getSSDPSchema() {
+        uint32_t chipId;
+        #ifdef ESP32
+            chipId = ESP.getEfuseMac();
+        #else
+            chipId = ESP.getChipId();    
+        #endif  
+      String s = "";
+        s +=F("<?xml version=\"1.0\"?>\n");
+        s +=F("<root xmlns=\"urn:schemas-upnp-org:device-1-0\">\n");
+        s +=F("\t<specVersion>\n");
+        s +=F("\t\t<major>1</major>\n");
+        s +=F("\t\t<minor>0</minor>\n");
+        s +=F("\t</specVersion>\n");
+        s +=F("<URLBase>");
+        s +=String(F("http://"))+(WiFi.status() != WL_CONNECTED ? WiFi.softAPIP().toString() : WiFi.localIP().toString());
+        s +=F("</URLBase>");
+        s +=F("<device>\n");
+        s +=F("\t<deviceType>upnp:rootdevice</deviceType>\n");
+        s +=F("\t<friendlyName>");
+        s += param(F("hostname"));
+        s +=F("</friendlyName>\r\n");
+        s +=F("\t<presentationURL>index.html</presentationURL>\r\n");
+        s +=F("\t<serialNumber>");
+        s += String(chipId);
+        s +=F("</serialNumber>\r\n");
+        s +=F("\t<modelName>");
+        s += FPSTR(PGnameModel);
+        s +=F("</modelName>\r\n");
+        s +=F("\t<modelNumber>");
+        s += FPSTR(PGversion);
+        s +=F("</modelNumber>\r\n");
+        s +=F("\t<modelURL>");
+        s += FPSTR(PGurlModel);
+        s +=F("</modelURL>\r\n");
+        s +=F("\t<manufacturer>");
+        s += FPSTR(PGnameManuf);
+        s +=F("</manufacturer>\r\n");
+        s +=F("\t<manufacturerURL>");
+        s += FPSTR(PGurlManuf);
+        s +=F("</manufacturerURL>\r\n");
+        s +=F("\t<UDN>0543bd4e-53c2-4f33-8a25-1f75583a19a2");
+        s +=String((uint8_t) ((chipId >> 16) & 0xff));
+        s +=String((uint8_t) ((chipId >>  8) & 0xff));
+        s +=String((uint8_t)   chipId        & 0xff);
+        s +=F("</UDN>\r\n");
+        s +=F("\t</device>\n");
+        s +=F("</root>\r\n\r\n");
+      return s;
+    }
+
     /**
       * устанавлием режим WiFi
       */

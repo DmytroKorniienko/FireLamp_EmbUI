@@ -10,15 +10,6 @@ bool __shouldReboot; // OTA update reboot flag
 
 extern jeeui2 jee;
 
-static const char PGmimetxt[] PROGMEM  = "text/plain";
-static const char PGmimecss[] PROGMEM  = "text/css";
-static const char PGmimehtml[] PROGMEM = "text/html; charset=utf-8";
-static const char PGmimejson[] PROGMEM = "application/json";
-static const char PGhdrcontentenc[] PROGMEM = "Content-Encoding";
-static const char PGhdrcachec[] PROGMEM = "Cache-Control";
-static const char PGgzip[] PROGMEM = "gzip";
-static const char PGnocache[] PROGMEM = "no-cache, no-store, must-revalidate";    // 10 days cache
-
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
     if(type == WS_EVT_CONNECT){
         LOG(printf_P, PSTR("ws[%s][%u] connect MEM: %u\n"), server->url(), client->id(), ESP.getFreeHeap());
@@ -209,6 +200,13 @@ void jeeui2::init(){
 void jeeui2::begin(){
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
+
+    ssdp_begin(); Serial.println(F("Start SSDP"));
+    
+    // server.on("/description.xml", HTTP_GET, [](AsyncWebServerRequest * request)
+    // {
+    //     request->send(200, "text/xml", SSDP.schema());
+    // });
 
     // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {

@@ -64,6 +64,7 @@ void pubCallback(Interface *interf){
     interf->json_frame_value();
     interf->value(FPSTR(TCONST_0001), myLamp.timeProcessor.getFormattedShortTime(), true);
     interf->value(FPSTR(TCONST_0002), String(ESP.getFreeHeap()), true);
+    interf->value(FPSTR(TCONST_008F), String(millis()/1000), true);
     interf->json_frame_flush();
 }
 

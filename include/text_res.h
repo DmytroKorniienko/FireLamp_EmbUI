@@ -403,7 +403,7 @@ static const char TCONST_008B[] PROGMEM = "jee/pub/";
 static const char TCONST_008C[] PROGMEM = "pin";
 static const char TCONST_008D[] PROGMEM = "act";
 static const char TCONST_008E[] PROGMEM = "isClearing";
-static const char TCONST_008F[] PROGMEM = "";
+static const char TCONST_008F[] PROGMEM = "pUptime";
 static const char TCONST_0090[] PROGMEM = "";
 
 static const char TCONST_FFFE[] PROGMEM = "false";

@@ -146,7 +146,7 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
     vReal[i]*=scale; // нормализация
     switch (level)
     {
-    case MIC_NOISE_REDUCE_LEVEL::NONE:
+    case MIC_NOISE_REDUCE_LEVEL::NR_NONE:
       vReal[i] = map(vReal[i], 0, RESOLUTION, -128, 127); // без преобразований
       break;
     case MIC_NOISE_REDUCE_LEVEL::BIT_1:
