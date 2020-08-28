@@ -252,10 +252,11 @@ class jeeui2
         s +=F("\t<manufacturerURL>");
         s += FPSTR(PGurlManuf);
         s +=F("</manufacturerURL>\r\n");
-        s +=F("\t<UDN>0543bd4e-53c2-4f33-8a25-1f75583a19a2");
-        s +=String((uint8_t) ((chipId >> 16) & 0xff));
-        s +=String((uint8_t) ((chipId >>  8) & 0xff));
-        s +=String((uint8_t)   chipId        & 0xff);
+        //s +=F("\t<UDN>0543bd4e-53c2-4f33-8a25-1f75583a19a2");
+        s +=F("\t<UDN>0543bd4e-53c2-4f33-8a25-1f7558");
+        char cn[7];
+        sprintf_P(cn, PSTR("%02x%02x%02x"), ((chipId >> 16) & 0xff), ((chipId >>  8) & 0xff), chipId & 0xff);
+        s += cn;
         s +=F("</UDN>\r\n");
         s +=F("\t</device>\n");
         s +=F("</root>\r\n\r\n");
