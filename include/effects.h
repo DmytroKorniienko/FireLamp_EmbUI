@@ -155,7 +155,17 @@ protected:
     TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
 
     const String &getCtrlVal(int idx) {
-        return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
+        //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
+        
+        // Добавлена поддержка вариантов следования индексов контролов вида 0,1,2,5,7 т.е. с пропусками
+        if(idx<ctrls->size() && idx>=0 && (*ctrls)[idx]->getId()==idx){
+            return (*ctrls)[idx]->getVal();
+        } else {
+            for(int i = 3; i<ctrls->size(); i++){
+                if((*ctrls)[idx]->getId()==idx) return (*ctrls)[idx]->getVal();
+            }
+        }
+        return dummy;
     }
 
 public:
