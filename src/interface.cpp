@@ -43,6 +43,13 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 Ticker optionsTicker;          // планировщик заполнения списка
 
+void resetAutoTimers() // сброс таймера демо и настройка автосохранений
+{
+    jee.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
+    myLamp.demoTimer(T_RESET);
+    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+}
+
 #ifdef AUX_PIN
 void AUX_toggle(bool key)
 {
@@ -122,7 +129,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         confEff->isFavorite((*data)[FPSTR(TCONST_0007)] == FPSTR(TCONST_FFFF));
     }
 
-    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+    resetAutoTimers();
     myLamp.effects.makeIndexFileFromList(); // обновить индексный файл после возможных изменений
     section_main_frame(interf, data);
 }
@@ -316,8 +323,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
 
-    myLamp.demoTimer(T_RESET);
-    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+    resetAutoTimers();
 }
 
 void set_effects_speed(Interface *interf, JsonObject *data){
@@ -328,8 +334,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
 
-    myLamp.demoTimer(T_RESET);
-    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+    resetAutoTimers();
 }
 
 void set_effects_scale(Interface *interf, JsonObject *data){
@@ -340,8 +345,7 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
 
-    myLamp.demoTimer(T_RESET);
-    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+    resetAutoTimers();
 }
 
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
@@ -355,8 +359,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(FPSTR(TCONST_0015))+String(i)].as<String>().c_str());
         }
     }
-    myLamp.demoTimer(T_RESET);
-    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+    resetAutoTimers();
 }
 
 void block_main_flags(Interface *interf, JsonObject *data){

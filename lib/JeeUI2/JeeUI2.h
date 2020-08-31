@@ -102,6 +102,7 @@ class jeeui2
     void init();
     void begin();
     void handle();
+    void autoSaveReset() {astimer = millis();} // передвинуть таймер
 
     void save(const char *_cfg = nullptr, bool force = false);
     void load(const char *_cfg = nullptr);

@@ -41,16 +41,18 @@ void jeeui2::setup_mDns(){
 
 void jeeui2::onSTADisconnected(WiFiEventStationModeDisconnected event_info)
 {
-    wifi_sta = false;
-    LOG(printf_P, PSTR("WiFi: Disconnected from SSID: %s, reason: %d\n"), event_info.ssid.c_str(), event_info.reason);
-    if (jeeschedw.active() && WiFi.getMode()==WIFI_AP)
+    if (jeeschedw.active() && (WiFi.getMode()==WIFI_AP || WiFi.getMode()==WIFI_AP_STA || !wifi_sta))
         return;
+    
+    LOG(printf_P, PSTR("WiFi: Disconnected from SSID: %s, reason: %d\n"), event_info.ssid.c_str(), event_info.reason);
+    wifi_sta = false;
 
     jeeschedw.once_scheduled(WIFI_CONNECT_TIMEOUT, [this](){
-            LOG(println, F("WiFi: enabling internal AP"));
-            wifi_setmode(WIFI_AP);  // Enable internal AP if station connection is lost
-            jeeschedw.once_scheduled(WIFI_RECONNECT_TIMER, [this](){wifi_setmode(WIFI_AP_STA); WiFi.begin(); setup_mDns();} );
-            } );
+        wifi_sta = false;
+        LOG(println, F("WiFi: enabling internal AP"));
+        wifi_setmode(WIFI_AP);  // Enable internal AP if station connection is lost
+        jeeschedw.once_scheduled(WIFI_RECONNECT_TIMER, [this](){wifi_setmode(WIFI_AP_STA); WiFi.begin(); setup_mDns();} );
+    } );
 }
 #else
 // need to test it under ESP32 (might not need any scheduler to handle both Client and AP at the same time)
