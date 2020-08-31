@@ -395,9 +395,9 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           id_tst |= 1<<item[F("id")].as<uint8_t>(); // закладываемся не более чем на 8 контролов, этого хватит более чем :)
           String name = item.containsKey(F("name")) ?
               item[F("name")].as<String>() 
-              : id == 0 ? String(F("Яркость"))
-              : id == 1 ? String(F("Скорость"))
-              : id == 2 ? String(F("Масштаб"))
+              : id == 0 ? String(FPSTR(TINTF_00D))
+              : id == 1 ? String(FPSTR(TINTF_087))
+              : id == 2 ? String(FPSTR(TINTF_088))
               : String(F("Доп."))+String(id);
           String val = item.containsKey(F("val")) ?
               item[F("val")].as<String>()
@@ -433,7 +433,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           controls.add(new UIControl(
               id,                                     // id
               CONTROL_TYPE::RANGE,                    // type
-              id==0 ? F("Яркость") : id==1 ? F("Скорость") : F("Масштаб"),           // name
+              id==0 ? FPSTR(TINTF_00D) : id==1 ? FPSTR(TINTF_087) : FPSTR(TINTF_088),           // name
               String(127),                            // value
               String(1),                              // min
               String(255),                            // max

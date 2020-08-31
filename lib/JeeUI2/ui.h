@@ -124,8 +124,8 @@ class Interface {
         void email(const String &id, const String &value, const String &label);
         void range(const String &id, int min, int max, float step, const String &label, bool directly = false);
         void range(const String &id, int value, int min, int max, float step, const String &label, bool directly = false);
-        void select(const String &id, const String &label, bool directly = false);
-        void select(const String &id, const String &value, const String &label, bool directly = false);
+        void select(const String &id, const String &label, bool directly = false, bool skiplabel = false);
+        void select(const String &id, const String &value, const String &label, bool directly = false, bool skiplabel = false);
         void option(const String &value, const String &label);
         /**
          * элемент интерфейса checkbox

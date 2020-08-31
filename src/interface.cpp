@@ -139,7 +139,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
 
     interf->json_section_main(FPSTR(TCONST_000F), FPSTR(TINTF_009));
     confEff = myLamp.effects.getSelectedListElement();
-    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), FPSTR(TINTF_00A), true);
+    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true);
 
     uint32_t timest = millis();
     if(fast){
@@ -149,11 +149,9 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         String effname((char *)0);
         EffectListElem *eff = nullptr;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-            if (eff->canBeSelected()) {
-                effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
-                interf->option(String(eff->eff_nb), effname);
-                ESP.wdtFeed();
-            }
+            effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
+            interf->option(String(eff->eff_nb), effname);
+            ESP.wdtFeed();
         }
     } else {
         EffectListElem *eff = nullptr;
@@ -176,17 +174,17 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
 }
 
 void delayedcall_show_effects_config(){
-    // LOG(println, F("Fire!!!"));
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 3000) : nullptr;
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), FPSTR(TINTF_00A), true);
+    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
     EffectListElem *eff = nullptr;
+    String effname((char *)0);
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-        EffectWorker *tmpeffect = new EffectWorker(eff, true);
-        interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-        delete tmpeffect;
+        myLamp.effects.loadeffname(effname, eff->eff_nb);
+        interf->option(String(eff->eff_nb), effname);
+        ESP.wdtFeed();
     }
     interf->json_section_end();
     interf->json_section_end();
@@ -404,18 +402,18 @@ void show_main_flags(Interface *interf, JsonObject *data){
 }
 
 void delayedcall_effects_main(){
-    // LOG(println, F("Fire!!!"));
     Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 3000) : nullptr;
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), FPSTR(TINTF_00A), true);
+    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
     EffectListElem *eff = nullptr;
+    String effname((char *)0);
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         if (eff->canBeSelected()) {
-            EffectWorker *tmpeffect = new EffectWorker(eff, true);
-            interf->option(String(eff->eff_nb), tmpeffect->getEffectName());
-            delete tmpeffect;
+            myLamp.effects.loadeffname(effname, eff->eff_nb);
+            interf->option(String(eff->eff_nb), effname);
+            ESP.wdtFeed();
         }
     }
     interf->json_section_end();
@@ -446,7 +444,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     interf->button(FPSTR(TCONST_0023), FPSTR(TINTF_016), FPSTR(TCONST_0025));
     interf->json_section_end();
 
-    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), FPSTR(TINTF_00A), true);
+    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true);
     LOG(printf_P,PSTR("Создаю список эффектов (%d):\n"),myLamp.effects.getModeAmount());
     EffectListElem *eff = nullptr;
 
@@ -1008,12 +1006,12 @@ void block_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_005C), FPSTR(TINTF_011));
 
-    interf->checkbox(FPSTR(TCONST_001D), myLamp.IsEventsHandled()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), F("События активны"), true);
+    interf->checkbox(FPSTR(TCONST_001D), myLamp.IsEventsHandled()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_086), true);
 
     int num = 1;
     EVENT *next = nullptr;
     interf->json_section_begin(FPSTR(TCONST_005D));
-    interf->select(FPSTR(TCONST_005E), String(0), FPSTR(TINTF_05B), false);
+    interf->select(FPSTR(TCONST_005E), String(0), String(FPSTR(TINTF_05B)), false);
     while ((next = myLamp.events.getNextEvent(next)) != nullptr) {
         interf->option(String(num), next->getName());
         ++num;
@@ -1139,7 +1137,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->json_section_main(FPSTR(TCONST_006C), FPSTR(TINTF_05D));
     }
 
-    interf->select(FPSTR(TCONST_0068), String(event.event), FPSTR(TINTF_05F), false);
+    interf->select(FPSTR(TCONST_0068), String(event.event), String(FPSTR(TINTF_05F)), false);
     interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
     interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
     interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
@@ -1193,7 +1191,7 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_001F), myButtons.isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07B), true);
 
     interf->json_section_begin(FPSTR(TCONST_006E));
-    interf->select(FPSTR(TCONST_006F), String(0), FPSTR(TINTF_07A), false);
+    interf->select(FPSTR(TCONST_006F), String(0), String(FPSTR(TINTF_07A)), false);
     for (int i = 0; i < myButtons.size(); i++) {
         interf->option(String(i), myButtons[i]->getName());
     }
@@ -1287,7 +1285,7 @@ void show_butt_conf(Interface *interf, JsonObject *data){
         interf->json_section_main(FPSTR(TCONST_0075), FPSTR(TINTF_05D));
     }
 
-    interf->select(FPSTR(TCONST_0074), String(btn? btn->action : 0), FPSTR(TINTF_07A), false);
+    interf->select(FPSTR(TCONST_0074), String(btn? btn->action : 0), String(FPSTR(TINTF_07A)), false);
     for (int i = 1; i < BA::BA_END; i++) {
         interf->option(String(i), btn_get_desc((BA)i));
     }

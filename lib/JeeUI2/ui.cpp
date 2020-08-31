@@ -207,12 +207,12 @@ void Interface::option(const String &value, const String &label){
     }
 }
 
-void Interface::select(const String &id, const String &value, const String &label, bool directly){
+void Interface::select(const String &id, const String &value, const String &label, bool directly, bool skiplabel){
     StaticJsonDocument<256> obj;
     obj[F("html")] = F("select");
     obj[F("id")] = id;
     obj[F("value")] = value;
-    obj[F("label")] = label;
+    obj[F("label")] = skiplabel ? "" : label;
     if (directly) obj[F("directly")] = true;
 
     if (!json_frame_add(obj.as<JsonObject>())) {
@@ -223,8 +223,8 @@ void Interface::select(const String &id, const String &value, const String &labe
     json_section_begin(F("options"), F(""), false, false, false, section_stack.end()->block.getElement(section_stack.end()->idx));
 }
 
-void Interface::select(const String &id, const String &label, bool directly){
-    select(id, jee->param(id), label, directly);
+void Interface::select(const String &id, const String &label, bool directly, bool skiplabel){
+    select(id, jee->param(id), label, directly, skiplabel);
 }
 
 void Interface::checkbox(const String &id, const String &value, const String &label, bool directly){
