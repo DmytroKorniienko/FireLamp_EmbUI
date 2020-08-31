@@ -238,13 +238,26 @@ void block_effects_param(Interface *interf, JsonObject *data){
     uint8_t ctrlCaseType; // тип контрола, старшие 4 бита соответствуют CONTROL_CASE, младшие 4 - CONTROL_TYPE
     for(int i=0; i<controls.size();i++){
         ctrlCaseType = controls[i]->getType();
+        switch(ctrlCaseType>>4){
+            case CONTROL_CASE::HIDE :
+                continue;
+                break;
+            case CONTROL_CASE::ISMICON :
 #ifdef MIC_EFFECTS
-        if(ctrlCaseType>>4==CONTROL_CASE::ISMICON && !myLamp.isMicOnOff()) continue; // контрол должен быть отображен только при включенном микрофоне
-        if(ctrlCaseType>>4==CONTROL_CASE::ISMICOFF && myLamp.isMicOnOff()) continue; // контрол должен быть отображен только при выключенном микрофоне
+                if(!myLamp.isMicOnOff()) continue;
 #else
-        if(ctrlCaseType>>4==CONTROL_CASE::ISMICON) continue; // при отключенном в прошивке микрофоне - отключить и контролы
-        if(ctrlCaseType>>4==CONTROL_CASE::ISMICOFF) continue; // при отключенном в прошивке микрофоне - отключить и контролы
-#endif
+                continue;
+#endif          
+                break;
+            case CONTROL_CASE::ISMICOFF :
+#ifdef MIC_EFFECTS
+                if(myLamp.isMicOnOff()) continue;
+#else
+                continue;
+#endif   
+                break;
+            default: break;
+        }
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
                 interf->range(

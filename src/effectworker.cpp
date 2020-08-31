@@ -417,7 +417,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
               : String();
           controls.add(new UIControl(
               id,             // id
-              ((id<3) ? CONTROL_TYPE::RANGE : item[F("type")].as<CONTROL_TYPE>()),     // type
+              item.containsKey(F("type")) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE, //((id<3) ? CONTROL_TYPE::RANGE : item[F("type")].as<CONTROL_TYPE>()),     // type
               name,           // name
               val,            // value
               min,            // min
