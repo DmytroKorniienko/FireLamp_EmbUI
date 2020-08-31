@@ -1161,16 +1161,23 @@ public:
 };
 
 // ---- Эффект "Мотыльки" 
-// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49189
+// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
 class EffectButterfly : public EffectCalc {
 private:
-    float butterfly2Pos[2U][LIGHTERS_AM *2];
-    float butterfly2Speed[2U][LIGHTERS_AM *2];
-    float butterfly2Turn[LIGHTERS_AM *2];
-    uint8_t butterfly2Color[LIGHTERS_AM *2];
-    uint8_t light2[LIGHTERS_AM *2];
+    float butterflysPosX[BUTTERFLY_MAX_COUNT];
+    float butterflysPosY[BUTTERFLY_MAX_COUNT];
+    float butterflysSpeedX[BUTTERFLY_MAX_COUNT];
+    float butterflysSpeedY[BUTTERFLY_MAX_COUNT];
+    float butterflysTurn[BUTTERFLY_MAX_COUNT];
+    uint8_t butterflysColor[BUTTERFLY_MAX_COUNT];
+    uint8_t butterflysBrightness[BUTTERFLY_MAX_COUNT];
+    uint8_t deltaValue;
+    uint8_t deltaHue;
+    uint8_t hue;
+    uint8_t hue2;
     byte step = 0;
     byte csum = 0;
+
     
     bool butterflyRoutine(CRGB *leds, EffectWorker *param);
 

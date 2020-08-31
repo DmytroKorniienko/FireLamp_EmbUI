@@ -173,7 +173,7 @@ static const char TINTF_03B[] PROGMEM = "Отзеркаливание H";
 static const char TINTF_03C[] PROGMEM = "Отзеркаливание V";
 static const char TINTF_03D[] PROGMEM = "Плавное переключение эффектов";
 static const char TINTF_03E[] PROGMEM = "Случайный эффект в Демо";
-static const char TINTF_03F[] PROGMEM = "Время в секундах для смены режима";
+static const char TINTF_03F[] PROGMEM = "Смена эффекта в Демо. (сек)";
 static const char TINTF_040[] PROGMEM = "Сортировка эффектов";
 static const char TINTF_041[] PROGMEM = "Копии под базовым";
 static const char TINTF_042[] PROGMEM = "Копии в конце";
@@ -254,7 +254,8 @@ static const char TINTF_08C[] PROGMEM = "";
 static const char TINTF_08D[] PROGMEM = "";
 static const char TINTF_08E[] PROGMEM = "";
 static const char TINTF_08F[] PROGMEM = "";
-static const char TINTF_090[] PROGMEM = "";
+static const char TINTF_090[] PROGMEM = "Нумерация в списке эффектов";
+static const char TINTF_091[] PROGMEM = "Символ микрофона в списке";
 
 //-------------------------
 
@@ -404,7 +405,8 @@ static const char TCONST_008C[] PROGMEM = "pin";
 static const char TCONST_008D[] PROGMEM = "act";
 static const char TCONST_008E[] PROGMEM = "isClearing";
 static const char TCONST_008F[] PROGMEM = "pUptime";
-static const char TCONST_0090[] PROGMEM = "";
+static const char TCONST_0090[] PROGMEM = "numInList";
+static const char TCONST_0091[] PROGMEM = "effHasMic";
 
 static const char TCONST_FFFE[] PROGMEM = "false";
 static const char TCONST_FFFF[] PROGMEM = "true";
