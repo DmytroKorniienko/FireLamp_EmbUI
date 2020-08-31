@@ -888,7 +888,7 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
       lightersSpeed[0U][i] = -lightersSpeed[0U][i];
     }
 
-    EVERY_N_MILLIS(random16(1024)) {
+    EVERY_N_MILLIS(random16(512, 2048)) {
       if (light[i] == 127) 
         light[i] = 255;
       else light[i] = 127;
@@ -3967,14 +3967,8 @@ bool EffectFireworks::fireworksRoutine(CRGB *leds, EffectWorker *param)
 // https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
  bool EffectPacific::run(CRGB *ledarr, EffectWorker *opt)
 {
-  EVERY_N_MILLISECONDS(map(speed, 1, 255, 5, 30)) {
-        return pacificRoutine(*&ledarr, &*opt);
-  }
+    return pacificRoutine(*&ledarr, &*opt);
   return false;
-}
-
-uint16_t revY(uint16_t y) {
-return y;
 }
 
 // Add one layer of waves into the led array
@@ -3991,7 +3985,7 @@ void pacifica_one_layer(CRGB *leds, const TProgmemRGBPalette16& p, uint16_t cist
     uint16_t sindex16 = sin16( ci) + 32768;
     uint8_t sindex8 = scale16( sindex16, 240);
     CRGB c = ColorFromPalette( p, sindex8, bri, LINEARBLEND);
-    leds[revY(i)] += c;
+    leds[i] += c;
   }
 }
 
@@ -4004,11 +3998,11 @@ void pacifica_add_whitecaps(CRGB *leds)
   for( uint16_t i = 0; i < NUM_LEDS; i++) {
     uint8_t threshold = scale8( sin8( wave), 20) + basethreshold;
     wave += 7;
-    uint8_t l = leds[revY(i)].getAverageLight();
+    uint8_t l = leds[i].getAverageLight();
     if( l > threshold) {
       uint8_t overage = l - threshold;
       uint8_t overage2 = qadd8( overage, overage);
-      leds[revY(i)] += CRGB( overage, overage2, qadd8( overage2, overage2));
+      leds[i] += CRGB( overage, overage2, qadd8( overage2, overage2));
     }
   }
 }
@@ -4017,9 +4011,9 @@ void pacifica_add_whitecaps(CRGB *leds)
 void pacifica_deepen_colors(CRGB *leds)
 {
   for( uint16_t i = 0; i < NUM_LEDS; i++) {
-    leds[revY(i)].blue = scale8( leds[i].blue,  145); 
-    leds[revY(i)].green= scale8( leds[i].green, 200); 
-    leds[revY(i)] |= CRGB( 2, 5, 7);
+    leds[i].blue = scale8( leds[i].blue,  145); 
+    leds[i].green= scale8( leds[i].green, 200); 
+    leds[i] |= CRGB( 2, 5, 7);
   }
 }
 
@@ -4034,8 +4028,8 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
   sLastms = ms;
   uint16_t speedfactor1 = beatsin16(3, 179, 269);
   uint16_t speedfactor2 = beatsin16(4, 179, 269);
-  uint32_t deltams1 = (deltams * speedfactor1) / map(speed, 1, 255, 380, 127);
-  uint32_t deltams2 = (deltams * speedfactor2) / map(speed, 1, 255, 380, 127);
+  uint32_t deltams1 = (deltams * speedfactor1) / map(speed, 1, 255, 620, 60);
+  uint32_t deltams2 = (deltams * speedfactor2) / map(speed, 1, 255, 620, 60);
   uint32_t deltams21 = (deltams1 + deltams2) / 2;
   sCIStart1 += (deltams1 * beatsin88(1011,10,13));
   sCIStart2 -= (deltams21 * beatsin88(777,8,11));
@@ -4233,7 +4227,7 @@ void EffectNoise::load() {
 }
 
 // ---- Эффект "Мотыльки" 
-// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49189
+// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
 bool EffectButterfly::run(CRGB *ledarr, EffectWorker *opt) {
 
   return butterflyRoutine(*&ledarr, &*opt);
@@ -4244,148 +4238,177 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
   byte _scale = getCtrlVal(2).toInt();
   byte _speed = getCtrlVal(1).toInt();
   bool wings = false;
+  bool isColored = true;
+
   if (getCtrlVal(3) == F("true"))
   { // переключатель в true
     wings = true;
   }
   
-  if (csum != (127U^_scale))
+  if (getCtrlVal(4) == F("true"))
+  { // переключатель в true
+    isColored = false;
+  } 
+  
+  if (csum != (isColored^(127U^_scale))) // проверяем не пора ли
   {
-    csum = (127U^_scale);
-    randomSeed(millis());
-    if (_scale > LIGHTERS_AM) _scale = LIGHTERS_AM *2;
-    for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+    csum = (isColored^(127U^_scale));
+    if (isColored) // для режима смены цвета фона фиксируем количество мотыльков
+      deltaValue = (_scale > BUTTERFLY_MAX_COUNT) ? BUTTERFLY_MAX_COUNT : _scale;
+    else
+      deltaValue = BUTTERFLY_FIX_COUNT;
+    for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
     {
-      //butterflyIdx=0;
-      butterfly2Pos[0U][i] = random8(WIDTH);
-      butterfly2Pos[1U][i] = random8(HEIGHT);
-      butterfly2Speed[0U][i] = 0;
-      butterfly2Speed[1U][i] = 0;
-      butterfly2Turn[i] = 0;
-      butterfly2Color[i] = random8();
-      light2[i] = (wings ? (127U + random8(2U)) * 128U : 255);
-
+      butterflysPosX[i] = random8(WIDTH);
+      butterflysPosY[i] = random8(HEIGHT);
+      butterflysSpeedX[i] = 0;
+      butterflysSpeedY[i] = 0;
+      butterflysTurn[i] = 0;
+      butterflysColor[i] = (isColored) ? random8() : 0U;
+      butterflysBrightness[i] = 255U;
     }
+    //для инверсии, чтобы сто раз не пересчитывать
+    if (_scale != 1U and !isColored)
+      hue = map(_scale, 2, BUTTERFLY_MAX_COUNT + 1U, 0, 255);
+    hue2 = (_scale == 1U) ? 100U : 190U;  // вычисление базового оттенка
+
   }
-  if (!wings) // имитация взмахов крыльями (с) kostyamat
-    FastLED.clear();
+  if (wings && isColored)
+    //myLamp.dimAll(35U); // для крылышков
+    fadeToBlackBy(leds, NUM_LEDS, 200);
   else
-    fadeToBlackBy(leds, NUM_LEDS, 220);
+    FastLED.clear();
 
-  float temp0;
+  float maxspeed;
+  uint8_t tmp;
   float speedfactor = (float)_speed / 2048.0f + 0.001f;
-  if (++step >= _scale) {
+  if (++step >= deltaValue)
     step = 0U;
-    //FastLED.clear();
-  }
-  for (uint8_t i = 0U; i < _scale; i++)
+  for (uint8_t i = 0U; i < deltaValue; i++)
   {
-    if (wings){ // имитируем взмахи крыльями (c) kostyamat
-      if (butterfly2Speed[0U][i] == 0.0f and butterfly2Speed[1U][i] == 0.0f)
-        light2[i] = 255;
-      else 
-        light2[i] = 127U + random8(2U) * 128U;
-    }
-    butterfly2Pos[0U][i] += butterfly2Speed[0U][i]*speedfactor;
-    butterfly2Pos[1U][i] += butterfly2Speed[1U][i]*speedfactor;
+    butterflysPosX[i] += butterflysSpeedX[i]*speedfactor;
+    butterflysPosY[i] += butterflysSpeedY[i]*speedfactor;
 
-    if (butterfly2Pos[0U][i] < 0)
-      butterfly2Pos[0U][i] = (float)(WIDTH - 1) + butterfly2Pos[0U][i];
-    if (butterfly2Pos[0U][i] > WIDTH - 1)
-      butterfly2Pos[0U][i] = butterfly2Pos[0U][i] + 1 - WIDTH;
+    if (butterflysPosX[i] < 0)
+      butterflysPosX[i] = (float)(WIDTH - 1) + butterflysPosX[i];
+    if (butterflysPosX[i] > WIDTH - 1)
+      butterflysPosX[i] = butterflysPosX[i] + 1 - WIDTH;
 
-    if (butterfly2Pos[1U][i] < 0)
+    if (butterflysPosY[i] < 0)
     {
-      butterfly2Pos[1U][i] = -butterfly2Pos[1U][i];
-      butterfly2Speed[1U][i] = -butterfly2Speed[1U][i];
-      //butterfly2Speed[0U][i] = -butterfly2Speed[0U][i];
+      butterflysPosY[i] = -butterflysPosY[i];
+      butterflysSpeedY[i] = -butterflysSpeedY[i];
+      //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
-    if (butterfly2Pos[1U][i] > HEIGHT - 1U)
+    if (butterflysPosY[i] > HEIGHT - 1U)
     {
-      butterfly2Pos[1U][i] = (HEIGHT << 1U) - 2U - butterfly2Pos[1U][i];
-      butterfly2Speed[1U][i] = -butterfly2Speed[1U][i];
-      //butterfly2Speed[0U][i] = -butterfly2Speed[0U][i];
+      butterflysPosY[i] = (HEIGHT << 1U) - 2U - butterflysPosY[i];
+      butterflysSpeedY[i] = -butterflysSpeedY[i];
+      //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
 
     //проворот траектории
-    temp0 = fabs(butterfly2Speed[0U][i])+fabs(butterfly2Speed[1U][i]); // максимальная суммарная скорость
-    if (temp0 == fabs(butterfly2Speed[0U][i] + butterfly2Speed[1U][i]))
+    maxspeed = fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]); // максимальная суммарная скорость
+    if (maxspeed == fabs(butterflysSpeedX[i] + butterflysSpeedY[i]))
       {
-          if (butterfly2Speed[0U][i] > 0) // правый верхний сектор вектора
+          if (butterflysSpeedX[i] > 0) // правый верхний сектор вектора
           {
-            butterfly2Speed[0U][i] += butterfly2Turn[i];
-            if (butterfly2Speed[0U][i] > temp0) // если вектор переехал вниз
+            butterflysSpeedX[i] += butterflysTurn[i];
+            if (butterflysSpeedX[i] > maxspeed) // если вектор переехал вниз
               {
-                butterfly2Speed[0U][i] = temp0 + temp0 - butterfly2Speed[0U][i];
-                butterfly2Speed[1U][i] = butterfly2Speed[0U][i] - temp0;
+                butterflysSpeedX[i] = maxspeed + maxspeed - butterflysSpeedX[i];
+                butterflysSpeedY[i] = butterflysSpeedX[i] - maxspeed;
               }
             else
-              butterfly2Speed[1U][i] = temp0 - fabs(butterfly2Speed[0U][i]);
+              butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
           }
           else                           // левый нижний сектор
           {
-            butterfly2Speed[0U][i] -= butterfly2Turn[i];
-            if (butterfly2Speed[0U][i] + temp0 < 0) // если вектор переехал вверх
+            butterflysSpeedX[i] -= butterflysTurn[i];
+            if (butterflysSpeedX[i] + maxspeed < 0) // если вектор переехал вверх
               {
-                butterfly2Speed[0U][i] = 0 - butterfly2Speed[0U][i] - temp0 - temp0;
-                butterfly2Speed[1U][i] = temp0 - fabs(butterfly2Speed[0U][i]);
+                butterflysSpeedX[i] = 0 - butterflysSpeedX[i] - maxspeed - maxspeed;
+                butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
               }
             else
-              butterfly2Speed[1U][i] = fabs(butterfly2Speed[0U][i]) - temp0;
+              butterflysSpeedY[i] = fabs(butterflysSpeedX[i]) - maxspeed;
           }
       }
     else //левый верхний и правый нижний секторы вектора
       {
-          if (butterfly2Speed[0U][i] > 0) // правый нижний сектор
+          if (butterflysSpeedX[i] > 0) // правый нижний сектор
           {
-            butterfly2Speed[0U][i] -= butterfly2Turn[i];
-            if (butterfly2Speed[0U][i] > temp0) // если вектор переехал наверх
+            butterflysSpeedX[i] -= butterflysTurn[i];
+            if (butterflysSpeedX[i] > maxspeed) // если вектор переехал наверх
               {
-                butterfly2Speed[0U][i] = temp0 + temp0 - butterfly2Speed[0U][i];
-                butterfly2Speed[1U][i] = temp0 - butterfly2Speed[0U][i];
+                butterflysSpeedX[i] = maxspeed + maxspeed - butterflysSpeedX[i];
+                butterflysSpeedY[i] = maxspeed - butterflysSpeedX[i];
               }
             else
-              butterfly2Speed[1U][i] = fabs(butterfly2Speed[0U][i]) - temp0;
+              butterflysSpeedY[i] = fabs(butterflysSpeedX[i]) - maxspeed;
           }
           else                           // левый верхний сектор
           {
-            butterfly2Speed[0U][i] += butterfly2Turn[i];
-            if (butterfly2Speed[0U][i] + temp0 < 0) // если вектор переехал вниз
+            butterflysSpeedX[i] += butterflysTurn[i];
+            if (butterflysSpeedX[i] + maxspeed < 0) // если вектор переехал вниз
               {
-                butterfly2Speed[0U][i] = 0 - butterfly2Speed[0U][i] - temp0 - temp0;
-                butterfly2Speed[1U][i] = 0 - butterfly2Speed[0U][i] - temp0;
+                butterflysSpeedX[i] = 0 - butterflysSpeedX[i] - maxspeed - maxspeed;
+                butterflysSpeedY[i] = 0 - butterflysSpeedX[i] - maxspeed;
               }
             else
-              butterfly2Speed[1U][i] = temp0 - fabs(butterfly2Speed[0U][i]);
+              butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
           }
       }
-    
-    if (light2[i] == 255U)
+   
+    if (butterflysBrightness[i] == 255U)
     {
       if (step == i && random8(2U) == 0U)//(step == 0U && ((pcnt + i) & 0x01))
       {
-        light2[i] = random8(180U,240U);
-        butterfly2Speed[0U][i] = (float)random8(51U) / 10.0f + 1.0f;
-        if (random8(2U) == 0U) butterfly2Speed[0U][i] = -butterfly2Speed[0U][i];
-        butterfly2Speed[1U][i] = (float)random8(51U) / 10.0f + 1.0f;
-        if (random8(2U) == 0U) butterfly2Speed[1U][i] = -butterfly2Speed[1U][i];
+        butterflysBrightness[i] = random8(220U,244U);
+        butterflysSpeedX[i] = (float)random8(101U) / 20.0f + 1.0f;
+        if (random8(2U) == 0U) butterflysSpeedX[i] = -butterflysSpeedX[i];
+        butterflysSpeedY[i] = (float)random8(101U) / 20.0f + 1.0f;
+        if (random8(2U) == 0U) butterflysSpeedY[i] = -butterflysSpeedY[i];
         // проворот траектории
-        butterfly2Turn[i] = (float)random8((fabs(butterfly2Speed[0U][i])+fabs(butterfly2Speed[1U][i]))*2.0+2.0) / 40.0f;
-        if (random8(2U) == 0U) butterfly2Turn[i] = -butterfly2Turn[i];
+        //butterflysTurn[i] = (float)random8((fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]))*2.0+2.0) / 40.0f;
+        butterflysTurn[i] = (float)random8((fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]))*20.0f+2.0f) / 200.0f;
+        if (random8(2U) == 0U) butterflysTurn[i] = -butterflysTurn[i];
       }
     }
-    else if ((uint16_t)(butterfly2Pos[0U][i] * 7) % 7 == 0U && (uint16_t)(butterfly2Pos[1U][i] * 7) % 7 == 0U)
+    else
     {
-      butterfly2Pos[0U][i] = (uint8_t)butterfly2Pos[0U][i];
-      butterfly2Pos[1U][i] = (uint8_t)butterfly2Pos[1U][i];
-      butterfly2Speed[0U][i] = 0;
-      butterfly2Speed[1U][i] = 0;
-      butterfly2Turn[i] = 0;
-      light2[i] = 255U;
+      if (step == i)
+        butterflysBrightness[i]++;
+      tmp = 255U - butterflysBrightness[i];
+      if (tmp == 0U || ((uint16_t)(butterflysPosX[i] * tmp) % tmp == 0U && (uint16_t)(butterflysPosY[i] * tmp) % tmp == 0U))
+      {
+        butterflysPosX[i] = round(butterflysPosX[i]);
+        butterflysPosY[i] = round(butterflysPosY[i]);
+        butterflysSpeedX[i] = 0;
+        butterflysSpeedY[i] = 0;
+        butterflysTurn[i] = 0;
+        butterflysBrightness[i] = 255U;
+      }
     }
-    
-    myLamp.drawPixelXYF(butterfly2Pos[0U][i], butterfly2Pos[1U][i], CHSV(butterfly2Color[i], 255U, light2[i]));
-    
+
+    if (wings)
+      myLamp.drawPixelXYF(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, (butterflysBrightness[i] == 255U) ? 255U : 128U + random8(2U) * 111U)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
+    else
+      myLamp.drawPixelXYF(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, butterflysBrightness[i])); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
+  }
+
+  // постобработка кадра
+  if (isColored){
+    for (uint8_t i = 0U; i < deltaValue; i++) // ещё раз рисуем всех Мотыльков, которые "сидят на стекле"
+      if (butterflysBrightness[i] == 255U)
+        myLamp.drawPixelXY(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, butterflysBrightness[i]));
+  }
+  else {
+    //теперь инверсия всей матрицы
+    if (_scale == 1U)
+      if (++deltaHue == 0U) hue++;
+    for (uint16_t i = 0U; i < NUM_LEDS; i++)
+      leds[i] = CHSV(hue, hue2, 255U - leds[i].r);
   }
   return true;
 }

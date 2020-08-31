@@ -66,6 +66,17 @@ void AUX_toggle(bool key)
 }
 #endif
 
+// Вывод значка микрофона в списке эффектов
+#ifdef MIC_EFFECTS
+    #define MIC_SYMBOL (jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? (pgm_read_byte(T_EFFVER + (uint8_t)eff->eff_nb) % 2 == 0 ? " \U0001F399" : "") : "")
+#else
+    #define MIC_SYMBOL ""
+#endif
+
+// Вывод номеров эффектов в списке, в WebUI
+#define EFF_NUMBER (jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? (String(eff->eff_nb) + ". ") : "")
+
+
 void pubCallback(Interface *interf){
     //return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
@@ -426,7 +437,6 @@ void delayedcall_effects_main(){
         optionsTicker.detach();
 }
 
-
 void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 #ifndef DELAYED_EFFECTS
     fast=false;
@@ -461,7 +471,11 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
                 effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
-                interf->option(String(eff->eff_nb), effname);
+                interf->option(String(eff->eff_nb), 
+                    EFF_NUMBER + 
+                    String(effname) + 
+                    MIC_SYMBOL                    
+                );
                 ESP.wdtFeed();
             }
         }
@@ -472,7 +486,11 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
                 myLamp.effects.loadeffname(effname, eff->eff_nb);
-                interf->option(String(eff->eff_nb), effname);
+                interf->option(String(eff->eff_nb), 
+                    EFF_NUMBER + 
+                    String(effname) + 
+                    MIC_SYMBOL                    
+                );
                 ESP.wdtFeed();
             }
         }
@@ -891,7 +909,10 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_008E), FPSTR(TINTF_083));
     interf->checkbox(FPSTR(TCONST_004F), FPSTR(TINTF_03E));
     interf->range(FPSTR(TCONST_0026), 30, 250, 10, FPSTR(TINTF_03F));
-
+    interf->checkbox(FPSTR(TCONST_0090), FPSTR(TINTF_090)); // нумерация в списке эффектов
+#ifdef MIC_EFFECTS
+    interf->checkbox(FPSTR(TCONST_0091), FPSTR(TINTF_091)); // значек микрофона в списке эффектов
+#endif
     interf->select(FPSTR(TCONST_0050), FPSTR(TINTF_040));
     interf->option(String(SORT_TYPE::ST_BASE), FPSTR(TINTF_041));
     interf->option(String(SORT_TYPE::ST_END), FPSTR(TINTF_042));
@@ -946,6 +967,10 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
     SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime((*data)[FPSTR(TCONST_0055)]));
+    SETPARAM(FPSTR(TCONST_0090));
+#ifdef MIC_EFFECTS
+    SETPARAM(FPSTR(TCONST_0091));
+#endif
 
     section_settings_frame(interf, data);
 }
@@ -1433,6 +1458,7 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_003A),F("0.00"));
     jee.var_create(FPSTR(TCONST_003B),F("0"));
     jee.var_create(FPSTR(TCONST_001E), FPSTR(TCONST_FFFF));
+    jee.var_create(FPSTR(TCONST_0091), FPSTR(TCONST_FFFE));  // значек микрофона в списке эффектов
 #endif
 
 #ifdef RESTORE_STATE
@@ -1447,6 +1473,7 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
     jee.var_create(FPSTR(TCONST_008E), FPSTR(TCONST_FFFE)); // "Очищать лампу при смене эффектов"
+    jee.var_create(FPSTR(TCONST_0090), FPSTR(TCONST_FFFE)); // Нумерация в списке эффектов
 
     // далее идут обработчики параметров
 
@@ -1541,6 +1568,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0039)] = jee.param(FPSTR(TCONST_0039));
     obj[FPSTR(TCONST_003A)] = jee.param(FPSTR(TCONST_003A));
     obj[FPSTR(TCONST_003B)] = jee.param(FPSTR(TCONST_003B));
+    obj[FPSTR(TCONST_0091)] = jee.param(FPSTR(TCONST_0091)); // значек микрофона в списке эффектов
     set_settings_mic(nullptr, &obj);
     obj.clear();
 #endif
@@ -1559,6 +1587,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0053)] = jee.param(FPSTR(TCONST_0053));
     obj[FPSTR(TCONST_0054)] = jee.param(FPSTR(TCONST_0054));
     obj[FPSTR(TCONST_0055)] = jee.param(FPSTR(TCONST_0055));
+    obj[FPSTR(TCONST_0090)] = jee.param(FPSTR(TCONST_0090)); // нумерация в списке эффектов
     set_settings_other(nullptr, &obj);
     obj.clear();
 }
