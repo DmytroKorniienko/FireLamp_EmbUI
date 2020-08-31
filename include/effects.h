@@ -96,6 +96,8 @@ typedef union {
 } EFFFLAGS;
 
 class EffectListElem{
+    private:
+    unsigned long ms = micros(); // момент создания элемента, для сортировки в порядке следования
     public:
     uint16_t eff_nb; // номер эффекта, для копий наращиваем старший байт
     EFFFLAGS flags; // флаги эффекта
@@ -113,6 +115,7 @@ class EffectListElem{
     void canBeSelected(bool val){ flags.canBeSelected = val; }
     bool isFavorite(){ return flags.isFavorite; }
     void isFavorite(bool val){ flags.isFavorite = val; }
+    unsigned long  getMS(){ return ms; }
 };
 
 //! Basic Effect Calc class
@@ -1169,7 +1172,7 @@ public:
 
 class EffectWorker {
 private:
-    uint8_t effSort; // порядок сортировки в UI
+    SORT_TYPE effSort; // порядок сортировки в UI
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     EFFFLAGS flags; // подумать нужен ли он здесь...
@@ -1197,6 +1200,7 @@ private:
     void clearControlsList(); // очистка списка контроллов и освобождение памяти
     
     //void initDefault();
+    void effectsReSort(SORT_TYPE st=(SORT_TYPE)(255));
 
     int loadeffconfig(const uint16_t nb, const char *folder=nullptr);
 
@@ -1277,7 +1281,7 @@ public:
     } // initDefault(); убрал из конструктора, т.к. крайне неудобно становится отлаживать..
 
     // тип сортировки
-    void setEffSortType(uint8_t type) {effSort = type;}
+    void setEffSortType(SORT_TYPE type) {effSort = type; effectsReSort();}
 
     // конструктор копий эффектов
     EffectWorker(const EffectListElem* base, const EffectListElem* copy);

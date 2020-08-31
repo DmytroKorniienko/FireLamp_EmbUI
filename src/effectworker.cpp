@@ -280,15 +280,26 @@ void EffectWorker::initDefault()
         }
     chk = effects[i]->eff_nb;
   }
-  if(effSort==0) // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
+  effectsReSort();
+}
+
+void EffectWorker::effectsReSort(SORT_TYPE _effSort)
+{
+  if(_effSort==255) _effSort=effSort; // Для дефолтного - берем с конфига
+  
+  if(_effSort==0) // сортирую окончательно, так чтобы копии были под базовыми эффектами :)
     effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
-  else if(effSort==1){ // сортирую окончательно, так чтобы копии были в конце :)
-        //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((int32_t)(((a->eff_nb&0xFF)<<8) | ((a->eff_nb&0xFF00)>>8)) - (((b->eff_nb&0xFF)<<8) | ((b->eff_nb&0xFF00)>>8)));});
-        //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (a->eff_nb&0xFF00) - (b->eff_nb&0xFF00) + (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
-      }
-  else if(effSort==2){ // в порядке следования внутри индекса
-        // не реализовано пока
-      }
+  else if(_effSort==1){ // сортирую окончательно, так чтобы копии были в конце :)
+    effects.sort([](EffectListElem *&a, EffectListElem *&b){ return a->eff_nb - b->eff_nb;}); // сортирую по eff_nb
+    //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((int32_t)(((a->eff_nb&0xFF)<<8) | ((a->eff_nb&0xFF00)>>8)) - (((b->eff_nb&0xFF)<<8) | ((b->eff_nb&0xFF00)>>8)));});
+    //effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (a->eff_nb&0xFF00) - (b->eff_nb&0xFF00) + (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
+  }
+  else if(_effSort==2){ // в порядке следования внутри индекса
+    effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (int)(a->getMS() - b->getMS());});
+  }
+  else if(_effSort==3){ // в алфавитном порядке
+    effects.sort([](EffectListElem *&a, EffectListElem *&b){ String tmp=FPSTR(T_EFFNAMEID[(uint8_t)a->eff_nb]); return strcmp_P(tmp.c_str(), (T_EFFNAMEID[(uint8_t)b->eff_nb]));});
+  }
 }
 
 /**
@@ -608,60 +619,21 @@ void EffectWorker::makeIndexFile(const char *folder)
   chckdefconfigs(folder);
 
   File indexFile;
-  /*
-  String filename;
-  if (folder != nullptr) {
-      filename.concat(F("/"));
-      filename.concat(folder);
-  }
-  filename.concat(F("/eff_index.json"));
-  */
 
-  /*  по-моему файл везде перезаписывается
-  if(LittleFS.exists(filename)){ // если индексный файл существует, то на выход
-      return;
-  }
-  */
   LOG(println, F("Rebuilding Index file..."));
   bool firstLine = true;
-  //bool nameFromConfig = false;    // судя по коду ниже это не актуально (ЕМ)
-  //indexFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   openIndexFile(indexFile, folder);
-  //BufferingPrint outbuff{indexFile, FILEIO_BUFFSIZE};
-
-  //outbuff.print("[");
   indexFile.print("[");
-  //char buff[IDX_ITEMBUFFSIZE];  // buff for {"nb":255,"fl":255},
 
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // EFF_NONE не сохраняем, перебор до 255 включительно
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
 
-    //LOG(printf_P,PSTR("rebuild idx for id: %d\n"), i);
-    // не соображу зачем нужно флаги хранить И в индексе И в конфиге эффекта, если индекс определяет "набор текущих любимых эффектов", возможно не прав (ЕМ)
-    // если нужно "восстанавливать" флаги в поврежденный индекс, то это не решает проблему существования множества индексов с разными флагами
-    // проще делать его копию на файловом уровне, это будет быстрее/менее затратно по ресурсам
-    // тут скорее вопрос принадлежности флагов. Если это характеристика текущего "набора" эффектов, то ей не место в конфигах самих эффектов
-    /*
-     else { // конфиг существует, тогда читаем его
-        loadeffconfig(i, folder);
-    }
-    if(!firstLine) idx.concat(F(",")); // собираем JSON, чтобы записать его за один раз
-    idx.concat(F("{\"nb\":"));
-    idx.concat(i);
-    idx.concat(F(",\"fl\":255}"));
-    //idx.concat(nameFromConfig ? flags.mask : 255); // от хранения имени в индексе отказался, т.к. он становится очень большим...
-    */
-    //outbuff.printf_P(PSTR("%s{\"nb\":%d,\"fl\":255}"), firstLine ? "" : ",", i);
     indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, 255);
     firstLine = false; // сбрасываю признак перовой строки
     //yield();
   }
 
-/*  
-  outbuff.print("]");
-  outbuff.flush();
-*/
   indexFile.print("]");
   indexFile.close();
 
@@ -671,19 +643,20 @@ void EffectWorker::makeIndexFile(const char *folder)
 
 void EffectWorker::makeIndexFileFromList(const char *folder)
 {
-      File indexFile;
+  File indexFile;
 
-      openIndexFile(indexFile, folder);
+  openIndexFile(indexFile, folder);
+  effectsReSort(SORT_TYPE::ST_IDX); // сброс сортировки перед записью
 
-      bool firstLine = true;
-      indexFile.print("[");
-      for (uint8_t i = 0; i < effects.size(); i++){
-        indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", effects[i]->eff_nb, effects[i]->flags.mask);
-        firstLine = false; // сбрасываю признак первой строки
-      }
-      indexFile.print("]");
-      indexFile.close();
-
+  bool firstLine = true;
+  indexFile.print("[");
+  for (uint8_t i = 0; i < effects.size(); i++){
+    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", effects[i]->eff_nb, effects[i]->flags.mask);
+    firstLine = false; // сбрасываю признак первой строки
+  }
+  indexFile.print("]");
+  indexFile.close();
+  effectsReSort(); // восстанавлива сортировку
   LOG(println,F("Индекс эффектов обновлен!"));
 }
 
@@ -738,98 +711,13 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
 // создать или обновить текущий индекс эффекта
 void EffectWorker::updateIndexFile()
 {
-  // Я передумал, тупо пересоздадим индексный файл из списка и не морочим голову :), так будет проще и по идее надежнее, чем адресно править
-  // предыдущий код пусть пока еще повисит навсякий случай
   makeIndexFileFromList();
-
-  // if (LittleFS.begin()) {
-  //     File indexFile;
-  //     String idx;
-  //     String filename;
-  //     filename.concat(F("/eff_index.json"));
-
-  //     if(!LittleFS.exists(filename)){ // если индексный файл не существует, то на выход
-  //         return;
-  //     }
-  //     DynamicJsonDocument doc(4096);
-      
-  //     indexFile = LittleFS.open(filename, "r");
-  //     idx = indexFile.readString();
-  //     DeserializationError error = deserializeJson(doc,idx);
-
-  //     if (error) {
-  //         LOG(print, F("Index deserializeJson error: "));
-  //         LOG(println, error.c_str()); //error.code()
-  //         return;
-  //     }
-
-  //     JsonArray arr = doc.as<JsonArray>();
-  //     size_t i=0;
-  //     for(; i<arr.size(); i++){
-  //         // ищем что проапдейтить
-  //         JsonObject var = arr[i];
-  //         if(var[F("nb")].as<uint16_t>()==curEff){
-  //             var[F("fl")] = flags.mask;
-  //         }
-  //     }
-  //     if(i>=arr.size()){
-  //         JsonObject var = arr.createNestedObject();
-  //         var[F("nb")] = curEff;
-  //         var[F("fl")] = flags.mask;
-  //     }
-  //     idx.clear();
-  //     serializeJson(doc,idx);
-  //     indexFile = LittleFS.open(filename, "w");
-  //     //LOG(println,idx);
-  //     indexFile.print(idx);
-  //     indexFile.flush();
-  //     indexFile.close();
-  //     doc.clear();
-  // }
 }
 
 // удалить эффект из индексного файла
 void EffectWorker::deleteFromIndexFile(const uint16_t effect)
 {
-  // Я передумал, тупо пересоздадим индексный файл из списка и не морочим голову :), так будет проще и по идее надежнее, чем адресно править
-  // предыдущий код пусть пока еще повисит навсякий случай
   makeIndexFileFromList();
-
-  // if (LittleFS.begin()) {
-  //     File indexFile;
-  //     String idx;
-  //     String filename;
-  //     filename.concat(F("/eff_index.json"));
-
-  //     if(!LittleFS.exists(filename)){ // если индексный файл не существует, то на выход
-  //         return;
-  //     }
-  //     DynamicJsonDocument doc(4096);
-  //     indexFile = LittleFS.open(filename, "r");
-  //     idx = indexFile.readString();
-  //     DeserializationError error = deserializeJson(doc,idx);
-
-  //     if (error) {
-  //         LOG(print, F("Index deserializeJson error: "));
-  //         LOG(println, error.c_str()); //error.code()
-  //         return;
-  //     }
-
-  //     JsonArray arr = doc.as<JsonArray>();
-  //     for(size_t i=0; i<arr.size(); i++){
-  //         // ищем что удалить
-  //         JsonObject var = arr[i];
-  //         if(var[F("nb")].as<uint16_t>()==effect)
-  //           arr.remove(i);
-  //     }
-  //     idx.clear();
-  //     serializeJson(arr,idx);
-  //     indexFile = LittleFS.open(filename, "w");
-  //     indexFile.print(idx);
-  //     indexFile.flush();
-  //     indexFile.close();
-  //     doc.clear();
-  // }
 }
 
 // удалить эффект

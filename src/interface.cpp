@@ -880,9 +880,10 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->range(FPSTR(TCONST_0026), 30, 250, 10, FPSTR(TINTF_03F));
 
     interf->select(FPSTR(TCONST_0050), FPSTR(TINTF_040));
-    interf->option(String(0), FPSTR(TINTF_041));
-    interf->option(String(1), FPSTR(TINTF_042));
-    interf->option(String(2), FPSTR(TINTF_043));
+    interf->option(String(SORT_TYPE::ST_BASE), FPSTR(TINTF_041));
+    interf->option(String(SORT_TYPE::ST_END), FPSTR(TINTF_042));
+    interf->option(String(SORT_TYPE::ST_IDX), FPSTR(TINTF_043));
+    interf->option(String(SORT_TYPE::ST_AB), FPSTR(TINTF_085));
     interf->json_section_end();
 
     interf->spacer(FPSTR(TINTF_001));
@@ -926,8 +927,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_008E), myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == FPSTR(TCONST_FFFF)));
     SETPARAM(FPSTR(TCONST_004F));
     SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(FPSTR(TCONST_0026)).toInt()); }}));
-    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<uint8_t>()));
-
+    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
     SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
     SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
