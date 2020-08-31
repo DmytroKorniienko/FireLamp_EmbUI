@@ -256,6 +256,21 @@ static const char TINTF_08E[] PROGMEM = "";
 static const char TINTF_08F[] PROGMEM = "";
 static const char TINTF_090[] PROGMEM = "Нумерация в списке эффектов";
 static const char TINTF_091[] PROGMEM = "Символ микрофона в списке";
+static const char TINTF_092[] PROGMEM = "";
+static const char TINTF_093[] PROGMEM = "";
+static const char TINTF_094[] PROGMEM = "";
+static const char TINTF_095[] PROGMEM = "";
+static const char TINTF_096[] PROGMEM = "";
+static const char TINTF_097[] PROGMEM = "";
+static const char TINTF_098[] PROGMEM = "";
+static const char TINTF_099[] PROGMEM = "";
+static const char TINTF_09A[] PROGMEM = "";
+static const char TINTF_09B[] PROGMEM = "";
+static const char TINTF_09C[] PROGMEM = "";
+static const char TINTF_09D[] PROGMEM = "";
+static const char TINTF_09E[] PROGMEM = "";
+static const char TINTF_09F[] PROGMEM = "";
+static const char TINTF_0A0[] PROGMEM = "";
 
 //-------------------------
 
@@ -407,6 +422,21 @@ static const char TCONST_008E[] PROGMEM = "isClearing";
 static const char TCONST_008F[] PROGMEM = "pUptime";
 static const char TCONST_0090[] PROGMEM = "numInList";
 static const char TCONST_0091[] PROGMEM = "effHasMic";
+static const char TCONST_0092[] PROGMEM = "";
+static const char TCONST_0093[] PROGMEM = "";
+static const char TCONST_0094[] PROGMEM = "";
+static const char TCONST_0095[] PROGMEM = "";
+static const char TCONST_0096[] PROGMEM = "";
+static const char TCONST_0097[] PROGMEM = "";
+static const char TCONST_0098[] PROGMEM = "";
+static const char TCONST_0099[] PROGMEM = "";
+static const char TCONST_009A[] PROGMEM = "";
+static const char TCONST_009B[] PROGMEM = "";
+static const char TCONST_009C[] PROGMEM = "";
+static const char TCONST_009D[] PROGMEM = "";
+static const char TCONST_009E[] PROGMEM = "";
+static const char TCONST_009F[] PROGMEM = "";
+static const char TCONST_00A0[] PROGMEM = "";
 
 static const char TCONST_FFFE[] PROGMEM = "false";
 static const char TCONST_FFFF[] PROGMEM = "true";

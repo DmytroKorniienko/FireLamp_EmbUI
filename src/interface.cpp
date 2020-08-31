@@ -194,7 +194,11 @@ void delayedcall_show_effects_config(){
     String effname((char *)0);
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         myLamp.effects.loadeffname(effname, eff->eff_nb);
-        interf->option(String(eff->eff_nb), effname);
+        interf->option(String(eff->eff_nb),
+            EFF_NUMBER + 
+            String(effname) + 
+            MIC_SYMBOL                
+        );
         ESP.wdtFeed();
     }
     interf->json_section_end();
@@ -423,7 +427,11 @@ void delayedcall_effects_main(){
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         if (eff->canBeSelected()) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
-            interf->option(String(eff->eff_nb), effname);
+            interf->option(String(eff->eff_nb),
+                EFF_NUMBER + 
+                String(effname) + 
+                MIC_SYMBOL
+            );
             ESP.wdtFeed();
         }
     }
