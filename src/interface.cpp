@@ -161,7 +161,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         EffectListElem *eff = nullptr;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
-            interf->option(String(eff->eff_nb), effname);
+            interf->option(String(eff->eff_nb),
+                EFF_NUMBER + 
+                String(effname) + 
+                MIC_SYMBOL
+            );
             ESP.wdtFeed();
         }
     } else {
@@ -170,7 +174,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         String effname((char *)0);
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
-            interf->option(String(eff->eff_nb), effname);
+            interf->option(String(eff->eff_nb),
+                EFF_NUMBER + 
+                String(effname) + 
+                MIC_SYMBOL
+            );
             ESP.wdtFeed();
         }
     }
