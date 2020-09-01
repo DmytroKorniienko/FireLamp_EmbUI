@@ -1318,6 +1318,8 @@ public:
     byte getModeAmount() {return effects.size();}
 
     const String &getEffectName() {return effectName;}
+    void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
+        {if(to->eff_nb==curEff) effectName=name; else {EffectWorker *tmp=new EffectWorker(to); tmp->selEff=to->eff_nb; tmp->setEffectName(name,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
     const String &getOriginalName() {return originalName;}
 
     /**
