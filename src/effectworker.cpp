@@ -370,7 +370,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
   }
 
   version = doc[F("ver")].as<uint8_t>();
-  if(geteffcodeversion((uint8_t)nb) != version){
+  if(geteffcodeversion((uint8_t)nb) != version && nb<=255){ // только для базовых эффектов эта проверка
       doc.clear();
       LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%d vs %d)\n"), version, geteffcodeversion((uint8_t)nb));
       savedefaulteffconfig(nb, filename);

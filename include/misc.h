@@ -35,8 +35,17 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __MISC_H
+#define __MISC_H
+
+//#pragma once
 #include <Arduino.h>
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#elif defined ESP32
+#include <WiFi.h>
+#endif
+//#include "user_config.h" - если включить, то UI тоже будет слать лог по телнет и это вызовет падения при большом потоке лога
 
 // Задержка после записи в ФС, не менять, если не сказано дополнительно!
 #ifndef DELAY_AFTER_FS_WRITING
@@ -343,39 +352,15 @@ class timerMinim
 
 #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
 #define TELNET_PORT           (23U)                         // номер telnet порта
-WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
-WiFiClient telnet;                                          // обработчик событий telnet клиента
-bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
+extern WiFiServer telnetServer;
+extern WiFiClient telnet;
+extern bool telnetGreetingShown;
+void handleTelnetClient();
 
-void handleTelnetClient()
-{
-  if (telnetServer.hasClient())
-  {
-    if (!telnet || !telnet.connected())
-    {
-      if (telnet)
-      {
-        telnet.stop();                                      // клиент отключился
-        telnetGreetingShown = false;
-      }
-      telnet = telnetServer.available();                    // готов к подключению нового клиента
-    }
-    else
-    {
-      telnetServer.available().stop();                      // один клиент уже подключен, блокируем подключение нового
-      telnetGreetingShown = false;
-    }
-  }
-
-  if (telnet && telnet.connected() && telnet.available())
-  {
-    if (!telnetGreetingShown)
-    {
-      telnet.println(F("Подключение к устройтву по протоколу telnet установлено\n-------"));
-      telnetGreetingShown = true;
-    }
-  }
-}
+// WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
+// WiFiClient telnet;                                          // обработчик событий telnet клиента
+// bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
 
 #endif
 
+#endif
