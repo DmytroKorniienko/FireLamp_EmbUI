@@ -69,8 +69,10 @@ void AUX_toggle(bool key)
 // Вывод значка микрофона в списке эффектов
 #ifdef MIC_EFFECTS
     #define MIC_SYMBOL (micSymb ? (pgm_read_byte(T_EFFVER + (uint8_t)eff->eff_nb) % 2 == 0 ? " \U0001F399" : "") : "")
+    #define MIC_SYMB bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false
 #else
     #define MIC_SYMBOL ""
+    #define MIC_SYMB
 #endif
 
 // Вывод номеров эффектов в списке, в WebUI
@@ -163,7 +165,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         //interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
         String effname((char *)0);
         EffectListElem *eff = nullptr;
-        bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false;
+        MIC_SYMB;
         bool numList = jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? true : false;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
@@ -178,7 +180,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         EffectListElem *eff = nullptr;
         LOG(println,F("DBG1: using slow Names generation"));
         String effname((char *)0);
-        bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false;
+        MIC_SYMB;
         bool numList = jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? true : false;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
@@ -208,7 +210,7 @@ void delayedcall_show_effects_config(){
     interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
     EffectListElem *eff = nullptr;
     String effname((char *)0);
-    bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false;
+    MIC_SYMB;
     bool numList = jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? true : false;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         myLamp.effects.loadeffname(effname, eff->eff_nb);
@@ -397,10 +399,10 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=3; i<controls.size();i++){
-        if((*data).containsKey(String(FPSTR(TCONST_0015))+String(i))){
-            controls[i]->setVal((*data)[String(FPSTR(TCONST_0015))+String(i)]);
-            myLamp.effects.worker->setDynCtrl(controls[i]); // передача значения в эффект (пока заглушка)
-            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(FPSTR(TCONST_0015))+String(i)].as<String>().c_str());
+        if((*data).containsKey(String(FPSTR(TCONST_0015))+String(controls[i]->getId()))){
+            controls[i]->setVal((*data)[String(FPSTR(TCONST_0015))+String(controls[i]->getId())]);
+            myLamp.effects.worker->setDynCtrl(controls[i]);
+            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(FPSTR(TCONST_0015))+String(controls[i]->getId())].as<String>().c_str());
         }
     }
     resetAutoTimers();
@@ -442,7 +444,7 @@ void delayedcall_effects_main(){
     interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
     EffectListElem *eff = nullptr;
     String effname((char *)0);
-    bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false;
+    MIC_SYMB;
     bool numList = jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? true : false;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         if (eff->canBeSelected()) {
@@ -493,7 +495,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
         //interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
         String effname((char *)0);
-        bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false;
+        MIC_SYMB;
         bool numList = jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? true : false;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
@@ -509,7 +511,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     } else {
         LOG(println,F("DBG2: using slow Names generation"));
         String effname((char *)0);
-        bool micSymb = jee.param(FPSTR(TCONST_0091)) == FPSTR(TCONST_FFFF) ? true : false;
+        MIC_SYMB;
         bool numList = jee.param(FPSTR(TCONST_0090)) == FPSTR(TCONST_FFFF) ? true : false;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {

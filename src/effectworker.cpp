@@ -285,6 +285,7 @@ void EffectWorker::initDefault()
 
 void EffectWorker::effectsReSort(SORT_TYPE _effSort)
 {
+  LOG(printf_P,PSTR("%s: %d\n"),F("*Пересортировка эффектов*"), _effSort);
   if(_effSort==255) _effSort=effSort; // Для дефолтного - берем с конфига
   
   switch(_effSort){
@@ -299,12 +300,12 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
     case SORT_TYPE::ST_IDX :
       effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (int)(a->getMS() - b->getMS());});
       break;
+    case SORT_TYPE::ST_AB2 :
+      // крайне медленный вариант, с побочными эффектами, пока отключаю и использую вместо него ST_AB
+      //effects.sort([](EffectListElem *&a, EffectListElem *&b){ EffectWorker *tmp = new EffectWorker((uint16_t)0); String tmp1; tmp->loadeffname(tmp1, a->eff_nb); String tmp2; tmp->loadeffname(tmp2,b->eff_nb); delete tmp; return strcmp_P(tmp1.c_str(), tmp2.c_str());});
+      //break;
     case SORT_TYPE::ST_AB :
       effects.sort([](EffectListElem *&a, EffectListElem *&b){ String tmp=FPSTR(T_EFFNAMEID[(uint8_t)a->eff_nb]); return strcmp_P(tmp.c_str(), (T_EFFNAMEID[(uint8_t)b->eff_nb]));});
-      break;
-    case SORT_TYPE::ST_AB2 :
-      //effects.sort([](EffectListElem *&a, EffectListElem *&b){ String tmp1=_getEffName(a->eff_nb); String tmp2=_getEffName(b->eff_nb); return strcmp_P(tmp1.c_str(), tmp2.c_str());});
-      effects.sort([](EffectListElem *&a, EffectListElem *&b){ EffectWorker *tmp = new EffectWorker((uint16_t)0); String tmp1; tmp->loadeffname(tmp1, a->eff_nb); String tmp2; tmp->loadeffname(tmp2,b->eff_nb); delete tmp; return strcmp_P(tmp1.c_str(), tmp2.c_str());});
       break;
     default:
       break;
@@ -322,9 +323,12 @@ void EffectWorker::loadeffname(String& effectName, const uint16_t nb, const char
 {
   String filename = geteffectpathname(nb,folder);
   DynamicJsonDocument doc(2048);
-  if (deserializeFile(doc, filename.c_str()) && doc[F("name")]){
+  bool ok = deserializeFile(doc, filename.c_str());
+  if (ok && doc[F("name")]){
     effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
-  } else {
+  } else if(!ok) {
+    // LittleFS.remove(filename);
+    // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
     effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
   }
 }
@@ -373,6 +377,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
 
   if (!deserializeFile(doc, filename.c_str() )){
     doc.clear();
+    LittleFS.remove(filename);
     savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
     if (!deserializeFile(doc, filename.c_str() ))
       return 1;   // ошибка и в файле и при попытке сгенерить конфиг по-умолчанию - выходим
@@ -665,8 +670,8 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
   }
   indexFile.print("]");
   indexFile.close();
-  effectsReSort(); // восстанавлива сортировку
   LOG(println,F("Индекс эффектов обновлен!"));
+  effectsReSort(); // восстанавливаем сортировку
 }
 
 void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)

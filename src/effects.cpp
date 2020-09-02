@@ -116,6 +116,9 @@ void EffectCalc::setDynCtrl(UIControl*_val){
     palettemap(palettes, paletteIdx);
     isCtrlPallete = true;
   }
+
+  if(_val->getName().startsWith(FPSTR(TINTF_020)) && _val->getId()==7) // Начинается с микрофон и имеет 7 id
+    isMicON = _val->getVal()=="true" ? true : false;
 }
 
 // Load palletes into array
@@ -299,7 +302,7 @@ bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 {
 #ifdef MIC_EFFECTS
-  bool isMicActive = myLamp.isMicOnOff() && getCtrlVal(4)=="true";
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
 
   uint8_t mic = myLamp.getMicMapMaxPeak();
   uint8_t mic_f = map(myLamp.getMicMapFreq(), LOW_FREQ_MAP_VAL, HI_FREQ_MAP_VAL, 0, 255);
@@ -367,7 +370,8 @@ bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *param)
 {
 #ifdef MIC_EFFECTS
-  byte _scale = myLamp.isMicOnOff() ? myLamp.getMicMapMaxPeak() : scale;
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+  byte _scale = isMicActive ? myLamp.getMicMapMaxPeak() : scale;
 #else
   byte _scale = scale;
 #endif
@@ -484,8 +488,9 @@ bool EffectPulse::pulseRoutine(CRGB *leds, EffectWorker *param) {
   palette = RainbowColors_p;
   uint8_t _scale = scale;
 #ifdef MIC_EFFECTS
-  #define FADE 255U - (myLamp.isMicOnOff() ? myLamp.getMicMapMaxPeak()*2 : 248U) // (myLamp.isMicOnOff() ? 300U - myLamp.getMicMapMaxPeak() : 5U)
-  #define BLUR (myLamp.isMicOnOff() ? myLamp.getMicMapMaxPeak()/3 : 10U) //(myLamp.isMicOnOff() ? map(myLamp.getMicMapMaxPeak(), 1, 255, 1, 30) : 10U)
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+  #define FADE 255U - (isMicActive ? myLamp.getMicMapMaxPeak()*2 : 248U) // (isMicActive ? 300U - myLamp.getMicMapMaxPeak() : 5U)
+  #define BLUR (isMicActive ? myLamp.getMicMapMaxPeak()/3 : 10U) //(isMicActive ? map(myLamp.getMicMapMaxPeak(), 1, 255, 1, 30) : 10U)
 #else
   #define FADE 7U
   #define BLUR 10U
@@ -555,8 +560,9 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
 #ifdef MIC_EFFECTS
+    bool isMicActive = myLamp.isMicOnOff() && isMicON;
     uint8_t micPeak = myLamp.getMicMapMaxPeak();
-    CHSV thisColor = CHSV((uint8_t)(hue + i * (micPeak > map(speed, 1, 255, 100, 10) ? (scale - micPeak) : scale) % 170), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
+    CHSV thisColor = CHSV((uint8_t)(hue + i * (micPeak > map(speed, 1, 255, 100, 10) and isMicActive ? (scale - micPeak) : scale) % 170), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
 #else
     CHSV thisColor = CHSV((uint8_t)(hue + i * scale%170), 255, 255);
 #endif
@@ -592,7 +598,8 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param)
     {
       float twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
 #ifdef MIC_EFFECTS
-      twirlFactor *= myLamp.getMicMapMaxPeak() > map(speed, 1, 255, 80, 10) ? 1.5f * ((float)myLamp.getMicMapFreq() / 255.0f) : 1.0f;
+      bool isMicActive = myLamp.isMicOnOff() && isMicON;
+      twirlFactor *= myLamp.getMicMapMaxPeak() > map(speed, 1, 255, 80, 10) and isMicActive ? 1.5f * ((float)myLamp.getMicMapFreq() / 255.0f) : 1.0f;
 #endif
       CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)myLamp.getmaxDim())), 255, 255);
       myLamp.drawPixelXY(i, j, thisColor);
@@ -623,6 +630,7 @@ bool EffectColors::colorsRoutine(CRGB *leds, EffectWorker *param)
   if(step!=delay) {
 
 #ifdef MIC_EFFECTS
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
   uint16_t mmf = myLamp.getMicMapFreq();
   uint16_t mmp = myLamp.getMicMapMaxPeak();
 
@@ -631,7 +639,7 @@ EVERY_N_SECONDS(1){
   LOG(printf_P,PSTR("MF: %5.2f MMF: %d MMP: %d scale %d speed: %d\n"), myLamp.getMicFreq(), mmf, mmp, scale, speed);
 }
 #endif
-  if(myLamp.isMicOnOff()){
+  if(isMicActive){
     // включен микрофон
     if(scale>=127){
       uint8_t pos = (round(3.0*(mmf+(25.0*speed/255.0))/255.0))*HEIGHT/8; // двигаем частоты по диапазону в зависимости от скорости и делим на 4 части 0...3
@@ -1248,8 +1256,9 @@ void Effect3DNoise::load(){
 
 bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
   #ifdef MIC_EFFECTS
-    uint8_t mmf = myLamp.getMicMapFreq();
-    uint8_t mmp = myLamp.getMicMapMaxPeak();
+    bool isMicActive = myLamp.isMicOnOff() && isMicON;
+    uint8_t mmf = isMicActive ? myLamp.getMicMapFreq() : 0;
+    uint8_t mmp = isMicActive ? myLamp.getMicMapMaxPeak() : 0;
     _scale = (NOISE_SCALE_AMP*scale/255+NOISE_SCALE_ADD)*(mmf>0?(1.5*mmf/255.0):1);
     _speed = NOISE_SCALE_AMP*speed/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
@@ -3402,8 +3411,9 @@ void EffectLeapers::restart_leaper(EffectLeapers::Leaper * l) {
 #ifdef MIC_EFFECTS
   uint8_t mic = myLamp.getMicMaxPeak();
   float rand = random8(1, 50 + _rv * 4);
-  l->xd = (1 * (float)(myLamp.isMicOnOff() ? 25 + mic : rand) / 100.0);
-  l->yd = (2 * (float)(myLamp.isMicOnOff() ? 25 + mic : rand) / 100.0);
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+  l->xd = (1 * (float)(isMicActive ? 25 + mic : rand) / 100.0);
+  l->yd = (2 * (float)(isMicActive ? 25 + mic : rand) / 100.0);
 #else
   l->xd = (1 * (float)random8(1, 50 + _rv * 4) / 100);
   l->yd = (2 * (float)random8(1, 100 + _rv * 3) / 100);
@@ -3512,8 +3522,9 @@ void EffectWhirl::load(){
 
 bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
-  micPick = myLamp.getMicMaxPeak();
-  myLamp.dimAll(myLamp.isMicOnOff() ? /*(100 + micPick*2)*/ 250U : 250U);
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+  micPick = isMicActive ? myLamp.getMicMaxPeak() : 0;
+  myLamp.dimAll(isMicActive ? /*(100 + micPick*2)*/ 250U : 250U);
 #else
   myLamp.dimAll(250U);
 #endif
@@ -3530,7 +3541,7 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
     boid->velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
     boid->update();
 #ifdef MIC_EFFECTS    
-    myLamp.drawPixelXY(boid->location.x, boid->location.y, myLamp.isMicOnOff() ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
+    myLamp.drawPixelXY(boid->location.x, boid->location.y, isMicActive ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
 #else
     myLamp.drawPixelXY(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
 #endif
@@ -3540,7 +3551,7 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
     }
   }
 #ifdef MIC_EFFECTS
-  myLamp.blur2d(myLamp.isMicOnOff() ? /*constrain(micPick * 2, 10, 100)*/ 30U : 30U);
+  myLamp.blur2d(isMicActive ? /*constrain(micPick * 2, 10, 100)*/ 30U : 30U);
 #else
   myLamp.blur2d(30U);
 #endif
@@ -3565,6 +3576,9 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   bool glare = false;
+#ifdef MIC_EFFECTS
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+#endif
   if(getCtrlVal(3)==F("true")) { // переключатель в true
     //LOG(println,F("тыдыщ"));
     glare = true;
@@ -3573,7 +3587,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
 #ifdef MIC_EFFECTS
-      if (myLamp.isMicOnOff()) {
+      if (isMicActive) {
         hue = myLamp.getMicMapFreq();
         leds[i] = CHSV(hue, 
           255U, 
@@ -3613,7 +3627,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
       }
     }
 #ifdef MIC_EFFECTS
-    byte _video = myLamp.isMicOnOff() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
+    byte _video = isMicActive ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
 #else
     byte _video = 255;
 #endif
@@ -3640,12 +3654,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 
 // ------- Эффект "Звезды"
 bool EffectStar::run(CRGB *ledarr, EffectWorker *opt){
-  // if (dryrun())
-  //   return false;
-  // if (csum != (127U^scale)) {
-  //   setup = true;
-  //   csum = 127U^scale;
-  // }
+
   return starRoutine(*&ledarr, &*opt);
 }
 
@@ -3659,14 +3668,10 @@ void EffectStar::drawStar(float xlocl, float ylocl, float biggy, float little, i
   for (int i = 0; i < points; i++)
   {
 #ifdef MIC_EFFECTS
-    // myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), myLamp.isMicOnOff() ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
-    // myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), myLamp.isMicOnOff() ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
-
-    myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), myLamp.isMicOnOff() ? CHSV(koler+myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
-    myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), myLamp.isMicOnOff() ? CHSV(koler+myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
+    myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), isMicActive ? CHSV(koler+myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
+    myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), isMicActive ? CHSV(koler+myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, koler));
 
 #else
-    // две строчки выше - рисуют звезду просто по оттенку, а две строчки ниже - берут цвет из текущей палитры
     myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
     myLamp.drawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
 #endif
@@ -3701,8 +3706,9 @@ if (setup) { // однократная настройка при старте э
 
 #ifdef MIC_EFFECTS
   micPick = myLamp.getMicMaxPeak();
-  //myLamp.dimAll(myLamp.isMicOnOff() ? micPick*2 : 90);
-  fadeToBlackBy(leds, NUM_LEDS, 255U - (myLamp.isMicOnOff() ? micPick*2 : 90)); // работает быстрее чем dimAll
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+  //myLamp.dimAll(isMicActive ? micPick*2 : 90);
+  fadeToBlackBy(leds, NUM_LEDS, 255U - (isMicActive ? micPick*2 : 90)); // работает быстрее чем dimAll
 #else
   fadeToBlackBy(leds, NUM_LEDS, 165);
   //myLamp.dimAll(90);
@@ -3739,7 +3745,7 @@ if (setup) { // однократная настройка при старте э
     }
   }
 #ifdef MIC_EFFECTS
-  myLamp.blur2d(myLamp.isMicOnOff() ? micPick/2 : 30U); //fadeToBlackBy() сам блурит, уменьшил блур под микрофон
+  myLamp.blur2d(isMicActive ? micPick/2 : 30U); //fadeToBlackBy() сам блурит, уменьшил блур под микрофон
 #else
   myLamp.blur2d(30U);
 #endif
@@ -4069,8 +4075,8 @@ void EffectOsc::load() {
      spd = 0;
      OSC_HV = HEIGHT;
   }
-
-   if((millis() - lastrun ) <= (myLamp.isMicOnOff() ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) {  
+  isMicActive = myLamp.isMicOnOff() && isMicON;
+   if((millis() - lastrun ) <= (isMicActive ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) {  
     return false;
   } else {
     lastrun = millis();
@@ -4087,18 +4093,18 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
 
   for (float x = 0.0f; x < ((float)OSC_HV - div); x += div) {
-    byte micPick = (myLamp.isMicOnOff() ? myLamp.getMicMaxPeak() : random8(255));
-    color = CHSV(myLamp.isMicOnOff() ? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
+    byte micPick = (isMicActive ? myLamp.getMicMaxPeak() : random8(255));
+    color = CHSV(isMicActive ? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
 if (spd == 127) {
 
     myLamp.drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
-        myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
+    //myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 } else 
     myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 
     y[0] = y[1];
-    y[1] = EffectMath::fmap((float)(myLamp.isMicOnOff() ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (getCtrlVal(3).toInt()-1), (pointer * 2) - (getCtrlVal(3).toInt()-1), 0.0f, float(OSC_HV - 1U)); 
-    delayMicroseconds((uint16_t)((myLamp.isMicOnOff() ? 1024U : 1568U) * div));
+    y[1] = EffectMath::fmap((float)(isMicActive ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (getCtrlVal(3).toInt()-1), (pointer * 2) - (getCtrlVal(3).toInt()-1), 0.0f, float(OSC_HV - 1U)); 
+    delayMicroseconds((uint16_t)((isMicActive ? 1024U : 1568U) * div));
   
   }  
 
@@ -4143,7 +4149,8 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
 
   generation++;
 #ifdef MIC_EFFECTS
-  mic[1] = myLamp.isMicOnOff() ? map(myLamp.getMicMapMaxPeak(), 0, 255, 0, WIDTH) : WIDTH;
+  bool isMicActive = myLamp.isMicOnOff() && isMicON;
+  mic[1] = isMicActive ? map(myLamp.getMicMapMaxPeak(), 0, 255, 0, WIDTH) : WIDTH;
 #else
   mic[1] = WIDTH;
 #endif

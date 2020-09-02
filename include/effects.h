@@ -44,6 +44,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "LittleFS.h"
 #include "text_res.h"
 #include "effects_types.h"
+#include "misc.h"
 #include "../../include/LList.h"
 
 // #define DEFAULT_SLIDER 127
@@ -131,6 +132,7 @@ private:
 protected:
     bool active=0;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
     bool isCtrlPallete = false; // признак наличия контрола палитры
+    bool isMicON = false; // признак включенного микрофона
 
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
     EFF_ENUM effect;        /**< энумератор эффекта */
@@ -158,11 +160,11 @@ protected:
         //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
         
         // Добавлена поддержка вариантов следования индексов контролов вида 0,1,2,5,7 т.е. с пропусками
-        if(idx<ctrls->size() && idx>=0 && (*ctrls)[idx]->getId()==idx){
+        if(idx<ctrls->size() && idx>=0 && idx<=2 && (*ctrls)[idx]->getId()==idx){
             return (*ctrls)[idx]->getVal();
         } else {
             for(int i = 3; i<ctrls->size(); i++){
-                if((*ctrls)[idx]->getId()==idx) return (*ctrls)[idx]->getVal();
+                if((*ctrls)[i]->getId()==idx) return (*ctrls)[i]->getVal();
             }
         }
         return dummy;
@@ -353,6 +355,8 @@ private:
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+
 
 //----- Эффект "Прыгающие Мячики"
 // перевод на субпиксельную графику kostyamat
@@ -1048,11 +1052,11 @@ private:
     float color[STARS_NUM] ;                        // цвет звезды
     uint8_t points[STARS_NUM] ;                       // количество углов в звезде
     unsigned int delay[STARS_NUM] ;                   // задержка пуска звезды относительно счётчика
-
     float counter = 0;                                // счетчик для реализации смещений, наростания и т.д. 
     uint8_t csum = 0;
     bool setup = true;
     uint8_t micPick = 0;
+    bool isMicActive;
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
     bool starRoutine(CRGB *leds, EffectWorker *param);
@@ -1108,6 +1112,7 @@ private:
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
+    bool isMicActive;
 
 public:
     void load() override;
@@ -1298,7 +1303,7 @@ public:
     } // initDefault(); убрал из конструктора, т.к. крайне неудобно становится отлаживать..
 
     // тип сортировки
-    void setEffSortType(SORT_TYPE type) {effSort = type; effectsReSort();}
+    void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
 
     // конструктор копий эффектов
     EffectWorker(const EffectListElem* base, const EffectListElem* copy);
@@ -1334,6 +1339,7 @@ public:
 
     // текущий эффект или его копия
     const uint16_t getEn() {return curEff;}
+    //const uint16_t 
 
     // следующий эффект, кроме canBeSelected==false
     uint16_t getNext();
