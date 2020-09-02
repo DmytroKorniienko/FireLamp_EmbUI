@@ -132,7 +132,7 @@ private:
 protected:
     bool active=0;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
     bool isCtrlPallete = false; // признак наличия контрола палитры
-    bool isMicON = false; // признак включенного микрофона
+    bool isMicActive = false; // признак включенного микрофона
 
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
     EFF_ENUM effect;        /**< энумератор эффекта */
@@ -315,7 +315,6 @@ class EffectFreq : public EffectCalc {
 private:
     int8_t peakX[2][WIDTH];
 
-    //const String getName() override {return String(FPSTR(T_FREQ));}
     bool freqAnalyseRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
@@ -340,7 +339,6 @@ public:
 
 class EffectMetaBalls : public EffectCalc {
 private:
-    //const String getName() override {return String(FPSTR(T_METABALLS));}
     bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -349,7 +347,6 @@ public:
 
 class EffectSinusoid3 : public EffectCalc {
 private:
-    //const String getName() override {return String(FPSTR(T_SINUSOID3));}
     bool sinusoid3Routine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -384,7 +381,6 @@ public:
 
 class EffectLightBalls : public EffectCalc {
 private:
-    //const String getName() override {return String(FPSTR(T_PAINTBALL));}
     bool lightBallsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -420,7 +416,6 @@ private:
     uint8_t _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
 
-    //const String getName() override {return String(FPSTR(T_PULSE));}
     bool pulseRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -435,7 +430,6 @@ private:
     float vectorB[2U];
     float coordB[2U];
 
-    //const String getName() override {return String(FPSTR(T_CUBE));}
     bool ballRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -449,7 +443,6 @@ private:
     float coord[BALLS_AMOUNT][2U];
     int16_t ballColors[BALLS_AMOUNT];
     byte light[BALLS_AMOUNT];
-    //const String getName() override {return String(FPSTR(T_LIGHTER_TRACES));}
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -461,7 +454,6 @@ class EffectRainbow : public EffectCalc {
 private:
     float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
     
-    //const String getName() override {return String(FPSTR(T_RAINBOW_2D));}
     bool rainbowHorVertRoutine(bool isVertical);
     bool rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param);
 
@@ -473,7 +465,6 @@ class EffectColors : public EffectCalc {
 private:
     uint8_t ihue;
 
-    //const String getName() override {return String(FPSTR(T_COLORS));}
     bool colorsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -492,8 +483,6 @@ public:
 
 class EffectMatrix : public EffectCalc {
 private:
-
-    //const String getName() override {return String(FPSTR(T_MATRIX));}
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -502,7 +491,6 @@ public:
 
 class EffectSnow : public EffectCalc {
 private:
-    //const String getName() override {return String(FPSTR(T_SNOW));}
     bool snowRoutine(CRGB *leds, EffectWorker *param);
     float snowShift = 0.0; // сдвиг снега
     
@@ -522,8 +510,6 @@ public:
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
-    
-    //const String getName() override {return String(FPSTR(T_EVERYTHINGFALL));}
     bool fire2012WithPalette(CRGB *leds, EffectWorker *param);
 
 public:
@@ -545,8 +531,7 @@ private:
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
   const uint8_t fireSmoothing = 90;
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-  
-  //const String getName() override {return String(FPSTR(T_FIRE2012));}
+
   bool fire2012Routine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -556,7 +541,6 @@ public:
 
 class EffectStarFall : public EffectCalc {
 private:
-    //const String getName() override {return String(FPSTR(T_SNOWSTORMSTARFALL));}
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -572,7 +556,6 @@ private:
     float lightersPos[2U][LIGHTERS_AM];
     byte light[LIGHTERS_AM];
 
-    //const String getName() override {return String(FPSTR(T_LIGHTERS));}
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -582,34 +565,6 @@ public:
 
 class Effect3DNoise : public EffectCalc {
 private:
-//    uint16_t XY(uint8_t x, uint8_t y);
-    /*
-    const String getName() override {
-        switch (effect)
-        {
-        case EFF_ENUM::EFF_MADNESS :
-            return String(FPSTR(T_MADNESS));
-        case EFF_ENUM::EFF_RAINBOW :
-            return String(FPSTR(T_RAINBOW));
-        case EFF_ENUM::EFF_RAINBOW_STRIPE :
-            return String(FPSTR(T_RAINBOW_STRIPE));
-        case EFF_ENUM::EFF_ZEBRA :
-            return String(FPSTR(T_ZEBRA));
-        case EFF_ENUM::EFF_FOREST :
-            return String(FPSTR(T_FOREST));
-        case EFF_ENUM::EFF_OCEAN :
-            return String(FPSTR(T_OCEAN));
-        case EFF_ENUM::EFF_PLASMA :
-            return String(FPSTR(T_PLASMA));
-        case EFF_ENUM::EFF_CLOUDS :
-            return String(FPSTR(T_CLOUDS));
-        case EFF_ENUM::EFF_LAVA :
-            return String(FPSTR(T_LAVA));
-        default:
-            return EffectCalc::getName();
-        }
-    }
-    */
     void fillNoiseLED();
     void fillnoise8();
 
@@ -651,7 +606,6 @@ private:
   float spirotheta1 = 0;
   float spirotheta2 = 0;
 
-  //const String getName() {return String(FPSTR(T_SPIRO));}
   bool spiroRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -679,7 +633,6 @@ private:
   bool predatorPresent;
   uint8_t hueoffset;
 
-  //const String getName() {return String(FPSTR(T_FLOCK));}
   bool flockRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -709,19 +662,6 @@ private:
    const uint8_t e_centerX =  (WIDTH / 2) - 1;
    const uint8_t e_centerY = (HEIGHT / 2) - 1;
 
-    /*
-    const String getName() override {
-        switch (effect)
-        {
-        case EFF_ENUM::EFF_RAINBOWCOMET :
-            return String(FPSTR(T_RAINBOWCOMET));
-        case EFF_ENUM::EFF_RAINBOWCOMET3 :
-            return String(FPSTR(T_RAINBOWCOMET3));
-        default:
-            return EffectCalc::getName();
-        }
-    }
-    */
     void drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2, CRGB color);
     void FillNoise(int8_t layer);
     bool rainbowCometRoutine(CRGB *leds, EffectWorker *param);
@@ -734,7 +674,6 @@ public:
 
 class EffectSwirl : public EffectCalc {
 private:
-    //const String getName() {return String(FPSTR(T_SWIRL));}
     bool swirlRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -747,19 +686,7 @@ private:
   uint8_t dri_phase;
   uint8_t _dri_speed;
   uint8_t _dri_delta;
-  /*
-  const String getName() override {
-        switch (effect)
-        {
-        case EFF_ENUM::EFF_DRIFT :
-            return String(FPSTR(T_DRIFT));
-        case EFF_ENUM::EFF_DRIFT2 :
-            return String(FPSTR(T_DRIFT2));
-        default:
-            return EffectCalc::getName();
-        }
-    }
-    */
+
   bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
   bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
 
@@ -773,7 +700,6 @@ private:
   uint8_t thue = 0U;
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
-  //const String getName() {return String(FPSTR(T_TWINKLES));}
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -788,7 +714,6 @@ private:
   uint8_t waveRotation;
   uint8_t whue;
   uint8_t waveTheta;
-  //const String getName() {return String(FPSTR(T_WAVES));}
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
 
   /**
@@ -813,7 +738,6 @@ private:
   float eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
   float eff_theta;         // глобальная переменная угла для работы эффектов
   byte hue;
-  //const String getName() {return String(FPSTR(T_RADAR));}
   bool radarRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -835,7 +759,6 @@ private:
   uint32_t e_scaleY[NUM_LAYERS];
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
-  //const String getName() {return String(FPSTR(T_SMOKE));}
   void FillNoise(int8_t layer);     // TODO: join with Comet's
   bool multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param);
 
@@ -856,7 +779,6 @@ private:
   uint8_t fire18heat[NUM_LEDS];
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
-  //const String getName() {return String(FPSTR(T_FIRE2018));}
   bool fire2018Routine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -878,7 +800,6 @@ private:
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
   uint8_t csum;   // reload checksum
 
-  //const String getName() {return String(FPSTR(T_RINGS));}
   void ringsSet();
   bool ringsRoutine(CRGB *leds, EffectWorker *param);
 
@@ -900,7 +821,6 @@ private:
   //bool movedirection;   // направление смещения
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
 
-  //const String getName() {return String(FPSTR(T_CUBE2));}
   void cubesize();
   bool cube2dRoutine(CRGB *leds, EffectWorker *param);
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
@@ -921,21 +841,7 @@ private:
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
   uint8_t myScale8(uint8_t x);
-    /*
-    const String getName() override {
-        switch (effect)
-        {
-        case EFF_ENUM::EFF_RAIN :
-            return String(FPSTR(T_RAIN));
-        case EFF_ENUM::EFF_COLORRAIN :
-            return String(FPSTR(T_COLORRAIN));
-        case EFF_ENUM::EFF_STORMYRAIN :
-            return String(FPSTR(T_STORMYRAIN));
-        default:
-            return EffectCalc::getName();
-        }
-    }
-    */
+
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC = false);
   bool coloredRainRoutine(CRGB *leds, EffectWorker *param);
   bool stormyRainRoutine(CRGB *leds, EffectWorker *param);
@@ -963,23 +869,6 @@ private:
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
     bool picassoRoutine2(CRGB *leds, EffectWorker *param);
     bool picassoRoutine3(CRGB *leds, EffectWorker *param);
-    /*
-    const String getName() //override
-    {
-        switch (effect)
-        {
-        case EFF_ENUM::EFF_PICASSO:
-            return String(FPSTR(T_PICASSO));
-        case EFF_ENUM::EFF_PICASSO2:
-            return String(FPSTR(T_PICASSO2));
-        case EFF_ENUM::EFF_PICASSO3:
-            return String(FPSTR(T_PICASSO3));
-        default:
-            return EffectCalc::getName();
-        }
-    }
-    */
-
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1056,7 +945,6 @@ private:
     uint8_t csum = 0;
     bool setup = true;
     uint8_t micPick = 0;
-    bool isMicActive;
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
     bool starRoutine(CRGB *leds, EffectWorker *param);
@@ -1112,8 +1000,6 @@ private:
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
-    bool isMicActive;
-
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

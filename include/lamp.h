@@ -223,7 +223,20 @@ public:
         float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
         return (uint8_t)(isMicOn?(log(last_freq)-minFreq)*scale:0);
     }
-    void setMicOnOff(bool val) {isMicOn = val;}
+    void setMicOnOff(bool val) {
+        isMicOn = val;
+        LList<UIControl*>&controls = effects.getControls();
+        if(val){
+            for(int i=3; i<controls.size(); i++) {
+                if(controls[i]->getId()==7)
+                    effects.worker->setDynCtrl(controls[i]);
+            }
+        } else {
+            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), FPSTR(TCONST_FFFE), String(""), String(""), String(""));
+            effects.worker->setDynCtrl(ctrl);
+            delete ctrl;
+        }
+    }
     bool isMicOnOff() {return isMicOn;}
     void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
 #endif
