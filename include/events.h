@@ -94,7 +94,7 @@ struct EVENT {
 
     String getName() {
         String buffer;
-        String day_buf(T_EVENT_DAYS);
+        String day_buf = FPSTR(T_EVENT_DAYS);
 
         buffer.concat(isEnabled?F(" "):F("!"));
         
