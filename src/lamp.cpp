@@ -874,8 +874,10 @@ void LAMP::periodicTimeHandle()
 {
   const tm* t = localtime(timeProcessor.now());
   //LOG(println, tm);
-  if(! t->tm_sec )
+  if(t->tm_sec)
     return;
+
+  LOG(printf_P,PSTR("%s: %02d:%02d:%02d\n"),F("periodicTimeHandle"),t->tm_hour,t->tm_min,t->tm_sec);
 
   time_t tm = t->tm_hour * 60 + t->tm_min;
 
