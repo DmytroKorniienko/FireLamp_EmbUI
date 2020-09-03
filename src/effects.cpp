@@ -37,11 +37,31 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "main.h"
 
-void EffectCalc::init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl){
+void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_lampstate){
   effect=_eff;
-  brightness=_brt;
-  speed=_spd;
-  scale=_scl;
+  for(int i=0; i<controls->size(); i++){
+    switch(i){
+      case 0:
+        brightness = (*controls)[i]->getVal().toInt();
+        break;
+      case 1:
+        speed = (*controls)[i]->getVal().toInt();
+        break;
+      case 2:
+        scale = (*controls)[i]->getVal().toInt();
+        break;
+      default:
+        setDynCtrl((*controls)[i]);
+        break;
+    }
+  }
+
+  if(!_lampstate->isMicOn){ // при отключенном глобальном дернем выключение
+    UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), FPSTR(TCONST_FFFE), String(""), String(""), String(""));
+    setDynCtrl(ctrl);
+    delete ctrl;
+  }
+
   active=true;
   load();
 }

@@ -124,6 +124,8 @@ private:
 #endif
  };
  #pragma pack(pop)
+    LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
+
     byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 #ifdef LAMP_DEBUG
@@ -225,6 +227,7 @@ public:
     }
     void setMicOnOff(bool val) {
         isMicOn = val;
+        lampState.isMicOn = val;
         LList<UIControl*>&controls = effects.getControls();
         if(val){
             for(int i=3; i<controls.size(); i++) {

@@ -55,6 +55,16 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //-------------------------------------------------
 class EffectWorker;
 
+typedef struct {
+    union {
+        uint8_t flags;
+        struct {
+            bool isMicOn:1;
+        };
+    };
+} LAMPSTATE;
+
+
 class UIControl{
 private:
     uint8_t id;
@@ -187,14 +197,12 @@ public:
     /**
      * intit метод, вызывается отдельно после создания экземпляра эффекта для установки базовых переменных
      * в конце выполнения вызывает метод load() который может быть переопределен в дочернем классе
-     * @param _eff - энумератор эффекта, может пригодится для мультиэффектов типа 3DNoise если эффект
-     * может использовать разные функции для различных версий эффекта
-     * @param _brt - яркость, прилетающая из "настроек" эффекта, эффект может менять свою яркость позже независимо от указок "сверху"
-     * @param _spd - скорость, прилетающая из "настроек" эффекта, эффект может менять свою скорость позже независимо от указок "сверху"
-     * @param _scl - шкала, прилетающая из "настроек" эффекта, эффект может менять свою шкалу позже независимо от указок "сверху"
+     * @param _eff - энумератор эффекта
+     * @param _controls - контролы эффекта
+     * @param _state - текущее состояние лампы
      *
     */
-    void init(EFF_ENUM _eff, byte _brt, byte _spd, byte _scl);
+    void init(EFF_ENUM _eff, LList<UIControl*>* _controls, LAMPSTATE* _state);
 
     /**
      * load метод, по умолчанию пустой. Вызывается автоматом из init(), в дочернем классе можно заменять на процедуру первой загрузки эффекта (вместо того что выполняется под флагом load)
@@ -1080,6 +1088,7 @@ public:
 
 class EffectWorker {
 private:
+    LAMPSTATE *lampstate; // ссылка на состояние лампы
     SORT_TYPE effSort; // порядок сортировки в UI
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
@@ -1157,8 +1166,8 @@ public:
     LList<UIControl*>&getControls() { return isSelected() ? controls : selcontrols; }
 
     // дефолтный конструктор
-    EffectWorker() : effects(), controls(), selcontrols() {
-
+    EffectWorker(LAMPSTATE *_lampstate) : effects(), controls(), selcontrols() {
+      lampstate = _lampstate;
       if (!LittleFS.begin()){
           //LOG(println, F("ERROR: Can't mount filesystem!"));
           return;

@@ -350,7 +350,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker(), effects(&lampState)
 #ifdef OTA
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
@@ -376,6 +376,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       micAnalyseDivider = 1; // анализ каждый раз
 #endif
       gauge_time = millis();
+      lampState.flags = 0; // сборосить все флаги состояния
       lamp_init(); // инициализация и настройка лампы
     }
 
