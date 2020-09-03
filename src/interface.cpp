@@ -938,7 +938,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_004E), FPSTR(TINTF_03D));
     interf->checkbox(FPSTR(TCONST_008E), FPSTR(TINTF_083));
     interf->checkbox(FPSTR(TCONST_004F), FPSTR(TINTF_03E));
-    interf->range(FPSTR(TCONST_0026), 30, 250, 10, FPSTR(TINTF_03F));
+    interf->range(FPSTR(TCONST_0026), 30, 250, 5, FPSTR(TINTF_03F));
     interf->checkbox(FPSTR(TCONST_0090), FPSTR(TINTF_090)); // нумерация в списке эффектов
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_0091), FPSTR(TINTF_091)); // значек микрофона в списке эффектов
