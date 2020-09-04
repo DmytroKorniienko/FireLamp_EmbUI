@@ -4243,23 +4243,27 @@ bool EffectButterfly::run(CRGB *ledarr, EffectWorker *opt) {
   return butterflyRoutine(*&ledarr, &*opt);
 }
 
+void EffectButterfly::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  // теперь проверяем уже поведение для этого эффекта
+  LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
+
+  if(_val->getType()==2 && _val->getId()==3)
+    wings = _val->getVal()==F("true") ? true : false;
+  if(_val->getType()==2 && _val->getId()==4)
+    isColored = _val->getVal()==F("true") ? false : true;
+}
+
 bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
 {
-  byte _scale = getCtrlVal(2).toInt();
-  byte _speed = getCtrlVal(1).toInt();
-  bool wings = false;
-  bool isColored = true;
+  // Эти же контролы отбражены на _scale и _speed... т.е. зачем прямое обращение?
+  // byte _scale = getCtrlVal(2).toInt();
+  // byte _speed = getCtrlVal(1).toInt();
+  
+  byte _scale = scale;
+  byte _speed = speed;
 
-  if (getCtrlVal(3) == F("true"))
-  { // переключатель в true
-    wings = true;
-  }
-  
-  if (getCtrlVal(4) == F("true"))
-  { // переключатель в true
-    isColored = false;
-  } 
-  
   if (csum != (isColored^(127U^_scale))) // проверяем не пора ли
   {
     csum = (isColored^(127U^_scale));

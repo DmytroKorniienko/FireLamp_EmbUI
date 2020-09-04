@@ -1076,12 +1076,14 @@ private:
     uint8_t hue2;
     byte step = 0;
     byte csum = 0;
-
+    bool wings = false;
+    bool isColored = true;
     
     bool butterflyRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     //void load() override;
+    virtual void setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 // --------- конец секции эффектов 
