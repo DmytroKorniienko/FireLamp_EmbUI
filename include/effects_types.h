@@ -164,10 +164,10 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, // 0-15
-  2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, // 16-31
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 32 - 47
-  1, 2, 2, 2, 2, 1, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, // 48 - 63
+  1, 2, 2, 2, 2, 1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 2, // 0-15
+  2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 1, 1, 1, 3, 1, // 16-31
+  1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 32 - 47
+  3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 0, 0, 0, 0, 0, 0, // 48 - 63
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
@@ -179,7 +179,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, // 240 - 255
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 2, // 240 - 255
 };
 
 
@@ -204,19 +204,20 @@ static const char E_DEFUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":
 // микрофон включен, и эффект обладает зависимостью от микрофона в принципе.
 static const char E_DEFMICUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 // Общая конфигурация для эффектов с 3-им ползунком для палитр
-static const char E_3_PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
+static const char E_3PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char E_3PAL_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 // Общая конфигурация для эффектов только с 2-мя ползунками "Яркость" и "Скорость", пример - эффект"Тихий Океан"
-static const char E_2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}"; // 3*16+0 для 2 контрола
+static const char E_2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}]}"; // 3*16+0 для 2 контрола
 
 static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Цвет\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_LIGHTERS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_RADAR[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
+static const char E_LIGHTERS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
+static const char E_RADAR[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
 static const char E_WHITE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Оттенок\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_LEAPERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":50,\"step\":1,\"name\":\"Жогово!\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_BUTTERFLY_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Количество / Цвет(ночнник)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Порхание\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Ночник\"}]}";
 
-static const char E_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Масштаб\"},{\"id\":4,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размытие\"},{\"id\":4,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
+static const char E_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Масштаб\"}]}";
+static const char E_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размытие\"}]}";
 static const char E_AQUARIUM[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Блики воды\"},{\"id\":4,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_FREQ_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_OSC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Развертка\"},{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Пульсация\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Уcиление\"},{\"id\":4,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
@@ -231,7 +232,7 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_WHITE_CFG, E_DEFMICUI, E_DEFMICUI, E_SPARCLES_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_LIGHTERS, E_DEFUI, E_DEFUI, E_DEFMICUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFMICUI, // 0-15
   E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_PRIZMATA_CFG, E_DEFUI, // 16-31
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_RADAR, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 32 - 47
-  E_DEFUI, E_LEAPERS_CFG, E_3_PAL_CFG, E_3_PAL_CFG, E_AQUARIUM, E_3_PAL_CFG, E_2_CFG, E_3_PAL_CFG, E_3_PAL_CFG, E_BUTTERFLY_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 48 - 63
+  E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM, E_3PAL_CFG, E_2_CFG, E_3PAL_MIC_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 48 - 63
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
@@ -243,7 +244,7 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 192 - 207
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 208 - 223
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 224 - 39
-  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_FREQ_CFG, E_OSC_CFG  // 240 - 255
+  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_FREQ_CFG, E_OSC_CFG  // 240 - 255
 };
 
 /**
