@@ -1138,8 +1138,8 @@ public:
 };
 
 
-// ***************************** ПАЛИТРА *****************************
-class EffectPalettes : public EffectCalc {
+// ***************************** "Стрелки" *****************************
+class EffectArrows : public EffectCalc {
 private:
     bool loadingFlag = true;
     byte csum = 0;
@@ -1156,13 +1156,15 @@ private:
     byte arrow_play_mode_count[6];      // Сколько раз проигрывать полностью каждый режим если вариант 0 - текущий счетчик
     byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
     float speedfactor;
+    bool subpixel;
+    float prevVal[2];
     void arrowSetupForMode(byte mode, bool change);
     void arrowSetup_mode1();
     void arrowSetup_mode2();
     //void arrowSetup_mode3(;)
     void arrowSetup_mode4();
 
-    bool palettesRoutine(CRGB *leds, EffectWorker *param);
+    bool arrowsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     //void load() override;

@@ -203,8 +203,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_PATTERNS :
     worker = std::unique_ptr<EffectPatterns>(new EffectPatterns());
     break;
-  case EFF_ENUM::EFF_PALETTES :
-    worker = std::unique_ptr<EffectPalettes>(new EffectPalettes());
+  case EFF_ENUM::EFF_ARROWS :
+    worker = std::unique_ptr<EffectArrows>(new EffectArrows());
     break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
