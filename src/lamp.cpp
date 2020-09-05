@@ -134,9 +134,9 @@ void LAMP::handle()
     LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
     LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
   }
-#endif
   avgfps = (avgfps+fps) / 2;
   fps = 0; // сброс FPS раз в секунду
+#endif
 
   // будильник обрабатываем раз в секунду
   alarmWorker();
