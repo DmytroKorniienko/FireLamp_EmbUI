@@ -197,6 +197,15 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_BUTTERFLY :
     worker = std::unique_ptr<EffectButterfly>(new EffectButterfly());
     break;
+  case EFF_ENUM::EFF_SHADOWS :
+    worker = std::unique_ptr<EffectShadows>(new EffectShadows());
+    break;
+  case EFF_ENUM::EFF_PATTERNS :
+    worker = std::unique_ptr<EffectPatterns>(new EffectPatterns());
+    break;
+  case EFF_ENUM::EFF_PALETTES :
+    worker = std::unique_ptr<EffectPalettes>(new EffectPalettes());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());

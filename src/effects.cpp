@@ -4077,10 +4077,12 @@ void EffectOsc::load() {
     spd = 127;
     OSC_HV = WIDTH;
   } else{
-     spd = 0;
-     OSC_HV = HEIGHT;
+    spd = 0;
+    OSC_HV = HEIGHT;
   }
-   if((millis() - lastrun ) <= (isMicActive ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) {  
+   if((millis() - lastrun ) <= (isMicActive ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) { 
+    _rv = getCtrlVal(3).toInt();
+    micA = isMicActive;
     return false;
   } else {
     lastrun = millis();
@@ -4097,8 +4099,8 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
 
   for (float x = 0.0f; x < ((float)OSC_HV - div); x += div) {
-    byte micPick = (isMicActive ? myLamp.getMicMaxPeak() : random8(255));
-    color = CHSV(isMicActive ? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
+    byte micPick = (micA ? myLamp.getMicMaxPeak() : random8(255));
+    color = CHSV(micA ? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
 if (spd == 127) {
 
     myLamp.drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
@@ -4107,8 +4109,8 @@ if (spd == 127) {
     myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 
     y[0] = y[1];
-    y[1] = EffectMath::fmap((float)(isMicActive ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (getCtrlVal(3).toInt()-1), (pointer * 2) - (getCtrlVal(3).toInt()-1), 0.0f, float(OSC_HV - 1U)); 
-    delayMicroseconds((uint16_t)((isMicActive ? 1024U : 1568U) * div));
+    y[1] = EffectMath::fmap((float)(micA ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (float)(_rv - 1), (pointer * 2U) - (float)(_rv - 1), 0.0f, float(OSC_HV - 1U)); 
+    delayMicroseconds((uint16_t)((micA ? 1024U : 1568U) * div));
   
   }  
 
@@ -4425,4 +4427,557 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
       leds[i] = CHSV(hue, hue2, 255U - leds[i].r);
   }
   return true;
+}
+
+// ---- Эффект "Тени" 
+// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
+bool EffectShadows::run(CRGB *ledarr, EffectWorker *opt) {
+  //if (dryrun())
+  //  return false;
+  return shadowsRoutine(*&ledarr, &*opt);
+}
+
+bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
+  
+  uint8_t sat8 = beatsin88( 87, 220, 250);
+  uint8_t brightdepth = beatsin88( 341, 96, 224);
+  uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 256), (40 * 256));
+  uint8_t msmultiplier = isMicActive ? myLamp.getMicMapMaxPeak() :  speed; //beatsin88(147, 23, 60);
+
+  uint16_t hue16 = sHue16;//gHue * 256;
+  uint16_t hueinc16 = beatsin88(113, 1, 3000);
+  
+  uint16_t ms = millis();
+  uint16_t deltams = ms - sLastMillis ;
+  
+  byte effectBrightness = isMicActive ? myLamp.getMicMapMaxPeak() * 1.5f : scale;
+
+  sLastMillis  = ms;
+  sPseudotime += deltams * msmultiplier;
+  sHue16 += deltams * beatsin88( 400, 5,9);
+  uint16_t brightnesstheta16 = sPseudotime;
+
+  for( uint16_t i = 0 ; i < NUM_LEDS; i++) {
+    hue16 += hueinc16;
+    uint8_t hue8 = hue16 / 256;
+
+    brightnesstheta16  += brightnessthetainc16;
+    uint16_t b16 = sin16( brightnesstheta16  ) + 32768U;
+
+    uint32_t bri16 = (uint32_t)((uint32_t)b16 * (uint32_t)b16) / 65536U;
+    uint8_t bri8 = (uint32_t)(((uint32_t)bri16) * brightdepth) / 65536U;
+    bri8 += (255 - brightdepth);
+    
+    CRGB newcolor = CHSV( hue8, sat8, map8(bri8, map(effectBrightness, 1, 255, 32, 125), map(effectBrightness, 1, 255, 125, 250))); 
+    
+    uint16_t pixelnumber = i;
+    pixelnumber = (NUM_LEDS-1) - pixelnumber;
+    
+    nblend( leds[pixelnumber], newcolor, 64);
+  }
+  return true;
+}
+
+// ---- Эффект "Узоры" 
+// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+// Сдвиг всей матрицы вверх
+void shiftDown() {
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+      myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x, y + 1));
+    }
+  }
+}
+
+// Сдвиг всей матрицы вверх
+void shiftUp() {
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = HEIGHT; y > 0; y--) {
+      myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x, y - 1));
+    }
+  }
+}
+
+bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
+  EVERY_N_MILLIS((1005000U / speed)){
+    if (scale == 1) 
+      dir = !dir;
+    loadingFlag = true;
+  }
+  if (dryrun()) {
+    return false;
+  }
+  if (csum != (127U^scale)) {
+    loadingFlag = true;
+    csum = (127U^scale);
+  }
+  if (scale != 1)
+    dir = getCtrlVal(3) == "true";
+
+  return patternsRoutine(*&ledarr, &*opt);
+}
+
+void EffectPatterns::load() {
+  FastLED.clear(true);
+}
+
+// Заполнение матрицы указанным паттерном
+// ptrn - индекс узора в массив узоров patterns[] в patterns.h
+// X   - позиция X вывода узора
+// Y   - позиция Y вывода узора
+// W   - ширина паттерна
+// H   - высота паттерна
+// dir - рисовать 'u' снизу, сдвигая вверх; 'd' - сверху, сдвигая вниз
+void EffectPatterns::drawPattern(uint8_t ptrn, uint8_t X, uint8_t Y, uint8_t W, uint8_t H, bool dir) {
+  
+  if (dir) 
+    shiftDown();
+  else 
+    shiftUp();
+
+  uint8_t y = dir ? (HEIGHT - 1) : 0;
+
+  // Если ширина паттерна не кратна ширине матрицы - отрисовывать со сдвигом? чтобы рисунок был максимально по центру
+  int8_t offset_x = -((WIDTH % W) / 2) + 1;
+  //_bri = random8(96U, 255U);
+  
+  for (uint8_t x = 0; x < WIDTH + W; x++) {
+    int8_t xx = offset_x + x;
+    if (xx >= 0 && xx < WIDTH) {
+      uint8_t in = (uint8_t)pgm_read_byte(&(patterns[ptrn][lineIdx][x % 10])); 
+      CHSV color = colorMR[in];
+      CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
+      myLamp.drawPixelXY(xx, y, color2); 
+    }
+  }
+
+  if (dir) {
+    lineIdx = (lineIdx > 0) ? (lineIdx - 1) : (H - 1);  
+  } else {
+    lineIdx = (lineIdx < H - 1) ? (lineIdx + 1) : 0;
+  }
+}
+
+// Отрисовка указанной картинки с размерами WxH в позиции XY
+void EffectPatterns::drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8_t W, uint8_t H) {
+  if (loadingFlag) {
+    loadingFlag = false;
+    _bri = random8(96U, 255U);
+  }
+
+  for (byte x = 0; x < W; x++) {
+    for (byte y = 0; y < H; y++) {
+      uint8_t in = (uint8_t)pgm_read_byte(&(patterns[iconIdx][y][x])); 
+      if (in != 0) {
+        CHSV color = colorMR[in];        
+        CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
+        myLamp.drawPixelXY(X+x,Y+H-y, color2); 
+      }
+    }
+  }
+}
+
+bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param) {
+
+  if (loadingFlag) {
+    loadingFlag = false;
+    patternIdx = map(scale, 1U, MAX_PATTERN + 1, -1, MAX_PATTERN);  // мапим к ползунку масштаба
+    if (patternIdx < 0) {
+      patternIdx = random8(0U, MAX_PATTERN); 
+    }
+    //fadeToBlackBy(leds, NUM_LEDS, 25);
+    if (dir) 
+      lineIdx = 9;         // Картинка спускается сверху вниз - отрисовка с нижней строки паттерна (паттерн 10x10)
+    else 
+      lineIdx = 0;         // Картинка поднимается сверху вниз - отрисовка с верхней строки паттерна
+    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
+    colorMR[6] = CHSV(random8(), 255U, 255U);
+    if (random8() % 10 == 0) {
+      colorMR[7] = CHSV(0U, 0U, 255U);
+    } else {
+      colorMR[7] = CHSV(random8(), 255U, 255U);
+      while (fabs(colorMR[7].h - colorMR[6].h) < 32) {
+        colorMR[7] = CHSV(random8(), 255U, 255U);
+      }
+    }
+  }  
+
+  drawPattern(patternIdx, 0, 0, 10, 10, dir);  
+  return true;
+}
+
+// ***************************** ПАЛИТРА *****************************
+bool EffectPalettes::run(CRGB *ledarr, EffectWorker *opt) {
+  if (scale == 1) {
+    EVERY_N_MILLIS((1005000U / speed))
+    {
+      loadingFlag = true;
+    }
+  }
+  speedfactor = (float)speed / 768.0 + 0.15;
+  //if (dryrun())
+  //  return false;
+
+  if (csum != (127U ^ scale))
+  {
+    csum = (127U ^ scale);
+    loadingFlag = true;
+  }
+
+  return palettesRoutine(*&ledarr, &*opt);
+}
+
+bool EffectPalettes::palettesRoutine(CRGB *leds, EffectWorker *param) {
+  if (loadingFlag) {
+    loadingFlag = false;
+    FastLED.clear();
+    arrow_complete = false;
+    arrow_mode_orig = scale-1;
+    arrow_mode = arrow_mode_orig == 0 ? random8(1,5) : arrow_mode_orig;
+    arrow_play_mode_count_orig[0] = 0;
+    arrow_play_mode_count_orig[1] = 4;  // 4 фазы - все стрелки показаны по кругу один раз - переходить к следующему ->
+    arrow_play_mode_count_orig[2] = 4;  // 2 фазы - гориз к центру (1), затем верт к центру (2) - обе фазы повторить по 2 раза -> 4
+    arrow_play_mode_count_orig[3] = 4;  // 1 фаза - все к центру (1) повторить по 4 раза -> 4
+    arrow_play_mode_count_orig[4] = 4;  // 2 фазы - гориз к центру (1), затем верт к центру (2) - обе фазы повторить по 2 раза -> 4
+    arrow_play_mode_count_orig[5] = 4;  // 1 фаза - все сразу (1) повторить по 4 раза -> 4
+    for (byte i=0; i<6; i++) {
+      arrow_play_mode_count[i] = arrow_play_mode_count_orig[i];
+    }
+    arrowSetupForMode(arrow_mode, true);
+  }
+  
+  byte effectBrightness = 255;//map8(getBrightnessCalculated(globalBrightness, effectContrast[thisMode]), 32,255);  
+
+  //EffectMath::fader(65); // 65
+  //fadeToBlackBy(leds, NUM_LEDS, 200);
+  for (float i = 0.0f; i < WIDTH; i+= speedfactor )
+  {
+    for (float j = 0.0f; j < HEIGHT; j+= speedfactor)
+    {
+      EffectMath::fadePixel((byte)i, (byte)j, 3);
+      //fadeToBlackBy(leds, NUM_LEDS, 250);
+    }
+  }
+  CHSV color;
+  
+  // движение стрелки - cлева направо
+  if ((arrow_direction & 0x01) > 0) {
+    color = CHSV(arrow_hue[0], 255, effectBrightness);
+    for (float x = 0.0f; x <= 4; x+= speedfactor) {
+      for (float y = 0.0f; y <= x; y+= speedfactor) {    
+        if (arrow_x[0] - x >= 0 && arrow_x[0] - x <= stop_x[0]) { 
+          CHSV clr = ((byte)x < 4 || ((byte)x == 4 && (byte)y < 2)) ? color : CHSV(0,0,0);
+          myLamp.drawPixelXYF(arrow_x[0] - x, arrow_y[0] - y, clr);
+          myLamp.drawPixelXYF(arrow_x[0] - x, arrow_y[0] + y, clr);
+        }
+      }    
+    }
+    arrow_x[0]+= speedfactor;
+  }
+
+  // движение стрелки - cнизу вверх
+  if ((arrow_direction & 0x02) > 0) {
+    color = CHSV(arrow_hue[1], 255, effectBrightness);
+    for (float y = 0.0f; y <= 4; y+= speedfactor) {
+      for (float x = 0.0f; x <= y; x+= speedfactor) {    
+        if (arrow_y[1] - y >= 0 && arrow_y[1] - y <= stop_y[1]) { 
+          CHSV clr = ((byte)y < 4 || ((byte)y == 4 && (byte)x < 2)) ? color : CHSV(0,0,0);
+          myLamp.drawPixelXYF(arrow_x[1] - x, arrow_y[1] - y, clr);
+          myLamp.drawPixelXYF(arrow_x[1] + x, arrow_y[1] - y, clr);
+        }
+      }    
+    }
+    arrow_y[1]+= speedfactor;
+  }
+
+  // движение стрелки - cправа налево
+  if ((arrow_direction & 0x04) > 0) {
+    color = CHSV(arrow_hue[2], 255, effectBrightness);
+    for (float x = 0.0f; x <= 4; x+= speedfactor) {
+      for (float y = 0.0f; y <= x; y+= speedfactor) {    
+        if (arrow_x[2] + x >= stop_x[2] && arrow_x[2] + x < WIDTH) { 
+          CHSV clr = ((byte)x < 4 || ((byte)x == 4 && (byte)y < 2)) ? color : CHSV(0,0,0);
+          myLamp.drawPixelXYF(arrow_x[2] + x, arrow_y[2] - y, clr);
+          myLamp.drawPixelXYF(arrow_x[2] + x, arrow_y[2] + y, clr);
+        }
+      }    
+    }
+    arrow_x[2]-= speedfactor;
+  }
+
+  // движение стрелки - cверху вниз
+  if ((arrow_direction & 0x08) > 0) {
+    color = CHSV(arrow_hue[3], 255, effectBrightness);
+    for (float y = 0.0f; y <= 4; y+= speedfactor) {
+      for (float x = 0.0f; x <= y; x+= speedfactor) {    
+        if (arrow_y[3] + y >= stop_y[3] && arrow_y[3] + y < HEIGHT) { 
+          CHSV clr = ((byte)y < 4 || ((byte)y == 4 && (byte)x < 2)) ? color : CHSV(0,0,0);
+          myLamp.drawPixelXYF(arrow_x[3] - x, arrow_y[3] + y, clr);
+          myLamp.drawPixelXYF(arrow_x[3] + x, arrow_y[3] + y, clr);
+        }
+      }    
+    }
+    arrow_y[3]-= speedfactor;
+  }
+
+  // Проверка завершения движения стрелки, переход к следующей фазе или режиму
+  
+  switch (arrow_mode) {
+
+    case 1:
+      // Последовательно - слева-направо -> снизу вверх -> справа налево -> сверху вниз и далее по циклу
+      // В каждый сомент времени сктивна только одна стрелка, если она дошла до края - переключиться на следующую и задать ее начальные координаты
+      arrow_complete = false;
+      switch (arrow_direction) {
+        case 1: arrow_complete = arrow_x[0] > stop_x[0]; break;
+        case 2: arrow_complete = arrow_y[1] > stop_y[1]; break;
+        case 4: arrow_complete = arrow_x[2] < stop_x[2]; break;
+        case 8: arrow_complete = arrow_y[3] < stop_y[3]; break;
+      }
+
+      arrow_change_mode = false;
+      if (arrow_complete) {
+        arrow_direction = (arrow_direction << 1) & 0x0F;
+        if (arrow_direction == 0) arrow_direction = 1;
+        if (arrow_mode_orig == 0) {
+          arrow_play_mode_count[1]--;
+          if (arrow_play_mode_count[1] == 0) {
+            arrow_play_mode_count[1] = arrow_play_mode_count_orig[1];
+            arrow_mode = random8(1,5);
+            arrow_change_mode = true;
+          }
+        }
+
+        arrowSetupForMode(arrow_mode, arrow_change_mode);
+      }
+      break;
+
+    case 2:
+      // Одновременно горизонтальные навстречу до половины экрана
+      // Затем одновременно вертикальные до половины экрана. Далее - повторять
+      arrow_complete = false;
+      switch (arrow_direction) {
+        case  5: arrow_complete = arrow_x[0] > stop_x[0]; break;   // Стрелка слева и справа встречаются в центре одновременно - проверять только стрелку слева
+        case 10: arrow_complete = arrow_y[1] > stop_y[1]; break;   // Стрелка снизу и сверху встречаются в центре одновременно - проверять только стрелку снизу
+      }
+
+      arrow_change_mode = false;
+      if (arrow_complete) {
+        arrow_direction = arrow_direction == 5 ? 10 : 5;
+        if (arrow_mode_orig == 0) {
+          arrow_play_mode_count[2]--;
+          if (arrow_play_mode_count[2] == 0) {
+            arrow_play_mode_count[2] = arrow_play_mode_count_orig[2];
+            arrow_mode = random8(1,5);
+            arrow_change_mode = true;
+          }
+        }
+        
+        arrowSetupForMode(arrow_mode, arrow_change_mode);
+      }
+      break;
+
+    case 3:
+      // Одновременно со всех сторон к центру
+      // Завершение кадра режима - когда все стрелки собрались в центре.
+      // Проверять стрелки по самой длинной стороне
+      if (WIDTH >= HEIGHT)
+        arrow_complete = arrow_x[0] > stop_x[0];
+      else 
+        arrow_complete = arrow_y[1] > stop_y[1];
+        
+      arrow_change_mode = false;
+      if (arrow_complete) {
+        if (arrow_mode_orig == 0) {
+          arrow_play_mode_count[3]--;
+          if (arrow_play_mode_count[3] == 0) {
+            arrow_play_mode_count[3] = arrow_play_mode_count_orig[3];
+            arrow_mode = random8(1,5);
+            arrow_change_mode = true;
+          }
+        }
+        
+        arrowSetupForMode(arrow_mode, arrow_change_mode);
+      }
+      break;
+
+    case 4:
+      // Одновременно слева/справа от края до края со смещением горизонтальной оси на 1/3 высоты, далее
+      // одновременно снизу/сверху от края до края со смещением вертикальной оси на 1/3 ширины
+      // Завершение кадра режима - когда все стрелки собрались в центре.
+      // Проверять стрелки по самой длинной стороне
+      switch (arrow_direction) {
+        case  5: arrow_complete = arrow_x[0] > stop_x[0]; break;   // Стрелка слева и справа движутся и достигают края одновременно - проверять только стрелку слева
+        case 10: arrow_complete = arrow_y[1] > stop_y[1]; break;   // Стрелка снизу и сверху движутся и достигают края одновременно - проверять только стрелку снизу
+      }
+
+      arrow_change_mode = false;
+      if (arrow_complete) {
+        arrow_direction = arrow_direction == 5 ? 10 : 5;
+        if (arrow_mode_orig == 0) {
+          arrow_play_mode_count[4]--;
+          if (arrow_play_mode_count[4] == 0) {
+            arrow_play_mode_count[4] = arrow_play_mode_count_orig[4];
+            arrow_mode = random8(1,5);
+            arrow_change_mode = true;
+          }
+        }
+        
+        arrowSetupForMode(arrow_mode, arrow_change_mode);
+      }
+      break;
+
+    case 5:
+      // Одновременно со всех сторон от края до края со смещением горизонтальной оси на 1/3 высоты, далее
+      // Проверять стрелки по самой длинной стороне
+      if (WIDTH >= HEIGHT)
+        arrow_complete = arrow_x[0] > stop_x[0];
+      else 
+        arrow_complete = arrow_y[1] > stop_y[1];
+
+      arrow_change_mode = false;
+      if (arrow_complete) {
+        if (arrow_mode_orig == 0) {
+          arrow_play_mode_count[5]--;
+          if (arrow_play_mode_count[5] == 0) {
+            arrow_play_mode_count[5] = arrow_play_mode_count_orig[5];
+            arrow_mode = random8(1,5);
+            arrow_change_mode = true;
+          }
+        }
+        
+        arrowSetupForMode(arrow_mode, arrow_change_mode);
+      }
+      break;
+  }
+  return true;
+}
+
+void EffectPalettes::arrowSetupForMode(byte mode, bool change) {
+    switch (mode) {
+      case 1:
+        if (change) arrow_direction = 1;
+        arrowSetup_mode1();    // От края матрицы к краю, по центру гориз и верт
+        break;
+      case 2:
+        if (change) arrow_direction = 5;
+        arrowSetup_mode2();    // По центру матрицы (гориз / верт) - ограничение - центр матрицы
+        break;
+      case 3:
+        if (change) arrow_direction = 15;
+        arrowSetup_mode2();    // как и в режиме 2 - по центру матрицы (гориз / верт) - ограничение - центр матрицы
+        break;
+      case 4:
+        if (change) arrow_direction = 5;
+        arrowSetup_mode4();    // От края матрицы к краю, верт / гориз
+        break;
+      case 5:
+        if (change) arrow_direction = 15;
+        arrowSetup_mode4();    // как и в режиме 4 от края матрицы к краю, на 1/3
+        break;
+    }
+}
+void EffectPalettes::arrowSetup_mode1() {
+  // Слева направо
+  if ((arrow_direction & 0x01) > 0) {
+    arrow_hue[0] = random8();
+    arrow_x[0] = 0;
+    arrow_y[0] = HEIGHT / 2;
+    stop_x [0] = WIDTH + 7;      // скрывается за экраном на 7 пикселей
+    stop_y [0] = 0;              // неприменимо 
+  }    
+  // снизу вверх
+  if ((arrow_direction & 0x02) > 0) {
+    arrow_hue[1] = random8();
+    arrow_y[1] = 0;
+    arrow_x[1] = WIDTH / 2;
+    stop_y [1] = HEIGHT + 7;     // скрывается за экраном на 7 пикселей
+    stop_x [1] = 0;              // неприменимо 
+  }    
+  // справа налево
+  if ((arrow_direction & 0x04) > 0) {
+    arrow_hue[2] = random8();
+    arrow_x[2] = WIDTH - 1;
+    arrow_y[2] = HEIGHT / 2;
+    stop_x [2] = -7;             // скрывается за экраном на 7 пикселей
+    stop_y [2] = 0;              // неприменимо 
+  }
+  // сверху вниз
+  if ((arrow_direction & 0x08) > 0) {
+    arrow_hue[3] = random8();
+    arrow_y[3] = HEIGHT - 1;
+    arrow_x[3] = WIDTH / 2;
+    stop_y [3] = -7;             // скрывается за экраном на 7 пикселей
+    stop_x [3] = 0;              // неприменимо 
+  }
+}
+
+void EffectPalettes::arrowSetup_mode2() {
+  // Слева направо до половины экрана
+  if ((arrow_direction & 0x01) > 0) {
+    arrow_hue[0] = random8();
+    arrow_x[0] = 0;
+    arrow_y[0] = HEIGHT / 2;
+    stop_x [0] = WIDTH / 2 - 1;  // до центра экрана
+    stop_y [0] = 0;              // неприменимо 
+  }    
+  // снизу вверх до половины экрана
+  if ((arrow_direction & 0x02) > 0) {
+    arrow_hue[1] = random8();
+    arrow_y[1] = 0;
+    arrow_x[1] = WIDTH / 2;
+    stop_y [1] = HEIGHT / 2 - 1; // до центра экрана
+    stop_x [1] = 0;              // неприменимо 
+  }    
+  // справа налево до половины экрана
+  if ((arrow_direction & 0x04) > 0) {
+    arrow_hue[2] = random8();
+    arrow_x[2] = WIDTH - 1;
+    arrow_y[2] = HEIGHT / 2;
+    stop_x [2] = WIDTH / 2;      // до центра экрана
+    stop_y [2] = 0;              // неприменимо 
+  }
+  // сверху вниз до половины экрана
+  if ((arrow_direction & 0x08) > 0) {
+    arrow_hue[3] = random8();
+    arrow_y[3] = HEIGHT - 1;
+    arrow_x[3] = WIDTH / 2;
+    stop_y [3] = HEIGHT / 2;     // до центра экрана
+    stop_x [3] = 0;              // неприменимо 
+  }
+}
+
+void EffectPalettes::arrowSetup_mode4() {
+  // Слева направо
+  if ((arrow_direction & 0x01) > 0) {
+    arrow_hue[0] = random8();
+    arrow_x[0] = 0;
+    arrow_y[0] = (HEIGHT / 3) * 2;
+    stop_x [0] = WIDTH + 7;      // скрывается за экраном на 7 пикселей
+    stop_y [0] = 0;              // неприменимо 
+  }    
+  // снизу вверх
+  if ((arrow_direction & 0x02) > 0) {
+    arrow_hue[1] = random8();
+    arrow_y[1] = 0;
+    arrow_x[1] = (WIDTH / 3) * 2;
+    stop_y [1] = HEIGHT + 7;     // скрывается за экраном на 7 пикселей
+    stop_x [1] = 0;              // неприменимо 
+  }    
+  // справа налево
+  if ((arrow_direction & 0x04) > 0) {
+    arrow_hue[2] = random8();
+    arrow_x[2] = WIDTH - 1;
+    arrow_y[2] = HEIGHT / 3;
+    stop_x [2] = -7;             // скрывается за экраном на 7 пикселей
+    stop_y [2] = 0;              // неприменимо 
+  }
+  // сверху вниз
+  if ((arrow_direction & 0x08) > 0) {
+    arrow_hue[3] = random8();
+    arrow_y[3] = HEIGHT - 1;
+    arrow_x[3] = WIDTH / 3;
+    stop_y [3] = -7;             // скрывается за экраном на 7 пикселей
+    stop_x [3] = 0;              // неприменимо 
+  }
 }
