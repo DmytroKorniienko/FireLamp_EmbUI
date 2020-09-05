@@ -126,7 +126,7 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
     block_effects_config_param(interf, data);
     interf->json_frame_flush();
 }
-
+void delayedcall_effects_main();
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff || !data) return;
 
@@ -137,7 +137,10 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     if (act == FPSTR(TCONST_000A)) {
         myLamp.effects.deleteEffect(confEff); // удаляем текущий
     }if (act == FPSTR(TCONST_000B)) {
-        myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
+        optionsTicker.once(1,std::bind([]{
+            myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
+            delayedcall_effects_main();
+        }));
         section_main_frame(interf, data);
         return;
     } else {
