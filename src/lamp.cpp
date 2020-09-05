@@ -351,10 +351,11 @@ void LAMP::frameShow(const uint32_t ticktime){
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker(), effects(&lampState)
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
 #ifdef OTA
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
+    , effects(&lampState)
     {
       MIRR_V = false; // отзрекаливание по V
       MIRR_H = false; // отзрекаливание по H
