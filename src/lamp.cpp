@@ -128,15 +128,15 @@ void LAMP::handle()
   if (wait_handlers + 999U > millis())
       return;
   wait_handlers = millis();
-
 #ifdef LAMP_DEBUG
-EVERY_N_SECONDS(15){
-  // fps counter
-  LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), fps);
-  LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
-}
-  fps = 0;
+  EVERY_N_SECONDS(15){
+    // fps counter
+    LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
+    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
+  }
 #endif
+  avgfps = (avgfps+fps) / 2;
+  fps = 0; // сброс FPS раз в секунду
 
   // будильник обрабатываем раз в секунду
   alarmWorker();

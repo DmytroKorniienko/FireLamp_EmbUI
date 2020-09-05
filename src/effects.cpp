@@ -4550,7 +4550,7 @@ void EffectPatterns::drawPattern(uint8_t ptrn, uint8_t X, uint8_t Y, uint8_t W, 
   
   for (uint8_t x = 0; x < WIDTH + W; x++) {
     int8_t xx = offset_x + x;
-    if (xx >= 0 && xx < WIDTH) {
+    if (xx >= 0 && xx < (int8_t)WIDTH) {
       uint8_t in = (uint8_t)pgm_read_byte(&(patterns[ptrn][lineIdx][x % 10])); 
       CHSV color = colorMR[in];
       CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;

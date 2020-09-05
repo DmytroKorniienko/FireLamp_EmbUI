@@ -129,7 +129,8 @@ private:
     byte txtOffset = 0; // смещение текста относительно края матрицы
     byte globalBrightness = BRIGHTNESS; // глобальная яркость, пока что будет использоваться для демо-режимов
 #ifdef LAMP_DEBUG
-    uint8_t fps = 0;    // fps counter
+    uint8_t fps = 0;        // fps counter
+    uint16_t avgfps = 0;    // avarage fps counter
 #endif
     int mqtt_int;
 
