@@ -137,8 +137,10 @@ void EffectCalc::setDynCtrl(UIControl*_val){
     isCtrlPallete = true;
   }
 
-  if(_val->getName().startsWith(FPSTR(TINTF_020)) && _val->getId()==7) // Начинается с микрофон и имеет 7 id
+  if(_val->getName().startsWith(FPSTR(TINTF_020)) && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
     isMicActive = _val->getVal()=="true" ? true : false;
+    myLamp.setMicAnalyseDivider(isMicActive);
+  }
 }
 
 // Load palletes into array

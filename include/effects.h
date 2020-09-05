@@ -182,6 +182,8 @@ protected:
 
 public:
 
+    bool isMicOn() {return isMicActive;}
+
     /** полезные обертки **/
     uint8_t wrapX(int8_t x){ return (x + WIDTH) % WIDTH; }
     uint8_t wrapY(int8_t y){ return (y + HEIGHT) % HEIGHT; }

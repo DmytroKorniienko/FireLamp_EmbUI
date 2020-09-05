@@ -1662,6 +1662,7 @@ void remote_action(RA action, ...){
             }
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFFECT: {
+            jee.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list);
             break;
         }
