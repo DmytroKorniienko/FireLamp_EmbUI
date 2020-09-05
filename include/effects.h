@@ -46,6 +46,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects_types.h"
 #include "misc.h"
 #include "../../include/LList.h"
+#include "patterns.h"
 
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
@@ -1010,6 +1011,8 @@ private:
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
+    byte _rv;
+    bool micA;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1088,6 +1091,88 @@ public:
     virtual void setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+// ---- Эффект "Тени" 
+// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
+class EffectShadows : public EffectCalc {
+private:
+    uint16_t sPseudotime = 0;
+    uint16_t sLastMillis = 0;
+    uint16_t sHue16 = 0;
+    
+    bool shadowsRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ---- Эффект "Узоры" 
+// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+class EffectPatterns : public EffectCalc {
+private:
+    int8_t patternIdx = -1;
+    int8_t lineIdx = 0;
+    bool loadingFlag = true;
+    bool dir = false;
+    byte csum = 0;
+    byte _bri = 255U;
+    CHSV colorMR[8] = {
+        CHSV(0, 0, 0),              // 0 - Black
+        CHSV(HUE_RED, 255, 255),    // 1 - Red
+        CHSV(HUE_PURPLE , 255, 255),  // 2 - Green
+        CHSV(HUE_BLUE, 255, 255),   // 3 - Blue
+        CHSV(HUE_YELLOW, 255, 255), // 4 - Yellow
+        CHSV(0, 0, 255),            // 5 - White
+        CHSV(0, 0, 0),              // 6 - 1-й случайный цвет
+        CHSV(0, 0, 0),              // 7 - 2-й случайный цвет
+    };
+
+    void drawPattern(uint8_t ptrn, uint8_t X, uint8_t Y, uint8_t W, uint8_t H, bool dir);
+    void drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8_t W, uint8_t H);
+
+    
+    bool patternsRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+
+// ***************************** "Стрелки" *****************************
+class EffectArrows : public EffectCalc {
+private:
+    bool loadingFlag = true;
+    byte csum = 0;
+    float arrow_x[4], arrow_y[4], stop_x[4], stop_y[4];
+    byte arrow_direction;             // 0x01 - слева направо; 0x02 - снизу вверх; 0х04 - справа налево; 0х08 - сверху вниз
+    byte arrow_mode, arrow_mode_orig; // 0 - по очереди все варианты
+                                      // 1 - по очереди от края до края экрана;
+                                      // 2 - одновременно по горизонтали навстречу к ентру, затем одновременно по вертикали навстречу к центру
+                                      // 3 - одновременно все к центру
+                                      // 4 - по два (горизонталь / вертикаль) все от своего края к противоположному, стрелки смещены от центра на 1/3
+                                      // 5 - одновременно все от своего края к противоположному, стрелки смещены от центра на 1/3
+    bool arrow_complete, arrow_change_mode;
+    byte arrow_hue[4];
+    byte arrow_play_mode_count[6];      // Сколько раз проигрывать полностью каждый режим если вариант 0 - текущий счетчик
+    byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
+    float speedfactor;
+    bool subpixel;
+    float prevVal[2];
+    void arrowSetupForMode(byte mode, bool change);
+    void arrowSetup_mode1();
+    void arrowSetup_mode2();
+    //void arrowSetup_mode3(;)
+    void arrowSetup_mode4();
+
+    bool arrowsRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов 
 
 class EffectWorker {
