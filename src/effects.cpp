@@ -131,6 +131,7 @@ void EffectCalc::setscl(byte _scl){
 void EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return;
 
+
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     paletteIdx = _val->getVal().toInt();
     palettemap(palettes, paletteIdx);
@@ -207,8 +208,7 @@ void EffectWaves::WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t
     return;
   }
 
-  palettepos = _val;
-  curPalette = _pals.at(palettepos);
+  curPalette = _pals.at(_val);
  
   //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
@@ -945,11 +945,6 @@ void EffectLighterTracers::load(){
 
 
 bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
-  // if((millis() - myLamp.getEffDelay() - EFFECTS_RUN_TIMER) < (unsigned)(255-myLamp.effects.getSpeed())){
-  //   return;
-  // } else {
-  //   myLamp.setEffDelay(millis());
-  // }
 
   return lighterTracersRoutine(*&ledarr, &*opt);
 }
@@ -2598,8 +2593,8 @@ bool EffectRain::stormyRainRoutine(CRGB *leds, EffectWorker *param)
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
 bool EffectFire2018::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
+ // if (dryrun())
+ //   return false;
   return fire2018Routine(*&ledarr, &*opt);
 }
 
@@ -2611,7 +2606,12 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
   uint16_t ctrl = ((ctrl1 + ctrl2) / 2);
 
   // parameters for the heatmap
-  uint16_t _speed = 25;     // speed пересекается с переменной в родительском классе
+#ifndef MIC_EFFECTS
+  uint16_t _speed = getCtrlVal(3) == "true" ? map(speed, 1, 255, 1, 255) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255));     // speed пересекается с переменной в родительском классе
+#else
+  byte mic_p = myLamp.getMicMapMaxPeak();
+  uint16_t _speed = isMicActive ? (mic_p > map(speed, 1, 255, 225, 20) ? mic_p : 20) : (getCtrlVal(3) == "true" ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
+#endif
   noise32_x[0] = 3 * ctrl * _speed;
   noise32_y[0] = 20 * millis() * _speed;
   noise32_z[0] = 5 * millis() * _speed;
@@ -2633,7 +2633,7 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
   }
 
   // parameters for te brightness mask
-  _speed = 20;
+  _speed = _speed - _speed/4;
   noise32_x[1] = 3 * ctrl * _speed;
   noise32_y[1] = 20 * millis() * _speed;
   noise32_z[1] = 5 * millis() * _speed;
@@ -4085,15 +4085,15 @@ void EffectOsc::load() {
     OSC_HV = HEIGHT;
   }
   if((millis() - lastrun ) <= (isMicActive ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) { 
-    _rv = getCtrlVal(3).toInt();
-    micA = isMicActive;
     return false;
   } else {
+    _rv = getCtrlVal(3).toInt();
+    micA = isMicActive;
+    div = EffectMath::fmap(speed, 128.0f - spd, 255.0f - spd, 0.50f, 4.0f);
     lastrun = millis();
   }
-  
-  div = EffectMath::fmap(speed, 128.0f - spd, 255.0f - spd, 0.50f, 4.0f);
-  random16_set_seed(micros());
+  //Serial.println("WTF?");
+
   return oscRoutine(*&ledarr, &*opt);
 }
 
@@ -4108,7 +4108,6 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
 if (spd == 127) {
 
     myLamp.drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
-    //myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 } else 
     myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 
