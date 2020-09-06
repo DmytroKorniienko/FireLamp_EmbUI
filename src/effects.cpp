@@ -4445,12 +4445,12 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
   
   uint8_t sat8 = beatsin88( 87, 220, 250);
   uint8_t brightdepth = beatsin88( 341, 96, 224);
-  uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 256), (40 * 256));
+  uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 225), (40 * 256));
 #ifdef MIC_EFFECTS
-  uint8_t msmultiplier = isMicActive ? myLamp.getMicMapMaxPeak() :  speed; //beatsin88(147, 23, 60);
+  uint8_t msmultiplier = isMicActive ? myLamp.getMicMapMaxPeak() : beatsin88(map(speed, 1, 255, 100, 255), 32, map(speed, 1, 255, 60, 255)); // beatsin88(147, 32, 60);
   byte effectBrightness = isMicActive ? myLamp.getMicMapMaxPeak() * 1.5f : scale;
 #else
-  uint8_t msmultiplier = speed; //beatsin88(147, 23, 60);
+  uint8_t msmultiplier = beatsin88(map(speed, 1, 255, 100, 255), 32, map(speed, 1, 255, 60, 255)); // beatsin88(147, 32, 60);
   byte effectBrightness = scale;
 #endif
   uint16_t hue16 = sHue16;//gHue * 256;
