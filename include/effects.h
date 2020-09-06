@@ -1298,7 +1298,8 @@ public:
 
     // отложенная запись конфига текущего эффекта
     bool autoSaveConfig(bool force=false, bool reset=false);
-
+    // удалить конфиг переданного эффекта
+    void removeConfig(const uint16_t nb, const char *folder=nullptr);
     // пересоздает индекс с текущего списка эффектов
     void makeIndexFileFromList(const char *folder = nullptr);
     // пересоздает индекс с конфигов в ФС

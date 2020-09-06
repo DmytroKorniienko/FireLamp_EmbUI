@@ -117,6 +117,7 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     }
 
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(TCONST_000D));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0093), FPSTR(TINTF_08B), FPSTR(TCONST_000D));
 
     interf->json_section_end();
 }
@@ -129,21 +130,30 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
 void delayedcall_effects_main();
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff || !data) return;
-
+    if(optionsTicker.active())
+        optionsTicker.detach();
+    
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
         myLamp.effects.copyEffect(confEff); // копируем текущий
-    } else
-    if (act == FPSTR(TCONST_000A)) {
+    } else if (act == FPSTR(TCONST_000A)) {
         myLamp.effects.deleteEffect(confEff); // удаляем текущий
-    }if (act == FPSTR(TCONST_000B)) {
+    } else if (act == FPSTR(TCONST_000B)) {
         optionsTicker.once(1,std::bind([]{
             myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
             delayedcall_effects_main();
         }));
         section_main_frame(interf, data);
         return;
-    } else {
+    } else if (act == FPSTR(TCONST_0093)) {
+        LOG(printf_P,PSTR("confEff->eff_nb=%d\n"), confEff->eff_nb);
+        myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
+        myLamp.effects.removeConfig(confEff->eff_nb);
+        confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
+        section_main_frame(interf, data);
+        return;
+    }
+    else {
         confEff->canBeSelected((*data)[FPSTR(TCONST_0006)] == FPSTR(TCONST_FFFF));
         confEff->isFavorite((*data)[FPSTR(TCONST_0007)] == FPSTR(TCONST_FFFF));
         myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], confEff);

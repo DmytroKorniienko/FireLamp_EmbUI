@@ -292,6 +292,12 @@ void EffectWorker::initDefault()
   effectsReSort();
 }
 
+void EffectWorker::removeConfig(const uint16_t nb, const char *folder)
+{
+  String filename = geteffectpathname(nb,folder);
+  LittleFS.remove(filename); // удаляем файл
+}
+
 void EffectWorker::effectsReSort(SORT_TYPE _effSort)
 {
   LOG(printf_P,PSTR("%s: %d\n"),F("*Пересортировка эффектов*"), _effSort);
