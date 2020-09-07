@@ -1714,7 +1714,7 @@ bool EffectPrismata::prismataRoutine(CRGB *leds, EffectWorker *param)
   fadeToBlackBy(leds, NUM_LEDS, 256U - getCtrlVal(3).toInt()); // делаем шлейф
   
   for (float x = 0.0f; x <= (float)WIDTH - 1; x += 0.25f) {
-      float y = (float)beatsin8((uint8_t)x + 1 * speed/5, 0, (HEIGHT-1)* 4) / 4.0f;
+      float y = (float)beatsin8((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 4) / 4.0f;
       myLamp.drawPixelXYF(x, y, ColorFromPalette(*curPalette, ((uint8_t)x + spirohueoffset) * 4));
     }
   return true;
@@ -5028,7 +5028,7 @@ void EffectArrows::arrowSetup_mode4() {
 // ------ Эффект "Дикие шарики" 
 // (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
  // EffectNBals::
- bool EffectNBals::run(CRGB *ledarr, EffectWorker *opt) {
+bool EffectNBals::run(CRGB *ledarr, EffectWorker *opt) {
   return nballsRoutine(*&ledarr, &*opt);
 }
 
@@ -5087,3 +5087,53 @@ void EffectNBals::balls_timer() {
     }
   }
 }
+
+// ------ Эффект "Притяжение" 
+ bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
+  if (csum != ((127U^scale)^speed)) {
+    csum = ((127U^scale)^speed);
+    loadingFlag = true;
+  }
+  return attractRoutine(*&ledarr, &*opt);
+}
+
+void EffectAttract::load() {
+  palettesload();
+}
+
+bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {  
+	if (loadingFlag) {
+    loadingFlag = false;
+        int direction = random(0, 2);
+        if (direction == 0)
+            direction = -1;
+
+        for (int i = 0; i < count; i++) {
+            Boid boid = Boid(15, 31 - i);
+            boid.mass = (float)random(1, map(scale, 1, 255, 50, 500)) /100.0f;
+            boid.velocity.x = (float)random(5, map(speed, 1, 255, 10, 265)) /100.0f;//((float) random(40, 50)) / 100.0;
+            boid.velocity.x *= direction;
+            boid.velocity.y = 0;
+            boid.colorIndex = i * 32;
+            boids[i] = boid;
+            //dim = random(170, 250);
+        }
+    }
+        // dim all pixels on the display
+        uint8_t dim = beatsin8(2, 170, 250);
+        //myLamp.dimAll(dim);
+        fadeToBlackBy(leds, NUM_LEDS, 255U - dim);
+
+        for (int i = 0; i < count; i++) {
+            Boid boid = boids[i];
+
+            PVector force = attract(boid);
+            boid.applyForce(force);
+
+            boid.update();
+            myLamp.drawPixelXYF(boid.location.x, boid.location.y, ColorFromPalette(*curPalette,boid.colorIndex));
+
+            boids[i] = boid;
+        }
+      return true;
+    }

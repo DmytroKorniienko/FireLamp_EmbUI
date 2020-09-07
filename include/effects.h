@@ -1194,6 +1194,43 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------ Эффект "Притяжение" 
+class EffectAttract : public EffectCalc {
+private:
+    const uint8_t spirocenterX = WIDTH / 2;
+    const uint8_t spirocenterY = HEIGHT / 2;
+    float mass;    // Mass, tied to size
+    float G;       // Gravitational Constant
+    const uint8_t count = 32;
+    bool loadingFlag = true;
+    byte csum = 0;
+    //Boid boids[AVAILABLE_BOID_COUNT];
+    Boid boids[32];
+    PVector location;   // Location
+
+
+
+    PVector attract(Boid m) {
+        PVector force = location - m.location;   // Calculate direction of force
+        float d = force.mag();                              // Distance between objects
+        d = constrain(d, 5.0f, 32.0f);                        // Limiting the distance to eliminate "extreme" results for very close or very far objects
+        force.normalize();                                  // Normalize vector (distance doesn't matter here, we just want this vector for direction)
+        float strength = (G * mass * m.mass) / (d * d);      // Calculate gravitional force magnitude
+        force *= strength;                                  // Get force vector --> magnitude * direction
+        return force;
+    }
+    bool attractRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    EffectAttract() {
+        location = PVector(spirocenterX, spirocenterY);
+        mass = 10;
+        G = .5;
+    }
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов 
 
 class EffectWorker {
