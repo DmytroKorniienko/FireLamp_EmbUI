@@ -4261,7 +4261,7 @@ void EffectButterfly::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   // теперь проверяем уже поведение для этого эффекта
-  LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
+  // LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
 
   if(_val->getType()==2 && _val->getId()==3)
     wings = _val->getVal()==F("true") ? true : false;

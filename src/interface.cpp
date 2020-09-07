@@ -422,8 +422,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     for(int i=3; i<controls.size();i++){
         if((*data).containsKey(String(FPSTR(TCONST_0015))+String(controls[i]->getId()))){
             controls[i]->setVal((*data)[String(FPSTR(TCONST_0015))+String(controls[i]->getId())]);
-            myLamp.effects.worker->setDynCtrl(controls[i]);
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), i, (*data)[String(FPSTR(TCONST_0015))+String(controls[i]->getId())].as<String>().c_str());
+            myLamp.effects.worker->setDynCtrl(controls[i]);
         }
     }
     resetAutoTimers();
