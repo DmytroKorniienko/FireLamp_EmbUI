@@ -131,15 +131,16 @@ void EffectCalc::setscl(byte _scl){
 void EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return;
 
-
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     paletteIdx = _val->getVal().toInt();
     palettemap(palettes, paletteIdx);
     isCtrlPallete = true;
   }
 
-  if(_val->getName().startsWith(FPSTR(TINTF_020)) && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = _val->getVal()=="true" ? true : false;
+  LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
+  
+  if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
+    isMicActive = _val->getVal()==FPSTR(TCONST_FFFF) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif
@@ -4075,6 +4076,15 @@ void EffectOsc::load() {
   pointer = myLamp.getMicScale()/ _scaler;
 }
 
+void EffectOsc::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  // теперь проверяем уже поведение для этого эффекта
+  // LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
+
+  _rv = getCtrlVal(3).toInt();
+}
+
  bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt)
 {
   if (speed <= 127) {
@@ -4087,7 +4097,7 @@ void EffectOsc::load() {
   if((millis() - lastrun ) <= (isMicActive ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) { 
     return false;
   } else {
-    _rv = getCtrlVal(3).toInt();
+    // шоэта??? и нахрена? типа перечитывания иногда? мда...
     micA = isMicActive;
     div = EffectMath::fmap(speed, 128.0f - spd, 255.0f - spd, 0.50f, 4.0f);
     lastrun = millis();
@@ -4098,7 +4108,6 @@ void EffectOsc::load() {
 }
 
 bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {  
-  static float y[2] = {0.0f, 0.0f};
     //memset8( leds, 0, NUM_LEDS * 3);
   fadeToBlackBy(leds, NUM_LEDS, 200);
 

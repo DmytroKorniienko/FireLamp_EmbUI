@@ -1013,6 +1013,8 @@ private:
     float div;
     byte _rv;
     bool micA;
+    float y[2] = {0.0f, 0.0f};
+    void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
