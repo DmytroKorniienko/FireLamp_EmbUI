@@ -147,9 +147,17 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         return;
     } else if (act == FPSTR(TCONST_0093)) {
         LOG(printf_P,PSTR("confEff->eff_nb=%d\n"), confEff->eff_nb);
-        myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
-        myLamp.effects.removeConfig(confEff->eff_nb);
-        confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
+        if(confEff->eff_nb==myLamp.effects.getCurrent()){
+            myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
+            myLamp.effects.removeConfig(confEff->eff_nb);
+            remote_action(RA_EFF_NEXT, NULL);
+        } else {
+            myLamp.effects.removeConfig(confEff->eff_nb);
+        }
+        String tmpStr="- ";
+        tmpStr+=confEff->eff_nb;
+        myLamp.sendString(tmpStr.c_str(), CRGB::Red);
+        //confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
         section_main_frame(interf, data);
         return;
     }
