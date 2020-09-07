@@ -875,12 +875,17 @@ void LAMP::newYearMessageHandle()
 void LAMP::periodicTimeHandle()
 {
   const tm* t = localtime(timeProcessor.now());
-  if(t->tm_sec || enPeriodicTimePrint==PERIODICTIME::PT_NOT_SHOW)
+  if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
     return;
 
   LOG(printf_P,PSTR("%s: %02d:%02d:%02d\n"),F("periodicTimeHandle"),t->tm_hour,t->tm_min,t->tm_sec);
 
   time_t tm = t->tm_hour * 60 + t->tm_min;
+
+  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW && !(tm%60)){
+    sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
+    return;
+  }
 
   switch (enPeriodicTimePrint)
   {
@@ -912,8 +917,6 @@ void LAMP::periodicTimeHandle()
     default:
       break;
   }
-  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint!=PERIODICTIME::PT_NOT_SHOW && !(tm%60))
-    sendStringToLamp(timeProcessor.getFormattedShortTime().c_str(), CRGB::Red);
 }
 
 #ifdef MIC_EFFECTS
