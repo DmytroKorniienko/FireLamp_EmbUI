@@ -1598,6 +1598,8 @@ void sync_parameters(){
 
     if (myLamp.IsGlobalBrightness()) {
         CALL_SETTER(FPSTR(TCONST_0012), jee.param(FPSTR(TCONST_0018)), set_effects_bright);
+    } else {
+        myLamp.setGlobalBrightness(jee.param(FPSTR(TCONST_0018)).toInt()); // починить бросок яркости в 255 при первом включении
     }
 
 #ifdef RESTORE_STATE
