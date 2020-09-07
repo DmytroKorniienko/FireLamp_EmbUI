@@ -1724,32 +1724,40 @@ bool EffectPrismata::prismataRoutine(CRGB *leds, EffectWorker *param)
 // Адаптация от (c) SottNick
 void EffectFlock::load(){
   palettesload();    // подгружаем дефолтные палитры
-
-  FastLED.clear();
-  for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
-    boids[i] = Boid(15, 15);
-    boids[i].maxspeed = 0.380*speed/127.0+0.380/2;
-    boids[i].maxforce = 0.015*speed/127.0+0.015/2;
-  }
-  predatorPresent = random(0, 2) >= 1;
-  if (predatorPresent) {
-    predator = Boid(31, 31);
-    predatorPresent = true;
-    predator.maxspeed = 0.385*speed/127.0+0.385/2;
-    predator.maxforce = 0.020*speed/127.0+0.020/2;
-    predator.neighbordist = 8.0;
-    predator.desiredseparation = 0.0;
-  }
-
 }
 
 bool EffectFlock::run(CRGB *ledarr, EffectWorker *opt){
+  if (curPalette == nullptr) {
+    return false;
+  }
+
+  EVERY_N_MILLIS(333) {
+    hueoffset += 1;
+  }
+  predatorPresent = getCtrlVal(3) == "true" ? true : false;
   return flockRoutine(*&ledarr, &*opt);
 }
 
 bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
-  if (curPalette == nullptr) {
-    return false;
+  if (loadingflag)
+  {
+    for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
+    {
+      boids[i] = Boid(15, 15);
+      boids[i].maxspeed = 0.380 * speed / 127.0 + 0.380 / 2;
+      boids[i].maxforce = 0.015 * speed / 127.0 + 0.015 / 2;
+    }
+    predatorPresent = random(0, 2) >= 1;
+    if (predatorPresent)
+    {
+      predator = Boid(31, 31);
+      predatorPresent = true;
+      predator.maxspeed = 0.385 * speed / 127.0 + 0.385 / 2;
+      predator.maxforce = 0.020 * speed / 127.0 + 0.020 / 2;
+      predator.neighbordist = 8.0;
+      predator.desiredseparation = 0.0;
+    }
+    loadingflag = false;
   }
 
   myLamp.blur2d(15);
@@ -1773,7 +1781,7 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
     // PVector velocity = boid->velocity;
         // backgroundLayer.drawLine(location.x, location.y, location.x - velocity.x, location.y - velocity.y, color);
         // effects.leds[XY(location.x, location.y)] += color;
-    myLamp.drawPixelXY(location.x, location.y, color);
+    myLamp.drawPixelXYF(location.x, location.y, color);
     if (applyWind) {
           boid->applyForce(wind);
           applyWind = false;
@@ -1787,7 +1795,7 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
     // PVector velocity = predator.velocity;
         // backgroundLayer.drawLine(location.x, location.y, location.x - velocity.x, location.y - velocity.y, color);
         // effects.leds[XY(location.x, location.y)] += color;
-    myLamp.drawPixelXY(location.x, location.y, color);
+    myLamp.drawPixelXYF(location.x, location.y, color);
   }
   EVERY_N_MILLIS(333) {
         hueoffset += 1;

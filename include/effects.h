@@ -635,11 +635,15 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ============= ЭФФЕКТ СТАЯ ===============
+// Адаптация от (c) SottNick
 class EffectFlock : public EffectCalc {
 private:
   Boid boids[AVAILABLE_BOID_COUNT];
   Boid predator;
   PVector wind;
+  bool loadingflag = true;
+  byte csum = 0;
 
   bool predatorPresent;
   uint8_t hueoffset;
