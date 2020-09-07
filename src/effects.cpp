@@ -3529,8 +3529,7 @@ bool EffectLeapers::run(CRGB *ledarr, EffectWorker *opt){
 
 // ------- Эффект "Вихри"
 bool EffectWhirl::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
+
   return whirlRoutine(*&ledarr, &*opt);
 }
 
@@ -3547,11 +3546,12 @@ void EffectWhirl::load(){
 bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
   micPick = isMicActive ? myLamp.getMicMaxPeak() : 0;
-  myLamp.dimAll(isMicActive ? /*(100 + micPick*2)*/ 250U : 250U);
+  //myLamp.dimAll(255U);
+  fadeToBlackBy(leds, NUM_LEDS, 15);
 #else
-  myLamp.dimAll(250U);
+  fadeToBlackBy(leds, NUM_LEDS, 15);
 #endif
-
+  float speedfactor = EffectMath::fmap((float)speed, 1.0f, 255.0f, 0.5f, 1.1f);
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
     Boid * boid = &boids[i];
     
@@ -3560,13 +3560,13 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 
     byte angle = inoise8(ff_x + ioffset, ff_y + joffset, ff_z);
 
-    boid->velocity.x = (float) sin8(angle) * 0.0078125 - 1.0;
-    boid->velocity.y = -((float)cos8(angle) * 0.0078125 - 1.0);
+    boid->velocity.x = ((float)sin8(angle) * 0.0078125 - speedfactor);
+    boid->velocity.y = -((float)cos8(angle) * 0.0078125 - speedfactor);
     boid->update();
 #ifdef MIC_EFFECTS    
-    myLamp.drawPixelXY(boid->location.x, boid->location.y, isMicActive ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
+    myLamp.drawPixelXYF(boid->location.x, boid->location.y, isMicActive ? CHSV(myLamp.getMicMapFreq(), 255-micPick, constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48, 255)) : ColorFromPalette(*curPalette, angle + (uint8_t)hue)); // + hue постепенно сдвигает палитру по кругу
 #else
-    myLamp.drawPixelXY(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + hue)); // + hue постепенно сдвигает палитру по кругу
+    myLamp.drawPixelXYF(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + (uint8_t)hue)); // + hue постепенно сдвигает палитру по кругу
 #endif
     if (boid->location.x < 0 || boid->location.x >= WIDTH || boid->location.y < 0 || boid->location.y >= HEIGHT) {
       boid->location.x = random(WIDTH);
@@ -3578,13 +3578,12 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 #else
   myLamp.blur2d(30U);
 #endif
-  EVERY_N_MILLIS(200) {
-    hue++;
-  }
-
-  ff_x += ff_speed;
-  ff_y += ff_speed;
-  ff_z += ff_speed;
+  //EVERY_N_MILLIS(200) {
+    hue += speedfactor;
+  //}
+  ff_x += speedfactor;
+  ff_y += speedfactor;
+  ff_z += speedfactor;
   return true;
 }
 

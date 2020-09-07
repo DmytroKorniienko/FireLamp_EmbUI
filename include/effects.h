@@ -911,15 +911,15 @@ public:
 // ----------- Эффект "Вихри" адаптация SottNick
 class EffectWhirl : public EffectCalc {
 private:
-    uint16_t ff_x;
-    uint16_t ff_y;
-    uint16_t ff_z;
-    uint8_t hue;
+    float ff_x;
+    float ff_y;
+    float ff_z;
+    float hue;
     Boid boids[AVAILABLE_BOID_COUNT];
     uint8_t micPick = 0;
 
-    static const uint8_t ff_speed = 1; // чем выше этот параметр, тем короче переходы (градиенты) между цветами. 1 - это самое красивое
-    static const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
+    const uint8_t ff_speed = 1; // чем выше этот параметр, тем короче переходы (градиенты) между цветами. 1 - это самое красивое
+    const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
 
     bool whirlRoutine(CRGB *leds, EffectWorker *param);
 
