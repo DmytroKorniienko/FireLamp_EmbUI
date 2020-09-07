@@ -1177,6 +1177,7 @@ public:
 // (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
 class EffectNBals : public EffectCalc {
 private:
+    uint8_t lastSecond = 99;
     uint16_t speedy;// speed is set dynamically once we've started up
     uint16_t _scale;
 

@@ -5023,7 +5023,6 @@ void EffectArrows::arrowSetup_mode4() {
   return nballsRoutine(*&ledarr, &*opt);
 }
 
-
 bool EffectNBals::nballsRoutine(CRGB *leds, EffectWorker *param) {
   beat1 = map(speed, 1, 255, 8, 128);
   beat2 = scale;
@@ -5035,8 +5034,9 @@ bool EffectNBals::nballsRoutine(CRGB *leds, EffectWorker *param) {
 void EffectNBals::blur(CRGB *leds) {
   myLamp.blur2d(beatsin8(2,100,255));
   // Use two out-of-sync sine waves
-  uint8_t  i = beatsin8( beat1, 1, HEIGHT-1);
-  uint8_t  j = beatsin8((beat1-beat2), 1, WIDTH-1);
+  // В общем те же фигуры Лиссажу, вид сбоку :), но выглядят хорошо
+  uint8_t  i = beatsin8( beat1, 0, HEIGHT-1);
+  uint8_t  j = beatsin8(abs(beat1-beat2), 0, WIDTH-1);
   // Also calculate some reflections
   uint8_t ni = (WIDTH-1)-i;
   uint8_t nj = (WIDTH-1)-j;  
@@ -5064,10 +5064,8 @@ void EffectNBals::blur(CRGB *leds) {
   }
 }
 
-
 void EffectNBals::balls_timer() {
   uint8_t secondHand = ((millis() / 1000)) % 60;
-  static uint8_t lastSecond = 99;
 
   if( lastSecond != secondHand) {
     lastSecond = secondHand;
