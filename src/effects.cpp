@@ -5015,3 +5015,68 @@ void EffectArrows::arrowSetup_mode4() {
     stop_x [3] = 0;              // неприменимо 
   }
 }
+
+// ------ Эффект "Дикие шарики" 
+// (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
+ // EffectNBals::
+ bool EffectNBals::run(CRGB *ledarr, EffectWorker *opt) {
+  return nballsRoutine(*&ledarr, &*opt);
+}
+
+
+bool EffectNBals::nballsRoutine(CRGB *leds, EffectWorker *param) {
+  beat1 = map(speed, 1, 255, 8, 128);
+  beat2 = scale;
+  balls_timer();
+  blur(*&leds);      
+  return true;
+}
+
+void EffectNBals::blur(CRGB *leds) {
+  myLamp.blur2d(beatsin8(2,100,255));
+  // Use two out-of-sync sine waves
+  uint8_t  i = beatsin8( beat1, 1, HEIGHT-1);
+  uint8_t  j = beatsin8((beat1-beat2), 1, WIDTH-1);
+  // Also calculate some reflections
+  uint8_t ni = (WIDTH-1)-i;
+  uint8_t nj = (WIDTH-1)-j;  
+  // The color of each point shifts over time, each at a different speed.
+  uint16_t ms = millis();  
+
+  switch(balls){
+  case 1:
+    leds[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255); 
+    break;
+  case 3:
+    leds[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
+    leds[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255); 
+    break;     
+  case 4:
+    leds[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
+    leds[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
+    leds[myLamp.getPixelNumber( i,nj)] += CHSV( ms / 37, 200, 255);
+    leds[myLamp.getPixelNumber( i, j)] += CHSV( ms / 11, 200, 255); 
+    break;
+  case 2:
+    leds[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
+    leds[myLamp.getPixelNumber( j, i)] += CHSV( ms / 13, 200, 255); 
+    break;
+  }
+}
+
+
+void EffectNBals::balls_timer() {
+  uint8_t secondHand = ((millis() / 1000)) % 60;
+  static uint8_t lastSecond = 99;
+
+  if( lastSecond != secondHand) {
+    lastSecond = secondHand;
+
+    if(( secondHand == 30)||( secondHand == 0))  {
+      balls += 1;
+      if(balls > 4) { 
+        balls = 1;
+      }
+    }
+  }
+}
