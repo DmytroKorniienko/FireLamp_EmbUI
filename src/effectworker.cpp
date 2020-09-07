@@ -560,7 +560,7 @@ void EffectWorker::chckdefconfigs(const char *folder){
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
       savedefaulteffconfig(i, cfgfilename);
-      yield();
+      //yield();
     }
   }
 }
@@ -697,47 +697,37 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
 
 void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
 {
-      File indexFile;
-      String sourcedir;
-      makeIndexFile(tofolder); // создать дефолтный набор прежде всего
+  File indexFile;
+  String sourcedir;
+  makeIndexFile(tofolder); // создать дефолтный набор прежде всего
+
+  if (fromfolder != nullptr) {
+      sourcedir.concat(F("/"));
+      sourcedir.concat(fromfolder);
+  }
+  sourcedir.concat(F("/eff"));
+  Dir dir = LittleFS.openDir(sourcedir);
+
+  DynamicJsonDocument doc(2048);
   
-      if (fromfolder != nullptr) {
-          sourcedir.concat(F("/"));
-          sourcedir.concat(fromfolder);
+  String fn;
+  openIndexFile(indexFile, tofolder);
+  bool firstLine = true;
+  indexFile.print("[");
+  
+  while (dir.next()) {
+      fn=sourcedir + "/" + dir.fileName();
+      if (!deserializeFile(doc, fn.c_str()) || doc[F("nb")].as<String>()=="0") {
+        continue;
       }
-      sourcedir.concat(F("/eff"));
-      Dir dir = LittleFS.openDir(sourcedir);
-
-      DynamicJsonDocument doc(2048);
-      
-      String fn;
-      openIndexFile(indexFile, tofolder);
-      bool firstLine = true;
-      indexFile.print("[");
-      
-      while (dir.next()) {
-          fn=sourcedir + "/" + dir.fileName();
-          //LOG(println,fn);
-          if (!deserializeFile(doc, fn.c_str()) || doc[F("nb")].as<String>()=="0") {
-            continue;
-          }
-
-          indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
-        /*
-          if(!firstLine) idx.concat(F(","));
-          idx.concat(F("{\"nb\":"));
-          idx.concat(doc[F("nb")].as<String>());
-          idx.concat(F(",\"fl\":"));
-          idx.concat(doc[F("flags")].as<uint8_t>());
-          idx.concat(F("}"));
-        */
-          firstLine = false; // сбрасываю признак первой строки
-          doc.clear();
-          //yield(); // сброс вотчдога при итерациях // вызывает Panic core_esp8266_main.cpp:133 __yield
-          ESP.wdtFeed();
-      }
-      indexFile.print("]");
-      indexFile.close();
+      indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
+      firstLine = false; // сбрасываю признак первой строки
+      doc.clear();
+      //yield(); // сброс вотчдога при итерациях // вызывает Panic core_esp8266_main.cpp:133 __yield
+      ESP.wdtFeed();
+  }
+  indexFile.print("]");
+  indexFile.close();
 
   LOG(println,F("Индекс эффектов создан из FS!"));
   initDefault(); // перечитаем вновь созданный индекс
