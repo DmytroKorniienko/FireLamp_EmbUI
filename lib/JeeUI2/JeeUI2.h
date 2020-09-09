@@ -185,6 +185,10 @@ class jeeui2
     void setup_mDns();
 
     void ssdp_begin() {
+          String hn = param(F("hostname"));
+          if (!hn.length())
+              var(F("hostname"), String(__IDPREFIX) + mc, true);
+
           uint32_t chipId;
           #ifdef ESP32
               chipId = ESP.getEfuseMac();
