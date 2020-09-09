@@ -14,6 +14,7 @@
 #endif
 
 #include <ESPAsyncWebServer.h>
+#include <SPIFFSEditor.h>
 #include "ArduinoJson.h"
 
 #ifdef ESP8266

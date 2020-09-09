@@ -208,6 +208,13 @@ void jeeui2::begin(){
     //     request->send(200, "text/xml", SSDP.schema());
     // });
 
+#ifdef ESP32
+  server.addHandler(new SPIFFSEditor(LittleFS, http_username,http_password));
+#elif defined(ESP8266)
+  //server.addHandler(new SPIFFSEditor(http_username,http_password, LittleFS));
+  server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
+#endif
+
     // Добавлено для отладки, т.е. возможности получить JSON интерфейса для анализа
     server.on(PSTR("/echo"), HTTP_ANY, [this](AsyncWebServerRequest *request) {
         // jee.send(request);
