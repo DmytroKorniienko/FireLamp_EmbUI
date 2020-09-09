@@ -534,14 +534,15 @@ private:
 
   // COOLING: How much does the air cool as it rises?
   // Less cooling = taller flames.  More cooling = shorter flames.
-  const uint8_t cooling = 70;
+    uint8_t cooling = 130U; // 70
   // SPARKING: What chance (out of 255) is there that a new spark will be lit?
   // Higher chance = more roaring fire.  Lower chance = more flickery fire.
-  const uint8_t sparking = 130;
+    const uint8_t sparking = 80U; // 130
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-  const uint8_t fireSmoothing = 90;
+    const uint8_t fireSmoothing = 150U; // 90
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+
 
   bool fire2012Routine(CRGB *leds, EffectWorker *param);
 
@@ -724,11 +725,11 @@ public:
 
 class EffectWaves : public EffectCalc {
 private:
-  uint8_t waveCount = speed % 2;
+  uint8_t waveCount = 1;
   const uint8_t waveScale = 256 / WIDTH;
   uint8_t waveRotation;
   uint8_t whue;
-  uint8_t waveTheta;
+  float waveTheta;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
 
   /**

@@ -151,13 +151,15 @@ void EffectCalc::setDynCtrl(UIControl*_val){
 void EffectCalc::palettesload(){
   palettes.reserve(FASTLED_PALETTS_COUNT);
   palettes.push_back(&CloudColors_p);
+  //palettes.push_back(&WaterfallColors_p);
   palettes.push_back(&ForestColors_p);
-  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&NormalFire_p);
   palettes.push_back(&LavaColors_p);
   palettes.push_back(&OceanColors_p);
   palettes.push_back(&PartyColors_p);
+  palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&RainbowColors_p);
-  palettes.push_back(&RainbowStripeColors_p);
+  //palettes.push_back(&RainbowStripeColors_p);
   //palettes.push_back(&WhiteBlackColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
@@ -2213,8 +2215,8 @@ void EffectWaves::load(){
 
 bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
 
-  waveCount = (scale <= 127 ? (scale <= 63 ? 0 : 1) : (scale >= 191 ? 1 : 0));
-  waveRotation = (scale <= 127 ? 0 : 1);  /* сильно перебрал управление эффнктом
+  waveCount = (scale <= 16 ? (scale <= 8 ? 0 : 1) : (scale >= 25 ? 1 : 0));
+  waveRotation = (scale <= 16 ? 0 : 1);  /* сильно перебрал управление эффектом
   не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции. 
 */
    
@@ -2224,42 +2226,43 @@ bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
 {
 
-  WavesPaletteMap(palettes,  (scale <= 127 ? (scale <= 63 ? map(scale, 1, 63, 0, 7) : map(scale, 64, 127, 0, 7)) : (scale >= 191 ? map(scale, 191, 255, 0, 7) : map(scale, 128, 190, 0, 7))));
+  WavesPaletteMap(palettes,  (scale <= 16 ? (scale <= 8 ? map(scale, 1, 8, 0, 7) : map(scale, 9, 16, 0, 7)) : (scale >= 25 ? map(scale, 25, 32, 0, 7) : map(scale, 17, 24, 0, 7))));
 
   if (curPalette == nullptr) {
     return false;
   }
 
   myLamp.blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
-  myLamp.dimAll(254);
+  //myLamp.dimAll(254);
+  fadeToBlackBy(leds, NUM_LEDS, 15);
 
-  int n = 0;
+  float n = 0;
   switch (waveRotation)
   {
   case 0:
   case 2:
-    for (uint8_t x = 0; x < WIDTH; x++)
+    for (float x = 0.0; x < WIDTH; x+= 0.25)
     {
-      n = quadwave8(x * 2 + waveTheta) / waveScale;
-      myLamp.drawPixelXY(x, n, ColorFromPalette(*curPalette, whue + x));
+      n = (float)quadwave8(x * 4 + waveTheta) / ((float)waveScale + 0.9f);
+      myLamp.drawPixelXYF(x, n, ColorFromPalette(*curPalette, whue + x));
       if (waveCount != 1)
-        myLamp.drawPixelXY(x, HEIGHT - 1 - n, ColorFromPalette(*curPalette, whue + x));
+        myLamp.drawPixelXYF(x, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + x));
     }
     break;
 
   case 1:
   case 3:
-    for (uint8_t y = 0; y < HEIGHT; y++)
+    for (float y = 0.0; y < HEIGHT; y+= 0.25)
     {
-      n = quadwave8(y * 2 + waveTheta) / waveScale;
-      myLamp.drawPixelXY(n, y, ColorFromPalette(*curPalette, whue + y));
+      n = (float)quadwave8(y * 4 + waveTheta) / ((float)waveScale + 0.9f);
+      myLamp.drawPixelXYF(n, y, ColorFromPalette(*curPalette, whue + y));
       if (waveCount != 1)
-        myLamp.drawPixelXY(WIDTH - 1 - n, y, ColorFromPalette(*curPalette, whue + y));
+        myLamp.drawPixelXYF((float)WIDTH - 1.0 - n, y, ColorFromPalette(*curPalette, whue + y));
     }
     break;
   }
 
-  waveTheta+=5*(speed/255.0)+1.0;
+  waveTheta+= 5.0*((float)speed/255.0)+1.0;
   whue+=speed/10.0+1;
   return true;
 }
@@ -2288,17 +2291,21 @@ void EffectFire2012::load(){
   scale2pallete();    // выбираем палитру согласно "шкале"
 
   // Add entropy to random number generator; we use a lot of it.
-  random16_add_entropy(random(256));
+  random16_add_entropy(millis());
 }
 
 bool EffectFire2012::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
+ if (dryrun())
     return false;
+
+  cooling = isMicActive ? 255 - myLamp.getMicMapMaxPeak() : 130;
+
+
 
   return fire2012Routine(*&ledarr, &*opt);
 }
 
-bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectWorker *opt)
+bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
 {
   if (curPalette == nullptr) {
     return false;
@@ -2309,7 +2316,7 @@ bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectWorker *opt)
 #else
   #define FIRE_BASE HEIGHT / 6 + 1
 #endif
-
+  //fadeToBlackBy(leds, NUM_LEDS, 5);
   // Loop for each column individually
   for (uint8_t x = 0; x < WIDTH; x++)
   {
@@ -2329,7 +2336,7 @@ bool EffectFire2012::fire2012Routine(CRGB *ledarr, EffectWorker *opt)
     if (random8() < sparking)
     {
       int j = random(FIRE_BASE);
-      noise3d[0][x][j] = qadd8(noise3d[0][x][j], random(160, 255));
+      noise3d[0][x][j] = qadd8(noise3d[0][x][j], random(96, 255)); // 196, 255
     }
 
     // Step 4.  Map from heat cells to LED colors
@@ -3546,10 +3553,10 @@ void EffectWhirl::load(){
 bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
   micPick = isMicActive ? myLamp.getMicMaxPeak() : 0;
-  //myLamp.dimAll(255U);
-  fadeToBlackBy(leds, NUM_LEDS, 15);
+ // myLamp.dimAll(255U);
+  fadeToBlackBy(leds, NUM_LEDS, 25);
 #else
-  fadeToBlackBy(leds, NUM_LEDS, 15);
+  fadeToBlackBy(leds, NUM_LEDS, 25);
 #endif
   float speedfactor = EffectMath::fmap((float)speed, 1.0f, 255.0f, 0.5f, 1.1f);
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
@@ -4083,8 +4090,7 @@ void EffectOsc::load() {
   pointer = myLamp.getMicScale()/ _scaler;
 }
 
-void EffectOsc::setDynCtrl(UIControl*_val)
-{
+void EffectOsc::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   // теперь проверяем уже поведение для этого эффекта
   // LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
@@ -4092,7 +4098,7 @@ void EffectOsc::setDynCtrl(UIControl*_val)
   _rv = getCtrlVal(3).toInt();
 }
 
- bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt)
+bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt)
 {
   if (speed <= 127) {
     spd = 127;
@@ -4104,8 +4110,6 @@ void EffectOsc::setDynCtrl(UIControl*_val)
   if((millis() - lastrun ) <= (isMicActive ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) { 
     return false;
   } else {
-    // шоэта??? и нахрена? типа перечитывания иногда? мда...
-    micA = isMicActive;
     div = EffectMath::fmap(speed, 128.0f - spd, 255.0f - spd, 0.50f, 4.0f);
     lastrun = millis();
   }
@@ -4119,8 +4123,8 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
 
   for (float x = 0.0f; x < ((float)OSC_HV - div); x += div) {
-    byte micPick = (micA ? myLamp.getMicMaxPeak() : random8(255));
-    color = CHSV(micA ? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
+    byte micPick = (isMicActive? myLamp.getMicMaxPeak() : random8(255));
+    color = CHSV(isMicActive? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
 if (spd == 127) {
 
     myLamp.drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
@@ -4128,8 +4132,8 @@ if (spd == 127) {
     myLamp.drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
 
     y[0] = y[1];
-    y[1] = EffectMath::fmap((float)(micA ? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (float)(_rv - 1), (pointer * 2U) - (float)(_rv - 1), 0.0f, float(OSC_HV - 1U)); 
-    delayMicroseconds((uint16_t)((micA ? 1024U : 1568U) * div));
+    y[1] = EffectMath::fmap((float)(isMicActive? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (float)(_rv - 1), (pointer * 2U) - (float)(_rv - 1), 0.0f, float(OSC_HV - 1U)); 
+    delayMicroseconds((uint16_t)((isMicActive? 1024U : 1568U) * div));
   
   }  
 
@@ -4534,7 +4538,7 @@ bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
     csum = (127U^scale);
   }
   if (scale != 1)
-    dir = getCtrlVal(3) == "true";
+    dir = getCtrlVal(3) == "true" ? true : false;
 
   return patternsRoutine(*&ledarr, &*opt);
 }
@@ -4599,32 +4603,45 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8
   }
 }
 
-bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
+{
 
-  if (loadingFlag) {
+  if (loadingFlag)
+  {
     loadingFlag = false;
-    patternIdx = map(scale, 1U, MAX_PATTERN + 1, -1, MAX_PATTERN);  // мапим к ползунку масштаба
-    if (patternIdx < 0) {
-      patternIdx = random8(0U, MAX_PATTERN); 
+    int8_t _sc = map(scale, 1U, MAX_PATTERN + 1, -1, MAX_PATTERN); // мапим к ползунку масштаба
+    if (_sc < 0)
+    {
+      patternIdx = random(0, MAX_PATTERN + 1);
+      if (patternIdx > MAX_PATTERN)
+        patternIdx = 0;
+    }
+    else 
+    {
+      patternIdx = _sc;
     }
     //fadeToBlackBy(leds, NUM_LEDS, 25);
-    if (dir) 
-      lineIdx = 9;         // Картинка спускается сверху вниз - отрисовка с нижней строки паттерна (паттерн 10x10)
-    else 
-      lineIdx = 0;         // Картинка поднимается сверху вниз - отрисовка с верхней строки паттерна
+    if (dir)
+      lineIdx = 9; // Картинка спускается сверху вниз - отрисовка с нижней строки паттерна (паттерн 10x10)
+    else
+      lineIdx = 0; // Картинка поднимается сверху вниз - отрисовка с верхней строки паттерна
     // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
     colorMR[6] = CHSV(random8(), 255U, 255U);
-    if (random8() % 10 == 0) {
+    if (random8() % 10 == 0)
+    {
       colorMR[7] = CHSV(0U, 0U, 255U);
-    } else {
+    }
+    else
+    {
       colorMR[7] = CHSV(random8(), 255U, 255U);
-      while (fabs(colorMR[7].h - colorMR[6].h) < 32) {
+      while (fabs(colorMR[7].h - colorMR[6].h) < 32)
+      {
         colorMR[7] = CHSV(random8(), 255U, 255U);
       }
     }
-  }  
+  }
 
-  drawPattern(patternIdx, 0, 0, 10, 10, dir);  
+  drawPattern(patternIdx, 0, 0, 10, 10, dir);
   return true;
 }
 
@@ -5108,39 +5125,42 @@ void EffectAttract::load() {
   palettesload();
 }
 
-bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {  
-	if (loadingFlag) {
+bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
+  if (loadingFlag)
+  {
     loadingFlag = false;
-        int direction = random(0, 2);
-        if (direction == 0)
-            direction = -1;
+    int direction = random(0, 2);
+    if (direction == 0)
+      direction = -1;
 
-        for (int i = 0; i < count; i++) {
-            Boid boid = Boid(15, 31 - i);
-            boid.mass = (float)random(1, map(scale, 1, 255, 50, 500)) /100.0f;
-            boid.velocity.x = (float)random(5, map(speed, 1, 255, 10, 265)) /100.0f;//((float) random(40, 50)) / 100.0;
-            boid.velocity.x *= direction;
-            boid.velocity.y = 0;
-            boid.colorIndex = i * 32;
-            boids[i] = boid;
-            //dim = random(170, 250);
-        }
+    for (int i = 0; i < count; i++)
+    {
+      Boid boid = Boid(15, 31 - i);
+      boid.mass = (float)random(1, map(scale, 1, 255, 50, 500)) / 100.0f;
+      boid.velocity.x = (float)random(5, map(speed, 1, 255, 10, 265)) / 100.0f; //((float) random(40, 50)) / 100.0;
+      boid.velocity.x *= direction;
+      boid.velocity.y = 0;
+      boid.colorIndex = i * 32;
+      boids[i] = boid;
+      //dim = random(170, 250);
     }
-        // dim all pixels on the display
-        uint8_t dim = beatsin8(2, 170, 250);
-        //myLamp.dimAll(dim);
-        fadeToBlackBy(leds, NUM_LEDS, 255U - dim);
+  }
+  // dim all pixels on the display
+  uint8_t dim = beatsin8(2, 170, 250);
+  //myLamp.dimAll(dim);
+  fadeToBlackBy(leds, NUM_LEDS, 255U - dim);
 
-        for (int i = 0; i < count; i++) {
-            Boid boid = boids[i];
+  for (int i = 0; i < count; i++)
+  {
+    Boid boid = boids[i];
 
-            PVector force = attract(boid);
-            boid.applyForce(force);
+    PVector force = attract(boid);
+    boid.applyForce(force);
 
-            boid.update();
-            myLamp.drawPixelXYF(boid.location.x, boid.location.y, ColorFromPalette(*curPalette,boid.colorIndex));
+    boid.update();
+    myLamp.drawPixelXYF(boid.location.x, boid.location.y, ColorFromPalette(*curPalette, boid.colorIndex));
 
-            boids[i] = boid;
-        }
-      return true;
-    }
+    boids[i] = boid;
+  }
+  return true;
+}
