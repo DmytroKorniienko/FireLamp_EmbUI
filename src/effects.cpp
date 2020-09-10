@@ -2297,8 +2297,9 @@ void EffectFire2012::load(){
 bool EffectFire2012::run(CRGB *ledarr, EffectWorker *opt){
  if (dryrun())
     return false;
-
+#ifdef MIC_EFFECTS
   cooling = isMicActive ? 255 - myLamp.getMicMapMaxPeak() : 130;
+#endif
 
 
 
