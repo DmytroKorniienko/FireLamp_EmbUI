@@ -377,7 +377,9 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       isMicOn = true; // глобальное испльзование микрофона
       micAnalyseDivider = 1; // анализ каждый раз
 #endif
+#ifdef VERTGAUGE
       gauge_time = millis();
+#endif
       lampState.flags = 0; // сборосить все флаги состояния
       lamp_init(); // инициализация и настройка лампы
     }
