@@ -763,7 +763,7 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
   if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
 
   EVERY_N_SECONDS(1){
-    LOG(printf_P, PSTR("%5.2f : %5.2f\n"),snowShift, EFFECT_FPS_SCALER*snowShift );
+    LOG(printf_P, PSTR("%5.2f : %5.2f\n"),nextFrame, EFFECT_FPS_SCALER*nextFrame );
   }
 
     // сдвигаем всё вниз
@@ -771,12 +771,12 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
     {
       for (uint8_t y = 0U; y < HEIGHT - 1; y++)
       {
-        CRGB curentColor = leds[myLamp.getPixelNumber(x, y + EFFECT_FPS_SCALER*snowShift)];
+        CRGB curentColor = leds[myLamp.getPixelNumber(x, y + EFFECT_FPS_SCALER*nextFrame)];
         myLamp.drawPixelXY(x, y, (unsigned int)curentColor > 0 ? curentColor : CRGB::Black);
       }
     }
 
-    for (uint8_t x = 0U; x < WIDTH && EFFECT_FPS_SCALER*snowShift>1.0; x++)
+    for (uint8_t x = 0U; x < WIDTH && EFFECT_FPS_SCALER*nextFrame>1.0; x++)
     {
       // заполняем случайно верхнюю строку
       // а также не даём двум блокам по вертикали вместе быть

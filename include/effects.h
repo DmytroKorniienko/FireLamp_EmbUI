@@ -507,10 +507,11 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------- снегопад ----------
 class EffectSnow : public EffectCalc {
 private:
     bool snowRoutine(CRGB *leds, EffectWorker *param);
-    float snowShift = 0.0; // сдвиг снега
+
     
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
