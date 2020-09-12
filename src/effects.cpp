@@ -77,7 +77,7 @@ bool EffectCalc::run(CRGB* ledarr, EffectWorker *opt){
 
 /**
  * проверка на холостой вызов для эффектов с доп. задержкой
- */
+
 bool EffectCalc::dryrun(){
   if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)(255-speed)/3){
     active=false;
@@ -88,6 +88,7 @@ bool EffectCalc::dryrun(){
 
   return !active;
 }
+ */
 
 /**
  * status - статус воркера, если работает и загружен эффект, отдает true
@@ -320,14 +321,13 @@ CRGB makeDarker( const CRGB& color, fract8 howMuchDarker)
 
 // ------------- конфетти --------------
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
-
   return sparklesRoutine(*&ledarr, &*opt);
 }
 
 bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
 #ifdef MIC_EFFECTS
   uint8_t mic = myLamp.getMicMapMaxPeak();
   uint8_t mic_f = map(myLamp.getMicMapFreq(), LOW_FREQ_MAP_VAL, HI_FREQ_MAP_VAL, 0, 255);
@@ -382,6 +382,8 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
       myLamp.setLeds(myLamp.getPixelNumber(x, y), currentHSV);
     }
   }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -450,9 +452,6 @@ void EffectEverythingFall::load(){
     palettesload();    // подгружаем дефолтные палитры
 }
 bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
-
   return fire2012WithPalette(*&ledarr, &*opt);
 }
 
@@ -461,6 +460,8 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
 // Default 120, suggested range 50-200.
 #define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
 bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
   uint8_t coolingnew = constrain((uint16_t)scale * palettes.size() / HEIGHT + 7, 1, 255) ;
 
   myLamp.blur2d(20);
@@ -492,19 +493,20 @@ bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
       myLamp.setLeds(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(*curPalette, colorindex));
     }
   }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
 // --------------------------- эффект пульс ----------------------
 // Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp
 bool EffectPulse::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
   return pulseRoutine(*&ledarr, &*opt);
 }
 
 bool EffectPulse::pulseRoutine(CRGB *leds, EffectWorker *param) {
-
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
   CRGBPalette16 palette;
   CRGB _pulse_color;
   uint8_t _pulse_delta = 0;
@@ -572,6 +574,8 @@ bool EffectPulse::pulseRoutine(CRGB *leds, EffectWorker *param) {
   }
   pulse_step++;
   myLamp.blur2d(BLUR);
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -636,8 +640,6 @@ void EffectColors::load(){
 }
 
 bool EffectColors::run(CRGB *ledarr, EffectWorker *opt){
-  // if (dryrun())
-  //   return false;
   return colorsRoutine(*&ledarr, &*opt);
 }
 
@@ -691,13 +693,13 @@ EVERY_N_SECONDS(1){
 
 // ------------- матрица ---------------
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
   return matrixRoutine(*&ledarr, &*opt);
 }
 
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
   for (uint8_t x = 0U; x < WIDTH; x++)
   {
     // обрабатываем нашу матрицу снизу вверх до второй сверху строчки
@@ -743,7 +745,8 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
       myLamp.drawPixelXY(x, HEIGHT - 1U, thisColor - 0x0a1000);                                     // в остальных случаях снижаем яркость на 1 уровень
       //myLamp.drawPixelXY(x, HEIGHT - 1U, thisColor - 0x050800);                                     // для длинных хвостов
   }
-
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -752,16 +755,15 @@ bool EffectSnow::run(CRGB *ledarr, EffectWorker *opt){
   return snowRoutine(*&ledarr, &*opt);
 }
 
-#define SNOW_SCALE (1.25) //0.25...5.0
 bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 {
 
-  snowShift = snowShift + speed/255.0;
+  nextFrame = nextFrame + SPEED_SCALER;
 
-  if(SNOW_SCALE*snowShift>1.0){ // будет смещение
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
 
   EVERY_N_SECONDS(1){
-    LOG(printf_P, PSTR("%5.2f : %5.2f\n"),snowShift, SNOW_SCALE*snowShift );
+    LOG(printf_P, PSTR("%5.2f : %5.2f\n"),snowShift, EFFECT_FPS_SCALER*snowShift );
   }
 
     // сдвигаем всё вниз
@@ -769,12 +771,12 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
     {
       for (uint8_t y = 0U; y < HEIGHT - 1; y++)
       {
-        CRGB curentColor = leds[myLamp.getPixelNumber(x, y + SNOW_SCALE*snowShift)];
+        CRGB curentColor = leds[myLamp.getPixelNumber(x, y + EFFECT_FPS_SCALER*snowShift)];
         myLamp.drawPixelXY(x, y, (unsigned int)curentColor > 0 ? curentColor : CRGB::Black);
       }
     }
 
-    for (uint8_t x = 0U; x < WIDTH && SNOW_SCALE*snowShift>1.0; x++)
+    for (uint8_t x = 0U; x < WIDTH && EFFECT_FPS_SCALER*snowShift>1.0; x++)
     {
       // заполняем случайно верхнюю строку
       // а также не даём двум блокам по вертикали вместе быть
@@ -787,63 +789,66 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
     }
   }
   // т.к. не храним позицию, то смещаем все синхронно, но в идеале - хранить позиции
-  snowShift = (SNOW_SCALE*snowShift > 1.0 ? (SNOW_SCALE*snowShift - (int)(snowShift*SNOW_SCALE)) : (snowShift));
-
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
-// ------------- метель -------------
-
 // ------------- звездопад/метель -------------
 bool EffectStarFall::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
   return snowStormStarfallRoutine(*&ledarr, &*opt);
 }
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
-  // заполняем головами комет левую и верхнюю линию
-  for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
-  {
-    if (myLamp.getPixColorXY(0U, i) == 0U &&
-       (random(0, (scale<127?SNOW_DENSE:STAR_DENSE)) == 0) &&
-        myLamp.getPixColorXY(0U, i + 1U) == 0U &&
-        myLamp.getPixColorXY(0U, i - 1U) == 0U)
+
+  nextFrame = nextFrame + SPEED_SCALER;
+
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
+    // заполняем головами комет левую и верхнюю линию
+    for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
     {
-      myLamp.setLeds(myLamp.getPixelNumber(0U, i), CHSV(random(0, 200), (scale<127?SNOW_SATURATION:STAR_SATURATION), 255U));
+      if (myLamp.getPixColorXY(0U, i) == 0U &&
+          (random(0, (scale < 127 ? SNOW_DENSE : STAR_DENSE)) == 0) &&
+          myLamp.getPixColorXY(0U, i + 1U) == 0U &&
+          myLamp.getPixColorXY(0U, i - 1U) == 0U)
+      {
+        myLamp.setLeds(myLamp.getPixelNumber(0U, i), CHSV(random(0, 200), (scale < 127 ? SNOW_SATURATION : STAR_SATURATION), 255U));
+      }
+    }
+
+    for (uint8_t i = 0U; i < WIDTH / 2U; i++)
+    {
+      if (myLamp.getPixColorXY(i, HEIGHT - 1U) == 0U &&
+          (random(0, map((scale % 128) * 2, 0U, 255U, 10U, 120U)) == 0U) &&
+          myLamp.getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
+          myLamp.getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
+      {
+        myLamp.setLeds(myLamp.getPixelNumber(i, HEIGHT - 1U), CHSV(random(0, 200), (scale < 127 ? SNOW_SATURATION : STAR_SATURATION), 255U));
+      }
+    }
+
+    // сдвигаем по диагонали
+    for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
+    {
+      for (uint8_t x = WIDTH - 1U; x > 0U; x--)
+      {
+        myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x - 1U, y + 1U));
+      }
+    }
+
+    // уменьшаем яркость левой и верхней линии, формируем "хвосты"
+    for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
+    {
+      EffectMath::fadePixel(0U, i, (scale < 127 ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
+    }
+    for (uint8_t i = 0U; i < WIDTH / 2U; i++)
+    {
+      EffectMath::fadePixel(i, HEIGHT - 1U, (scale < 127 ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
     }
   }
 
-  for (uint8_t i = 0U; i < WIDTH / 2U; i++)
-  {
-    if (myLamp.getPixColorXY(i, HEIGHT - 1U) == 0U &&
-       (random(0, map((scale%128)*2, 0U, 255U, 10U, 120U)) == 0U) &&
-        myLamp.getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
-        myLamp.getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
-    {
-      myLamp.setLeds(myLamp.getPixelNumber(i, HEIGHT - 1U), CHSV(random(0, 200),  (scale<127?SNOW_SATURATION:STAR_SATURATION), 255U));
-    }
-  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
 
-  // сдвигаем по диагонали
-  for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
-  {
-    for (uint8_t x = WIDTH - 1U; x > 0U; x--)
-    {
-      myLamp.drawPixelXY(x, y, myLamp.getPixColorXY(x - 1U, y + 1U));
-    }
-  }
-
-  // уменьшаем яркость левой и верхней линии, формируем "хвосты"
-  for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
-  {
-    EffectMath::fadePixel(0U, i,  (scale<127?SNOW_TAIL_STEP:STAR_TAIL_STEP));
-  }
-  for (uint8_t i = 0U; i < WIDTH / 2U; i++)
-  {
-    EffectMath::fadePixel(i, HEIGHT - 1U, (scale<127?SNOW_TAIL_STEP:STAR_TAIL_STEP));
-  }
   return true;
 }
 
@@ -1947,14 +1952,14 @@ void EffectFreq::load()
 }
 
 bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
   myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   return freqAnalyseRoutine(*&ledarr, &*opt);
 }
 
 bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
   float samp_freq;
   double last_freq = 0;
   uint8_t last_min_peak, last_max_peak;
@@ -2064,13 +2069,14 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 
   samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
   delete mw;
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 #endif
 
 // ------------------------------ ЭФФЕКТ МЕРЦАНИЕ ----------------------
 // (c) SottNick
-
 #define TWINKLES_SPEEDS 4     // всего 4 варианта скоростей мерцания
 #define TWINKLES_MULTIPLIER 24 // слишком медленно, если на самой медленной просто по единичке добавлять
 
@@ -2092,26 +2098,19 @@ void EffectTwinkles::load(){
 }
 
 bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
-
   return twinklesRoutine(*&ledarr, &*opt);
 }
 
 bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
   if (curPalette == nullptr) {
     return false;
   }
 
-  scale = TWINKLES_MULTIPLIER*speed/255.0;  // почему масштаб зависит от скорости? и какая величина будет перекрывать другую...
+  _scale = TWINKLES_MULTIPLIER*speed/255.0;  // почему масштаб зависит от скорости? и какая величина будет перекрывать другую...
 
-/*
-  // тоже не понял что это... если была переменная R, то нужно что-то обсчитать относительно бегунка шкалы?
-  if(!var.isEmpty()){
-    tnum = 50-49*(scale/255.0);
-  }
-*/
 
     for (uint32_t idx=0; idx < NUM_LEDS; idx++) {
       if (ledsbuff[idx].b == 0){
@@ -2123,26 +2122,28 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
         }
       }
       else if (ledsbuff[idx].g <= TWINKLES_SPEEDS){             // если нарастание яркости
-        if (ledsbuff[idx].b > 255U - ledsbuff[idx].g - scale){            // если досигнут максимум
+        if (ledsbuff[idx].b > 255U - ledsbuff[idx].g - _scale){            // если досигнут максимум
           ledsbuff[idx].b = 255U;
           ledsbuff[idx].g = ledsbuff[idx].g + TWINKLES_SPEEDS;
         }
         else
-          ledsbuff[idx].b = ledsbuff[idx].b + ledsbuff[idx].g + scale;
+          ledsbuff[idx].b = ledsbuff[idx].b + ledsbuff[idx].g + _scale;
       }
       else {                                                    // если угасание яркости
-        if (ledsbuff[idx].b <= ledsbuff[idx].g - TWINKLES_SPEEDS + scale){// если досигнут минимум
+        if (ledsbuff[idx].b <= ledsbuff[idx].g - TWINKLES_SPEEDS + _scale){// если досигнут минимум
           ledsbuff[idx].b = 0;                                  // всё выкл
           thue++; // считаем количество погасших пикселей
         }
         else
-          ledsbuff[idx].b = ledsbuff[idx].b - ledsbuff[idx].g + TWINKLES_SPEEDS - scale;
+          ledsbuff[idx].b = ledsbuff[idx].b - ledsbuff[idx].g + TWINKLES_SPEEDS - _scale;
       }
       if (ledsbuff[idx].b == 0)
         myLamp.setLeds(idx, 0U);
       else
         myLamp.setLeds(idx, ColorFromPalette(*curPalette, ledsbuff[idx].r, ledsbuff[idx].b));
     }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
 
   return true;
 }
@@ -2295,14 +2296,9 @@ void EffectFire2012::load(){
 }
 
 bool EffectFire2012::run(CRGB *ledarr, EffectWorker *opt){
- if (dryrun())
-    return false;
 #ifdef MIC_EFFECTS
   cooling = isMicActive ? 255 - myLamp.getMicMapMaxPeak() : 130;
 #endif
-
-
-
   return fire2012Routine(*&ledarr, &*opt);
 }
 
@@ -2311,6 +2307,8 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
   if (curPalette == nullptr) {
     return false;
   }
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет смещение
 
 #if HEIGHT / 6 > 6
   #define FIRE_BASE 6
@@ -2350,6 +2348,8 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
       nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
     }
   }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -2366,8 +2366,6 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
 // uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
 // uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
 bool EffectRain::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
 
   /*EVERY_N_SECONDS(3){
     LOG(printf_P, PSTR("speed: %d, scale: %d\n"), speed, scale);
@@ -2387,6 +2385,9 @@ bool EffectRain::run(CRGB *ledarr, EffectWorker *opt){
   default:
     return false;
   }
+  
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
+  return true;
 }
 
 void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC)
@@ -2568,6 +2569,8 @@ uint8_t EffectRain::myScale8(uint8_t x)
 
 bool EffectRain::coloredRainRoutine(CRGB *leds, EffectWorker *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр 
   CRGB solidRainColor = CRGB(60, 80, 90);
   CRGB randomRainColor = CHSV(random(1,255), 255U, 255U);
   // я хз, как прикрутить а 1 регулятор и длину хвостов и цвет капель
@@ -2580,27 +2583,38 @@ bool EffectRain::coloredRainRoutine(CRGB *leds, EffectWorker *param) // вним
     rain(60, 200, map8(42, 5, 100), (31*(scale%8)), randomRainColor, false, false, false, true);
   else
     rain(60, 200, map8(42, 5, 100), (31*(scale%8)), CHSV(scale, 255U, 255U), false, false, false);
-
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
 bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр 
+
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
   //rain(60, 200, map8(intensity,2,60), 10, solidRainColor, true, true, false);
   rain(60, 180, scale, 30, solidRainColor, true, true, false);
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
 bool EffectRain::stormyRainRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
+
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
   //rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
   rain(60, 160, scale, 30, solidRainColor, true, true, true);
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -2610,8 +2624,6 @@ bool EffectRain::stormyRainRoutine(CRGB *leds, EffectWorker *param)
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
 bool EffectFire2018::run(CRGB *ledarr, EffectWorker *opt){
- // if (dryrun())
- //   return false;
   return fire2018Routine(*&ledarr, &*opt);
 }
 
@@ -2731,9 +2743,6 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
 //uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
 //uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
 bool EffectRingsLock::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
-
   if (csum != (scale^getCtrlVal(3).toInt()))
     ringsSet();
   return ringsRoutine(*&ledarr, &*opt);
@@ -2773,6 +2782,8 @@ void EffectRingsLock::ringsSet(){
 bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
 {
   uint8_t h, x, y;
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет смещение
 
   for (uint8_t i = 0; i < ringNb; i++)
   {
@@ -2826,16 +2837,15 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
       }
     }
   }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
 // ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
 // (c) SottNick
 // refactored by Vortigont
-
 bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
 
   if (csum != (scale^getCtrlVal(3).toInt()))
     cubesize();
@@ -2904,6 +2914,8 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectWorker *param)
   if (curPalette == nullptr) {
     return false;
   }
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { 
   if (!pauseSteps){
     pauseSteps--;
     return false; // пропускаем кадры после прокрутки кубика (делаем паузу)
@@ -2933,6 +2945,8 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectWorker *param)
 
     direction ? cube2dmoveCols(i, moveItems.at(i)) : cube2dmoveRows(i, moveItems.at(i));
   }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
 
   return true;
 }
@@ -3018,8 +3032,7 @@ bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
     if (myLamp.isPrintingNow()) // если выводится бегущая строка, то эффект приостанавливаем! Специально обученный костыль, т.к. вывод статического и динамического текста одноверенно не совместимы
       return true;
   }
-  // if (dryrun())
-  //   return false;
+
   return timePrintRoutine(*&ledarr, &*opt);
 }
 
@@ -3198,22 +3211,23 @@ void EffectFire::load(){
 }
 
 bool EffectFire::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun())
-    return false;
-
   return fireRoutine(*&ledarr, &*opt);
 }
 
 bool EffectFire::fireRoutine(CRGB *leds, EffectWorker *param)
 {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
   if (pcnt >= 100) {                                  // внутренний делитель кадров для поднимающегося пламени
     shiftUp();                                              // смещение кадра вверх
     generateLine();                                         // перерисовать новую нижнюю линию случайным образом
     pcnt = 0;
   }
-
-  drawFrame(pcnt, true);                              // для прошивки где стоит логический параметр
   pcnt += 25;
+  
+  drawFrame(pcnt, true);                              // для прошивки где стоит логический параметр
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -3427,8 +3441,7 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
 }
 
 bool EffectPicasso::run(CRGB *ledarr, EffectWorker *opt){
-  // if (dryrun())
-  //   return false;
+
   if (effect == EFF_PICASSO) {
     return picassoRoutine(*&ledarr, &*opt);
   }
@@ -3598,13 +3611,12 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 // ------------- цвет + вода в бассейне ------------------
 // (с) SottNick. 03.2020
 bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
-  if (dryrun())
-    return false;
-
   return aquariumRoutine(*&ledarr, &*opt);
 }
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
   bool glare = false;
   if(getCtrlVal(3)==F("true")) { // переключатель в true
     glare = true;
@@ -3675,6 +3687,8 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   else {
     hue +=1;
   }
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }             
 
@@ -4149,15 +4163,17 @@ void EffectMunch::load() {
 
  bool EffectMunch::run(CRGB *ledarr, EffectWorker *opt)
 {
-  if (dryrun())
-    return false;
+
   return munchRoutine(*&ledarr, &*opt);
 }
 
 bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
   byte rand = 4;
-  if (scale%31 == 0)  rand = random8(4, 8); // Хрень, конечно, но хоть какое-то разнообразие.
+  if (scale%32 > 0)  rand = scale%32;
+  if (getCtrlVal(3) == "true") rand = random8(1, 9); // Хрень, конечно, но хоть какое-то разнообразие.
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
       leds[myLamp.getPixelNumber(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
@@ -4183,6 +4199,8 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
 #else
   mic[1] = WIDTH;
 #endif
+  }
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -4456,8 +4474,6 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
 // ---- Эффект "Тени" 
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
 bool EffectShadows::run(CRGB *ledarr, EffectWorker *opt) {
-  //if (dryrun())
-  //  return false;
   return shadowsRoutine(*&ledarr, &*opt);
 }
 
@@ -4531,9 +4547,7 @@ bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
       dir = !dir;
     loadingFlag = true;
   }
-  if (dryrun()) {
-    return false;
-  }
+
   if (csum != (127U^scale)) {
     loadingFlag = true;
     csum = (127U^scale);
@@ -4606,43 +4620,46 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-
-  if (loadingFlag)
+  nextFrame = nextFrame + SPEED_SCALER;
+  if (EFFECT_FPS_SCALER * nextFrame > 1.0)
   {
-    loadingFlag = false;
-    int8_t _sc = map(scale, 1U, MAX_PATTERN + 1, -1, MAX_PATTERN); // мапим к ползунку масштаба
-    if (_sc < 0)
+    if (loadingFlag)
     {
-      patternIdx = random(0, MAX_PATTERN + 1);
-      if (patternIdx > MAX_PATTERN)
-        patternIdx = 0;
-    }
-    else 
-    {
-      patternIdx = _sc;
-    }
-    //fadeToBlackBy(leds, NUM_LEDS, 25);
-    if (dir)
-      lineIdx = 9; // Картинка спускается сверху вниз - отрисовка с нижней строки паттерна (паттерн 10x10)
-    else
-      lineIdx = 0; // Картинка поднимается сверху вниз - отрисовка с верхней строки паттерна
-    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
-    colorMR[6] = CHSV(random8(), 255U, 255U);
-    if (random8() % 10 == 0)
-    {
-      colorMR[7] = CHSV(0U, 0U, 255U);
-    }
-    else
-    {
-      colorMR[7] = CHSV(random8(), 255U, 255U);
-      while (fabs(colorMR[7].h - colorMR[6].h) < 32)
+      loadingFlag = false;
+      int8_t _sc = map(scale, 1U, MAX_PATTERN + 1, -1, MAX_PATTERN); // мапим к ползунку масштаба
+      if (_sc < 0)
+      {
+        patternIdx = random(0, MAX_PATTERN + 1);
+        if (patternIdx > MAX_PATTERN)
+          patternIdx = 0;
+      }
+      else
+      {
+        patternIdx = _sc;
+      }
+      //fadeToBlackBy(leds, NUM_LEDS, 25);
+      if (dir)
+        lineIdx = 9; // Картинка спускается сверху вниз - отрисовка с нижней строки паттерна (паттерн 10x10)
+      else
+        lineIdx = 0; // Картинка поднимается сверху вниз - отрисовка с верхней строки паттерна
+      // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
+      colorMR[6] = CHSV(random8(), 255U, 255U);
+      if (random8() % 10 == 0)
+      {
+        colorMR[7] = CHSV(0U, 0U, 255U);
+      }
+      else
       {
         colorMR[7] = CHSV(random8(), 255U, 255U);
+        while (fabs(colorMR[7].h - colorMR[6].h) < 32)
+        {
+          colorMR[7] = CHSV(random8(), 255U, 255U);
+        }
       }
     }
+    drawPattern(patternIdx, 0, 0, 10, 10, dir);
   }
-
-  drawPattern(patternIdx, 0, 0, 10, 10, dir);
+  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 
@@ -4656,8 +4673,6 @@ bool EffectArrows::run(CRGB *ledarr, EffectWorker *opt) {
   }
   speedfactor = (float)speed / 768.0 + 0.15;
   subpixel = getCtrlVal(3) == "true" ? true : false;
-  //if (dryrun())
-  //  return false;
 
   if (csum != (127U ^ scale))
   {

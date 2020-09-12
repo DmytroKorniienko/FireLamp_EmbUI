@@ -145,7 +145,9 @@ protected:
     bool isCtrlPallete = false; // признак наличия контрола палитры
     bool isMicActive = false; // признак включенного микрофона
 
-    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
+    float nextFrame;
+    //uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
+ 
     EFF_ENUM effect;        /**< энумератор эффекта */
 
     byte brightness;
@@ -325,6 +327,7 @@ public:
 class EffectFreq : public EffectCalc {
 private:
     int8_t peakX[2][WIDTH];
+     
 
     bool freqAnalyseRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
@@ -341,6 +344,7 @@ private:
     float curTimePos; // текущая позиция вывода
     CRGB hColor[1]; // цвет часов и минут
     CRGB mColor[1]; // цвет часов и минут
+    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
 
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
@@ -406,6 +410,7 @@ private:
   uint8_t line[WIDTH];
   uint8_t shiftValue[HEIGHT];                            // массив дороожки горизонтального смещения пламени (hueValue)
   unsigned char matrixValue[8][16];
+   
 
     void drawFrame(uint8_t pcnt, bool isColored);
     void generateLine();
@@ -426,6 +431,7 @@ private:
     uint8_t currentRadius = 4;
     uint8_t _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
+     
 
     bool pulseRoutine(CRGB *leds, EffectWorker *param);
 
@@ -494,6 +500,7 @@ public:
 
 class EffectMatrix : public EffectCalc {
 private:
+     
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -509,9 +516,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Конффетти"
+// ---- Эффект "Конфетти"
 class EffectSparcles : public EffectCalc {
 private:
+     
     bool sparklesRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -521,6 +529,7 @@ public:
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
+     
     bool fire2012WithPalette(CRGB *leds, EffectWorker *param);
 
 public:
@@ -534,14 +543,15 @@ private:
 
   // COOLING: How much does the air cool as it rises?
   // Less cooling = taller flames.  More cooling = shorter flames.
-    uint8_t cooling = 130U; // 70
+    uint8_t cooling = 100U; // 70
   // SPARKING: What chance (out of 255) is there that a new spark will be lit?
   // Higher chance = more roaring fire.  Lower chance = more flickery fire.
     const uint8_t sparking = 80U; // 130
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-    const uint8_t fireSmoothing = 150U; // 90
-  uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+    const uint8_t fireSmoothing = 130U; // 90
+    uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+     
 
 
   bool fire2012Routine(CRGB *leds, EffectWorker *param);
@@ -551,8 +561,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------- звездопад/метель -------------
 class EffectStarFall : public EffectCalc {
 private:
+     
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -711,12 +723,16 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------------------------ ЭФФЕКТ МЕРЦАНИЕ ----------------------
+// (c) SottNick
 class EffectTwinkles : public EffectCalc {
 private:
   uint8_t thue = 0U;
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
+   
+  byte _scale;
 
 public:
     void load() override;
@@ -815,6 +831,7 @@ private:
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
   uint8_t csum;   // reload checksum
+   
 
   void ringsSet();
   bool ringsRoutine(CRGB *leds, EffectWorker *param);
@@ -824,6 +841,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
+// (c) SottNick
+// refactored by Vortigont
 class EffectCube2d : public EffectCalc {
 private:
   uint8_t sizeX, sizeY; // размеры ячеек по горизонтали / вертикали
@@ -836,6 +856,7 @@ private:
   std::vector<int8_t> moveItems;     // индекс перемещаемого элемента
   //bool movedirection;   // направление смещения
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
+   
 
   void cubesize();
   bool cube2dRoutine(CRGB *leds, EffectWorker *param);
@@ -857,6 +878,7 @@ private:
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
   uint8_t myScale8(uint8_t x);
+   
 
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC = false);
   bool coloredRainRoutine(CRGB *leds, EffectWorker *param);
@@ -937,6 +959,7 @@ private:
     uint8_t deltaHue = 0U;
     uint8_t deltaHue2 = 0U;
     uint8_t step = 0;
+     
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1019,6 +1042,7 @@ private:
     byte _rv;
     bool micA;
     float y[2] = {0.0f, 0.0f};
+    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
     void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -1034,6 +1058,7 @@ private:
     byte flip = 0;
     byte generation = 0;
     byte mic[2];
+     
 
     bool munchRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1124,6 +1149,7 @@ private:
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
+     
     CHSV colorMR[8] = {
         CHSV(0, 0, 0),              // 0 - Black
         CHSV(HUE_RED, 255, 255),    // 1 - Red
