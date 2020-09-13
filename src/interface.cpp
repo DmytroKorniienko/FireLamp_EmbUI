@@ -80,6 +80,7 @@ void AUX_toggle(bool key)
 
 
 void pubCallback(Interface *interf){
+    if (!interf) return;
     //return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
     interf->value(FPSTR(TCONST_0001), myLamp.timeProcessor.getFormattedShortTime(), true);
@@ -90,6 +91,7 @@ void pubCallback(Interface *interf){
 
 void block_menu(Interface *interf, JsonObject *data){
     // создаем меню
+    jee.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     interf->json_section_menu();
 
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));
@@ -580,7 +582,8 @@ void set_onflag(Interface *interf, JsonObject *data){
             myLamp.changePower(newpower);
         } else {
             myLamp.changePower(newpower);
-            myLamp.effects.autoSaveConfig(true); // принудительное сохранение конфига текущего эффекта при выключении питания
+            //myLamp.effects.autoSaveConfig(true); // принудительное сохранение конфига текущего эффекта при выключении питания
+            resetAutoTimers();
         }
     }
 #ifdef RESTORE_STATE
