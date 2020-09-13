@@ -1721,50 +1721,53 @@ bool EffectPrismata::prismataRoutine(CRGB *leds, EffectWorker *param)
 // Адаптация от (c) SottNick
 void EffectFlock::load(){
   palettesload();    // подгружаем дефолтные палитры
+  speedfactor = (float)speed / 196.0;
+  for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
+  {
+    boids[i] = Boid(random8(0,WIDTH), random(0, HEIGHT));
+    boids[i].maxspeed = 0.380 * speedfactor + 0.380 / 2;
+    boids[i].maxforce = 0.015 * speedfactor + 0.015 / 2;
+  }
+  predator = Boid(random8(0,WIDTH), random(0, HEIGHT) );
+  predator.maxspeed = 0.385 * speedfactor + 0.385 / 2;
+  predator.maxforce = 0.020 * speedfactor + 0.020 / 2;
+  predator.neighbordist = 8.0;
+  predator.desiredseparation = 0.0;
+}
+
+void EffectFlock::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
+  predatorPresent = (getCtrlVal(3) == "true");
+}
+
+void EffectFlock::setspd(const byte _spd)
+{
+  EffectCalc::setspd(_spd);
+  speedfactor = (float)speed / 196.0;
+  for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
+    {
+      //boids[i] = Boid(15, 15);
+      boids[i].maxspeed = 0.380 * speedfactor + 0.380 / 2;
+      boids[i].maxforce = 0.015 * speedfactor + 0.015 / 2;
+    }
+  if (predatorPresent)
+    {
+      predator.maxspeed = 0.385 * speedfactor + 0.385 / 2;
+      predator.maxforce = 0.020 * speedfactor + 0.020 / 2;
+      //predator.neighbordist = 8.0;
+      //predator.desiredseparation = 0.0;
+    }
 }
 
 bool EffectFlock::run(CRGB *ledarr, EffectWorker *opt){
   if (curPalette == nullptr) {
     return false;
   }
-
-  if ((getCtrlVal(3) == "true") != predatorPresent) {
-    predatorPresent = !predatorPresent;
-    loadingflag = true;
-  }
-  if (csum != (127U^speed)) {
-    csum = (127U^speed);
-    loadingflag = true;
-  }
   return flockRoutine(*&ledarr, &*opt);
 }
 
 bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
-  float speedfactor = (float)speed / 255.0;
-  //EVERY_N_MILLIS(333) {
-    hueoffset += speedfactor;
-  //}
-  if (loadingflag)
-  {
-    for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
-    {
-      boids[i] = Boid(15, 15);
-      boids[i].maxspeed = 0.380 * speedfactor + 0.380 / 2;
-      boids[i].maxforce = 0.015 * speedfactor + 0.015 / 2;
-    }
-
-    if (predatorPresent)
-    {
-      predator = Boid(random8(0,WIDTH), random(0, HEIGHT) );
-      predatorPresent = true;
-      predator.maxspeed = 0.385 * speedfactor + 0.385 / 2;
-      predator.maxforce = 0.020 * speedfactor + 0.020 / 2;
-      predator.neighbordist = 8.0;
-      predator.desiredseparation = 0.0;
-    }
-    loadingflag = false;
-  }
-
+  hueoffset += (speedfactor/5.0+0.1);
 
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 220, 10));
   // субпиксельным эффектам блюр, что мёртвому припарка. Они сами неплохо блюрят, и функция с ними не работает толком 
@@ -2158,13 +2161,13 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
   return radarRoutine(*&ledarr, &*opt);
 }
 
+void EffectRadar::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  subPix = (getCtrlVal(3) == F("true"));
+}
+
 bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 {
-  bool subPix = false;
-  if (getCtrlVal(3) == F("true"))
-  { // переключатель в true
-    subPix = true;
-  }
   if (curPalette == nullptr)
   {
     return false;
@@ -2183,9 +2186,9 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
   }
   else
   {
-    uint8_t scale = palettescale; // диапазоны внутри палитры, влияют на степень размытия хвоста
+    uint8_t _scale = palettescale; // диапазоны внутри палитры, влияют на степень размытия хвоста
     myLamp.blur2d(beatsin8(5U, 3U, 10U));
-    myLamp.dimAll(255U - (0 + scale * 3));
+    myLamp.dimAll(255U - (0 + _scale * 1.5));
 
     for (uint8_t offset = 0U; offset < WIDTH / 2U - 1U; offset++)
     {

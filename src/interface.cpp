@@ -1616,6 +1616,8 @@ void sync_parameters(){
     CALL_SETTER(FPSTR(TCONST_000E), jee.param(FPSTR(TCONST_000E)), set_auxflag);
 #endif
 
+    myLamp.setClearingFlag(jee.param(FPSTR(TCONST_008E)) == FPSTR(TCONST_FFFF));
+
 // do{ yield(); } while (1==0);
 // ниже возникает wdt reset при включенной build_type = debug - причина неустановлена
 

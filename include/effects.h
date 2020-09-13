@@ -657,14 +657,14 @@ private:
   Boid boids[AVAILABLE_BOID_COUNT];
   Boid predator;
   PVector wind;
-  bool loadingflag = true;
-  byte csum = 0;
+  float speedfactor;
 
   bool predatorPresent;
   float hueoffset;
 
   bool flockRoutine(CRGB *leds, EffectWorker *param);
-
+  void setDynCtrl(UIControl*_val) override;
+  void setspd(const byte _spd) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -770,8 +770,10 @@ class EffectRadar : public EffectCalc {
 private:
   float eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
   float eff_theta;         // глобальная переменная угла для работы эффектов
+  bool subPix = false;
   byte hue;
   bool radarRoutine(CRGB *leds, EffectWorker *param);
+  void setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;

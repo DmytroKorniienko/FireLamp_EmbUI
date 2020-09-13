@@ -1101,6 +1101,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     }
   }
 
+  //LOG(printf_P,PSTR(">>>>>>>>>>>isEffClearing==%d\n"),isEffClearing);
   if(isEffClearing)
     FastLED.clear();
 
