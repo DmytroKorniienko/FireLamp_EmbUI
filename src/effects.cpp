@@ -2093,48 +2093,50 @@ bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
 {
-  nextFrame = nextFrame + SPEED_SCALER;
-  if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
   if (curPalette == nullptr) {
     return false;
   }
 
-  _scale = TWINKLES_MULTIPLIER*speed/255.0;  // почему масштаб зависит от скорости? и какая величина будет перекрывать другую...
+  byte speedfactor = (float)TWINKLES_MULTIPLIER * (float)speed / 380.0; 
 
-
-    for (uint32_t idx=0; idx < NUM_LEDS; idx++) {
-      if (ledsbuff[idx].b == 0){
-        if (random8(tnum) == 0 && thue > 0){  // если пиксель ещё не горит, зажигаем каждый ХЗй
-          ledsbuff[idx].r = random8();                          // оттенок пикселя
-          ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS +1);     // скорость и направление (нарастает 1-4, но не угасает 5-8)
-          ledsbuff[idx].b = ledsbuff[idx].g;                    // яркость
-          thue--; // уменьшаем количество погасших пикселей
-        }
+  for (uint32_t idx = 0; idx < NUM_LEDS; idx++)
+  {
+    if (ledsbuff[idx].b == 0)
+    {
+      if (random8(tnum) == 0 && thue > 0)
+      {                                                    // если пиксель ещё не горит, зажигаем каждый ХЗй
+        ledsbuff[idx].r = random8();                       // оттенок пикселя
+        ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS + 1); // скорость и направление (нарастает 1-4, но не угасает 5-8)
+        ledsbuff[idx].b = ledsbuff[idx].g;                 // яркость
+        thue--;                                            // уменьшаем количество погасших пикселей
       }
-      else if (ledsbuff[idx].g <= TWINKLES_SPEEDS){             // если нарастание яркости
-        if (ledsbuff[idx].b > 255U - ledsbuff[idx].g - _scale){            // если досигнут максимум
-          ledsbuff[idx].b = 255U;
-          ledsbuff[idx].g = ledsbuff[idx].g + TWINKLES_SPEEDS;
-        }
-        else
-          ledsbuff[idx].b = ledsbuff[idx].b + ledsbuff[idx].g + _scale;
-      }
-      else {                                                    // если угасание яркости
-        if (ledsbuff[idx].b <= ledsbuff[idx].g - TWINKLES_SPEEDS + _scale){// если досигнут минимум
-          ledsbuff[idx].b = 0;                                  // всё выкл
-          thue++; // считаем количество погасших пикселей
-        }
-        else
-          ledsbuff[idx].b = ledsbuff[idx].b - ledsbuff[idx].g + TWINKLES_SPEEDS - _scale;
-      }
-      if (ledsbuff[idx].b == 0)
-        myLamp.setLeds(idx, 0U);
-      else
-        myLamp.setLeds(idx, ColorFromPalette(*curPalette, ledsbuff[idx].r, ledsbuff[idx].b));
     }
-  }
-  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
-
+    else if (ledsbuff[idx].g <= TWINKLES_SPEEDS)
+    { // если нарастание яркости
+      if (ledsbuff[idx].b > 255U - ledsbuff[idx].g - speedfactor)
+      { // если досигнут максимум
+        ledsbuff[idx].b = 255U;
+        ledsbuff[idx].g = ledsbuff[idx].g + TWINKLES_SPEEDS;
+      }
+      else
+        ledsbuff[idx].b = ledsbuff[idx].b + ledsbuff[idx].g + speedfactor;
+    }
+    else
+    { // если угасание яркости
+      if (ledsbuff[idx].b <= ledsbuff[idx].g - TWINKLES_SPEEDS + speedfactor)
+      {                      // если досигнут минимум
+        ledsbuff[idx].b = 0; // всё выкл
+        thue++;              // считаем количество погасших пикселей
+      }
+      else
+        ledsbuff[idx].b = ledsbuff[idx].b - ledsbuff[idx].g + TWINKLES_SPEEDS - speedfactor;
+    }
+    if (ledsbuff[idx].b == 0)
+      myLamp.setLeds(idx, 0U);
+    else
+      myLamp.setLeds(idx, ColorFromPalette(*curPalette, ledsbuff[idx].r, ledsbuff[idx].b));
+    }
+  myLamp.blur2d(20); // так они не только разгороються, но и раздуваються. Красивше :)
   return true;
 }
 

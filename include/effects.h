@@ -734,7 +734,6 @@ private:
   CRGB ledsbuff[NUM_LEDS];
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
    
-  byte _scale;
 
 public:
     void load() override;
