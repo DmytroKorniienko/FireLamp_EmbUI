@@ -588,6 +588,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------- Эффекты "Лава, Зебра, etc"
 class Effect3DNoise : public EffectCalc {
 private:
     void fillNoiseLED();
@@ -660,7 +661,7 @@ private:
   byte csum = 0;
 
   bool predatorPresent;
-  uint8_t hueoffset;
+  float hueoffset;
 
   bool flockRoutine(CRGB *leds, EffectWorker *param);
 
