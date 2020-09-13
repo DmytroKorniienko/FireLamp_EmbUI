@@ -2072,6 +2072,28 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 
 void EffectTwinkles::load(){
   palettesload();    // подгружаем дефолтные палитры
+  setup();
+}
+
+void EffectTwinkles::setup()
+{
+  tnum = ptPallete-palettescale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
+  for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
+    if (random8(tnum) == 0) {                                // чем ниже tnum, тем чаще будут заполняться элементы лампы
+      ledsbuff[idx].r = random8();                           // оттенок пикселя
+      ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1); // скорость и направление (нарастает 1-4 или угасает 5-8)
+      ledsbuff[idx].b = random8();                           // яркость
+    }
+    else
+      ledsbuff[idx] = 0; // всё выкл
+  }
+}
+
+void EffectTwinkles::setscl(const byte _scl)
+{
+  EffectCalc::setscl(_scl); // дернем базовый, где будет пересчет палитры
+  tnum = ptPallete-palettescale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
+  setup();
 }
 
 bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
@@ -2082,21 +2104,6 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
-  }
-  tnum = speed%10 + 1;
-  if (csum != (127U ^ tnum)) {
-    csum = (127U ^ tnum);
-    //tnum = speed%32;
-
-    for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
-      if (random8(tnum) == 0) {                                                        // я не понял что это значит
-        ledsbuff[idx].r = random8();                           // оттенок пикселя
-        ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1); // скорость и направление (нарастает 1-4 или угасает 5-8)
-        ledsbuff[idx].b = random8();                           // яркость
-      }
-      else
-        ledsbuff[idx] = 0; // всё выкл
-    }
   }
 
   byte speedfactor = (float)TWINKLES_MULTIPLIER * (float)speed / 380.0; 
