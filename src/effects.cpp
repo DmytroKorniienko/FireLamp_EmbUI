@@ -962,17 +962,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   //float speedfactor = speed/2048.0+0.01;
   float speedfactor = (float)speed / 4096.0f + 0.001f;
 
-  if (!BALL_TRACK)                                          // режим без следов шариков
-  {
-    FastLED.clear();
-  }
-  else                                                      // режим со следами
-  {
-    //myLamp.blur2d(speed/10); // точно нужен прямой доступ??? 
-    //EffectMath::fader(TRACK_STEP);
-    fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)speed) /255) + 40); // выводим кубик со шлейфом, длинна которого зависит от скорости.
-
-  }
+  fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)speed) /255) + 40); // выводим кубик со шлейфом, длинна которого зависит от скорости.
 
   // движение шариков
   int maxBalls = (uint8_t)((BALLS_AMOUNT/255.0)*scale+0.99);
@@ -1143,7 +1133,7 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-//-- 3D Noise эффектцы --------------
+// ----------- Эффекты "Лава, Зебра, etc"
 
 // для работы FastLed (blur2d)
 uint16_t XY(uint8_t x, uint8_t y)
@@ -1637,9 +1627,9 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
   myLamp.blur2d(e_com_BLUR);    // < -- размытие хвоста
   myLamp.dimAll(254);            // < -- затухание эффекта для последующего кадра
   CRGB _eNs_color = CRGB::White;
-  if (scale <= 1) {
+  if (scale == 1) {
     _eNs_color = CHSV(noise3d[0][0][0] * e_com_3DCOLORSPEED , 255, 255);
-  } else if (scale < 128) {
+  } else if (scale >1 && scale < 128) {
     _eNs_color = CHSV(millis() / ((uint16_t)scale + 1U) * 4 + 10, 255, 255);
   } else {
     _eNs_color = CHSV((scale - 128) * 2, 255, 255);
@@ -1684,7 +1674,7 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
   myLamp.setLeds(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00);
 
   uint16_t sc = (uint16_t)speed * 30 + 500; //64 + 1000;
-  uint16_t sc2 = (float)speed/127.0+1.5; //1.5...3.5;
+  uint16_t sc2 = (float)speed / 127.0 + 1.5; //1.5...3.5;
   for(uint8_t i=0; i<NUM_LAYERS; i++){
     e_x[i] += 1500*sc2;
     e_y[i] += 1500*sc2;
@@ -1738,45 +1728,57 @@ bool EffectFlock::run(CRGB *ledarr, EffectWorker *opt){
     return false;
   }
 
-  EVERY_N_MILLIS(333) {
-    hueoffset += 1;
+  if ((getCtrlVal(3) == "true") != predatorPresent) {
+    predatorPresent = !predatorPresent;
+    loadingflag = true;
   }
-  predatorPresent = getCtrlVal(3) == "true" ? true : false;
+  if (csum != (127U^speed)) {
+    csum = (127U^speed);
+    loadingflag = true;
+  }
   return flockRoutine(*&ledarr, &*opt);
 }
 
 bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
+  float speedfactor = (float)speed / 255.0;
+  //EVERY_N_MILLIS(333) {
+    hueoffset += speedfactor;
+  //}
   if (loadingflag)
   {
     for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
     {
       boids[i] = Boid(15, 15);
-      boids[i].maxspeed = 0.380 * speed / 127.0 + 0.380 / 2;
-      boids[i].maxforce = 0.015 * speed / 127.0 + 0.015 / 2;
+      boids[i].maxspeed = 0.380 * speedfactor + 0.380 / 2;
+      boids[i].maxforce = 0.015 * speedfactor + 0.015 / 2;
     }
-    predatorPresent = random(0, 2) >= 1;
+
     if (predatorPresent)
     {
-      predator = Boid(31, 31);
+      predator = Boid(random8(0,WIDTH), random(0, HEIGHT) );
       predatorPresent = true;
-      predator.maxspeed = 0.385 * speed / 127.0 + 0.385 / 2;
-      predator.maxforce = 0.020 * speed / 127.0 + 0.020 / 2;
+      predator.maxspeed = 0.385 * speedfactor + 0.385 / 2;
+      predator.maxforce = 0.020 * speedfactor + 0.020 / 2;
       predator.neighbordist = 8.0;
       predator.desiredseparation = 0.0;
     }
     loadingflag = false;
   }
 
-  myLamp.blur2d(15);
-  myLamp.dimAll(254U - scale);
+
+  fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 220, 10));
+  // субпиксельным эффектам блюр, что мёртвому припарка. Они сами неплохо блюрят, и функция с ними не работает толком 
+  //myLamp.blur2d(15); 
+  //myLamp.dimAll(map(speed, 1, 255, 1, 220));
   bool applyWind = random(0, 255) > 240;
   if (applyWind) {
-    wind.x = Boid::randomf() * .015 * speed/127.0 + .015/2;
-    wind.y = Boid::randomf() * .015 * speed/127.0 + .015/2;
+    wind.x = Boid::randomf() * .015 * speedfactor + .015 / 2;
+    wind.y = Boid::randomf() * .015 * speedfactor + .015 / 2;
   }
-  CRGB color = ColorFromPalette(*curPalette, hueoffset);
 
+  CRGB color = ColorFromPalette(*curPalette, hueoffset, 170);
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
+
     Boid * boid = &boids[i];
     if (predatorPresent) {
           // flee from predator
@@ -1785,9 +1787,6 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
     boid->run(boids, AVAILABLE_BOID_COUNT);
     boid->wrapAroundBorders();
     PVector location = boid->location;
-    // PVector velocity = boid->velocity;
-        // backgroundLayer.drawLine(location.x, location.y, location.x - velocity.x, location.y - velocity.y, color);
-        // effects.leds[XY(location.x, location.y)] += color;
     myLamp.drawPixelXYF(location.x, location.y, color);
     if (applyWind) {
           boid->applyForce(wind);
@@ -1797,20 +1796,11 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
   if (predatorPresent) {
     predator.run(boids, AVAILABLE_BOID_COUNT);
     predator.wrapAroundBorders();
-    color = ColorFromPalette(*curPalette, hueoffset + 128);
+    color = ColorFromPalette(*curPalette, hueoffset + 128, 255);
     PVector location = predator.location;
-    // PVector velocity = predator.velocity;
-        // backgroundLayer.drawLine(location.x, location.y, location.x - velocity.x, location.y - velocity.y, color);
-        // effects.leds[XY(location.x, location.y)] += color;
     myLamp.drawPixelXYF(location.x, location.y, color);
   }
-  EVERY_N_MILLIS(333) {
-        hueoffset += 1;
-  }
 
-  EVERY_N_SECONDS(30) {
-        predatorPresent = !predatorPresent;
-      }
   return true;
 }
 
@@ -3117,14 +3107,17 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
   int val;
   int ctrl3 = getCtrlVal(3).toInt();
 
-  if(ctrl3){
-    val = ((int)(6*ctrl3/255.1))%6;
-    xSmokePos=xSmokePos+(ctrl3%43)/42.0+0.01;
-    xSmokePos2=xSmokePos2+(ctrl3%43)/84.0+0.01;
-  } else {
-    val = scale%6;
-    xSmokePos=xSmokePos+speed/255.0+0.01;
-    xSmokePos2=xSmokePos2+speed/512.0+0.01;
+  if (ctrl3)
+  {
+    val = ((int)(6 * ctrl3 / 255.1)) % 6;
+    xSmokePos = xSmokePos + (ctrl3 % 43) / 42.0 + 0.01;
+    xSmokePos2 = xSmokePos2 + (ctrl3 % 43) / 84.0 + 0.01;
+  }
+  else
+  {
+    val = scale % 6;
+    xSmokePos = xSmokePos + speed / 255.0 + 0.01;
+    xSmokePos2 = xSmokePos2 + speed / 512.0 + 0.01;
   }
 
   bool isColored = scale<250; // 250...255, т.е. 6 штук закладываю на заполнения
@@ -3671,11 +3664,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 #endif
     for (byte x = 0; x < WIDTH ; x++) {
       for (byte y = 0; y < HEIGHT; y++) {
-        // y%32, x%32 - это для масштабирования эффекта на лампы размером большим, чем размер анимации 32х32, а также для произвольного сдвига текстуры
-        /*leds[XY(x, y)] = */ 
         myLamp.drawPixelXY(x, y, CHSV(hue, 255U - pgm_read_byte(&aquariumGIF[step][(y + deltaHue2) % 32U][(x + deltaHue) % 32U]) * CAUSTICS_BR / 100U, _video));
-        // чтобы регулятор Масштаб начал вместо цвета регулировать яркость бликов, нужно закомментировать предыдущую строчку и раскоментировать следующую
-        //        leds[XY(x, y)] = CHSV(158U, 255U - pgm_read_byte(&aquariumGIF[step][(y+deltaHue2)%32U][(x+deltaHue)%32U]) * modes[currentMode].Scale / 100U, 255U);
       }
     }
     step++;
@@ -4260,7 +4249,7 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
       //it´s basically a rainbow mapping with an inverted brightness mask
       CRGB overlay = CHSV(noise[0][y][x], 255, noise[0][x][y]);
       //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[0][15][15]
-      leds[XY(x, y)] = ColorFromPalette( *curPalette, noise[0][WIDTH - 1][HEIGHT - 1] + noise[0][x][y]) + overlay;
+      leds[myLamp.getPixelNumber(x, y)] = ColorFromPalette( *curPalette, noise[0][WIDTH - 1][HEIGHT - 1] + noise[0][x][y]) + overlay;
     }
   }
 
