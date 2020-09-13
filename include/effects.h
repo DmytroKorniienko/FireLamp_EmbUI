@@ -733,7 +733,8 @@ private:
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
-   
+  byte csum = 0;
+
 
 public:
     void load() override;

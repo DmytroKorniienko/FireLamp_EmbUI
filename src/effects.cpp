@@ -760,7 +760,7 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 
   nextFrame = nextFrame + SPEED_SCALER;
 
-  if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
+  //if (EFFECT_FPS_SCALER * nextFrame > 1.0) { // будет кадр
 
   EVERY_N_SECONDS(1){
     LOG(printf_P, PSTR("%5.2f : %5.2f\n"),nextFrame, EFFECT_FPS_SCALER*nextFrame );
@@ -787,7 +787,7 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
       else
         myLamp.drawPixelXY(x, HEIGHT - 1U, CRGB::Black/*0x000000*/);
     }
-  }
+  //}
   // т.к. не храним позицию, то смещаем все синхронно, но в идеале - хранить позиции
   nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
@@ -2072,19 +2072,6 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 
 void EffectTwinkles::load(){
   palettesload();    // подгружаем дефолтные палитры
-
-  tnum = palettescale;
-
-  for (uint32_t idx=0; idx < NUM_LEDS; idx++) {
-    if (random8(tnum) == 0){                // я не понял что это значит
-      ledsbuff[idx].r = random8();                          // оттенок пикселя
-      ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 +1); // скорость и направление (нарастает 1-4 или угасает 5-8)
-      ledsbuff[idx].b = random8();                          // яркость
-    }
-    else
-      ledsbuff[idx] = 0;                                    // всё выкл
-  }
-
 }
 
 bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
@@ -2095,6 +2082,21 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
     return false;
+  }
+  tnum = speed%10 + 1;
+  if (csum != (127U ^ tnum)) {
+    csum = (127U ^ tnum);
+    //tnum = speed%32;
+
+    for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
+      if (random8(tnum) == 0) {                                                        // я не понял что это значит
+        ledsbuff[idx].r = random8();                           // оттенок пикселя
+        ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1); // скорость и направление (нарастает 1-4 или угасает 5-8)
+        ledsbuff[idx].b = random8();                           // яркость
+      }
+      else
+        ledsbuff[idx] = 0; // всё выкл
+    }
   }
 
   byte speedfactor = (float)TWINKLES_MULTIPLIER * (float)speed / 380.0; 
