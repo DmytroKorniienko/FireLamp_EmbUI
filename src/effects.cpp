@@ -2855,11 +2855,30 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
 // (c) SottNick
 // refactored by Vortigont
 bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
-
-  if (csum != (scale^getCtrlVal(3).toInt()))
-    cubesize();
-
   return cube2dRoutine(*&ledarr, &*opt);
+}
+
+void EffectCube2d::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+
+  if(_val->getType()==0 && _val->getId()==3){ // sizeX
+    //uint8_t cubeScaleX = EffectMath::ceil8(MAX_RANGE, CUBE2D_MAX_SIZE);       // масштаб "шкалы" в макс. размерность прямоугольника по X
+    uint8_t cubeScaleX = EffectMath::ceil8(7, WIDTH/2-1);       // масштаб "шкалы" в макс. размерность прямоугольника по X
+    sizeX = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleX);
+  }
+  if(_val->getType()==0 && _val->getId()==4){ // sizeY
+    //uint8_t cubeScaleY = EffectMath::ceil8(cubeScaleX, CUBE2D_MAX_SIZE);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
+    uint8_t cubeScaleY = EffectMath::ceil8(7, HEIGHT/2-1);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
+    sizeY = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleY);
+  }
+  cubesize();
+}
+
+void EffectCube2d::setscl(const byte _scl)
+{
+  EffectCalc::setscl(_scl); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  cubesize();
 }
 
 void EffectCube2d::load(){
@@ -2875,13 +2894,13 @@ void EffectCube2d::cubesize(){
   }
 
   FastLED.clear();
-  uint8_t cubeScaleX = EffectMath::ceil8(MAX_RANGE, CUBE2D_MAX_SIZE);       // масштаб "шкалы" в макс. размерность прямоугольника по X
-  sizeX = EffectMath::ceil8(scale, cubeScaleX);
+  // uint8_t cubeScaleX = EffectMath::ceil8(MAX_RANGE, CUBE2D_MAX_SIZE);       // масштаб "шкалы" в макс. размерность прямоугольника по X
+  // sizeX = EffectMath::ceil8(scale, cubeScaleX);
 
-  uint8_t cubeScaleY = EffectMath::ceil8(cubeScaleX, CUBE2D_MAX_SIZE);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
-  uint8_t scaleY = scale%cubeScaleX;
-  ++scaleY;   // начинаем шкалу с "1"
-  sizeY = EffectMath::ceil8(scaleY, cubeScaleY);
+  // uint8_t cubeScaleY = EffectMath::ceil8(cubeScaleX, CUBE2D_MAX_SIZE);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
+  // uint8_t scaleY = scale%cubeScaleX;
+  // ++scaleY;   // начинаем шкалу с "1"
+  // sizeY = EffectMath::ceil8(scaleY, cubeScaleY);
 
   cntY = HEIGHT / (sizeY + 1U);
 	fieldY = (sizeY + 1U) * cntY;
@@ -2900,13 +2919,12 @@ void EffectCube2d::cubesize(){
     {
       x = i * (sizeX + 1U);
       if (scale == 255U)
-        color = CHSV(45U, 0U, 128U + random8(128U));
-      else {
-          color = ColorFromPalette(*curPalette, random8(17, 255)); // Не хотелось бы получать черные кубики, поэтому выбор цвета от выше 16-ти
-        for (uint8_t k = 0U; k < sizeY; k++){
-          for (uint8_t m = 0U; m < sizeX; m++){
-            myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
-          }
+        color = CHSV(46U, 0U, 32U + random8(256U-32U));
+      else
+        color = ColorFromPalette(*curPalette, random8(17, 255)); // Не хотелось бы получать черные кубики, поэтому выбор цвета от выше 16-ти
+      for (uint8_t k = 0U; k < sizeY; k++){
+        for (uint8_t m = 0U; m < sizeX; m++){
+          myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
         }
       }
     }
@@ -2914,7 +2932,6 @@ void EffectCube2d::cubesize(){
 
   pauseSteps = CUBE2D_PAUSE_FRAMES; // осталось шагов паузы
   shiftSteps = 0;
-  csum = scale^getCtrlVal(3).toInt();
   //end
 }
 
@@ -3129,7 +3146,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
   else
     FastLED.clear();
 
-  xSmokePos = xSmokePos + speed / 255.0 + 0.01;
+  xSmokePos = xSmokePos + speed / 255.0 + 0.01; // смещение здесь
   xSmokePos2 = xSmokePos2 + scale / 512.0 + 0.01; // вращение заполнения тут
 
   bool isColored = scale!=255 && scale!=1; // 255 и 1 - белый цвет
@@ -3187,6 +3204,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
     default:
       break;
   }
+  //myLamp.blur2d(25); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
   if(!debug){
     // Noise
     uint16_t sc = (uint16_t)speed * 6 + 500;

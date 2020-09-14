@@ -859,7 +859,6 @@ private:
   uint8_t sizeX, sizeY; // размеры ячеек по горизонтали / вертикали
   uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
   uint8_t fieldX, fieldY; // размер всего поля блоков по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
-  uint8_t csum;   // reload checksum
 
   uint8_t pauseSteps; // осталось шагов паузы
   uint8_t shiftSteps=0; // всего шагов сдвига
@@ -872,6 +871,8 @@ private:
   bool cube2dRoutine(CRGB *leds, EffectWorker *param);
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
   void cube2dmoveRows(uint8_t moveItem, bool movedirection);
+  void setDynCtrl(UIControl*_val) override;
+  void setscl(const byte _scl) override;
 
 public:
     void load() override;
