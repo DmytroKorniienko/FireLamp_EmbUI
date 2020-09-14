@@ -876,10 +876,7 @@ bool EffectLighters::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
 {
   bool subPix = false;
-  if (getCtrlVal(3) == F("true"))
-  { // переключатель в true
-    subPix = true;
-  }
+  subPix = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
   float speedfactor = (float)speed / 4096.0f + 0.001f;
 
  // myLamp.blur2d(speed/10);
@@ -1737,7 +1734,7 @@ void EffectFlock::load(){
 
 void EffectFlock::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
-  predatorPresent = (getCtrlVal(3) == "true");
+  predatorPresent = (_val->getVal() == FPSTR(TCONST_FFFF));
 }
 
 void EffectFlock::setspd(const byte _spd)
@@ -2172,7 +2169,7 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
 
 void EffectRadar::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  subPix = (getCtrlVal(3) == F("true"));
+  subPix = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
 }
 
 bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
@@ -2648,10 +2645,10 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
 
   // parameters for the heatmap
 #ifndef MIC_EFFECTS
-  uint16_t _speed = getCtrlVal(3) == "true" ? map(speed, 1, 255, 1, 255) : (getCtrlVal(3) == "true" ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
+  uint16_t _speed = getCtrlVal(3) == FPSTR(TCONST_FFFF) ? map(speed, 1, 255, 1, 255) : (getCtrlVal(3) == FPSTR(TCONST_FFFF) ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
 #else
   byte mic_p = myLamp.getMicMapMaxPeak();
-  uint16_t _speed = isMicActive ? (mic_p > map(speed, 1, 255, 225, 20) ? mic_p : 20) : (getCtrlVal(3) == "true" ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
+  uint16_t _speed = isMicActive ? (mic_p > map(speed, 1, 255, 225, 20) ? mic_p : 20) : (getCtrlVal(3) == FPSTR(TCONST_FFFF) ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
 #endif
   noise32_x[0] = 3 * ctrl * _speed;
   noise32_y[0] = 20 * millis() * _speed;
@@ -3116,33 +3113,26 @@ void EffectMStreamSmoke::FillNoise(int8_t layer) {
   }
 }
 
+void EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  fillType = getCtrlVal(3).toInt();
+  debug = getCtrlVal(4)==FPSTR(TCONST_FFFF);
+}
+
 // (c) SottNick
 // Относительно стартовой версии - переписан 20200521
 bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB color;
-
-  myLamp.dimAll(254);
-
-  //String var = myLamp.effects.getValue(myLamp.effects.getCurrent()->param, F("R"));
-
-  int val;
-  int ctrl3 = getCtrlVal(3).toInt();
-
-  if (ctrl3)
-  {
-    val = ((int)(6 * ctrl3 / 255.1)) % 6;
-    xSmokePos = xSmokePos + (ctrl3 % 43) / 42.0 + 0.01;
-    xSmokePos2 = xSmokePos2 + (ctrl3 % 43) / 84.0 + 0.01;
-  }
+  if(!debug)
+    myLamp.dimAll(254);
   else
-  {
-    val = scale % 6;
-    xSmokePos = xSmokePos + speed / 255.0 + 0.01;
-    xSmokePos2 = xSmokePos2 + speed / 512.0 + 0.01;
-  }
+    FastLED.clear();
 
-  bool isColored = scale<250; // 250...255, т.е. 6 штук закладываю на заполнения
+  xSmokePos = xSmokePos + speed / 255.0 + 0.01;
+  xSmokePos2 = xSmokePos2 + scale / 512.0 + 0.01; // вращение заполнения тут
+
+  bool isColored = scale!=255 && scale!=1; // 255 и 1 - белый цвет
   if (isColored)
   {
     if (smokeHue == scale)
@@ -3157,38 +3147,38 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
   else
     color = CHSV((scale - 1U) * 2.6, !isColored ? 0U : 255U, 255U);
 
-  switch(val){
-    case 0:
+  switch(fillType){
+    case 1:
       for (uint8_t y = 0; y < HEIGHT; y++) {
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)xSmokePos-y)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-((int)xSmokePos-y)-1)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color;
       }
       break;
-    case 1:
+    case 2:
       for (uint8_t y = 0; y < HEIGHT; y++) {
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)(xSmokePos-y)%WIDTH+(int)(xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)(xSmokePos-y)-1)%WIDTH+(int)(xSmokePos2)%WIDTH, y)] += color;
       }
       break;
-    case 2:
+    case 3:
       for (uint8_t y = 0; y < HEIGHT; y++) {
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)((xSmokePos-y)*1.5)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)((xSmokePos-y)*1.5)-1)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color; // увеличим частоту в 1.5
       }
       break;
-    case 3:
+    case 4:
       for (uint8_t y = 0; y < HEIGHT; y++) {
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)((xSmokePos-y)*1.5)%WIDTH+(int)(xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)((xSmokePos-y)*1.5)-1)%WIDTH+(int)(xSmokePos2)%WIDTH, y)] += color; // увеличим частоту в 1.5
       }
       break;
-    case 4:
+    case 5:
       for (uint8_t y = 0; y < HEIGHT; y++) {
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)xSmokePos-y)%WIDTH*y/(HEIGHT-1)+WIDTH/2, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-((int)xSmokePos-y)-1)%WIDTH*y/(HEIGHT-1)+WIDTH/2, y)] += color;
       }
       break;
-    case 5:
+    case 6:
       for (uint8_t y = 0; y < HEIGHT; y++) {
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((xSmokePos-y)*y/(HEIGHT-1)+WIDTH/2, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
         myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(xSmokePos-y)-1)*y/(HEIGHT-1)+WIDTH/2, y)] += color;
@@ -3197,8 +3187,8 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
     default:
       break;
   }
-
-  // Noise
+  if(!debug){
+    // Noise
     uint16_t sc = (uint16_t)speed * 6 + 500;
     uint16_t sc2 = (float)speed/127.0 + 1.5;
 
@@ -3211,10 +3201,12 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
     //MoveX(3);
     //MoveY(3);
 
+
     EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);//4
     EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);//4
 
-  myLamp.blur2d(25); // без размытия как-то пиксельно, наверное...
+    myLamp.blur2d(25); // без размытия как-то пиксельно, наверное...
+  }
   return true;
 }
 
@@ -3632,10 +3624,7 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   nextFrame = nextFrame + SPEED_SCALER;
   if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
-  bool glare = false;
-  if(getCtrlVal(3)==F("true")) { // переключатель в true
-    glare = true;
-  }
+  bool glare = (getCtrlVal(3)==FPSTR(TCONST_FFFF));
 
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
@@ -4184,7 +4173,7 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
   byte rand = 4;
   if (scale%32 > 0)  rand = scale%32;
-  if (getCtrlVal(3) == "true") rand = random8(1, 9); // Хрень, конечно, но хоть какое-то разнообразие.
+  if (getCtrlVal(3) == FPSTR(TCONST_FFFF)) rand = random8(1, 9); // Хрень, конечно, но хоть какое-то разнообразие.
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
       leds[myLamp.getPixelNumber(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
@@ -4305,9 +4294,9 @@ void EffectButterfly::setDynCtrl(UIControl*_val)
   // LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
 
   if(_val->getType()==2 && _val->getId()==3)
-    wings = _val->getVal()==F("true") ? true : false;
+    wings = _val->getVal() == FPSTR(TCONST_FFFF);
   if(_val->getType()==2 && _val->getId()==4)
-    isColored = _val->getVal()==F("true") ? false : true;
+    isColored = _val->getVal() == FPSTR(TCONST_FFFF);
 }
 
 bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
@@ -4564,7 +4553,7 @@ bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
     csum = (127U^scale);
   }
   if (scale != 1)
-    dir = getCtrlVal(3) == "true" ? true : false;
+    dir = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
 
   return patternsRoutine(*&ledarr, &*opt);
 }
@@ -4683,7 +4672,7 @@ bool EffectArrows::run(CRGB *ledarr, EffectWorker *opt) {
     }
   }
   speedfactor = (float)speed / 768.0 + 0.15;
-  subpixel = getCtrlVal(3) == "true" ? true : false;
+  subpixel = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
 
   if (csum != (127U ^ scale))
   {

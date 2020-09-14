@@ -786,7 +786,9 @@ public:
 
 class EffectMStreamSmoke : public EffectCalc {
 private:
+  bool debug = false;
   uint8_t smokeHue = 0U;
+  int fillType;
   float xSmokePos;
   float xSmokePos2;
   uint8_t eNs_noisesmooth;
@@ -800,6 +802,7 @@ private:
 
   void FillNoise(int8_t layer);     // TODO: join with Comet's
   bool multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param);
+  void setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
