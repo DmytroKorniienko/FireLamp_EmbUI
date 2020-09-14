@@ -711,10 +711,14 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ============= DRIFT / ДРИФТ ===============
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
+// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
+// https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
 class EffectDrift : public EffectCalc {
 private:
   uint8_t dri_phase;
-  uint8_t _dri_speed;
+  float _dri_speed;
   uint8_t _dri_delta;
 
   bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);

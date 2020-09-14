@@ -1868,9 +1868,16 @@ void EffectDrift::load(){
 }
 
 bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
-  myLamp.blur2d(beatsin8(3U, 5, 10 + scale*3));
-  myLamp.dimAll(beatsin8(2U, 246, 252));
-  _dri_speed = map8(speed, 1U, 20U);
+  //myLamp.blur2d(beatsin8(3U, 5, 10 + scale*3));
+  //myLamp.dimAll(beatsin8(2U, 246, 252));
+  if (getCtrlVal(3) == "false")
+    FastLED.clear();
+  else
+    fadeToBlackBy(ledarr, NUM_LEDS, beatsin8(2U, 1, 8));
+
+// есть разница когда коэффициент как переключатель 2-20, и дробный, так скорость можно крутить плавнее
+// Особенно, если коеффициент участвует в умножении
+  _dri_speed = EffectMath::fmap(speed, 1., 255., 2., 20.); 
   _dri_delta = beatsin8(1U);
   //EVERY_N_MILLIS(13){
     dri_phase++;    // 13 ms это примерно каждый кадр и есть
@@ -1897,10 +1904,11 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 1; i < WIDTH / 2U; i++) // возможно, стоит здесь использовать const MINLENGTH
   {
-    int8_t x = beatsin8((CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
-    int8_t y = beatsin8((CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
-    myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps * 2U + _dri_delta) ); // используем массив палитр из других эффектов выше
+    int8_t x = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
+    int8_t y = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
+    myLamp.drawPixelXY(x, y, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps * 2U + _dri_delta) ); // используем массив палитр из других эффектов выше
   }
+  myLamp.blur2d(beatsin8(3U, 5, 100));
   return true;
 }
 
@@ -1931,8 +1939,9 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
       y = beatsin8((HEIGHT - i) * _dri_speed, HEIGHT - 1 - i, i + 1U, 0, 64U + dri_phase);
       color = ColorFromPalette(*curPalette, ~(i * WIDTH_steps * 2U + _dri_delta));
     }
-    myLamp.setLeds(myLamp.getPixelNumber(x, y), color);
+    myLamp.drawPixelXYF(x, y, color);
   }
+  myLamp.blur2d(beatsin8(3U, 5, 100));
   return true;
 }
 
@@ -2238,7 +2247,6 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
   }
 
   myLamp.blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
-  //myLamp.dimAll(254);
   fadeToBlackBy(leds, NUM_LEDS, 15);
 
   float n = 0;
