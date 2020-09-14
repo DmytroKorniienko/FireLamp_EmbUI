@@ -4301,54 +4301,53 @@ void EffectNoise::load() {
 // ---- Эффект "Мотыльки" 
 // (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
 bool EffectButterfly::run(CRGB *ledarr, EffectWorker *opt) {
-
   return butterflyRoutine(*&ledarr, &*opt);
+}
+
+void EffectButterfly::load()
+{
+  for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
+  {
+    butterflysPosX[i] = random8(WIDTH);
+    butterflysPosY[i] = random8(HEIGHT);
+    butterflysSpeedX[i] = 0;
+    butterflysSpeedY[i] = 0;
+    butterflysTurn[i] = 0;
+    butterflysColor[i] = (isColored) ? random8() : 0U;
+    butterflysBrightness[i] = 255U;
+  }
 }
 
 void EffectButterfly::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  // теперь проверяем уже поведение для этого эффекта
-  // LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
-
+  byte _scale = scale;
   if(_val->getType()==2 && _val->getId()==3)
     wings = _val->getVal() == FPSTR(TCONST_FFFF);
-  if(_val->getType()==2 && _val->getId()==4)
-    isColored = _val->getVal() == FPSTR(TCONST_FFFF);
-}
+  if(_val->getType()==2 && _val->getId()==4){
+    isColored = _val->getVal() != FPSTR(TCONST_FFFF);
 
-bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
-{
-  // Эти же контролы отбражены на _scale и _speed... т.е. зачем прямое обращение?
-  // byte _scale = getCtrlVal(2).toInt();
-  // byte _speed = getCtrlVal(1).toInt();
-  
-  byte _scale = scale;
-  byte _speed = speed;
-
-  if (csum != (isColored^(127U^_scale))) // проверяем не пора ли
-  {
-    csum = (isColored^(127U^_scale));
-    if (isColored) // для режима смены цвета фона фиксируем количество мотыльков
-      deltaValue = (_scale > BUTTERFLY_MAX_COUNT) ? BUTTERFLY_MAX_COUNT : _scale;
-    else
-      deltaValue = BUTTERFLY_FIX_COUNT;
     for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
     {
-      butterflysPosX[i] = random8(WIDTH);
-      butterflysPosY[i] = random8(HEIGHT);
-      butterflysSpeedX[i] = 0;
-      butterflysSpeedY[i] = 0;
-      butterflysTurn[i] = 0;
       butterflysColor[i] = (isColored) ? random8() : 0U;
-      butterflysBrightness[i] = 255U;
     }
     //для инверсии, чтобы сто раз не пересчитывать
     if (_scale != 1U and !isColored)
       hue = map(_scale, 2, BUTTERFLY_MAX_COUNT + 1U, 0, 255);
     hue2 = (_scale == 1U) ? 100U : 190U;  // вычисление базового оттенка
-
   }
+}
+
+bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
+{
+  byte _scale = scale;
+  byte _speed = speed;
+
+  if (isColored) // для режима смены цвета фона фиксируем количество мотыльков
+    deltaValue = (_scale > BUTTERFLY_MAX_COUNT) ? BUTTERFLY_MAX_COUNT : _scale;
+  else
+    deltaValue = BUTTERFLY_FIX_COUNT;
+
   if (wings && isColored)
     //myLamp.dimAll(35U); // для крылышков
     fadeToBlackBy(leds, NUM_LEDS, 200);

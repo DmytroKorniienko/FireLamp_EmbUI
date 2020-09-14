@@ -1128,7 +1128,7 @@ private:
     bool isColored = true;
     
     bool butterflyRoutine(CRGB *leds, EffectWorker *param);
-
+    void load() override;
 public:
     //void load() override;
     virtual void setDynCtrl(UIControl*_val) override;
