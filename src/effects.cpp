@@ -77,9 +77,9 @@ bool EffectCalc::run(CRGB* ledarr, EffectWorker *opt){
 
 /**
  * проверка на холостой вызов для эффектов с доп. задержкой
-
-bool EffectCalc::dryrun(){
-  if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)(255-speed)/3){
+ */
+bool EffectCalc::dryrun(float n){
+  if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)(255-speed)/n){
     active=false;
   } else {
     lastrun = millis();
@@ -88,7 +88,6 @@ bool EffectCalc::dryrun(){
 
   return !active;
 }
- */
 
 /**
  * status - статус воркера, если работает и загружен эффект, отдает true
@@ -3235,14 +3234,35 @@ void EffectFire::load(){
   generateLine();
 }
 
+void EffectFire::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  delaytype = _val->getVal().toInt();
+  active = true; // врубаем снова после dryrun()
+}
+
 bool EffectFire::run(CRGB *ledarr, EffectWorker *opt){
-  return fireRoutine(*&ledarr, &*opt);
+  if(delaytype==1){
+    nextFrame = nextFrame + (float) SPEED_SCALER;
+
+    if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
+      fireRoutine(*&ledarr, &*opt);
+    }
+    nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
+    return true;
+  } else if(delaytype==2) {
+    if (dryrun(3.0))
+      return false;
+    return fireRoutine(*&ledarr, &*opt);
+  } else if(delaytype==3) {
+    delay((255 - speed)/3.0);
+    return fireRoutine(*&ledarr, &*opt);
+  }
 }
 
 bool EffectFire::fireRoutine(CRGB *leds, EffectWorker *param)
 {
-  nextFrame = nextFrame + SPEED_SCALER;
-  if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
+  // nextFrame = nextFrame + SPEED_SCALER;
+  // if (EFFECT_FPS_SCALER * nextFrame > 1.0) {
   if (pcnt >= 100) {                                  // внутренний делитель кадров для поднимающегося пламени
     shiftUp();                                              // смещение кадра вверх
     generateLine();                                         // перерисовать новую нижнюю линию случайным образом
@@ -3251,8 +3271,8 @@ bool EffectFire::fireRoutine(CRGB *leds, EffectWorker *param)
   pcnt += 25;
   
   drawFrame(pcnt, true);                              // для прошивки где стоит логический параметр
-  }
-  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
+  // }
+  // nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
   return true;
 }
 

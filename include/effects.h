@@ -146,7 +146,7 @@ protected:
     bool isMicActive = false; // признак включенного микрофона
 
     float nextFrame;
-    //uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
+    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
  
     EFF_ENUM effect;        /**< энумератор эффекта */
 
@@ -228,7 +228,7 @@ public:
      * drynrun метод, всеми любимая затычка-проверка на "пустой" вызов
      * возвращает false если еще не прошло достаточно времени с EFFECTS_RUN_TIMER
      */
-    bool dryrun();
+    bool dryrun(float n=1.0);
 
     /**
      * status - статус воркера, если работает и загружен эффект, отдает true
@@ -405,6 +405,7 @@ public:
 // ============= Эффект "Огненная лампа" =================
 class EffectFire : public EffectCalc {
 private:
+  uint8_t delaytype; // тип задержки (отладка)
   uint8_t pcnt;
   uint8_t shiftHue[HEIGHT];                              // массив дороожки горизонтального смещения пламени (hueMask)
   uint8_t line[WIDTH];
@@ -416,6 +417,7 @@ private:
     void generateLine();
     void shiftUp();
     bool fireRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val);
 
 public:
     void load() override;

@@ -169,7 +169,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 2, 2, 2, 1, 1, 1, 3, 1, 1, 2, 1, 1, 1, 2, // 0-15
+  1, 2, 2, 2, 2, 1, 1, 1, 3, 1, 1, 2, 1, 3, 1, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 1, 3, 1, 3, 3, // 16-31
   1, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 3, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 4, 1, 3, 3, 3, 0, // 48 - 63
@@ -243,6 +243,9 @@ static const char E_DRIFT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 static const char E_SMOKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет/Вращение\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Заполнение\"},{\"id\":4,\"type\":2,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Отладка\"}]}";
 static const char E_CUBE2D_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Размер по X\"},{\"id\":4,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Размер по Y\"}]}";
 
+static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
+
+
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 1\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 2\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 3\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 
@@ -252,7 +255,7 @@ static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver
  * не обязательно каждому эффекту лепить свой конфиг, можно ставить указатели на эффекты с похожими контролами
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
-  E_DEFUI, E_WHITE_CFG, E_DEFMICUI, E_DEFMICUI, E_SPARCLES_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_LIGHTERS, E_DEFUI, E_DEFUI, E_DEFMICUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFMICUI, // 0-15
+  E_DEFUI, E_WHITE_CFG, E_DEFMICUI, E_DEFMICUI, E_SPARCLES_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_LIGHTERS, E_DEFUI, E_DEFUI, E_DEFMICUI, E_DEFUI, E_FIRE_CFG, E_DEFUI, E_DEFMICUI, // 0-15
   E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
   E_DEFUI, E_DRIFT_CFG, E_DRIFT_CFG, E_3PAL_CFG, E_RADAR, E_WAVES_CFG, E_3PAL_MIC_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_F2018_CFG, E_DEFUI, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
   E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM, E_3PAL_CFG, E_2_CFG, E_MUNCH_MIC_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_SHAD_CFG, E_PATT_CFG, E_ARR_CFG, E_NBAL_CFG, E_ATTRACT_CFG, E_DEFUI, // 48 - 63
