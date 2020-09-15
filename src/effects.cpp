@@ -1008,7 +1008,7 @@ bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
   uint8_t blurAmount = dim8_raw(beatsin8(3,64,100));
   blur2d(leds, WIDTH, HEIGHT, blurAmount);
 
-  float speedScale = (((float)speed)/255)+(5.0/255.0);
+  float speedScale = (((float)speed)/255.0)+0.1;
 
   // Use two out-of-sync sine waves
   uint16_t  i = beatsin16( 79*speedScale, 0, 255); //91
@@ -1083,7 +1083,7 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 0U; i < 2U; i++)
   {
-    coordB[i] += vectorB[i] * ((0.1f * (float)_speed) /255.0f);
+    coordB[i] += vectorB[i] * ((0.1f * (float)_speed) /127.0f);
     if ((int8_t)coordB[i] < 0)
     {
       coordB[i] = 0;
@@ -3226,7 +3226,7 @@ bool EffectFire::fireRoutine(CRGB *leds, EffectWorker *param)
     generateLine();                                         // перерисовать новую нижнюю линию случайным образом
     pcnt = 0;
   }
-  pcnt += 25;
+  pcnt += 20;
   
   drawFrame(pcnt, true);                              // для прошивки где стоит логический параметр
   return true;

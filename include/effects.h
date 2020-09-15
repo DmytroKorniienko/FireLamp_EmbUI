@@ -393,6 +393,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------- пейнтбол -------------
 class EffectLightBalls : public EffectCalc {
 private:
     bool lightBallsRoutine(CRGB *leds, EffectWorker *param);
