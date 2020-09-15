@@ -341,10 +341,6 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
 };
 */
 
-// Общий скалер FPS для эффектов
-#define EFFECT_FPS_SCALER (1.0) //0.25...5.0
-// Общий скалер скорости к FPS
-#define SPEED_SCALER (float)getCtrlVal(1).toInt() / 255.1 + 0.1
 
 // ==== Константы для эффектов ====
 

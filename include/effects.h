@@ -145,7 +145,6 @@ protected:
     bool isCtrlPallete = false; // признак наличия контрола палитры
     bool isMicActive = false; // признак включенного микрофона
 
-    float nextFrame;
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
  
     EFF_ENUM effect;        /**< энумератор эффекта */
@@ -512,6 +511,7 @@ public:
 // ------------- снегопад ----------
 class EffectSnow : public EffectCalc {
 private:
+    float nextFrame;
     bool snowRoutine(CRGB *leds, EffectWorker *param);
 
     
