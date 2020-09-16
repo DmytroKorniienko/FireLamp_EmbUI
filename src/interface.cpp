@@ -883,6 +883,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->number(FPSTR(TCONST_0047), FPSTR(TINTF_037));
     interf->text(FPSTR(TCONST_0048), FPSTR(TINTF_038));
     interf->text(FPSTR(TCONST_0049), FPSTR(TINTF_02D));
+    interf->text(FPSTR(TCONST_007B), FPSTR(TINTF_08C));
     interf->number(FPSTR(TCONST_004A), FPSTR(TINTF_039));
     interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(TCONST_0008));
     interf->json_section_end();
@@ -941,9 +942,9 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0046), strncpy(jee.m_host, jee.param(FPSTR(TCONST_0046)).c_str(), sizeof(jee.m_host)-1));
     SETPARAM(FPSTR(TCONST_0048), strncpy(jee.m_user, jee.param(FPSTR(TCONST_0048)).c_str(), sizeof(jee.m_user)-1));
     SETPARAM(FPSTR(TCONST_0049), strncpy(jee.m_pass, jee.param(FPSTR(TCONST_0049)).c_str(), sizeof(jee.m_pass)-1));
+    SETPARAM(FPSTR(TCONST_007B), strncpy(jee.m_pref, jee.param(FPSTR(TCONST_007B)).c_str(), sizeof(jee.m_pref)-1));
     SETPARAM(FPSTR(TCONST_0047), jee.m_port = jee.param(FPSTR(TCONST_0047)).toInt());
     SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
-    //m_pref
 
     jee.save();
     //if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
@@ -1475,7 +1476,7 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0047), F("1883"));
     jee.var_create(FPSTR(TCONST_0048), F(""));
     jee.var_create(FPSTR(TCONST_0049), F(""));
-    jee.var_create(FPSTR(TCONST_007B), F(""));
+    jee.var_create(FPSTR(TCONST_007B), jee.mc);  // m_pref == MAC по дефолту
     jee.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 
     jee.var_create(FPSTR(TCONST_0016), F("1"));
