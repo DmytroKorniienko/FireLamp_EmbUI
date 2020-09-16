@@ -792,8 +792,19 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 bool EffectStarFall::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
     return false;
-  colored = getCtrlVal(3) == F("false");
   return snowStormStarfallRoutine(*&ledarr, &*opt);
+}
+
+void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  //colored = getCtrlVal(3) != FPSTR(TCONST_FFFF); // да можно и так обратиться, если уверены, что есть только один контрол 3+, только везде желательно использовать == FPSTR(TCONST_FFFF) или != FPSTR(TCONST_FFFF)
+  // либо можно распознать id и сделать кастомное действие лишь для конкретного id
+  if(_val->getId()==3) {
+    colored = _val->getVal() != FPSTR(TCONST_FFFF);
+  }
+  if(_val->getId()==4) {
+    isOld = _val->getVal() != FPSTR(TCONST_FFFF);
+  }
 }
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
@@ -830,7 +841,7 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
     }
   }
 
-  if (getCtrlVal(4) == F("false")) {
+  if (isOld) {
     fadeToBlackBy(leds, NUM_LEDS, 15);
     myLamp.blur2d(25);
   } else {

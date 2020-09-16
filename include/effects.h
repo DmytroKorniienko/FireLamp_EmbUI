@@ -569,7 +569,9 @@ public:
 class EffectStarFall : public EffectCalc {
 private:
     bool colored = false;
+    bool isOld = false;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override {FastLED.clear();}
