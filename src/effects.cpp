@@ -792,32 +792,32 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 bool EffectStarFall::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
     return false;
+  colored = getCtrlVal(3) == F("false");
   return snowStormStarfallRoutine(*&ledarr, &*opt);
 }
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
-
   // заполняем головами комет левую и верхнюю линию
   for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
   {
     if (myLamp.getPixColorXY(0U, i) == 0U &&
-        (random(0, (scale < 127 ? SNOW_DENSE : STAR_DENSE)) == 0) &&
+        (random(0, (colored ? SNOW_DENSE : STAR_DENSE)) == 0) &&
         myLamp.getPixColorXY(0U, i + 1U) == 0U &&
         myLamp.getPixColorXY(0U, i - 1U) == 0U)
     {
-      myLamp.setLeds(myLamp.getPixelNumber(0U, i), CHSV(random(0, 200), (scale < 127 ? SNOW_SATURATION : STAR_SATURATION), 255U));
+      myLamp.setLeds(myLamp.getPixelNumber(0U, i), CHSV(random(0, 200), (colored ? SNOW_SATURATION : STAR_SATURATION), 255U));
     }
   }
 
   for (uint8_t i = 0U; i < WIDTH / 2U; i++)
   {
     if (myLamp.getPixColorXY(i, HEIGHT - 1U) == 0U &&
-        (random(0, map((scale % 128) * 2, 0U, 255U, 10U, 120U)) == 0U) &&
+        (random(0, (colored ? SNOW_DENSE : STAR_DENSE)) == 0U) &&
         myLamp.getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
         myLamp.getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
     {
-      myLamp.setLeds(myLamp.getPixelNumber(i, HEIGHT - 1U), CHSV(random(0, 200), (scale < 127 ? SNOW_SATURATION : STAR_SATURATION), 255U));
+      myLamp.setLeds(myLamp.getPixelNumber(i, HEIGHT - 1U), CHSV(random(0, 200), (colored ? SNOW_SATURATION : STAR_SATURATION), 255U));
     }
   }
 
@@ -830,14 +830,20 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
     }
   }
 
-  // уменьшаем яркость левой и верхней линии, формируем "хвосты"
-  for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
-  {
-    EffectMath::fadePixel(0U, i, (scale < 127 ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
-  }
-  for (uint8_t i = 0U; i < WIDTH / 2U; i++)
-  {
-    EffectMath::fadePixel(i, HEIGHT - 1U, (scale < 127 ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
+  if (getCtrlVal(4) == F("false")) {
+    fadeToBlackBy(leds, NUM_LEDS, 15);
+    myLamp.blur2d(25);
+  } else {
+
+    // уменьшаем яркость левой и верхней линии, формируем "хвосты"
+    for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
+    {
+      EffectMath::fadePixel(0U, i, (colored ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
+    }
+    for (uint8_t i = 0U; i < WIDTH / 2U; i++)
+    {
+      EffectMath::fadePixel(i, HEIGHT - 1U, (colored < 127 ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
+    }
   }
 
   return true;
@@ -874,7 +880,7 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
   //myLamp.dimAll(50 + speed/10);
   memset8( leds, 0, NUM_LEDS * 3); 
 
-  for (uint8_t i = 0U; i < (uint8_t)((LIGHTERS_AM/255.0)*scale)+1; i++) // масштабируем на LIGHTERS_AM, чтобы не было выхода за диапазон
+  for (uint8_t i = 0U; i < scale; i++) // масштабируем на LIGHTERS_AM, чтобы не было выхода за диапазон
   {
     // EVERY_N_SECONDS(1)
     // {

@@ -568,7 +568,7 @@ public:
 // ------------- звездопад/метель -------------
 class EffectStarFall : public EffectCalc {
 private:
-     
+    bool colored = false;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
 
 public:
