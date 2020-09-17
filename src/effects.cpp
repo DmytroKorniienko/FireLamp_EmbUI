@@ -1956,6 +1956,7 @@ void EffectFreq::load()
 {
   palettesload();    // подгружаем дефолтные палитры
   memset(peakX,0,sizeof(peakX));
+  memset(x,0,sizeof(x));
 }
 
 bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
@@ -1967,23 +1968,23 @@ bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 {
-  float samp_freq;
-  double last_freq = 0;
-  uint8_t last_min_peak, last_max_peak;
-  float x[WIDTH+1]; memset(x,0,sizeof(x));
-  float maxVal;
-  uint8_t freqDiv = 2U-scale/128; //1...2
+  { // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
+    MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
 
-  MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
+    samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
+    last_min_peak = mw->getMinPeak();
+    last_max_peak = mw->getMaxPeak()*2;
 
-  samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
-  last_min_peak = mw->getMinPeak();
-  last_max_peak = mw->getMaxPeak()*2;
-
-  maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv);
+    EVERY_N_MILLIS(MIC_POLLRATE){
+      maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
+    }
+    samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
+    delete mw;
+  }
 
   float _scale = (maxVal==0? 0 : last_max_peak/maxVal);
   _scale = _scale * ((scale%128)/127.0);
+  freqDiv = 2U-scale/128; //1...2
 
 // #ifdef LAMP_DEBUG
 // EVERY_N_SECONDS(1){
@@ -2073,9 +2074,6 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
     if(freqDiv>1)
       myLamp.setLeds(myLamp.getPixelNumber(freqDiv*i+1,ypos), color);
   }
-
-  samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
-  delete mw;
   return true;
 }
 #endif
