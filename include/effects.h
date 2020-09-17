@@ -309,6 +309,8 @@ public:
   static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
   static void fader(uint8_t step);
   static uint8_t ceil8(const uint8_t a, const uint8_t b);
+
+
   /*
   static CRGB& piXY(CRGB *leds, byte x, byte y);
   static void screenscale( accum88 a, byte N, byte& screen, byte& screenerr);
@@ -1275,6 +1277,114 @@ public:
         G = .5;
     }
     void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+//------------ Эффект "Змейка"
+class EffectSnake : public EffectCalc {
+private:
+    uint8_t hue;
+    static const int snakeCount = 6;// а может меньше?
+    enum Direction
+{
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+
+struct Pixel
+{
+    uint8_t x;
+    uint8_t y;
+};
+
+CRGB colors[SNAKE_LENGTH];
+struct Snake
+{
+  Pixel pixels[SNAKE_LENGTH];
+
+  Direction direction;
+
+  void newDirection()
+  {
+    switch (direction)
+    {
+    case UP:
+    case DOWN:
+      direction = random(0, 2) == 1 ? RIGHT : LEFT;
+      break;
+
+    case LEFT:
+    case RIGHT:
+      direction = random(0, 2) == 1 ? DOWN : UP;
+
+    default:
+      break;
+    }
+  };
+
+  void shuffleDown()
+  {
+    for (byte i = SNAKE_LENGTH - 1; i > 0; i--)
+    {
+      pixels[i] = pixels[i - 1];
+    }
+  }
+
+  void reset()
+  {
+    direction = UP;
+    for (int i = 0; i < SNAKE_LENGTH; i++)
+    {
+      pixels[i].x = 0;
+      pixels[i].y = 0;
+    }
+  }
+
+  void move()
+  {
+    switch (direction)
+    {
+    case UP:
+      pixels[0].y = (pixels[0].y + 1) % HEIGHT;
+      break;
+    case LEFT:
+      pixels[0].x = (pixels[0].x + 1) % WIDTH;
+      break;
+    case DOWN:
+      pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
+      break;
+    case RIGHT:
+      pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
+      break;
+    }
+  }
+
+  void draw(CRGB colors[SNAKE_LENGTH])
+  {
+    for (byte i = 0; i < SNAKE_LENGTH; i++)
+    {
+    // Вот как это разрулить? Покажите на примере, пожалуста. Всю голову сломал
+    // Я этот долбаный draw даже вычленил. Оно даже скомпилировалось, но рисовать что либо отказалось.
+    // Я всю эту хрень выносил из класса эффекта в файл effects_type.h но тоже не смог обеспечить видимость массива leds, и функций
+    // из класса LAMP. Менять структуру и переносить в EffectMath я видимо не готов. Потому что из того класса массив leds тоже не видим.
+    // Вообще, не понимаю, массив то глобален всегда, когда лампа включена. Зачем такие сложности, почему его не объявить на уровне где он был бы виден из любого места 
+    // в эффектах, в классах, в коде, без передачи указателя? А то постоянно во все нужно тыкать CRGB *leds, потом забирать *&leds. Ок в ОПП я еще баран, но зачем эти искуственные заборы?
+     // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
+     //myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i] %= (255 - i * (255 / SNAKE_LENGTH)));
+
+    }
+  }
+};
+
+    Snake snakes[snakeCount];
+
+    bool snakeRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    //void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

@@ -131,6 +131,7 @@ EFF_PATTERNS,                                 // Узоры
 EFF_ARROWS,                                   // Стрелки
 EFF_NBALLS,                                   // Дикие шарики
 EFF_ATTRACT,                                  // Притяжение
+EFF_SNAKE,                                    // Змейка
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -146,7 +147,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_005, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
   TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
   TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
-  TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_000, // 48 - 63
+  TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 96 - 111
@@ -172,7 +173,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 2, 2, 2, 1, 3, 1, 5, 5, 3, 4, 1, 3, 3, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 1, 3, 1, 3, 3, // 16-31
   1, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 3, 5, 1, 1, // 32 - 47
-  3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 4, 1, 3, 3, 3, 0, // 48 - 63
+  3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 4, 1, 3, 3, 3, 1, // 48 - 63
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
@@ -426,6 +427,7 @@ static const uint8_t hueMask[8][16] PROGMEM =
   {5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5  },
   {1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1  }
 };
+
 
 
 template <class T>
@@ -1818,5 +1820,6 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 */
 #define BLOCK_ON_START 4   // Сколько блоков сразу появлять в начале эффекта
 
-
+//------------ Эффект "Змейка"
+#define SNAKE_LENGTH  WIDTH// здесь был [USER=20731]@stepko[/USER], 16-оригинал
 

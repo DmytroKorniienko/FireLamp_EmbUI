@@ -212,6 +212,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_ATTRACT :
     worker = std::unique_ptr<EffectAttract>(new EffectAttract());
     break;
+  case EFF_ENUM::EFF_SNAKE :
+    worker = std::unique_ptr<EffectSnake>(new EffectSnake());
+    break; 
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());

@@ -5182,3 +5182,29 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
   }
   return true;
 }
+
+//------------ Эффект "Змейка"
+
+bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
+  fill_palette(colors, SNAKE_LENGTH, hue++, 5, *curPalette, 255, LINEARBLEND);
+
+  for (int i = 0; i < snakeCount; i++)
+  {
+    Snake *snake = &snakes[i];
+
+    snake->shuffleDown();
+
+    if (random(10) > 7)
+    {
+      snake->newDirection();
+    }
+
+    snake->move();
+    snake->draw(colors);
+  }
+  return true;
+}
+
+bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
+  return snakeRoutine(*&ledarr, &*opt);
+}
