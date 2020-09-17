@@ -328,7 +328,12 @@ public:
 class EffectFreq : public EffectCalc {
 private:
     int8_t peakX[2][WIDTH];
-     
+    float samp_freq;
+    double last_freq = 0;
+    uint8_t last_min_peak, last_max_peak;
+    float x[WIDTH+1]; 
+    float maxVal;
+    uint8_t freqDiv = 2U-scale/128; //1...2     
 
     bool freqAnalyseRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
