@@ -227,7 +227,7 @@ public:
      * drynrun метод, всеми любимая затычка-проверка на "пустой" вызов
      * возвращает false если еще не прошло достаточно времени с EFFECTS_RUN_TIMER
      */
-    bool dryrun(float n=1.0);
+    bool dryrun(float n=1.0, uint8_t delay = EFFECTS_RUN_TIMER);
 
     /**
      * status - статус воркера, если работает и загружен эффект, отдает true

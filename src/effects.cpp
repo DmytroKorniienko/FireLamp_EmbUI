@@ -78,9 +78,9 @@ bool EffectCalc::run(CRGB* ledarr, EffectWorker *opt){
 /**
  * проверка на холостой вызов для эффектов с доп. задержкой
  */
-bool EffectCalc::dryrun(float n){
+bool EffectCalc::dryrun(float n, uint8_t delay){
   //if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)(255-speed)/n){
-  if((millis() - lastrun) < (unsigned)(float(256 - speed)/n)) {
+  if((millis() - lastrun - delay) < (unsigned)(float(255 - speed) / n)) {
     active=false;
   } else {
     lastrun = millis();
