@@ -90,6 +90,7 @@ void pubCallback(Interface *interf){
 }
 
 void block_menu(Interface *interf, JsonObject *data){
+    if (!interf) return;
     // создаем меню
     jee.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     interf->json_section_menu();
@@ -125,13 +126,14 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
 }
 
 void show_effects_config_param(Interface *interf, JsonObject *data){
+    if (!interf) return;
     interf->json_frame_interface();
     block_effects_config_param(interf, data);
     interf->json_frame_flush();
 }
 void delayedcall_effects_main();
 void set_effects_config_param(Interface *interf, JsonObject *data){
-    if (!interf || !confEff || !data) return;
+    if (!confEff || !data) return;
     if(optionsTicker.active())
         optionsTicker.detach();
     
@@ -269,7 +271,7 @@ void show_effects_config(Interface *interf, JsonObject *data){
 }
 
 void set_effects_config_list(Interface *interf, JsonObject *data){
-    if (!interf || !data) return;
+    if (!data) return;
     uint16_t num = (*data)[FPSTR(TCONST_0010)].as<uint16_t>();
 
     // Так  нельзя :(, поскольку интерфейс отдаст только effListConf, а не весь блок...
@@ -563,12 +565,10 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 }
 
 void set_eff_prev(Interface *interf, JsonObject *data){
-    if (!interf) return;
     remote_action(RA::RA_EFF_PREV, NULL);
 }
 
 void set_eff_next(Interface *interf, JsonObject *data){
-    if (!interf) return;
     remote_action(RA::RA_EFF_NEXT, NULL);
 }
 
@@ -609,6 +609,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
 
 #ifdef OTA
 void set_otaflag(Interface *interf, JsonObject *data){
+    //if (!data) return;
     myLamp.startOTAUpdate();
 
     interf->json_frame_interface();
@@ -838,6 +839,7 @@ void set_micflag(Interface *interf, JsonObject *data){
 }
 
 void set_settings_mic_calib(Interface *interf, JsonObject *data){
+    //if (!data) return;
     if (!myLamp.isMicOnOff()) {
         myLamp.sendStringToLamp(String(FPSTR(TINTF_026)).c_str(), CRGB::Red);
     } else
@@ -905,7 +907,7 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
  * настройка подключения WiFi в режиме AP
  */
 void set_settings_wifiAP(Interface *interf, JsonObject *data){
-    if (!data) return;
+    //if (!data) return;
 
     SETPARAM(FPSTR(TCONST_003F));
     SETPARAM(FPSTR(TCONST_0043));
@@ -1186,7 +1188,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     String act;
     bool edit = false;
     int i = 1, num = 0;
-    if (!interf) return;
+    if (!interf || !data) return;
 
     if (data->containsKey(FPSTR(TCONST_005E))) {
         EVENT *curr = nullptr;
@@ -1333,7 +1335,7 @@ void set_butt_conf(Interface *interf, JsonObject *data){
 }
 
 void show_butt_conf(Interface *interf, JsonObject *data){
-    if (!interf) return;
+    if (!interf || !data) return;
 
     Button *btn = nullptr;
     String act;
