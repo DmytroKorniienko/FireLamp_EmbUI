@@ -1303,8 +1303,8 @@ private:
 
 struct Pixel
 {
-    float x;
-    float y;
+    byte x;
+    byte y;
 };
 
 CRGB colors[SNAKE_LENGTH];
@@ -1334,7 +1334,7 @@ struct Snake
 
   void shuffleDown()
   {
-    for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
+    for (byte i = SNAKE_LENGTH - 1; i > 0; i--)
     {
       pixels[i] = pixels[i - 1];
     }
@@ -1343,28 +1343,28 @@ struct Snake
   void reset()
   {
     direction = UP;
-    for (int i = 0; i < (int)SNAKE_LENGTH; i++)
+    for (int i = 0; i < SNAKE_LENGTH; i++)
     {
       pixels[i].x = 0;
       pixels[i].y = 0;
     }
   }
 
-  void move(float speedfactor)
+  void move()
   {
     switch (direction)
     {
     case UP:
-      pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + 1*speedfactor);
+      pixels[0].y = (pixels[0].y + 1) % HEIGHT;
       break;
     case LEFT:
-      pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + 1*speedfactor);
+      pixels[0].x = (pixels[0].x + 1) % WIDTH;
       break;
     case DOWN:
-      pixels[0].y = pixels[0].y <= 0 ? HEIGHT - 1*speedfactor : pixels[0].y - 1*speedfactor;
+      pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
       break;
     case RIGHT:
-      pixels[0].x = pixels[0].x <= 0 ? WIDTH - 1*speedfactor : pixels[0].x - 1*speedfactor;
+      pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
       break;
     }
   }

@@ -5198,12 +5198,12 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
 
     snake->shuffleDown();
 
-    if (random(10) > 8)
+    if (random(10) > 7)
     {
       snake->newDirection();
     }
 
-    snake->move(speedFactor);
+    snake->move();
     snake->draw(colors, speedFactor);
   }
   return true;
@@ -5215,7 +5215,7 @@ bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
 
 void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
 {
-  for (float i = 0.0; i < (float)SNAKE_LENGTH; i+= speedfactor)
+  for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
     // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
     for (byte n = 20; n >= 1; n--)
