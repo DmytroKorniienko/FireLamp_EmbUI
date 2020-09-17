@@ -5183,12 +5183,15 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-//------------ Эффект "Змейка"
+//------------ Эффект "Змеиный Остров"
 void EffectSnake::load() {
   palettesload();
 }
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
+  fadeToBlackBy(leds, NUM_LEDS, 35);
+  speedFactor = (float)speed / 110.0 + 0.2; // надо будет что-то придумать, пороговые скорости сильно зависят от частоты процессора
+  // Это справедливо для всех эффектов с такого типа задержкой. Каккой то делитель, я пока хз.
   fill_palette(colors, SNAKE_LENGTH, hue++, 5, *curPalette, 255, LINEARBLEND);
 
   for (int i = 0; i < snakeCount; i++)
@@ -5203,7 +5206,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     }
 
     snake->move();
-    snake->draw(colors);
+    snake->draw(colors, speedFactor);
   }
   return true;
 }
@@ -5212,11 +5215,12 @@ bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(*&ledarr, &*opt);
 }
 
-void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH])
+void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
 {
-  for (byte i = 0; i < SNAKE_LENGTH; i++)
+  for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
     // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
-    myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i] %= (255 - i * (255 / SNAKE_LENGTH)));
+    for (byte n = 20; n >= 1; n--)
+      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
   }
 }

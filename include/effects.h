@@ -1280,11 +1280,12 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//------------ Эффект "Змейка"
+//------------ Эффект "Змеиный Остров"
 class EffectSnake : public EffectCalc {
 private:
     uint8_t hue;
-    static const int snakeCount = 6;// а может меньше?
+     float speedFactor;
+    static const int snakeCount = WIDTH /4;// а может меньше?
     void load() override;
     enum Direction
 {
@@ -1297,8 +1298,8 @@ private:
 
 struct Pixel
 {
-    uint8_t x;
-    uint8_t y;
+    byte x;
+    byte y;
 };
 
 CRGB colors[SNAKE_LENGTH];
@@ -1363,7 +1364,7 @@ struct Snake
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH]);
+  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor);
 };
 
     Snake snakes[snakeCount];
