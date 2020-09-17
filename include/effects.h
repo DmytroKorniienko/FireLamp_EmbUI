@@ -1285,6 +1285,7 @@ class EffectSnake : public EffectCalc {
 private:
     uint8_t hue;
     static const int snakeCount = 6;// а может меньше?
+    void load() override;
     enum Direction
 {
   UP,
@@ -1362,21 +1363,7 @@ struct Snake
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH])
-  {
-    for (byte i = 0; i < SNAKE_LENGTH; i++)
-    {
-    // Вот как это разрулить? Покажите на примере, пожалуста. Всю голову сломал
-    // Я этот долбаный draw даже вычленил. Оно даже скомпилировалось, но рисовать что либо отказалось.
-    // Я всю эту хрень выносил из класса эффекта в файл effects_type.h но тоже не смог обеспечить видимость массива leds, и функций
-    // из класса LAMP. Менять структуру и переносить в EffectMath я видимо не готов. Потому что из того класса массив leds тоже не видим.
-    // Вообще, не понимаю, массив то глобален всегда, когда лампа включена. Зачем такие сложности, почему его не объявить на уровне где он был бы виден из любого места 
-    // в эффектах, в классах, в коде, без передачи указателя? А то постоянно во все нужно тыкать CRGB *leds, потом забирать *&leds. Ок в ОПП я еще баран, но зачем эти искуственные заборы?
-     // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
-     //myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i] %= (255 - i * (255 / SNAKE_LENGTH)));
-
-    }
-  }
+  void draw(CRGB colors[SNAKE_LENGTH]);
 };
 
     Snake snakes[snakeCount];

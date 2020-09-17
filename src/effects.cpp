@@ -5184,6 +5184,9 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 //------------ Эффект "Змейка"
+void EffectSnake::load() {
+  palettesload();
+}
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   fill_palette(colors, SNAKE_LENGTH, hue++, 5, *curPalette, 255, LINEARBLEND);
@@ -5207,4 +5210,13 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
 
 bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(*&ledarr, &*opt);
+}
+
+void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH])
+{
+  for (byte i = 0; i < SNAKE_LENGTH; i++)
+  {
+    // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
+    myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i] %= (255 - i * (255 / SNAKE_LENGTH)));
+  }
 }
