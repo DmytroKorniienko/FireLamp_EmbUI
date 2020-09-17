@@ -803,7 +803,7 @@ void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял �
     colored = _val->getVal() != FPSTR(TCONST_FFFF);
   }
   if(_val->getId()==4) {
-    isOld = _val->getVal() != FPSTR(TCONST_FFFF);
+    isOld = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 }
 

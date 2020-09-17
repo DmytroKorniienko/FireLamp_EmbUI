@@ -170,7 +170,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 2, 2, 2, 1, 3, 1, 5, 5, 3, 4, 1, 3, 3, 2, // 0-15
+  1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 3, 3, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 1, 3, 1, 3, 3, // 16-31
   1, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 3, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 4, 1, 3, 3, 3, 3, // 48 - 63
@@ -246,7 +246,7 @@ static const char E_CUBE2D_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"v
 static const char E_FLAMP_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
 static const char E_LIGHT2[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер/Цвет\"}]}";
 static const char E_CUBE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер/Шлейф(1-85-170-255)\"}]}";
-static const char E_STARFAIL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"} ,{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Снег/Звезды\"} ,{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Старый вариант\"}]}"; // 3*16+0 для 2 контрола
+static const char E_STARFAIL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"} ,{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Снег/Звезды\"} ,{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Метеоры\"}]}"; // 3*16+0 для 2 контрола
 
 static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
 
@@ -1813,13 +1813,7 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 #define BUTTERFLY_MAX_COUNT           (64U) // максимальное количество мотыльков
 #define BUTTERFLY_FIX_COUNT           (28U) // количество мотыльков для режима, конда бегунок Масштаб регулирует цвет
 
-// ***************************** ПАЛИТРА *****************************
-/*#define BLOCK_SIZE 4       // Размер квадратика палитры.
-#define FADE_IN_STEPS 32   // За сколько шагов плашка появляется на экране    
-#define FADE_OUT_STEPS 64  // За сколько шагов плашка убирается с экрана    
-*/
-#define BLOCK_ON_START 4   // Сколько блоков сразу появлять в начале эффекта
 
-//------------ Эффект "Змейка"
-#define SNAKE_LENGTH  (WIDTH / 2U)  // здесь был [USER=20731]@stepko[/USER], 16-оригинал
+//------------ Эффект "Змеиный Остров"
+#define SNAKE_LENGTH  (HEIGHT / 2U)  
 
