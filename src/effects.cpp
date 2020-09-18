@@ -5184,17 +5184,61 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
 //------------ Эффект "Змеиный Остров"
 void EffectSnake::load() {
   palettesload();
+}
+
+bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
+  fadeToBlackBy(leds, NUM_LEDS, 35);
+  speedFactor = (float)speed / 110.0 + 0.2; // надо будет что-то придумать, пороговые скорости сильно зависят от частоты процессора
+  // Это справедливо для всех эффектов с такого типа задержкой. Каккой то делитель, я пока хз.
+  fill_palette(colors, SNAKE_LENGTH, hue++, 5, *curPalette, 255, LINEARBLEND);
+
+  for (int i = 0; i < snakeCount; i++)
+  {
+    Snake *snake = &snakes[i];
+
+    snake->shuffleDown();
+
+    if (random(10) > 7)
+    {
+      snake->newDirection();
+    }
+
+    snake->move();
+    snake->draw(colors, speedFactor);
+  }
+  return true;
+}
+
+bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
+  return snakeRoutine(*&ledarr, &*opt);
+}
+
+void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
+{
+  for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
+  {
+    // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
+    for (byte n = 20; n >= 1; n--)
+      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
+  }
+}
+
+//------------ Эффект "Змейки"
+// вариант субпикселя и поведения от kDn
+void EffectSnake2::load() {
+  palettesload();
   snakeCount = WIDTH / 4;// а может меньше? может и меньше, может и больше, сделайте выбор и не морочьте голову :)
+  // это не мой вопрос. Меня все устраивает. :)
   for(uint8_t i=0;i<MAX_SNAKES;i++){
     snakes[i].pixels[0].x = WIDTH / 2; // пусть расползаются из центра
     snakes[i].pixels[0].y = HEIGHT / 2; // так будет интереснее
-    snakes[i].direction = (EffectSnake::Direction)random(3);
+    snakes[i].direction = (EffectSnake2::Direction)random(3);
     // в принципе ничего не мешает задать отдельной змейке как цвет, так и скорость, точнее коэф. влияния на скорость и много чего другого
     // пока же хватит и этого ибо лень
   }
 }
 
-bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
   fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
   hue+=speedFactor;
@@ -5217,11 +5261,11 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
+bool EffectSnake2::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(*&ledarr, &*opt);
 }
 
-void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb)
+void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb)
 {
   for (int i = 0; i < (int)SNAKE_LENGTH; i++)
   {

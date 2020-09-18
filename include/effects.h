@@ -1286,7 +1286,105 @@ public:
 };
 
 //------------ Эффект "Змеиный Остров"
+// База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
 class EffectSnake : public EffectCalc {
+private:
+    uint8_t hue;
+     float speedFactor;
+    static const int snakeCount = WIDTH /4;// а может меньше?
+    void load() override;
+    enum Direction
+{
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+
+struct Pixel
+{
+    byte x;
+    byte y;
+};
+
+CRGB colors[SNAKE_LENGTH];
+struct Snake
+{
+  Pixel pixels[SNAKE_LENGTH];
+
+  Direction direction;
+
+  void newDirection()
+  {
+    switch (direction)
+    {
+    case UP:
+    case DOWN:
+      direction = random(0, 2) == 1 ? RIGHT : LEFT;
+      break;
+
+    case LEFT:
+    case RIGHT:
+      direction = random(0, 2) == 1 ? DOWN : UP;
+
+    default:
+      break;
+    }
+  };
+
+  void shuffleDown()
+  {
+    for (byte i = SNAKE_LENGTH - 1; i > 0; i--)
+    {
+      pixels[i] = pixels[i - 1];
+    }
+  }
+
+  void reset()
+  {
+    direction = UP;
+    for (int i = 0; i < SNAKE_LENGTH; i++)
+    {
+      pixels[i].x = 0;
+      pixels[i].y = 0;
+    }
+  }
+
+  void move()
+  {
+    switch (direction)
+    {
+    case UP:
+      pixels[0].y = (pixels[0].y + 1) % HEIGHT;
+      break;
+    case LEFT:
+      pixels[0].x = (pixels[0].x + 1) % WIDTH;
+      break;
+    case DOWN:
+      pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
+      break;
+    case RIGHT:
+      pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
+      break;
+    }
+  }
+
+  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor);
+};
+
+    Snake snakes[snakeCount];
+
+    bool snakeRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    //void load();
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+//------------ Эффект "Змейки"
+// вариант субпикселя и поведения от kDn
+class EffectSnake2 : public EffectCalc {
 private:
     float hue;
     float speedFactor;
