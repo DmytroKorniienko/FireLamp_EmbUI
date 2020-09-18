@@ -1291,7 +1291,7 @@ class EffectSnake : public EffectCalc {
 private:
     float hue;
     float speedFactor;
-    int snakeCount; // = WIDTH / 4;// а может меньше?
+    int snakeCount;
     bool subPix = false;
 
     void load() override;
@@ -1312,6 +1312,8 @@ struct Pixel
 CRGB colors[SNAKE_LENGTH];
 struct Snake
 {
+  float internal_counter = 0.0;
+  float internal_speedf = 1.0;
   Pixel pixels[SNAKE_LENGTH];
 
   Direction direction;
@@ -1334,12 +1336,17 @@ struct Snake
     }
   };
 
-  void shuffleDown()
+  void shuffleDown(float speedFactor)
   {
-    for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
-    {
-      if(fabs(pixels[i].x-pixels[i - 1].x)>1.0 || fabs(pixels[i].y-pixels[i - 1].y)>1.0)
-        pixels[i] = pixels[i - 1];
+    internal_counter+=speedFactor*internal_speedf;
+
+    if(internal_counter>1.0){
+        for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
+        {
+            pixels[i] = pixels[i - 1];
+        }
+        double f;
+        internal_counter=modf(internal_counter, &f);
     }
   }
 

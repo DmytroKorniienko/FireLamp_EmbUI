@@ -5198,31 +5198,27 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
 // вариант субпикселя и поведения от kDn
 void EffectSnake::load() {
   palettesload();
-  snakeCount = WIDTH / 4;// а может меньше? может и меньше, может и больше, сделайте выбор и не морочьте голову :)
-  // это не мой вопрос. Меня все устраивает. :)
+
   for(uint8_t i=0;i<MAX_SNAKES;i++){
+    snakes[i].reset();
     snakes[i].pixels[0].x = WIDTH / 2; // пусть расползаются из центра
     snakes[i].pixels[0].y = HEIGHT / 2; // так будет интереснее
     snakes[i].direction = (EffectSnake::Direction)random(3);
-    // в принципе ничего не мешает задать отдельной змейке как цвет, так и скорость, точнее коэф. влияния на скорость и много чего другого
-    // пока же хватит и этого ибо лень
+    snakes[i].internal_speedf = 0.75+1.0/(random(i+1)+1);
   }
 }
 
 void EffectSnake::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  subPix = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+  if(_val->getId()==4)
+    subPix = (_val->getVal() == FPSTR(TCONST_FFFF));
+  if(_val->getId()==3)
+    snakeCount = _val->getVal().toInt();
 }
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
-  //if (subPix) // мда, файдера в оригинале вообще не было, но что-то так сломано, что без него змейек на части рвет. Разбираться лень. Ваш эффект, сами и ремонтируйте безпиксель
-  // или вообще его уберите. Хотя утверждали, что мол только функцию вывода заменить. Соврали??? А длинну змеек по прямой проверяли? (ваши же слова,)
-
-  // В эту игру можно играть бесконечно. Ловя друг друга на некомпетентности. А надо ли? Вам Сотнега мало?
-  // На этом, со своей стороны я эту игру прекращаю. Давайте с уважением друг к другу.
-  // Хотел было обединить процедуры. Но посмотрел - не стомт этого делать. Будет сложно вносить изменения, лучше раздельно
-      fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
+  fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
 
   hue+=speedFactor;
 
@@ -5231,7 +5227,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     Snake *snake = &snakes[i];
     fill_palette(colors, SNAKE_LENGTH, hue*i, i, *curPalette, 255, LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
-    snake->shuffleDown();
+    snake->shuffleDown(speedFactor);
 
     if (random((speed<128)?speed*100:speed*10) < speed) // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
     {
@@ -5253,16 +5249,10 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
   for (int i = 0; i < (int)SNAKE_LENGTH; i++)
   {
     if (subpix)
-      // а зачем float к float приводить? А, понял опечатка от копи&паста осталось. ;)
-      myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i] %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1))); 
+      myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]); //(i == (int)SNAKE_LENGTH - 1) ? CRGB::Black :  %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1))
     else 
-      myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i] %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1)));
+      myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]); //%= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1))
   }
-  // вообще-то можно было бы обрабатывать на 1 длины меньше, а хвост перекрашивать в черный, т.е. не через фейдер... но тут хз
-  // ведь если через фейдер, то можно элементарно сделать длину хвоста длинее чем SNAKE_LENGTH, так что может и имеет смысл оставить
-  // как есть, но на всякий случай стоит помнить об этой возможности :)
-
-  // Знаю, но оно тут нафиг не надо, имхо
 }
 
 //------------ Эффект "Змеиный Остров"
