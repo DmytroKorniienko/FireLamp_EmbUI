@@ -1369,7 +1369,7 @@ struct Snake
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor);
+  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb);
 };
 
     Snake snakes[MAX_SNAKES];

@@ -5199,11 +5199,10 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
   hue+=speedFactor;
 
-  fill_palette(colors, SNAKE_LENGTH, hue, 5, *curPalette, 255, LINEARBLEND);
-
   for (int i = 0; i < snakeCount; i++)
   {
     Snake *snake = &snakes[i];
+    fill_palette(colors, SNAKE_LENGTH, hue*i, i, *curPalette, 255, LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
     snake->shuffleDown();
 
@@ -5213,7 +5212,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     }
 
     snake->move(speedFactor);
-    snake->draw(colors, speedFactor);
+    snake->draw(colors, speedFactor, i);
   }
   return true;
 }
@@ -5222,11 +5221,11 @@ bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(*&ledarr, &*opt);
 }
 
-void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
+void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb)
 {
   for (int i = 0; i < (int)SNAKE_LENGTH; i++)
   {
-    myLamp.drawPixelXYF((float)pixels[i].x, (float)pixels[i].y, colors[i] %= (255 - i * (255 / SNAKE_LENGTH)));
+    myLamp.drawPixelXYF((float)pixels[i].x, (float)pixels[i].y, colors[i] %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1)));
   }
   // вообще-то можно было бы обрабатывать на 1 длины меньше, а хвост перекрашивать в черный, т.е. не через фейдер... но тут хз
   // ведь если через фейдер, то можно элементарно сделать длину хвоста длинее чем SNAKE_LENGTH, так что может и имеет смысл оставить
