@@ -1288,7 +1288,7 @@ public:
 //------------ Эффект "Змеиный Остров"
 class EffectSnake : public EffectCalc {
 private:
-    uint8_t hue;
+    float hue;
     float speedFactor;
     int snakeCount; // = WIDTH / 4;// а может меньше?
     void load() override;

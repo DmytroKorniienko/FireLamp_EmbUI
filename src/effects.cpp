@@ -5197,8 +5197,9 @@ void EffectSnake::load() {
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
   fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
+  hue+=speedFactor;
 
-  fill_palette(colors, SNAKE_LENGTH, hue++, 5, *curPalette, 255, LINEARBLEND);
+  fill_palette(colors, SNAKE_LENGTH, hue, 5, *curPalette, 255, LINEARBLEND);
 
   for (int i = 0; i < snakeCount; i++)
   {
