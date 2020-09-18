@@ -2893,10 +2893,14 @@ void EffectCube2d::cubesize(){
   // ++scaleY;   // начинаем шкалу с "1"
   // sizeY = EffectMath::ceil8(scaleY, cubeScaleY);
 
-  cntY = HEIGHT / (sizeY + 1U);
+// Проверил заполняемость всей матрицы кубами 2х2, 5х5, 6х6 - работает четко. Надо будет функции сдивгов поправить так, чтобы кореектно работали 
+// с размерами не кратными матрице. 
+  //cntY = ceil((float)HEIGHT / (sizeY + 1U));
+  cntY = ceil(HEIGHT / (sizeY + 1U));
 	fieldY = (sizeY + 1U) * cntY;
 
-  cntX = WIDTH / (sizeX + 1U);
+  //cntX = ceil((float)WIDTH / (sizeX + 1U));
+  cntX = ceil(WIDTH / (sizeX + 1U));
 	fieldX = (sizeX + 1U) * cntX;
   //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
 
@@ -2912,7 +2916,16 @@ void EffectCube2d::cubesize(){
       if (scale == 255U)
         color = CHSV(46U, 0U, 32U + random8(256U-32U));
       else
-        color = ColorFromPalette(*curPalette, random8(17, 255)); // Не хотелось бы получать черные кубики, поэтому выбор цвета от выше 16-ти
+
+     //for (byte stepper = 0; stepper <=30; stepper++)
+      while (1) // немного потенциально опасно, но у нас, если палитры не подгружены, - return, думаю это сводит опасность практически к нулю, иначе сработает ватдог
+        // не вижу другого способа перестать получать почти черные кубики, это раздражает, впечатление будто лампе глаз выбили, или зуб :))
+      {
+
+        color = scale > 1 ? ColorFromPalette(*curPalette, random(1024)>>1, random8(128, 255)) : CRGB(random8(), random8(), random8()); 
+        if (color >= CRGB(10,10,10)) break;  // Не хотелось бы получать слишком тёмные кубики
+      }
+      
       for (uint8_t k = 0U; k < sizeY; k++){
         for (uint8_t m = 0U; m < sizeX; m++){
           myLamp.setLeds(myLamp.getPixelNumber(x+m, y+k), color);
@@ -5181,66 +5194,36 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-//------------ Эффект "Змеиный Остров"
-void EffectSnake::load() {
-  palettesload();
-}
-
-bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
-  fadeToBlackBy(leds, NUM_LEDS, 35);
-  speedFactor = (float)speed / 110.0 + 0.2; // надо будет что-то придумать, пороговые скорости сильно зависят от частоты процессора
-  // Это справедливо для всех эффектов с такого типа задержкой. Каккой то делитель, я пока хз.
-  fill_palette(colors, SNAKE_LENGTH, hue++, 5, *curPalette, 255, LINEARBLEND);
-
-  for (int i = 0; i < snakeCount; i++)
-  {
-    Snake *snake = &snakes[i];
-
-    snake->shuffleDown();
-
-    if (random(10) > 7)
-    {
-      snake->newDirection();
-    }
-
-    snake->move();
-    snake->draw(colors, speedFactor);
-  }
-  return true;
-}
-
-bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
-  return snakeRoutine(*&ledarr, &*opt);
-}
-
-void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
-{
-  for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
-  {
-    // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
-    for (byte n = 20; n >= 1; n--)
-      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
-  }
-}
-
 //------------ Эффект "Змейки"
 // вариант субпикселя и поведения от kDn
-void EffectSnake2::load() {
+void EffectSnake::load() {
   palettesload();
   snakeCount = WIDTH / 4;// а может меньше? может и меньше, может и больше, сделайте выбор и не морочьте голову :)
   // это не мой вопрос. Меня все устраивает. :)
   for(uint8_t i=0;i<MAX_SNAKES;i++){
     snakes[i].pixels[0].x = WIDTH / 2; // пусть расползаются из центра
     snakes[i].pixels[0].y = HEIGHT / 2; // так будет интереснее
-    snakes[i].direction = (EffectSnake2::Direction)random(3);
+    snakes[i].direction = (EffectSnake::Direction)random(3);
     // в принципе ничего не мешает задать отдельной змейке как цвет, так и скорость, точнее коэф. влияния на скорость и много чего другого
     // пока же хватит и этого ибо лень
   }
 }
 
-bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
+void EffectSnake::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  subPix = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+}
+
+bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
-  fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
+  //if (subPix) // мда, файдера в оригинале вообще не было, но что-то так сломано, что без него змейек на части рвет. Разбираться лень. Ваш эффект, сами и ремонтируйте безпиксель
+  // или вообще его уберите. Хотя утверждали, что мол только функцию вывода заменить. Соврали??? А длинну змеек по прямой проверяли? (ваши же слова,)
+
+  // В эту игру можно играть бесконечно. Ловя друг друга на некомпетентности. А надо ли? Вам Сотнега мало?
+  // На этом, со своей стороны я эту игру прекращаю. Давайте с уважением друг к другу.
+  // Хотел было обединить процедуры. Но посмотрел - не стомт этого делать. Будет сложно вносить изменения, лучше раздельно
+      fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
+
   hue+=speedFactor;
 
   for (int i = 0; i < snakeCount; i++)
@@ -5256,7 +5239,88 @@ bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
     }
 
     snake->move(speedFactor);
-    snake->draw(colors, speedFactor, i);
+    snake->draw(colors, speedFactor, i, subPix);
+  }
+  return true;
+}
+
+bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
+  return snakeRoutine(*&ledarr, &*opt);
+}
+
+void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix)
+{
+  for (int i = 0; i < (int)SNAKE_LENGTH; i++)
+  {
+    if (subpix)
+      // а зачем float к float приводить? А, понял опечатка от копи&паста осталось. ;)
+      myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i] %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1))); 
+    else 
+      myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i] %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1)));
+  }
+  // вообще-то можно было бы обрабатывать на 1 длины меньше, а хвост перекрашивать в черный, т.е. не через фейдер... но тут хз
+  // ведь если через фейдер, то можно элементарно сделать длину хвоста длинее чем SNAKE_LENGTH, так что может и имеет смысл оставить
+  // как есть, но на всякий случай стоит помнить об этой возможности :)
+
+  // Знаю, но оно тут нафиг не надо, имхо
+}
+
+//------------ Эффект "Змеиный Остров"
+// База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
+void EffectSnake2::load() {
+  palettesload();
+}
+
+void EffectSnake2::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  disko = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+}
+
+bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
+  fadeToBlackBy(leds, NUM_LEDS, 35);
+  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.); // вы на ошибку в логике намикали, мол коэффициент выше 1 получался?
+  // ну да, ошибочка вышла :) Через fmap скорость равномернее регулируеться.
+#ifdef MIC_EFFECTS 
+  fill_palette(
+      colors, 
+      SNAKE_LENGTH, 
+      isMicActive ? 
+      (disko ? myLamp.getMicMapFreq() : myLamp.getMicMapMaxPeak())
+      : 
+      (disko ? random(1024) >> 2 : hue++), 
+      5, 
+      isMicActive ? RainbowColors_p : *curPalette, 
+      isMicActive ? 
+      (uint8_t)((float)myLamp.getMicMapMaxPeak() * EffectMath::fmap((float)scale, 1., 255., 1.25, 10.)) 
+      : 
+      255, 
+      LINEARBLEND
+  );
+#else
+    fill_palette(
+      colors, 
+      SNAKE_LENGTH, 
+      disko ? random(1024) >> 2 : hue++, 
+      5, 
+      *curPalette, 
+      255, 
+      LINEARBLEND
+  );
+#endif
+
+  for (int i = 0; i < snakeCount; i++)
+  {
+    Snake *snake = &snakes[i];
+
+    snake->shuffleDown();
+
+    if (random(10) > 8)
+    {
+      snake->newDirection();
+    }
+
+    snake->move();
+    snake->draw(colors, speedFactor);
   }
   return true;
 }
@@ -5265,13 +5329,12 @@ bool EffectSnake2::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(*&ledarr, &*opt);
 }
 
-void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb)
+void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
 {
-  for (int i = 0; i < (int)SNAKE_LENGTH; i++)
+  for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
-    myLamp.drawPixelXYF((float)pixels[i].x, (float)pixels[i].y, colors[i] %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1)));
+    // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
+    for (byte n = 20; n >= 1; n--)
+      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
   }
-  // вообще-то можно было бы обрабатывать на 1 длины меньше, а хвост перекрашивать в черный, т.е. не через фейдер... но тут хз
-  // ведь если через фейдер, то можно элементарно сделать длину хвоста длинее чем SNAKE_LENGTH, так что может и имеет смысл оставить
-  // как есть, но на всякий случай стоит помнить об этой возможности :)
 }

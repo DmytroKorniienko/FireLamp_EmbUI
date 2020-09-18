@@ -1285,12 +1285,111 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//------------ Эффект "Змеиный Остров"
-// База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
+//------------ Эффект "Змейки"
+// вариант субпикселя и поведения от kDn
 class EffectSnake : public EffectCalc {
 private:
-    uint8_t hue;
-     float speedFactor;
+    float hue;
+    float speedFactor;
+    int snakeCount; // = WIDTH / 4;// а может меньше?
+    bool subPix = false;
+
+    void load() override;
+    enum Direction
+{
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+struct Pixel
+{
+    float x;
+    float y;
+};
+
+CRGB colors[SNAKE_LENGTH];
+struct Snake
+{
+  Pixel pixels[SNAKE_LENGTH];
+
+  Direction direction;
+
+  void newDirection()
+  {
+    switch (direction)
+    {
+    case UP:
+    case DOWN:
+      direction = random(0, 2) == 1 ? RIGHT : LEFT;
+      break;
+
+    case LEFT:
+    case RIGHT:
+      direction = random(0, 2) == 1 ? DOWN : UP;
+
+    default:
+      break;
+    }
+  };
+
+  void shuffleDown()
+  {
+    for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
+    {
+      if(fabs(pixels[i].x-pixels[i - 1].x)>1.0 || fabs(pixels[i].y-pixels[i - 1].y)>1.0)
+        pixels[i] = pixels[i - 1];
+    }
+  }
+
+  void reset()
+  {
+    direction = UP;
+    for (int i = 0; i < (int)SNAKE_LENGTH; i++)
+    {
+      pixels[i].x = 0;
+      pixels[i].y = 0;
+    }
+  }
+
+  void move(float speedfactor)
+  {
+    switch (direction)
+    {
+    case UP:
+      pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + speedfactor);
+      break;
+    case LEFT:
+      pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + speedfactor);
+      break;
+    case DOWN:
+      pixels[0].y = pixels[0].y <= 0 ? HEIGHT - speedfactor : pixels[0].y - speedfactor;
+      break;
+    case RIGHT:
+      pixels[0].x = pixels[0].x <= 0 ? WIDTH - speedfactor : pixels[0].x - speedfactor;
+      break;
+    }
+  }
+
+  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix);
+};
+
+    Snake snakes[MAX_SNAKES];
+    bool snakeRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
+public:
+    //void load();
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+//------------ Эффект "Змеиный Остров"
+// База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
+class EffectSnake2 : public EffectCalc {
+private:
+    byte hue;
+    bool disko = false;
+    float speedFactor;
     static const int snakeCount = WIDTH /4;// а может меньше?
     void load() override;
     enum Direction
@@ -1374,7 +1473,7 @@ struct Snake
 };
 
     Snake snakes[snakeCount];
-
+    void setDynCtrl(UIControl*_val) override;
     bool snakeRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1382,101 +1481,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//------------ Эффект "Змейки"
-// вариант субпикселя и поведения от kDn
-class EffectSnake2 : public EffectCalc {
-private:
-    float hue;
-    float speedFactor;
-    int snakeCount; // = WIDTH / 4;// а может меньше?
-    void load() override;
-    enum Direction
-{
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT
-};
-
-struct Pixel
-{
-    float x;
-    float y;
-};
-
-CRGB colors[SNAKE_LENGTH];
-struct Snake
-{
-  Pixel pixels[SNAKE_LENGTH];
-
-  Direction direction;
-
-  void newDirection()
-  {
-    switch (direction)
-    {
-    case UP:
-    case DOWN:
-      direction = random(0, 2) == 1 ? RIGHT : LEFT;
-      break;
-
-    case LEFT:
-    case RIGHT:
-      direction = random(0, 2) == 1 ? DOWN : UP;
-
-    default:
-      break;
-    }
-  };
-
-  void shuffleDown()
-  {
-    for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
-    {
-      if(fabs(pixels[i].x-pixels[i - 1].x)>1.0 || fabs(pixels[i].y-pixels[i - 1].y)>1.0)
-        pixels[i] = pixels[i - 1];
-    }
-  }
-
-  void reset()
-  {
-    direction = UP;
-    for (int i = 0; i < (int)SNAKE_LENGTH; i++)
-    {
-      pixels[i].x = 0;
-      pixels[i].y = 0;
-    }
-  }
-
-  void move(float speedfactor)
-  {
-    switch (direction)
-    {
-    case UP:
-      pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + speedfactor);
-      break;
-    case LEFT:
-      pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + speedfactor);
-      break;
-    case DOWN:
-      pixels[0].y = pixels[0].y <= 0 ? HEIGHT - speedfactor : pixels[0].y - speedfactor;
-      break;
-    case RIGHT:
-      pixels[0].x = pixels[0].x <= 0 ? WIDTH - speedfactor : pixels[0].x - speedfactor;
-      break;
-    }
-  }
-
-  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb);
-};
-
-    Snake snakes[MAX_SNAKES];
-    bool snakeRoutine(CRGB *leds, EffectWorker *param);
-
-public:
-    //void load();
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
 
 // --------- конец секции эффектов 
 
