@@ -1289,8 +1289,8 @@ public:
 class EffectSnake : public EffectCalc {
 private:
     uint8_t hue;
-     float speedFactor;
-    static const int snakeCount = WIDTH /4;// а может меньше?
+    float speedFactor;
+    int snakeCount; // = WIDTH / 4;// а может меньше?
     void load() override;
     enum Direction
 {
@@ -1300,11 +1300,10 @@ private:
   RIGHT
 };
 
-
 struct Pixel
 {
-    byte x;
-    byte y;
+    float x;
+    float y;
 };
 
 CRGB colors[SNAKE_LENGTH];
@@ -1334,37 +1333,38 @@ struct Snake
 
   void shuffleDown()
   {
-    for (byte i = SNAKE_LENGTH - 1; i > 0; i--)
+    for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
     {
-      pixels[i] = pixels[i - 1];
+      if(fabs(pixels[i].x-pixels[i - 1].x)>1.0 || fabs(pixels[i].y-pixels[i - 1].y)>1.0)
+        pixels[i] = pixels[i - 1];
     }
   }
 
   void reset()
   {
     direction = UP;
-    for (int i = 0; i < SNAKE_LENGTH; i++)
+    for (int i = 0; i < (int)SNAKE_LENGTH; i++)
     {
       pixels[i].x = 0;
       pixels[i].y = 0;
     }
   }
 
-  void move()
+  void move(float speedfactor)
   {
     switch (direction)
     {
     case UP:
-      pixels[0].y = (pixels[0].y + 1) % HEIGHT;
+      pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + speedfactor);
       break;
     case LEFT:
-      pixels[0].x = (pixels[0].x + 1) % WIDTH;
+      pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + speedfactor);
       break;
     case DOWN:
-      pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
+      pixels[0].y = pixels[0].y <= 0 ? HEIGHT - speedfactor : pixels[0].y - speedfactor;
       break;
     case RIGHT:
-      pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
+      pixels[0].x = pixels[0].x <= 0 ? WIDTH - speedfactor : pixels[0].x - speedfactor;
       break;
     }
   }
@@ -1372,8 +1372,7 @@ struct Snake
   void draw(CRGB colors[SNAKE_LENGTH], float speedfactor);
 };
 
-    Snake snakes[snakeCount];
-
+    Snake snakes[MAX_SNAKES];
     bool snakeRoutine(CRGB *leds, EffectWorker *param);
 
 public:

@@ -1813,7 +1813,7 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 #define BUTTERFLY_MAX_COUNT           (64U) // максимальное количество мотыльков
 #define BUTTERFLY_FIX_COUNT           (28U) // количество мотыльков для режима, конда бегунок Масштаб регулирует цвет
 
-
 //------------ Эффект "Змеиный Остров"
 #define SNAKE_LENGTH  (HEIGHT / 2U)  
+#define MAX_SNAKES    (16U) // 16 хватит всем :)
 
