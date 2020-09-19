@@ -5289,7 +5289,7 @@ void EffectSnake2::setDynCtrl(UIControl*_val) {
 
 bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 35);
-  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.); 
+  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.05, 1.); 
   //disko = getCtrlVal(3) == "true";
 
 #ifdef MIC_EFFECTS 
@@ -5345,7 +5345,7 @@ void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
 {
   for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
-    for (byte n = 20; n >= 1; n--)
+    for (byte n = 10.0 * speedfactor+(speedfactor <= 0.5 ? 6: -4); n >= 1; n--)
       myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
   }
 }
