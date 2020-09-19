@@ -63,12 +63,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2
-#ifdef MIC_EFFECTS
-  , M_UP
-  , M_DN
-#endif
-} SORT_TYPE; // виды сортировки
+typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2, ST_MIC} SORT_TYPE; // виды сортировки
 
 static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
 

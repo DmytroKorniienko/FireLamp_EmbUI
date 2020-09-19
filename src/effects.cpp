@@ -5227,18 +5227,18 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
-  fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости, но еще почитайте комментарий в отрисовке
+  fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости
 
   hue+=speedFactor;
 
-  for (int i = 0; i < snakeCount; i++)
+  for (int i = snakeCount - 1; i >= 0; i--)
   {
     Snake *snake = &snakes[i];
-    fill_palette(colors, SNAKE_LENGTH, hue*i, i, *curPalette, 255, LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
+    fill_palette(colors, SNAKE_LENGTH, hue*i, i, *curPalette, 255-(i*5+53), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
     snake->shuffleDown(speedFactor);
 
-    if (random((speed<128)?speed*100:speed*10) < speed) // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
+    if (random((speed<25)?speed*50:speed*10) < speed) // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
     {
       snake->newDirection();
     }
@@ -5258,9 +5258,9 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
   for (int i = 0; i < (int)SNAKE_LENGTH; i++)
   {
     if (subpix)
-      myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]); //(i == (int)SNAKE_LENGTH - 1) ? CRGB::Black :  %= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1))
+      myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
     else 
-      myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]); //%= ((255 - i * (255 / SNAKE_LENGTH)) * (snakenb + 1))
+      myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]);
   }
 }
 

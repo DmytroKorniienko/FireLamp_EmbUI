@@ -977,8 +977,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->option(String(SORT_TYPE::ST_AB), FPSTR(TINTF_085));
     interf->option(String(SORT_TYPE::ST_AB2), FPSTR(TINTF_08A));
 #ifdef MIC_EFFECTS
-    interf->option(String(SORT_TYPE::M_UP), FPSTR(TINTF_08D));  // эффекты с микрофоном в начало списка
-    interf->option(String(SORT_TYPE::M_DN), FPSTR(TINTF_08E));  // в конец
+    interf->option(String(SORT_TYPE::ST_MIC), FPSTR(TINTF_08D));  // эффекты с микрофоном
 #endif
     interf->json_section_end();
 
