@@ -395,6 +395,8 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 
   if (flag){
     effectsTimer(T_ENABLE);
+    if(mode == LAMPMODE::MODE_DEMO)
+      demoTimer(T_ENABLE);
   } else  {
     fadelight(0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE));  // гасим эффект-процессор
     demoTimer(T_DISABLE);     // гасим Демо-таймер
@@ -816,6 +818,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
     toPrint.concat(text);
     toPrint.replace(F("%TM"), timeProcessor.getFormattedShortTime());
     toPrint.replace(F("%IP"), WiFi.localIP().toString());
+    toPrint.replace(F("%EN"), effects.getEffectName());
     _letterColor = letterColor;
   }
 
@@ -1109,6 +1112,9 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   // поскольку настройки НУЖНО разрешить крутить и при выключенной лампе.
   // changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
   effects.moveSelected();
+
+  if(mode==LAMPMODE::MODE_DEMO)
+    myLamp.sendStringToLamp(effects.getEffectName().c_str(), CRGB::Green);
 
   bool natural = true;
   switch (action) {
