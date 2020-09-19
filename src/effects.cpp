@@ -5141,54 +5141,59 @@ void EffectNBals::balls_timer() {
 }
 
 // ------ Эффект "Притяжение" 
- bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
-  if (dryrun(3.7, 5))
-    return false;
-  /*if (csum != ((127U^scale)^speed)) {
-    csum = ((127U^scale)^speed);
-    loadingFlag = true;
-  }*/
+bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
   return attractRoutine(*&ledarr, &*opt);
 }
 
 void EffectAttract::load() {
   palettesload();
+  for (int i = 0; i < count; i++)
+  {
+    int direction = 1-2*random(0, 2); // -1 или 1
+    Boid boid = Boid(15, 16 - i);
+    boid.mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * (1.0/speed);
+    boid.velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * (1.0/speed);
+    boid.velocity.x *= direction;
+    boid.velocity.y = 0;
+    boid.colorIndex = i * 32;
+    boids[i] = boid;
+  }
+}
+
+void EffectAttract::setscl(const byte _scl)
+{
+  EffectCalc::setscl(_scl);
+  _energy = _scl; // энергия 
+  setup();
+}
+
+void EffectAttract::setspd(const byte _spd)
+{
+  EffectCalc::setspd(_spd);
+  setup();
 }
 
 void EffectAttract::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==2) // энергия 
-    _energy = _val->getVal().toInt();
   if(_val->getId()==3) // масса
     _mass = _val->getVal().toInt();
-    loadingFlag = true;
+  setup();
+}
+
+void EffectAttract::setup(){
+  for (int i = 0; i < count; i++)
+  {
+    boids[i].mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * (1.0/(256-speed));
+    boids[i].velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * (1.0/(256-speed));
+  }
+  LOG(printf_P,PSTR("%5.2f %5.2f %d\n"),boids[0].mass,boids[0].velocity.x,1-2*random(0, 2));
 }
 
 bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
-  if (loadingFlag)
-  {
-    loadingFlag = false;
-    int direction = random(0, 2);
-    if (direction == 0)
-      direction = -1;
-
-    for (int i = 0; i < count; i++)
-    {
-      Boid boid = Boid(15, 31 - i);
-      boid.mass = (float)random(1, map(_mass, 1, 255, 50, 500)) / 100.0f;
-      boid.velocity.x = (float)random(5, map(_energy, 1, 255, 10, 265)) / 100.0f; //((float) random(40, 50)) / 100.0;
-      boid.velocity.x *= direction;
-      boid.velocity.y = 0;
-      boid.colorIndex = i * 32;
-      boids[i] = boid;
-      //dim = random(170, 250);
-    }
-  }
-
   uint8_t dim = beatsin8(3, 170, 250);
   fadeToBlackBy(leds, NUM_LEDS, 255U - dim);
 
-  for (int i = 0; i < count; i++)
+  for (int i = 0; i < count; i++) // count
   {
     Boid boid = boids[i];
     //boid.acceleration *= EffectMath::fmap((float)speed, 1., 255., 0.1, 1.0);

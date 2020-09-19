@@ -1264,7 +1264,9 @@ private:
     Boid boids[count];
     PVector location;   // Location
     void setDynCtrl(UIControl*_val) override;
-
+    void setscl(const byte _scl) override;
+    void setspd(const byte _spd) override;
+    void setup();
 
 
     PVector attract(Boid m) {
