@@ -5344,6 +5344,6 @@ void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
   for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
     for (byte n = 20; n >= 1; n--)
-      myLamp.drawPixelXY((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
+      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
   }
 }
