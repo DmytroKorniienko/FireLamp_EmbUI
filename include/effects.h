@@ -1397,10 +1397,10 @@ public:
 // База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
 class EffectSnake2 : public EffectCalc {
 private:
-    byte hue;
+    byte hue = 0;
     bool disko = false;
     float speedFactor;
-    static const int snakeCount = WIDTH /4;// а может меньше?
+    static const int snakeCount = WIDTH /4;
     void load() override;
     enum Direction
 {
