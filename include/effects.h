@@ -1253,6 +1253,7 @@ class EffectAttract : public EffectCalc {
 private:
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
+    float speedFactor;
     float mass;    // Mass, tied to size
     float G;       // Gravitational Constant
     uint8_t _mass = 127;

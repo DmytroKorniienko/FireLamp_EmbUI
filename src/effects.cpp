@@ -5147,15 +5147,19 @@ bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
 
 void EffectAttract::load() {
   palettesload();
+  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.05, 1.);
   for (int i = 0; i < count; i++)
   {
     int direction = 1-2*random(0, 2); // -1 или 1
     Boid boid = Boid(15, 16 - i);
-    boid.mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * (1.0/speed);
-    boid.velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * (1.0/speed);
+    boid.mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * speedFactor; //(1.0/speed);
+    boid.velocity.x = (float)random(5, map(_energy, 1, 255, 16, 768)) / 100.0f * speedFactor; //(1.0/speed);
     boid.velocity.x *= direction;
     boid.velocity.y = 0;
     boid.colorIndex = i * 32;
+    boid.location.x = Boid::randomf(); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
+    boid.location.y = Boid::randomf(); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
+    //Это вроде решает проблему
     boids[i] = boid;
   }
 }
@@ -5170,6 +5174,7 @@ void EffectAttract::setscl(const byte _scl)
 void EffectAttract::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd);
+  speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.05, 1.);
   setup();
 }
 
@@ -5183,8 +5188,8 @@ void EffectAttract::setDynCtrl(UIControl*_val) {
 void EffectAttract::setup(){
   for (int i = 0; i < count; i++)
   {
-    boids[i].mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * (1.0/(256-speed));
-    boids[i].velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * (1.0/(256-speed));
+    boids[i].mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * speedFactor; //(1.0/(256-speed));
+    boids[i].velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * speedFactor; //(1.0/(256-speed));
   }
   LOG(printf_P,PSTR("%5.2f %5.2f %d\n"),boids[0].mass,boids[0].velocity.x,1-2*random(0, 2));
 }
