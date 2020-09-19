@@ -1255,12 +1255,15 @@ private:
     const uint8_t spirocenterY = HEIGHT / 2;
     float mass;    // Mass, tied to size
     float G;       // Gravitational Constant
-    const uint8_t count = 32;
+    uint8_t _mass = 127;
+    uint8_t _energy = 127;
+    static const uint8_t count = HEIGHT *2 - WIDTH /2;
     bool loadingFlag = true;
     byte csum = 0;
     //Boid boids[AVAILABLE_BOID_COUNT];
-    Boid boids[32];
+    Boid boids[count];
     PVector location;   // Location
+    void setDynCtrl(UIControl*_val) override;
 
 
 

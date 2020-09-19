@@ -2896,11 +2896,11 @@ void EffectCube2d::cubesize(){
 // Проверил заполняемость всей матрицы кубами 2х2, 5х5, 6х6 - работает четко. Надо будет функции сдивгов поправить так, чтобы кореектно работали 
 // с размерами не кратными матрице. 
   //cntY = ceil((float)HEIGHT / (sizeY + 1U));
-  cntY = ceil(HEIGHT / (sizeY + 1U));
+  cntY = HEIGHT / (sizeY + 1U);
 	fieldY = (sizeY + 1U) * cntY;
 
   //cntX = ceil((float)WIDTH / (sizeX + 1U));
-  cntX = ceil(WIDTH / (sizeX + 1U));
+  cntX = WIDTH / (sizeX + 1U);
 	fieldX = (sizeX + 1U) * cntX;
   //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
 
@@ -2917,8 +2917,7 @@ void EffectCube2d::cubesize(){
         color = CHSV(46U, 0U, 32U + random8(256U-32U));
       else
 
-     //for (byte stepper = 0; stepper <=30; stepper++)
-      while (1) // немного потенциально опасно, но у нас, если палитры не подгружены, - return, думаю это сводит опасность практически к нулю, иначе сработает ватдог
+      while (1) // немного потенциально опасно, но у нас, если палитры не подгружены, - return, думаю это сводит опасность практически к нулю, иначе сработает вачдог
         // не вижу другого способа перестать получать почти черные кубики, это раздражает, впечатление будто лампе глаз выбили, или зуб :))
       {
 
@@ -5143,15 +5142,26 @@ void EffectNBals::balls_timer() {
 
 // ------ Эффект "Притяжение" 
  bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
-  if (csum != ((127U^scale)^speed)) {
+  if (dryrun(3.7, 5))
+    return false;
+  /*if (csum != ((127U^scale)^speed)) {
     csum = ((127U^scale)^speed);
     loadingFlag = true;
-  }
+  }*/
   return attractRoutine(*&ledarr, &*opt);
 }
 
 void EffectAttract::load() {
   palettesload();
+}
+
+void EffectAttract::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==2) // энергия 
+    _energy = _val->getVal().toInt();
+  if(_val->getId()==3) // масса
+    _mass = _val->getVal().toInt();
+    loadingFlag = true;
 }
 
 bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
@@ -5165,8 +5175,8 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
     for (int i = 0; i < count; i++)
     {
       Boid boid = Boid(15, 31 - i);
-      boid.mass = (float)random(1, map(scale, 1, 255, 50, 500)) / 100.0f;
-      boid.velocity.x = (float)random(5, map(speed, 1, 255, 10, 265)) / 100.0f; //((float) random(40, 50)) / 100.0;
+      boid.mass = (float)random(1, map(_mass, 1, 255, 50, 500)) / 100.0f;
+      boid.velocity.x = (float)random(5, map(_energy, 1, 255, 10, 265)) / 100.0f; //((float) random(40, 50)) / 100.0;
       boid.velocity.x *= direction;
       boid.velocity.y = 0;
       boid.colorIndex = i * 32;
@@ -5174,15 +5184,14 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
       //dim = random(170, 250);
     }
   }
-  // dim all pixels on the display
-  uint8_t dim = beatsin8(2, 170, 250);
-  //myLamp.dimAll(dim);
+
+  uint8_t dim = beatsin8(3, 170, 250);
   fadeToBlackBy(leds, NUM_LEDS, 255U - dim);
 
   for (int i = 0; i < count; i++)
   {
     Boid boid = boids[i];
-
+    //boid.acceleration *= EffectMath::fmap((float)speed, 1., 255., 0.1, 1.0);
     PVector force = attract(boid);
     boid.applyForce(force);
 
@@ -5268,8 +5277,8 @@ void EffectSnake2::setDynCtrl(UIControl*_val) {
 
 bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 35);
-  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.); // вы на ошибку в логике намикали, мол коэффициент выше 1 получался?
-  // ну да, ошибочка вышла :) Через fmap скорость равномернее регулируеться.
+  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.); 
+
 #ifdef MIC_EFFECTS 
   fill_palette(
       colors, 
@@ -5323,7 +5332,6 @@ void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
 {
   for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
-    // leds[XY(pixels[i].x, pixels[i].y)] = colors[i] %= (255 - i * (255 / SNAKE_LENGTH));
     for (byte n = 20; n >= 1; n--)
       myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
   }

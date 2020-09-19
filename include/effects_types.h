@@ -63,7 +63,12 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2} SORT_TYPE; // виды сортировки
+typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2
+#ifdef MIC_EFFECTS
+  , M_UP
+  , M_DN
+#endif
+} SORT_TYPE; // виды сортировки
 
 static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
 
@@ -174,7 +179,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 3, 3, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 1, 3, 1, 3, 3, // 16-31
   1, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 5, 5, 1, 1, // 32 - 47
-  3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 4, 1, 3, 3, 3, 1, // 48 - 63
+  3, 4, 4, 4, 4, 3, 3, 4, 3, 3, 4, 1, 3, 3, 5, 1, // 48 - 63
   2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
@@ -236,7 +241,7 @@ static const char E_SHAD_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver
 static const char E_ARR_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Режим (1 = случайный)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
 static const char E_F2018_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Оттенок\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Линейная скорость\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_NBAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":25,\"step\":1,\"name\":\"Смещение\"}]}";
-static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Энергия\"}, {\"id\":2,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Масса\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Энергия\"}, {\"id\":3,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Масса\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_FLOCK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Хищник\"}]}";
 static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Цвета / Количество\"}]}";
 static const char E_MUNCH_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра /Цвет(%32)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Случайный цвет\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";

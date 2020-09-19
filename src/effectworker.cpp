@@ -334,6 +334,14 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
     case SORT_TYPE::ST_AB :
       effects.sort([](EffectListElem *&a, EffectListElem *&b){ String tmp=FPSTR(T_EFFNAMEID[(uint8_t)a->eff_nb]); return strcmp_P(tmp.c_str(), (T_EFFNAMEID[(uint8_t)b->eff_nb]));});
       break;
+#ifdef MIC_EFFECTS
+    case SORT_TYPE::M_UP : // Ой ля-ля! Что-то код ниже я не понимаю вообще. Думал сам сделаю.
+      effects.sort([](EffectListElem *&a, EffectListElem *&b){ String tmp=FPSTR(T_EFFNAMEID[(uint8_t)a->eff_nb]); return strcmp_P(tmp.c_str(), (T_EFFNAMEID[(uint8_t)b->eff_nb]));});
+      break;
+    case SORT_TYPE::M_DN :
+      effects.sort([](EffectListElem *&a, EffectListElem *&b){ String tmp=FPSTR(T_EFFNAMEID[(uint8_t)a->eff_nb]); return strcmp_P(tmp.c_str(), (T_EFFNAMEID[(uint8_t)b->eff_nb]));});
+      break;
+#endif
     default:
       break;
   }
