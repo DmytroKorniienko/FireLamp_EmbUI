@@ -5288,12 +5288,14 @@ void EffectSnake2::load() {
 
 void EffectSnake2::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  disko = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+  if(_val->getId()==3)
+    disko = (_val->getVal() == FPSTR(TCONST_FFFF));
 }
 
 bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 35);
   speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.); 
+  //disko = getCtrlVal(3) == "true";
 
 #ifdef MIC_EFFECTS 
   fill_palette(
