@@ -81,7 +81,7 @@ void section_effects_frame(Interface *interf, JsonObject *data);
 void section_lamp_frame(Interface *interf, JsonObject *data);
 void section_settings_frame(Interface *interf, JsonObject *data);
 void pubCallback(Interface *interf);
-
+void save_lamp_flags();
 
 void remote_action(RA action, ...);
 void httpCallback(const String &param, const String &value);

@@ -1032,7 +1032,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
 #ifdef MIC_EFFECTS
     SETPARAM(FPSTR(TCONST_0091));
 #endif
-
+    
+    save_lamp_flags();
     section_settings_frame(interf, data);
 }
 
@@ -1463,10 +1464,23 @@ void section_main_frame(Interface *interf, JsonObject *data){
     }
 }
 
+void set_lamp_flags(Interface *interf, JsonObject *data){
+    if(!data) return;
+    SETPARAM(FPSTR(TCONST_0094));
+}
+
+void save_lamp_flags(){
+    DynamicJsonDocument doc(128);
+    JsonObject obj = doc.to<JsonObject>();
+    obj[FPSTR(TCONST_0094)] = myLamp.getLampFlags();
+    set_lamp_flags(nullptr, &obj);
+    obj.clear();
+}
 
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
+    jee.var_create(FPSTR(TCONST_0094), "0"); // Дефолтный набор флагов // myLamp.getLampFlags()
 
     //WiFi
     jee.var_create(FPSTR(TCONST_003F), F(""));
@@ -1537,6 +1551,8 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0090), FPSTR(TCONST_FFFE)); // Нумерация в списке эффектов
 
     // далее идут обработчики параметров
+
+    jee.section_handle_add(FPSTR(TCONST_0094), set_lamp_flags);
 
     jee.section_handle_add(FPSTR(TCONST_007E), section_main_frame);
     jee.section_handle_add(FPSTR(TCONST_0020), show_main_flags);

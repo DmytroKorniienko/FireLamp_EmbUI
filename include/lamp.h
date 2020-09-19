@@ -105,7 +105,8 @@ typedef enum _SCHEDULER {
 class LAMP {
 private:
 #pragma pack(push,1)
- struct {
+union {
+struct {
     bool MIRR_V:1; // отзрекаливание по V
     bool MIRR_H:1; // отзрекаливание по H
     bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
@@ -117,12 +118,17 @@ private:
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
+
+    uint16_t reserved:5; // выравнивание по границе 16, если нужны будут доп. биты, то уменьшать здесь соответственно
+
 #ifdef MIC_EFFECTS
-    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isMicOn:1; // глобальное включение/выключение микрофона
     uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
+    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
 #endif
- };
+};
+uint32_t lampflags;
+};
  #pragma pack(pop)
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
@@ -204,11 +210,11 @@ private:
      */
     void frameShow(const uint32_t ticktime);
 
-
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
-
+    uint32_t getLampFlags() {return lampflags;} // возвращает упакованные флаги лампы
+    void setLampFlags(uint32_t _lampflags) {lampflags=_lampflags;} // устананавливает упакованные флаги лампы
 #ifdef MIC_EFFECTS
     void setMicCalibration() {isCalibrationRequest = true;}
     bool isMicCalibration() {return isCalibrationRequest;}

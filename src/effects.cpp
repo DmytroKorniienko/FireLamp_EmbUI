@@ -5228,8 +5228,12 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
   fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости
-
+#ifdef MIC_EFFECTS
+  hue+=(speedFactor+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
+#else
   hue+=speedFactor;
+#endif
+
 
   for (int i = snakeCount - 1; i >= 0; i--)
   {
@@ -5238,10 +5242,17 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
 
     snake->shuffleDown(speedFactor);
 
-    if (random((speed<25)?speed*50:speed*10) < speed) // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
-    {
+#ifdef MIC_EFFECTS
+    if(myLamp.getMicMapMaxPeak()>speed/3.0+75.0 && isMicOn()) {
+      snake->newDirection();
+    } else if (random((speed<25)?speed*50:speed*10) < speed && !isMicOn()) {// как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
       snake->newDirection();
     }
+#else
+    if (random((speed<25)?speed*50:speed*10) < speed){ // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
+      snake->newDirection();
+    }
+#endif
 
     snake->move(speedFactor);
     snake->draw(colors, speedFactor, i, subPix);
@@ -5333,6 +5344,6 @@ void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
   for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
   {
     for (byte n = 20; n >= 1; n--)
-      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
+      myLamp.drawPixelXY((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
   }
 }
