@@ -336,7 +336,7 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
       break;
 #ifdef MIC_EFFECTS
     case SORT_TYPE::ST_MIC :
-      effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (int)(T_EFFVER[a->eff_nb&0xFF]&0x01 - T_EFFVER[b->eff_nb&0xFF]&0x01); });
+      effects.sort([](EffectListElem *&a, EffectListElem *&b){ return ((int)(pgm_read_byte(T_EFFVER + (a->eff_nb&0xFF))&0x01) - (int)(pgm_read_byte(T_EFFVER + (b->eff_nb&0xFF))&0x01)); });
       break;
 #endif
     default:
