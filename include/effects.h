@@ -639,10 +639,11 @@ private:
 
   bool spiroincrement = false;
   bool spirohandledChange = false;
-  byte spirohueoffset = 0;
+  float spirohueoffset = 0;
   uint8_t spirocount = 1;
   float spirotheta1 = 0;
   float spirotheta2 = 0;
+  uint8_t internalCnt = 0;
 
   bool spiroRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1456,7 +1457,7 @@ struct Snake
   void reset()
   {
     direction = UP;
-    for (int i = 0; i < SNAKE_LENGTH; i++)
+    for (int i = 0; i < (int)SNAKE_LENGTH; i++)
     {
       pixels[i].x = 0;
       pixels[i].y = 0;

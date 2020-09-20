@@ -1513,10 +1513,10 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  float speed_factor = (float)speed/127.0 +1;
+  bool change = false;
+  float speed_factor = (float)speed/127.0 + 1;
   uint8_t spirooffset = 256 / spirocount;
-  boolean change = false;
-  myLamp.blur2d(15);//45/(speed_factor*3));
+
   //myLamp.dimAll(254U - palettescale);
   //myLamp.dimAll(250-speed_factor*7);
   uint8_t dim = beatsin8(16 / speed_factor, 5, 10);
@@ -1528,48 +1528,52 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
     uint8_t x2 = EffectMath::mapsincos8(MAP_SIN, spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
     uint8_t y2 = EffectMath::mapsincos8(MAP_COS, spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
     CRGB color = ColorFromPalette(*curPalette, (spirohueoffset + i * spirooffset), 128U);
-    if (myLamp.getPixelNumber(x, y) < NUM_LEDS)/*(x2<WIDTH && y2<HEIGHT)*/{ // добавил проверки. не знаю, почему эффект подвисает без них. Что-то он так и не перестал это делать. :(
+    if (myLamp.getPixelNumber(x2, y2) < NUM_LEDS){
       CRGB tmpColor = myLamp.getPixColorXY(x2, y2);
       tmpColor += color;
-      myLamp.setLeds(myLamp.getPixelNumber(x2, y2), tmpColor); // += color
-      myLamp.setLeds(myLamp.getPixelNumber(WIDTH - x2, HEIGHT - y2), (tmpColor += color));
+      myLamp.setLeds(myLamp.getPixelNumber(x2, y2), tmpColor);
+      //myLamp.setLeds(myLamp.getPixelNumber(WIDTH - x2, HEIGHT - y2), (tmpColor += color)); // строка бредовая, поскольку число спиралей выбирается вовсе не здесь и ломается логика эффекта
     }
 
-    if(x2 == spirocenterX && y2 == spirocenterY) change = true;
+    if(x2 == spirocenterX && y2 == spirocenterY) change = true; // в центре могут находится некоторое время
   }
 
-  spirotheta2 += 2*speed_factor;
+  spirotheta2 += 2.*speed_factor;
+  spirotheta1 += 1.*speed_factor;
+  spirohueoffset += 1.*speed_factor;
 
-  //EVERY_N_MILLIS(16 / speed_factor/*EFFECTS_RUN_TIMER/2*/) {  // эта хрень тоже должна зависить от скорости.
-    spirotheta1 += 1.* speed_factor;
- // }
+  if (change && !spirohandledChange) { // меняем кол-во спиралей
+    spirohandledChange = true;
 
-  EVERY_N_MILLIS(100 / speed_factor) {
-    if (change && !spirohandledChange) {
-      spirohandledChange = true;
-
-      if (spirocount >= WIDTH || spirocount == 1) spiroincrement = !spiroincrement;
-      if (spiroincrement) {
-        if(spirocount >= 4)
-          spirocount *= 2;
-        else
-          spirocount += 1;
-      } else {
-        if(spirocount > 4)
-          spirocount /= 2;
-        else
-            spirocount -= 1;
-      }
-
-      spirooffset = 256 / spirocount;
+    if (spirocount >= WIDTH || spirocount == 1)
+      spiroincrement = !spiroincrement;
+    
+    if (spiroincrement) {
+      if(spirocount >= 4)
+        spirocount *= 2;
+      else
+        spirocount += 1;
+    } else {
+      if(spirocount > 4)
+        spirocount /= 2;
+      else
+          spirocount -= 1;
     }
 
-    if(!change) spirohandledChange = false;
+    spirooffset = 256 / spirocount;
   }
 
-  EVERY_N_MILLIS(33) {
-      spirohueoffset += 1;
+  // сброс спустя время, чтобы счетчик спиралей не менялся скачками
+  if(spirohandledChange){
+    if(internalCnt==25) { // спустя 25 кадров
+      spirohandledChange = false;
+      internalCnt=0;
+    } else {
+      internalCnt++;
+    }
   }
+
+  myLamp.blur2d(25);
   return true;
 }
 
@@ -5365,9 +5369,9 @@ bool EffectSnake2::run(CRGB *ledarr, EffectWorker *opt ) {
 
 void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
 {
-  for (float i = 0.0; i < SNAKE_LENGTH; i+= speedfactor)
+  for (float i = 0.0; i < (float)SNAKE_LENGTH; i+= speedfactor)
   {
     for (byte n = 10.0 * speedfactor+(speedfactor <= 0.5 ? 6: -4); n >= 1; n--)
-      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE_LENGTH)));
+      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / (float)SNAKE_LENGTH)));
   }
 }
