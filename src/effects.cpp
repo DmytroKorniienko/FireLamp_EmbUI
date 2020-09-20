@@ -5311,21 +5311,24 @@ void EffectSnake2::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3)
     disko = (_val->getVal() == FPSTR(TCONST_FFFF));
+  if(_val->getId()==4)
+    subPix = (_val->getVal() == FPSTR(TCONST_FFFF));
 }
 
 bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
-  fadeToBlackBy(leds, NUM_LEDS, 35);
-  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.05, 1.); 
+  hue ++;
+  fadeToBlackBy(leds, NUM_LEDS, subPix ? 35 : 253);
+  speedFactor = subPix ? EffectMath::fmap((float)speed, 1., 255., 0.05, 1.) : EffectMath::fmap((float)speed, 1., 255., 0.001, 0.01); 
   //disko = getCtrlVal(3) == "true";
 
 #ifdef MIC_EFFECTS 
   fill_palette(
       colors, 
-      SNAKE_LENGTH, 
+      SNAKE2_LENGTH, 
       isMicActive ? 
       (disko ? myLamp.getMicMapFreq() : myLamp.getMicMapMaxPeak())
       : 
-      (disko ? random(1024) >> 2 : hue++), 
+      (disko ? hue += random8(16) : hue), 
       5, 
       isMicActive ? RainbowColors_p : *curPalette, 
       isMicActive ? 
@@ -5337,7 +5340,7 @@ bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
 #else
     fill_palette(
       colors, 
-      SNAKE_LENGTH, 
+      SNAKE2_LENGTH, 
       disko ? random(1024) >> 2 : hue++, 
       5, 
       *curPalette, 
@@ -5348,6 +5351,7 @@ bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
 
   for (int i = 0; i < snakeCount; i++)
   {
+
     Snake *snake = &snakes[i];
 
     snake->shuffleDown();
@@ -5358,7 +5362,7 @@ bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
     }
 
     snake->move();
-    snake->draw(colors, speedFactor);
+    snake->draw(colors, speedFactor, subPix);
   }
   return true;
 }
@@ -5367,11 +5371,14 @@ bool EffectSnake2::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(*&ledarr, &*opt);
 }
 
-void EffectSnake2::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor)
+void EffectSnake2::Snake::draw(CRGB colors[SNAKE2_LENGTH], float speedfactor, bool subpix)
 {
-  for (float i = 0.0; i < (float)SNAKE_LENGTH; i+= speedfactor)
+  for (float i = 0.0; i < SNAKE2_LENGTH; i+= (speedfactor))
   {
-    for (byte n = 10.0 * speedfactor+(speedfactor <= 0.5 ? 6: -4); n >= 1; n--)
-      myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / (float)SNAKE_LENGTH)));
+    if (subpix)
+      for (byte n = 10.0 * speedfactor+(speedfactor <= 0.5 ? 6: -4); n >= 1; n--)
+        myLamp.drawPixelXYF((float)pixels[(uint8_t)i].x / n, (float)pixels[(uint8_t)i].y / n, colors[(uint8_t)i] %= (255 - (uint8_t)i * (255 / SNAKE2_LENGTH)));
+    else
+      myLamp.drawPixelXY(pixels[(uint8_t)i].x, pixels[(uint8_t)i].y, colors[(uint8_t)i] /*%= (255 - (uint8_t)i * (255 / SNAKE2_LENGTH))*/);
   }
 }

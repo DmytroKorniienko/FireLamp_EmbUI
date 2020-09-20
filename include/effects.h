@@ -1403,88 +1403,89 @@ class EffectSnake2 : public EffectCalc {
 private:
     byte hue = 0;
     bool disko = false;
+    bool subPix = false;
     float speedFactor;
-    static const int snakeCount = WIDTH /4;
+    static const uint8_t snakeCount = WIDTH / 4;
     void load() override;
+
     enum Direction
-{
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT
-};
-
-
-struct Pixel
-{
-    byte x;
-    byte y;
-};
-
-CRGB colors[SNAKE_LENGTH];
-struct Snake
-{
-  Pixel pixels[SNAKE_LENGTH];
-
-  Direction direction;
-
-  void newDirection()
-  {
-    switch (direction)
     {
-    case UP:
-    case DOWN:
-      direction = random(0, 2) == 1 ? RIGHT : LEFT;
-      break;
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT
+    };
 
-    case LEFT:
-    case RIGHT:
-      direction = random(0, 2) == 1 ? DOWN : UP;
-
-    default:
-      break;
-    }
-  };
-
-  void shuffleDown()
-  {
-    for (byte i = SNAKE_LENGTH - 1; i > 0; i--)
+    struct Pixel
     {
-      pixels[i] = pixels[i - 1];
-    }
-  }
+        byte x;
+        byte y;
+    };
 
-  void reset()
-  {
-    direction = UP;
-    for (int i = 0; i < (int)SNAKE_LENGTH; i++)
+    CRGB colors[SNAKE2_LENGTH];
+    struct Snake
     {
-      pixels[i].x = 0;
-      pixels[i].y = 0;
-    }
-  }
+        Pixel pixels[SNAKE2_LENGTH];
 
-  void move()
-  {
-    switch (direction)
-    {
-    case UP:
-      pixels[0].y = (pixels[0].y + 1) % HEIGHT;
-      break;
-    case LEFT:
-      pixels[0].x = (pixels[0].x + 1) % WIDTH;
-      break;
-    case DOWN:
-      pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
-      break;
-    case RIGHT:
-      pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
-      break;
-    }
-  }
+        Direction direction;
 
-  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor);
-};
+        void newDirection()
+        {
+            switch (direction)
+            {
+            case UP:
+            case DOWN:
+                direction = random(0, 2) == 1 ? RIGHT : LEFT;
+                break;
+
+            case LEFT:
+            case RIGHT:
+                direction = random(0, 2) == 1 ? DOWN : UP;
+
+            default:
+                break;
+            }
+        };
+
+        void shuffleDown()
+        {
+            for (uint8_t i = SNAKE2_LENGTH - 1; i > 0; i--)
+            {
+                pixels[i] = pixels[i - 1];
+            }
+        }
+
+        void reset()
+        {
+            direction = UP;
+            for (uint8_t i = 0; i < SNAKE2_LENGTH; i++)
+            {
+                pixels[i].x = 0;
+                pixels[i].y = 0;
+            }
+        }
+
+        void move()
+        {
+            switch (direction)
+            {
+            case UP:
+                pixels[0].y = (pixels[0].y + 1) % HEIGHT;
+                break;
+            case LEFT:
+                pixels[0].x = (pixels[0].x + 1) % WIDTH;
+                break;
+            case DOWN:
+                pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
+                break;
+            case RIGHT:
+                pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
+                break;
+            }
+        }
+
+        void draw(CRGB colors[SNAKE2_LENGTH], float speedfactor, bool subpix);
+    };
 
     Snake snakes[snakeCount];
     void setDynCtrl(UIControl*_val) override;
