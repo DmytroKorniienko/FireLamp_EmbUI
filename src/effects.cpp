@@ -3577,6 +3577,8 @@ bool EffectLeapers::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 // ------- Эффект "Вихри"
+// Based on Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
+// Copyright(c) 2014 Jason Coon
 bool EffectWhirl::run(CRGB *ledarr, EffectWorker *opt){
 
   return whirlRoutine(*&ledarr, &*opt);
