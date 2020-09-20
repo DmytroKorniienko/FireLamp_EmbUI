@@ -1513,12 +1513,14 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  const float speed_factor = (float)speed/127+1;
+  float speed_factor = (float)speed/127.0 +1;
   uint8_t spirooffset = 256 / spirocount;
   boolean change = false;
   myLamp.blur2d(15);//45/(speed_factor*3));
-  myLamp.dimAll(254U - palettescale);
+  //myLamp.dimAll(254U - palettescale);
   //myLamp.dimAll(250-speed_factor*7);
+  uint8_t dim = beatsin8(16 / speed_factor, 5, 10);
+  myLamp.dimAll(254 - dim);
 
   for (int i = 0; i < spirocount; i++) {
     uint8_t  x = EffectMath::mapsincos8(MAP_SIN, spirotheta1 + i * spirooffset, spirominx, spiromaxx);
@@ -1526,10 +1528,11 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
     uint8_t x2 = EffectMath::mapsincos8(MAP_SIN, spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
     uint8_t y2 = EffectMath::mapsincos8(MAP_COS, spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
     CRGB color = ColorFromPalette(*curPalette, (spirohueoffset + i * spirooffset), 128U);
-    if (x2<WIDTH && y2<HEIGHT){ // добавил проверки. не знаю, почему эффект подвисает без них
+    if (myLamp.getPixelNumber(x, y) < NUM_LEDS)/*(x2<WIDTH && y2<HEIGHT)*/{ // добавил проверки. не знаю, почему эффект подвисает без них. Что-то он так и не перестал это делать. :(
       CRGB tmpColor = myLamp.getPixColorXY(x2, y2);
       tmpColor += color;
       myLamp.setLeds(myLamp.getPixelNumber(x2, y2), tmpColor); // += color
+      myLamp.setLeds(myLamp.getPixelNumber(WIDTH - x2, HEIGHT - y2), (tmpColor += color));
     }
 
     if(x2 == spirocenterX && y2 == spirocenterY) change = true;
@@ -1537,11 +1540,11 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
 
   spirotheta2 += 2*speed_factor;
 
-  EVERY_N_MILLIS(EFFECTS_RUN_TIMER/2) {
-    spirotheta1 += 1*speed_factor;
-  }
+  //EVERY_N_MILLIS(16 / speed_factor/*EFFECTS_RUN_TIMER/2*/) {  // эта хрень тоже должна зависить от скорости.
+    spirotheta1 += 1.* speed_factor;
+ // }
 
-  EVERY_N_MILLIS(50) {
+  EVERY_N_MILLIS(100 / speed_factor) {
     if (change && !spirohandledChange) {
       spirohandledChange = true;
 
@@ -1567,7 +1570,6 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
   EVERY_N_MILLIS(33) {
       spirohueoffset += 1;
   }
-
   return true;
 }
 
@@ -5143,13 +5145,14 @@ void EffectNBals::balls_timer() {
 }
 
 // ------ Эффект "Притяжение" 
+// Базовый Attract проект Аврора
 bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
   return attractRoutine(*&ledarr, &*opt);
 }
 
 void EffectAttract::load() {
   palettesload();
-  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.05, 1.);
+  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.02, 1.);
   for (int i = 0; i < count; i++)
   {
     int direction = 1-2*random(0, 2); // -1 или 1
@@ -5159,8 +5162,8 @@ void EffectAttract::load() {
     boid.velocity.x *= direction;
     boid.velocity.y = 0;
     boid.colorIndex = i * 32;
-    boid.location.x = Boid::randomf(); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
-    boid.location.y = Boid::randomf(); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
+    //boid.location.x = fabs(Boid::randomf()); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
+    //boid.location.y = fabs(Boid::randomf()); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
     //Это вроде решает проблему
     boids[i] = boid;
   }
@@ -5176,7 +5179,13 @@ void EffectAttract::setscl(const byte _scl)
 void EffectAttract::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd);
-  speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.05, 1.);
+  speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.02, 1.);
+  
+  for (int i = 0; i < count; i++) {
+    boids[i].location.x = fabs(Boid::randomf()); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
+    boids[i].location.y = fabs(Boid::randomf()); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
+  // Мда, этот эффекта таки стоит перезапускать о любому чиху. Но фиг с ним.
+  }
   setup();
 }
 
@@ -5202,6 +5211,7 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
 
   for (int i = 0; i < count; i++) // count
   {
+
     Boid boid = boids[i];
     //boid.acceleration *= EffectMath::fmap((float)speed, 1., 255., 0.1, 1.0);
     PVector force = attract(boid);

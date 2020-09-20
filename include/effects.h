@@ -633,12 +633,12 @@ private:
   const uint8_t spirocenterY = HEIGHT / 2;
 
   const uint8_t spirominx = spirocenterX - spiroradiusx;
-  const uint8_t spiromaxx = spirocenterX + spiroradiusx + 1;
+  const uint8_t spiromaxx = spirocenterX + spiroradiusx;// + 1;
   const uint8_t spirominy = spirocenterY - spiroradiusy;
-  const uint8_t spiromaxy = spirocenterY + spiroradiusy + 1;
+  const uint8_t spiromaxy = spirocenterY + spiroradiusy; // + 1;
 
-  boolean spiroincrement = false;
-  boolean spirohandledChange = false;
+  bool spiroincrement = false;
+  bool spirohandledChange = false;
   byte spirohueoffset = 0;
   uint8_t spirocount = 1;
   float spirotheta1 = 0;
