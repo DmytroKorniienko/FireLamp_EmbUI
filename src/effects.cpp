@@ -299,9 +299,11 @@ void EffectMath::fader(uint8_t step)
   }
 }
 
+
+
 /* kostyamat добавил
 функция увеличения яркости */
-CRGB makeBrighter( const CRGB& color, fract8 howMuchBrighter)
+CRGB EffectMath::makeBrighter( const CRGB& color, fract8 howMuchBrighter)
 {
   CRGB incrementalColor = color;
   incrementalColor.nscale8( howMuchBrighter);
@@ -310,12 +312,33 @@ CRGB makeBrighter( const CRGB& color, fract8 howMuchBrighter)
 
 /* kostyamat добавил
  функция уменьшения яркости */
-CRGB makeDarker( const CRGB& color, fract8 howMuchDarker)
+CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker)
 {
   CRGB newcolor = color;
   newcolor.nscale8( 255 - howMuchDarker);
   return newcolor;
 }
+
+/* kostyamat добавил
+ функция возвращает рандомное значение float между min и max 
+ с шагом 1/4096 */
+float EffectMath::randomf(float min, float max)
+{
+  return fmap((float)random16(4095), 0.0, 4095.0, min, max);
+}
+
+/* kostyamat добавил
+ функция возвращает true, если float
+ ~ целое (первая цифра после запятой == 0) */
+bool EffectMath::isInteger(float val) {
+    val = val - (int)val;
+    if ((int)(val * 10.0) != 0)
+        return false;
+    else
+        return true;
+}
+
+
 
 // ============= ЭФФЕКТЫ ===============
 
@@ -1578,6 +1601,8 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
 }
 
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
+// ***** Парящий огонь, Кровавые Небеса, Радужный Змей и т.п.
+// базис (c) Stefan Petrick
 void EffectComet::drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2, CRGB color)
 { // Fine if: 0<x1<x2<WIDTH && 0<y1<y2<HEIGHT
   for (int8_t xP = x1; xP <= x2; xP++)
@@ -1590,9 +1615,6 @@ void EffectComet::drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2,
 }
 
 void EffectComet::FillNoise(int8_t layer) {
-  const uint8_t e_centerX =  (WIDTH / 2) - 1;
-  const uint8_t e_centerY = (HEIGHT / 2) - 1;
-
   for (uint8_t i = 0; i < WIDTH; i++) {
     int32_t ioffset = e_scaleX[layer] * (i - e_centerX);
     for (uint8_t j = 0; j < HEIGHT; j++) {
@@ -1605,12 +1627,23 @@ void EffectComet::FillNoise(int8_t layer) {
     }
   }
 }
+void EffectComet::load() {
+  eNs_noisesmooth = 200;
+  for (uint8_t i = 0; i < NUM_LAYERS; i++) {
+    e_x[i] = random16();
+    e_y[i] = random16();
+    e_z[i] = random16();
+    e_x[i] = 6000;
+    e_y[i] = 6000;
+  }
 
-void EffectComet::load(){
-    eNs_noisesmooth = random(0, 200*(uint_fast16_t)speed/255); // степень сглаженности шума 0...200
+
 }
 
 bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
+  if (dryrun(4.0))
+    return false;
+
   switch (effect)
   {
   case EFF_ENUM::EFF_RAINBOWCOMET :
@@ -1619,9 +1652,90 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
   case EFF_ENUM::EFF_RAINBOWCOMET3 :
     return rainbowComet3Routine(*&ledarr, &*opt);
     break;
+  case EFF_ENUM::EFF_FLINE :
+    return firelineRoutine(*&ledarr, &*opt);
+    break;
+  case EFF_ENUM::EFF_FFIRE :
+    return fractfireRoutine(*&ledarr, &*opt);
+    break;
+  case EFF_ENUM::EFF_FLSNAKE :
+    return flsnakeRoutine(*&ledarr, &*opt);
+    break;
   default:
     return false;
   }
+}
+
+bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
+  
+  myLamp.blur2d(40); // без размытия как-то пиксельно, по-моему...
+  //dimAll(160); // < -- затухание эффекта для последующего кадров
+  fadeToBlackBy(leds, NUM_LEDS, 256U - scale);
+  float beat2 = (10.0 -  (float)beatsin8(3, 10, 20)) / 10.;
+  for (uint8_t i = 1; i < WIDTH; i += 2) {
+    leds[XY( i, e_centerY)] += CHSV(i * 2 , 255, 255);
+  }
+  // Noise
+  e_x[0] += 3000;
+  e_y[0] += 3000;
+  e_z[0] += 3000;
+  e_scaleX[0] = 8000;
+  e_scaleY[0] = 8000;
+  FillNoise(0);
+
+  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);
+  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3, beat2);
+  return true;
+}
+
+bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
+  myLamp.blur2d(40); // без размытия как-то пиксельно, по-моему...
+  //dimAll(140); // < -- затухание эффекта для последующего кадрв
+  fadeToBlackBy(leds, NUM_LEDS, 255 - map(scale, 1, 255, 180, 254));
+  //uint8_t beat = beatsin8(5, 127, 180);
+  for (uint8_t i = 1; i < WIDTH; i += 2) {
+    leds[XY( i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
+  }
+  // Noise
+  e_x[0] += 3000;
+  e_y[0] += 3000;
+  e_z[0] += 3000;
+  e_scaleX[0] = 8000;
+  e_scaleY[0] = 8000;
+  FillNoise(0);
+  //MoveX(1);
+  //MoveY(1);
+
+  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 2, 1);
+  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);
+  return true;
+}
+
+bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
+  hue++;
+  //myLamp.blur2d(40);
+  fadeToBlackBy(leds, NUM_LEDS, 260U - scale); 
+  //FastLED.clear();
+  for (uint8_t y = 2; y < HEIGHT; y += 5) {
+    for (uint8_t x = 2; x < WIDTH; x += 5) {
+      myLamp.drawPixelXY(x, y, CHSV((hue + x * y) *4 , 255, 255));
+      myLamp.drawPixelXY(x + 1, y,CHSV(hue + (x + 4) * y, 255, 255));
+      myLamp.drawPixelXY(x, y + 1, CHSV(hue + x * (y + 4), 255, 255));
+      myLamp.drawPixelXY(x + 1, y + 1,CHSV(hue + (x + 4) * (y + 4), 255, 255));
+    }
+  }
+  // Noise
+  e_x[0] += 3000;
+  e_y[0] += 3000;
+  e_z[0] += 3000;
+  e_scaleX[0] = 8000;
+  e_scaleY[0] = 8000;
+  FillNoise(0);
+
+  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);
+  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);
+  hue++;
+  return true;
 }
 
 bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
@@ -1645,7 +1759,7 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
   } else {
     _eNs_color = CHSV((scale - 128) * 2, 255, 255);
   }
-  drawFillRect2_fast(e_centerX - 1, e_centerY - 1, e_centerX + 1, e_centerY + 1, _eNs_color);
+  drawFillRect2_fast(e_centerX, e_centerY, e_centerX+1, e_centerY+1, _eNs_color);
   // Noise
   uint16_t sc = (uint16_t)speed * 30 + 500; //64 + 1000;
   uint16_t sc2 = (float)speed/127.0+1.5; //1.5...3.5;
@@ -1673,7 +1787,7 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
           255 - white
 */
 
-  myLamp.blur2d(scale/5+1);    // < -- размытие хвоста
+  myLamp.blur2d(40);//scale/5+1);    // < -- размытие хвоста
   myLamp.dimAll(255-scale/66);            // < -- затухание эффекта для последующего кадра
   byte xx = 2 + sin8( millis() / 10) / 22;
   byte yy = 2 + cos8( millis() / 9) / 22;
@@ -3819,66 +3933,48 @@ if (setup) { // однократная настройка при старте э
   return true;
 }
                                                                                                                                     
-//---------- Эффект "Фейерверк" адаптация kostyamat
+//---------- Эффект "Фейерверк" 
+//адаптация и переписал - kostyamat
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
+void EffectFireworks::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  flashing = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+}
 
-CRGB &piXY(CRGB *leds, byte x, byte y) {
+CRGB &Dot::piXY(CRGB *leds, byte x, byte y, CRGB empty) {
   x -= PIXEL_X_OFFSET;
   y -= PIXEL_Y_OFFSET;
   if( x < WIDTH && y < HEIGHT) {
-    if( y & 0x01) {
-      // Odd rows run backwards
-      uint8_t reverseX = (WIDTH - 1) - x;
-      return leds[(y * WIDTH) + reverseX];
-    } else {
-      // Even rows run forwards
-      return leds[ (y * HEIGHT) + x ] ;
-    }
+    return leds[myLamp.getPixelNumber(x, y)];
   } else
-    return leds[0];
+    return empty;
 }
 
-void screenscale( accum88 a, byte N, byte& screen, byte& screenerr)
-{
-  byte ia = a >> 8;
-  screen = scale8( ia, N);
-  byte m = screen * (256 / N);
-  screenerr = (ia - m) * scale8(255,N);
-  return;
-}
-
-int16_t scale15by8_local( int16_t i, fract8 _scale )
-{
-    int16_t result;
-    result = (int32_t)((int32_t)i * _scale) / 256;
-    return result;
-}
-
-void Dot::Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor)
+void Dot::Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor, uint8_t dim)
   {
     yv = (int16_t)0 + (int16_t)random16(1500) - (int16_t)500;
     xv = basedv + (int16_t)random16(2000) - (int16_t)1000;
     y = basey;
     x = basex;
     color = basecolor;
-    color *= 20;
+    //EffectMath::makeBrighter(color, 50);
+    color *= dim; //50;
     theType = 2;
     show = 1;
   }
 
 void Dot::GroundLaunch(DOTS_STORE &store)
   {
-    yv = 600 + random16(300 + (25 * HEIGHT));
+    yv = 600 + random16(400 + (25 * HEIGHT));
     if(yv > 1200) yv = 1200;
     xv = (int16_t)random16(600) - (int16_t)300;
     y = 0;
-    x = 0x8000;
-    hsv2rgb_rainbow( CHSV( random8(), 240, 200), color);
-    //color = CHSV(random8(), 240, 200);
+    x = 0x8000; 
+    color = CHSV(0, 0, 130); // цвет запускаемого снаряда
     show = 1;
   }
 
-  void Dot::Move(DOTS_STORE &store)
+  void Dot::Move(DOTS_STORE &store, bool Flashing)
   {
     if( !show) return;
     yv -= gGravity;
@@ -3909,9 +4005,9 @@ void Dot::GroundLaunch(DOTS_STORE &store)
       // pinnacle
       if( theType == 1 ) {
 
-        if( (y > (uint16_t)(0x8000)) && (random8() < 64)) {
+        if( (y > (uint16_t)(0x8000)) && (random8() < 32) && Flashing) {
           // boom
-          LEDS.showColor( CRGB::WhiteSmoke);
+          LEDS.showColor( CRGB::Gray);
           LEDS.showColor( CRGB::Black);
         }
 
@@ -3922,7 +4018,7 @@ void Dot::GroundLaunch(DOTS_STORE &store)
         store.gBursty = y;
         store.gBurstxv = xv;
         store.gBurstyv = yv;
-        store.gBurstcolor = color;        
+        store.gBurstcolor = CRGB(random8(), random8(), random8());        
       }
     }
     if( theType == 2) {
@@ -3975,20 +4071,24 @@ void Dot::Draw(CRGB *leds)
 
 bool EffectFireworks::run(CRGB *ledarr, EffectWorker *opt) 
 {
-  EVERY_N_MILLIS(15) {
-    random16_add_entropy(analogRead(A0));
+  random16_add_entropy(analogRead(A0));
+  dim = beatsin8(100, 20, 100);
+  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 10) {
+    valDim = random8(25, 50);
+  }
+  EVERY_N_MILLISECONDS(10) {
     return fireworksRoutine(*&ledarr, &*opt);
   }
-    return false;
+  return false;
 }
 
 void EffectFireworks::sparkGen() {
-  for (byte c = 0; c < map(scale, 1, 255, 1, SPARK); c++) {
+  for (byte c = 0; c < scale; c++) {
     if( gDot[c].show == 0 ) {
       if( launchcountdown[c] == 0) {
         gDot[c].GroundLaunch(this->store);
         gDot[c].theType = 1;
-        launchcountdown[c] = random16(865 - speed*3) + 1;
+        launchcountdown[c] = random16(1200 - speed*4) + 1;
       } else {
         launchcountdown[c] --;
       }
@@ -3998,7 +4098,8 @@ void EffectFireworks::sparkGen() {
   if( store.gSkyburst) {
     byte nsparks = random8( NUM_SPARKS / 2, NUM_SPARKS + 1);
     for( byte b = 0; b < nsparks; b++) {
-      gSparks[b].Skyburst( store.gBurstx, store.gBursty, store.gBurstyv, store.gBurstcolor);
+      store.gBurstcolor = CHSV(random8(), 200, 100);
+      gSparks[b].Skyburst( store.gBurstx, store.gBursty, store.gBurstyv, store.gBurstcolor, dim);
       store.gSkyburst = false;
     }
   }
@@ -4007,26 +4108,17 @@ void EffectFireworks::sparkGen() {
 
 bool EffectFireworks::fireworksRoutine(CRGB *leds, EffectWorker *param) 
 {
-  sparkGen();
-  memset8( leds, 0, NUM_LEDS * 3);
-
-#if 1
-  CRGB sky1(0,0,2);
-  CRGB sky2(2,0,2);
-   for( uint16_t v = 0; v < NUM_LEDS; v++) {
-     leds[v] = sky1;
-   }
-    for( byte u = 0; u < 1; u++) {
-      leds[random16(NUM_LEDS)] = sky2;
-    }
-#endif
   
-  for (byte a = 0; a < map(scale, 1, 255, 1, SPARK); a++) {
-    gDot[a].Move(store);
+  fadeToBlackBy(leds, NUM_LEDS, valDim);
+  sparkGen();
+  //memset8( leds, 0, NUM_LEDS * 3);
+  
+  for (byte a = 0; a < scale; a++) {
+    gDot[a].Move(store, flashing);
     gDot[a].Draw(leds);
   }
   for( byte b = 0; b < NUM_SPARKS; b++) {
-    gSparks[b].Move(store);
+    gSparks[b].Move(store, flashing);
     gSparks[b].Draw(leds);
   }
     return true;

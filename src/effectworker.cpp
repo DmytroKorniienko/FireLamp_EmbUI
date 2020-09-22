@@ -59,6 +59,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     break;
   case EFF_ENUM::EFF_RAINBOWCOMET :
   case EFF_ENUM::EFF_RAINBOWCOMET3 :
+  case EFF_ENUM::EFF_FLINE :
+  case EFF_ENUM::EFF_FFIRE :
+  case EFF_ENUM::EFF_FLSNAKE :
     worker = std::unique_ptr<EffectComet>(new EffectComet());
     break;
   case EFF_ENUM::EFF_FLOCK :

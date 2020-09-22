@@ -309,7 +309,10 @@ public:
   static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
   static void fader(uint8_t step);
   static uint8_t ceil8(const uint8_t a, const uint8_t b);
-
+  static CRGB makeBrighter( const CRGB& color, fract8 howMuchBrighter);
+  static CRGB makeDarker( const CRGB& color, fract8 howMuchDarker);
+  static float randomf(float min, float max);
+  static bool isInteger(float val);
 
   /*
   static CRGB& piXY(CRGB *leds, byte x, byte y);
@@ -683,18 +686,13 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-
+// ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
+// ***** Парящий огонь, Кровавые Небеса, Радужный Змей и т.п.
+// базис (c) Stefan Petrick
 class EffectComet : public EffectCalc {
 private:
+    byte hue;
     uint8_t eNs_noisesmooth;
-    uint8_t rhue;
-    uint8_t smokeHue;
-    float xSmokePos;
-    float xSmokePos2;
-    uint16_t noiseX;
-    uint16_t noiseY;
-    uint16_t noiseZ;
-    uint8_t nline[WIDTH];
     uint32_t e_x[NUM_LAYERS];
     uint32_t e_y[NUM_LAYERS];
     uint32_t e_z[NUM_LAYERS];
@@ -702,19 +700,29 @@ private:
     uint32_t e_scaleY[NUM_LAYERS];
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
-   const uint8_t e_centerX =  (WIDTH / 2) - 1;
-   const uint8_t e_centerY = (HEIGHT / 2) - 1;
+    const uint8_t e_centerX =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01);
+    const uint8_t e_centerY = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01);
 
     void drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2, CRGB color);
     void FillNoise(int8_t layer);
+
     bool rainbowCometRoutine(CRGB *leds, EffectWorker *param);
     bool rainbowComet3Routine(CRGB *leds, EffectWorker *param);
+    bool firelineRoutine(CRGB *leds, EffectWorker *param);
+    bool fractfireRoutine(CRGB *leds, EffectWorker *param);
+    bool flsnakeRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ============= SWIRL /  ВОДОВОРОТ ===============
+// Prismata Loading Animation
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
+// v1.1 - +dither by PalPalych 12.04.2020
+// Aurora: https://github.com/pixelmatix/aurora
+// Copyright (c) 2014 Jason Coon
 class EffectSwirl : public EffectCalc {
 private:
     bool swirlRoutine(CRGB *leds, EffectWorker *param);
@@ -797,6 +805,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------------------------ ЭФФЕКТ ДЫМ ----------------------
 class EffectMStreamSmoke : public EffectCalc {
 private:
   bool debug = false;
@@ -1018,17 +1027,21 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//---------- Эффект "Фейерверк" адаптация kostyamat
+//---------- Эффект "Фейерверк" 
+//адаптация и переписал - kostyamat
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 class EffectFireworks : public EffectCalc {
 private:
     DOTS_STORE store;
     uint16_t launchcountdown[SPARK];
-    //uint8_t micPick = 0;
+    byte dim;
+    uint8_t valDim;
+    bool flashing = false;
     bool fireworksRoutine(CRGB *leds, EffectWorker *param);
     void sparkGen();
     Dot gDot[SPARK];
     Dot gSparks[NUM_SPARKS];
+    void setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
