@@ -3947,7 +3947,7 @@ CRGB &Dot::piXY(CRGB *leds, byte x, byte y, CRGB empty) {
   if( x < WIDTH && y < HEIGHT) {
     return leds[myLamp.getPixelNumber(x, y)];
   } else
-    return empty;
+    return empty; // не знаю как убрать варнинг, но возврат leds[0] создает мигающий пиксель 0,0. Это тоже не решение. :(
 }
 
 void Dot::Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor, uint8_t dim)
@@ -4419,7 +4419,7 @@ void EffectButterfly::load()
 void EffectButterfly::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  byte _scale = scale;
+ 
   if(_val->getType()==2 && _val->getId()==3)
     wings = _val->getVal() == FPSTR(TCONST_FFFF);
   if(_val->getType()==2 && _val->getId()==4){
@@ -4429,10 +4429,7 @@ void EffectButterfly::setDynCtrl(UIControl*_val)
     {
       butterflysColor[i] = (isColored) ? random8() : 0U;
     }
-    //для инверсии, чтобы сто раз не пересчитывать
-    if (_scale != 1U and !isColored)
-      hue = map(_scale, 2, BUTTERFLY_MAX_COUNT + 1U, 0, 255);
-    hue2 = (_scale == 1U) ? 100U : 190U;  // вычисление базового оттенка
+
   }
 }
 
@@ -4445,6 +4442,10 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
     deltaValue = (_scale > BUTTERFLY_MAX_COUNT) ? BUTTERFLY_MAX_COUNT : _scale;
   else
     deltaValue = BUTTERFLY_FIX_COUNT;
+
+  if (_scale != 1U and !isColored)
+    hue = map(_scale, 2, BUTTERFLY_MAX_COUNT + 1U, 0, 255);
+  hue2 = (_scale == 1U) ? 100U : 190U; // вычисление базового оттенка
 
   if (wings && isColored)
     //myLamp.dimAll(35U); // для крылышков
@@ -5473,4 +5474,99 @@ void EffectSnake2::Snake::draw(CRGB colors[SNAKE2_LENGTH], float speedfactor, bo
     else
       myLamp.drawPixelXY(pixels[(uint8_t)i].x, pixels[(uint8_t)i].y, colors[(uint8_t)i] /*%= (255 - (uint8_t)i * (255 / SNAKE2_LENGTH))*/);
   }
+}
+
+// --------------  Эффект "Цветение"
+// (c) Idir Idir (Soulmate)
+bool EffectFlower::run(CRGB *ledarr, EffectWorker *opt ) {
+  return flowerRoutine(*&ledarr, &*opt);
+}
+
+bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
+  float speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 2.55);
+#ifdef MIC_EFFECTS
+#define _Mic isMicActive ? (float)peak / 50. : 0.1
+  byte peak = myLamp.getMicMapMaxPeak();
+ if (millis() - lastrun >= (isMicActive ? 4000 - (uint16_t)peak * 20 : (unsigned int)(8000.0 / speedFactor)))
+#else
+#define _Mic 0.1
+ if (millis() - lastrun >= (unsigned int)(8000.0 / speedFactor))
+#endif
+ {
+   angle += _Mic;
+   if (angle <= 1.) angle = 1.;
+   lastrun = millis();
+ }
+
+  float n = triwave8((uint8_t)counter) * 2.2; // 2.2;
+  //float n = quadwave8((uint8_t)counter) * 1.5;
+  float a = n * angle;
+  float r = c * sqrt16(n);
+  float x = r * cos(a) + (float)WIDTH / 2.;
+  float y = r * sin(a) + (float)HEIGHT / 2.;
+#ifdef MIC_EFFECTS
+    color = CHSV(
+      isMicActive ? myLamp.getMicFreq() : (millis()>>1), 
+      isMicActive ? (255 - peak/2) : 250, 
+      isMicActive ? constrain(peak *2, 96, 255) : 255
+      );
+#else
+  color = CHSV(millis()>>1, 250, 255/*(uint16_t)counter >> 1*/);
+#endif
+  if ((uint16_t)ceil(x * y) < NUM_LEDS) 
+    myLamp.drawPixelXYF(x, y, color) ;
+
+  //myLamp.blur2d( 20 );
+  fadeToBlackBy(leds, NUM_LEDS, 5);
+
+  counter += speedFactor;
+  return true;
+}
+
+bool EffectTest::run(CRGB *ledarr, EffectWorker *opt ) {
+  return testRoutine(*&ledarr, &*opt);
+}
+
+void EffectTest::updaterain(CRGB *leds, float speedFactor)
+{
+    byte sat = beatsin8(30, 170, 255);
+  for (byte i = 0; i < WIDTH; i++)
+  {
+    for (float j = 0.; j < HEIGHT; j += speedFactor)
+    {
+      byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
+      if (layer)
+      {
+      
+        myLamp.drawPixelXYF(i, j, CHSV(hue, scale == 255 ? 0 : sat, scale ==255 ? sat: 255));
+        //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
+      } //random8(2) add glitchy effect
+    }
+  }
+  _speed++;
+  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 25: 15);
+  //blurRows(leds, WIDTH, HEIGHT, 16);
+  //myLamp.blur2d(16);
+  //blurColumns(leds, WIDTH, HEIGHT, 16);
+}
+
+bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 0.9);
+
+  if (counter)
+  {
+    raininit(rain);
+    counter = 0;
+  } //init array of dots. run once
+  if (millis() - lastrun > 50) { 
+    if (scale != 1)
+      hue = scale;
+    else
+      hue ++; 
+    updaterain(*&leds, speedfactor); 
+    lastrun = millis();
+  }
+  changepattern();  
+
+  return true;
 }
