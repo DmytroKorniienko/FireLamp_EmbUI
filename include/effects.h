@@ -309,10 +309,13 @@ public:
   static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
   static void fader(uint8_t step);
   static uint8_t ceil8(const uint8_t a, const uint8_t b);
-  static CRGB makeBrighter( const CRGB& color, fract8 howMuchBrighter);
-  static CRGB makeDarker( const CRGB& color, fract8 howMuchDarker);
+  static CRGB makeBrighter( const CRGB& color, fract8 howMuchBrighter = 5);
+  static CRGB makeDarker( const CRGB& color, fract8 howMuchDarker = 5);
   static float randomf(float min, float max);
   static bool isInteger(float val);
+  static bool Lightning(CRGB lightningColor = CHSV(30,90,255) /*CRGB(72, 72, 80)*/, uint8_t chanse = 72U);
+  static void Clouds(uint8_t rhue = 2, bool flash = false);
+  static void addGlitter(uint8_t chanceOfGlitter = 127);
 
   /*
   static CRGB& piXY(CRGB *leds, byte x, byte y);
@@ -700,6 +703,7 @@ private:
     uint32_t e_scaleY[NUM_LAYERS];
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
+
     const uint8_t e_centerX =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01);
     const uint8_t e_centerY = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01);
 
@@ -901,15 +905,14 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----- "Дождь", "Цветной дождь", "Тучка в банке"
 class EffectRain : public EffectCalc {
 private:
-  uint16_t noiseX;
-  uint16_t noiseY;
-  uint16_t noiseZ;
+
   uint8_t rhue;
   uint8_t nline[WIDTH];
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-
+  float speedfactor;
   uint8_t myScale8(uint8_t x);
    
 
@@ -1525,14 +1528,16 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-class EffectTest : public EffectCalc
+//------------ Эффект "За окном идет дождь"
+// (c) Idir Idir (Soulmate)
+class EffectCRain : public EffectCalc
 {
 private:
     byte rain[NUM_LEDS];
 
     byte counter = 1;
     int8_t _speed = 1;
-    byte hue;
+    float hue;
 
     void changepattern()
     {
@@ -1549,7 +1554,7 @@ private:
     { //init array of dots. run once
         for (int i = 0; i < NUM_LEDS; i++)
         {
-            if (random8(20) == 0)
+            if (random8(18) == 0)
             {
                 rain[i] = 1;
             }
@@ -1563,7 +1568,7 @@ private:
     void updaterain(CRGB *leds, float speedFactor);
 
 
-    bool testRoutine(CRGB *leds, EffectWorker *param);
+    bool crainRoutine(CRGB *leds, EffectWorker *param);
     //void setDynCtrl(UIControl*_val) override;
 
 public:

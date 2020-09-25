@@ -136,8 +136,8 @@ EFF_SNAKE2,                                   // Змеиный Остров
 EFF_FLINE,                                    // Парящий огонь
 EFF_FFIRE,                                    // Северное сияние
 EFF_FLSNAKE,                                  // Радужный Змей
-EFF_FLOWER,                                   // Цветок
-EFF_TEST,
+EFF_FLOWER,                                   // Цветение
+EFF_CRAIN,                                    // За окном идет дождь...
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -178,7 +178,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
 static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 3, 3, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 3, 3, 1, 3, 3, // 16-31
-  1, 3, 3, 3, 3, 3, 2, 1, 1, 1, 2, 1, 5, 5, 1, 1, // 32 - 47
+  1, 3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 1, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 4, 5, 3, 4, 3, 3, 4, 1, 3, 3, 5, 2, // 48 - 63
   4, 1, 1, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
@@ -258,8 +258,8 @@ static const char E_STARFAIL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver
 static const char E_SNAKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Кол-во\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_SNAKE2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Цвета Диско\"}, {\"id\":4,\"type\":2,\"val\":\"false\",\"name\":\"Субпиксель\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Частота запусков\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Количество снарядов\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Вспышки\"}]}";
-static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер капель\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1 = случайный, 255 = белый)\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Вспышки\"}]}";
-
+static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер капель\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1 = случайный, 255 = белый)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
+static const char E_RAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
 static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
 
 
@@ -274,7 +274,7 @@ static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver
 static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_WHITE_CFG, E_DEFMICUI, E_DEFMICUI, E_SPARCLES_CFG, E_DEFUI, E_STARFAIL, E_DEFUI, E_LIGHTERS, E_LIGHT2, E_CUBE_CFG, E_PULS_CFG, E_DEFUI, E_FLAMP_CFG, E_2_CFG, E_DEFMICUI, // 0-15
   E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
-  E_DEFUI, E_DRIFT_CFG, E_DRIFT_CFG, E_3PAL_CFG, E_RADAR, E_WAVES_CFG, E_3PAL_MIC_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_F2018_CFG, E_DEFUI, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
+  E_DEFUI, E_DRIFT_CFG, E_DRIFT_CFG, E_3PAL_CFG, E_RADAR, E_WAVES_CFG, E_3PAL_MIC_CFG, E_RAIN_CFG, E_CRAIN_CFG, E_DEFUI, E_F2018_CFG, E_DEFUI, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
   E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM, E_FWORK_CFG, E_2_CFG, E_MUNCH_MIC_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_SHAD_CFG, E_PATT_CFG, E_ARR_CFG, E_NBAL_CFG, E_ATTRACT_CFG, E_SNAKE_CFG, // 48 - 63
   E_SNAKE2_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_CRAIN_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
@@ -326,6 +326,7 @@ static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {CRGB::White, CRGB
 static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, CRGB::Gray, CRGB::White, CRGB::WhiteSmoke};
 /*
 
+
 static const TProgmemRGBPalette16 WoodFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold}; 
 static const TProgmemRGBPalette16 AlcoholFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue};  // Blue
 static const TProgmemRGBPalette16 CopperFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen};     // Green
@@ -358,6 +359,10 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
 };
 */
 
+
+// Еще одно представление высоты и ширины матрицы, часто встречаеться последнее время
+#define LED_ROWS HEIGHT
+#define LED_COLS WIDTH
 
 // ==== Константы для эффектов ====
 
@@ -1846,3 +1851,4 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 #define SNAKE2_LENGTH (HEIGHT / 2U + WIDTH / 4U)
 #define MAX_SNAKES    (16U) // 16 хватит всем :)
 
+//Молния (инструмент)

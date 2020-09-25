@@ -312,7 +312,7 @@ CRGB EffectMath::makeBrighter( const CRGB& color, fract8 howMuchBrighter)
 
 /* kostyamat добавил
  функция уменьшения яркости */
-CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker)
+CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker )
 {
   CRGB newcolor = color;
   newcolor.nscale8( 255 - howMuchDarker);
@@ -331,16 +331,126 @@ float EffectMath::randomf(float min, float max)
  функция возвращает true, если float
  ~ целое (первая цифра после запятой == 0) */
 bool EffectMath::isInteger(float val) {
-    val = val - (int)val;
-    if ((int)(val * 10.0) != 0)
+    float val1;
+    val1 = val - (int)val;
+    if ((int)(val1 * 10) != 0)
         return false;
     else
         return true;
 }
 
+/* kostyamat добавил
+ функция рисует молнию на любом эффекте
+ */
+bool EffectMath::Lightning(CRGB lightningColor, uint8_t chanse)
+{
+  //uint8_t lightning[WIDTH][HEIGHT];
+  // ESP32 does not like static arrays  https://github.com/espressif/arduino-esp32/issues/2567
+if (random16() < chanse)
+  {            
+    uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);                                                           // Odds of a lightning bolt
+    lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
+    for (uint8_t ly = HEIGHT - 1; ly > 1; ly--)
+    {
+      for (uint8_t lx = 1; lx < WIDTH - 1; lx++)
+      {
+        if (lightning[lx + ly * WIDTH] == 255)
+        {
+          lightning[lx + ly * WIDTH] = 0;
+          uint8_t dir = random8(4);
+          switch (dir)
+          {
+          case 0:
+            myLamp.setLeds(myLamp.getPixelNumber(lx + 1, ly - 1), lightningColor);
+            lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // move down and right
+            break;
+          case 1:
+            myLamp.setLeds(myLamp.getPixelNumber(lx, ly - 1), CRGB(128, 128, 128)); // я без понятия, почему у верхней молнии один оттенок, а у остальных - другой
+            lightning[lx + (ly - 1) * WIDTH] = 255;                                 // move down
+            break;
+          case 2:
+            myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
+            lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // move down and left
+            break;
+          case 3:
+            myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
+            lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // fork down and left
+            myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
+            lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // fork down and right
+            break;
+          }
+        }
+      }
+    }
 
+    free(lightning);
+    return true;
+  }
+  return false;
+}
+
+void EffectMath::Clouds(uint8_t rhue, bool flash)
+{
+#ifdef SMARTMATRIX
+  const CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(75, 84, 84), CRGB(49, 75, 75), CRGB::Black);
+#else
+  const CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(35, 44, 44), CRGB(29, 35, 35), CRGB::Black);
+#endif
+  //uint32_t random = millis();
+  uint8_t dataSmoothing = 50; //196
+  uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
+  uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
+  uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
+  uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
+  const uint16_t cloudHeight = (HEIGHT * 0.2) + 1;
+
+  // This is the array that we keep our computed noise values in
+  //static uint8_t noise[WIDTH][cloudHeight];
+  static uint8_t *noise = (uint8_t *)malloc(WIDTH * cloudHeight);
+  for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    int xoffset = noiseScale * x + rhue;
+
+    for (int z = 0; z < cloudHeight; z++)
+    {
+      int yoffset = noiseScale * z - rhue;
+      uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
+      noiseData = qadd8(noiseData, scale8(noiseData, 39));
+      noise[x * cloudHeight + z] = scale8(noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
+      if (flash)
+        myLamp.drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
+      else 
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (250 / cloudHeight));
+    }
+    noiseZ++;
+  }
+  if (flash) {
+    for (uint16_t i = 0; i < WIDTH; i++)
+    {
+      for (byte z = 0; z < 10; z++)
+        myLamp.drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4., (float)HEIGHT - 1.), CHSV(0, 250, random8(96, 120)));
+    }
+    myLamp.blur2d(100);
+  }
+}
+
+void EffectMath::addGlitter(uint8_t chanceOfGlitter){
+  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::White;
+}
 
 // ============= ЭФФЕКТЫ ===============
+
+// для работы FastLed (blur2d)
+uint16_t XY(uint8_t x, uint8_t y)
+{
+#ifdef ROTATED_MATRIX
+  return myLamp.getPixelNumber(y,x); // повернутое на 90 градусов
+#else
+  return myLamp.getPixelNumber(x,y); // обычное подключение
+#endif
+}
+
+
 
 // ------------- конфетти --------------
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
@@ -1163,15 +1273,7 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 
 // ----------- Эффекты "Лава, Зебра, etc"
 
-// для работы FastLed (blur2d)
-uint16_t XY(uint8_t x, uint8_t y)
-{
-#ifdef ROTATED_MATRIX
-  return myLamp.getPixelNumber(y,x); // повернутое на 90 градусов
-#else
-  return myLamp.getPixelNumber(x,y); // обычное подключение
-#endif
-}
+
 
 void Effect3DNoise::fillNoiseLED()
 {
@@ -1392,13 +1494,14 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
       bballsShift[i] = 0.0f;
       if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
         if (bballsX[i] <= 0.0f) bballsX[i] = (float)(WIDTH - 1U);
-        else bballsX[i] -= 0.5f;
+        else bballsX[i] -= 1.0f;
       } else {
         if (bballsX[i] >= float(WIDTH - 1U)) bballsX[i] = 0.0f;
-        else bballsX[i] += 0.5f;
+        else bballsX[i] += 1.0f;
       }
     }
-    myLamp.drawPixelXYF(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, 255));
+    myLamp.drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, 255));
+
   }
   return true;
 }
@@ -2305,7 +2408,7 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
   if (subPix)
   {
     fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed / 255);
-    for (float offset = 0.0f; offset <= (float)(WIDTH - 1) / 2U; offset += 0.5f)
+    for (float offset = 0.0f; offset < (float)(WIDTH - 1) / 2U; offset += 0.5f)
     {
       float x = (float)EffectMath::mapsincos8(MAP_COS, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
       float y = (float)EffectMath::mapsincos8(MAP_SIN, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
@@ -2488,38 +2591,26 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
 // https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 // там по ссылке ещё остались эффекты с 3 по 9 (в SimplePatternList перечислены)
-
-//прикольная процедура добавляет блеск почти к любому эффекту после его отрисовки https://www.youtube.com/watch?v=aobtR1gIyIo
-//void addGlitter( uint8_t chanceOfGlitter){
-//  if ( random8() < chanceOfGlitter) leds[ random16(NUM_LEDS) ] += CRGB::White;
-//static uint8_t intensity = 42;  // будет бегунок масштаба
-// Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
-// uint8_t **tempMatrix; = noise3d[0][WIDTH][HEIGHT]
-// uint8_t *splashArray; = line[WIDTH] из эффекта Огонь
-bool EffectRain::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun(3.0))
+bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
+{
+  if (dryrun(4.0))
     return false;
+    speedfactor = EffectMath::fmap((float)speed, 1., 255., 1., .1);
 
-  /*EVERY_N_SECONDS(3){
-    LOG(printf_P, PSTR("speed: %d, scale: %d\n"), speed, scale);
-  }*/
-
-  switch (effect)
-  {
-  case EFF_ENUM::EFF_RAIN :
-    return simpleRainRoutine(*&ledarr, &*opt);
-    break;
-  case EFF_ENUM::EFF_COLORRAIN :
-    return coloredRainRoutine(*&ledarr, &*opt);
-    break;
-  case EFF_ENUM::EFF_STORMYRAIN :
-    return stormyRainRoutine(*&ledarr, &*opt);
-    break;
-  default:
-    return false;
-  }
-  
-  return true;
+    switch (effect)
+    {
+    case EFF_ENUM::EFF_RAIN:
+      return simpleRainRoutine(*&ledarr, &*opt);
+      break;
+    case EFF_ENUM::EFF_COLORRAIN:
+      return coloredRainRoutine(*&ledarr, &*opt);
+      break;
+    case EFF_ENUM::EFF_STORMYRAIN:
+      return stormyRainRoutine(*&ledarr, &*opt);
+      break;
+    default:
+      return false;
+    }
 }
 
 void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC)
@@ -2528,18 +2619,10 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
   // static uint16_t noiseY = random16();
   // static uint16_t noiseZ = random16();
   // CRGB solidRainColor = CRGB(60, 80, 90);
-
-  CRGB lightningColor = CRGB(72, 72, 80);
+  
   CRGBPalette16 rain_p(CRGB::Black, rainColor);
-#ifdef SMARTMATRIX
-  CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(75, 84, 84), CRGB(49, 75, 75), CRGB::Black);
-#else
-  CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(15, 24, 24), CRGB(9, 15, 15), CRGB::Black);
-#endif
-
-
-  //fadeToBlackBy(leds, NUM_LEDS, 255 - tailLength);
-  nscale8(myLamp.getUnsafeLedsArray(), NUM_LEDS, tailLength);
+  fadeToBlackBy(myLamp.getUnsafeLedsArray(), NUM_LEDS, 255 - tailLength);
+  //nscale8(myLamp.getUnsafeLedsArray(), NUM_LEDS, tailLength);
 
   // Loop for each column individually
   for (uint8_t x = 0; x < WIDTH; x++)
@@ -2547,30 +2630,30 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     // Step 1.  Move each dot down one cell
     for (uint8_t i = 0; i < HEIGHT; i++)
     {
-      if (noise3d[0][x][i] >= backgroundDepth)
+      if (noise3d[0][(uint8_t)x][i] >= backgroundDepth) {
       { // Don't move empty cells
         if (i > 0)
-          noise3d[0][x][wrapY(i - 1)] = noise3d[0][x][i];
-        noise3d[0][x][i] = 0;
+          noise3d[0][(uint8_t)x][wrapY(i - 1)] = noise3d[0][(uint8_t)x][i];
+        noise3d[0][(uint8_t)x][i] = 0;
       }
     }
 
     // Step 2.  Randomly spawn new dots at top
     if (random(255) < spawnFreq)
     {
-      noise3d[0][x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
+      noise3d[0][(uint8_t)x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
     }
-
+    }
     // Step 3. Map from tempMatrix cells to LED colors
     //uint32_t color = CRGB::Black;
-    for (int16_t y = HEIGHT-1; y >= 0; y--)
+    for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= speedfactor)
     {
       // if(color == CRGB::Black && myLamp.getPixColor(myLamp.getPixelNumber(x, y)) && y!=(HEIGHT-1))
       //   color = myLamp.getPixColor(myLamp.getPixelNumber(x, y));
       // else if(!myLamp.getPixColor(myLamp.getPixelNumber(x, y)) && y!=(HEIGHT-1))
       //    color = CRGB::Black;
 
-      if (noise3d[0][x][y] >= backgroundDepth)
+      if (noise3d[0][(uint8_t)x][(uint8_t)y] >= backgroundDepth)
       { // Don't write out empty cells
         // if(fixRC && color!=CRGB::Black){
         //   myLamp.setLeds(myLamp.getPixelNumber(x, y), color);
@@ -2578,7 +2661,7 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
         // else if(fixRC && y==(HEIGHT-1) && color==CRGB::Black)
         //   myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, noise3d[0][x][y]));
         // else if(!fixRC)
-          myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, noise3d[0][x][y]));
+          myLamp.drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
       }
     }
     //color = CRGB::Black;
@@ -2587,100 +2670,32 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     if (splashes)
     {
       // FIXME, this is broken
-      byte j = nline[x];
-      byte v = noise3d[0][x][0];
+      byte j = nline[(uint8_t)x];
+      byte v = noise3d[0][(uint8_t)x][0];
 
       if (j >= backgroundDepth)
       {
         myLamp.setLeds(myLamp.getPixelNumber(wrapX(x - 2), 0), ColorFromPalette(rain_p, j / 3));
         myLamp.setLeds(myLamp.getPixelNumber(wrapX(x + 2), 0), ColorFromPalette(rain_p, j / 3));
-        nline[x] = 0; // Reset splash
+        nline[(uint8_t)x] = 0; // Reset splash
       }
 
       if (v >= backgroundDepth)
       {
         myLamp.setLeds(myLamp.getPixelNumber(wrapX(x - 1), 1), ColorFromPalette(rain_p, v / 2));
         myLamp.setLeds(myLamp.getPixelNumber(wrapX(x + 1), 1), ColorFromPalette(rain_p, v / 2));
-        nline[x] = v; // Prep splash for next frame
+        nline[(uint8_t)x] = v; // Prep splash for next frame
       }
     }
 
     // Step 5. Add lightning if called for
-    if (storm)
-    {
-      //uint8_t lightning[WIDTH][HEIGHT];
-      // ESP32 does not like static arrays  https://github.com/espressif/arduino-esp32/issues/2567
-      uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);
-      while (lightning == NULL)
-      {
-        Serial.println("lightning malloc failed");
-      }
-
-      if (random16() < 72)
-      {                                                                       // Odds of a lightning bolt
-        lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
-        for (uint8_t ly = HEIGHT - 1; ly > 1; ly--)
-        {
-          for (uint8_t lx = 1; lx < WIDTH - 1; lx++)
-          {
-            if (lightning[lx + ly * WIDTH] == 255)
-            {
-              lightning[lx + ly * WIDTH] = 0;
-              uint8_t dir = random8(4);
-              switch (dir)
-              {
-              case 0:
-                myLamp.setLeds(myLamp.getPixelNumber(lx + 1, ly - 1), lightningColor);
-                lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // move down and right
-                break;
-              case 1:
-                myLamp.setLeds(myLamp.getPixelNumber(lx, ly - 1), CRGB(128, 128, 128)); // я без понятия, почему у верхней молнии один оттенок, а у остальных - другой
-                lightning[lx + (ly - 1) * WIDTH] = 255;     // move down
-                break;
-              case 2:
-                myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
-                lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // move down and left
-                break;
-              case 3:
-                myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
-                lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // fork down and left
-                myLamp.setLeds(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
-                lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // fork down and right
-                break;
-              }
-            }
-          }
-        }
-      }
-      free(lightning);
-    }
 
     // Step 6. Add clouds if called for
     if (clouds)
     {
-      uint16_t noiseScale = 250; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-      const uint16_t cloudHeight = (HEIGHT * 0.2) + 1;
-
-      // This is the array that we keep our computed noise values in
-      //static uint8_t noise[WIDTH][cloudHeight];
-      static uint8_t *noise = (uint8_t *)malloc(WIDTH * cloudHeight);
-      while (noise == NULL)
-      {
-        Serial.println("noise malloc failed");
-      }
-      int xoffset = noiseScale * x + rhue;
-
-      for (int z = 0; z < cloudHeight; z++)
-      {
-        int yoffset = noiseScale * z - rhue;
-        uint8_t dataSmoothing = 192;
-        uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
-        noiseData = qadd8(noiseData, scale8(noiseData, 39));
-        noise[x * cloudHeight + z] = scale8(noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (cloudHeight - z) * (250 / cloudHeight));
-      }
-      noiseZ++;
+      EffectMath::Clouds(rhue, (storm ? EffectMath::Lightning() : false));
     }
+  
   }
 }
 
@@ -2733,7 +2748,7 @@ bool EffectRain::stormyRainRoutine(CRGB *leds, EffectWorker *param)
   //uint8_t Scale = scale;
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
   //rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
-  rain(60, 160, scale, 30, solidRainColor, true, true, true);
+  rain(60, 160, scale, 20, solidRainColor, true, true, true);
   return true;
 }
 
@@ -3576,7 +3591,7 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
   for (unsigned i = 0; i < numParticles - 2; i+=2) {
     Particle *p1 = (Particle *)&particles[i];
     Particle *p2 = (Particle *)&particles[i + 1];
-    myLamp.drawCircleF(std::fabs(p1->position_x - p2->position_x), std::fabs(p1->position_y - p2->position_y), std::fabs(p1->position_x - p1->position_y), p1->color);
+    myLamp.drawCircleF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
   }
 
   EVERY_N_MILLIS(20000){
@@ -4222,7 +4237,7 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
 #ifdef MIC_EFFECTS
 //----- Эффект "Осциллограф" (c) kostyamat
 void EffectOsc::load() {
-  pointer = myLamp.getMicScale()/ _scaler;
+  pointer = (float)myLamp.getMicScale()/ _scaler;
 }
 
 void EffectOsc::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
@@ -4259,7 +4274,7 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
 
   for (float x = 0.0f; x < ((float)OSC_HV - div); x += div) {
     byte micPick = (isMicActive? myLamp.getMicMaxPeak() : random8(255));
-    color = CHSV(isMicActive? myLamp.getMicMapFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
+    color = CHSV(isMicActive? myLamp.getMicFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
 if (spd == 127) {
 
     myLamp.drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
@@ -5194,7 +5209,7 @@ bool EffectNBals::nballsRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 void EffectNBals::blur(CRGB *leds) {
-  myLamp.blur2d(beatsin8(2,100,255));
+  myLamp.blur2d(beatsin8(2,0,60));
   // Use two out-of-sync sine waves
   // В общем те же фигуры Лиссажу, вид сбоку :), но выглядят хорошо
   uint8_t  i = beatsin8( beat1, 0, HEIGHT-1);
@@ -5523,50 +5538,57 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-bool EffectTest::run(CRGB *ledarr, EffectWorker *opt ) {
-  return testRoutine(*&ledarr, &*opt);
+//------------ Эффект "За окном идет дождь..."
+// (c) Idir Idir (Soulmate)
+bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
+  return crainRoutine(*&ledarr, &*opt);
 }
 
-void EffectTest::updaterain(CRGB *leds, float speedFactor)
+void EffectCRain::updaterain(CRGB *leds, float speedFactor)
 {
-    byte sat = beatsin8(30, 170, 255);
+    byte sat = beatsin8(30, 150, 255);
   for (byte i = 0; i < WIDTH; i++)
   {
-    for (float j = 0.; j < HEIGHT; j += speedFactor)
+    for (float j = 0.; j < (float)HEIGHT - 4.5; j += speedFactor)
     {
       byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       if (layer)
       {
       
-        myLamp.drawPixelXYF(i, j, CHSV(hue, scale == 255 ? 0 : sat, scale ==255 ? sat: 255));
+        myLamp.drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
     }
   }
   _speed++;
-  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 25: 15);
+
+  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 35: 20);
+  
   //blurRows(leds, WIDTH, HEIGHT, 16);
   //myLamp.blur2d(16);
   //blurColumns(leds, WIDTH, HEIGHT, 16);
 }
 
-bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 0.9);
+  EVERY_N_MILLISECONDS(5) {
+    changepattern();
+  }
 
   if (counter)
   {
     raininit(rain);
     counter = 0;
   } //init array of dots. run once
-  if (millis() - lastrun > 50) { 
+  if (millis() - lastrun > 40) { 
     if (scale != 1)
       hue = scale;
     else
-      hue ++; 
+      hue += 0.5; 
     updaterain(*&leds, speedfactor); 
     lastrun = millis();
   }
-  changepattern();  
 
+  EffectMath::Clouds(2, EffectMath::Lightning(CHSV(30,90,255), 255U));
   return true;
 }
