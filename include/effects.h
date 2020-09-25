@@ -388,8 +388,8 @@ class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
     uint8_t bballsNUM_BALLS;                             // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-    uint8_t bballsCOLOR[bballsMaxNUM_BALLS] ;           // прикручено при адаптации для разноцветных мячиков
-    float bballsX[bballsMaxNUM_BALLS] ;               // прикручено при адаптации для распределения мячиков по радиусу лампы
+    byte bballsCOLOR[bballsMaxNUM_BALLS] ;           // прикручено при адаптации для разноцветных мячиков
+    int8_t bballsX[bballsMaxNUM_BALLS] ;               // прикручено при адаптации для распределения мячиков по радиусу лампы
     float bballsPos[bballsMaxNUM_BALLS] ;               // The integer position of the dot on the strip (LED index)
     float bballsHi = 0.0;                                    // An array of heights
     float bballsVImpact[bballsMaxNUM_BALLS] ;           // As time goes on the impact velocity will change, so make an array to store those values
@@ -1516,7 +1516,7 @@ public:
 // (c) Idir Idir (Soulmate)
 class EffectFlower : public EffectCalc {
 private:
-    float c = 0.4;   //diameter 
+    float c = 0.5;   //diameter 
     float angle = 1.;
     float  counter = 0.;
     CHSV color;

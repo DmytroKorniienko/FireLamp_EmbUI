@@ -1454,11 +1454,11 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     }
     for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
       bballsCOLOR[i] = random8();
-      bballsX[i] = (float)random8(10U, WIDTH*10) / 10.0f;
+      bballsX[i] = random8(0, WIDTH-1);
       bballsTLast[i] = millis();
       bballsPos[i] = 0.0f;                                 // Balls start on the ground
-      bballsVImpact[i] = bballsVImpact0;                   // And "pop" up at vImpact0
-      bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2);
+      bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
+      bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2.);
       bballsShift[i] = false;
     }
     regen = false;
@@ -1484,20 +1484,20 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
       //if ( bballsVImpact[i] < 0.01 ) bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
       if ( bballsVImpact[i] < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
       {
-        bballsCOR[i] = 0.90 - ((float)random8(0U, 90U) /10.0f) / pow(random8(40U, 90U) / 10.0f, 2); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
-        bballsShift[i] = bballsCOR[i] >= 0.89;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
+        bballsCOR[i] = 0.90 - (EffectMath::randomf(0., 9.)) / pow(EffectMath::randomf(4., 9.), 2.); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
+        bballsShift[i] = bballsCOR[i] >= 0.85;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
         bballsVImpact[i] = bballsVImpact0;
       }
     }
     bballsPos[i] = bballsHi * (float)(HEIGHT - 1) / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 1.6f) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 1.5f) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
       bballsShift[i] = 0.0f;
       if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
-        if (bballsX[i] <= 0.0f) bballsX[i] = (float)(WIDTH - 1U);
-        else bballsX[i] -= 1.0f;
+        if (bballsX[i] <= 0) bballsX[i] = (WIDTH - 1U);
+        else bballsX[i] -= 1;
       } else {
-        if (bballsX[i] >= float(WIDTH - 1U)) bballsX[i] = 0.0f;
-        else bballsX[i] += 1.0f;
+        if (bballsX[i] >= (int8_t)(WIDTH - 1U)) bballsX[i] = 0;
+        else bballsX[i] += 1;
       }
     }
     myLamp.drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, 255));
