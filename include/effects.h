@@ -287,14 +287,6 @@ public:
      */
     void scale2pallete();
 
-      /**
-    * Vpalletemap - меняет указатель на текущую палитру из набора в соответствие с N-ным значением 
-    * @param _val - N-ное значение 0-7
-    * @param _pals - набор с палитрами
-    */
-void WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val);
-
-
     /**
      * деструктор по-умолчанию пустой, может быть переопределен
      */
@@ -785,7 +777,8 @@ private:
   uint8_t whue;
   float waveTheta;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
-
+  void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val) override;
+  void setscl(const byte _scl) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1607,6 +1600,7 @@ private:
 
     bool testRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
+    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val) override;
 
 public:
     void load() override;

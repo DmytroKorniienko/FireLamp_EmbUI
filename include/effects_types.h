@@ -1782,6 +1782,8 @@ typedef struct _DOTS_STORE {
 } DOTS_STORE;
 
 class Dot {    // класс для создания снарядов и питард
+private:
+  CRGB empty = CRGB(0,0,0);
 public:
   byte    show;
   byte    theType;
@@ -1807,7 +1809,7 @@ public:
   void Move(DOTS_STORE &store, bool Flashing);
   void GroundLaunch(DOTS_STORE &store);
   void Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor, uint8_t dim);
-  CRGB &piXY(CRGB *leds, byte x, byte y, CRGB empty = CRGB(0,0,0));
+  CRGB &piXY(CRGB *leds, byte x, byte y);
 
   int16_t scale15by8_local( int16_t i, fract8 _scale )
   {

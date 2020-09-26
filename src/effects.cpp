@@ -205,18 +205,6 @@ void EffectCalc::scale2pallete(){
   }
 }
 
-// В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
-void EffectCalc::WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
-  if (!_pals.size()) {
-    LOG(println,F("No palettes loaded or wrong value!"));
-    return;
-  }
-
-  curPalette = _pals.at(_val);
- 
-  //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
-}
-
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
@@ -1748,8 +1736,8 @@ void EffectComet::load() {
 }
 
 bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun(4.0))
-    return false;
+  // if (dryrun(4.0))
+  //   return false;
 
   switch (effect)
   {
@@ -2455,21 +2443,34 @@ void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
+// В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
+void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
+  if (!_pals.size()) {
+    LOG(println,F("No palettes loaded or wrong value!"));
+    return;
+  }
+
+  curPalette = _pals.at(_val);
+ 
+  //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
+}
+
+void EffectWaves::setscl(const byte _scl){
+  EffectCalc::setscl(_scl);
 
   waveCount = (scale <= 16 ? (scale <= 8 ? 0 : 1) : (scale >= 25 ? 1 : 0));
   waveRotation = (scale <= 16 ? 0 : 1);  /* сильно перебрал управление эффектом
-  не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции. 
-*/
-   
+                                            не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции. 
+                                          */
+  palettemap(palettes,  (scale <= 16 ? (scale <= 8 ? map(scale, 1, 8, 0, 7) : map(scale, 9, 16, 0, 7)) : (scale >= 25 ? map(scale, 25, 32, 0, 7) : map(scale, 17, 24, 0, 7))));
+}
+
+bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
   return wavesRoutine(*&ledarr, &*opt);
 }
 
 bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
 {
-
-  WavesPaletteMap(palettes,  (scale <= 16 ? (scale <= 8 ? map(scale, 1, 8, 0, 7) : map(scale, 9, 16, 0, 7)) : (scale >= 25 ? map(scale, 25, 32, 0, 7) : map(scale, 17, 24, 0, 7))));
-
   if (curPalette == nullptr) {
     return false;
   }
@@ -3963,13 +3964,13 @@ void EffectFireworks::setDynCtrl(UIControl*_val) {
   flashing = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
 }
 
-CRGB &Dot::piXY(CRGB *leds, byte x, byte y, CRGB empty) {
+CRGB &Dot::piXY(CRGB *leds, byte x, byte y) {
   x -= PIXEL_X_OFFSET;
   y -= PIXEL_Y_OFFSET;
   if( x < WIDTH && y < HEIGHT) {
     return leds[myLamp.getPixelNumber(x, y)];
   } else
-    return empty; // не знаю как убрать варнинг, но возврат leds[0] создает мигающий пиксель 0,0. Это тоже не решение. :(
+    return empty; // fixed
 }
 
 void Dot::Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor, uint8_t dim)
@@ -5678,7 +5679,18 @@ void EffectTest::load() {
   palettes.push_back(&NormalFire2_p);
   palettes.push_back(&WoodFireColors_p);
 
-  WavesPaletteMap(palettes,  _pal);
+  palettemap(palettes,  _pal);
+}
+
+void EffectTest::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
+  if (!_pals.size()) {
+    LOG(println,F("No palettes loaded or wrong value!"));
+    return;
+  }
+
+  curPalette = _pals.at(_val);
+ 
+  //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
 void EffectTest::setDynCtrl(UIControl*_val)
@@ -5687,7 +5699,7 @@ void EffectTest::setDynCtrl(UIControl*_val)
 
   if(_val->getId()==3) { // Выбор палитры
     _pal = _val->getVal().toInt() - 1;
-    WavesPaletteMap(palettes,  _pal);
+    palettemap(palettes,  _pal);
   }
 }
 

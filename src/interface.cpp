@@ -143,7 +143,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     } else if (act == FPSTR(TCONST_000A)) {
         myLamp.effects.deleteEffect(confEff); // удаляем текущий
     } else if (act == FPSTR(TCONST_000B)) {
-        optionsTicker.once(1,std::bind([]{
+        optionsTicker.once(5,std::bind([]{
             myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
             delayedcall_effects_main();
         }));
