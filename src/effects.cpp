@@ -2441,17 +2441,18 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 // Адаптация от (c) SottNick
 void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
+  waveCount = (scale <= 16 ? (scale <= 8 ? 0 : 1) : (scale >= 25 ? 1 : 0));
+  waveRotation = (scale <= 16 ? 0 : 1);
 }
 
 // В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
 void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
-  if (!_pals.size()) {
+  std::size_t idx = (_val-1)%8;
+  if (!_pals.size() || idx>=_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
-
-  curPalette = _pals.at(_val);
- 
+  curPalette = _pals.at(idx);
   //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
@@ -2459,10 +2460,8 @@ void EffectWaves::setscl(const byte _scl){
   EffectCalc::setscl(_scl);
 
   waveCount = (scale <= 16 ? (scale <= 8 ? 0 : 1) : (scale >= 25 ? 1 : 0));
-  waveRotation = (scale <= 16 ? 0 : 1);  /* сильно перебрал управление эффектом
-                                            не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции. 
-                                          */
-  palettemap(palettes,  (scale <= 16 ? (scale <= 8 ? map(scale, 1, 8, 0, 7) : map(scale, 9, 16, 0, 7)) : (scale >= 25 ? map(scale, 25, 32, 0, 7) : map(scale, 17, 24, 0, 7))));
+  waveRotation = (scale <= 16 ? 0 : 1);  // сильно перебрал управление эффектом
+                                         // не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции. 
 }
 
 bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
@@ -5657,6 +5656,11 @@ bool EffectDNA::run(CRGB *ledarr, EffectWorker *opt) {
 
 // ----------- Эффект "Тест"
 void EffectTest::load() {
+  regenNoise();
+  palettesload();    // подгружаем палитры
+}
+
+void EffectTest::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
   palettes.push_back(&CopperFireColors_p);
@@ -5669,12 +5673,10 @@ void EffectTest::load() {
   palettes.push_back(&HeatColors2_p);
   palettes.push_back(&NormalFire2_p);
   palettes.push_back(&WoodFireColors_p);
-
-  palettemap(palettes,  _pal);
-  regenNoise();
-
-
+  usepalettes = true; // включаем флаг палитр
+  scale2pallete();    // выставляем текущую палитру
 }
+
 
 void EffectTest::regenNoise() {
   uint16_t b = millis();
@@ -5692,22 +5694,21 @@ void EffectTest::regenNoise() {
 }
 
 void EffectTest::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
-  if (!_pals.size()) {
+  std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
+  if (!_pals.size() || idx>=_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
 
-  curPalette = _pals.at(_val);
+  curPalette = _pals.at(idx);
 }
 
 void EffectTest::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3) { // Выбор палитры
-    _pal = _val->getVal().toInt() - 1;
-    palettemap(palettes,  _pal);
+    _pal = _val->getVal().toInt() - 1; // а нафига эта переменная? непонятно, оставлю...
   }
-
 }
 
 /*
@@ -5726,10 +5727,8 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
 */
 
 bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
-  /*if (csum != (127U^scale)) {
-    csum = (127U^scale);
-    regenNoise();
-  }*/
+  if(!curPalette) return false;
+
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.05, 1.);
 
   for (uint8_t i = 0; i < NUM_COLS; i++)

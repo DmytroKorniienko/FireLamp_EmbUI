@@ -1607,6 +1607,7 @@ private:
     bool testRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
     void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val) override;
+    void palettesload() override;
     void regenNoise();
 
 public:
