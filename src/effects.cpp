@@ -206,7 +206,7 @@ void EffectCalc::scale2pallete(){
 }
 
 // В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
-void EffectWaves::WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
+void EffectCalc::WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
   if (!_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
@@ -1454,7 +1454,9 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     }
     for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
       bballsCOLOR[i] = random8();
+      bballsBri[i] = 128;
       bballsX[i] = random8(0, WIDTH-1);
+      bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 128);
       bballsTLast[i] = millis();
       bballsPos[i] = 0.0f;                                 // Balls start on the ground
       bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
@@ -1500,8 +1502,10 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
         else bballsX[i] += 1;
       }
     }
-    myLamp.drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, 255));
-
+    // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой, 
+    // который движится в том же Х. И каждый следующий ярче предыдущего.
+    bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 128); 
+    myLamp.drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]));
   }
   return true;
 }
@@ -2591,12 +2595,24 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
 // https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 // там по ссылке ещё остались эффекты с 3 по 9 (в SimplePatternList перечислены)
+void EffectRain::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3) // Тучка
+    clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+  
+  if(_val->getId()==4) // sizeY
+    storm = _val->getVal() == FPSTR(TCONST_FFFF);
+}
+
 bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
 {
   if (dryrun(4.0))
     return false;
     speedfactor = EffectMath::fmap((float)speed, 1., 255., 1., .1);
-
+  return simpleRainRoutine(*&ledarr, &*opt);
+  
+/*
     switch (effect)
     {
     case EFF_ENUM::EFF_RAIN:
@@ -2606,14 +2622,14 @@ bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
       return coloredRainRoutine(*&ledarr, &*opt);
       break;
     case EFF_ENUM::EFF_STORMYRAIN:
-      return stormyRainRoutine(*&ledarr, &*opt);
+      return simpleRainRoutine(*&ledarr, &*opt);
       break;
     default:
       return false;
-    }
+    } */
 }
 
-void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC)
+void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor)
 {
   // static uint16_t noiseX = random16();
   // static uint16_t noiseY = random16();
@@ -2694,11 +2710,11 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     if (clouds)
     {
       EffectMath::Clouds(rhue, (storm ? EffectMath::Lightning() : false));
-    }
+    } else if (storm) EffectMath::Lightning();
   
   }
 }
-
+/*
 uint8_t EffectRain::myScale8(uint8_t x)
 { // даёт масштабировать каждые 8 градаций (от 0 до 7) бегунка Масштаб в значения от 0 до 255 по типа синусоиде
   uint8_t x8 = x % 8U;
@@ -2724,33 +2740,24 @@ bool EffectRain::coloredRainRoutine(CRGB *leds, EffectWorker *param) // вним
   //rain(60, 200, map8(intensity,5,100), 195, CRGB::Green, false, false, false); // было CRGB::Green
 
   if (scale > 255U-8U)
-    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), solidRainColor, false, false, false);
+    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), solidRainColor);
   else if (scale > 255U-16U)
-    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), randomRainColor, false, false, false, true);
+    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), randomRainColor);
   else
-    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), CHSV(scale, 255U, 255U), false, false, false);
+    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), CHSV(scale, 255U, 255U));
   return true;
 }
-
+*/
 bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB solidRainColor = CRGB(60, 80, 90);
   //uint8_t Scale = scale;
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
   //rain(60, 200, map8(intensity,2,60), 10, solidRainColor, true, true, false);
-  rain(60, 180, scale, 30, solidRainColor, true, true, false);
+  rain(60, 180, scale, 30, solidRainColor);
   return true;
 }
 
-bool EffectRain::stormyRainRoutine(CRGB *leds, EffectWorker *param)
-{
-  CRGB solidRainColor = CRGB(60, 80, 90);
-  //uint8_t Scale = scale;
-  // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
-  //rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
-  rain(60, 160, scale, 20, solidRainColor, true, true, true);
-  return true;
-}
 
 
 // ============= FIRE 2018 /  ОГОНЬ 2018 ===============
@@ -5539,7 +5546,16 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 //------------ Эффект "За окном идет дождь..."
-// (c) Idir Idir (Soulmate)
+// (c) Idir Idir (Soulmate) переделан кардинально kostyamat
+void EffectCRain::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3) // Тучка
+    clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+  
+  if(_val->getId()==4) // sizeY
+    storm = _val->getVal() == FPSTR(TCONST_FFFF);
+}
 bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
   return crainRoutine(*&ledarr, &*opt);
 }
@@ -5549,7 +5565,7 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
     byte sat = beatsin8(30, 150, 255);
   for (byte i = 0; i < WIDTH; i++)
   {
-    for (float j = 0.; j < (float)HEIGHT - 4.5; j += speedFactor)
+    for (float j = 0.; j < ((float)HEIGHT - (clouds ? 4.5 : 1.)); j += speedFactor)
     {
       byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       if (layer)
@@ -5588,7 +5604,113 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
     updaterain(*&leds, speedfactor); 
     lastrun = millis();
   }
-
-  EffectMath::Clouds(2, EffectMath::Lightning(CHSV(30,90,255), 255U));
+  if (clouds)
+    EffectMath::Clouds(2, storm ? EffectMath::Lightning(CHSV(30,90,255), 255U) : false);
+  else if (storm) EffectMath::Lightning(CHSV(30,90,255), 255U);
   return true;
 }
+
+// ----------- Эфеект "ДНК"
+void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
+  // extract the fractional parts and derive their inverses
+  uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
+  // calculate the intensities for each affected pixel
+  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  // multiply the intensities by the colour, and saturating-add them to the pixels
+  for (uint8_t i = 0; i < 4; i++) {
+    uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
+    myLamp.getUnsafeLedsArray()[xy].r = qadd8(myLamp.getUnsafeLedsArray()[xy].r, col->r * wu[i] >> 8);
+    myLamp.getUnsafeLedsArray()[xy].g = qadd8(myLamp.getUnsafeLedsArray()[xy].g, col->g * wu[i] >> 8);
+    myLamp.getUnsafeLedsArray()[xy].b = qadd8(myLamp.getUnsafeLedsArray()[xy].b, col->b * wu[i] >> 8);
+  }
+}
+
+bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
+{
+  speeds = map(speed, 1, 255, 10, 60);
+  fadeToBlackBy(leds, NUM_LEDS, speeds /*map(speed, 1, 255, 15, 90)*/);
+
+  for (uint8_t i = 0; i < LED_ROWS; i++)
+  {
+    uint16_t ms = millis();
+    uint32_t x = beatsin16(speeds, 0, (LED_COLS - 1) * 256, 0, i * freq);
+    uint32_t y = i * 256;
+    uint32_t x1 = beatsin16(speeds, 0, (LED_COLS - 1) * 256, 0, i * freq + 32768);
+
+    CRGB col = CHSV(ms / 29 + i * 255 / (LED_ROWS - 1), 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn));
+    CRGB col1 = CHSV(ms / 29 + i * 255 / (LED_ROWS - 1) + 128, 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn + 128));
+    wu_pixel (x , y, &col);
+    wu_pixel (x1 , y, &col1);
+  }
+
+  myLamp.blur2d(16);
+  return true;
+}
+
+bool EffectDNA::run(CRGB *ledarr, EffectWorker *opt) {
+
+  return DNARoutine(*&ledarr, &*opt);
+}
+
+// ----------- Эффект "Тест"
+/*    DEFINE_GRADIENT_PALETTE(firepal){
+    // define fire palette
+    0,   0,   0,   0,        //black
+    32,  255, 0,   0,     // red
+    180, 235, 235, 0,  //yellow
+    255, 255, 255, 255 // white
+    };
+*/
+void EffectTest::load() {
+  //CRGBPalette16 myPal = firepal;
+  // собираем свой набор палитр для эффекта
+  palettes.reserve(NUMPALETTES);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&SodiumFireColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&HeatColors2_p);
+  palettes.push_back(&NormalFire2_p);
+  palettes.push_back(&WoodFireColors_p);
+
+  WavesPaletteMap(palettes,  _pal);
+}
+
+void EffectTest::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+
+  if(_val->getId()==3) { // Выбор палитры
+    _pal = _val->getVal().toInt() - 1;
+    WavesPaletteMap(palettes,  _pal);
+  }
+}
+
+bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
+  //CRGBPalette16 myPal = firepal;
+  uint8_t speedy = map(speed, 1, 255, 255, 0);
+  uint8_t _scale = scale + 30;
+
+  uint32_t a = millis();
+  for (byte i = 0U; i < LED_COLS; i++) {
+    for (float j = 0.; j < (float)LED_ROWS; j+= 0.25) {
+      //leds[XY((LED_COLS - 1) - i, (LED_ROWS - 1) - j)] = ColorFromPalette(*curPalette/*myPal*/, qsub8(inoise8(i * scale, j * scale + a, a / speed), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255);
+//      if(curPalette!=palettes.at(10))
+        myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette/*myPal*/, qsub8(inoise8(i * _scale, j * _scale + a, a / speedy), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255));
+//      else
+//        myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(HeatColors2_p/*myPal*/, qsub8(inoise8(i * _scale, j * _scale + a, a / speedy), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255));
+    }
+  }
+  return true;
+}
+
+bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
+  
+  return testRoutine(*&ledarr, &*opt);
+}
+

@@ -287,6 +287,13 @@ public:
      */
     void scale2pallete();
 
+      /**
+    * Vpalletemap - меняет указатель на текущую палитру из набора в соответствие с N-ным значением 
+    * @param _val - N-ное значение 0-7
+    * @param _pals - набор с палитрами
+    */
+void WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val);
+
 
     /**
      * деструктор по-умолчанию пустой, может быть переопределен
@@ -387,13 +394,14 @@ public:
 class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
-    uint8_t bballsNUM_BALLS;                             // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-    byte bballsCOLOR[bballsMaxNUM_BALLS] ;           // прикручено при адаптации для разноцветных мячиков
-    int8_t bballsX[bballsMaxNUM_BALLS] ;               // прикручено при адаптации для распределения мячиков по радиусу лампы
+    uint8_t bballsNUM_BALLS;                            // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
+    byte bballsCOLOR[bballsMaxNUM_BALLS] ;              // прикручено при адаптации для разноцветных мячиков
+    byte bballsBri[bballsMaxNUM_BALLS];                 // --- // ---
+    int8_t bballsX[bballsMaxNUM_BALLS] ;                // прикручено при адаптации для распределения мячиков по радиусу лампы
     float bballsPos[bballsMaxNUM_BALLS] ;               // The integer position of the dot on the strip (LED index)
-    float bballsHi = 0.0;                                    // An array of heights
+    float bballsHi = 0.0;                               // An array of heights
     float bballsVImpact[bballsMaxNUM_BALLS] ;           // As time goes on the impact velocity will change, so make an array to store those values
-    float bballsTCycle = 0.0;                                // The time since the last time the ball struck the ground
+    float bballsTCycle = 0.0;                           // The time since the last time the ball struck the ground
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
@@ -778,13 +786,6 @@ private:
   float waveTheta;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
 
-  /**
-    * Vpalletemap - меняет указатель на текущую палитру из набора в соответствие с N-ным значением 
-    * @param _val - N-ное значение 0-7
-    * @param _pals - набор с палитрами
-*/
-virtual void WavesPaletteMap(std::vector<PGMPalette*> &_pals, const uint8_t _val);
-
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -914,11 +915,14 @@ private:
   uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
   float speedfactor;
   uint8_t myScale8(uint8_t x);
+  bool clouds = false;
+  bool storm = false;
+  bool splashes = true;
    
-
-  void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm, bool fixRC = false);
-  bool coloredRainRoutine(CRGB *leds, EffectWorker *param);
-  bool stormyRainRoutine(CRGB *leds, EffectWorker *param);
+  void setDynCtrl(UIControl*_val) override;
+  void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor);
+  //bool coloredRainRoutine(CRGB *leds, EffectWorker *param);
+  //bool stormyRainRoutine(CRGB *leds, EffectWorker *param);
   bool simpleRainRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1538,6 +1542,9 @@ private:
     byte counter = 1;
     int8_t _speed = 1;
     float hue;
+    bool storm = false;
+    bool clouds = false;
+    void setDynCtrl(UIControl*_val) override;
 
     void changepattern()
     {
@@ -1573,6 +1580,37 @@ private:
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
+};
+
+// ----------- Эфеект "ДНК"
+class EffectDNA : public EffectCalc {
+private:
+    double freq = 3000;
+    float mn =255.0/13.8;
+    uint8_t speeds = 30;
+
+    bool DNARoutine(CRGB *leds, EffectWorker *param);
+    //void setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ----------- Эффект "Тест"
+class EffectTest : public EffectCalc {
+private:
+ /*   int scale = 60; // scale of fire
+    int speed = 20;   //speed of effect
+*/
+    byte _pal = 8;
+
+    bool testRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
 // --------- конец секции эффектов 

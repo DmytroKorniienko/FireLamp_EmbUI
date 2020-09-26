@@ -164,9 +164,13 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     worker = std::unique_ptr<EffectCube2d>(new EffectCube2d());
     break;
   case EFF_ENUM::EFF_RAIN :
-  case EFF_ENUM::EFF_COLORRAIN :
-  case EFF_ENUM::EFF_STORMYRAIN :
     worker = std::unique_ptr<EffectRain>(new EffectRain());
+    break;
+  case EFF_ENUM::EFF_CRAIN :
+    worker = std::unique_ptr<EffectCRain>(new EffectCRain());
+    break;
+  case EFF_ENUM::EFF_DNA :
+    worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
   case EFF_ENUM::EFF_PICASSO :
   case EFF_ENUM::EFF_PICASSO2 :
@@ -221,12 +225,12 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SNAKE2 :
     worker = std::unique_ptr<EffectSnake2>(new EffectSnake2());
     break; 
-    case EFF_ENUM::EFF_FLOWER :
+  case EFF_ENUM::EFF_FLOWER :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());
     break; 
-  case EFF_ENUM::EFF_CRAIN :
-    worker = std::unique_ptr<EffectCRain>(new EffectCRain());
-    break;
+  case EFF_ENUM::EFF_TEST :
+    worker = std::unique_ptr<EffectTest>(new EffectTest());
+    break; 
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());
