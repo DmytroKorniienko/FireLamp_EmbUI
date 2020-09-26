@@ -5631,7 +5631,7 @@ void wu_pixel(uint32_t x, uint32_t y, CRGB * col) {      //awesome wu_pixel proc
 bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
 {
   speeds = map(speed, 1, 255, 10, 60);
-  fadeToBlackBy(leds, NUM_LEDS, speeds /*map(speed, 1, 255, 15, 90)*/);
+  fadeToBlackBy(leds, NUM_LEDS, speeds);
 
   for (uint8_t i = 0; i < LED_ROWS; i++)
   {
@@ -5656,16 +5656,7 @@ bool EffectDNA::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 // ----------- Эффект "Тест"
-/*    DEFINE_GRADIENT_PALETTE(firepal){
-    // define fire palette
-    0,   0,   0,   0,        //black
-    32,  255, 0,   0,     // red
-    180, 235, 235, 0,  //yellow
-    255, 255, 255, 255 // white
-    };
-*/
 void EffectTest::load() {
-  //CRGBPalette16 myPal = firepal;
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
   palettes.push_back(&CopperFireColors_p);
@@ -5680,6 +5671,24 @@ void EffectTest::load() {
   palettes.push_back(&WoodFireColors_p);
 
   palettemap(palettes,  _pal);
+  regenNoise();
+
+
+}
+
+void EffectTest::regenNoise() {
+  uint16_t b = millis();
+  for (uint8_t i = 0; i < LED_COLS; i++)
+  {
+    for (uint8_t j = 0; j < (NOISE_HEIGHT); j++)
+    {
+      noises[j * LED_COLS + i] = inoise8(i * (scale+30), j * (scale+30) + b / scale);//inoise8(i * (scale+30), j * (scale+30)); //init noise buffer
+    }
+  }
+  for (uint8_t j = 0; j < LED_ROWS; j++)
+  {
+    colorfade[j] = abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1); // init colorfade table
+  }
 }
 
 void EffectTest::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
@@ -5689,40 +5698,57 @@ void EffectTest::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val)
   }
 
   curPalette = _pals.at(_val);
- 
-  //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
 }
 
 void EffectTest::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-
   if(_val->getId()==3) { // Выбор палитры
     _pal = _val->getVal().toInt() - 1;
     palettemap(palettes,  _pal);
   }
+
 }
 
+/*
 bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
-  //CRGBPalette16 myPal = firepal;
   uint8_t speedy = map(speed, 1, 255, 255, 0);
   uint8_t _scale = scale + 30;
 
   uint32_t a = millis();
   for (byte i = 0U; i < LED_COLS; i++) {
     for (float j = 0.; j < (float)LED_ROWS; j+= 0.25) {
-      //leds[XY((LED_COLS - 1) - i, (LED_ROWS - 1) - j)] = ColorFromPalette(*curPalette/*myPal*/, qsub8(inoise8(i * scale, j * scale + a, a / speed), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255);
-//      if(curPalette!=palettes.at(10))
-        myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette/*myPal*/, qsub8(inoise8(i * _scale, j * _scale + a, a / speedy), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255));
-//      else
-//        myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(HeatColors2_p/*myPal*/, qsub8(inoise8(i * _scale, j * _scale + a, a / speedy), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255));
+        myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * _scale, j * _scale + a, a / speedy), abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1)), 255));
     }
   }
+  return true;
+} 
+*/
+
+bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
+  /*if (csum != (127U^scale)) {
+    csum = (127U^scale);
+    regenNoise();
+  }*/
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.05, 1.);
+
+  for (uint8_t i = 0; i < NUM_COLS; i++)
+  {
+    for (float j = 0.; j < NUM_ROWS; j+= speedfactor)
+    {
+      uint16_t index = ((uint8_t)j + a + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
+     // leds[XY((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j)] = ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[j]), 255);
+      myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])));
+    }
+  }
+  a++;
   return true;
 }
 
 bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
-  
+  EVERY_N_MILLISECONDS(100) {
+    regenNoise();
+  }
   return testRoutine(*&ledarr, &*opt);
 }
 

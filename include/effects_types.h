@@ -365,6 +365,10 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
 #define LED_ROWS HEIGHT
 #define LED_COLS WIDTH
 
+// И еще одно представление высоты и ширины матрицы, часто встречаеться последнее время
+#define NUM_ROWS HEIGHT
+#define NUM_COLS WIDTH
+
 // ==== Константы для эффектов ====
 
 // Эффекты на базе "3D Noise"
