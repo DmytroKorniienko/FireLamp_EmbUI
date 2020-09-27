@@ -55,12 +55,7 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
         break;
     }
   }
-
-  if(!_lampstate->isMicOn){ // при отключенном глобальном дернем выключение
-    UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), FPSTR(TCONST_FFFE), String(""), String(""), String(""));
-    setDynCtrl(ctrl);
-    delete ctrl;
-  }
+  lampstate = _lampstate;
 
   active=true;
   load();
@@ -101,6 +96,11 @@ bool EffectCalc::status(){return active;}
 void EffectCalc::setbrt(const byte _brt){
   brightness = _brt;
   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
+  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+  if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
+    palettemap(palettes, _brt);
+    paletteIdx = _brt;
+  }
 }
 
 /**
@@ -109,6 +109,11 @@ void EffectCalc::setbrt(const byte _brt){
 void EffectCalc::setspd(const byte _spd){
   speed = _spd;
   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
+  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+  if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
+    palettemap(palettes, _spd);
+    paletteIdx = _spd;
+  }
 }
 
 /**
@@ -118,7 +123,8 @@ void EffectCalc::setscl(byte _scl){
   scale = _scl;
   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
 
-  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete))){   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры
+  // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
+  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
     palettemap(palettes, _scl);
     paletteIdx = _scl;
   }
@@ -141,7 +147,7 @@ void EffectCalc::setDynCtrl(UIControl*_val){
   LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
   
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = _val->getVal()==FPSTR(TCONST_FFFF) ? true : false;
+    isMicActive = (_val->getVal()==FPSTR(TCONST_FFFF) && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif

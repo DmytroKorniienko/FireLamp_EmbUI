@@ -138,6 +138,7 @@ class EffectListElem{
 class EffectCalc {
 private:
     EffectWorker *pworker = nullptr; // указатель на воркер
+    LAMPSTATE *lampstate = nullptr;
     LList<UIControl *> *ctrls;
     String dummy; // дефолтная затычка для отсутствующего контролла, в случае приведения к целому получится "0"
 protected:
