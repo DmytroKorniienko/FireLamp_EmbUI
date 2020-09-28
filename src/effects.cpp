@@ -1777,7 +1777,8 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 256U - scale);
   float beat2 = (10.0 -  (float)beatsin8(3, 10, 20)) / 10.;
   for (uint8_t i = 1; i < WIDTH; i += 2) {
-    leds[XY( i, e_centerY)] += CHSV(i * 2 , 255, 255);
+    //leds[XY( i, e_centerY)] += CHSV(i * 2 , 255, 255);
+    leds[myLamp.getPixelNumber( i, e_centerY)] += CHSV(i * 2 , 255, 255);
   }
   // Noise
   e_x[0] += 3000;
@@ -1798,7 +1799,8 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 255 - map(scale, 1, 255, 180, 254));
   //uint8_t beat = beatsin8(5, 127, 180);
   for (uint8_t i = 1; i < WIDTH; i += 2) {
-    leds[XY( i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
+    //leds[XY( i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
+    leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
   }
   // Noise
   e_x[0] += 3000;
@@ -5578,7 +5580,8 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
   {
     for (float j = 0.; j < ((float)HEIGHT - (clouds ? 4.5 : 1.)); j += speedFactor)
     {
-      byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
+      //byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
+      byte layer = rain[myLamp.getPixelNumber(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       if (layer)
       {
       
