@@ -39,6 +39,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_lampstate){
   effect=_eff;
+  lampstate = _lampstate;
+
   for(int i=0; i<controls->size(); i++){
     switch(i){
       case 0:
@@ -55,7 +57,6 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
         break;
     }
   }
-  lampstate = _lampstate;
 
   active=true;
   load();
@@ -5422,8 +5423,10 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
 {
   for (int i = 0; i < (int)SNAKE_LENGTH; i++)
   {
-    if (subpix)
+    if (subpix){
+      //myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]); // тест
       myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
+    }
     else 
       myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]);
   }
@@ -5629,7 +5632,8 @@ void wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel proced
                    WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
-    uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
+    //uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
+    uint16_t xy = myLamp.getPixelNumber((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
     myLamp.getUnsafeLedsArray()[xy].r = qadd8(myLamp.getUnsafeLedsArray()[xy].r, col.r * wu[i] >> 8);
     myLamp.getUnsafeLedsArray()[xy].g = qadd8(myLamp.getUnsafeLedsArray()[xy].g, col.g * wu[i] >> 8);
     myLamp.getUnsafeLedsArray()[xy].b = qadd8(myLamp.getUnsafeLedsArray()[xy].b, col.b * wu[i] >> 8);
