@@ -5470,7 +5470,7 @@ bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
     fill_palette(
       colors, 
       SNAKE2_LENGTH, 
-      : (disko ? (hue += EffectMath::randomf(0, 2. * speedFactor)) : hue),
+      (disko ? (hue += EffectMath::randomf(0, 2. * speedFactor)) : hue),
       5, 
       *curPalette, 
       255, 
