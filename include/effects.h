@@ -316,6 +316,15 @@ public:
   static bool Lightning(CRGB lightningColor = CHSV(30,90,255) /*CRGB(72, 72, 80)*/, uint8_t chanse = 72U);
   static void Clouds(uint8_t rhue = 2, bool flash = false);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
+  static void nightMode(CRGB *leds)
+    {
+        for (uint16_t i = 0; i < NUM_LEDS; i++)
+        {
+            leds[i].r = dim8_video(leds[i].r);
+            leds[i].g = dim8_video(leds[i].g);
+            leds[i].b = dim8_video(leds[i].b);
+        }
+    }
 
   /*
   static CRGB& piXY(CRGB *leds, byte x, byte y);
@@ -561,13 +570,13 @@ private:
 
   // COOLING: How much does the air cool as it rises?
   // Less cooling = taller flames.  More cooling = shorter flames.
-    uint8_t cooling = 100U; // 70
+    uint8_t cooling = 80U; // 70
   // SPARKING: What chance (out of 255) is there that a new spark will be lit?
   // Higher chance = more roaring fire.  Lower chance = more flickery fire.
-    const uint8_t sparking = 80U; // 130
+    const uint8_t sparking = 90U; // 130
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-    const uint8_t fireSmoothing = 130U; // 90
+    const uint8_t fireSmoothing = 70U; // 90
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
      
 
@@ -1413,15 +1422,16 @@ public:
 
 //------------ Эффект "Змеиный Остров"
 // База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
-class EffectSnake2 : public EffectCalc {
+class EffectSnake2 : public EffectCalc
+{
 private:
-    byte hue = 0;
-    bool disko = false;
-    bool subPix = false;
+    float hue;
     float speedFactor;
-    static const uint8_t snakeCount = WIDTH / 4;
-    void load() override;
+    static const uint8_t snakeCount = WIDTH / 2U;
+    bool subPix = false;
+    bool disko;
 
+    void load() override;
     enum Direction
     {
         UP,
@@ -1432,14 +1442,16 @@ private:
 
     struct Pixel
     {
-        byte x;
-        byte y;
+        float x;
+        float y;
     };
 
-    CRGB colors[SNAKE2_LENGTH];
+    CRGB colors[SNAKE_LENGTH];
     struct Snake
     {
-        Pixel pixels[SNAKE2_LENGTH];
+        float internal_counter = 0.0;
+        float internal_speedf = 1.0;
+        Pixel pixels[SNAKE_LENGTH];
 
         Direction direction;
 
@@ -1461,53 +1473,60 @@ private:
             }
         };
 
-        void shuffleDown()
+        void shuffleDown(float speedFactor)
         {
-            for (uint8_t i = SNAKE2_LENGTH - 1; i > 0; i--)
+            internal_counter += speedFactor * internal_speedf;
+
+            if (internal_counter > 1.0)
             {
-                pixels[i] = pixels[i - 1];
+                for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
+                {
+                    pixels[i] = pixels[i - 1];
+                }
+                double f;
+                internal_counter = modf(internal_counter, &f);
             }
         }
 
         void reset()
         {
             direction = UP;
-            for (uint8_t i = 0; i < SNAKE2_LENGTH; i++)
+            for (int i = 0; i < (int)SNAKE_LENGTH; i++)
             {
                 pixels[i].x = 0;
                 pixels[i].y = 0;
             }
         }
 
-        void move()
+        void move(float speedfactor)
         {
             switch (direction)
             {
             case UP:
-                pixels[0].y = (pixels[0].y + 1) % HEIGHT;
+                pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + speedfactor);
                 break;
             case LEFT:
-                pixels[0].x = (pixels[0].x + 1) % WIDTH;
+                pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + speedfactor);
                 break;
             case DOWN:
-                pixels[0].y = pixels[0].y == 0 ? HEIGHT - 1 : pixels[0].y - 1;
+                pixels[0].y = pixels[0].y <= 0 ? HEIGHT - speedfactor : pixels[0].y - speedfactor;
                 break;
             case RIGHT:
-                pixels[0].x = pixels[0].x == 0 ? WIDTH - 1 : pixels[0].x - 1;
+                pixels[0].x = pixels[0].x <= 0 ? WIDTH - speedfactor : pixels[0].x - speedfactor;
                 break;
             }
         }
 
-        void draw(CRGB colors[SNAKE2_LENGTH], float speedfactor, bool subpix);
+        void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix);
     };
 
     Snake snakes[snakeCount];
-    void setDynCtrl(UIControl*_val) override;
+    void setDynCtrl(UIControl *_val) override;
     bool snakeRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     //void load();
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
 };
 
 // --------------  Эффект "Цветение"
@@ -1577,6 +1596,7 @@ public:
 };
 
 // ----------- Эфеект "ДНК"
+// База https://pastebin.com/jwvC1sNF адаптация и доработки kostyamat
 class EffectDNA : public EffectCalc {
 private:
     double freq = 3000;
@@ -1591,8 +1611,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Тест"
-class EffectTest : public EffectCalc {
+// ----------- Эффект "Огненная Лампа"
+// База https://pastebin.com/eKqe4zzA переделака на субпиксель и доработки - kostyamat
+class EffectFire2020 : public EffectCalc {
 private:
  /*   int scale = 60; // scale of fire
     int speed = 20;   //speed of effect
@@ -1604,8 +1625,17 @@ private:
     byte _pal = 8;
     byte _scale = 60;
     byte csum = 0;
+    void adjust_gamma(CRGB *leds)
+    {
+        for (uint16_t i = 0; i < NUM_LEDS; i++)
+        {
+            leds[i].r = dim8_video(leds[i].r);
+            leds[i].g = dim8_video(leds[i].g);
+            leds[i].b = dim8_video(leds[i].b);
+        }
+    }
 
-    bool testRoutine(CRGB *leds, EffectWorker *param);
+    bool fire2020Routine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
     void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val) override;
     void palettesload() override;

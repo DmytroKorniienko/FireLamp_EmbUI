@@ -466,7 +466,7 @@ void LAMP::drawPixelXYF(float x, float y, const CRGB &color)
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (xn * yn < NUM_LEDS) myLamp.drawPixelXY(xn, yn, EffectMath::makeDarker(clr, 5));
+    if (xn * yn < NUM_LEDS) myLamp.drawPixelXY(xn, yn, EffectMath::makeDarker(clr, 25));
   }
 }
 
@@ -487,7 +487,7 @@ void LAMP::drawPixelXYF_X(float x, uint16_t y, const CRGB &color)
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-     if (xn * y < NUM_LEDS) myLamp.drawPixelXY(xn, y, clr);
+     if (xn * y < NUM_LEDS) myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, 50));
   }
 }
 
@@ -509,7 +509,7 @@ void LAMP::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color)
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
 
-     if (x * yn < NUM_LEDS) myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, 60));
+     if (x * yn < NUM_LEDS) myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, 50));
   }
 }
 

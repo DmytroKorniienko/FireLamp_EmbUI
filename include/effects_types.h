@@ -137,7 +137,7 @@ EFF_FLINE,                                    // Парящий огонь
 EFF_FFIRE,                                    // Северное сияние
 EFF_FLSNAKE,                                  // Радужный Змей
 EFF_FLOWER,                                   // Цветение
-EFF_TEST,                                     // Огонь 2020 (Тест)
+EFF_TEST,                                     //  (Тест)
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -176,7 +176,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 3, 3, 2, // 0-15
+  1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 5, 3, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 3, 1, 1, 3, 3, 1, 3, 3, // 16-31
   1, 3, 3, 3, 3, 3, 2, 5, 5, 5, 2, 1, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 4, 5, 3, 4, 3, 3, 4, 1, 3, 3, 5, 2, // 48 - 63
@@ -261,7 +261,7 @@ static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер капель\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1 = случайный, 255 = белый)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
 static const char E_RAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
 static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
-static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Массштаб\"}, {\"id\":3,\"type\":0,\"val\":8,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Палитра\"}]}";
 
 
 // Инженерный
@@ -273,11 +273,11 @@ static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver
  * не обязательно каждому эффекту лепить свой конфиг, можно ставить указатели на эффекты с похожими контролами
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
-  E_DEFUI, E_WHITE_CFG, E_DEFMICUI, E_DEFMICUI, E_SPARCLES_CFG, E_DEFUI, E_STARFAIL, E_DEFUI, E_LIGHTERS, E_LIGHT2, E_CUBE_CFG, E_PULS_CFG, E_DEFUI, E_FLAMP_CFG, E_2_CFG, E_DEFMICUI, // 0-15
+  E_DEFUI, E_WHITE_CFG, E_DEFMICUI, E_DEFMICUI, E_SPARCLES_CFG, E_DEFUI, E_STARFAIL, E_DEFUI, E_LIGHTERS, E_LIGHT2, E_CUBE_CFG, E_PULS_CFG, E_DEFUI, E_NFIRE_CFG, E_2_CFG, E_DEFMICUI, // 0-15
   E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_DEFMICUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
   E_DEFUI, E_DRIFT_CFG, E_DRIFT_CFG, E_3PAL_CFG, E_RADAR, E_WAVES_CFG, E_3PAL_MIC_CFG, E_RAIN_CFG, E_CRAIN_CFG, E_2_CFG, E_F2018_CFG, E_DEFUI, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
   E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM, E_FWORK_CFG, E_2_CFG, E_MUNCH_MIC_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_SHAD_CFG, E_PATT_CFG, E_ARR_CFG, E_NBAL_CFG, E_ATTRACT_CFG, E_SNAKE_CFG, // 48 - 63
-  E_SNAKE2_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_NFIRE_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
+  E_SNAKE2_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 112 - 127
@@ -1858,4 +1858,21 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 #define SNAKE2_LENGTH (HEIGHT / 2U + WIDTH / 4U)
 #define MAX_SNAKES    (16U) // 16 хватит всем :)
 
-//Молния (инструмент)
+// Gamma corection
+static const uint8_t PROGMEM gamma8[] = {
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
+        1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
+        2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
+        5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+       10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
+       17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
+       25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
+       37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
+       51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
+       69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
+       90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
+      115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
+      144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
+      177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
+      215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
