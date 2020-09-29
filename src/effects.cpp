@@ -5569,13 +5569,14 @@ void EffectCRain::setDynCtrl(UIControl*_val)
   if(_val->getId()==4) // sizeY
     storm = _val->getVal() == FPSTR(TCONST_FFFF);
 }
+
 bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
   return crainRoutine(*&ledarr, &*opt);
 }
 
 void EffectCRain::updaterain(CRGB *leds, float speedFactor)
 {
-    byte sat = beatsin8(30, 150, 255);
+  byte sat = beatsin8(30, 150, 255);
   for (byte i = 0; i < WIDTH; i++)
   {
     for (float j = 0.; j < ((float)HEIGHT - (clouds ? 4.5 : 1.)); j += speedFactor)
@@ -5584,8 +5585,8 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
       byte layer = rain[myLamp.getPixelNumber(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       if (layer)
       {
-      
-        myLamp.drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
+        //myLamp.drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220)); // дождь практически исчез...
+        myLamp.drawPixelXY(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220)); // дождь практически исчез...
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
     }
@@ -5599,25 +5600,56 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
   //blurColumns(leds, WIDTH, HEIGHT, 16);
 }
 
+void EffectCRain::load(){
+  // if (counter)
+  // {
+    raininit(rain);
+  //   counter = 0;
+  // } //init array of dots. run once
+}
+
+void EffectCRain::raininit(byte rain[NUM_LEDS])
+{ //init array of dots. run once
+    for (int i = 0; i < NUM_LEDS; i++)
+    {
+        if (random8(18) == 0)
+        {
+            rain[i] = 1;
+        }
+        else
+        {
+            rain[i] = 0;
+        } //random8(20) number of dots. decrease for more dots
+    }
+}
+
+void EffectCRain::changepattern()
+{
+    int rand1 = random16(NUM_LEDS);
+    int rand2 = random16(NUM_LEDS);
+    if ((rain[rand1] == 1) && (rain[rand2] == 0))
+    { //simple get two random dot 1 and 0 and swap it, this will not change total number of dots
+        rain[rand1] = 0;
+        rain[rand2] = 1;
+    }
+}
+
 bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 0.9);
-  EVERY_N_MILLISECONDS(5) {
-    changepattern();
-  }
 
-  if (counter)
-  {
-    raininit(rain);
-    counter = 0;
-  } //init array of dots. run once
-  if (millis() - lastrun > 40) { 
+  changepattern();
+
+  if(counter>1.0){
     if (scale != 1)
       hue = scale;
     else
       hue += 0.5; 
-    updaterain(*&leds, speedfactor); 
-    lastrun = millis();
+    updaterain(leds, speedfactor); 
+    double f;
+    counter=modf(counter, &f);
   }
+  counter+=speedfactor;
+
   if (clouds)
     EffectMath::Clouds(2, storm ? EffectMath::Lightning(CHSV(30,90,255), 255U) : false);
   else if (storm) EffectMath::Lightning(CHSV(30,90,255), 255U);

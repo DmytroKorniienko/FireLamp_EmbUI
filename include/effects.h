@@ -1552,47 +1552,21 @@ class EffectCRain : public EffectCalc
 private:
     byte rain[NUM_LEDS];
 
-    byte counter = 1;
+    float counter = 1.0;
     int8_t _speed = 1;
     float hue;
     bool storm = false;
     bool clouds = false;
     void setDynCtrl(UIControl*_val) override;
 
-    void changepattern()
-    {
-        int rand1 = random16(NUM_LEDS);
-        int rand2 = random16(NUM_LEDS);
-        if ((rain[rand1] == 1) && (rain[rand2] == 0))
-        { //simple get two random dot 1 and 0 and swap it, this will not change total number of dots
-            rain[rand1] = 0;
-            rain[rand2] = 1;
-        }
-    }
-
-    void raininit(byte rain[NUM_LEDS])
-    { //init array of dots. run once
-        for (int i = 0; i < NUM_LEDS; i++)
-        {
-            if (random8(18) == 0)
-            {
-                rain[i] = 1;
-            }
-            else
-            {
-                rain[i] = 0;
-            } //random8(20) number of dots. decrease for more dots
-        }
-    }
-
+    void changepattern();
+    void raininit(byte rain[NUM_LEDS]);
     void updaterain(CRGB *leds, float speedFactor);
-
-
     bool crainRoutine(CRGB *leds, EffectWorker *param);
-    //void setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
+    void load() override;
 };
 
 // ----------- Эфеект "ДНК"

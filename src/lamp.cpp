@@ -451,7 +451,7 @@ void LAMP::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функци�
 
 void LAMP::drawPixelXYF(float x, float y, const CRGB &color)
 {
-  if (x<0 || y<0) return;
+  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -466,54 +466,49 @@ void LAMP::drawPixelXYF(float x, float y, const CRGB &color)
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (xn * yn < NUM_LEDS) myLamp.drawPixelXY(xn, yn, EffectMath::makeDarker(clr, 25));
+    myLamp.drawPixelXY(xn, yn, EffectMath::makeDarker(clr, 25));
   }
 }
 
 void LAMP::drawPixelXYF_X(float x, uint16_t y, const CRGB &color)
 {
-  if (x<0 || y<0) return;
+  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
 
   // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255., ix = 255 - xx, iy = 255 - yy;
+  uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
   // calculate the intensities for each affected pixel
   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  uint8_t wu[2] = {WU_WEIGHT(ix, y), WU_WEIGHT(xx, y)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
+  for (uint8_t i = 0; i < 2; i++) {
     int16_t xn = x + (i & 1);
     CRGB clr = myLamp.getPixColorXY(xn, y);
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-     if (xn * y < NUM_LEDS) myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, 50));
+    myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, 50));
   }
 }
 
 void LAMP::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color)
 {
-  if (x<0 || y<0) return;
+  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
 
   // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
+  uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
   // calculate the intensities for each affected pixel
   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  uint8_t wu[2] = { WU_WEIGHT(x, iy), WU_WEIGHT(x, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-    int16_t yn = y + ((i >> 1) & 1);
+  for (uint8_t i = 0; i < 2; i++) {
+    int16_t yn = y + (i & 1);
     CRGB clr = myLamp.getPixColorXY(x, yn);
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-
-     if (x * yn < NUM_LEDS) myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, 50));
+    myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, 50));
   }
 }
-
-
 
 void LAMP::drawLine(int x1, int y1, int x2, int y2, const CRGB &color){
   int deltaX = abs(x2 - x1);
