@@ -2688,7 +2688,7 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
         // else if(fixRC && y==(HEIGHT-1) && color==CRGB::Black)
         //   myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, noise3d[0][x][y]));
         // else if(!fixRC)
-          myLamp.drawPixelXY(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
+          //myLamp.drawPixelXY(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
           myLamp.drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
       }
     }
@@ -5591,7 +5591,7 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
       byte layer = rain[myLamp.getPixelNumber(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       if (layer)
       {
-        myLamp.drawPixelXY(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
+        //myLamp.drawPixelXY(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
         myLamp.drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
@@ -5778,7 +5778,7 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
     for (float j = 0.; j < NUM_ROWS; j+= speedfactor)
     {
       uint16_t index = ((uint8_t)j + a + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
-      myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])));
+      myLamp.drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])),10);
     }
   }
   for (uint16_t i = 0; i < NUM_LEDS; i++) // функция Y-субпикселя режет яркость, что полезно для всех эффектов но не для этого. 
