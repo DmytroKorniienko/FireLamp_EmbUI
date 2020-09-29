@@ -5385,7 +5385,7 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 384.0 + 0.025; 
-  fadeToBlackBy(leds, NUM_LEDS, 1 + speed/8 ); // длина хвоста будет зависеть от скорости
+  fadeToBlackBy(leds, NUM_LEDS, 64 ); // длина хвоста будет зависеть от скорости 1 + speed/8
 #ifdef MIC_EFFECTS
   hue+=(speedFactor+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
 #else
@@ -5395,16 +5395,16 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
 
   for (int i = snakeCount - 1; i >= 0; i--)
   {
-    Snake *snake = &snakes[i];
+    EffectSnake::Snake &snake = snakes[i];
     fill_palette(colors, SNAKE_LENGTH, hue*(i+1), i, *curPalette, 255-(i*5+53), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
-    snake->shuffleDown(speedFactor, subPix);
+    snake.shuffleDown(speedFactor, subPix);
 
 #ifdef MIC_EFFECTS
     if(myLamp.getMicMapMaxPeak()>speed/3.0+75.0 && isMicOn()) {
-      snake->newDirection();
+      snake.newDirection();
     } else if (random((speed<25)?speed*50:speed*10) < speed && !isMicOn()) {// как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
-      snake->newDirection();
+      snake.newDirection();
     }
 #else
     if (random((speed<25)?speed*50:speed*10) < speed){ // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
@@ -5412,8 +5412,8 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     }
 #endif
 
-    snake->move(speedFactor);
-    snake->draw(colors, speedFactor, i, subPix);
+    snake.move(speedFactor);
+    snake.draw(colors, speedFactor, i, subPix);
   }
   return true;
 }
@@ -5426,6 +5426,7 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
 {
   for (int i = 0; i < (int)SNAKE_LENGTH; i++) // (int)SNAKE_LENGTH
   {
+    //FastLED.clear();
     if (subpix){
       myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
     }
