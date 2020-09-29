@@ -5424,9 +5424,9 @@ bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
 
 void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix)
 {
-  for (int i = 0; i < (int)SNAKE_LENGTH; i++) // (int)SNAKE_LENGTH
+  for (int i = 0; i < 1; i++) // (int)SNAKE_LENGTH
   {
-    //FastLED.clear();
+    FastLED.clear(); // врубаю очистку, чтобы видно было отрисовку одного пикселя (тестировать при сабпиксель отключено - иначе будет использован сабпиксель4)
     if (subpix){
       myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
     }
