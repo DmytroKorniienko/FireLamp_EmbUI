@@ -1639,7 +1639,9 @@ private:
     byte csum = 0;
 
     bool testRoutine(CRGB *leds, EffectWorker *param);
-    //void setDynCtrl(UIControl*_val) override;
+    void setDynCtrl(UIControl*_val) override;
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
 
 public:

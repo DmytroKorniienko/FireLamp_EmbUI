@@ -5786,10 +5786,6 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ----------- Эфеект "Змейки"
-// (c) Сотнег
-// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
-// адаптация и доработки kostyamat
 bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
   EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 6 + 6) {
     regenNoise();
@@ -5797,14 +5793,21 @@ bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
   return fire2020Routine(*&ledarr, &*opt);
 }
 
-// Я наверное никогда не пойму магии этой функции. Нахера она надо? Один фиг приходится через XROR ползунок проверять
-/*void EffectTest::setDynCtrl(UIControl*_val){
+// ----------- Эфеект "Змейки"
+// (c) Сотнег
+// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
+// адаптация и доработки kostyamat
+void EffectTest::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==2) { // количество змеек
-    SnakeNum = (_val->getVal().toInt() - 1U) / 99.0 * (MAX_SNAKES - 1U) + 1U;
-    regen();
-  }
-}*/ 
+  // можно перегрузить, даже если ничего не делаем, но учтите динамические контролы это с id()>=3, но не 0,1,2 - для них см. ниже!!!
+} 
+
+void EffectTest::setscl(const byte _scl){ // вот тут перегрузим масштаб
+  EffectCalc::setscl(_scl); // вызываем функцию базового класса (т.е. заполнение scale и что еще она там умеет)
+  // А теперь расширяем ее нужным поведением
+  SnakeNum = scale; // можно было и _scl присвоить, без разницы
+  regen();
+}
 
 void EffectTest::regen() {
   if (SnakeNum > MAX_SNAKES)
@@ -5825,12 +5828,8 @@ void EffectTest::regen() {
 }
 
 bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
-  if (csum != (127U^scale)) {
-    SnakeNum = scale;
-    csum = (127U^scale);
-    regen();
-  }
-  FastLED.clear();
+  FastLED.clear(); // кадый вызов очищать матрицу? э... фигня какая-то ну да ладно, это видимо чтобы хвосты подчищать, хотя лучше бы это делать иначе
+  // Дальнейший код даже не читаю, поскольку не уверен в необходимости третьего варианта змеек... Но хз, пусть пока будет.
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06, 0.5);
   int8_t dx = 0, dy = 0;
   for (uint8_t i = 0; i < SnakeNum; i++)
