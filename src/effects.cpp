@@ -5424,7 +5424,7 @@ bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
 
 void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix)
 {
-  for (int i = 0; i < (int)SNAKE_LENGTH; i++)
+  for (int i = 0; i < (int)SNAKE_LENGTH; i++) // (int)SNAKE_LENGTH
   {
     if (subpix){
       myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);

@@ -470,6 +470,46 @@ void LAMP::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
   }
 }
 
+// void LAMP::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
+// {
+//   if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
+
+//   // extract the fractional parts and derive their inverses
+//   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
+//   // calculate the intensities for each affected pixel
+//   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+//   uint8_t wu[2] = {WU_WEIGHT(ix, y), WU_WEIGHT(xx, y)};
+//   // multiply the intensities by the colour, and saturating-add them to the pixels
+//   for (uint8_t i = 0; i < 2; i++) {
+//     int16_t xn = x + (i & 1);
+//     CRGB clr = myLamp.getPixColorXY(xn, y);
+//     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+//     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+//     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+//     myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+//   }
+// }
+
+// void LAMP::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel)
+// {
+//   if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
+
+//   // extract the fractional parts and derive their inverses
+//   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
+//   // calculate the intensities for each affected pixel
+//   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+//   uint8_t wu[2] = { WU_WEIGHT(x, iy), WU_WEIGHT(x, yy)};
+//   // multiply the intensities by the colour, and saturating-add them to the pixels
+//   for (uint8_t i = 0; i < 2; i++) {
+//     int16_t yn = y + (i & 1);
+//     CRGB clr = myLamp.getPixColorXY(x, yn);
+//     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+//     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+//     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+//     myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+//   }
+// }
+
 void LAMP::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
 {
   if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
@@ -480,13 +520,17 @@ void LAMP::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darkle
   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   uint8_t wu[2] = {WU_WEIGHT(ix, y), WU_WEIGHT(xx, y)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 2; i++) {
-    int16_t xn = x + (i & 1);
-    CRGB clr = myLamp.getPixColorXY(xn, y);
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+  for (int8_t i = 1; i >= 0; i--) {
+    CRGB clr;
+    for(int8_t sign = i; sign >= 0; sign--){
+      int16_t xn = sign ? x + (i & 1) : x - (i & 1);
+      clr = myLamp.getPixColorXY(xn, y);
+      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+      if(xn==x || (xn!=x && xx<=96))
+        myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+    }
   }
 }
 
@@ -500,13 +544,17 @@ void LAMP::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darkle
   #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   uint8_t wu[2] = { WU_WEIGHT(x, iy), WU_WEIGHT(x, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 2; i++) {
-    int16_t yn = y + (i & 1);
-    CRGB clr = myLamp.getPixColorXY(x, yn);
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+  for (int8_t i = 1; i >= 0; i--) {
+    CRGB clr;
+    for(int8_t sign = i; sign >= 0; sign--){
+      int16_t yn = sign ? y + (i & 1) : y - (i & 1);
+      clr = myLamp.getPixColorXY(x, yn);
+      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+      if(yn==y || (yn!=y && yy<=96)) // берем только для 8/3 от виртуального пикселя для закрашивания сверху/снизу см вес выше
+        myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+    }
   }
 }
 
