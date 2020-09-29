@@ -2688,6 +2688,7 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
         // else if(fixRC && y==(HEIGHT-1) && color==CRGB::Black)
         //   myLamp.setLeds(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, noise3d[0][x][y]));
         // else if(!fixRC)
+          myLamp.drawPixelXY(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
           myLamp.drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
       }
     }
