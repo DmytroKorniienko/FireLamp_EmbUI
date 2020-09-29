@@ -1646,6 +1646,33 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------- Эфеект "Змейки"
+// (c) Сотнег
+// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
+// адаптация и доработки kostyamat
+class EffectTest : public EffectCalc {
+private:
+//#define MAX_SNAKES    (WIDTH * 2)          // максимальное количество червяков
+    uint8_t SnakeNum;                        // выбранное количество червяков
+    long  snakeLast[MAX_SNAKES] ;            // тут будет траектория тела червяка
+    float snakePosX[MAX_SNAKES];             // тут будет позиция головы
+    float snakePosY[MAX_SNAKES];             // тут будет позиция головы
+    float snakeSpeedX[MAX_SNAKES];           // тут будет скорость червяка
+    float snakeSpeedY[MAX_SNAKES];           // тут будет дробная часть позиции головы
+    //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
+    uint8_t snakeColor[MAX_SNAKES];          // тут будет начальный цвет червяка
+    uint8_t snakeDirect[MAX_SNAKES];         //тут будет направление червяка
+    byte csum = 0;
+
+    bool testRoutine(CRGB *leds, EffectWorker *param);
+    //void setDynCtrl(UIControl*_val) override;
+    void regen();
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов 
 
 class EffectWorker {
