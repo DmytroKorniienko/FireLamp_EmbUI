@@ -5786,6 +5786,10 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
+// ----------- Эфеект "Змейки"
+// (c) Сотнег
+// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
+// адаптация и доработки kostyamat
 bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
   EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 6 + 6) {
     regenNoise();
@@ -5793,3 +5797,232 @@ bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
   return fire2020Routine(*&ledarr, &*opt);
 }
 
+// Я наверное никогда не пойму магии этой функции. Нахера она надо? Один фиг приходится через XROR ползунок проверять
+/*void EffectTest::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==2) { // количество змеек
+    SnakeNum = (_val->getVal().toInt() - 1U) / 99.0 * (MAX_SNAKES - 1U) + 1U;
+    regen();
+  }
+}*/ 
+
+void EffectTest::regen() {
+  if (SnakeNum > MAX_SNAKES)
+    SnakeNum = MAX_SNAKES;
+  for (uint8_t i = 0; i < SnakeNum; i++)
+  {
+    snakeLast[i] = 0;
+    snakePosX[i] = random8(WIDTH);
+    snakePosY[i] = random8(HEIGHT);
+    snakeSpeedX[i] = (255. + random8()) / 255.;
+    snakeSpeedY[i] = 0;
+    //snakeTurn[i] = 0;
+    snakeColor[i] = random8();
+    snakeDirect[i] = random8(4); //     B00           направление головы змейки
+                                 // B10     B11
+                                 //     B01
+  }
+}
+
+bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
+  if (csum != (127U^scale)) {
+    SnakeNum = scale;
+    csum = (127U^scale);
+    regen();
+  }
+  FastLED.clear();
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06, 0.5);
+  int8_t dx = 0, dy = 0;
+  for (uint8_t i = 0; i < SnakeNum; i++)
+  {
+    snakeSpeedY[i] += snakeSpeedX[i] * speedfactor;
+    if (snakeSpeedY[i] >= 1)
+    {
+      snakeSpeedY[i] = snakeSpeedY[i] - (int)snakeSpeedY[i];
+      if (random8(10U) == 0U)
+        if (random8(2U))
+        {                                           // <- поворот налево
+          snakeLast[i] = (snakeLast[i] << 2) | B01; // младший бит = поворот
+          switch (snakeDirect[i])
+          {
+          case B10:
+            snakeDirect[i] = B01;
+            if (snakePosY[i] == 0U)
+              snakePosY[i] = HEIGHT - 1U;
+            else
+              snakePosY[i]--;
+            break;
+          case B11:
+            snakeDirect[i] = B00;
+            if (snakePosY[i] >= HEIGHT - 1U)
+              snakePosY[i] = 0U;
+            else
+              snakePosY[i]++;
+            break;
+          case B00:
+            snakeDirect[i] = B10;
+            if (snakePosX[i] == 0U)
+              snakePosX[i] = WIDTH - 1U;
+            else
+              snakePosX[i]--;
+            break;
+          case B01:
+            snakeDirect[i] = B11;
+            if (snakePosX[i] >= WIDTH - 1U)
+              snakePosX[i] = 0U;
+            else
+              snakePosX[i]++;
+            break;
+          }
+        }
+        else
+        {                                           // -> поворот направо
+          snakeLast[i] = (snakeLast[i] << 2) | B11; // младший бит = поворот, старший = направо
+          switch (snakeDirect[i])
+          {
+          case B11:
+            snakeDirect[i] = B01;
+            if (snakePosY[i] == 0U)
+              snakePosY[i] = HEIGHT - 1U;
+            else
+              snakePosY[i]--;
+            break;
+          case B10:
+            snakeDirect[i] = B00;
+            if (snakePosY[i] >= HEIGHT - 1U)
+              snakePosY[i] = 0U;
+            else
+              snakePosY[i]++;
+            break;
+          case B01:
+            snakeDirect[i] = B10;
+            if (snakePosX[i] == 0U)
+              snakePosX[i] = WIDTH - 1U;
+            else
+              snakePosX[i]--;
+            break;
+          case B00:
+            snakeDirect[i] = B11;
+            if (snakePosX[i] >= WIDTH - 1U)
+              snakePosX[i] = 0U;
+            else
+              snakePosX[i]++;
+            break;
+          }
+        }
+      else
+      { // двигаем без поворота
+        snakeLast[i] = (snakeLast[i] << 2);
+        switch (snakeDirect[i])
+        {
+        case B01:
+          if (snakePosY[i] == 0U)
+            snakePosY[i] = HEIGHT - 1U;
+          else
+            snakePosY[i]--;
+          break;
+        case B00:
+          if (snakePosY[i] >= HEIGHT - 1U)
+            snakePosY[i] = 0U;
+          else
+            snakePosY[i]++;
+          break;
+        case B10:
+          if (snakePosX[i] == 0U)
+            snakePosX[i] = WIDTH - 1U;
+          else
+            snakePosX[i]--;
+          break;
+        case B11:
+          if (snakePosX[i] >= WIDTH - 1U)
+            snakePosX[i] = 0U;
+          else
+            snakePosX[i]++;
+          break;
+        }
+      }
+    }
+    switch (snakeDirect[i])
+    {
+    case B01:
+      dy = 1;
+      dx = 0;
+      break;
+    case B00:
+      dy = -1;
+      dx = 0;
+      break;
+    case B10:
+      dy = 0;
+      dx = 1;
+      break;
+    case B11:
+      dy = 0;
+      dx = -1;
+      break;
+    }
+
+    long temp = snakeLast[i];
+    uint8_t x = snakePosX[i];
+    uint8_t y = snakePosY[i];
+    //CHSV color = CHSV(snakeColor[i], 255U, 255U);
+    //drawPixelXY(x, y, color);
+    myLamp.drawPixelXYF(x, y, CHSV(snakeColor[i], 255U, snakeSpeedY[i] * 255));
+    for (uint8_t m = 0; m < SNAKE_LENGTH; m++)
+    { // 16 бит распаковываем, 14 ещё остаётся без дела в запасе, 2 на хвостик
+      x = (WIDTH + x + dx) % WIDTH;
+      y = (HEIGHT + y + dy) % HEIGHT;
+      myLamp.drawPixelXYF(x, y, CHSV(snakeColor[i] + m * 4U, 255U, 255U));
+
+      if (temp & B01)
+      { // младший бит = поворот, старший = направо
+        temp = temp >> 1;
+        if (temp & B01)
+        { // старший бит = направо
+          if (dx == 0)
+          {
+            dx = 0 - dy;
+            dy = 0;
+          }
+          else
+          {
+            dy = dx;
+            dx = 0;
+          }
+        }
+        else
+        { // иначе налево
+          if (dx == 0)
+          {
+            dx = dy;
+            dy = 0;
+          }
+          else
+          {
+            dy = 0 - dx;
+            dx = 0;
+          }
+        }
+        temp = temp >> 1;
+      }
+      else
+      { // если без поворота
+        temp = temp >> 2;
+      }
+    }
+    x = (WIDTH + x + dx) % WIDTH;
+    y = (HEIGHT + y + dy) % HEIGHT;
+    myLamp.drawPixelXYF(x, y, CHSV(snakeColor[i] + SNAKE_LENGTH * 4U, 255U, (1 - snakeSpeedY[i]) * 255)); // хвостик
+  }
+
+  return true;
+}
+
+bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
+  return testRoutine(*&ledarr, &*opt);
+}
+
+void EffectTest::load() {
+  SnakeNum = (scale - 1U) / 99.0 * (MAX_SNAKES - 1U) + 1U;
+  regen();
+}
