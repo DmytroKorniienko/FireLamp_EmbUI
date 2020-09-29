@@ -5585,8 +5585,8 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
       byte layer = rain[myLamp.getPixelNumber(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       if (layer)
       {
-        //myLamp.drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220)); // дождь практически исчез...
-        myLamp.drawPixelXY(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220)); // дождь практически исчез...
+        myLamp.drawPixelXY(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
+        myLamp.drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
     }
@@ -5601,11 +5601,7 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
 }
 
 void EffectCRain::load(){
-  // if (counter)
-  // {
     raininit(rain);
-  //   counter = 0;
-  // } //init array of dots. run once
 }
 
 void EffectCRain::raininit(byte rain[NUM_LEDS])
@@ -5644,11 +5640,12 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
       hue = scale;
     else
       hue += 0.5; 
-    updaterain(leds, speedfactor); 
+    //updaterain(leds, speedfactor); // вот хз как лучше с этим дождем... вроде тут оно нафиг не нужно, вынесу наружу
     double f;
     counter=modf(counter, &f);
   }
   counter+=speedfactor;
+  updaterain(leds, speedfactor*0.1);
 
   if (clouds)
     EffectMath::Clouds(2, storm ? EffectMath::Lightning(CHSV(30,90,255), 255U) : false);
