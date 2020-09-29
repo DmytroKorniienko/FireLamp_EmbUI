@@ -5398,7 +5398,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     Snake *snake = &snakes[i];
     fill_palette(colors, SNAKE_LENGTH, hue*(i+1), i, *curPalette, 255-(i*5+53), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
-    snake->shuffleDown(speedFactor);
+    snake->shuffleDown(speedFactor, subPix);
 
 #ifdef MIC_EFFECTS
     if(myLamp.getMicMapMaxPeak()>speed/3.0+75.0 && isMicOn()) {
@@ -5427,11 +5427,16 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
   for (int i = 0; i < (int)SNAKE_LENGTH; i++)
   {
     if (subpix){
-      //myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]); // тест
       myLamp.drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
     }
-    else 
-      myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]);
+    else {
+      if(i!=0)
+        myLamp.drawPixelXY(pixels[i].x, pixels[i].y, colors[i]);
+      else if(direction<LEFT)
+        myLamp.drawPixelXYF_Y(pixels[i].x, pixels[i].y, colors[i]);
+      else
+        myLamp.drawPixelXYF_X(pixels[i].x, pixels[i].y, colors[i]);
+    }
   }
 }
 

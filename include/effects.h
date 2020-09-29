@@ -1366,14 +1366,19 @@ struct Snake
     }
   };
 
-  void shuffleDown(float speedFactor)
+  void shuffleDown(float speedFactor, bool subpix)
   {
     internal_counter+=speedFactor*internal_speedf;
 
     if(internal_counter>1.0){
         for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
         {
-            pixels[i] = pixels[i - 1];
+            if(subpix)
+                pixels[i] = pixels[i - 1];
+            else {
+                pixels[i].x = (uint8_t)pixels[i - 1].x;
+                pixels[i].y = (uint8_t)pixels[i - 1].y;
+            }
         }
         double f;
         internal_counter=modf(internal_counter, &f);
