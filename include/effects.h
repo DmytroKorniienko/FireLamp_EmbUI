@@ -407,12 +407,13 @@ private:
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
-    byte csum = 0;
-    bool regen = true;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
-
+    void setDynCtrl(UIControl*_val) override;
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setspd(const byte _spd) override; // перегрузка для скорости
+    void regen();
+    void load() override;
 public:
-    //void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

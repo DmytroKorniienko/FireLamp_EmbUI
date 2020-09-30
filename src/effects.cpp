@@ -1421,7 +1421,6 @@ bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
   return true;
 }
 
-
 //----- Эффект "Прыгающие Мячики"
 //  BouncingBalls2014 is a program that lets you animate an LED strip
 //  to look like a group of bouncing balls
@@ -1431,41 +1430,46 @@ bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
 //  адаптация от SottNick
 // перевод на субпиксельную графику kostyamat
 bool EffectBBalls::run(CRGB *ledarr, EffectWorker *opt){
-  if (csum != (scale^getCtrlVal(3).toInt())) {
-    csum = scale^getCtrlVal(3).toInt();
-    regen = true;
-  }
+  return bBallsRoutine(ledarr, opt);
+}
 
-  return bBallsRoutine(*&ledarr, &*opt);
+void EffectBBalls::setscl(const byte _scl){
+  EffectCalc::setscl(_scl); // перегрузка для масштаба
+  regen();
+}
+
+void EffectBBalls::regen(){
+  FastLED.clear();
+  if (scale <= 16) {
+    bballsNUM_BALLS =  map(scale, 1, 16, 1, bballsMaxNUM_BALLS);
+  } else {
+    bballsNUM_BALLS =  map(scale, 32, 17, 1, bballsMaxNUM_BALLS);
+  }
+  for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
+    bballsCOLOR[i] = random8();
+    bballsBri[i] = 156;
+    bballsX[i] = random8(0, WIDTH-1);
+    bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
+    bballsTLast[i] = millis();
+    bballsPos[i] = 0.0f;                                 // Balls start on the ground
+    bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
+    bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2.);
+    bballsShift[i] = false;
+  }
+}
+
+void EffectBBalls::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  // пусто пока, т.к. нет 3+ контролов
+}
+
+void EffectBBalls::load(){
+  regen();
 }
 
 bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 {
-  if (regen) {
-    FastLED.clear();
-    if (scale <= 16) {
-      bballsNUM_BALLS =  map(scale, 1, 16, 1, bballsMaxNUM_BALLS);
-    } else {
-      bballsNUM_BALLS =  map(scale, 32, 17, 1, bballsMaxNUM_BALLS);
-    }
-    for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
-      bballsCOLOR[i] = random8();
-      bballsBri[i] = 156;
-      bballsX[i] = random8(0, WIDTH-1);
-      bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-      bballsTLast[i] = millis();
-      bballsPos[i] = 0.0f;                                 // Balls start on the ground
-      bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
-      bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2.);
-      bballsShift[i] = false;
-    }
-    regen = false;
-  }
-
-  if (scale <= 16) 
-    FastLED.clear();
-  else 
-    fadeToBlackBy(leds, NUM_LEDS, 50);
+  fadeToBlackBy(leds, NUM_LEDS, scale <= 16 ? 255 : 50);
 
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
     bballsTCycle =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
@@ -1502,7 +1506,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     // который движится в том же Х. И каждый следующий ярче предыдущего.
     bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156); 
     if (bballsPos[i] < HEIGHT - 1) 
-      myLamp.drawPixelXYF(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]));
+      myLamp.drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]));
   }
   return true;
 }
@@ -5419,7 +5423,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
-  return snakeRoutine(*&ledarr, &*opt);
+  return snakeRoutine(ledarr, &*opt);
 }
 
 void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix)

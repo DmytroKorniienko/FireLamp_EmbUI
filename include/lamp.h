@@ -321,8 +321,8 @@ public:
     void fillAll(const CRGB &color); // залить все
     void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
     void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
-    void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=25);
-    void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=25);
+    void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
+    void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=50);
     void drawLine(int x1, int y1, int x2, int y2, const CRGB &color);
     void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
     void drawCircle(int x0, int y0, int radius, const CRGB &color);
