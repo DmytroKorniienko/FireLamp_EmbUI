@@ -3164,7 +3164,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
       break;
   }
   //EffectMath::blur2d(25); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
-  if(!!isDebug()){
+  if(!isDebug()){
     // Noise
     uint16_t sc = (uint16_t)speed * 6 + 500;
     uint16_t sc2 = (float)speed/127.0 + 1.5;
