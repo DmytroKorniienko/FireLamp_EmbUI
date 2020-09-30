@@ -586,8 +586,9 @@ void set_onflag(Interface *interf, JsonObject *data){
             myLamp.changePower(newpower);
         } else {
             myLamp.changePower(newpower);
-            //myLamp.effects.autoSaveConfig(true); // принудительное сохранение конфига текущего эффекта при выключении питания
-            resetAutoTimers();
+            optionsTicker.once(3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
+                resetAutoTimers();
+            }));
         }
     }
 #ifdef RESTORE_STATE
