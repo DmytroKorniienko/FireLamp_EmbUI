@@ -316,15 +316,7 @@ public:
   static bool Lightning(CRGB lightningColor = CHSV(30,90,255) /*CRGB(72, 72, 80)*/, uint8_t chanse = 72U);
   static void Clouds(uint8_t rhue = 2, bool flash = false);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
-  static void nightMode(CRGB *leds)
-    {
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-            leds[i].r = dim8_video(leds[i].r);
-            leds[i].g = dim8_video(leds[i].g);
-            leds[i].b = dim8_video(leds[i].b);
-        }
-    }
+  static void nightMode(CRGB *leds);
 
   /*
   static CRGB& piXY(CRGB *leds, byte x, byte y);
@@ -337,6 +329,25 @@ public:
   static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max){
       return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
   }
+
+    static uint32_t getPixColor(uint32_t thisSegm); // функция получения цвета пикселя по его номеру
+    static uint32_t getPixColorXY(uint16_t x, uint16_t y); // функция получения цвета пикселя в матрице по его координатам
+    static void fillAll(const CRGB &color); // залить все
+    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
+    static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
+    static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
+    static void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=50);
+    static void drawLine(int x1, int y1, int x2, int y2, const CRGB &color);
+    static void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
+    static void drawCircle(int x0, int y0, int radius, const CRGB &color);
+    static void drawCircleF(float x0, float y0, float radius, const CRGB &color);
+    static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
+    static void setLedsNscale8(uint16_t idx, uint8_t val);
+    static void dimAll(uint8_t value);
+    static CRGB getLed(uint16_t idx);
+    static void blur2d(uint8_t val);
+    static CRGB *setLed(uint16_t idx, CHSV val);
+    static CRGB *setLed(uint16_t idx, CRGB val);
 };
 
 #ifdef MIC_EFFECTS

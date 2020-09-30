@@ -331,9 +331,9 @@ void LAMP::frameShow(const uint32_t ticktime){
       for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
         for (byte y = 0; y < HEIGHT ; y++) {
           if (ind > y)
-            drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
+            EffectMath::drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
           else
-            drawPixelXY(x, y,  0);
+            EffectMath::drawPixelXY(x, y,  0);
         }
       }
 #else
@@ -341,9 +341,9 @@ void LAMP::frameShow(const uint32_t ticktime){
       for (byte y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
         for (byte x = 0; x < WIDTH ; x++) {
           if (ind > x)
-            drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
+            EffectMath::drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
           else
-            drawPixelXY((x + y) % WIDTH, y,  0);
+            EffectMath::drawPixelXY((x + y) % WIDTH, y,  0);
         }
       }
 #endif
@@ -412,211 +412,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 }
 
 
-uint32_t LAMP::getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
-{
-  if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-  {
-    return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
-  }
-  else                                                      // если нечётная строка
-  {
-    return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
-  }
-}
 
-uint32_t LAMP::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
-{
-  uint32_t thisPixel = thisSegm * SEGMENTS;
-  if (thisPixel > NUM_LEDS - 1) return 0;
-  return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
-}
-
-void LAMP::fillAll(const CRGB &color) // залить все
-{
-  for (int32_t i = 0; i < NUM_LEDS; i++)
-  {
-    leds[i] = color;
-  }
-}
-
-void LAMP::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
-{
-  if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
-  uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
-  for (uint16_t i = 0; i < SEGMENTS; i++)
-  {
-    leds[thisPixel + i] = color;
-  }
-}
-
-void LAMP::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
-{
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
-
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-    int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-    CRGB clr = myLamp.getPixColorXY(xn, yn);
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    myLamp.drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
-  }
-}
-
-void LAMP::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
-{
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
-
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
-  // calculate the intensities for each affected pixel
-  uint8_t wu[2] = {ix, xx};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (int8_t i = 1; i >= 0; i--) {
-    // for(int8_t sign = i; sign >= 0; sign--){
-    //   int16_t xn = sign ? x + (i & 1) : x - (i & 1);
-      int16_t xn = x + (i & 1);
-      CRGB clr = myLamp.getPixColorXY(xn, y);
-      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-      //if(xn==(int)x || (xn!=(int)x && ix<=96)) // берем только для 8/3 от виртуального пикселя для закрашивания слева/справа см вес выше
-        myLamp.drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
-    // }
-  }
-}
-
-void LAMP::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel)
-{
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return;
-
-  // extract the fractional parts and derive their inverses
-  uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  uint8_t wu[2] = {iy, yy};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (int8_t i = 1; i >= 0; i--) {
-    // for(int8_t sign = i; sign >= 0; sign--){
-    //   int16_t yn = sign ? y + (i & 1) : y - (i & 1);
-      int16_t yn = y + (i & 1);
-      CRGB clr = myLamp.getPixColorXY(x, yn);
-      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-      //if(yn==(int)y || (yn!=(int)y && iy<=96)) // берем только для 8/3 от виртуального пикселя для закрашивания сверху/снизу см вес выше
-        myLamp.drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
-    //}
-  }
-}
-
-void LAMP::drawLine(int x1, int y1, int x2, int y2, const CRGB &color){
-  int deltaX = abs(x2 - x1);
-  int deltaY = abs(y2 - y1);
-  int signX = x1 < x2 ? 1 : -1;
-  int signY = y1 < y2 ? 1 : -1;
-  int error = deltaX - deltaY;
-
-  drawPixelXY(x2, y2, color);
-  while (x1 != x2 || y1 != y2) {
-      drawPixelXY(x1, y1, color);
-      int error2 = error * 2;
-      if (error2 > -deltaY) {
-          error -= deltaY;
-          x1 += signX;
-      }
-      if (error2 < deltaX) {
-          error += deltaX;
-          y1 += signY;
-      }
-  }
-}
-
-void LAMP::drawLineF(float x1, float y1, float x2, float y2, const CRGB &color){
-  float deltaX = fabs(x2 - x1);
-  float deltaY = fabs(y2 - y1);
-  float error = deltaX - deltaY;
-
-  float signX = x1 < x2 ? 0.5 : -0.5;
-  float signY = y1 < y2 ? 0.5 : -0.5;
-
-  while (true) {
-      if ((signX > 0. && x1 > x2+signX) || (signX < 0. && x1 < x2+signX)) break;
-      if ((signY > 0. && y1 > y2+signY) || (signY < 0. && y1 < y2+signY)) break;
-      drawPixelXYF(x1, y1, color);
-      float error2 = error;
-      if (error2 > -deltaY) {
-          error -= deltaY;
-          x1 += signX;
-      }
-      if (error2 < deltaX) {
-          error += deltaX;
-          y1 += signY;
-      }
-  }
-}
-
-void LAMP::drawCircle(int x0, int y0, int radius, const CRGB &color){
-  int a = radius, b = 0;
-  int radiusError = 1 - a;
-
-  if (radius == 0) {
-    myLamp.drawPixelXY(x0, y0, color);
-    return;
-  }
-
-  while (a >= b)  {
-    myLamp.drawPixelXY(a + x0, b + y0, color);
-    myLamp.drawPixelXY(b + x0, a + y0, color);
-    myLamp.drawPixelXY(-a + x0, b + y0, color);
-    myLamp.drawPixelXY(-b + x0, a + y0, color);
-    myLamp.drawPixelXY(-a + x0, -b + y0, color);
-    myLamp.drawPixelXY(-b + x0, -a + y0, color);
-    myLamp.drawPixelXY(a + x0, -b + y0, color);
-    myLamp.drawPixelXY(b + x0, -a + y0, color);
-    b++;
-    if (radiusError < 0)
-      radiusError += 2 * b + 1;
-    else
-    {
-      a--;
-      radiusError += 2 * (b - a + 1);
-    }
-  }
-}
-
-void LAMP::drawCircleF(float x0, float y0, float radius, const CRGB &color){
-  float x = 0., y = radius, error = 0.;
-  float delta = 1. - 2. * radius;
-
-  while (y >= 0) {
-    drawPixelXYF(x0 + x, y0 + y, color);
-    drawPixelXYF(x0 + x, y0 - y, color);
-    drawPixelXYF(x0 - x, y0 + y, color);
-    drawPixelXYF(x0 - x, y0 - y, color);
-    error = 2. * (delta + y) - 1.;
-    if (delta < 0. && error <= 0.) {
-      ++x;
-      delta += 2. * x + 1.;
-      continue;
-    }
-    error = 2. * (delta - x) - 1.;
-    if (delta > 0. && error > 0.) {
-      --y;
-      delta += 1. - 2. * y;
-      continue;
-    }
-    ++x;
-    delta += 2. * (x - y);
-    --y;
-  }
-}
 
 void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
@@ -759,18 +555,18 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor,
       if (thisBit)
       {
         if(!isInverse)
-          drawPixelXY(offset + i, txtOffset + j, letterColor);
+          EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
-          //drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
+          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
+          //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
       }
       else
       {
         if(isInverse)
-          drawPixelXY(offset + i, txtOffset + j, letterColor);
+          EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
-          //drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
+          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
+          //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }
   }
@@ -1246,7 +1042,7 @@ void LAMP::showWarning(
 
   for (uint16_t i = 0U; i < NUM_LEDS; i++)                  // установка цвета всех диодов в WARNING_COLOR
   {
-    myLamp.setLeds(i, color);
+    EffectMath::setLed(i, color);
   }
 
   uint32_t startTime = millis();

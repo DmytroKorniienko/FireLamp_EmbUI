@@ -315,28 +315,19 @@ public:
     void changePower(); // плавное включение/выключение
     void changePower(bool);
 
-    uint32_t getPixelNumber(uint16_t x, uint16_t y); // получить номер пикселя в ленте по координатам
-    uint32_t getPixColor(uint32_t thisSegm); // функция получения цвета пикселя по его номеру
-    uint32_t getPixColorXY(uint16_t x, uint16_t y) { return getPixColor(getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
-    void fillAll(const CRGB &color); // залить все
-    void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
-    void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
-    void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
-    void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=50);
-    void drawLine(int x1, int y1, int x2, int y2, const CRGB &color);
-    void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
-    void drawCircle(int x0, int y0, int radius, const CRGB &color);
-    void drawCircleF(float x0, float y0, float radius, const CRGB &color);
     CRGB *getUnsafeLedsArray(){return leds;}
-    CRGB *setLeds(uint16_t idx, CHSV val) { leds[idx] = val; return &leds[idx]; }
-    CRGB *setLeds(uint16_t idx, CRGB val) { leds[idx] = val; return &leds[idx]; }
-    void setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { leds[idx].fadeToBlackBy(val); }
-    void setLedsNscale8(uint16_t idx, uint8_t val) { leds[idx].nscale8(val); }
-    //fadeToBlackBy
-    void dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(value); } }
-    CRGB getLeds(uint16_t idx) { return leds[idx]; }
-    //CRGB *getLeds() { return leds; }
-    void blur2d(uint8_t val) {::blur2d(leds,WIDTH,HEIGHT,val);}
+    // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
+    uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
+    {
+        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
+        }
+        else                                                      // если нечётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
+        }
+    }
 
     /*
      * Change global brightness with or without fade effect
