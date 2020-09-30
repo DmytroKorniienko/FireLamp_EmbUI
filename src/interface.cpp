@@ -584,6 +584,11 @@ void set_onflag(Interface *interf, JsonObject *data){
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
             myLamp.changePower(newpower);
+#ifndef ESP_USE_BUTTON
+            optionsTicker.once(3,std::bind([]{
+                myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
+            }));
+#endif
         } else {
             myLamp.changePower(newpower);
             optionsTicker.once(3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
