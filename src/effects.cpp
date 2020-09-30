@@ -5199,6 +5199,16 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
   for (int i = 0; i < 1; i++) // (int)SNAKE_LENGTH
   {
     FastLED.clear(); // врубаю очистку, чтобы видно было отрисовку одного пикселя (тестировать при сабпиксель отключено - иначе будет использован сабпиксель4)
+    
+    EffectMath::drawPixelXYF(9.21, 4.15, colors[i]);
+    EffectMath::drawPixelXYF(7.22, 8.11, EffectMath::getPixColorXYF(9.21, 4.15));
+
+    EffectMath::drawPixelXYF_X(11.21, 6, colors[i]);
+    EffectMath::drawPixelXYF_X(9.22, 11, EffectMath::getPixColorXYF_X(11.21, 6));
+
+    EffectMath::drawPixelXYF_Y(13, 8.15, colors[i]);
+    EffectMath::drawPixelXYF_Y(11, 13.11, EffectMath::getPixColorXYF_Y(13, 8.15));
+
     if (subpix){
       EffectMath::drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
     }

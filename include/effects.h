@@ -337,6 +337,11 @@ public:
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
     static void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=50);
+
+    static CRGB getPixColorXYF_X(float x, uint16_t y);
+    static CRGB getPixColorXYF_Y(uint16_t x, float y);
+    static CRGB getPixColorXYF(float x, float y);
+
     static void drawLine(int x1, int y1, int x2, int y2, const CRGB &color);
     static void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
     static void drawCircle(int x0, int y0, int radius, const CRGB &color);
