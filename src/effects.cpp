@@ -1260,7 +1260,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
       }
     }
     bballsPos[i] = bballsHi * (float)(HEIGHT - 1) / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 1.5f) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 0.9f) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
       bballsShift[i] = 0.0f;
       if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
         if (bballsX[i] <= 0) bballsX[i] = (WIDTH - 1U);
@@ -1274,7 +1274,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     // который движится в том же Х. И каждый следующий ярче предыдущего.
     bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156); 
     if (bballsPos[i] < HEIGHT - 1) 
-      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]));
+      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 35);
   }
   return true;
 }
@@ -2374,7 +2374,7 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
   return true;
 }
 
-// ============= RAINS/LEDS/THUNDERS IN THE CAN /  ОСАДКИ/ТУЧКА/ГРОЗА В БАНКЕ ===============
+// ===== Эффект "Шторм" адаптация и рефакторинг kostyamat
 // https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 // там по ссылке ещё остались эффекты с 3 по 9 (в SimplePatternList перечислены)
@@ -2390,38 +2390,16 @@ void EffectRain::setDynCtrl(UIControl*_val)
 
 bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
 {
-  if (dryrun(4.0))
-    return false;
-    speedfactor = EffectMath::fmap((float)speed, 1., 255., 1., .1);
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., .01, .1);
   return simpleRainRoutine(*&ledarr, &*opt);
-  
-/*
-    switch (effect)
-    {
-    case EFF_ENUM::EFF_RAIN:
-      return simpleRainRoutine(*&ledarr, &*opt);
-      break;
-    case EFF_ENUM::EFF_COLORRAIN:
-      return coloredRainRoutine(*&ledarr, &*opt);
-      break;
-    case EFF_ENUM::EFF_STORMYRAIN:
-      return simpleRainRoutine(*&ledarr, &*opt);
-      break;
-    default:
-      return false;
-    } */
+
 }
 
 void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor)
 {
-  // static uint16_t noiseX = random16();
-  // static uint16_t noiseY = random16();
-  // static uint16_t noiseZ = random16();
-  // CRGB solidRainColor = CRGB(60, 80, 90);
   
   CRGBPalette16 rain_p(CRGB::Black, rainColor);
   fadeToBlackBy(myLamp.getUnsafeLedsArray(), NUM_LEDS, 255 - tailLength);
-  //nscale8(myLamp.getUnsafeLedsArray(), NUM_LEDS, tailLength);
 
   // Loop for each column individually
   for (uint8_t x = 0; x < WIDTH; x++)
@@ -2443,28 +2421,14 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
       noise3d[0][(uint8_t)x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
     }
     }
-    // Step 3. Map from tempMatrix cells to LED colors
-    //uint32_t color = CRGB::Black;
+    // Step 3. Map from tempMatrix cells to LED colors;
     for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= speedfactor)
     {
-      // if(color == CRGB::Black && EffectMath::getPixColor(myLamp.getPixelNumber(x, y)) && y!=(HEIGHT-1))
-      //   color = EffectMath::getPixColor(myLamp.getPixelNumber(x, y));
-      // else if(!EffectMath::getPixColor(myLamp.getPixelNumber(x, y)) && y!=(HEIGHT-1))
-      //    color = CRGB::Black;
-
       if (noise3d[0][(uint8_t)x][(uint8_t)y] >= backgroundDepth)
       { // Don't write out empty cells
-        // if(fixRC && color!=CRGB::Black){
-        //   EffectMath::setLed(myLamp.getPixelNumber(x, y), color);
-        // }
-        // else if(fixRC && y==(HEIGHT-1) && color==CRGB::Black)
-        //   EffectMath::setLed(myLamp.getPixelNumber(x, y), ColorFromPalette(rain_p, noise3d[0][x][y]));
-        // else if(!fixRC)
-          //EffectMath::drawPixelXY(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
-          EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]));
+          EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]), 45);
       }
     }
-    //color = CRGB::Black;
 
     // Step 4. Add splash if called for
     if (splashes)
@@ -3185,139 +3149,6 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
     EffectMath::blur2d(25); // без размытия как-то пиксельно, наверное...
   }
   return true;
-}
-
-
-// ============= Эффект "Огненная лампа" =================
-void EffectFire::load(){
-  pcnt = 0U;
-  generateLine();
-}
-
-void EffectFire::setDynCtrl(UIControl*_val) {
-  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  delaytype = _val->getVal().toInt();
-}
-
-bool EffectFire::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun(3.0))
-    return false;
-  return fireRoutine(*&ledarr, &*opt);
-}
-
-bool EffectFire::fireRoutine(CRGB *leds, EffectWorker *param)
-{
-  if (pcnt >= 100) {                                  // внутренний делитель кадров для поднимающегося пламени
-    shiftUp();                                              // смещение кадра вверх
-    generateLine();                                         // перерисовать новую нижнюю линию случайным образом
-    pcnt = 0;
-  }
-  pcnt += 20;
-  
-  drawFrame(pcnt, true);                              // для прошивки где стоит логический параметр
-  return true;
-}
-
-// Randomly generate the next line (matrix row)
-void EffectFire::generateLine() {
-  for (uint8_t x = 0U; x < WIDTH; x++) {
-    line[x] = random8(127, 255);                             // заполнение случайным образом нижней линии (127, 255) - менее контрастное, (64, 255) - оригинал
-  }
-}
-
-void EffectFire::shiftUp() {                                            //подъем кадра
-  for (uint8_t y = HEIGHT - 1U; y > 0U; y--) {
-    for (uint8_t x = 0U; x < WIDTH; x++) {
-      uint8_t newX = x % 16U;                               // сократил формулу без доп. проверок
-      if (y > 7U) continue;
-      matrixValue[y][newX] = matrixValue[y - 1U][newX];     //смещение пламени (только для зоны очага)
-    }
-  }
-
-  for (uint8_t x = 0U; x < WIDTH; x++) {                    // прорисовка новой нижней линии
-    uint8_t newX = x % 16U;                                 // сократил формулу без доп. проверок
-    matrixValue[0U][newX] = line[newX];
-  }
-}
-
-// draw a frame, interpolating between 2 "key frames"
-// @param pcnt percentage of interpolation
-
-void EffectFire::drawFrame(uint8_t pcnt, bool isColored) {                  // прорисовка нового кадра
-  int32_t nextv;
-#ifdef UNIVERSE_FIRE                                            // если определен универсальный огонь
-  uint8_t baseHue = (scale - 1U) * 2.6; // может так хватит?
-#else
-  uint8_t baseHue = isColored ? 255U : 0U;
-#endif
-  uint8_t baseSat = ( scale < 255) ? 255U : 0U;  // вычисление базового оттенка // может так хватит?
-  
-  uint8_t deltaValue = random8(0U, 3U) ? constrain (shiftValue[0] + random8(0U, 2U) - random8(0U, 2U), 15, 17) : shiftValue[0]; // random(0U, 3U)= скорость смещения очага чем больше 3U - тем медленнее                          // текущее смещение пламени (hueValue)
-
-  //first row interpolates with the "next" line
-  uint8_t deltaHue = random8(0U, 2U) ? constrain (shiftHue[0] + random8(0U, 2U) - random8(0U, 2U), 15, 17) : shiftHue[0]; // random(0U, 2U)= скорость смещения языков чем больше 2U - тем медленнее
-  // 15U, 17U - амплитуда качания -1...+1 относительно 16U
-  // высчитываем плавную дорожку смещения всполохов для нижней строки
-  // так как в последствии координаты точки будут исчисляться из остатка, то за базу можем принять кратную ширину матрицы hueMask
-  // ширина матрицы hueMask = 16, поэтому нам нужно получить диапазон чисел от 15 до 17
-  // далее к предыдущему значению прибавляем случайную 1 и отнимаем случайную 1 - это позволит плавным образом менять значение смещения
-  shiftHue[0] = deltaHue;                                   // заносим это значение в стэк
-  // 15U, 17U - амплитуда качания -1...+1 относительно 16U
-  shiftValue[0] = deltaValue;
-
-
-  for (uint8_t x = 0U; x < WIDTH; x++) {                                          // прорисовка нижней строки (сначала делаем ее, так как потом будем пользоваться ее значением смещения)
-    uint8_t newX = x % 16;                                                        // сократил формулу без доп. проверок
-    nextv =                                                               // расчет значения яркости относительно valueMask и нижерасположенной строки.
-      (((100.0 - pcnt) * matrixValue[0][newX] + pcnt * line[newX]) / 100.0)
-      - pgm_read_byte(&valueMask[0][(x + deltaValue) % 16U]);
-    CRGB color = CHSV(                                                            // вычисление цвета и яркости пикселя
-                   baseHue + pgm_read_byte(&hueMask[0][(x + deltaHue) % 16U]),    // H - смещение всполохов
-                   baseSat,                                                       // S - когда колесо масштаба =100 - белый огонь (экономим на 1 эффекте)
-                   (uint8_t)max(0, nextv)                                         // V
-                 );
-    EffectMath::setLed(myLamp.getPixelNumber(x, 0), color);                                            // прорисовка цвета очага
-  }
-
-  //each row interpolates with the one before it
-  for (uint8_t y = HEIGHT - 1U; y > 0U; y--) {                                      // прорисовка остальных строк с учетом значения низлежащих
-    deltaHue = shiftHue[y];                                                         // извлекаем положение
-    shiftHue[y] = shiftHue[y - 1];                                                  // подготавлеваем значение смешения для следующего кадра основываясь на предыдущем
-    deltaValue = shiftValue[y];                                                     // извлекаем положение
-    shiftValue[y] = shiftValue[y - 1];                                              // подготавлеваем значение смешения для следующего кадра основываясь на предыдущем
-
-
-    if (y > 8U) {                                                                   // цикл стирания текущей строоки для искр
-      for (uint8_t _x = 0U; _x < WIDTH; _x++) {                                     // стираем строчку с искрами (очень не оптимально)
-        EffectMath::drawPixelXY(_x, y, 0U);
-      }
-    }
-    for (uint8_t x = 0U; x < WIDTH; x++) {                                          // пересчет координаты x для текущей строки
-      uint8_t newX = x % 16U;                                                       // функция поиска позиции значения яркости для матрицы valueMask
-      if (y < 8U) {                                                                 // если строка представляет очаг
-        nextv =                                                                     // расчет значения яркости относительно valueMask и нижерасположенной строки.
-          (((100.0 - pcnt) * matrixValue[y][newX]
-            + pcnt * matrixValue[y - 1][newX]) / 100.0)
-          - pgm_read_byte(&valueMask[y][(x + deltaValue) % 16U]);
-
-        CRGB color = CHSV(                                                                  // определение цвета пикселя
-                       baseHue + pgm_read_byte(&hueMask[y][(x + deltaHue) % 16U ]),         // H - смещение всполохов
-                       baseSat,                                                             // S - когда колесо масштаба =100 - белый огонь (экономим на 1 эффекте)
-                       (uint8_t)max(0, nextv)                                               // V
-                     );
-        EffectMath::setLed(myLamp.getPixelNumber(x, y), color);
-      }
-      else if (y == 8U && SPARKLES) {                                               // если это самая нижняя строка искр - формитуем искорку из пламени
-        if (random8(0, 20) == 0 && EffectMath::getPixColorXY(x, y - 1U) != 0U) EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x, y - 2U));  // 20 = обратная величина количества искр
-        else EffectMath::drawPixelXY(x, y, 0U);
-      }
-      else if (SPARKLES) {                                                          // если это не самая нижняя строка искр - перемещаем искорку выше
-        // старая версия для яркости
-        newX = (random8(0, 4)) ? x : (x + WIDTH + random8(0U, 2U) - random8(0U, 2U)) % WIDTH ;   // с вероятностью 1/3 смещаем искорку влево или вправо
-        if (EffectMath::getPixColorXY(x, y - 1U) > 0U) EffectMath::drawPixelXY(newX, y, EffectMath::getPixColorXY(x, y - 1U));    // рисуем искорку на новой строчке
-      }
-    }
-  }
 }
 
 // ----------- Эффекты "Пикассо" (c) obliterator
@@ -5380,8 +5211,8 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-//------------ Эффект "За окном идет дождь..."
-// (c) Idir Idir (Soulmate) переделан кардинально kostyamat
+//------------ Эффект "Дождь за окном..."
+// (c) Idir Idir (Soulmate) переделан кардинально (с)kostyamat
 void EffectCRain::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
@@ -5398,28 +5229,28 @@ bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
 
 void EffectCRain::updaterain(CRGB *leds, float speedFactor)
 {
-  byte sat = beatsin8(30, 150, 255);
+
+
   for (byte i = 0; i < WIDTH; i++)
   {
-    for (float j = 0.; j < ((float)HEIGHT - (clouds ? 4.5 : 1.)); j += speedFactor)
+    for (float j = 0.; j < ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)); j += 0.1)
     {
+      byte sat = beatsin8(30, 150, 255);
+      EVERY_N_MILLISECONDS(3)
+      {
+        changepattern();
+      }
       //byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
-      byte layer = rain[myLamp.getPixelNumber(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
+      byte layer = rain[myLamp.getPixelNumber(i, (uint16_t)(j + _speed) + random8(2) % HEIGHT)]; //fake scroll based on shift coordinate
       if (layer)
       {
-        //EffectMath::drawPixelXY(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
-        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
+        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220), 45);
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
     }
   }
-  _speed++;
+  _speed+= speedFactor;
 
-  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 35: 20);
-  
-  //blurRows(leds, WIDTH, HEIGHT, 16);
-  //EffectMath::blur2d(16);
-  //blurColumns(leds, WIDTH, HEIGHT, 16);
 }
 
 void EffectCRain::load(){
@@ -5430,7 +5261,7 @@ void EffectCRain::raininit(byte rain[NUM_LEDS])
 { //init array of dots. run once
     for (int i = 0; i < NUM_LEDS; i++)
     {
-        if (random8(18) == 0)
+        if (random8(15) == 0)
         {
             rain[i] = 1;
         }
@@ -5453,24 +5284,22 @@ void EffectCRain::changepattern()
 }
 
 bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 0.9);
-
-  changepattern();
-
-  if(counter>1.0){
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.20, 1.);
+  if(counter > 1.0){
     if (scale != 1)
       hue = scale;
     else
-      hue += 0.5; 
+      hue += 0.33; 
     //updaterain(leds, speedfactor); // вот хз как лучше с этим дождем... вроде тут оно нафиг не нужно, вынесу наружу
     double f;
     counter=modf(counter, &f);
   }
   counter+=speedfactor;
-  updaterain(leds, speedfactor*0.1);
-
+  updaterain(leds, speedfactor * 0.5);
+  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 35: 20);
+  blurRows(leds, WIDTH, ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)), 10);
   if (clouds)
-    EffectMath::Clouds(2, storm ? EffectMath::Lightning(CHSV(30,90,255), 255U) : false);
+    EffectMath::Clouds(2, storm ? EffectMath::Lightning(CHSV(30,90,255), 200U) : false);
   else if (storm) EffectMath::Lightning(CHSV(30,90,255), 255U);
   return true;
 }
@@ -5552,7 +5381,7 @@ void EffectFire2020::regenNoise() {
   {
     for (uint8_t j = 0; j < (NOISE_HEIGHT); j++)
     {
-      noises[j * LED_COLS + i] = inoise8(i * (scale+30), j * (scale+30) + b / scale);//inoise8(i * (scale+30), j * (scale+30)); //init noise buffer
+      noises[j * LED_COLS + i] = inoise8(i * (scale+30), j * (scale+30) + b / (scale+30)); // init noise buffer
     }
   }
   for (uint8_t j = 0; j < LED_ROWS; j++)
@@ -5579,28 +5408,23 @@ void EffectFire2020::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _
 void EffectFire2020::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  /*if(_val->getId()==3) { // Выбор палитры
-    _pal = _val->getVal().toInt() - 1; // а нафига эта переменная? непонятно, оставлю...
-  }*/
+
 }
 
 bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   if(!curPalette) return false;
 
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.03, 0.33);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.033, 0.15);
 
   for (uint8_t i = 0; i < NUM_COLS; i++)
   {
     for (float j = 0.; j < NUM_ROWS; j+= speedfactor)
     {
       uint16_t index = ((uint8_t)j + a + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
-      EffectMath::drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])),10);
+      EffectMath::drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])),35);
     }
   }
-  for (uint16_t i = 0; i < NUM_LEDS; i++) // функция Y-субпикселя режет яркость, что полезно для всех эффектов но не для этого. 
-  // Поэтому восстанавливаем яркость. И по ходу сглаживаем немного градации цветов, что тут тоже хорошо.
-  // Этот эффект изначально расчитан на градиент-палитры. Вообще удивительно, что из наших удалось несколько подобрать.
-    leds[i] = EffectMath::makeBrighter(leds[i], 50);
+  blurRows(leds, WIDTH, HEIGHT, 15);
   a++;
   return true;
 }

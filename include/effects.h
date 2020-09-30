@@ -928,7 +928,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----- "Дождь", "Цветной дождь", "Тучка в банке"
+// ===== Эффект "Шторм" адаптация и рефакторинг kostyamat
+// https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+// там по ссылке ещё остались эффекты с 3 по 9 (в SimplePatternList перечислены)
 class EffectRain : public EffectCalc {
 private:
 
@@ -1569,15 +1572,15 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//------------ Эффект "За окном идет дождь"
-// (c) Idir Idir (Soulmate)
+//------------ Эффект "Дождь за окном..."
+// (c) Idir Idir (Soulmate) переделан кардинально (с)kostyamat
 class EffectCRain : public EffectCalc
 {
 private:
     byte rain[NUM_LEDS];
 
     float counter = 1.0;
-    int8_t _speed = 1;
+    float _speed = 0;
     float hue;
     bool storm = false;
     bool clouds = false;
