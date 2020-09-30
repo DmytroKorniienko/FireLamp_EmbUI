@@ -379,9 +379,11 @@ class EffectTime : public EffectCalc {
 private:
     bool timeShiftDir; // направление сдвига
     float curTimePos; // текущая позиция вывода
+    float color_idx; // индекс цвета
     CRGB hColor[1]; // цвет часов и минут
     CRGB mColor[1]; // цвет часов и минут
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
+    bool isMinute=false;
 
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
     void load() override;

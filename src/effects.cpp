@@ -3000,16 +3000,35 @@ void EffectTime::load(){
 
 bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
 {
+  // #undef HEIGHT
+  // #define HEIGHT 8
+  // #undef WIDTH
+  // #define WIDTH 8
+
   if (speed==1 || speed==255){
     EVERY_N_SECONDS(5){
       FastLED.clear();
-      uint8_t xPos = random(LET_WIDTH*2,WIDTH);
+      
       String tmp = myLamp.timeProcessor.getFormattedShortTime();
-      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
-      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-(LET_HEIGHT*2), xPos);
+      if(HEIGHT>=16){
+        uint8_t xPos = random(LET_WIDTH*2,WIDTH);
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-(LET_HEIGHT*2), xPos);
+      } else if(WIDTH>=21){ // требуется минимум 5*4+1 символов
+        uint8_t xPos = random((LET_WIDTH*2+1),WIDTH);
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));  
+      } else {
+        uint8_t xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
+        isMinute=!isMinute;
+        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
+      }
     }
   } else {
     //FastLED.clear();
+    EVERY_N_SECONDS(5){
+      isMinute=!isMinute;
+    }
     EffectMath::dimAll(250-speed/3); // небольшой шлейф, чисто как визуальный эффект :)
     int16_t xPos = curTimePos;
     if((xPos<=(signed)LET_WIDTH*2-((signed)LET_WIDTH/2)) || (xPos>=(signed)WIDTH+((signed)LET_WIDTH/2))){
@@ -3025,11 +3044,27 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
     }
     String tmp = myLamp.timeProcessor.getFormattedShortTime();
     uint8_t shift = beatsin8(speed/5, -1, 1);
-    myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
-    myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
+    if(HEIGHT>=16){
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
+    } else if(WIDTH>=21){
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos+(LET_WIDTH*2+1));
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+    } else if(WIDTH>=10){
+      myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+    } else {
+        xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
+        myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, (int)color_idx%16), false, HEIGHT-LET_HEIGHT, xPos);
+        color_idx=color_idx+(speed/256.0);
+    }
     curTimePos=curTimePos+(0.23*(speed/255.0))*(timeShiftDir?-1:1); // смещаем
   }
   return true;
+
+  // #undef HEIGHT
+  // #define HEIGHT 16
+  // #undef WIDTH
+  // #define WIDTH 16
 }
 
 // ------------------------------ ЭФФЕКТ ДЫМ ----------------------
