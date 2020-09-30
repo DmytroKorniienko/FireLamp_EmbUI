@@ -361,6 +361,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       MIRR_H = false; // отзрекаливание по H
       dawnFlag = false; // флаг устанавливается будильником "рассвет"
       ONflag = false; // флаг включения/выключения
+      isDebug = false; // флаг отладки
       isFaderON = true; // признак того, что используется фейдер для смены эффектов
       isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
       isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов

@@ -118,8 +118,8 @@ struct {
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
-
-    uint16_t reserved:5; // выравнивание по границе 16, если нужны будут доп. биты, то уменьшать здесь соответственно
+    bool isDebug:1; // признак режима отладки
+    uint16_t reserved:4; // выравнивание по границе 16, если нужны будут доп. биты, то уменьшать здесь соответственно
 
 #ifdef MIC_EFFECTS
     bool isMicOn:1; // глобальное включение/выключение микрофона
@@ -289,6 +289,8 @@ public:
     void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
     bool IsEventsHandled() {return isEventsHandled;}
     bool isLampOn() {return ONflag;}
+    bool isDebugOn() {return isDebug;}
+    void setDebug(bool flag) {isDebug=flag; lampState.isDebug=flag;}
     void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}

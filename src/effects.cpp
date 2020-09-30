@@ -3093,7 +3093,6 @@ void EffectMStreamSmoke::FillNoise(int8_t layer) {
 void EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   fillType = getCtrlVal(3).toInt();
-  debug = getCtrlVal(4)==FPSTR(TCONST_FFFF);
 }
 
 // (c) SottNick
@@ -3101,7 +3100,7 @@ void EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
 bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB color;
-  if(!debug)
+  if(!isDebug())
     EffectMath::dimAll(254);
   else
     FastLED.clear();
@@ -3165,7 +3164,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
       break;
   }
   //EffectMath::blur2d(25); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
-  if(!debug){
+  if(!!isDebug()){
     // Noise
     uint16_t sc = (uint16_t)speed * 6 + 500;
     uint16_t sc2 = (float)speed/127.0 + 1.5;
@@ -3198,7 +3197,6 @@ void EffectFire::load(){
 void EffectFire::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   delaytype = _val->getVal().toInt();
-  active = true; // врубаем снова после dryrun()
 }
 
 bool EffectFire::run(CRGB *ledarr, EffectWorker *opt){
@@ -5215,7 +5213,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     }
 #else
     if (random((speed<25)?speed*50:speed*10) < speed){ // как часто будут повороты :), логика загадочная, но на малой скорости лучше змейкам круги не наматывать :)
-      snake->newDirection();
+      snake.newDirection();
     }
 #endif
 

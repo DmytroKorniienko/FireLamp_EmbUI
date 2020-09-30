@@ -453,6 +453,9 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #ifdef ESP_USE_BUTTON
     interf->checkbox(FPSTR(TCONST_001F), myButtons.isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_013), true);
 #endif
+#ifdef LAMP_DEBUG
+    interf->checkbox(FPSTR(TCONST_0095), myLamp.isDebugOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_08E), true);
+#endif
     interf->json_section_end();
 }
 
@@ -1414,6 +1417,12 @@ void set_btnflag(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_001F), myButtons.setButtonOn((*data)[FPSTR(TCONST_001F)] == FPSTR(TCONST_FFFF)));
 }
 #endif
+
+void set_debugflag(Interface *interf, JsonObject *data){
+    if (!data) return;
+    SETPARAM(FPSTR(TCONST_0095), myLamp.setDebug((*data)[FPSTR(TCONST_0095)] == FPSTR(TCONST_FFFF)));
+}
+
 void section_effects_frame(Interface *interf, JsonObject *data){
     if(optionsTicker.active())
         optionsTicker.detach();
@@ -1621,12 +1630,15 @@ void create_parameters(){
     jee.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
     jee.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     jee.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
+    jee.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
 #endif
 }
 
 void sync_parameters(){
     DynamicJsonDocument doc(1024);
     JsonObject obj = doc.to<JsonObject>();
+
+    //myLamp.setLampFlags(jee.param(FPSTR(TCONST_0094)).toInt()); // восстановление всех флагов оптом
 
     CALL_SETTER(FPSTR(TCONST_001D), jee.param(FPSTR(TCONST_001D)), set_eventflag);
     CALL_SETTER(FPSTR(TCONST_001C), jee.param(FPSTR(TCONST_001C)), set_gbrflag);

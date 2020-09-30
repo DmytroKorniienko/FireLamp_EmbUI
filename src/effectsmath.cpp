@@ -360,7 +360,7 @@ CRGB EffectMath::getPixColorXYF(float x, float y)
   uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
                    WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  CRGB clr;
+  CRGB clr=CRGB::Black;
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
     if(!i){
@@ -385,7 +385,7 @@ CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
   // calculate the intensities for each affected pixel
   uint8_t wu[2] = {ix, xx};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  CRGB clr;
+  CRGB clr=CRGB::Black;
   for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
       if(i){
@@ -409,7 +409,7 @@ CRGB EffectMath::getPixColorXYF_Y(uint16_t x, float y)
   // calculate the intensities for each affected pixel
   uint8_t wu[2] = {iy, yy};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  CRGB clr;
+  CRGB clr=CRGB::Black;
   for (int8_t i = 1; i >= 0; i--) {
       int16_t yn = y + (i & 1);
       if(i){

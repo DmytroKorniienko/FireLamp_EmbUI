@@ -61,6 +61,7 @@ typedef struct {
         uint8_t flags;
         struct {
             bool isMicOn:1;
+            bool isDebug:1;
         };
     };
 } LAMPSTATE;
@@ -141,15 +142,15 @@ private:
     LAMPSTATE *lampstate = nullptr;
     LList<UIControl *> *ctrls;
     String dummy; // дефолтная затычка для отсутствующего контролла, в случае приведения к целому получится "0"
-protected:
-    bool active=0;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
+    bool active = false;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
     bool isCtrlPallete = false; // признак наличия контрола палитры
     bool isMicActive = false; // признак включенного микрофона
-
-    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
- 
+protected:
     EFF_ENUM effect;        /**< энумератор эффекта */
-
+    bool isDebug() {return lampstate!=nullptr ? lampstate->isDebug : false;}
+    bool isActive() {return active;}
+    void setActive(bool flag) {active=flag;}
+    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
     byte brightness;
     byte speed;
     byte scale;
@@ -835,7 +836,6 @@ public:
 // ------------------------------ ЭФФЕКТ ДЫМ ----------------------
 class EffectMStreamSmoke : public EffectCalc {
 private:
-  bool debug = false;
   uint8_t smokeHue = 0U;
   int fillType;
   float xSmokePos;
