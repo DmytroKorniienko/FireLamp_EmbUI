@@ -112,7 +112,7 @@ void LAMP::handle()
 {
 #ifdef MIC_EFFECTS
   static unsigned long mic_check;
-  if(isMicOn && (ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
+  if(flags.isMicOn && (flags.ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
     if(effects.worker->isMicOn() || isMicCalibration())
       micHandler();
     mic_check = millis();
@@ -141,14 +141,14 @@ void LAMP::handle()
   // будильник обрабатываем раз в секунду
   alarmWorker();
 
-  if(isEffectsDisabledUntilText && !isStringPrinting) {
+  if(flags.isEffectsDisabledUntilText && !flags.isStringPrinting) {
     setBrightness(0,false,false); // напечатали, можно гасить матрицу :)
-    isEffectsDisabledUntilText = false;
+    flags.isEffectsDisabledUntilText = false;
   }
 
   // отложенное включение/выключение
-  if(isOffAfterText && !isStringPrinting) {
-    isOffAfterText = false;
+  if(flags.isOffAfterText && !flags.isStringPrinting) {
+    flags.isOffAfterText = false;
     changePower(false);
   }
 
@@ -163,7 +163,7 @@ void LAMP::handle()
   //timeProcessor.handleTime();                         // Обновление времени
 
   // обработчик событий (пока не выкину в планировщик)
-  if (isEventsHandled) {
+  if (flags.isEventsHandled) {
     events.events_handle();
   }
 
@@ -177,12 +177,12 @@ void LAMP::alarmWorker(){
     static time_t startmillis;
 
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
-      dawnFlag = false;
+      flags.dawnFlag = false;
       return;
     }
 
     // проверка рассвета, первый вход в функцию
-    if (!dawnFlag){
+    if (!flags.dawnFlag){
       startmillis = millis();
       memset(dawnColorMinus,0,sizeof(dawnColorMinus));
       dawnCounter = 0;
@@ -239,7 +239,7 @@ void LAMP::alarmWorker(){
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
         leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
     }
-    dawnFlag = true;
+    flags.dawnFlag = true;
 }
 
 void LAMP::effectsTick(){
@@ -258,7 +258,7 @@ void LAMP::effectsTick(){
     return;
   }
 
-  if(!isEffectsDisabledUntilText){
+  if(!flags.isEffectsDisabledUntilText){
     // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
     if(effects.worker->run(getUnsafeLedsArray(), &effects)) {
 #ifdef USELEDBUF
@@ -273,7 +273,7 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isEffectsDisabledUntilText || effects.worker->status()) {
+  if (flags.isEffectsDisabledUntilText || effects.worker->status()) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else {
@@ -357,42 +357,46 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
 #endif
     , effects(&lampState)
     {
-      MIRR_V = false; // отзрекаливание по V
-      MIRR_H = false; // отзрекаливание по H
-      dawnFlag = false; // флаг устанавливается будильником "рассвет"
-      ONflag = false; // флаг включения/выключения
-      isDebug = false; // флаг отладки
-      isFaderON = true; // признак того, что используется фейдер для смены эффектов
-      isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
-      isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
+      flags.MIRR_V = false; // отзрекаливание по V
+      flags.MIRR_H = false; // отзрекаливание по H
+      flags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
+      flags.ONflag = false; // флаг включения/выключения
+      flags.isDebug = false; // флаг отладки
+      flags.isFaderON = true; // признак того, что используется фейдер для смены эффектов
+      flags.isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
+      flags.isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
 
-      isStringPrinting = false; // печатается ли прямо сейчас строка?
-      isEffectsDisabledUntilText = false;
-      isOffAfterText = false;
-      isEventsHandled = true;
+      flags.isStringPrinting = false; // печатается ли прямо сейчас строка?
+      flags.isEffectsDisabledUntilText = false;
+      flags.isOffAfterText = false;
+      flags.isEventsHandled = true;
       _brt =0;
       _steps = 0;
       _brtincrement = 0;
 #ifdef MIC_EFFECTS
-      isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
-      isMicOn = true; // глобальное испльзование микрофона
-      micAnalyseDivider = 1; // анализ каждый раз
+      flags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+      flags.isMicOn = true; // глобальное испльзование микрофона
+      flags.micAnalyseDivider = 1; // анализ каждый раз
 #endif
 #ifdef VERTGAUGE
       gauge_time = millis();
 #endif
+      flags.numInList = false;
+      flags.effHasMic = false;
+      flags.dRand = false;
+      
       lampState.flags = 0; // сборосить все флаги состояния
       lamp_init(); // инициализация и настройка лампы
     }
 
-void LAMP::changePower() {changePower(!ONflag);}
+void LAMP::changePower() {changePower(!flags.ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
   stopAlarm();            // любая активность в интерфейсе - отключаем будильник
-  if (flag == ONflag) return;  // пропускаем холостые вызовы
+  if (flag == flags.ONflag) return;  // пропускаем холостые вызовы
   LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? F("ON"): F("Off"));
-  ONflag = flag;
+  flags.ONflag = flag;
 
   if (flag){
     effectsTimer(T_ENABLE);
@@ -404,7 +408,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
   }
 
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
-      digitalWrite(MOSFET_PIN, (ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
+      digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
 
       if (CURRENT_LIMIT > 0){
@@ -422,13 +426,13 @@ void LAMP::startAlarm(){
 }
 
 void LAMP::stopAlarm(){
-  dawnFlag = false;
+  flags.dawnFlag = false;
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
 
   myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
   LOG(println, F("Отключение будильника рассвет."));
-  if (!ONflag) {
+  if (!flags.ONflag) {
       effectsTimer(T_DISABLE);
       FastLED.clear();
       FastLED.show();
@@ -476,10 +480,10 @@ void LAMP::startOTAUpdate()
 #endif
 bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int32_t pos, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
-  static int32_t offset = (MIRR_V ? 0 : WIDTH);
+  static int32_t offset = (flags.MIRR_V ? 0 : WIDTH);
 
   if(pos)
-    offset = (MIRR_V ? 0 + pos : WIDTH - pos);
+    offset = (flags.MIRR_V ? 0 + pos : WIDTH - pos);
 
   if (!text || !strlen(text))
   {
@@ -495,7 +499,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
     }
     else
     {
-      if(!MIRR_V)
+      if(!flags.MIRR_V)
         drawLetter(text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
       else
         drawLetter(text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
@@ -505,15 +509,15 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   }
 
   if(!stopText)
-    (MIRR_V ? offset++ : offset--);
-  if ((!MIRR_V && offset < (int32_t)(-j * (letWidth + letSpace))) || (MIRR_V && offset > (int32_t)(j * (letWidth + letSpace))+(signed)WIDTH))       // строка убежала
+    (flags.MIRR_V ? offset++ : offset--);
+  if ((!flags.MIRR_V && offset < (int32_t)(-j * (letWidth + letSpace))) || (flags.MIRR_V && offset > (int32_t)(j * (letWidth + letSpace))+(signed)WIDTH))       // строка убежала
   {
-    offset = (MIRR_V ? 0 : WIDTH);
+    offset = (flags.MIRR_V ? 0 : WIDTH);
     return true;
   }
   if(pos) // если задана позиция, то считаем что уже отобразили
   {
-    offset = (MIRR_V ? 0 : WIDTH);
+    offset = (flags.MIRR_V ? 0 : WIDTH);
     return true;
   }
 
@@ -607,11 +611,11 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
 
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
 {
-  if((!ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
+  if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
   if(textOffset==-128) textOffset=this->txtOffset;
 
   if(text==nullptr){ // текст пустой
-    if(!isStringPrinting){ // ничего сейчас не печатается
+    if(!flags.isStringPrinting){ // ничего сейчас не печатается
       if(docArrMessages.isNull()){ // массив пустой
         return; // на выход
       }
@@ -626,7 +630,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         return; // на выход
     }
   } else { // текст не пустой
-    if(!isStringPrinting){ // ничего сейчас не печатается
+    if(!flags.isStringPrinting){ // ничего сейчас не печатается
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
@@ -656,7 +660,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   static String toPrint;
   static CRGB _letterColor;
 
-  isStringPrinting = true;
+  flags.isStringPrinting = true;
   int8_t offs=(textOffset==-128?txtOffset:textOffset);
 
   if(text!=nullptr && text[0]!='\0'){
@@ -668,10 +672,10 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 
   if(toPrint.length()==0) {
-    isStringPrinting = false;
+    flags.isStringPrinting = false;
     return; // нечего печатать
   } else {
-    isStringPrinting = true;
+    flags.isStringPrinting = true;
   }
 
   if(tmStringStepTime.isReadyManual()){
@@ -679,7 +683,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
       tmStringStepTime.reset();
     }
     else {
-      isStringPrinting = false;
+      flags.isStringPrinting = false;
       toPrint.clear(); // все напечатали
       sendStringToLamp(); // получаем новую порцию
     }
@@ -774,7 +778,7 @@ void LAMP::micHandler()
 {
   static uint8_t counter=0;
 
-  if(mw==nullptr && !isCalibrationRequest){ // обычный режим
+  if(mw==nullptr && !flags.isCalibrationRequest){ // обычный режим
     //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
     samp_freq = mw->process(noise_reduce); // возвращаемое значение - частота семплирования
@@ -783,8 +787,8 @@ void LAMP::micHandler()
 
     if(!counter) // раз на N измерений берем частоту, т.к. это требует обсчетов
       last_freq = mw->analyse(); // возвращаемое значение - частота главной гармоники
-    if(micAnalyseDivider)
-      counter = (counter+1)%(0x01<<(micAnalyseDivider-1)); // как часто выполнять анализ
+    if(flags.micAnalyseDivider)
+      counter = (counter+1)%(0x01<<(flags.micAnalyseDivider-1)); // как часто выполнять анализ
     else
       counter = 1; // при micAnalyseDivider == 0 - отключено
 
@@ -806,7 +810,7 @@ void LAMP::micHandler()
     if(!mw->isCaliblation()){ // калибровка конец
       mic_noise = mw->getNoise();
       mic_scale = mw->getScale();
-      isCalibrationRequest = false; // завершили
+      flags.isCalibrationRequest = false; // завершили
       delete mw;
       mw = nullptr;
 
@@ -943,14 +947,14 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
         return;
     }
     // тухнем "вниз" только на включенной лампе
-    if (fade && ONflag) {
+    if (fade && flags.ONflag) {
       fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
   }
 
   //LOG(printf_P,PSTR(">>>>>>>>>>>isEffClearing==%d\n"),isEffClearing);
-  if(isEffClearing)
+  if(flags.isEffClearing)
     FastLED.clear();
 
   // Не-не-не, я против того чтобы за пользователя решать когда ему включать лампу
@@ -977,7 +981,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(ONflag)
+  if(flags.ONflag)
     effects.worker->run(getUnsafeLedsArray(), &effects);
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }

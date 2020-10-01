@@ -100,13 +100,10 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
-
-
-class LAMP {
-private:
 #pragma pack(push,1)
-union {
+typedef union {
 struct {
+    // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool MIRR_V:1; // отзрекаливание по V
     bool MIRR_H:1; // отзрекаливание по H
     bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
@@ -119,17 +116,24 @@ struct {
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
     bool isDebug:1; // признак режима отладки
-    uint16_t reserved:4; // выравнивание по границе 16, если нужны будут доп. биты, то уменьшать здесь соответственно
-
-#ifdef MIC_EFFECTS
+    bool numInList:1; // нумерация в списке
+    bool effHasMic:1; // значек микрофона в списке
+    bool dRand:1; // случайный порядок демо
+    bool reserved:1;
+    //--------16 штук граница-------------------
+    // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool isMicOn:1; // глобальное включение/выключение микрофона
     uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
-#endif
+    // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
-uint32_t lampflags;
-};
- #pragma pack(pop)
+uint32_t lampflags; // набор битов для конфига
+} LAMPFLAGS;
+#pragma pack(pop)
+
+class LAMP {
+private:
+    LAMPFLAGS flags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
     byte txtOffset = 0; // смещение текста относительно края матрицы
@@ -213,27 +217,28 @@ uint32_t lampflags;
 public:
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
-    uint32_t getLampFlags() {return lampflags;} // возвращает упакованные флаги лампы
-    void setLampFlags(uint32_t _lampflags) {lampflags=_lampflags;} // устананавливает упакованные флаги лампы
+    uint32_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
+    const LAMPFLAGS &getLampSettings() {return flags;} // возвращает упакованные флаги лампы
+    void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
 #ifdef MIC_EFFECTS
-    void setMicCalibration() {isCalibrationRequest = true;}
-    bool isMicCalibration() {return isCalibrationRequest;}
+    void setMicCalibration() {flags.isCalibrationRequest = true;}
+    bool isMicCalibration() {return flags.isCalibrationRequest;}
     float getMicScale() {return mic_scale;}
     void setMicScale(float scale) {mic_scale = scale;}
     float getMicNoise() {return mic_noise;}
     void setMicNoise(float noise) {mic_noise = noise;}
     void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
     MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return noise_reduce;}
-    uint8_t getMicMaxPeak() {return isMicOn?last_max_peak:0;}
-    uint8_t getMicMapMaxPeak() {return isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
-    float getMicFreq() {return isMicOn?last_freq:0;}
+    uint8_t getMicMaxPeak() {return flags.isMicOn?last_max_peak:0;}
+    uint8_t getMicMapMaxPeak() {return flags.isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
+    float getMicFreq() {return flags.isMicOn?last_freq:0;}
     uint8_t getMicMapFreq() {
         float minFreq=(log((float)(SAMPLING_FREQ>>1)/MICWORKER::samples));
         float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
-        return (uint8_t)(isMicOn?(log(last_freq)-minFreq)*scale:0);
+        return (uint8_t)(flags.isMicOn?(log(last_freq)-minFreq)*scale:0);
     }
     void setMicOnOff(bool val) {
-        isMicOn = val;
+        flags.isMicOn = val;
         lampState.isMicOn = val;
         LList<UIControl*>&controls = effects.getControls();
         if(val){
@@ -247,8 +252,8 @@ public:
             delete ctrl;
         }
     }
-    bool isMicOnOff() {return isMicOn;}
-    void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
+    bool isMicOnOff() {return flags.isMicOn;}
+    void setMicAnalyseDivider(uint8_t val) {flags.micAnalyseDivider = val&3;}
 #endif
 
 #ifdef VERTGAUGE
@@ -256,12 +261,12 @@ public:
 #endif
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
-    byte getLampBrightness() { return isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
-    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS) * (isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
-    void setLampBrightness(byte brg) { if (isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
+    byte getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
+    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS) * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
+    void setLampBrightness(byte brg) { if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
-    void setIsGlobalBrightness(bool val) {isGlobalBrightness = val;}
-    bool IsGlobalBrightness() {return isGlobalBrightness;}
+    void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val;}
+    bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     int getmqtt_int() {return mqtt_int;}
     void semqtt_int(int val) {mqtt_int = val;}
@@ -273,26 +278,26 @@ public:
 
     void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
-    bool isPrintingNow() { return isStringPrinting; }
+    bool isPrintingNow() { return flags.isStringPrinting; }
     LAMP();
 
     void handle();          // главная функция обработки эффектов
     void lamp_init();       // первичная инициализация Лампы
 
     void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
-    void setFaderFlag(bool flag) {isFaderON = flag;}
-    bool getFaderFlag() {return isFaderON;}
-    void setClearingFlag(bool flag) {isEffClearing = flag;}
-    bool getClearingFlag() {return isEffClearing;}
-    void disableEffectsUntilText() {isEffectsDisabledUntilText = true; FastLED.clear();}
-    void setOffAfterText() {isOffAfterText = true;}
-    void setIsEventsHandled(bool flag) {isEventsHandled = flag;}
-    bool IsEventsHandled() {return isEventsHandled;}
-    bool isLampOn() {return ONflag;}
-    bool isDebugOn() {return isDebug;}
-    void setDebug(bool flag) {isDebug=flag; lampState.isDebug=flag;}
-    void setMIRR_V(bool flag) {if (flag!=MIRR_V) { MIRR_V = flag; FastLED.clear();}}
-    void setMIRR_H(bool flag) {if (flag!=MIRR_H) { MIRR_H = flag; FastLED.clear();}}
+    void setFaderFlag(bool flag) {flags.isFaderON = flag;}
+    bool getFaderFlag() {return flags.isFaderON;}
+    void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
+    bool getClearingFlag() {return flags.isEffClearing;}
+    void disableEffectsUntilText() {flags.isEffectsDisabledUntilText = true; FastLED.clear();}
+    void setOffAfterText() {flags.isOffAfterText = true;}
+    void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
+    bool IsEventsHandled() {return flags.isEventsHandled;}
+    bool isLampOn() {return flags.ONflag;}
+    bool isDebugOn() {return flags.isDebug;}
+    void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
+    void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; FastLED.clear();}}
+    void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
     void setTextOffset(uint8_t val) { txtOffset=val;}
     void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
@@ -309,6 +314,9 @@ public:
     void newYearMessageHandle();
     void setNYMessageTimer(int in){ tmNewYearMessage.setInterval(in*60*1000); tmNewYearMessage.reset(); }
     void setNYUnixTime(time_t tm){ NEWYEAR_UNIXDATETIME = tm; }
+    void setNumInList(bool flag) {flags.numInList = flag;}
+    void setEffHasMic(bool flag) {flags.effHasMic = flag;}
+    void setDRand(bool flag) {flags.dRand = flag;}
 
     // ---------- служебные функции -------------
     uint16_t getmaxDim() {return maxDim;}
@@ -321,6 +329,10 @@ public:
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
     uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
     {
+        // хак с макроподстановкой, пусть живет пока
+        #define MIRR_H flags.MIRR_H
+        #define MIRR_V flags.MIRR_V
+        
         if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
         {
             return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
@@ -329,6 +341,9 @@ public:
         {
             return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
         }
+    
+        #undef MIRR_H
+        #undef MIRR_V
     }
 
     /*
