@@ -5175,8 +5175,8 @@ void EffectSnake::load() {
     snakes[i].reset();
     snakes[i].pixels[0].x = WIDTH / 2; // пусть расползаются из центра
     snakes[i].pixels[0].y = HEIGHT / 2; // так будет интереснее
-    snakes[i].direction = (EffectSnake::Direction)random(3);
-    snakes[i].internal_speedf = 0.75+1.0/(random(i+1)+1);
+    snakes[i].direction = (EffectSnake::Direction)random(4);
+    snakes[i].internal_speedf = ((random(2) ? 0.5 : 0.33)+1.0/(random(i+1)+1))+0.5;
   }
 }
 
@@ -5189,19 +5189,20 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
 }
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
-  speedFactor = (float)speed / 384.0 + 0.025; 
-  fadeToBlackBy(leds, NUM_LEDS, 64 ); // длина хвоста будет зависеть от скорости 1 + speed/8
+  speedFactor = (float)speed / 512.0 + 0.025; 
+  fadeToBlackBy(leds, NUM_LEDS, speed<25 ? 5 : speed/2 ); // длина хвоста будет зависеть от скорости
 #ifdef MIC_EFFECTS
   hue+=(speedFactor+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
 #else
   hue+=speedFactor;
 #endif
 
-
   for (int i = snakeCount - 1; i >= 0; i--)
   {
     EffectSnake::Snake &snake = snakes[i];
-    fill_palette(colors, SNAKE_LENGTH, hue*(i+1), i, *curPalette, 255-(i*5+53), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
+    fill_palette(colors, SNAKE_LENGTH, (
+      (speed==1 || speed==255) ? ((i+1)*8) : (speed<=127 ? hue+i : (float)((int)hue%255)*i/4.0+1)
+    ), i, *curPalette, 255-(i*5+53), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
     snake.shuffleDown(speedFactor, subPix);
 
@@ -5218,7 +5219,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
 #endif
 
     snake.move(speedFactor);
-    snake.draw(colors, speedFactor, i, subPix);
+    snake.draw(colors, speedFactor, i, subPix, isDebug());
   }
   return true;
 }
@@ -5227,20 +5228,23 @@ bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
   return snakeRoutine(ledarr, &*opt);
 }
 
-void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix)
+void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix, bool isDebug)
 {
-  for (int i = 0; i < 1; i++) // (int)SNAKE_LENGTH
+  int len= isDebug ? 1 : (int)SNAKE_LENGTH;
+  for (int i = 0; i < len; i++) // (int)SNAKE_LENGTH
   {
-    FastLED.clear(); // врубаю очистку, чтобы видно было отрисовку одного пикселя (тестировать при сабпиксель отключено - иначе будет использован сабпиксель4)
-    
-    EffectMath::drawPixelXYF(9.21, 4.15, colors[i]);
-    EffectMath::drawPixelXYF(7.22, 8.11, EffectMath::getPixColorXYF(9.21, 4.15));
+    if(isDebug){ // тест сабпикселя
+      FastLED.clear(); // врубаю очистку, чтобы видно было отрисовку одного пикселя (тестировать при сабпиксель отключено - иначе будет использован сабпиксель4)
 
-    EffectMath::drawPixelXYF_X(11.21, 6, colors[i]);
-    EffectMath::drawPixelXYF_X(9.22, 11, EffectMath::getPixColorXYF_X(11.21, 6));
+      EffectMath::drawPixelXYF(9.21, 4.15, colors[i]);
+      EffectMath::drawPixelXYF(7.22, 8.11, EffectMath::getPixColorXYF(9.21, 4.15));
 
-    EffectMath::drawPixelXYF_Y(13, 8.15, colors[i]);
-    EffectMath::drawPixelXYF_Y(11, 13.11, EffectMath::getPixColorXYF_Y(13, 8.15));
+      EffectMath::drawPixelXYF_X(11.21, 6, colors[i]);
+      EffectMath::drawPixelXYF_X(9.22, 11, EffectMath::getPixColorXYF_X(11.21, 6));
+
+      EffectMath::drawPixelXYF_Y(13, 8.15, colors[i]);
+      EffectMath::drawPixelXYF_Y(11, 13.11, EffectMath::getPixColorXYF_Y(13, 8.15));
+    }
 
     if (subpix){
       EffectMath::drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);

@@ -1416,24 +1416,26 @@ struct Snake
 
   void move(float speedfactor)
   {
+    float inc = speedfactor*internal_speedf;
+    
     switch (direction)
     {
     case UP:
-      pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + speedfactor);
+      pixels[0].y = pixels[0].y >= HEIGHT ? inc : (pixels[0].y + inc);
       break;
     case LEFT:
-      pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + speedfactor);
+      pixels[0].x = pixels[0].x >= WIDTH ? inc : (pixels[0].x + inc);
       break;
     case DOWN:
-      pixels[0].y = pixels[0].y <= 0 ? HEIGHT - speedfactor : pixels[0].y - speedfactor;
+      pixels[0].y = pixels[0].y <= 0 ? HEIGHT - inc : pixels[0].y - inc;
       break;
     case RIGHT:
-      pixels[0].x = pixels[0].x <= 0 ? WIDTH - speedfactor : pixels[0].x - speedfactor;
+      pixels[0].x = pixels[0].x <= 0 ? WIDTH - inc : pixels[0].x - inc;
       break;
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix);
+  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix, bool isDebug=false);
 };
 
     Snake snakes[MAX_SNAKES];
