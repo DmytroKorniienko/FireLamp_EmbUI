@@ -1627,8 +1627,8 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
           255 - white
 */
 
-  EffectMath::blur2d(e_com_BLUR);    // < -- размытие хвоста
-  EffectMath::dimAll(254);            // < -- затухание эффекта для последующего кадра
+  // EffectMath::blur2d(e_com_BLUR);    // < -- размытие хвоста
+  // EffectMath::dimAll(254);            // < -- затухание эффекта для последующего кадра
   CRGB _eNs_color = CRGB::White;
   if (scale == 1) {
     _eNs_color = CHSV(noise3d[0][0][0] * e_com_3DCOLORSPEED , 255, 255);
@@ -1638,19 +1638,21 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
     _eNs_color = CHSV((scale - 128) * 2, 255, 255);
   }
   drawFillRect2_fast(e_centerX, e_centerY, e_centerX+1, e_centerY+1, _eNs_color);
-  // Noise
-  uint16_t sc = (uint16_t)speed * 30 + 500; //64 + 1000;
-  uint16_t sc2 = (float)speed/127.0+1.5; //1.5...3.5;
-  for(uint8_t i=0; i<NUM_LAYERS; i++){
-    e_x[i] += e_com_TAILSPEED*sc2;
-    e_y[i] += e_com_TAILSPEED*sc2;
-    e_z[i] += e_com_TAILSPEED*sc2;
-    e_scaleX[i] = sc; // 8000;
-    e_scaleY[i] = sc; // 8000;
-    FillNoise(i);
+  if(!isDebug()){
+    // Noise
+    uint16_t sc = (uint16_t)speed * 30 + 500; //64 + 1000;
+    uint16_t sc2 = (float)scale/127.0+1.5; //1.5...3.5;
+    for(uint8_t i=0; i<NUM_LAYERS; i++){
+      e_x[i] += e_com_TAILSPEED*sc2;
+      e_y[i] += e_com_TAILSPEED*sc2;
+      e_z[i] += e_com_TAILSPEED*sc2;
+      e_scaleX[i] = sc; // 8000;
+      e_scaleY[i] = sc; // 8000;
+      FillNoise(i);
+    }
+    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 2U - 1U);
+    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 2U - 1U);
   }
-  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 2U - 1U);
-  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 2U - 1U);
   return true;
 }
 
@@ -1665,29 +1667,35 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
           255 - white
 */
 
-  EffectMath::blur2d(40);//scale/5+1);    // < -- размытие хвоста
-  EffectMath::dimAll(255-scale/66);            // < -- затухание эффекта для последующего кадра
-  byte xx = 2 + sin8( millis() / 10) / 22;
-  byte yy = 2 + cos8( millis() / 9) / 22;
-  EffectMath::setLed(myLamp.getPixelNumber( xx%WIDTH, yy%HEIGHT), 0x0000FF);
+  //EffectMath::blur2d(scale/10.+5.);      // < -- размытие точек
+  //EffectMath::dimAll(255-speed/66);     // < -- затухание эффекта для последующего кадра
 
-  xx = 4 + sin8( millis() / 10) / 32;
-  yy = 4 + cos8( millis() / 7) / 32;
-  EffectMath::setLed(myLamp.getPixelNumber( xx%WIDTH, yy%HEIGHT), 0xFF0000);
-  EffectMath::setLed(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00);
+  EffectMath::setLed(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00); // зеленый стоит по центру
 
-  uint16_t sc = (uint16_t)speed * 30 + 500; //64 + 1000;
-  uint16_t sc2 = (float)speed / 127.0 + 1.5; //1.5...3.5;
-  for(uint8_t i=0; i<NUM_LAYERS; i++){
-    e_x[i] += 1500*sc2;
-    e_y[i] += 1500*sc2;
-    e_z[i] += 1500*sc2;
-    e_scaleX[i] = sc; // 8000;
-    e_scaleY[i] = sc; // 8000;
-    FillNoise(i);
+  float pointspeedfactor = 256./speed+2.0; // насколько быстро будут перемещаться сами точки
+
+  float xx = 2 + sin8( millis() / (10*pointspeedfactor)) / 22;
+  float yy = 2 + cos8( millis() / (9*pointspeedfactor)) / 22;
+  EffectMath::setLed(myLamp.getPixelNumber( xx, yy), 0x0000FF);
+
+  xx = 4 + sin8( millis() / (10*pointspeedfactor)) / 32;
+  yy = 4 + cos8( millis() / (7*pointspeedfactor)) / 32;
+  EffectMath::setLed(myLamp.getPixelNumber( xx, yy), 0xFF0000);
+
+  if(!isDebug()){
+    uint16_t sc = (uint16_t)speed * 60 + 500; //64 + 1000;
+    uint16_t sc2 = (float)scale / 256.0 + 1.5; //1.5...3.5;
+    for(uint8_t i=0; i<NUM_LAYERS; i++){
+      e_x[i] += 1500*sc2;
+      e_y[i] += 1500*sc2;
+      e_z[i] += 1500*sc2;
+      e_scaleX[i] = sc; // 8000;
+      e_scaleY[i] = sc; // 8000;
+      FillNoise(i);
+    }
+    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 2);
+    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 2, 0.33);
   }
-  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 2);
-  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 2, 0.33);
   return true;
 }
 
