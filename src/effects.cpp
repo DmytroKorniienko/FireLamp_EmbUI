@@ -2775,25 +2775,26 @@ void EffectCube2d::cubesize(){
   }
 
   FastLED.clear();
-  // uint8_t cubeScaleX = EffectMath::ceil8(MAX_RANGE, CUBE2D_MAX_SIZE);       // масштаб "шкалы" в макс. размерность прямоугольника по X
-  // sizeX = EffectMath::ceil8(scale, cubeScaleX);
-
-  // uint8_t cubeScaleY = EffectMath::ceil8(cubeScaleX, CUBE2D_MAX_SIZE);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
-  // uint8_t scaleY = scale%cubeScaleX;
-  // ++scaleY;   // начинаем шкалу с "1"
-  // sizeY = EffectMath::ceil8(scaleY, cubeScaleY);
+  //memset(ledbuff, 0, 3*21*21);
 
 // Проверил заполняемость всей матрицы кубами 2х2, 5х5, 6х6 - работает четко. Надо будет функции сдивгов поправить так, чтобы кореектно работали 
 // с размерами не кратными матрице. 
-  //cntY = ceil((float)HEIGHT / (sizeY + 1U));
-  cntY = HEIGHT / (sizeY + 1U);
+  cntY = ceil((float)HEIGHT / (float)(sizeY + 1U));
+  //cntY = HEIGHT / (sizeY + 1U);
 	fieldY = (sizeY + 1U) * cntY;
+  //fieldY = 21;
 
-  //cntX = ceil((float)WIDTH / (sizeX + 1U));
-  cntX = WIDTH / (sizeX + 1U);
+  cntX = ceil((float)WIDTH / (float)(sizeX + 1U));
+  //cntX = WIDTH / (sizeX + 1U);
 	fieldX = (sizeX + 1U) * cntX;
-  //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
+  //fieldY = 21;
 
+  //delete[] ledbuff;
+  //delay(1);
+  //CRGB *ledbuff = new CRGB[fieldX * fieldY](); //создаем виртуальный экран
+  memset(ledbuff, 0, 3*((WIDTH + WIDTH/3) * (HEIGHT + HEIGHT/3))); // чистим под ним память
+
+  //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
   uint8_t x=0, y = 0;
   CRGB color;
 
@@ -2817,7 +2818,8 @@ void EffectCube2d::cubesize(){
       
       for (uint8_t k = 0U; k < sizeY; k++){
         for (uint8_t m = 0U; m < sizeX; m++){
-          EffectMath::setLed(myLamp.getPixelNumber(x+m, y+k), color);
+          //EffectMath::setLed(myLamp.getPixelNumber(x+m, y+k), color);
+          ledbuff[myLamp.getPixelNumber(x+m, y+k, fieldX, fieldY, fieldX * fieldY)] = color; 
         }
       }
     }
@@ -2863,6 +2865,12 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectWorker *param)
 
     direction ? cube2dmoveCols(i, moveItems.at(i)) : cube2dmoveRows(i, moveItems.at(i));
   }
+
+  for (uint8_t x = 0; x < WIDTH; x++) { // переписываем виртуальный экран в настоящий
+    for(uint8_t y = 0; y < HEIGHT; y++) {
+      EffectMath::setLed(myLamp.getPixelNumber(x, y), ledbuff[myLamp.getPixelNumber(x, y, fieldX, fieldY, fieldX * fieldY)]);
+    }
+  }
   return true;
 }
 
@@ -2877,28 +2885,36 @@ void EffectCube2d::cube2dmoveCols(uint8_t moveItem, bool movedirection){
       // если крутим столбец вниз
       if (!movedirection)
         {
-          color = EffectMath::getPixColorXY(x, anim0);                                   // берём цвет от нижней строчки
+          //color = EffectMath::getPixColorXY(x, anim0);                                   // берём цвет от нижней строчки
+          color = ledbuff[myLamp.getPixelNumber(x, anim0, fieldX, fieldY, fieldX * fieldY)];
           for (uint8_t k = anim0; k < anim0+fieldY-1; k++)
           {
-            color2 = EffectMath::getPixColorXY(x,k+1);                                   // берём цвет от строчки над нашей
+            //color2 = EffectMath::getPixColorXY(x,k+1);                                   // берём цвет от строчки над нашей
+            color2 = ledbuff[myLamp.getPixelNumber(x, k+1, fieldX, fieldY, fieldX * fieldY)];
             for (uint8_t m = x; m < x + sizeX; m++)
-              EffectMath::setLed(myLamp.getPixelNumber(m,k), color2);                           // копируем его на всю нашу строку
+              //EffectMath::setLed(myLamp.getPixelNumber(m, k), color2);                           // копируем его на всю нашу строку
+              ledbuff[myLamp.getPixelNumber(m, k, fieldX, fieldY, fieldX * fieldY)] = color2;
           }
           for   (uint8_t m = x; m < x + sizeX; m++)
-            EffectMath::setLed(myLamp.getPixelNumber(m, anim0+fieldY-1), color);                  // цвет нижней строчки копируем на всю верхнюю
+            //EffectMath::setLed(myLamp.getPixelNumber(m, anim0+fieldY-1), color);                  // цвет нижней строчки копируем на всю верхнюю
+            ledbuff[myLamp.getPixelNumber(m, anim0+fieldY-1, fieldX, fieldY, fieldX * fieldY)] = color;
           return;
         }
 
       // крутим столбец вверх
-      color = EffectMath::getPixColorXY(x,anim0+fieldY-1);                            // берём цвет от верхней строчки
+      //color = EffectMath::getPixColorXY(x,anim0+fieldY-1);                            // берём цвет от верхней строчки
+      color = ledbuff[myLamp.getPixelNumber(x,anim0+fieldY-1, fieldX, fieldY, fieldX * fieldY)];
       for (uint8_t k = anim0+fieldY-1; k > anim0 ; k--)
       {
-        color2 = EffectMath::getPixColorXY(x,k-1);                                   // берём цвет от строчки под нашей
+        //color2 = EffectMath::getPixColorXY(x,k-1);                                   // берём цвет от строчки под нашей
+        color2 = ledbuff[myLamp.getPixelNumber(x, k-1, fieldX, fieldY, fieldX * fieldY)];
         for (uint8_t m = x; m < x + sizeX; m++)
-          EffectMath::setLed(myLamp.getPixelNumber(m,k), color2);                           // копируем его на всю нашу строку
+          //EffectMath::setLed(myLamp.getPixelNumber(m,k), color2);                           // копируем его на всю нашу строку
+          ledbuff[myLamp.getPixelNumber(m, k , fieldX, fieldY, fieldX * fieldY)] = color2;
       }
       for   (uint8_t m = x; m < x + sizeX; m++)
-        EffectMath::setLed(myLamp.getPixelNumber(m, anim0), color);                         // цвет верхней строчки копируем на всю нижнюю
+        //EffectMath::setLed(myLamp.getPixelNumber(m, anim0), color);                         // цвет верхней строчки копируем на всю нижнюю
+        ledbuff[myLamp.getPixelNumber(m, anim0, fieldX, fieldY, fieldX * fieldY)] = color;
 }
 
 // идём по вертикали, крутим по горизонтали (строки двигаются)
@@ -2912,32 +2928,39 @@ void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
   // крутим строку влево
   if (!movedirection)
   {
-    color = EffectMath::getPixColorXY(anim0, y);                            // берём цвет от левой колонки (левого пикселя)
+    //color = EffectMath::getPixColorXY(anim0, y);                            // берём цвет от левой колонки (левого пикселя)
+    color = ledbuff[myLamp.getPixelNumber(anim0, y, fieldX, fieldY, fieldX * fieldY)];
     for (uint8_t k = anim0; k < anim0+fieldX-1; k++)
     {
-      color2 = EffectMath::getPixColorXY(k+1, y);                           // берём цвет от колонки (пикселя) правее
+      //color2 = EffectMath::getPixColorXY(k+1, y);                           // берём цвет от колонки (пикселя) правее
+      color2 = ledbuff[myLamp.getPixelNumber(k+1, y, fieldX, fieldY, fieldX * fieldY)];
       for (uint8_t m = y; m < y + sizeY; m++)
-        EffectMath::setLed(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+        //EffectMath::setLed(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+        ledbuff[myLamp.getPixelNumber(k, m, fieldX, fieldY, fieldX * fieldY)] = color2;
     }
     for   (uint8_t m = y; m < y + sizeY; m++)
-      EffectMath::setLed(myLamp.getPixelNumber(anim0+fieldX-1, m), color);                  // цвет левой колонки копируем на всю правую
-    return;
+      //EffectMath::setLed(myLamp.getPixelNumber(anim0+fieldX-1, m), color);                  // цвет левой колонки копируем на всю правую
+      ledbuff[myLamp.getPixelNumber(anim0+fieldX-1, m, fieldX, fieldY, fieldX * fieldY)] = color;
+   return;
   }
 
   //  крутим строку вправо
-  color = EffectMath::getPixColorXY(anim0+fieldX-1, y);                    // берём цвет от правой колонки
+  //color = EffectMath::getPixColorXY(anim0+fieldX-1, y);                    // берём цвет от правой колонки
+  color = ledbuff[myLamp.getPixelNumber(anim0+fieldX-1, y, fieldX, fieldY, fieldX * fieldY)];
   for (uint8_t k = anim0+fieldX-1; k > anim0 ; k--)
   {
-    color2 = EffectMath::getPixColorXY(k-1, y);                           // берём цвет от колонки левее
+    //color2 = EffectMath::getPixColorXY(k-1, y);                           // берём цвет от колонки левее
+    color2 = ledbuff[myLamp.getPixelNumber(k-1, y, fieldX, fieldY, fieldX * fieldY)];
     for (uint8_t m = y; m < y + sizeY; m++)
-      EffectMath::setLed(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+      //EffectMath::setLed(myLamp.getPixelNumber(k, m), color2);                           // копируем его на всю нашу колонку
+      ledbuff[myLamp.getPixelNumber(k, m, fieldX, fieldY, fieldX * fieldY)] = color2;
   }
   for   (uint8_t m = y; m < y + sizeY; m++)
-    EffectMath::setLed(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
-
+    //EffectMath::setLed(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
+    ledbuff[myLamp.getPixelNumber(anim0, m, fieldX, fieldY, fieldX * fieldY)] = color;
 }
 
-//--------------
+//-------------- Эффект "Часы"
 bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
   if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
       EffectMath::dimAll(254);

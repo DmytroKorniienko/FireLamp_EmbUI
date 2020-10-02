@@ -374,8 +374,7 @@ public:
 };
 #endif
 
-// Думаю пример все поглядели, возвертаю часы в режим с 3 ползунками, а то масштаб вообще не работает :)
-//static const char EFF_TIME_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":\"@ver@\",\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
+//-------------- Эффект "Часы"
 class EffectTime : public EffectCalc {
 private:
     bool timeShiftDir; // направление сдвига
@@ -914,6 +913,12 @@ private:
   std::vector<int8_t> moveItems;     // индекс перемещаемого элемента
   //bool movedirection;   // направление смещения
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
+  const byte maxSize = 7;
+  byte maxCountY = ceil((float)HEIGHT / (float)(maxSize + 1U)); // максимальный количество кубиков
+  byte maxCountX = ceil((float)WIDTH / (float)(maxSize + 1U));
+  //CRGB *ledbuff = new CRGB[(maxCountX * (maxSize+1))*(maxCountY * (maxSize+1))]();  
+  CRGB ledbuff[(WIDTH + WIDTH/3) * (HEIGHT + HEIGHT/3)];  
+  //CRGB ledbuff[21 * 21];
    
 
   void cubesize();

@@ -327,7 +327,7 @@ public:
 
     CRGB *getUnsafeLedsArray(){return leds;}
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-    uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
+    uint32_t getPixelNumber(uint16_t x, uint16_t y, uint8_t W = WIDTH, uint8_t H = HEIGHT, uint16_t NL = NUM_LEDS) // получить номер пикселя в ленте по координатам
     {
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
@@ -335,11 +335,11 @@ public:
         
         if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
         {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
+            return ((uint32_t)THIS_Y * SEGMENTS * W + THIS_X)%NL;
         }
         else                                                      // если нечётная строка
         {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
+            return ((uint32_t)THIS_Y * SEGMENTS * W + W - THIS_X - 1)%NL;
         }
     
         #undef MIRR_H
