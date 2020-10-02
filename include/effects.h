@@ -916,9 +916,10 @@ private:
   const byte maxSize = 7;
   byte maxCountY = ceil((float)HEIGHT / (float)(maxSize + 1U)); // максимальный количество кубиков
   byte maxCountX = ceil((float)WIDTH / (float)(maxSize + 1U));
-  //CRGB *ledbuff = new CRGB[(maxCountX * (maxSize+1))*(maxCountY * (maxSize+1))]();  
-  CRGB ledbuff[(WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2)];  
-  //CRGB ledbuff[21 * 21];
+  //CRGB *ledbuff = new CRGB[NUM_LEDS];  
+  std::vector<CRGB> ledbuff;
+  //CRGB ledbuff[(WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2)];  
+
    
 
   void cubesize();
