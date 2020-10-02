@@ -1640,8 +1640,8 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
   drawFillRect2_fast(e_centerX, e_centerY, e_centerX+1, e_centerY+1, _eNs_color);
   if(!isDebug()){
     // Noise
-    uint16_t sc = (uint16_t)speed * 30 + 500; //64 + 1000;
-    uint16_t sc2 = (float)scale/127.0+1.5; //1.5...3.5;
+    uint16_t sc = (uint16_t)scale * 30 + 500; //64 + 1000;
+    uint16_t sc2 = (float)speed/100.0+1.0; //1.5...3.5;
     for(uint8_t i=0; i<NUM_LAYERS; i++){
       e_x[i] += e_com_TAILSPEED*sc2;
       e_y[i] += e_com_TAILSPEED*sc2;
@@ -1683,8 +1683,8 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
   EffectMath::setLed(myLamp.getPixelNumber( xx, yy), 0xFF0000);
 
   if(!isDebug()){
-    uint16_t sc = (uint16_t)speed * 60 + 500; //64 + 1000;
-    uint16_t sc2 = (float)scale / 256.0 + 1.5; //1.5...3.5;
+    uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
+    uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
     for(uint8_t i=0; i<NUM_LAYERS; i++){
       e_x[i] += 1500*sc2;
       e_y[i] += 1500*sc2;
