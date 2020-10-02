@@ -326,15 +326,34 @@ public:
     void changePower(bool);
 
     CRGB *getUnsafeLedsArray(){return leds;}
+
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-    uint32_t getPixelNumber(uint16_t x, uint16_t y, uint8_t W = _WIDTH, uint8_t H = HEIGHT, uint16_t NL = NUM_LEDS) // получить номер пикселя в ленте по координатам
+        uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
     {
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
         #define MIRR_V flags.MIRR_V
+        
+        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
+        }
+        else                                                      // если нечётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
+        }
+    
+        #undef MIRR_H
+        #undef MIRR_V
+    }
 
-        uint16_t _THIS_Y = (MIRR_H ? (H - y - 1) : y);
-        uint16_t _THIS_X = (MIRR_V ? (W - x - 1) : x);
+    // перегрузка для работы с буффером
+    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H, uint16_t NL) // получить номер пикселя в ленте по координатам
+    {
+        NL = W*H;
+
+        uint16_t _THIS_Y = y;
+        uint16_t _THIS_X = x;
         
         if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
         {
@@ -345,8 +364,6 @@ public:
             return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1)%NL;
         }
     
-        #undef MIRR_H
-        #undef MIRR_V
     }
 
     /*
