@@ -41,12 +41,30 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 extern LAMP myLamp; // Объект лампы
 
-void LAMP::lamp_init()
+void LAMP::lamp_init(const uint8_t lpin, const uint8_t curlimit)
 {
-  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)  /*.setCorrection(TypicalLEDStrip)*/;
+  switch(lpin){
+    case 0:  FastLED.addLeds<WS2812B, 0, COLOR_ORDER>(leds, NUM_LEDS); break; /*.setCorrection(TypicalLEDStrip)*/
+    case 1:  FastLED.addLeds<WS2812B, 1, COLOR_ORDER>(leds, NUM_LEDS); break;
+    case 2:  FastLED.addLeds<WS2812B, 2, COLOR_ORDER>(leds, NUM_LEDS); break;
+    case 3:  FastLED.addLeds<WS2812B, 3, COLOR_ORDER>(leds, NUM_LEDS); break;
+    case 4:  FastLED.addLeds<WS2812B, 4, COLOR_ORDER>(leds, NUM_LEDS); break;
+    //case 5:  FastLED.addLeds<WS2812B, 5, COLOR_ORDER>(leds, NUM_LEDS); break;
+      // case 6:  FastLED.addLeds<WS2812B, 6, COLOR_ORDER>(leds, NUM_LEDS); break; // Invalid pin specified
+      // case 7:  FastLED.addLeds<WS2812B, 7, COLOR_ORDER>(leds, NUM_LEDS); break; // Invalid pin specified
+      // case 8:  FastLED.addLeds<WS2812B, 8, COLOR_ORDER>(leds, NUM_LEDS); break; // Invalid pin specified
+      // case 9:  FastLED.addLeds<WS2812B, 9, COLOR_ORDER>(leds, NUM_LEDS); break; // Invalid pin specified
+      // case 10: FastLED.addLeds<WS2812B, 10, COLOR_ORDER>(leds, NUM_LEDS); break; // Invalid pin specified
+      // case 11: FastLED.addLeds<WS2812B, 11, COLOR_ORDER>(leds, NUM_LEDS); break; // Invalid pin specified
+    //case 12: FastLED.addLeds<WS2812B, 12, COLOR_ORDER>(leds, NUM_LEDS); break;
+    //case 13: FastLED.addLeds<WS2812B, 13, COLOR_ORDER>(leds, NUM_LEDS); break;
+    //case 14: FastLED.addLeds<WS2812B, 14, COLOR_ORDER>(leds, NUM_LEDS); break;
+    //case 15: FastLED.addLeds<WS2812B, 15, COLOR_ORDER>(leds, NUM_LEDS); break;
+  }
+  
   brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
-  if (CURRENT_LIMIT > 0){
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП
+  if (curlimit > 0){
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, curlimit); // установка максимального тока БП
   }
   FastLED.clearData();
   //FastLED.clear();                                            // очистка матрицы
@@ -386,7 +404,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.dRand = false;
       
       lampState.flags = 0; // сборосить все флаги состояния
-      lamp_init(); // инициализация и настройка лампы
+      //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
     }
 
 void LAMP::changePower() {changePower(!flags.ONflag);}
@@ -415,9 +433,6 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
         FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
       }
 }
-
-
-
 
 void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);

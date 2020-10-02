@@ -42,6 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "text_res.h"
 
 Ticker optionsTicker;          // планировщик заполнения списка
+Ticker sysTicker;              // системный планировщик
 
 void resetAutoTimers() // сброс таймера демо и настройка автосохранений
 {
@@ -98,7 +99,11 @@ void block_menu(Interface *interf, JsonObject *data){
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));
     interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));
     interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));
-
+#if defined(SHOWSYSCONFIG)
+#if SHOWSYSCONFIG == 1
+    interf->option(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
+#endif
+#endif
     interf->json_section_end();
 }
 
@@ -144,9 +149,9 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         myLamp.effects.deleteEffect(confEff); // удаляем текущий
     } else if (act == FPSTR(TCONST_000B)) {
 #ifndef DELAYED_EFFECTS
-        optionsTicker.once(5,std::bind([]{
+        sysTicker.once(5,std::bind([]{
 #else
-        optionsTicker.once(1,std::bind([]{
+        sysTicker.once(1,std::bind([]{
 #endif
             myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
             delayedcall_effects_main();
@@ -588,13 +593,14 @@ void set_onflag(Interface *interf, JsonObject *data){
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
             myLamp.changePower(newpower);
 #ifndef ESP_USE_BUTTON
-            optionsTicker.once(3,std::bind([]{
-                myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
-            }));
+            if(millis()<10000)
+                sysTicker.once(3,std::bind([]{
+                    myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
+                }));
 #endif
         } else {
             myLamp.changePower(newpower);
-            optionsTicker.once(3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
+            sysTicker.once(3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 resetAutoTimers();
             }));
         }
@@ -1500,6 +1506,49 @@ void section_main_frame(Interface *interf, JsonObject *data){
     }
 }
 
+void section_sys_settings_frame(Interface *interf, JsonObject *data){
+    if (!interf) return;
+
+    interf->json_frame_interface(FPSTR(TINTF_08F));
+
+    block_menu(interf, data);
+    interf->json_section_main(FPSTR(TCONST_0099), FPSTR(TINTF_08F));
+        interf->spacer(FPSTR(TINTF_092)); // заголовок
+        interf->json_section_line(FPSTR(TINTF_092)); // расположить в одной линии
+            interf->number(FPSTR(TCONST_0096),FPSTR(TINTF_093),0,4);
+            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),0,15);
+        interf->json_section_end(); // конец контейнера
+        interf->spacer();
+        interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),0,16000);
+        interf->button_submit(FPSTR(TCONST_0099), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+
+        interf->spacer();
+        interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
+    interf->json_section_end();
+    
+    interf->json_frame_flush();
+}
+
+void set_sys_settings(Interface *interf, JsonObject *data){
+    if(!data) return;
+    String tmpChk = (*data)[FPSTR(TCONST_0096)];
+    if(tmpChk.toInt()>4) return;
+    String tmpChk1 = (*data)[FPSTR(TCONST_0097)];
+    if(tmpChk1.toInt()>15) return;
+    String tmpChk2 = (*data)[FPSTR(TCONST_0098)];
+    if(tmpChk2.toInt()>16000) return;
+
+    SETPARAM(FPSTR(TCONST_0096));
+    SETPARAM(FPSTR(TCONST_0097));
+    SETPARAM(FPSTR(TCONST_0098));
+    myLamp.sendString(String(FPSTR(TINTF_096)).c_str(), CRGB::Red);
+    sysTicker.once(10,std::bind([]{
+        jee.save();
+        ESP.restart();
+    }));
+    section_effects_frame(interf,data);
+}
+
 void set_lamp_flags(Interface *interf, JsonObject *data){
     if(!data) return;
     SETPARAM(FPSTR(TCONST_0094));
@@ -1522,9 +1571,6 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_003F), F(""));
     jee.var_create(FPSTR(TCONST_0043),  FPSTR(TCONST_FFFE));     // режим AP-only (только точка доступа), не трогать
     jee.var_create(FPSTR(TCONST_0044), F(""));      // пароль внутренней точки доступа
-//    jee.var_create(F("ssid"), F(""));     // режим AP-only (только точка доступа)
-//    jee.var_create(F("pass"), F(""));      // пароль внутренней точки доступа
-
 
     // параметры подключения к MQTT
     jee.var_create(FPSTR(TCONST_0046), F("")); // Дефолтные настройки для MQTT
@@ -1533,13 +1579,8 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0049), F(""));
     jee.var_create(FPSTR(TCONST_007B), jee.mc);  // m_pref == MAC по дефолту
     jee.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
-
     jee.var_create(FPSTR(TCONST_0016), F("1"));
-
     jee.var_create(FPSTR(TCONST_002A),F("cfg1"));
-
-    //jee.var_create(FPSTR(TCONST_004C), FPSTR(TCONST_FFFE));
-    //jee.var_create(FPSTR(TCONST_004D), FPSTR(TCONST_FFFE));
 #ifdef ESP_USE_BUTTON
     jee.var_create(FPSTR(TCONST_001F), FPSTR(TCONST_FFFF)); // не трогать пока...
 #endif
@@ -1551,16 +1592,12 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0051), F("100"));
     jee.var_create(FPSTR(TCONST_0052), F("0"));
     jee.var_create(FPSTR(TCONST_0053), F("0"));
-
     jee.var_create(FPSTR(TCONST_0050), F("1"));
-
-    //jee.var_create(FPSTR(TCONST_001C), FPSTR(TCONST_FFFE));
     jee.var_create(FPSTR(TCONST_0018), F("127"));
 
     // date/time related vars
     jee.var_create(FPSTR(TCONST_0057), "");
     jee.var_create(FPSTR(TCONST_0058), "");
-
     jee.var_create(FPSTR(TCONST_0054), F("0"));
     jee.var_create(FPSTR(TCONST_0055), FPSTR(TCONST_007D));
 
@@ -1568,25 +1605,21 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0039),F("1.28"));
     jee.var_create(FPSTR(TCONST_003A),F("0.00"));
     jee.var_create(FPSTR(TCONST_003B),F("0"));
-    //jee.var_create(FPSTR(TCONST_001E), FPSTR(TCONST_FFFF));
-    //jee.var_create(FPSTR(TCONST_0091), FPSTR(TCONST_FFFE));  // значек микрофона в списке эффектов
 #endif
 
 #ifdef RESTORE_STATE
-    //jee.var_create(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE));
     jee.var_create(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE));
 #endif
 
-    //jee.var_create(FPSTR(TCONST_001D), FPSTR(TCONST_FFFE));
-
-    //jee.var_create(FPSTR(TCONST_004E), FPSTR(TCONST_FFFE));
-    //jee.var_create(FPSTR(TCONST_004F), FPSTR(TCONST_FFFE));
     jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
-    //jee.var_create(FPSTR(TCONST_008E), FPSTR(TCONST_FFFE)); // "Очищать лампу при смене эффектов"
-    //jee.var_create(FPSTR(TCONST_0090), FPSTR(TCONST_FFFE)); // Нумерация в списке эффектов
+    // пины и системные настройки
+    jee.var_create(FPSTR(TCONST_0096), String(LAMP_PIN)); // Пин лампы
+    jee.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
+    jee.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
     // далее идут обработчики параметров
+    jee.section_handle_add(FPSTR(TCONST_0099), set_sys_settings);
 
     jee.section_handle_add(FPSTR(TCONST_0094), set_lamp_flags);
 
@@ -1617,7 +1650,7 @@ void create_parameters(){
 #ifdef AUX_PIN
     jee.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
 #endif
-
+    jee.section_handle_add(FPSTR(TCONST_009A), section_sys_settings_frame);
     jee.section_handle_add(FPSTR(TCONST_0003), section_lamp_frame);
     jee.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
     jee.section_handle_add(FPSTR(TCONST_0030), edit_lamp_config);

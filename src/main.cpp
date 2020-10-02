@@ -74,7 +74,7 @@ void setup() {
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     
     myLamp.events.loadConfig();
-
+    myLamp.lamp_init(jee.param(F("PINL")).toInt(),jee.param(F("CLmt")).toInt());
 #ifdef ESP_USE_BUTTON
     if (!myButtons.loadConfig()) {
       default_buttons();
@@ -87,7 +87,7 @@ void setup() {
 #endif
 
 #ifdef ESP_USE_BUTTON
-    attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
+    attachInterrupt(digitalPinToInterrupt(jee.param(F("PINB")).toInt()), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
 #endif
 
     // восстанавливаем настройки времени
@@ -146,9 +146,9 @@ void buttonhelper(bool state){
  *  Button pin interrupt handler
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
-  detachInterrupt(BTN_PIN);
+  detachInterrupt(jee.param(F("PINB")).toInt());
   _isrHelper.once_ms(0, buttonhelper, myButtons.getpinTransition());   // вместо флага используем тикер :)
   myButtons.setpinTransition(!myButtons.getpinTransition());
-  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, myButtons.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+  attachInterrupt(digitalPinToInterrupt(jee.param(F("PINB")).toInt()), buttonpinisr, myButtons.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
 }
 #endif

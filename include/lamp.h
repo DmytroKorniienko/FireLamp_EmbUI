@@ -215,6 +215,7 @@ private:
     void frameShow(const uint32_t ticktime);
 
 public:
+    void lamp_init(const uint8_t lpin, const uint8_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
     uint32_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
@@ -282,7 +283,6 @@ public:
     LAMP();
 
     void handle();          // главная функция обработки эффектов
-    void lamp_init();       // первичная инициализация Лампы
 
     void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
     void setFaderFlag(bool flag) {flags.isFaderON = flag;}
