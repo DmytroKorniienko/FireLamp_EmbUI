@@ -1629,6 +1629,11 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
 
   // EffectMath::blur2d(e_com_BLUR);    // < -- размытие хвоста
   // EffectMath::dimAll(254);            // < -- затухание эффекта для последующего кадра
+
+  if(isDebug()){
+    FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
+  }
+
   CRGB _eNs_color = CRGB::White;
   if (scale == 1) {
     _eNs_color = CHSV(noise3d[0][0][0] * e_com_3DCOLORSPEED , 255, 255);
@@ -1666,6 +1671,10 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
           128...254 - selected color
           255 - white
 */
+
+  if(isDebug()){
+    FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
+  }
 
   //EffectMath::blur2d(scale/10.+5.);      // < -- размытие точек
   //EffectMath::dimAll(255-speed/66);     // < -- затухание эффекта для последующего кадра
