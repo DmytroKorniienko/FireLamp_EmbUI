@@ -2792,7 +2792,7 @@ void EffectCube2d::cubesize(){
   //delete[] ledbuff;
   //delay(1);
   //CRGB *ledbuff = new CRGB[fieldX * fieldY](); //создаем виртуальный экран
-  memset(ledbuff, 0, 3*((WIDTH + WIDTH/3) * (HEIGHT + HEIGHT/3))); // чистим под ним память
+  memset(ledbuff, 0, 3*((WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2))); // чистим под ним память
 
   //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
   uint8_t x=0, y = 0;
