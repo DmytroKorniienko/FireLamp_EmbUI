@@ -332,14 +332,17 @@ public:
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
         #define MIRR_V flags.MIRR_V
+
+        uint16_t _THIS_Y = (MIRR_H ? (H - y - 1) : y);
+        uint16_t _THIS_X = (MIRR_V ? (W - x - 1) : x);
         
-        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+        if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
         {
-            return ((uint32_t)THIS_Y * SEGMENTS * W + THIS_X)%NL;
+            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X)%NL;
         }
         else                                                      // если нечётная строка
         {
-            return ((uint32_t)THIS_Y * SEGMENTS * W + W - THIS_X - 1)%NL;
+            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1)%NL;
         }
     
         #undef MIRR_H

@@ -2792,25 +2792,20 @@ void EffectCube2d::cubesize(){
   }
 
   FastLED.clear();
-  //memset(ledbuff, 0, 3*21*21);
-
+  
 // Проверил заполняемость всей матрицы кубами 2х2, 5х5, 6х6 - работает четко. Надо будет функции сдивгов поправить так, чтобы кореектно работали 
 // с размерами не кратными матрице. 
   cntY = ceil((float)HEIGHT / (float)(sizeY + 1U));
-  //cntY = HEIGHT / (sizeY + 1U);
 	fieldY = (sizeY + 1U) * cntY;
-  //fieldY = 21;
+
 
   cntX = ceil((float)WIDTH / (float)(sizeX + 1U));
-  //cntX = WIDTH / (sizeX + 1U);
 	fieldX = (sizeX + 1U) * cntX;
-  //fieldY = 21;
 
-  //delete[] ledbuff;
-  //delay(1);
-  //CRGB *ledbuff = new CRGB[fieldX * fieldY](); //создаем виртуальный экран
-  memset(ledbuff, 0, 3*((WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2))); // чистим под ним память
-
+  ledbuff.resize(fieldX * fieldY); // создаем виртуальную матрицу, размером кратную размеру кубика+1
+  for(uint16_t i = 0; i < (fieldX * fieldY); i++) // очищаем виртуальную матрицу. (может кто знает способ попроще?)
+    ledbuff[i] = CRGB(0, 0, 0);
+  
   //LOG(printf_P, PSTR("CUBE2D Size: scX=%d, scY=%d, scaleY=%d, cntX=%d, cntY=%d\n"), cubeScaleX, cubeScaleY, scaleY, cntX, cntY);
   uint8_t x=0, y = 0;
   CRGB color;
