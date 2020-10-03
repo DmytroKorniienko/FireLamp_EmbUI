@@ -279,7 +279,7 @@ void LAMP::effectsTick(){
 #ifdef USELEDBUF
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
-        if(!flags.isStringPrinting){ // чистить буфер только если не выводится строка
+        if(!flags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
           ledsbuff.resize(0);
           ledsbuff.shrink_to_fit();
         }

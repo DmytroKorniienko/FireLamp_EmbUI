@@ -143,6 +143,7 @@ private:
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
     int mqtt_int;
+    uint8_t bPin = 0;        // пин кнопки
 
     const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
@@ -221,6 +222,8 @@ public:
     uint32_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
     const LAMPFLAGS &getLampSettings() {return flags;} // возвращает упакованные флаги лампы
     void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
+    void setbPin(uint8_t val) {bPin = val;}
+    uint8_t getbPin() {return bPin;}
 #ifdef MIC_EFFECTS
     void setMicCalibration() {flags.isCalibrationRequest = true;}
     bool isMicCalibration() {return flags.isCalibrationRequest;}
