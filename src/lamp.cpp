@@ -41,8 +41,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 extern LAMP myLamp; // Объект лампы
 
-void LAMP::lamp_init(const uint8_t lpin, const uint8_t curlimit)
+void LAMP::lamp_init(const uint8_t lpin, const uint16_t curlimit)
 {
+  setcurLimit(curlimit);
+  
   switch(lpin){
     case 0:  FastLED.addLeds<WS2812B, 0, COLOR_ORDER>(leds, NUM_LEDS); break; /*.setCorrection(TypicalLEDStrip)*/
     case 1:  FastLED.addLeds<WS2812B, 1, COLOR_ORDER>(leds, NUM_LEDS); break;
@@ -439,8 +441,8 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
 
-      if (CURRENT_LIMIT > 0){
-        FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
+      if (curLimit > 0){
+        FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
       }
 }
 

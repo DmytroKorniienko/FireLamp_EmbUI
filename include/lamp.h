@@ -143,7 +143,8 @@ private:
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
     int mqtt_int;
-    uint8_t bPin = 0;        // пин кнопки
+    uint8_t bPin = BTN_PIN;        // пин кнопки
+    uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
     const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
     const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
@@ -216,7 +217,7 @@ private:
     void frameShow(const uint32_t ticktime);
 
 public:
-    void lamp_init(const uint8_t lpin, const uint8_t curlimit);       // первичная инициализация Лампы
+    void lamp_init(const uint8_t lpin, const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
     uint32_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
@@ -224,6 +225,8 @@ public:
     void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
     void setbPin(uint8_t val) {bPin = val;}
     uint8_t getbPin() {return bPin;}
+    void setcurLimit(uint16_t val) {curLimit = val;}
+    uint16_t getcurLimit() {return curLimit;}
 #ifdef MIC_EFFECTS
     void setMicCalibration() {flags.isCalibrationRequest = true;}
     bool isMicCalibration() {return flags.isCalibrationRequest;}
