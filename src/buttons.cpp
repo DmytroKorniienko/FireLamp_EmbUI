@@ -103,7 +103,7 @@ String Button::getName(){
 		return buffer;
 };
 
-Buttons::Buttons(): buttons(), holdtm(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, NORM_OPEN){
+Buttons::Buttons(uint8_t btn): buttons(), holdtm(NUMHOLD_TIME), touch(btn, PULL_MODE, NORM_OPEN){
 	holding = false;
 	holded = false;
 	buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
@@ -112,9 +112,9 @@ Buttons::Buttons(): buttons(), holdtm(NUMHOLD_TIME), touch(BTN_PIN, PULL_MODE, N
 	clicks = 0;
 
 #if (PULL_MODE == LOW_PULL)
-		pinMode(BTN_PIN, INPUT);
+		pinMode(btn, INPUT);
 #else
-		pinMode(BTN_PIN, INPUT_PULLUP);
+		pinMode(btn, INPUT_PULLUP);
 #endif
 	touch.setTickMode(MANUAL);    // мы сами говорим когда опрашивать пин
 	touch.setStepTimeout(BUTTON_STEP_TIMEOUT);

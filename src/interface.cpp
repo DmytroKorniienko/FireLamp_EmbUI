@@ -456,7 +456,7 @@ void block_main_flags(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_000E), FPSTR(TCONST_000E), true);
 #endif
 #ifdef ESP_USE_BUTTON
-    interf->checkbox(FPSTR(TCONST_001F), myButtons.isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_013), true);
+    interf->checkbox(FPSTR(TCONST_001F), myButtons->isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_013), true);
 #endif
 #ifdef LAMP_DEBUG
     interf->checkbox(FPSTR(TCONST_0095), myLamp.isDebugOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_08E), true);
@@ -752,8 +752,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         myLamp.events.loadConfig(filename.c_str());
 #ifdef ESP_USE_BUTTON
         filename = String(FPSTR(TCONST_0033)) + name;
-        myButtons.clear();
-        if (!myButtons.loadConfig()) {
+        myButtons->clear();
+        if (!myButtons->loadConfig()) {
             default_buttons();
         }
 #endif
@@ -771,7 +771,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         myLamp.events.saveConfig(filename.c_str());
 #ifdef ESP_USE_BUTTON
         filename = String(FPSTR(TCONST_0033)) + name;
-        myButtons.saveConfig(filename.c_str());
+        myButtons->saveConfig(filename.c_str());
 #endif
     }
 
@@ -1310,12 +1310,12 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_006D), FPSTR(TINTF_013));
 
-    interf->checkbox(FPSTR(TCONST_001F), myButtons.isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07B), true);
+    interf->checkbox(FPSTR(TCONST_001F), myButtons->isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07B), true);
 
     interf->json_section_begin(FPSTR(TCONST_006E));
     interf->select(FPSTR(TCONST_006F), String(0), String(FPSTR(TINTF_07A)), false);
-    for (int i = 0; i < myButtons.size(); i++) {
-        interf->option(String(i), myButtons[i]->getName());
+    for (int i = 0; i < myButtons->size(); i++) {
+        interf->option(String(i), (*myButtons)[i]->getName());
     }
     interf->json_section_end();
 
@@ -1353,8 +1353,8 @@ void set_butt_conf(Interface *interf, JsonObject *data){
 
     if (data->containsKey(FPSTR(TCONST_006F))) {
         int num = (*data)[FPSTR(TCONST_006F)];
-        if (num < myButtons.size()) {
-            btn = myButtons[num];
+        if (num < myButtons->size()) {
+            btn = (*myButtons)[num];
         }
     }
     if (btn) {
@@ -1364,10 +1364,10 @@ void set_butt_conf(Interface *interf, JsonObject *data){
         btn->flags.click = clicks;
         btn->flags.onetime = onetime;
     } else {
-        myButtons.add(new Button(on, hold, clicks, onetime, action));
+        myButtons->add(new Button(on, hold, clicks, onetime, action));
     }
 
-    myButtons.saveConfig();
+    myButtons->saveConfig();
     show_settings_butt(interf, data);
 }
 
@@ -1380,15 +1380,15 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     if (data->containsKey(FPSTR(TCONST_006F))) {
         num = (*data)[FPSTR(TCONST_006F)];
-        if (num < myButtons.size()) {
+        if (num < myButtons->size()) {
             act = (*data)[FPSTR(TCONST_006E)].as<String>();
-            btn = myButtons[num];
+            btn = (*myButtons)[num];
         }
     }
 
     if (act == FPSTR(TCONST_000A)) {
-        myButtons.remove(num);
-        myButtons.saveConfig();
+        myButtons->remove(num);
+        myButtons->saveConfig();
         show_settings_butt(interf, data);
         return;
     } else
@@ -1435,7 +1435,7 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 void set_btnflag(Interface *interf, JsonObject *data){
     // в отдельном классе, т.е. не входит в флаги лампы!
     if (!data) return;
-    SETPARAM(FPSTR(TCONST_001F), myButtons.setButtonOn((*data)[FPSTR(TCONST_001F)] == FPSTR(TCONST_FFFF)));
+    SETPARAM(FPSTR(TCONST_001F), myButtons->setButtonOn((*data)[FPSTR(TCONST_001F)] == FPSTR(TCONST_FFFF)));
 }
 #endif
 
@@ -2009,27 +2009,27 @@ void event_worker(const EVENT *event){
 }
 #ifdef ESP_USE_BUTTON
 void default_buttons(){
-    myButtons.clear();
+    myButtons->clear();
     // Выключена
-    myButtons.add(new Button(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
-    myButtons.add(new Button(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
-    myButtons.add(new Button(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
-    myButtons.add(new Button(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
-    myButtons.add(new Button(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
-    myButtons.add(new Button(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+    myButtons->add(new Button(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
+    myButtons->add(new Button(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons->add(new Button(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
+    myButtons->add(new Button(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
+    myButtons->add(new Button(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+    myButtons->add(new Button(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
 
     // Включена
-    myButtons.add(new Button(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
-    myButtons.add(new Button(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
-    myButtons.add(new Button(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
+    myButtons->add(new Button(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
+    myButtons->add(new Button(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons->add(new Button(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
 #ifdef OTA
-    myButtons.add(new Button(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
+    myButtons->add(new Button(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
 #endif
-    myButtons.add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
-    myButtons.add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
-    myButtons.add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
-    myButtons.add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клие скорость
-    myButtons.add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
+    myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
+    myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клие скорость
+    myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
 #endif
 

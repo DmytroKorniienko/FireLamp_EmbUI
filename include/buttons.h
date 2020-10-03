@@ -92,7 +92,7 @@ class Buttons {
 	 */
 	void buttonPress(bool state);
 
-	Buttons();
+	Buttons(uint8_t btn=BTN_PIN);
 
 	int loadConfig(const char *cfg = nullptr);
 	void saveConfig(const char *cfg = nullptr);

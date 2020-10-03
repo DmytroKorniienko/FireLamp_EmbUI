@@ -51,7 +51,7 @@ jeeui2 jee; // Создаем объект класса для работы с J
 LAMP myLamp;
 Ticker _isrHelper;       // планировщик для обработки прерываний
 #ifdef ESP_USE_BUTTON
-Buttons myButtons;
+Buttons *myButtons;
 #endif
 
 void setup() {
@@ -75,12 +75,6 @@ void setup() {
     
     myLamp.events.loadConfig();
     myLamp.lamp_init(jee.param(F("CLmt")).toInt());
-#ifdef ESP_USE_BUTTON
-    if (!myButtons.loadConfig()) {
-      default_buttons();
-      myButtons.saveConfig();
-    }
-#endif
 
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
@@ -88,6 +82,11 @@ void setup() {
 
 #ifdef ESP_USE_BUTTON
     myLamp.setbPin(jee.param(F("PINB")).toInt());
+    myButtons = new Buttons(myLamp.getbPin());
+    if (!myButtons->loadConfig()) {
+      default_buttons();
+      myButtons->saveConfig();
+    }
     attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
 #endif
 
@@ -140,7 +139,7 @@ void sendData(){
  * 2) Тикер не может дернуть нестатический метод класса
  */
 void buttonhelper(bool state){
-  myButtons.buttonPress(state);
+  myButtons->buttonPress(state);
 }
 
 /*
@@ -149,8 +148,8 @@ void buttonhelper(bool state){
 ICACHE_RAM_ATTR void buttonpinisr(){
     jee.autoSaveReset();
     detachInterrupt(myLamp.getbPin());
-    _isrHelper.once_ms(0, buttonhelper, myButtons.getpinTransition());   // вместо флага используем тикер :)
-    myButtons.setpinTransition(!myButtons.getpinTransition());
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons.getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+    _isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
+    myButtons->setpinTransition(!myButtons->getpinTransition());
+    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
 }
 #endif

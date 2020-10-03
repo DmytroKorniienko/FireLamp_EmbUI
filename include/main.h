@@ -54,7 +54,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 extern LAMP myLamp; // Объект лампы
 #ifdef ESP_USE_BUTTON
-extern Buttons myButtons;
+extern Buttons *myButtons;
 extern GButton touch;
 #endif
 
