@@ -1516,7 +1516,6 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->spacer(FPSTR(TINTF_092)); // заголовок
         interf->json_section_line(FPSTR(TINTF_092)); // расположить в одной линии
             interf->number(FPSTR(TCONST_0096),FPSTR(TINTF_093),0,4);
-            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),0,15);
         interf->json_section_end(); // конец контейнера
         interf->spacer();
         interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),0,16000);
@@ -1531,14 +1530,11 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
 
 void set_sys_settings(Interface *interf, JsonObject *data){
     if(!data) return;
-    String tmpChk = (*data)[FPSTR(TCONST_0096)];
-    if(tmpChk.toInt()>4) return;
     String tmpChk1 = (*data)[FPSTR(TCONST_0097)];
     if(tmpChk1.toInt()>15) return;
     String tmpChk2 = (*data)[FPSTR(TCONST_0098)];
     if(tmpChk2.toInt()>16000) return;
 
-    SETPARAM(FPSTR(TCONST_0096));
     SETPARAM(FPSTR(TCONST_0097));
     SETPARAM(FPSTR(TCONST_0098));
     myLamp.sendString(String(FPSTR(TINTF_096)).c_str(), CRGB::Red);
@@ -1614,7 +1610,6 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
     // пины и системные настройки
-    jee.var_create(FPSTR(TCONST_0096), String(LAMP_PIN)); // Пин лампы
     jee.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
     jee.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 

@@ -74,7 +74,7 @@ void setup() {
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     
     myLamp.events.loadConfig();
-    myLamp.lamp_init(jee.param(F("PINL")).toInt(),jee.param(F("CLmt")).toInt());
+    myLamp.lamp_init(jee.param(F("CLmt")).toInt());
 #ifdef ESP_USE_BUTTON
     if (!myButtons.loadConfig()) {
       default_buttons();
