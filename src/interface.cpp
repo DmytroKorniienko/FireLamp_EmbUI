@@ -1515,7 +1515,7 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_0099), FPSTR(TINTF_08F));
         interf->spacer(FPSTR(TINTF_092)); // заголовок
         interf->json_section_line(FPSTR(TINTF_092)); // расположить в одной линии
-            interf->number(FPSTR(TCONST_0096),FPSTR(TINTF_093),0,4);
+            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),0,15);
         interf->json_section_end(); // конец контейнера
         interf->spacer();
         interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),0,16000);
