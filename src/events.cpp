@@ -33,7 +33,8 @@ void EVENT_MANAGER::check_event(EVENT *event)
             }
         }
     }
-    uint8_t cur_day = tm->tm_wday-1; // 1 == Sunday
+    //uint8_t cur_day = tm->tm_wday-1; // 1 == Sunday
+    uint8_t cur_day = tm->tm_wday; // 1 == Sunday
     if(!cur_day) cur_day = 7; // 7 = Sunday
     if((event->raw_data>>cur_day)&1) { // обрабатывать сегодня
         if(event->unixtime<=_now){ // время события было раньше/равно текущего
