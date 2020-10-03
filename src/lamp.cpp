@@ -279,8 +279,10 @@ void LAMP::effectsTick(){
 #ifdef USELEDBUF
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
-        // ledsbuff.resize(0); // Разобраться в будущем что не так с костыльными эффектами и почему они нормально не работают если раскомментированы эти строки
-        // ledsbuff.shrink_to_fit();
+        if(!flags.isStringPrinting){ // чистить буфер только если не выводится строка
+          ledsbuff.resize(0);
+          ledsbuff.shrink_to_fit();
+        }
       }
 #endif
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
