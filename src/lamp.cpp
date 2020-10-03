@@ -266,9 +266,6 @@ void LAMP::effectsTick(){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
-  if (!_effectsTicker.active() ) return;
-  //if(millis()<5000) return; // затычка до выяснения
-
   uint32_t _begin = millis();
   if (isAlarm()) {
     doPrintStringToLamp(); // обработчик печати строки
@@ -276,22 +273,33 @@ void LAMP::effectsTick(){
     return;
   }
 
-  if(!flags.isEffectsDisabledUntilText){
-    // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-    if(effects.worker->run(getUnsafeLedsArray(), &effects)) {
+  if (_effectsTicker.active()) {
+    //if(millis()<5000) return; // затычка до выяснения
+    if(!flags.isEffectsDisabledUntilText){
 #ifdef USELEDBUF
-      ledsbuff.resize(NUM_LEDS);
-      std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+      if (!ledsbuff.empty()) {
+        std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
+        // ledsbuff.resize(0); // Разобраться в будущем что не так с костыльными эффектами и почему они нормально не работают если раскомментированы эти строки
+        // ledsbuff.shrink_to_fit();
+      }
 #endif
+      // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
+      if(effects.worker->run(getUnsafeLedsArray(), &effects)) {
+#ifdef USELEDBUF
+        ledsbuff.resize(NUM_LEDS);
+        std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+#endif
+      }
     }
   }
 
-  doPrintStringToLamp(); // обработчик печати строки
+  if (!isAlarm())
+    doPrintStringToLamp(); // обработчик печати строки
 #ifdef VERTGAUGE
   GaugeMix();
 #endif
 
-  if (flags.isEffectsDisabledUntilText || effects.worker->status()) {
+  if (flags.isEffectsDisabledUntilText || effects.worker->status() || flags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else {
@@ -315,13 +323,13 @@ void LAMP::frameShow(const uint32_t ticktime){
 
   FastLED.show();
 // восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов)
-#ifdef USELEDBUF
-  if (!ledsbuff.empty()) {
-    std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
-    ledsbuff.resize(0);
-    ledsbuff.shrink_to_fit();
-  }
-#endif
+// #ifdef USELEDBUF
+//   if (!ledsbuff.empty()) {
+//     std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
+//     ledsbuff.resize(0);
+//     ledsbuff.shrink_to_fit();
+//   }
+// #endif
 
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
@@ -996,8 +1004,13 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(flags.ONflag)
+  if(flags.ONflag && !flags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
+#ifdef USELEDBUF
+      ledsbuff.resize(NUM_LEDS);
+      std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+#endif
+  }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
 
