@@ -1153,7 +1153,7 @@ private:
     uint32_t z[NUM_LAYERS];
     uint32_t scale_x[NUM_LAYERS];
     uint32_t scale_y[NUM_LAYERS];
-    uint8_t  noise[1][16][16];
+    uint8_t  noise[NUM_LAYERS][WIDTH][HEIGHT];
     
     bool noiseRoutine(CRGB *leds, EffectWorker *param);
     void adjust_gamma(CRGB *leds)

@@ -4040,6 +4040,7 @@ DEFINE_GRADIENT_PALETTE( pit ) {
 };
 bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
   EffectMath::dimAll(200U);
+    uint8_t layer = 0;
 
   //CRGBPalette16 Pal( pit );
 
@@ -4047,21 +4048,20 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
   //(here based on the top left pixel - it could be any position else)
   //the factor "2" defines the max speed of the x movement
   //the "-255" defines the median moving direction
-  x[0] = x[0] + (map(speed, 1U, 255U, 2U, 16U ) * noise[0][0][0]) - 255U;
+  x[layer] = x[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][0][0]) - 255U;
   //modulate the position so that it increases/decreases y
   //(here based on the top right pixel - it could be any position else)
-  y[0] = y[0] + (map(speed, 1U, 255U, 2U, 16U ) * noise[0][WIDTH - 1][0]) - 255U;
+  y[layer] = y[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][WIDTH - 1][0]) - 255U;
   //z just in one direction but with the additional "1" to make sure to never get stuck
   //in case the movement is stopped by a crazy parameter (noise data) combination
   //(here based on the down left pixel - it could be any position else)
-  z[0] += 1 + ((noise[0][0][HEIGHT - 1]) / 4);
+  z[layer] += 1 + ((noise[layer][0][HEIGHT - 1]) / 4);
   //set the scaling based on left and right pixel of the middle line
   //here you can set the range of the zoom in both dimensions
-  scale_x[0] = 8000 + (noise[0][0][CentreY] * 16);
-  scale_y[0] = 8000 + (noise[0][WIDTH - 1][CentreY] * 16);
+  scale_x[layer] = 8000 + (noise[layer][0][CentreY] * 16);
+  scale_y[layer] = 8000 + (noise[layer][WIDTH - 1][CentreY] * 16);
 
   //calculate the noise data
-  uint8_t layer = 0;
   for (uint8_t i = 0; i < WIDTH; i++) {
     uint32_t ioffset = scale_x[layer] * (i - CentreX);
     for (uint8_t j = 0; j < HEIGHT; j++) {
@@ -4084,9 +4084,9 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
     for (uint8_t x = 0; x < WIDTH; x++) {
       //I will add this overlay CRGB later for more colors
       //it´s basically a rainbow mapping with an inverted brightness mask
-      CRGB overlay = CHSV(noise[0][y][x], 255, noise[0][x][y]);
-      //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[0][15][15]
-      leds[myLamp.getPixelNumber(x, y)] = ColorFromPalette( *curPalette, noise[0][WIDTH - 1][HEIGHT - 1] + noise[0][x][y]) + overlay;
+      CRGB overlay = CHSV(noise[layer][y][x], 255, noise[layer][x][y]);
+      //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[layer][15][15]
+      leds[myLamp.getPixelNumber(x, y)] = ColorFromPalette( *curPalette, noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]) + overlay;
     }
   }
 
