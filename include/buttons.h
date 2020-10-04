@@ -65,6 +65,9 @@ class Buttons {
 	bool pinTransition:1;  // ловим "нажатие" кнопки
  };
  #pragma pack(pop)
+	uint8_t pin; // пин
+	uint8_t pullmode; // подтяжка
+	uint8_t state; // тип (нормально открытый/закрытый)
 
 	byte clicks = 0;
 	Ticker _buttonTicker; // планировщик кнопки
@@ -74,7 +77,8 @@ class Buttons {
 	public:
 	bool getpinTransition() { return pinTransition; }
 	void setpinTransition(bool val) { pinTransition = val; }
-
+	int getPressTransitionType() {return pullmode==LOW_PULL ? RISING : FALLING;}
+	int getReleaseTransitionType() {return pullmode!=LOW_PULL ? RISING : FALLING;}
 	void setButtonOn(bool flag) { buttonEnabled = flag; }
 	bool isButtonOn() { return buttonEnabled; }
 
@@ -91,8 +95,7 @@ class Buttons {
 	 * @param bool state - true, кнопку "нажали", false - "отпустили"
 	 */
 	void buttonPress(bool state);
-
-	Buttons(uint8_t btn=BTN_PIN);
+	Buttons(uint8_t _pin=BTN_PIN, uint8_t _pullmode=PULL_MODE, uint8_t _state=NORM_OPEN);
 
 	int loadConfig(const char *cfg = nullptr);
 	void saveConfig(const char *cfg = nullptr);

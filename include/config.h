@@ -60,6 +60,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
 //#define OTA                                                 // Обновление по ОТА
 //#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
+//#define MP3PLAYER                                           // Включить использование MP3 плеера (DF Player)
 
 typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------

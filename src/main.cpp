@@ -54,6 +54,11 @@ Ticker _isrHelper;       // планировщик для обработки п�
 Buttons *myButtons;
 #endif
 
+#ifdef MP3PLAYER
+#include "mp3player.h"
+MP3PLAYERDEVICE *mp3 = nullptr;
+#endif
+
 void setup() {
     Serial.begin(115200);
 #ifdef AUX_PIN
@@ -82,12 +87,12 @@ void setup() {
 
 #ifdef ESP_USE_BUTTON
     myLamp.setbPin(jee.param(F("PINB")).toInt());
-    myButtons = new Buttons(myLamp.getbPin());
+    myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
     if (!myButtons->loadConfig()) {
       default_buttons();
       myButtons->saveConfig();
     }
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
+    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
 #endif
 
     // восстанавливаем настройки времени
@@ -102,6 +107,10 @@ void setup() {
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
+
+#ifdef MP3PLAYER
+    mp3 = new MP3PLAYERDEVICE();
+#endif
 }
 
 void loop() {
@@ -112,6 +121,10 @@ void loop() {
     sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
+#endif
+
+#ifdef MP3PLAYER
+    mp3->handle();
 #endif
 }
 
@@ -150,6 +163,6 @@ ICACHE_RAM_ATTR void buttonpinisr(){
     detachInterrupt(myLamp.getbPin());
     _isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
     myButtons->setpinTransition(!myButtons->getpinTransition());
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? myButtons->getPressTransitionType() : myButtons->getReleaseTransitionType());  // меням прерывание
 }
 #endif

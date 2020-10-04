@@ -34,26 +34,27 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
+#ifndef __MP3_PLAYER_H
+#define __MP3_PLAYER_H
+#include <SoftwareSerial.h>
+#include "DFRobotDFPlayerMini.h"
+#include "main.h"
 
-#pragma once
-#include <Arduino.h>
-#include "JeeUI2.h"
-#include "config.h"
-#include "lamp.h"
-#include "buttons.h"
+#define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
+#define MP3_RX_PIN            (D6)                         // RX mp3 player TX (D6)
 
-// глобальные переменные для работы с ними в программе
-extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
+class MP3PLAYERDEVICE : public DFRobotDFPlayerMini {
+  private:
+    union {
+      struct {
+        bool reserved:1;            // пока заглушка
+      };
+      uint32_t flags;
+    };
+    SoftwareSerial mp3player;
+    void printSatusDetail();
+  public:
+    MP3PLAYERDEVICE(const uint8_t rxPin=MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
+    void handle();
+};
 #endif
-
-void mqttCallback(const String &topic, const String &payload);
-void sendData();
-
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
