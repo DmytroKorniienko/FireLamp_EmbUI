@@ -1515,7 +1515,13 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_0099), FPSTR(TINTF_08F));
         interf->spacer(FPSTR(TINTF_092)); // заголовок
         interf->json_section_line(FPSTR(TINTF_092)); // расположить в одной линии
-            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),0,15);
+#ifdef ESP_USE_BUTTON
+            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),0,16);
+#endif
+#ifdef MP3PLAYER
+            interf->number(FPSTR(TCONST_009B),FPSTR(TINTF_097),0,16);
+            interf->number(FPSTR(TCONST_009C),FPSTR(TINTF_098),0,16);
+#endif
         interf->json_section_end(); // конец контейнера
         interf->spacer();
         interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),0,16000);
@@ -1530,12 +1536,23 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
 
 void set_sys_settings(Interface *interf, JsonObject *data){
     if(!data) return;
-    String tmpChk1 = (*data)[FPSTR(TCONST_0097)];
-    if(tmpChk1.toInt()>15) return;
-    String tmpChk2 = (*data)[FPSTR(TCONST_0098)];
-    if(tmpChk2.toInt()>16000) return;
 
+#ifdef ESP_USE_BUTTON
+    {String tmpChk = (*data)[FPSTR(TCONST_0097)]; if(tmpChk.toInt()>16) return;}
+#endif
+#ifdef MP3PLAYER
+    {String tmpChk = (*data)[FPSTR(TCONST_009B)]; if(tmpChk.toInt()>16) return;}
+    {String tmpChk = (*data)[FPSTR(TCONST_009C)]; if(tmpChk.toInt()>16) return;}
+#endif
+    {String tmpChk = (*data)[FPSTR(TCONST_0098)]; if(tmpChk.toInt()>16000) return;}
+
+#ifdef ESP_USE_BUTTON
     SETPARAM(FPSTR(TCONST_0097));
+#endif
+#ifdef MP3PLAYER
+    SETPARAM(FPSTR(TCONST_009B));
+    SETPARAM(FPSTR(TCONST_009C));
+#endif
     SETPARAM(FPSTR(TCONST_0098));
     myLamp.sendString(String(FPSTR(TINTF_096)).c_str(), CRGB::Red);
     sysTicker.once(10,std::bind([]{
@@ -1610,7 +1627,13 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
     // пины и системные настройки
+#ifdef ESP_USE_BUTTON
     jee.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
+#endif
+#ifdef MP3PLAYER
+    jee.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
+    jee.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
+#endif
     jee.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
     // далее идут обработчики параметров

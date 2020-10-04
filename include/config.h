@@ -106,6 +106,15 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define MIN_PEAK_LEVEL        (50U)                         // Минимальный амплитудный уровень, для эффектов зависящих от микрофона
 #endif
 
+#ifdef MP3PLAYER
+#ifndef MP3_TX_PIN
+#define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
+#endif
+#ifndef MP3_RX_PIN
+#define MP3_RX_PIN            (D6)                         // RX mp3 player TX (D6)
+#endif
+#endif
+
 #ifndef LAMP_PIN
 //#define LAMP_PIN              (2U)                          // пин ленты                (D4)
 #ifdef ESP8266
