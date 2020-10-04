@@ -2753,7 +2753,10 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
 bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
     return false;
-  return cube2dRoutine(*&ledarr, &*opt);
+  if (classic) 
+    return cube2dClassicRoutine(*&ledarr, &*opt);
+  else
+    return cube2dRoutine(*&ledarr, &*opt);
 }
 
 void EffectCube2d::setDynCtrl(UIControl*_val)
@@ -2761,14 +2764,15 @@ void EffectCube2d::setDynCtrl(UIControl*_val)
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
 
   if(_val->getType()==0 && _val->getId()==3){ // sizeX
-    //uint8_t cubeScaleX = EffectMath::ceil8(MAX_RANGE, CUBE2D_MAX_SIZE);       // масштаб "шкалы" в макс. размерность прямоугольника по X
     uint8_t cubeScaleX = EffectMath::ceil8(7, WIDTH/2-1);       // масштаб "шкалы" в макс. размерность прямоугольника по X
     sizeX = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleX);
   }
   if(_val->getType()==0 && _val->getId()==4){ // sizeY
-    //uint8_t cubeScaleY = EffectMath::ceil8(cubeScaleX, CUBE2D_MAX_SIZE);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
     uint8_t cubeScaleY = EffectMath::ceil8(7, HEIGHT/2-1);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
     sizeY = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleY);
+  }
+  if(_val->getType()==2 && _val->getId()==5){ // sizeY
+    classic = _val->getVal() == FPSTR(TCONST_FFFF);
   }
   cubesize();
 }
@@ -2970,6 +2974,10 @@ void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
   for   (uint8_t m = y; m < y + sizeY; m++)
     //EffectMath::setLed(myLamp.getPixelNumber(anim0, m), color);                          // цвет правой колонки копируем на всю левую
     ledbuff[myLamp.getPixelNumberBuff(anim0, m, fieldX, fieldY, fieldX * fieldY)] = color;
+}
+
+bool EffectCube2d::cube2dClassicRoutine(CRGB *leds, EffectWorker *param) {
+  return true;
 }
 
 //-------------- Эффект "Часы"

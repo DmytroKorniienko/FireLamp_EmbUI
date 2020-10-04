@@ -904,6 +904,7 @@ public:
 // refactored by Vortigont
 class EffectCube2d : public EffectCalc {
 private:
+  bool classic = false;
   uint8_t sizeX, sizeY; // размеры ячеек по горизонтали / вертикали
   uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
   uint8_t fieldX, fieldY; // размер всего поля блоков по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
@@ -924,6 +925,7 @@ private:
 
   void cubesize();
   bool cube2dRoutine(CRGB *leds, EffectWorker *param);
+  bool cube2dClassicRoutine(CRGB *leds, EffectWorker *param);
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
   void cube2dmoveRows(uint8_t moveItem, bool movedirection);
   void setDynCtrl(UIControl*_val) override;
