@@ -39,6 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3player(rxPin, txPin) // RX, TX
 {
   mp3player.begin(9600);
+  setTimeOut(500); //Set serial communictaion time out 500ms
   LOG(println);
   LOG(println, F("DFRobot DFPlayer Mini Demo"));
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
@@ -48,15 +49,20 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
     LOG(println, F("2.Please insert the SD card!"));
     while(true);
   }
-  LOG(println, F("DFPlayer Mini online."));
 
-  volume(0);  //Set volume value. From 0 to 30
+  LOG(println, F("DFPlayer Mini online."));
+  EQ(DFPLAYER_EQ_NORMAL);
+  outputDevice(DFPLAYER_DEVICE_SD);
+  //outputSetting(true, 15); //output setting, enable the output and set the gain to 15
+  //volume(15);  //Set volume value. From 0 to 30
   //play(1);  //Play the first mp3
   //LOG(println, readFileCounts()); //read all file counts in SD card
   //LOG(println, readCurrentFileNumber()); //read current play file number
   //LOG(println, readFileCountsInFolder(1)); //read fill counts in folder SD:/03
-  randomAll();
-  //playFolder(6, 1);
+  //randomAll();
+  volume(15);
+  playFolder(6, 1);
+  //volume(0);
 }
 
 void MP3PLAYERDEVICE::printSatusDetail(){
@@ -119,7 +125,9 @@ void MP3PLAYERDEVICE::printSatusDetail(){
 
 void MP3PLAYERDEVICE::handle()
 {
+#ifdef LAMP_DEBUG  
   if (available()) {
     printSatusDetail(); //Print the detail message from DFPlayer to handle different errors and states.
   }
+#endif
 }

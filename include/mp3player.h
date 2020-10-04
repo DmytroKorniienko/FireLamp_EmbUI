@@ -40,9 +40,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "DFRobotDFPlayerMini.h"
 #include "main.h"
 
-#define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
-#define MP3_RX_PIN            (D6)                         // RX mp3 player TX (D6)
-
 class MP3PLAYERDEVICE : public DFRobotDFPlayerMini {
   private:
     union {

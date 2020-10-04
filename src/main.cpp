@@ -109,7 +109,9 @@ void setup() {
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
 
 #ifdef MP3PLAYER
-    mp3 = new MP3PLAYERDEVICE();
+    int rxpin = jee.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : jee.param(FPSTR(TCONST_009B)).toInt();
+    int txpin = jee.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : jee.param(FPSTR(TCONST_009C)).toInt();
+    mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
 #endif
 }
 
