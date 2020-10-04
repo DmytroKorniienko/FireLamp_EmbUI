@@ -908,21 +908,23 @@ private:
   uint8_t sizeX, sizeY; // размеры ячеек по горизонтали / вертикали
   uint8_t cntX, cntY; // количество ячеек по горизонтали / вертикали
   uint8_t fieldX, fieldY; // размер всего поля блоков по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
-
+  uint8_t currentStep;
   uint8_t pauseSteps; // осталось шагов паузы
   uint8_t shiftSteps=0; // всего шагов сдвига
   std::vector<int8_t> moveItems;     // индекс перемещаемого элемента
   //bool movedirection;   // направление смещения
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
-  const byte maxSize = 7;
-  byte maxCountY = ceil((float)HEIGHT / (float)(maxSize + 1U)); // максимальный количество кубиков
-  byte maxCountX = ceil((float)WIDTH / (float)(maxSize + 1U));
+  uint8_t storage[WIDTH][HEIGHT];
+  int8_t globalShiftX, globalShiftY;
+  uint8_t gX, gY;
+  bool seamlessX = false;
+
   //CRGB *ledbuff = new CRGB[NUM_LEDS];  
   std::vector<CRGB> ledbuff;
   //CRGB ledbuff[(WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2)];  
 
    
-
+  void swapBuff();
   void cubesize();
   bool cube2dRoutine(CRGB *leds, EffectWorker *param);
   bool cube2dClassicRoutine(CRGB *leds, EffectWorker *param);
