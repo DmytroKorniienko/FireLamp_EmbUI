@@ -456,6 +456,10 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #ifdef ESP_USE_BUTTON
     interf->checkbox(FPSTR(TCONST_001F), myButtons->isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_013), true);
 #endif
+
+#ifdef MP3PLAYER
+    interf->checkbox(FPSTR(TCONST_009D), myLamp.isONMP3()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_099), true);
+#endif
 #ifdef LAMP_DEBUG
     interf->checkbox(FPSTR(TCONST_0095), myLamp.isDebugOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_08E), true);
 #endif
@@ -1104,7 +1108,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0057), myLamp.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
     SETPARAM(FPSTR(TCONST_0058), myLamp.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
 
-    myLamp.sendStringToLamp(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
+    myLamp.sendStringToLamp(String(F("%TM")).c_str(), CRGB::Green);
 
     section_settings_frame(interf, data);
 }
@@ -1449,6 +1453,13 @@ void set_debugflag(Interface *interf, JsonObject *data){
     save_lamp_flags();
 }
 
+void set_mp3flag(Interface *interf, JsonObject *data){
+    if (!data) return;
+    myLamp.setONMP3((*data)[FPSTR(TCONST_009D)] == FPSTR(TCONST_FFFF));
+    mp3->setIsOn(myLamp.isONMP3());
+    save_lamp_flags();
+}
+
 void section_effects_frame(Interface *interf, JsonObject *data){
     if(optionsTicker.active())
         optionsTicker.detach();
@@ -1702,6 +1713,7 @@ void create_parameters(){
     jee.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     jee.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
     jee.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
+    jee.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
 #endif
 }
 
@@ -1716,6 +1728,12 @@ void sync_parameters(){
     //CALL_SETTER(FPSTR(TCONST_0095), tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), set_debugflag);
     obj[FPSTR(TCONST_0095)] = tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_debugflag(nullptr, &obj);
+    obj.clear();
+#endif
+
+#ifdef MP3PLAYER
+    obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    set_mp3flag(nullptr, &obj);
     obj.clear();
 #endif
 
@@ -1926,7 +1944,7 @@ void remote_action(RA action, ...){
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
         case RA::RA_SEND_TIME:
-            myLamp.sendString(myLamp.timeProcessor.getFormattedShortTime().c_str(), CRGB::Green);
+            myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
             break;
 #ifdef OTA
         case RA::RA_OTA:

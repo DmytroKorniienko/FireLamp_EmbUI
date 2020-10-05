@@ -34,25 +34,36 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-#include "main.h"
+
 #ifdef MP3PLAYER
 #ifndef __MP3_PLAYER_H
 #define __MP3_PLAYER_H
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
 
-class MP3PLAYERDEVICE : public DFRobotDFPlayerMini {
+class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
   private:
     union {
       struct {
-        bool reserved:1;            // пока заглушка
+        bool ready:1; // закончилась ли инициализация
+        bool on:1; // включен ли...
+        bool inAdv:1; // выводится сообщение времени
       };
       uint32_t flags;
     };
+    int nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
     SoftwareSerial mp3player;
+    Ticker delayedCall;
+    Ticker periodicCall;
     void printSatusDetail();
+    void playAdvertise(int filenb);
   public:
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
+    bool isReady() {return ready;}
+    bool isInAdv() {return inAdv;};
+    bool isOn() {return on && ready;}
+    void setIsOn(bool val) {on = val; if(!on) stop();}
+    void playTime(int hours, int minutes);
     void handle();
 };
 #endif

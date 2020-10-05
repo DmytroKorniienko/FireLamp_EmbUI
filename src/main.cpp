@@ -55,7 +55,6 @@ Buttons *myButtons;
 #endif
 
 #ifdef MP3PLAYER
-#include "mp3player.h"
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
@@ -100,6 +99,12 @@ void setup() {
     myLamp.timeProcessor.setcustomntp((jee.param(F("userntp")).c_str()));
     myLamp.events.setEventCallback(event_worker);
 
+#ifdef MP3PLAYER
+    int rxpin = jee.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : jee.param(FPSTR(TCONST_009B)).toInt();
+    int txpin = jee.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : jee.param(FPSTR(TCONST_009C)).toInt();
+    mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
+#endif
+
     sync_parameters();
 
     myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
@@ -107,12 +112,6 @@ void setup() {
     jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
-
-#ifdef MP3PLAYER
-    int rxpin = jee.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : jee.param(FPSTR(TCONST_009B)).toInt();
-    int txpin = jee.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : jee.param(FPSTR(TCONST_009C)).toInt();
-    mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
-#endif
 }
 
 void loop() {
@@ -123,10 +122,6 @@ void loop() {
     sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
-#endif
-
-#ifdef MP3PLAYER
-    mp3->handle();
 #endif
 }
 

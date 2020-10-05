@@ -60,7 +60,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define TIMEAPI_BUFSIZE     600
 #define TM_BASE_YEAR        1900
 #define DAYSECONDS          (86400U)
-#define DATETIME_STRLEN     (20U)   // buffer for data/time string "YYYY-MM-DDThh:mm:ss"
+#define DATETIME_STRLEN     (19U)   // buffer for data/time string "YYYY-MM-DDThh:mm:ss"
 #define HTTPSYNC_DELAY      5
 #define HTTP_REFRESH_HRS    3     // время суток для обновления часовой зоны
 #define HTTP_REFRESH_MIN    3
@@ -186,6 +186,16 @@ public:
      * возвращает строку с временем в формате "00:00"
      */
     String getFormattedShortTime();
+
+    int getHours()
+    {
+        return localtime(now())->tm_hour;
+    }
+
+    int getMinutes()
+    {
+        return localtime(now())->tm_min;
+    }
 
     /**
      * заглушка для любителей руками подергать время :)

@@ -126,6 +126,7 @@ struct {
     uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isShowSysMenu:1; // показывать ли системное меню
+    bool isOnMP3;
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
 uint32_t lampflags; // набор битов для конфига
@@ -303,6 +304,8 @@ public:
     bool isLampOn() {return flags.ONflag;}
     bool isDebugOn() {return flags.isDebug;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
+    bool isONMP3() {return flags.isOnMP3;}
+    void setONMP3(bool flag) {flags.isOnMP3=flag;}
     bool isShowSysMenu() {return flags.isShowSysMenu;}
     void setIsShowSysMenu(bool flag) {flags.isShowSysMenu=flag;}
     void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; FastLED.clear();}}

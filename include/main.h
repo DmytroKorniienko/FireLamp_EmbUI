@@ -49,6 +49,10 @@ extern LAMP myLamp; // Объект лампы
 extern Buttons *myButtons;
 extern GButton touch;
 #endif
+#ifdef MP3PLAYER
+#include "mp3player.h"
+extern MP3PLAYERDEVICE *mp3;
+#endif
 
 void mqttCallback(const String &topic, const String &payload);
 void sendData();

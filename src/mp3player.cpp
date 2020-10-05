@@ -35,11 +35,15 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 #include "mp3player.h"
+#include "main.h"
 #ifdef MP3PLAYER
 MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3player(rxPin, txPin) // RX, TX
 {
+  on = false;
+  ready = false;
+
   mp3player.begin(9600);
-  setTimeOut(500); //Set serial communictaion time out 500ms
+  setTimeOut(200); //Set serial communictaion time out 200ms
   LOG(println);
   LOG(println, F("DFRobot DFPlayer Mini Demo"));
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
@@ -49,10 +53,12 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
     LOG(println, F("2.Please insert the SD card!"));
     while(true);
   }
+  ready = true;
 
   LOG(println, F("DFPlayer Mini online."));
   EQ(DFPLAYER_EQ_NORMAL);
   outputDevice(DFPLAYER_DEVICE_SD);
+  periodicCall.attach_scheduled(1, std::bind(&MP3PLAYERDEVICE::handle, this));   // "ленивый" опрос 1 раз в сек
   //outputSetting(true, 15); //output setting, enable the output and set the gain to 15
   //volume(15);  //Set volume value. From 0 to 30
   //play(1);  //Play the first mp3
@@ -60,9 +66,9 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   //LOG(println, readCurrentFileNumber()); //read current play file number
   //LOG(println, readFileCountsInFolder(1)); //read fill counts in folder SD:/03
   //randomAll();
-  volume(15);
+  volume(5);
+  //if(isOn())
   playFolder(6, 1);
-  //volume(0);
 }
 
 void MP3PLAYERDEVICE::printSatusDetail(){
@@ -131,4 +137,22 @@ void MP3PLAYERDEVICE::handle()
   }
 #endif
 }
+
+void MP3PLAYERDEVICE::playTime(int hours, int minutes)
+{
+  stopAdvertise();
+  delay(100);
+  if(!isReady() || !isOn()) return; // || isInAdv()
+  playAdvertise(hours);
+  nextAdv = minutes+100;
+  delayedCall.once_scheduled(2, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 3 секунды после произношения часов
+}
+
+void MP3PLAYERDEVICE::playAdvertise(int filenb) {
+  inAdv=true;
+  advertise(filenb);
+  //readState()
+  inAdv=false;
+}
+
 #endif
