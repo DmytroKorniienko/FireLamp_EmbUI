@@ -34,12 +34,12 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-//#if defined (MP3_TX_PIN)  || defined (MP3_RX_PIN)
+#include "main.h"
+#ifdef MP3PLAYER
 #ifndef __MP3_PLAYER_H
 #define __MP3_PLAYER_H
 #include <SoftwareSerial.h>
 #include "DFRobotDFPlayerMini.h"
-#include "main.h"
 
 class MP3PLAYERDEVICE : public DFRobotDFPlayerMini {
   private:
@@ -56,4 +56,4 @@ class MP3PLAYERDEVICE : public DFRobotDFPlayerMini {
     void handle();
 };
 #endif
-//#endif
+#endif

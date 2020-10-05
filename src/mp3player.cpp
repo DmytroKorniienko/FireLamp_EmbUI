@@ -34,8 +34,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-#if defined (MP3_TX_PIN)  || defined (MP3_RX_PIN)
 #include "mp3player.h"
+#ifdef MP3PLAYER
 MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3player(rxPin, txPin) // RX, TX
 {
   mp3player.begin(9600);
