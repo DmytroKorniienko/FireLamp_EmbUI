@@ -1228,7 +1228,9 @@ void EffectBBalls::regen(){
 
 void EffectBBalls::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-  // пусто пока, т.к. нет 3+ контролов
+    if(_val->getId()==3) { // ореол
+    halo = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 void EffectBBalls::load(){
@@ -1273,8 +1275,11 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой, 
     // который движится в том же Х. И каждый следующий ярче предыдущего.
     bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156); 
-    if (bballsPos[i] < HEIGHT - 1) 
-      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 35);
+    //if (bballsPos[i] < HEIGHT - 1) 
+      if (halo){ // если ореол включен
+        EffectMath::drawCircleF(bballsX[i], bballsPos[i], 3.0, CHSV(bballsCOLOR[i], 255, bballsBri[i]/2));
+      }
+      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 20);
   }
   return true;
 }

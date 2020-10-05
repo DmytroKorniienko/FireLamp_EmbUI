@@ -499,9 +499,9 @@ void EffectMath::drawCircle(int x0, int y0, int radius, const CRGB &color){
   }
 }
 
-void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color){
+/*void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color){
   float x = 0., y = radius, error = 0.;
-  float delta = 1. - 2. * radius;
+  float delta = .25 - 2. * radius;
 
   while (y >= 0) {
     drawPixelXYF(x0 + x, y0 + y, color);
@@ -523,6 +523,49 @@ void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color
     ++x;
     delta += 2. * (x - y);
     --y;
+  }
+}*/
+
+void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color, bool fill, float step){
+  float a = radius, b = 0.;
+  float radiusError = step - a;
+
+  if (radius <= step*2) {
+    EffectMath::drawPixelXYF(x0, y0, color);
+    return;
+  }
+
+  while (a >= b)  {
+    if (fill) {
+      /*  С этим нужно еще подумать. Как зарисовывать круг. Приспичит, - сделаю
+      EffectMath::drawLineF(a + x0, b + y0, color);
+      EffectMath::drawLineF(b + x0, a + y0, color);
+      EffectMath::drawLineF(-a + x0, b + y0, color);
+      EffectMath::drawLineF(-b + x0, a + y0, color);
+      EffectMath::drawLineF(-a + x0, -b + y0, color);
+      EffectMath::drawLineF(-b + x0, -a + y0, color);
+      EffectMath::drawLineF(a + x0, -b + y0, color);
+      EffectMath::drawLineF(b + x0, -a + y0, color);
+      */
+    }
+    else {
+      EffectMath::drawPixelXYF(a + x0, b + y0, color, 50);
+      EffectMath::drawPixelXYF(b + x0, a + y0, color, 50);
+      EffectMath::drawPixelXYF(-a + x0, b + y0, color, 50);
+      EffectMath::drawPixelXYF(-b + x0, a + y0, color, 50);
+      EffectMath::drawPixelXYF(-a + x0, -b + y0, color, 50);
+      EffectMath::drawPixelXYF(-b + x0, -a + y0, color, 50);
+      EffectMath::drawPixelXYF(a + x0, -b + y0, color, 50);
+      EffectMath::drawPixelXYF(b + x0, -a + y0, color, 50);
+    }
+    b+= step;
+    if (radiusError < 0.)
+      radiusError += 2. * b + step;
+    else
+    {
+      a-= step;
+      radiusError += 2 * (b - a + step);
+    }
   }
 }
 

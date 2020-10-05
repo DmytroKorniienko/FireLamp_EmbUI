@@ -346,7 +346,7 @@ public:
     static void drawLine(int x1, int y1, int x2, int y2, const CRGB &color);
     static void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
     static void drawCircle(int x0, int y0, int radius, const CRGB &color);
-    static void drawCircleF(float x0, float y0, float radius, const CRGB &color);
+    static void drawCircleF(float x0, float y0, float radius, const CRGB &color, bool fill = false, float step = 0.25);
     static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
     static void setLedsNscale8(uint16_t idx, uint8_t val);
     static void dimAll(uint8_t value);
@@ -425,6 +425,7 @@ private:
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
+    bool halo = false;                                  // ореол
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
     void setscl(const byte _scl) override; // перегрузка для масштаба

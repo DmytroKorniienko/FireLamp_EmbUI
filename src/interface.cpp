@@ -1453,12 +1453,14 @@ void set_debugflag(Interface *interf, JsonObject *data){
     save_lamp_flags();
 }
 
+#ifdef MP3PLAYER
 void set_mp3flag(Interface *interf, JsonObject *data){
     if (!data) return;
     myLamp.setONMP3((*data)[FPSTR(TCONST_009D)] == FPSTR(TCONST_FFFF));
     mp3->setIsOn(myLamp.isONMP3());
     save_lamp_flags();
 }
+#endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
     if(optionsTicker.active())
@@ -1713,7 +1715,9 @@ void create_parameters(){
     jee.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     jee.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
     jee.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
+#ifdef MP3PLAYER
     jee.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
+#endif
 #endif
 }
 
