@@ -79,7 +79,6 @@ void AUX_toggle(bool key)
 // Вывод номеров эффектов в списке, в WebUI
 #define EFF_NUMBER (numList ? (String(eff->eff_nb) + ". ") : "")
 
-
 void pubCallback(Interface *interf){
     if (!interf) return;
     //return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
@@ -99,10 +98,9 @@ void block_menu(Interface *interf, JsonObject *data){
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));
     interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));
     interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));
-#if defined(SHOWSYSCONFIG)
-#if SHOWSYSCONFIG == 1
-    interf->option(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
-#endif
+#ifdef SHOWSYSCONFIG
+    if(myLamp.isShowSysMenu())
+        interf->option(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
 #endif
     interf->json_section_end();
 }
@@ -1005,6 +1003,9 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->option(String(SORT_TYPE::ST_MIC), FPSTR(TINTF_08D));  // эффекты с микрофоном
 #endif
     interf->json_section_end();
+#ifdef SHOWSYSCONFIG
+    interf->checkbox(FPSTR(TCONST_0096), myLamp.getLampSettings().isShowSysMenu ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_093), false); // отображение системного меню
+#endif
 
     interf->spacer(FPSTR(TINTF_001));
     interf->range(FPSTR(TCONST_0051), 10, 100, 10, FPSTR(TINTF_044));
@@ -1023,7 +1024,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->spacer(FPSTR(TINTF_04E));
     interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
     interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
-
+    
     interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
     interf->spacer();
@@ -1064,6 +1065,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
     //SETPARAM(FPSTR(TCONST_0091), myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF)));
     myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF));
 #endif
+    myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == FPSTR(TCONST_FFFF));
+
     save_lamp_flags();
     section_settings_frame(interf, data);
 }

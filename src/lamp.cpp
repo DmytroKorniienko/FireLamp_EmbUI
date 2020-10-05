@@ -396,6 +396,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.numInList = false;
       flags.effHasMic = false;
       flags.dRand = false;
+      flags.isShowSysMenu = false;
       
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
