@@ -3383,8 +3383,10 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
   //EffectMath::blur2d(25); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
   if(!isDebug()){
     // Noise
-    uint16_t sc = (uint16_t)speed * 6 + 500;
-    uint16_t sc2 = (float)speed/127.0 + 1.5;
+    // uint16_t sc = (uint16_t)speed * 6 + 500;
+    // uint16_t sc2 = (float)speed/127.0 + 1.5;
+    uint16_t sc = (uint16_t)scale * 10 + 500; //64 + 1000;
+    uint16_t sc2 = (float)speed/100.0+1.0; //1.5...3.5;
 
     e_x[0] += sc;
     e_y[0] += sc;
@@ -3399,7 +3401,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
     EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);//4
     EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);//4
 
-    EffectMath::blur2d(25); // без размытия как-то пиксельно, наверное...
+    //EffectMath::blur2d(25); // без размытия как-то пиксельно, наверное...
   }
   return true;
 }
