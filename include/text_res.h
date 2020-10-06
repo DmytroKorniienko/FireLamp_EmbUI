@@ -114,6 +114,7 @@ static const char TEFF_066[] PROGMEM = "Кровавые Небеса";
 static const char TEFF_067[] PROGMEM = "Радужный Змей";
 static const char TEFF_068[] PROGMEM = "Цветение";
 static const char TEFF_069[] PROGMEM = "Змейки от Сотнег (тест)";
+static const char TEFF_070[] PROGMEM = "Попкорн (тест)";
 static const char TEFF_253[] PROGMEM = "Часы";
 static const char TEFF_254[] PROGMEM = "Частотный анализатор";
 static const char TEFF_255[] PROGMEM = "Осциллограф";

@@ -5572,11 +5572,11 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
 
 // ----------- Эфеект "ДНК"
 // База https://pastebin.com/jwvC1sNF адаптация и доработки kostyamat
+#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
 void wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
   // extract the fractional parts and derive their inverses
   uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
                    WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
@@ -5933,4 +5933,129 @@ bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
 void EffectTest::load() {
   SnakeNum = (scale - 1U) / 99.0 * (MAX_SNAKES - 1U) + 1U;
   regen();
+}
+
+// ----------- Эфеект "Попкорн"
+// (C) Aaron Gotwalt (Soulmate)
+// адаптация и доработки kostyamat
+bool EffectPopcorn::run(CRGB *ledarr, EffectWorker *opt) {
+  return popcornRoutine(*&ledarr, &*opt);
+}
+
+bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 1.0);
+  gravity = 15. * speedfactor;
+  if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30);
+  else FastLED.clear();// fadeToBlackBy(leds, NUM_LEDS, 250);
+  move();
+  paint(*&leds);
+  return true;
+}
+
+void EffectPopcorn::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==4) // Размытие
+    blurred = _val->getVal() == FPSTR(TCONST_FFFF);
+  
+}
+
+void EffectPopcorn::setscl(const byte _scl){ // вот тут перегрузим масштаб
+  EffectCalc::setscl(_scl); // вызываем функцию базового класса (т.е. заполнение scale и что еще она там умеет)
+  // А теперь расширяем ее нужным поведением
+  NUM_ROCKETS = scale*2;
+  rockets.resize(NUM_ROCKETS);
+  for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
+    rockets[r].x = random8() * LED_COLS;
+    rockets[r].y = random8() * LED_ROWS;
+  }
+}
+
+void EffectPopcorn::load() {
+  NUM_ROCKETS = scale*2;
+  rockets.resize(NUM_ROCKETS);
+  for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
+    rockets[r].x = random8() * LED_COLS;
+    rockets[r].y = random8() * LED_ROWS;
+  }
+  palettesload();
+}
+
+void EffectPopcorn::restart_rocket(uint8_t r) {
+  rockets[r].xd = random8() + 32;
+  if (rockets[r].x > (int)(LED_COLS / 2 * 256)) {
+    // leap towards the centre of the screen
+    rockets[r].xd = -rockets[r].xd;
+  }
+  // controls the leap height
+  rockets[r].yd = random8() * 8 + LED_COLS * 10;
+}
+
+void EffectPopcorn::paint(CRGB *leds) {
+  // 
+  for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
+    CRGB rgb = ColorFromPalette(*curPalette, r * LED_COLS + rockets[r].yd, 255, LINEARBLEND);
+    
+    // make the acme pink, because why not
+    if (-1 > rockets[r].yd and rockets[r].yd < 1) rgb = CRGB::Gray;
+    
+    // extract the fractional parts and derive their inverses
+    uint8_t xx = rockets[r].x & 0xff;
+    uint8_t yy = rockets[r].y & 0xff;
+    uint8_t ix = 255 - xx;
+    uint8_t iy = 255 - yy;
+    uint8_t wu[4] = {
+      WU_WEIGHT(ix, iy),
+      WU_WEIGHT(xx, iy),
+      WU_WEIGHT(ix, yy),
+      WU_WEIGHT(xx, yy)
+    };
+    
+    // multiply the intensities by the colour, and saturating-add them to the pixels
+    for (uint8_t i = 0; i < 4; i++) {
+      uint8_t x = (rockets[r].x >> 8) + (i & 1);
+      uint8_t y = (rockets[r].y >> 8) + ((i >> 1) & 1);
+      int32_t index = myLamp.getPixelNumber(x, y);
+      if (index < NUM_LEDS)
+      leds[index].r = qadd8(leds[index].r, rgb.r * wu[i] >> 8);
+      leds[index].g = qadd8(leds[index].g, rgb.g * wu[i] >> 8);
+      leds[index].b = qadd8(leds[index].b, rgb.b * wu[i] >> 8);
+    }
+  }
+}
+
+void EffectPopcorn::move() {
+    for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
+    // add the X & Y velocities to the positions
+    rockets[r].x += (float)rockets[r].xd * speedfactor;
+    rockets[r].y += (float)rockets[r].yd * speedfactor;
+    
+    // bounce off the floor?
+    if (rockets[r].y < 0) {
+      rockets[r].yd = (-rockets[r].yd * 240) >> 8;
+      rockets[r].y = rockets[r].yd;
+      // settled on the floor?
+      if (rockets[r].y <= 200) { // if you change gravity, this will probably need changing too
+        restart_rocket(r);
+      }
+    }
+    
+    // bounce off the sides of the screen?
+    if (rockets[r].x < 0 || rockets[r].x > (int)LED_COLS * 256) {
+      rockets[r].xd = (-rockets[r].xd * 248) >> 8;
+      // force back onto the screen, otherwise they eventually sneak away
+      if (rockets[r].x < 0) {
+        rockets[r].x = rockets[r].xd;
+        rockets[r].yd += rockets[r].xd;
+      } else {
+        rockets[r].x = (LED_COLS * 256) - rockets[r].xd;
+      }
+    }
+    
+    // gravity
+    rockets[r].yd -= gravity;
+    
+    // viscosity
+    rockets[r].xd = (rockets[r].xd * 224) >> 8;
+    rockets[r].yd = (rockets[r].yd * 224) >> 8;
+  }
 }

@@ -1689,6 +1689,37 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------- Эфеект "Попкорн"
+// (C) Aaron Gotwalt (Soulmate)
+// адаптация и доработки kostyamat
+class EffectPopcorn : public EffectCalc {
+private:
+    uint8_t NUM_ROCKETS = 10;
+    float gravity = 15;
+    bool blurred = false;
+    float speedfactor;
+
+    typedef struct
+    {
+        int32_t x, y, xd, yd;
+    } Rocket;
+
+    std::vector<Rocket> rockets;
+
+    void restart_rocket(uint8_t r);
+    void paint(CRGB *leds);
+    void move();
+    bool popcornRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setspd(const byte _spd) override; // перегрузка для скорости
+
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов 
 
 class EffectWorker {
