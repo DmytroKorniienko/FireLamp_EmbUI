@@ -50,7 +50,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
 
 #define RESTORE_STATE 1                                     // востанавливать состояние вкл/выкл, демо, после перезагрузки.
-#define DELAYED_EFFECTS         (1U)                        // отложенная загрузка эффектов
+//#define DELAYED_EFFECTS         (1U)                        // отложенная загрузка эффектов
+#define SHOWSYSCONFIG                                       // Показывать системное меню
 
 //-----------------------------------
 #define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
@@ -58,6 +59,13 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
 #define OTA                                                 // Обновление по ОТА
 //#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
+#define MP3PLAYER                                           // Включить использование MP3 плеера (DF Player)
+
+#ifdef MP3PLAYER
+#define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
+#define MP3_RX_PIN            (D6)                         // RX mp3 player TX (D6)
+#endif
+
 
 #define MIC_PIN               (A0)                          // пин для микрофона, ESP8266 Analog Pin ADC0 = A0
 #define LAMP_PIN              (D3)                          // пин ленты (D3)
@@ -139,9 +147,12 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // #define DAWN_TIMEOUT          (1U)                          // сколько рассвет светит после времени будильника, минут
 #define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника (дефолтное поведение в config.h - вывод времени отключен)
 
+#define MAX_FPS               (50U)                          // Максимальное число обсчитываемых и выводимых кадров в секунду
+
 #ifdef MIC_EFFECTS
-//#define FAST_ADC_READ                                        // микрофон, использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
-//#define SAMPLING_FREQ         (18000U*2U)
+#define MIC_POLLRATE          (100U)                         // как часто опрашиваем микрофон, мс
+#define FAST_ADC_READ                                        // микрофон, использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
+#define SAMPLING_FREQ         (12000U*2U)
 #endif
 
 #endif
