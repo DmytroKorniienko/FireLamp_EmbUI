@@ -35,7 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __LAMP_H
+#define __LAMP_H
+
 #include "misc.h"
 #include "config.h" // подключаем эффекты, там же их настройки
 #include "effects.h"
@@ -130,6 +132,7 @@ struct {
     bool playTime:1; // воспроизводить время?
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
+    uint8_t alarmSound:2; // звук будильника ALARM_SOUND_TYPE
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
 uint32_t lampflags; // набор битов для конфига
@@ -320,6 +323,7 @@ public:
     void setPlayTime(bool flag) {flags.playTime = flag;}
     void setPlayName(bool flag) {flags.playName = flag;}
     void setPlayEffect(bool flag) {flags.playEffect = flag;}
+    void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
 
     void periodicTimeHandle();
 
@@ -448,3 +452,4 @@ private:
 #endif
 };
 
+#endif

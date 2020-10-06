@@ -821,6 +821,13 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
     interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
 
+    interf->select(FPSTR(TCONST_00A6), String(myLamp.getLampSettings().alarmSound), String(FPSTR(TINTF_0A3)), false);
+    interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
+    interf->option(String(ALARM_SOUND_TYPE::AT_FIRST), FPSTR(TINTF_0A0));
+    interf->option(String(ALARM_SOUND_TYPE::AT_RANDOM), FPSTR(TINTF_0A1));
+    interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
+    interf->json_section_end();
+
     interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->json_section_end();
 
@@ -842,6 +849,8 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
+    myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
+    
     SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
     save_lamp_flags();
     section_settings_frame(interf, data);
@@ -1772,6 +1781,7 @@ void sync_parameters(){
     myLamp.setPlayTime(tmp.playTime);
     myLamp.setPlayName(tmp.playName);
     myLamp.setPlayEffect(tmp.playEffect);
+    myLamp.setAlatmSound((ALARM_SOUND_TYPE)tmp.alarmSound);
 #endif
 
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);

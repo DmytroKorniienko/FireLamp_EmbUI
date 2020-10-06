@@ -217,6 +217,11 @@ void LAMP::alarmWorker(){
       // величина рассвета 0-255
       int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
+
+#ifdef MP3PLAYER
+      mp3->setTempVolume(map(dawnPosition,0,255,1,30)); // запуск звука будильника
+#endif
+      
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
         map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
@@ -402,6 +407,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.playTime = false; // воспроизводить время?
       flags.playName = false; // воспроизводить имя?
       flags.playEffect = false; // воспроизводить эффект?
+      flags.alarmSound = ALARM_SOUND_TYPE::AT_NONE;
 
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
@@ -438,6 +444,9 @@ void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   effectsTimer(T_ENABLE);
+#ifdef MP3PLAYER
+  mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
+#endif
 }
 
 void LAMP::stopAlarm(){
@@ -446,6 +455,10 @@ void LAMP::stopAlarm(){
 
   myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
+#ifdef MP3PLAYER
+  mp3->StopAndRestoreVolume(); // восстановить уровень громкости
+#endif
+
   LOG(println, F("Отключение будильника рассвет."));
   if (!flags.ONflag) {
       effectsTimer(T_DISABLE);
@@ -640,7 +653,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
         String tmpStr = var[F("s")];
-        if(mp3!=nullptr && mp3->isReady() && flags.playTime && tmpStr.indexOf(String(F("%TM")))>0)
+        if(mp3!=nullptr && mp3->isReady() && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
           mp3->playTime(timeProcessor.getHours(), timeProcessor.getMinutes());
 #endif
         arr.remove(0); // удаляем отправленный
@@ -654,7 +667,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
-      if(mp3!=nullptr && mp3->isReady() && flags.playTime && tmpStr.indexOf(String(F("%TM")))>0)
+      if(mp3!=nullptr && mp3->isReady() && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
         mp3->playTime(timeProcessor.getHours(), timeProcessor.getMinutes());
 #endif
     } else { // идет печать, помещаем в очередь

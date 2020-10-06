@@ -1980,9 +1980,9 @@ void EffectFreq::load()
 }
 
 bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
+  myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   if (dryrun(3.0))
     return false;
-  myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   return freqAnalyseRoutine(*&ledarr, &*opt);
 }
 
@@ -1991,14 +1991,16 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
   { // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
     MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
 
-    samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
-    last_min_peak = mw->getMinPeak();
-    last_max_peak = mw->getMaxPeak()*2;
+    if(mw!=nullptr){
+      samp_freq = mw->process(myLamp.getMicNoiseRdcLevel()); // частота семплирования
+      last_min_peak = mw->getMinPeak();
+      last_max_peak = mw->getMaxPeak()*2;
 
-    EVERY_N_MILLIS(MIC_POLLRATE){
-      maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
+      EVERY_N_MILLIS(MIC_POLLRATE){
+        maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
+      }
+      samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     }
-    samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     delete mw;
   }
 

@@ -281,8 +281,24 @@ static const char TINTF_09B[] PROGMEM = "Громкость";
 static const char TINTF_09C[] PROGMEM = "Озвучивать время";
 static const char TINTF_09D[] PROGMEM = "Озвучивать имя эффекта";
 static const char TINTF_09E[] PROGMEM = "Озвучивать эффект";
-static const char TINTF_09F[] PROGMEM = "";
-static const char TINTF_0A0[] PROGMEM = "";
+static const char TINTF_09F[] PROGMEM = "Отключен";
+static const char TINTF_0A0[] PROGMEM = "Первый";
+static const char TINTF_0A1[] PROGMEM = "Случайный";
+static const char TINTF_0A2[] PROGMEM = "Случайный MP3";
+static const char TINTF_0A3[] PROGMEM = "Звук будильника";
+static const char TINTF_0A4[] PROGMEM = "";
+static const char TINTF_0A5[] PROGMEM = "";
+static const char TINTF_0A6[] PROGMEM = "";
+static const char TINTF_0A7[] PROGMEM = "";
+static const char TINTF_0A8[] PROGMEM = "";
+static const char TINTF_0A9[] PROGMEM = "";
+static const char TINTF_0AA[] PROGMEM = "";
+static const char TINTF_0AB[] PROGMEM = "";
+static const char TINTF_0AC[] PROGMEM = "";
+static const char TINTF_0AD[] PROGMEM = "";
+static const char TINTF_0AE[] PROGMEM = "";
+static const char TINTF_0AF[] PROGMEM = "";
+static const char TINTF_0B0[] PROGMEM = "";
 
 //-------------------------
 
@@ -454,7 +470,7 @@ static const char TCONST_00A2[] PROGMEM = "mp3volume";
 static const char TCONST_00A3[] PROGMEM = "playTime";
 static const char TCONST_00A4[] PROGMEM = "playName";
 static const char TCONST_00A5[] PROGMEM = "playEffect";
-static const char TCONST_00A6[] PROGMEM = "";
+static const char TCONST_00A6[] PROGMEM = "alarmSound";
 static const char TCONST_00A7[] PROGMEM = "";
 static const char TCONST_00A8[] PROGMEM = "";
 static const char TCONST_00A9[] PROGMEM = "";

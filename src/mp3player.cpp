@@ -155,7 +155,12 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
 {
   stop();
-  playFolder(effnb%7,1); // тест
+  playFolder(effnb%6+1,1); // тест
+}
+
+void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
+  volume(0);
+  playFolder((random(7)+1)%7,1); // тест
 }
 
 #endif

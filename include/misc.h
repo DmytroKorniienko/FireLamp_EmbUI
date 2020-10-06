@@ -38,7 +38,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef __MISC_H
 #define __MISC_H
 
-//#pragma once
 #include <Arduino.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
@@ -46,6 +45,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <WiFi.h>
 #endif
 //#include "user_config.h" - если включить, то UI тоже будет слать лог по телнет и это вызовет падения при большом потоке лога
+
+typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников
 
 // Задержка после записи в ФС, не менять, если не сказано дополнительно!
 #ifndef DELAY_AFTER_FS_WRITING
