@@ -119,7 +119,7 @@ struct {
     bool numInList:1; // нумерация в списке
     bool effHasMic:1; // значек микрофона в списке
     bool dRand:1; // случайный порядок демо
-    bool reserved:1;
+    bool showName:1; // отображение имени в демо
     //--------16 штук граница-------------------
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool isMicOn:1; // глобальное включение/выключение микрофона
@@ -329,6 +329,7 @@ public:
     void setNumInList(bool flag) {flags.numInList = flag;}
     void setEffHasMic(bool flag) {flags.effHasMic = flag;}
     void setDRand(bool flag) {flags.dRand = flag;}
+    void setShowName(bool flag) {flags.showName = flag;}
 
     // ---------- служебные функции -------------
     uint16_t getmaxDim() {return maxDim;}

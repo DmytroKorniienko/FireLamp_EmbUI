@@ -276,7 +276,7 @@ static const char TINTF_096[] PROGMEM = "Перезагрузка";
 static const char TINTF_097[] PROGMEM = "Пин RX плеера";
 static const char TINTF_098[] PROGMEM = "Пин TX плеера";
 static const char TINTF_099[] PROGMEM = "DFPlayer";
-static const char TINTF_09A[] PROGMEM = "";
+static const char TINTF_09A[] PROGMEM = "Название эффекта в Демо";
 static const char TINTF_09B[] PROGMEM = "";
 static const char TINTF_09C[] PROGMEM = "";
 static const char TINTF_09D[] PROGMEM = "";
@@ -446,7 +446,7 @@ static const char TCONST_009A[] PROGMEM = "ESPsysSettings";
 static const char TCONST_009B[] PROGMEM = "PINMP3RX";
 static const char TCONST_009C[] PROGMEM = "PINMP3TX";
 static const char TCONST_009D[] PROGMEM = "isOnMP3";
-static const char TCONST_009E[] PROGMEM = "";
+static const char TCONST_009E[] PROGMEM = "showName";
 static const char TCONST_009F[] PROGMEM = "";
 static const char TCONST_00A0[] PROGMEM = "";
 

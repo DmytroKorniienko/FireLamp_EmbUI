@@ -407,7 +407,6 @@ void set_effects_bright(Interface *interf, JsonObject *data){
 void set_effects_speed(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    //myLamp.effects.setSpeedS((*data)[FPSTR(TCONST_0013)]);
     myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
     myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
@@ -418,7 +417,6 @@ void set_effects_speed(Interface *interf, JsonObject *data){
 void set_effects_scale(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    //myLamp.effects.setScaleS((*data)[FPSTR(TCONST_0014)]);
     myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
     myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
@@ -608,7 +606,6 @@ void set_onflag(Interface *interf, JsonObject *data){
         }
     }
 #ifdef RESTORE_STATE
-    //jee.var(FPSTR(TCONST_001A), (*data)[FPSTR(TCONST_001A)]);
     save_lamp_flags();
 #endif
 }
@@ -653,7 +650,6 @@ void set_auxflag(Interface *interf, JsonObject *data){
 
 void set_gbrflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    //SETPARAM(FPSTR(TCONST_001C), myLamp.setIsGlobalBrightness((*data)[FPSTR(TCONST_001C)] == FPSTR(TCONST_FFFF)));
     myLamp.setIsGlobalBrightness((*data)[FPSTR(TCONST_001C)] == FPSTR(TCONST_FFFF));
     save_lamp_flags();
     if (myLamp.isLampOn()) {
@@ -817,11 +813,9 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_0037), FPSTR(TINTF_020));
 
-    //interf->checkbox(FPSTR(TCONST_001E), FPSTR(TINTF_021), true);
     interf->checkbox(FPSTR(TCONST_001E), myLamp.isMicOnOff()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_012), true);
 
     interf->json_section_begin(FPSTR(TCONST_0038));
-    //if (!iGLOBAL.isMicCal) {
     if (!myLamp.isMicCalibration()) {
         interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
         interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
@@ -831,9 +825,7 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     interf->spacer();
-    //interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), iGLOBAL.isMicCal? FPSTR(TCONST_0008) : FPSTR(TCONST_000C));
     interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), myLamp.isMicCalibration()? FPSTR(TCONST_0008) : FPSTR(TCONST_000C));
-
 
     interf->spacer();
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
@@ -859,7 +851,6 @@ void set_settings_mic(Interface *interf, JsonObject *data){
 
 void set_micflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    //SETPARAM(FPSTR(TCONST_001E), myLamp.setMicOnOff((*data)[FPSTR(TCONST_001E)] == FPSTR(TCONST_FFFF)));
     myLamp.setMicOnOff((*data)[FPSTR(TCONST_001E)] == FPSTR(TCONST_FFFF));
     save_lamp_flags();
     show_effects_param(interf,data);
@@ -869,12 +860,9 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
     //if (!data) return;
     if (!myLamp.isMicOnOff()) {
         myLamp.sendStringToLamp(String(FPSTR(TINTF_026)).c_str(), CRGB::Red);
-    } else
-    //if(!iGLOBAL.isMicCal) {
-    if(!myLamp.isMicCalibration()) {
+    } else if(!myLamp.isMicCalibration()) {
         myLamp.sendStringToLamp(String(FPSTR(TINTF_025)).c_str(), CRGB::Red);
         myLamp.setMicCalibration();
-        //iGLOBAL.isMicCal = true;
     } else {
         myLamp.sendStringToLamp(String(FPSTR(TINTF_027)).c_str(), CRGB::Red);
     }
@@ -976,8 +964,6 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
 
     jee.save();
-    //if(millis()>30000) // после реконекта пытается снова выполнить эту секцию, хз как правильно, делаю так, прошу подправить
-        //jee.wifi_connect();
 
     section_settings_frame(interf, data);
 }
@@ -992,6 +978,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_004E), myLamp.getLampSettings().isFaderON ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_03D), false);
     interf->checkbox(FPSTR(TCONST_008E), myLamp.getLampSettings().isEffClearing ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_083), false);
     interf->checkbox(FPSTR(TCONST_004F), myLamp.getLampSettings().dRand ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_03E), false);
+    interf->checkbox(FPSTR(TCONST_009E), myLamp.getLampSettings().showName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09A), false);
     interf->range(FPSTR(TCONST_0026), 30, 250, 5, FPSTR(TINTF_03F));
     interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_090), false); // нумерация в списке эффектов
 #ifdef MIC_EFFECTS
@@ -1046,16 +1033,14 @@ void show_settings_other(Interface *interf, JsonObject *data){
 
 void set_settings_other(Interface *interf, JsonObject *data){
     if (!data) return;
-    //SETPARAM(FPSTR(TCONST_004C), myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF)));
     myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF));
-    //SETPARAM(FPSTR(TCONST_004D), myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF)));
     myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF));
-    //SETPARAM(FPSTR(TCONST_004E), myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF)));
     myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF));
-    //SETPARAM(FPSTR(TCONST_008E), myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == FPSTR(TCONST_FFFF)));
     myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == FPSTR(TCONST_FFFF));
-    //SETPARAM(FPSTR(TCONST_004F), myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == FPSTR(TCONST_FFFF)));
     myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == FPSTR(TCONST_FFFF));
+    myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == FPSTR(TCONST_FFFF));
+    myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == FPSTR(TCONST_FFFF));
+
     SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(FPSTR(TCONST_0026)).toInt()); }}));
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
     SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
@@ -1063,10 +1048,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
     SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime((*data)[FPSTR(TCONST_0055)]));
-    //SETPARAM(FPSTR(TCONST_0090), myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == FPSTR(TCONST_FFFF)));
-    myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == FPSTR(TCONST_FFFF));
 #ifdef MIC_EFFECTS
-    //SETPARAM(FPSTR(TCONST_0091), myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF)));
     myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF));
 #endif
     myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == FPSTR(TCONST_FFFF));
@@ -1169,7 +1151,6 @@ void show_settings_event(Interface *interf, JsonObject *data){
 
 void set_eventflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    //SETPARAM(FPSTR(TCONST_001D), myLamp.setIsEventsHandled((*data)[FPSTR(TCONST_001D)] == FPSTR(TCONST_FFFF)));
     myLamp.setIsEventsHandled((*data)[FPSTR(TCONST_001D)] == FPSTR(TCONST_FFFF));
     save_lamp_flags();
 }
@@ -1448,7 +1429,6 @@ void set_btnflag(Interface *interf, JsonObject *data){
 
 void set_debugflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    //SETPARAM(FPSTR(TCONST_0095), myLamp.setDebug((*data)[FPSTR(TCONST_0095)] == FPSTR(TCONST_FFFF)));
     myLamp.setDebug((*data)[FPSTR(TCONST_0095)] == FPSTR(TCONST_FFFF));
     save_lamp_flags();
 }
@@ -1729,7 +1709,6 @@ void sync_parameters(){
     tmp.lampflags = jee.param(FPSTR(TCONST_0094)).toInt();
 
 #ifdef LAMP_DEBUG
-    //CALL_SETTER(FPSTR(TCONST_0095), tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), set_debugflag);
     obj[FPSTR(TCONST_0095)] = tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_debugflag(nullptr, &obj);
     obj.clear();
@@ -1741,12 +1720,10 @@ void sync_parameters(){
     obj.clear();
 #endif
 
-    //CALL_SETTER(FPSTR(TCONST_001D), jee.param(FPSTR(TCONST_001D)), set_eventflag);
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_eventflag(nullptr, &obj);
     obj.clear();
 
-    //CALL_SETTER(FPSTR(TCONST_001C), jee.param(FPSTR(TCONST_001C)), set_gbrflag);
     obj[FPSTR(TCONST_001C)] = tmp.isGlobalBrightness ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_gbrflag(nullptr, &obj);
     obj.clear();
@@ -1758,7 +1735,6 @@ void sync_parameters(){
     }
 
 #ifdef RESTORE_STATE
-    //CALL_SETTER(FPSTR(TCONST_001A), jee.param(FPSTR(TCONST_001A)), set_onflag);
     obj[FPSTR(TCONST_001A)] = tmp.ONflag ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_onflag(nullptr, &obj);
     obj.clear();
@@ -1771,25 +1747,19 @@ void sync_parameters(){
     CALL_SETTER(FPSTR(TCONST_000E), jee.param(FPSTR(TCONST_000E)), set_auxflag);
 #endif
 
-    //myLamp.setClearingFlag(jee.param(FPSTR(TCONST_008E)) == FPSTR(TCONST_FFFF));
     myLamp.setClearingFlag(tmp.isEffClearing);
 
 // do{ yield(); } while (1==0);
 // ниже возникает wdt reset при включенной build_type = debug - причина неустановлена
 
 #ifdef MIC_EFFECTS
-//save_lamp_flags();
-    //CALL_SETTER(FPSTR(TCONST_001E), jee.param(FPSTR(TCONST_001E)), set_micflag);
     obj[FPSTR(TCONST_001E)] = tmp.isMicOn ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_micflag(nullptr, &obj);
     obj.clear();
-    //myLamp.setMicOnOff(tmp.isMicOn ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE));
 
     obj[FPSTR(TCONST_0039)] = jee.param(FPSTR(TCONST_0039));
     obj[FPSTR(TCONST_003A)] = jee.param(FPSTR(TCONST_003A));
     obj[FPSTR(TCONST_003B)] = jee.param(FPSTR(TCONST_003B));
-    //obj[FPSTR(TCONST_0091)] = jee.param(FPSTR(TCONST_0091)); // значек микрофона в списке эффектов
-    obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); // значек микрофона в списке эффектов
     set_settings_mic(nullptr, &obj);
     obj.clear();
 #endif
@@ -1799,17 +1769,13 @@ void sync_parameters(){
     CALL_SETTER(FPSTR(TCONST_001F), jee.param(FPSTR(TCONST_001F)), set_btnflag);
 #endif
 
-    //obj[FPSTR(TCONST_004E)] = jee.param(FPSTR(TCONST_004E));
-    //obj[FPSTR(TCONST_008E)] = jee.param(FPSTR(TCONST_008E));
-    //obj[FPSTR(TCONST_004C)] = jee.param(FPSTR(TCONST_004C));
-    //obj[FPSTR(TCONST_004D)] = jee.param(FPSTR(TCONST_004D));
-    //obj[FPSTR(TCONST_0090)] = jee.param(FPSTR(TCONST_0090)); // нумерация в списке эффектов
     obj[FPSTR(TCONST_004E)] = tmp.isFaderON ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_008E)] = tmp.isEffClearing ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_004C)] = tmp.MIRR_H ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_004D)] = tmp.MIRR_V ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_0090)] = tmp.numInList ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_004F)] = tmp.dRand ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_009E)] = tmp.showName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     
     obj[FPSTR(TCONST_0050)] = jee.param(FPSTR(TCONST_0050));

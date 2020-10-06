@@ -59,16 +59,12 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   EQ(DFPLAYER_EQ_NORMAL);
   outputDevice(DFPLAYER_DEVICE_SD);
   periodicCall.attach_scheduled(1, std::bind(&MP3PLAYERDEVICE::handle, this));   // "ленивый" опрос 1 раз в сек
+  volume(5);  //Set volume value. From 0 to 30
   //outputSetting(true, 15); //output setting, enable the output and set the gain to 15
   //volume(15);  //Set volume value. From 0 to 30
-  //play(1);  //Play the first mp3
   //LOG(println, readFileCounts()); //read all file counts in SD card
   //LOG(println, readCurrentFileNumber()); //read current play file number
   //LOG(println, readFileCountsInFolder(1)); //read fill counts in folder SD:/03
-  //randomAll();
-  volume(5);
-  //if(isOn())
-  playFolder(6, 1);
 }
 
 void MP3PLAYERDEVICE::printSatusDetail(){
@@ -140,12 +136,13 @@ void MP3PLAYERDEVICE::handle()
 
 void MP3PLAYERDEVICE::playTime(int hours, int minutes)
 {
-  stopAdvertise();
-  delay(100);
-  if(!isReady() || !isOn()) return; // || isInAdv()
-  playAdvertise(hours);
-  nextAdv = minutes+100;
-  delayedCall.once_scheduled(2, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 3 секунды после произношения часов
+  //delayedCall.once(1, std::bind([this](int hours=12, int minutes=37){
+    //stopAdvertise();
+    if(!isReady() || !isOn()) return; // || isInAdv()
+    playAdvertise(hours);
+    nextAdv = minutes+100;
+    delayedCall.once_scheduled(1.75, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 1.75 секунды после произношения часов
+  //}));
 }
 
 void MP3PLAYERDEVICE::playAdvertise(int filenb) {
@@ -153,6 +150,12 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
   advertise(filenb);
   //readState()
   inAdv=false;
+}
+
+void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
+{
+  stop();
+  playFolder(effnb%7,1); // тест
 }
 
 #endif

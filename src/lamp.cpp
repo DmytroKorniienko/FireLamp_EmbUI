@@ -398,6 +398,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.dRand = false;
       flags.isShowSysMenu = false;
       flags.isOnMP3 = false;
+      flags.showName = false;
       
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
@@ -979,8 +980,13 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   // changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
   effects.moveSelected();
 
-  if(mode==LAMPMODE::MODE_DEMO)
-    myLamp.sendStringToLamp(effects.getEffectName().c_str(), CRGB::Green);
+  if(mode==LAMPMODE::MODE_DEMO && flags.showName){
+    myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
+#ifdef MP3PLAYER
+      if(mp3!=nullptr && mp3->isReady());
+        mp3->playEffect(effects.getEn());
+#endif
+  }
 
   bool natural = true;
   switch (action) {
