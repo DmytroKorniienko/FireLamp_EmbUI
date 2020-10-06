@@ -399,7 +399,10 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.isShowSysMenu = false;
       flags.isOnMP3 = false;
       flags.showName = false;
-      
+      flags.playTime = false; // воспроизводить время?
+      flags.playName = false; // воспроизводить имя?
+      flags.playEffect = false; // воспроизводить эффект?
+
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
     }
@@ -635,6 +638,11 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
         doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
+#ifdef MP3PLAYER
+        String tmpStr = var[F("s")];
+        if(mp3!=nullptr && mp3->isReady() && flags.playTime && tmpStr.indexOf(String(F("%TM")))>0)
+          mp3->playTime(timeProcessor.getHours(), timeProcessor.getMinutes());
+#endif
         arr.remove(0); // удаляем отправленный
       }
     } else {
@@ -646,7 +654,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
-      if(mp3!=nullptr && mp3->isReady() && tmpStr.indexOf(String(F("%TM")))>0);
+      if(mp3!=nullptr && mp3->isReady() && flags.playTime && tmpStr.indexOf(String(F("%TM")))>0)
         mp3->playTime(timeProcessor.getHours(), timeProcessor.getMinutes());
 #endif
     } else { // идет печать, помещаем в очередь
@@ -983,7 +991,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   if(mode==LAMPMODE::MODE_DEMO && flags.showName){
     myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
-      if(mp3!=nullptr && mp3->isReady());
+      if(mp3!=nullptr && mp3->isReady() && flags.playName);
         mp3->playEffect(effects.getEn());
 #endif
   }

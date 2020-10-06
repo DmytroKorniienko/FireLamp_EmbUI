@@ -126,7 +126,10 @@ struct {
     uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
     bool isShowSysMenu:1; // показывать ли системное меню
-    bool isOnMP3;
+    bool isOnMP3:1; // включен ли плеер?
+    bool playTime:1; // воспроизводить время?
+    bool playName:1; // воспроизводить имя?
+    bool playEffect:1; // воспроизводить эффект?
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
 uint32_t lampflags; // набор битов для конфига
@@ -313,6 +316,10 @@ public:
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
     void setTextOffset(uint8_t val) { txtOffset=val;}
     void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
+
+    void setPlayTime(bool flag) {flags.playTime = flag;}
+    void setPlayName(bool flag) {flags.playName = flag;}
+    void setPlayEffect(bool flag) {flags.playEffect = flag;}
 
     void periodicTimeHandle();
 

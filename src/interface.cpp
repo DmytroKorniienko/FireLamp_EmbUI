@@ -808,6 +808,46 @@ void block_lamp(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+#ifdef MP3PLAYER
+void block_settings_mp3(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_section_main(FPSTR(TCONST_00A1), FPSTR(TINTF_099));
+
+    interf->checkbox(FPSTR(TCONST_009D), myLamp.isONMP3()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_099), true);
+
+    interf->json_section_begin(FPSTR(TCONST_00A0));
+    interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), false);
+    interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
+    interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
+    interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
+
+    interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+    interf->json_section_end();
+
+    interf->spacer();
+    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
+
+    interf->json_section_end();
+}
+
+void show_settings_mp3(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_frame_interface();
+    block_settings_mp3(interf, data);
+    interf->json_frame_flush();
+}
+
+void set_settings_mp3(Interface *interf, JsonObject *data){
+    if (!data) return;
+    myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)]==FPSTR(TCONST_FFFF));
+    myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
+    myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
+    SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
+    save_lamp_flags();
+    section_settings_frame(interf, data);
+}
+#endif
+
 #ifdef MIC_EFFECTS
 void block_settings_mic(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -1470,6 +1510,9 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 #ifdef MIC_EFFECTS
     interf->button(FPSTR(TCONST_0079), FPSTR(TINTF_020));
 #endif
+#ifdef MP3PLAYER
+    interf->button(FPSTR(TCONST_009F), FPSTR(TINTF_099));
+#endif
 
     interf->button(FPSTR(TCONST_005C), FPSTR(TINTF_011));
 
@@ -1629,6 +1672,7 @@ void create_parameters(){
 #ifdef MP3PLAYER
     jee.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
     jee.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
+    jee.var_create(FPSTR(TCONST_00A2),F("15")); // громкость
 #endif
     jee.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
@@ -1697,6 +1741,8 @@ void create_parameters(){
     jee.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
 #ifdef MP3PLAYER
     jee.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
+    jee.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
+    jee.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
 #endif
 #endif
 }
@@ -1718,6 +1764,14 @@ void sync_parameters(){
     obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_mp3flag(nullptr, &obj);
     obj.clear();
+
+    obj[FPSTR(TCONST_00A2)] = jee.param(FPSTR(TCONST_00A2));
+    set_settings_mp3(nullptr, &obj);
+    obj.clear();
+
+    myLamp.setPlayTime(tmp.playTime);
+    myLamp.setPlayName(tmp.playName);
+    myLamp.setPlayEffect(tmp.playEffect);
 #endif
 
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);

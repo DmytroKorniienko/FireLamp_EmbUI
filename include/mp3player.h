@@ -65,6 +65,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void setIsOn(bool val) {on = val; if(!on) stop();}
     void playTime(int hours, int minutes);
     void playEffect(uint16_t effnb);
+    void setVolume(uint8_t vol) { volume(vol); }
     void handle();
 };
 #endif
