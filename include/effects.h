@@ -278,7 +278,7 @@ public:
      * @param _val - байт "ползунка"
      * @param _pals - набор с палитрами
      */
-    virtual void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val);
+    virtual void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min=1,  const uint8_t _max=255);
 
     /**
      * метод выбирает текущую палитру '*curPalette' из набора дотупных палитр 'palettes'
@@ -807,7 +807,7 @@ private:
   uint8_t whue;
   float waveTheta;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
-  void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val) override;
+  void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
   void setscl(const byte _scl) override;
 public:
     void load() override;
@@ -1651,7 +1651,7 @@ private:
 
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
-    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val) override;
+    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
     void regenNoise();
 

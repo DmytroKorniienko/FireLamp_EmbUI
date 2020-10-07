@@ -99,7 +99,7 @@ void EffectCalc::setbrt(const byte _brt){
   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
   if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, _brt);
+    palettemap(palettes, _brt, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
     paletteIdx = _brt;
   }
 }
@@ -112,7 +112,7 @@ void EffectCalc::setspd(const byte _spd){
   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
   if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, _spd);
+    palettemap(palettes, _spd, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
     paletteIdx = _spd;
   }
 }
@@ -126,7 +126,7 @@ void EffectCalc::setscl(byte _scl){
 
   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
-    palettemap(palettes, _scl);
+    palettemap(palettes, _scl, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
     paletteIdx = _scl;
   }
 }
@@ -141,7 +141,7 @@ void EffectCalc::setDynCtrl(UIControl*_val){
 
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     paletteIdx = _val->getVal().toInt();
-    palettemap(palettes, paletteIdx);
+    palettemap(palettes, paletteIdx, _val->getMin().toInt(), _val->getMax().toInt());
     isCtrlPallete = true;
   }
 
@@ -180,12 +180,12 @@ void EffectCalc::palettesload(){
  * @param _val - байт "ползунка"
  * @param _pals - набор с палитрами
  */
-void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
+void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min,  const uint8_t _max){
   if (!_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
-  ptPallete = (MAX_RANGE+0.1)/_pals.size();     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  ptPallete = (_max+0.1)/_pals.size();     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
   palettepos = (uint8_t)((float)_val/ptPallete);
   curPalette = _pals.at(palettepos);
   palettescale = _val-ptPallete*(palettepos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
@@ -2253,7 +2253,7 @@ void EffectWaves::load(){
 }
 
 // В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
-void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
+void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
   std::size_t idx = (_val-1)%8;
   if (!_pals.size() || idx>=_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));
@@ -5661,7 +5661,7 @@ void EffectFire2020::regenNoise() {
 
 }
 
-void EffectFire2020::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val){
+void EffectFire2020::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
   std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
   if (!_pals.size() || idx>=_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));

@@ -178,7 +178,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 5, 3, 2, // 0-15
-  2, 2, 2, 2, 2, 2, 2, 2, 5, 1, 1, 3, 3, 1, 3, 3, // 16-31
+  2, 2, 2, 2, 2, 2, 2, 2, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
   1, 3, 3, 3, 3, 3, 2, 5, 7, 5, 2, 1, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 4, 5, 3, 4, 3, 3, 4, 1, 3, 3, 5, 2, // 48 - 63
   4, 1, 1, 1, 2, 5, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
@@ -217,8 +217,8 @@ static const char E_DEFUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":
 // микрофон включен, и эффект обладает зависимостью от микрофона в принципе.
 static const char E_DEFMICUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 // Общая конфигурация для эффектов с 3-им ползунком для палитр
-static const char E_3PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_3PAL_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
+static const char E_3PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char E_3PAL_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Палитра\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 // Общая конфигурация для эффектов только с 2-мя ползунками "Яркость" и "Скорость", пример - эффект"Тихий Океан"
 static const char E_2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}]}"; // 3*16+0 для 2 контрола
 static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}"; // 3*16+0 для 2 контрола

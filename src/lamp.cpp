@@ -282,7 +282,7 @@ void LAMP::effectsTick(){
 #endif
       }
     }
-  }
+  } else return;
 
   if (!isAlarm())
     doPrintStringToLamp(); // обработчик печати строки
@@ -443,6 +443,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 void LAMP::startAlarm(){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
+  demoTimer(T_DISABLE);     // гасим Демо-таймер
   effectsTimer(T_ENABLE);
 #ifdef MP3PLAYER
   mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
@@ -454,18 +455,19 @@ void LAMP::stopAlarm(){
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
 
   myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
-  mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
+  mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
   mp3->StopAndRestoreVolume(); // восстановить уровень громкости
 #endif
 
-  LOG(println, F("Отключение будильника рассвет."));
+  LOG(printf_P, PSTR("Отключение будильника рассвет, ONflag=%d\n"), flags.ONflag);
+  brightness(getNormalizedLampBrightness());
   if (!flags.ONflag) {
       effectsTimer(T_DISABLE);
       FastLED.clear();
       FastLED.show();
-  }
-  brightness(getNormalizedLampBrightness());
+  } else if(mode==LAMPMODE::MODE_DEMO)
+    demoTimer(T_ENABLE);     // вернуть демо-таймер
 }
 
 /*
