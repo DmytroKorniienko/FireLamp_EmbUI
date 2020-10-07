@@ -1697,6 +1697,7 @@ private:
     uint8_t NUM_ROCKETS = 10;
     float gravity = 15;
     bool blurred = false;
+    bool revCol = false;
     float speedfactor;
 
     typedef struct

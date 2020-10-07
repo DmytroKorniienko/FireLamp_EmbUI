@@ -1214,7 +1214,7 @@ void EffectBBalls::regen(){
     bballsNUM_BALLS =  map(scale, 32, 17, 1, bballsMaxNUM_BALLS);
   }
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
-    bballsCOLOR[i] = random8();
+    bballsCOLOR[i] = random16(random8(), random8());
     bballsBri[i] = 156;
     bballsX[i] = random8(0, WIDTH-1);
     bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
@@ -1277,9 +1277,9 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156); 
     //if (bballsPos[i] < HEIGHT - 1) 
       if (halo){ // если ореол включен
-        EffectMath::drawCircleF(bballsX[i], bballsPos[i], 3.0, CHSV(bballsCOLOR[i], 255, bballsBri[i]/2));
-      }
-      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 20);
+        EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.25, 2.75, CHSV(bballsCOLOR[i], 255, bballsBri[i]));
+      } else
+        EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 5);
   }
   return true;
 }
@@ -5724,10 +5724,10 @@ void EffectTest::regen() {
   for (uint8_t i = 0; i < SnakeNum; i++)
   {
     snakeLast[i] = 0;
-    snakePosX[i] = random8(WIDTH);
-    snakePosY[i] = random8(HEIGHT);
-    snakeSpeedX[i] = (255. + random8()) / 255.;
-    snakeSpeedY[i] = 0;
+    snakePosX[i] = random8(WIDTH / 2 - WIDTH / 4, WIDTH/2 + WIDTH / 4);
+    snakePosY[i] = random8(HEIGHT / 2 - HEIGHT / 4, HEIGHT / 2 + HEIGHT / 4);
+    snakeSpeedX[i] = EffectMath::randomf(0.2, 1.5);//(255. + random8()) / 255.;
+    snakeSpeedY[i] = EffectMath::randomf(0.2, 1.5);
     //snakeTurn[i] = 0;
     snakeColor[i] = random8();
     snakeDirect[i] = random8(4); //     B00           направление головы змейки
@@ -5747,7 +5747,7 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
     if (snakeSpeedY[i] >= 1)
     {
       snakeSpeedY[i] = snakeSpeedY[i] - (int)snakeSpeedY[i];
-      if (random8(10U) == 0U)
+      if (random8(8) <= 1U)
         if (random8(2U))
         {                                           // <- поворот налево
           snakeLast[i] = (snakeLast[i] << 2) | B01; // младший бит = поворот
@@ -5931,7 +5931,7 @@ bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 void EffectTest::load() {
-  SnakeNum = (scale - 1U) / 99.0 * (MAX_SNAKES - 1U) + 1U;
+  SnakeNum = scale;
   regen();
 }
 
@@ -5944,11 +5944,12 @@ bool EffectPopcorn::run(CRGB *ledarr, EffectWorker *opt) {
 
 bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
   speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 1.0);
-  gravity = 15. * speedfactor;
+  gravity = 16. * speedfactor;
   if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30);
   else FastLED.clear();// fadeToBlackBy(leds, NUM_LEDS, 250);
   move();
   paint(*&leds);
+  //if (blurred) EffectMath::nightMode(leds);
   return true;
 }
 
@@ -5956,13 +5957,14 @@ void EffectPopcorn::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==4) // Размытие
     blurred = _val->getVal() == FPSTR(TCONST_FFFF);
-  
+  if(_val->getId()==5) // Реверс цветов
+    revCol = _val->getVal() == FPSTR(TCONST_FFFF);
 }
 
 void EffectPopcorn::setscl(const byte _scl){ // вот тут перегрузим масштаб
   EffectCalc::setscl(_scl); // вызываем функцию базового класса (т.е. заполнение scale и что еще она там умеет)
   // А теперь расширяем ее нужным поведением
-  NUM_ROCKETS = scale*2;
+  NUM_ROCKETS = 5 + scale;
   rockets.resize(NUM_ROCKETS);
   for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
     rockets[r].x = random8() * LED_COLS;
@@ -5971,34 +5973,33 @@ void EffectPopcorn::setscl(const byte _scl){ // вот тут перегрузи
 }
 
 void EffectPopcorn::load() {
-  NUM_ROCKETS = scale*2;
+  NUM_ROCKETS = 5 + scale;
   rockets.resize(NUM_ROCKETS);
   for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
-    rockets[r].x = random8() * LED_COLS;
-    rockets[r].y = random8() * LED_ROWS;
+    rockets[r].x = random8() * WIDTH;
+    rockets[r].y = random8() * HEIGHT;
   }
   palettesload();
 }
 
 void EffectPopcorn::restart_rocket(uint8_t r) {
   rockets[r].xd = random8() + 32;
-  if (rockets[r].x > (int)(LED_COLS / 2 * 256)) {
+  if (rockets[r].x > (int)(WIDTH / 2) * 256) {
     // leap towards the centre of the screen
     rockets[r].xd = -rockets[r].xd;
   }
   // controls the leap height
-  rockets[r].yd = random8() * 8 + LED_COLS * 10;
+  rockets[r].yd = random8() * 8 + HEIGHT * 10;
 }
 
 void EffectPopcorn::paint(CRGB *leds) {
   // 
   for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
-    CRGB rgb = ColorFromPalette(*curPalette, r * LED_COLS + rockets[r].yd, 255, LINEARBLEND);
+    CRGB rgb = revCol ? CRGB::Gray : ColorFromPalette(*curPalette, r * LED_COLS + rockets[r].yd, 255, LINEARBLEND);
     
-    // make the acme pink, because why not
-    if (-1 > rockets[r].yd and rockets[r].yd < 1) rgb = CRGB::Gray;
-    
-    // extract the fractional parts and derive their inverses
+    // make the acme gray, because why not
+    if (-1 > rockets[r].yd and rockets[r].yd < 1) revCol ? rgb = ColorFromPalette(*curPalette, r * LED_COLS + rockets[r].yd, 255, LINEARBLEND) : rgb = CRGB::Gray;
+
     uint8_t xx = rockets[r].x & 0xff;
     uint8_t yy = rockets[r].y & 0xff;
     uint8_t ix = 255 - xx;
@@ -6020,13 +6021,15 @@ void EffectPopcorn::paint(CRGB *leds) {
       leds[index].g = qadd8(leds[index].g, rgb.g * wu[i] >> 8);
       leds[index].b = qadd8(leds[index].b, rgb.b * wu[i] >> 8);
     }
+
   }
+    
 }
 
 void EffectPopcorn::move() {
     for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
     // add the X & Y velocities to the positions
-    rockets[r].x += (float)rockets[r].xd * speedfactor;
+    rockets[r].x += (float)rockets[r].xd ;
     rockets[r].y += (float)rockets[r].yd * speedfactor;
     
     // bounce off the floor?
@@ -6034,28 +6037,28 @@ void EffectPopcorn::move() {
       rockets[r].yd = (-rockets[r].yd * 240) >> 8;
       rockets[r].y = rockets[r].yd;
       // settled on the floor?
-      if (rockets[r].y <= 200) { // if you change gravity, this will probably need changing too
+      if (rockets[r].y <= 200 /*(float)400 - 200 * speedfactor*/) { // if you change gravity, this will probably need changing too (200)
         restart_rocket(r);
       }
     }
     
     // bounce off the sides of the screen?
-    if (rockets[r].x < 0 || rockets[r].x > (int)LED_COLS * 256) {
+    /*if (rockets[r].x < 0 || rockets[r].x > (int)WIDTH * 256) {
       rockets[r].xd = (-rockets[r].xd * 248) >> 8;
       // force back onto the screen, otherwise they eventually sneak away
       if (rockets[r].x < 0) {
         rockets[r].x = rockets[r].xd;
         rockets[r].yd += rockets[r].xd;
       } else {
-        rockets[r].x = (LED_COLS * 256) - rockets[r].xd;
+        rockets[r].x = (WIDTH * 256) - rockets[r].xd;
       }
-    }
+    }*/
     
     // gravity
     rockets[r].yd -= gravity;
     
     // viscosity
-    rockets[r].xd = (rockets[r].xd * 224) >> 8;
-    rockets[r].yd = (rockets[r].yd * 224) >> 8;
+    rockets[r].xd = (rockets[r].xd * 224) >> 8; // 224
+    rockets[r].yd = (rockets[r].yd * 224) >> 8; //224
   }
 }
