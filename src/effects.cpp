@@ -1217,7 +1217,7 @@ void EffectBBalls::regen(){
     bballsCOLOR[i] = random16(random8(), random8());
     bballsBri[i] = 156;
     bballsX[i] = random8(0, WIDTH-1);
-    bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
+    bballsBri[i] = halo ? 200 : (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
     bballsTLast[i] = millis();
     bballsPos[i] = 0.0f;                                 // Balls start on the ground
     bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
@@ -1262,7 +1262,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
       }
     }
     bballsPos[i] = bballsHi * (float)(HEIGHT - 1) / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 0.9f) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 0.8) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
       bballsShift[i] = 0.0f;
       if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
         if (bballsX[i] <= 0) bballsX[i] = (WIDTH - 1U);
@@ -1272,14 +1272,16 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
         else bballsX[i] += 1;
       }
     }
-    // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой, 
-    // который движится в том же Х. И каждый следующий ярче предыдущего.
-    bballsBri[i] =(bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156); 
+
     //if (bballsPos[i] < HEIGHT - 1) 
       if (halo){ // если ореол включен
-        EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.25, 2.75, CHSV(bballsCOLOR[i], 255, bballsBri[i]));
-      } else
+        EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i], 225, bballsBri[i]));
+      } else {
+        // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой, 
+        // который движится в том же Х. И каждый следующий ярче предыдущего.
+        bballsBri[i] = (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156); 
         EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 5);
+      }
   }
   return true;
 }
@@ -1392,7 +1394,7 @@ bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// --------------------------- эффект спирали ----------------------
+// ***** Эффект "Спираль"     ****
 /*
  * Aurora: https://github.com/pixelmatix/aurora
  * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
@@ -1408,7 +1410,6 @@ bool EffectSpiro::run(CRGB *ledarr, EffectWorker *opt){
   return spiroRoutine(*&ledarr, &*opt);
 }
 
-// ***** Эффект "Спираль"     ****
 bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
 {
 
@@ -2837,7 +2838,7 @@ void EffectCube2d::cubesize(){
     for (uint8_t i = 0U; i < cntX; i++)
     {
       x = i * (sizeX + 1U);
-      if (scale == 255U)
+      if (scale == 9U)
         color = CHSV(46U, 0U, 32U + random8(256U-32U));
       else
 
@@ -2845,7 +2846,7 @@ void EffectCube2d::cubesize(){
         // не вижу другого способа перестать получать почти черные кубики, это раздражает, впечатление будто лампе глаз выбили, или зуб :))
       {
 
-        color = scale > 1 ? ColorFromPalette(*curPalette, random(1024)>>1, random8(128, 255)) : CRGB(random8(), random8(), random8()); 
+        color = scale > 0 ? ColorFromPalette(*curPalette, random(1024)>>1, random8(128, 255)) : CRGB(random8(), random8(), random8()); 
         if (color >= CRGB(10,10,10)) break;  // Не хотелось бы получать слишком тёмные кубики
       }
       
