@@ -158,7 +158,8 @@ void EffectCalc::setDynCtrl(UIControl*_val){
 // Load palletes into array
 void EffectCalc::palettesload(){
   palettes.reserve(FASTLED_PALETTS_COUNT);
-  palettes.push_back(&CloudColors_p);
+  palettes.push_back(&RainbowStripeColors_p);
+  //palettes.push_back(&CloudColors_p);
   //palettes.push_back(&WaterfallColors_p);
   palettes.push_back(&ForestColors_p);
   palettes.push_back(&NormalFire_p);
@@ -3698,76 +3699,70 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 
 // ------------- цвет + вода в бассейне ------------------
 // (с) SottNick. 03.2020
+// переписал на программные субпиксельные блики - (c) kostyamat 
+void EffectAquarium::load() {
+  ledbuff.resize(WIDTH*2 * HEIGHT*2);
+}
+
 bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
-  if (dryrun(3.0))
-    return false;
   return aquariumRoutine(*&ledarr, &*opt);
 }
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 
-  bool glare = (getCtrlVal(3)==FPSTR(TCONST_FFFF));
+  bool glare = (getCtrlVal(4)==FPSTR(TCONST_FFFF));
+  byte satur = getCtrlVal(3).toInt();
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
+  xsin = beatsin8(10, 0, WIDTH * 2);
+  ysin = beatsin8(15, 0, HEIGHT * 2);
 
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
 #ifdef MIC_EFFECTS
       if (isMicOn()) {
         hue = myLamp.getMicMapFreq();
-        leds[i] = CHSV(hue, 
-          255U, 
+        leds[i] = CHSV((uint8_t)hue, 
+          satur, 
           constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 
           48, 
           255)
           ); 
       }
       else 
-        leds[i] = CHSV(hue, 255U, 255U);
+        leds[i] = CHSV((uint8_t)hue, satur, 255U);
 #else
-      leds[i] = CHSV(hue, 255U, 255U);
+      leds[i] = CHSV((uint8_t)hue, satur, 255U);
 #endif
     }
-    deltaHue = 0U;
-    deltaHue2 = 0U;
 
   if (glare) // если регулятор масштаб на минимуме, то будет работать старый эффект "цвет" (без анимации бликов воды)
   {
-    EffectMath::dimAll(200);
-    if (step > 24U) // количество кадров в анимации -1 (отсчёт с нуля)
-      step = 0U;
-    if (step > 0U && step < 3U) // пару раз за цикл анимации двигаем текстуру по радиусу лампы. а может и не двигаем. как повезёт
-    {
-      if (random(2U) == 0U)
-      {
-        deltaHue++;
-        if (deltaHue > 31U) deltaHue = 0U;
-      }
-    }
-    if (step > 11U && step < 14U) // пару раз за цикл анимации двигаем текстуру по вертикали. а может и не двигаем. как повезёт
-    {
-      if (random(2U) == 0U)
-      {
-        deltaHue2++;
-        if (deltaHue2 > 31U) deltaHue2 = 0U;
-      }
-    }
+    //fadeToBlackBy(leds, NUM_LEDS, 100);
+
 #ifdef MIC_EFFECTS
     byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
 #else
     byte _video = 255;
 #endif
-    for (byte x = 0; x < WIDTH ; x++) {
-      for (byte y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY(x, y, CHSV(hue, 255U - pgm_read_byte(&aquariumGIF[step][(y + deltaHue2) % 32U][(x + deltaHue) % 32U]) * CAUSTICS_BR / 100U, _video));
+    for (byte x = 0; x < WIDTH*2 ; x++) {
+      for (byte y = 0; y < HEIGHT*2; y++) {
+       // EffectMath::drawPixelXY(x, y, CHSV(hue, satur - pgm_read_byte(&aquariumGIF[(y + deltaHue2) % 32U][(x + deltaHue) % 32U]) * CAUSTICS_BR / 100U, _video));
+        ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH*2, HEIGHT*2, WIDTH*2 * HEIGHT*2)] = CHSV((uint8_t)hue, satur - pgm_read_byte(&aquariumGIF[y % 32U][x % 32U]) * CAUSTICS_BR / 100U, _video);
       }
     }
-    step++;
+
+    for (float x = 0; (uint8_t)x < WIDTH ; x+=0.25) {
+      for (float y = 0; (uint8_t)y < HEIGHT; y+=0.25) {
+        EffectMath::drawPixelXYF(x, y, ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)]);
+      }
+    }
   } 
  
   if (speed == 1) { 
     hue = scale;
   }
   else {
-    hue +=1;
+    hue += speedfactor;
   }
   return true;
 }             

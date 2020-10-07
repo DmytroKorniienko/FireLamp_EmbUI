@@ -1027,19 +1027,24 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- цвет + вода в бассейне ("Аквариум")------------------
+// ------------- цвет + вода в бассейне ------------------
 // (с) SottNick. 03.2020
+// переписал на программные субпиксельные блики - (c) kostyamat 
 class EffectAquarium : public EffectCalc {
 private:
-    uint8_t hue = 0;
-    uint8_t deltaHue = 0U;
-    uint8_t deltaHue2 = 0U;
-    uint8_t step = 0;
+    float hue = 0.;
+    //uint8_t deltaHue = 0U;
+    //uint8_t deltaHue2 = 0U;
+    //uint8_t step = 0;
+    std::vector<CRGB> ledbuff;
+    byte xsin;
+    byte ysin;
+
      
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
-    //void load() override;
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
