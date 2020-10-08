@@ -3713,8 +3713,8 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   bool glare = (getCtrlVal(4)==FPSTR(TCONST_FFFF));
   byte satur = getCtrlVal(3).toInt();
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
-  xsin = beatsin8(10, 0, WIDTH * 2);
-  ysin = beatsin8(15, 0, HEIGHT * 2);
+  xsin = beatsin88(300 * EffectMath::fmap((float)speed, 1., 255., 4.5, 15.), 0, WIDTH * 2);
+  ysin = beatsin88(450 * EffectMath::fmap((float)speed, 1., 255., 4.5, 15.), 0, HEIGHT * 2);
 
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
@@ -3750,8 +3750,8 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
       }
     }
 
-    for (float x = 0; (uint8_t)x < WIDTH ; x+=0.25) {
-      for (float y = 0; (uint8_t)y < HEIGHT; y+=0.25) {
+    for (float x = 0; (uint8_t)x < WIDTH ; x+=0.33) {
+      for (float y = 0; (uint8_t)y < HEIGHT; y+=0.33) {
         EffectMath::drawPixelXYF(x, y, CHSV((uint8_t)hue,ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
       }
     }
