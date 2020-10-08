@@ -52,6 +52,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       uint32_t flags;
     };
     uint8_t cur_volume = 0;
+    uint16_t mp3filescount = 193; // кол-во файлов в каталоге MP3
     uint8_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
     SoftwareSerial mp3player;
     Ticker delayedCall;
@@ -66,6 +67,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void setIsOn(bool val) {on = val; if(!on) stop();}
     void playTime(int hours, int minutes);
     void playEffect(uint16_t effnb);
+    void playName(uint16_t effnb);
     void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
     void setTempVolume(uint8_t vol) { volume(vol); }
     void StartAlarmSound(ALARM_SOUND_TYPE val);
