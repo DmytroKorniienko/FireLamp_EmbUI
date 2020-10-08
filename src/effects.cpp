@@ -3708,14 +3708,44 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
   return aquariumRoutine(*&ledarr, &*opt);
 }
 
+void nPatterns() {
+  
+}
+
+void EffectAquarium::nGlare() {
+#ifdef MIC_EFFECTS
+  byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
+#else
+  byte _video = 255;
+#endif
+  for (byte x = 0; x < WIDTH * 2; x++)
+  {
+    for (byte y = 0; y < HEIGHT * 2; y++)
+    {
+      ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)] = satur - pgm_read_byte(&aquariumGIF[y % 32U][x % 32U]) * CAUSTICS_BR / 100U;
+    }
+  }
+
+  for (byte x = 0; (uint8_t)x < WIDTH; x += 1)
+  {
+    for (byte y = 0; (uint8_t)y < HEIGHT; y += 1)
+    {
+      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
+    }
+  }
+}
+
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 
-  bool glare = (getCtrlVal(4)==FPSTR(TCONST_FFFF));
-  byte satur = getCtrlVal(3).toInt();
+  glare = (getCtrlVal(4)==FPSTR(TCONST_FFFF));
+  satur = getCtrlVal(3).toInt();
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
-  xsin = beatsin88(300 * EffectMath::fmap((float)speed, 1., 255., 4.5, 15.), 0, WIDTH * 2);
-  ysin = beatsin88(450 * EffectMath::fmap((float)speed, 1., 255., 4.5, 15.), 0, HEIGHT * 2);
+  xsin = beatsin88(300 * EffectMath::fmap((float)speed, 1., 255., 5., 15.), 0, WIDTH * 2);
+  ysin = beatsin88(450 * EffectMath::fmap((float)speed, 1., 255., 5., 15.), 0, HEIGHT * 2);
 
+  if (glare) // если блики включены
+    nGlare();
+  else {
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
 #ifdef MIC_EFFECTS
@@ -3734,29 +3764,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
       leds[i] = CHSV((uint8_t)hue, satur, 255U);
 #endif
     }
-
-  if (glare) // если регулятор масштаб на минимуме, то будет работать старый эффект "цвет" (без анимации бликов воды)
-  {
-    //fadeToBlackBy(leds, NUM_LEDS, 100);
-
-#ifdef MIC_EFFECTS
-    byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
-#else
-    byte _video = 255;
-#endif
-    for (byte x = 0; x < WIDTH*2 ; x++) {
-      for (byte y = 0; y < HEIGHT*2; y++) {
-        ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH*2, HEIGHT*2, WIDTH*2 * HEIGHT*2)] = satur - pgm_read_byte(&aquariumGIF[y % 32U][x % 32U]) * CAUSTICS_BR / 100U;
-      }
-    }
-
-    for (float x = 0; (uint8_t)x < WIDTH ; x+=0.33) {
-      for (float y = 0; (uint8_t)y < HEIGHT; y+=0.33) {
-        EffectMath::drawPixelXYF(x, y, CHSV((uint8_t)hue,ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
-      }
-    }
-  } 
- 
+  }
   if (speed == 1) { 
     hue = scale;
   }

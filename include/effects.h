@@ -1039,8 +1039,11 @@ private:
     std::vector<uint8_t> ledbuff;
     byte xsin;
     byte ysin;
+    byte satur;
+    bool glare = false;
 
-     
+    void nGlare();
+    void nPatterns();
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
