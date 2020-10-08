@@ -175,14 +175,18 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_PICASSO :
   case EFF_ENUM::EFF_PICASSO2 :
   case EFF_ENUM::EFF_PICASSO3 :
+  case EFF_ENUM::EFF_PICASSO4 :
     worker = std::unique_ptr<EffectPicasso>(new EffectPicasso());
     break;
   case EFF_ENUM::EFF_LEAPERS :
     worker = std::unique_ptr<EffectLeapers>(new EffectLeapers());
     break;
+  case EFF_ENUM::EFF_LIQUIDLAMP :
+    worker = std::unique_ptr<EffectLiquidLamp>(new EffectLiquidLamp());
+    break;
   case EFF_ENUM::EFF_AQUARIUM :
     worker = std::unique_ptr<EffectAquarium>(new EffectAquarium());
-    break; 
+    break;
   case EFF_ENUM::EFF_WHIRL :
     worker = std::unique_ptr<EffectWhirl>(new EffectWhirl());
     break;
@@ -221,19 +225,19 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     break;
   case EFF_ENUM::EFF_SNAKE :
     worker = std::unique_ptr<EffectSnake>(new EffectSnake());
-    break; 
+    break;
   case EFF_ENUM::EFF_SNAKE2 :
     worker = std::unique_ptr<EffectSnake2>(new EffectSnake2());
-    break; 
+    break;
   case EFF_ENUM::EFF_FLOWER :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());
-    break; 
+    break;
   case EFF_ENUM::EFF_TEST :
     worker = std::unique_ptr<EffectTest>(new EffectTest());
-    break; 
+    break;
   case EFF_ENUM::EFF_POPCORN :
     worker = std::unique_ptr<EffectPopcorn>(new EffectPopcorn());
-    break; 
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());
@@ -330,7 +334,7 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
 {
   LOG(printf_P,PSTR("%s: %d\n"),F("*Пересортировка эффектов*"), _effSort);
   if(_effSort==255) _effSort=effSort; // Для дефолтного - берем с конфига
-  
+
   switch(_effSort){
     case SORT_TYPE::ST_BASE :
       effects.sort([](EffectListElem *&a, EffectListElem *&b){ return (((a->eff_nb&0xFF) - (b->eff_nb&0xFF))<<8) + (((a->eff_nb&0xFF00) - (b->eff_nb&0xFF00))>>8);});
@@ -456,7 +460,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
       if(!(id_tst&(1<<id))){ // проверка на существование контрола
           id_tst |= 1<<item[F("id")].as<uint8_t>(); // закладываемся не более чем на 8 контролов, этого хватит более чем :)
           String name = item.containsKey(F("name")) ?
-              item[F("name")].as<String>() 
+              item[F("name")].as<String>()
               : id == 0 ? String(FPSTR(TINTF_00D))
               : id == 1 ? String(FPSTR(TINTF_087))
               : id == 2 ? String(FPSTR(TINTF_088))
@@ -510,7 +514,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
 const String EffectWorker::geteffectpathname(const uint16_t nb, const char *folder){
   uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
   String filename;
-  char buffer[5]; 
+  char buffer[5];
   if (folder != nullptr) {
       filename.concat(F("/"));
       filename.concat(folder);
@@ -577,7 +581,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
 
 /**
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
- * 
+ *
  */
 void EffectWorker::chckdefconfigs(const char *folder){
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
@@ -651,7 +655,7 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
 
 /**
  * процедура открывает индекс-файл на запись в переданный хендл,
- * возвращает хендл 
+ * возвращает хендл
  */
 File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
 
@@ -669,8 +673,8 @@ File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
 
 
 /**
- *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов 
- * 
+ *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов
+ *
  */
 void EffectWorker::makeIndexFile(const char *folder)
 {
@@ -736,12 +740,12 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   Dir dir = LittleFS.openDir(sourcedir);
 
   DynamicJsonDocument doc(2048);
-  
+
   String fn;
   openIndexFile(indexFile, tofolder);
   bool firstLine = true;
   indexFile.print("[");
-  
+
   while (dir.next()) {
       fn=sourcedir + "/" + dir.fileName();
       if (!deserializeFile(doc, fn.c_str()) || doc[F("nb")].as<String>()=="0") {
@@ -807,7 +811,7 @@ void EffectWorker::copyEffect(const EffectListElem *base)
 
 // вернуть выбранный элемент списка
 EffectListElem *EffectWorker::getSelectedListElement()
-{ 
+{
   EffectListElem *res = effects.size()>0? effects[0] : nullptr;
   for(int i=0; i<effects.size(); i++){
       if(effects[i]->eff_nb==selEff)
@@ -859,7 +863,7 @@ EffectListElem *EffectWorker::getNextEffect(EffectListElem *current){
 
 // перейти на указанный
 void EffectWorker::directMoveBy(uint16_t select)
-{ 
+{
   // выполняется в обход фейдера, как моментальное переключение
   setSelected(getBy(select));
   moveSelected();
@@ -929,7 +933,7 @@ uint16_t EffectWorker::getPrev()
 uint16_t EffectWorker::getNext()
 {
   if(!isSelected()) return selEff; // если эффект в процессе смены, то возвращаем selEff
-  
+
   // все индексы списка и их синхронизация - фигня ИМХО, исходим только от curEff
   uint16_t firstfound = curEff;
   bool found = false;

@@ -45,8 +45,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "text_res.h"
 #include "effects_types.h"
 #include "misc.h"
-#include "../../include/LList.h"
+#include "LList.h"
 #include "patterns.h"
+#include "color_palette.h"
 
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
@@ -172,7 +173,7 @@ protected:
 
     const String &getCtrlVal(int idx) {
         //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
-        
+
         // Добавлена поддержка вариантов следования индексов контролов вида 0,1,2,5,7 т.е. с пропусками
         if(idx<ctrls->size() && idx>=0 && idx<=2 && (*ctrls)[idx]->getId()==idx){
             return (*ctrls)[idx]->getVal();
@@ -325,11 +326,6 @@ public:
   static void plot88(CRGB *leds, byte x, byte y, CRGB& color);
   static int16_t scale15by8_local( int16_t i, fract8 scale );
 */
-  /** аналог ардуино функции map(), но только для float
-   */
-  static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max){
-      return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-  }
 
     static uint32_t getPixColor(uint32_t thisSegm); // функция получения цвета пикселя по его номеру
     static uint32_t getPixColorXY(uint16_t x, uint16_t y); // функция получения цвета пикселя в матрице по его координатам
@@ -354,6 +350,100 @@ public:
     static void blur2d(uint8_t val);
     static CRGB *setLed(uint16_t idx, CHSV val);
     static CRGB *setLed(uint16_t idx, CRGB val);
+
+    /** аналог ардуино функции map(), но только для float
+   */
+    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max){
+        return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
+    }
+
+    static float distance(float x1, float y1, float x2, float y2){
+        float dx = x2 - x1, dy = y2 - y1;
+        return EffectMath::sqrt((dx * dx) + (dy * dy));
+    }
+    // чуть менее точная, зато в 3 раза быстрее
+    static float sqrt(float x){
+        union{
+            int i;
+            float x;
+        } u;
+
+        u.x = x;
+        // u.i = (1<<29) + (u.i >> 1) - (1<<22);
+        // u.i = 0x20000000 + (u.i >> 1) - 0x400000;
+        u.i = (u.i >> 1) + 0x1FC00000;
+        return u.x;
+    }
+    // аналог fmap, но не линейная. (linear == fmap)
+    static float mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float)){
+        if (x <= in_min) return out_min;
+        if (x >= in_max) return out_max;
+        return curve((x - in_min), out_min, (out_max - out_min), (in_max - in_min));
+    }
+    static float linear(float t, float b, float c, float d) { return c * t / d + b; }
+    static float InQuad(float t, float b, float c, float d) { t /= d; return c * t * t + b; }
+    static float OutQuad(float t, float b, float c, float d) { t /= d; return -c * t * (t - 2) + b; }
+    static float InOutQuad(float t, float b, float c, float d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t + b;
+        --t;
+        return -c / 2 * (t * (t - 2) - 1) + b;
+    }
+    static float InCubic(float t, float b, float c, float d) { t /= d; return c * t * t * t + b; }
+    static float OutCubic(float t, float b, float c, float d) { t = t / d - 1; return c * (t * t * t + 1) + b; }
+    static float InOutCubic(float t, float b, float c, float d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t * t + b;
+        t -= 2;
+        return c / 2 * (t * t * t + 2) + b;
+    }
+    static float InQuart(float t, float b, float c, float d) { t /= d; return c * t * t * t * t + b; }
+    static float OutQuart(float t, float b, float c, float d) { t = t / d - 1; return -c * (t * t * t * t - 1) + b; }
+    static float InOutQuart(float t, float b, float c, float d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t * t * t + b;
+        t -= 2;
+        return -c / 2 * (t * t * t * t - 2) + b;
+    }
+    static float InQuint(float t, float b, float c, float d) { t /= d; return c * t * t * t * t * t + b; }
+
+    static float fixed_to_float(int input){
+        return ((float)input / (float)(1 << 16));
+    }
+    static int float_to_fixed(float input){
+        return (int)(input * (1 << 16));
+    }
+    static float OutQuint(float t, float b, float c, float d) {
+        t = t / d - 1;
+        return c * (t * t * t * t * t + 1) + b;
+    }
+    static float InOutQuint(float t, float b, float c, float d) {
+        t /= d / 2;
+        if (t < 1) return  c / 2 * t * t * t * t * t + b;
+        t -= 2;
+        return c / 2 * (t * t * t * t * t + 2) + b;
+    }
+    // static float InSine(float t, float b, float c, float d) { return -c * Math.cos(t/d * (Math.PI/2)) + c + b; }
+    // static float OutSine(float t, float b, float c, float d) { return c * Math.sin(t/d * (Math.PI/2)) + b; }
+    // static float InOutSine(float t, float b, float c, float d) { return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b; }
+    static float InExpo(float t, float b, float c, float d) { return (t==0) ? b : c * powf(2, 10 * (t/d - 1)) + b; }
+    static float OutExpo(float t, float b, float c, float d) { return (t==d) ? b+c : c * (-powf(2, -10 * t/d) + 1) + b; }
+    static float InOutExpo(float t, float b, float c, float d) {
+        if (t==0) return b;
+        if (t==d) return b + c;
+        t /= d / 2;
+        if (t < 1) return c/2 * powf(2, 10 * (t - 1)) + b;
+        --t;
+        return c/2 * (-powf(2, -10 * t) + 2) + b;
+    }
+    static float InCirc(float t, float b, float c, float d) { t /= d; return -c * (sqrt(1 - t * t) - 1) + b; }
+    static float OutCirc(float t, float b, float c, float d) { t = t / d - 1; return c * sqrt(1 - t * t) + b; }
+    static float InOutCirc(float t, float b, float c, float d) {
+        t /= d / 2;
+        if (t < 1) return -c/2 * (sqrt(1 - t*t) - 1) + b;
+        t -= 2;
+        return c/2 * (sqrt(1 - t*t) + 1) + b;
+    }
 };
 
 #ifdef MIC_EFFECTS
@@ -363,9 +453,9 @@ private:
     float samp_freq;
     double last_freq = 0;
     uint8_t last_min_peak, last_max_peak;
-    float x[WIDTH+1]; 
+    float x[WIDTH+1];
     float maxVal;
-    uint8_t freqDiv = 2U-scale/128; //1...2     
+    uint8_t freqDiv = 2U-scale/128; //1...2
 
     bool freqAnalyseRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
@@ -454,7 +544,7 @@ private:
   uint8_t line[WIDTH];
   uint8_t shiftValue[HEIGHT];                            // массив дороожки горизонтального смещения пламени (hueValue)
   unsigned char matrixValue[8][16];
-   
+
 
     void drawFrame(uint8_t pcnt, bool isColored);
     void generateLine();
@@ -476,7 +566,7 @@ private:
     uint8_t currentRadius = 4;
     uint8_t _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
-     
+
 
     bool pulseRoutine(CRGB *leds, EffectWorker *param);
 
@@ -515,7 +605,7 @@ public:
 class EffectRainbow : public EffectCalc {
 private:
     float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
-    
+
     bool rainbowHorVertRoutine(bool isVertical);
     bool rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param);
 
@@ -545,7 +635,7 @@ public:
 
 class EffectMatrix : public EffectCalc {
 private:
-     
+
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -558,7 +648,7 @@ private:
     float nextFrame;
     bool snowRoutine(CRGB *leds, EffectWorker *param);
 
-    
+
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -566,7 +656,7 @@ public:
 // ---- Эффект "Конфетти"
 class EffectSparcles : public EffectCalc {
 private:
-     
+
     bool sparklesRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -576,7 +666,7 @@ public:
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
-     
+
     bool fire2012WithPalette(CRGB *leds, EffectWorker *param);
 
 public:
@@ -598,7 +688,7 @@ private:
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
     const uint8_t fireSmoothing = 70U; // 90
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-     
+
 
 
   bool fire2012Routine(CRGB *leds, EffectWorker *param);
@@ -890,7 +980,7 @@ private:
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
   uint8_t csum;   // reload checksum
-   
+
 
   void ringsSet();
   bool ringsRoutine(CRGB *leds, EffectWorker *param);
@@ -920,11 +1010,11 @@ private:
   uint8_t gX, gY;
   bool seamlessX = false;
 
-  //CRGB *ledbuff = new CRGB[NUM_LEDS];  
+  //CRGB *ledbuff = new CRGB[NUM_LEDS];
   std::vector<CRGB> ledbuff;
-  //CRGB ledbuff[(WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2)];  
+  //CRGB ledbuff[(WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2)];
 
-   
+
   void swapBuff();
   void cubesize();
   bool cube2dRoutine(CRGB *leds, EffectWorker *param);
@@ -954,7 +1044,7 @@ private:
   bool clouds = false;
   bool storm = false;
   bool splashes = true;
-   
+
   void setDynCtrl(UIControl*_val) override;
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor);
   //bool coloredRainRoutine(CRGB *leds, EffectWorker *param);
@@ -983,7 +1073,45 @@ private:
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
     bool picassoRoutine2(CRGB *leds, EffectWorker *param);
     bool picassoRoutine3(CRGB *leds, EffectWorker *param);
+    bool picassoRoutine4(CRGB *leds, EffectWorker *param);
+    GradientPaletteList *palettes;
 public:
+    EffectPicasso() {
+        palettes = new GradientPaletteList();
+        palettes->add(MBVioletColors_gp, 0, 16);
+
+        palettes->add(ib_jul01_gp, 60, 16, 200);
+
+        palettes->add(es_pinksplash_08_gp, 125, 16);
+
+        palettes->add(departure_gp, 0);
+        palettes->add(departure_gp, 140, 16, 220);
+
+        palettes->add(es_landscape_64_gp, 25, 16, 250);
+        palettes->add(es_landscape_64_gp, 125);
+        palettes->add(es_landscape_64_gp, 175, 50, 220);
+
+        palettes->add(es_ocean_breeze_036_gp, 0);
+
+        palettes->add(es_landscape_33_gp, 0);
+        palettes->add(es_landscape_33_gp, 50);
+        palettes->add(es_landscape_33_gp, 50, 50);
+
+        palettes->add(GMT_drywet_gp, 0);
+        palettes->add(GMT_drywet_gp, 75);
+        palettes->add(GMT_drywet_gp, 150, 0, 200);
+
+        palettes->add(fire_gp, 175);
+
+        palettes->add(Pink_Purple_gp, 25);
+        palettes->add(Pink_Purple_gp, 175, 0, 220);
+
+        palettes->add(Sunset_Real_gp, 25, 0, 200);
+        palettes->add(Sunset_Real_gp, 50, 0, 220);
+
+        palettes->add(BlacK_Magenta_Red_gp, 25);
+    }
+    ~EffectPicasso() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1004,6 +1132,69 @@ private:
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool leapersRoutine(CRGB *leds, EffectWorker *param);
 public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+class EffectLiquidLamp : public EffectCalc {
+    typedef struct Particle{
+        float position_x = 0;
+        float position_y = 0;
+        float speed_x = 0;
+        float speed_y = 0;
+        float rad = 0;
+        float hot = 0;
+        float spf = 0;
+        int mass = 0;
+        unsigned mx = 0;
+        unsigned sc = 0;
+        unsigned tr = 0;
+    } Particle;
+private:
+    unsigned MASS_MIN = 10;
+    unsigned MASS_MAX = 50;
+    Particle particles[20];
+    unsigned numParticles = 0;
+    unsigned physic_on = 1;
+    void generate(bool reset = false);
+    void position();
+    void physic();
+    bool Routine(CRGB *leds, EffectWorker *param);
+
+    GradientPaletteList *palettes;
+public:
+    EffectLiquidLamp() {
+        palettes = new GradientPaletteList();
+        // эта политра создана под эффект
+        palettes->add(MBVioletColors_gp, 0, 16);
+        // палитры частично подогнаные под эффект
+        palettes->add(ib_jul01_gp, 60, 16, 200);
+        palettes->add(Sunset_Real_gp, 25, 0, 200);
+
+        palettes->add(es_landscape_33_gp, 50, 50);
+
+        palettes->add(es_pinksplash_08_gp, 125, 16);
+
+        palettes->add(es_landscape_64_gp, 175, 50, 220);
+        palettes->add(es_landscape_64_gp, 25, 16, 250);
+
+        palettes->add(es_ocean_breeze_036_gp, 0);
+
+        palettes->add(es_landscape_33_gp, 0);
+
+        palettes->add(GMT_drywet_gp, 0);
+        palettes->add(GMT_drywet_gp, 75);
+        palettes->add(GMT_drywet_gp, 150, 0, 200);
+
+        palettes->add(fire_gp, 175);
+
+        palettes->add(Pink_Purple_gp, 25);
+        palettes->add(Pink_Purple_gp, 175, 0, 220);
+
+        palettes->add(Sunset_Real_gp, 50, 0, 220);
+
+        palettes->add(BlacK_Magenta_Red_gp, 25);
+    }
+    ~EffectLiquidLamp() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1029,7 +1220,7 @@ public:
 
 // ------------- цвет + вода в бассейне ------------------
 // (с) SottNick. 03.2020
-// переписал на программные субпиксельные блики - (c) kostyamat 
+// переписал на программные субпиксельные блики - (c) kostyamat
 class EffectAquarium : public EffectCalc {
 private:
     float hue = 0.;
@@ -1039,8 +1230,11 @@ private:
     std::vector<uint8_t> ledbuff;
     byte xsin;
     byte ysin;
+    byte satur;
+    bool glare = false;
 
-     
+    void nGlare();
+    void nPatterns();
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1049,7 +1243,7 @@ public:
 };
 
 #define STARS_NUM (16)
-// ----------- Эффект "Звезды" 
+// ----------- Эффект "Звезды"
 class EffectStar : public EffectCalc {
 private:
     float driftx;
@@ -1061,7 +1255,7 @@ private:
     float color[STARS_NUM] ;                        // цвет звезды
     uint8_t points[STARS_NUM] ;                       // количество углов в звезде
     unsigned int delay[STARS_NUM] ;                   // задержка пуска звезды относительно счётчика
-    float counter = 0;                                // счетчик для реализации смещений, наростания и т.д. 
+    float counter = 0;                                // счетчик для реализации смещений, наростания и т.д.
     uint8_t csum = 0;
     bool setup = true;
     uint8_t micPick = 0;
@@ -1075,7 +1269,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//---------- Эффект "Фейерверк" 
+//---------- Эффект "Фейерверк"
 //адаптация и переписал - kostyamat
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 class EffectFireworks : public EffectCalc {
@@ -1120,7 +1314,7 @@ private:
     float pointer;
     const float _scaler = 3.3f / 1024;
     CRGB color = CHSV(255, 200, 200);
-    const float center = (float)HEIGHT / 2; 
+    const float center = (float)HEIGHT / 2;
     void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
@@ -1143,7 +1337,7 @@ private:
     byte flip = 0;
     byte generation = 0;
     byte mic[2];
-     
+
 
     bool munchRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1164,7 +1358,7 @@ private:
     uint32_t scale_x[NUM_LAYERS];
     uint32_t scale_y[NUM_LAYERS];
     uint8_t  noise[NUM_LAYERS][WIDTH][HEIGHT];
-    
+
     bool noiseRoutine(CRGB *leds, EffectWorker *param);
     void adjust_gamma(CRGB *leds)
     {
@@ -1181,7 +1375,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Мотыльки" 
+// ---- Эффект "Мотыльки"
 // (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
 class EffectButterfly : public EffectCalc {
 private:
@@ -1200,7 +1394,7 @@ private:
     byte csum = 0;
     bool wings = false;
     bool isColored = true;
-    
+
     bool butterflyRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
@@ -1209,14 +1403,14 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Тени" 
+// ---- Эффект "Тени"
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
 class EffectShadows : public EffectCalc {
 private:
     uint16_t sPseudotime = 0;
     uint16_t sLastMillis = 0;
     uint16_t sHue16 = 0;
-    
+
     bool shadowsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1224,7 +1418,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Узоры" 
+// ---- Эффект "Узоры"
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
 class EffectPatterns : public EffectCalc {
 private:
@@ -1234,7 +1428,7 @@ private:
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
-     
+
     CHSV colorMR[8] = {
         CHSV(0, 0, 0),              // 0 - Black
         CHSV(HUE_RED, 255, 255),    // 1 - Red
@@ -1249,7 +1443,7 @@ private:
     void drawPattern(uint8_t ptrn, uint8_t X, uint8_t Y, uint8_t W, uint8_t H, bool dir);
     void drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8_t W, uint8_t H);
 
-    
+
     bool patternsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1291,7 +1485,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффект "Дикие шарики" 
+// ------ Эффект "Дикие шарики"
 // (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
 class EffectNBals : public EffectCalc {
 private:
@@ -1310,7 +1504,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффект "Притяжение" 
+// ------ Эффект "Притяжение"
 class EffectAttract : public EffectCalc {
 private:
     const uint8_t spirocenterX = WIDTH / 2;
@@ -1436,7 +1630,7 @@ struct Snake
   void move(float speedfactor)
   {
     float inc = speedfactor*internal_speedf;
-    
+
     switch (direction)
     {
     case UP:
@@ -1578,7 +1772,7 @@ public:
 // (c) Idir Idir (Soulmate)
 class EffectFlower : public EffectCalc {
 private:
-    float c = 0.5;   //diameter 
+    float c = 0.5;   //diameter
     float angle = 1.;
     float  counter = 0.;
     CHSV color;
@@ -1638,7 +1832,7 @@ private:
     int speed = 20;   //speed of effect
 */
     #define NOISE_HEIGHT  (LED_COLS * 4U)
-    uint16_t noises[LED_COLS * NOISE_HEIGHT];   //precalculated noise table 
+    uint16_t noises[LED_COLS * NOISE_HEIGHT];   //precalculated noise table
     byte colorfade[LED_ROWS];                   //simple colorfade table for speedup
     byte a = 0;
     byte _pal = 8;
@@ -1726,7 +1920,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// --------- конец секции эффектов 
+// --------- конец секции эффектов
 
 class EffectWorker {
 private:
@@ -1757,7 +1951,7 @@ private:
 
     void clearEffectList(); // очистка списка эффектов, вызываетсяч в initDefault
     void clearControlsList(); // очистка списка контроллов и освобождение памяти
-    
+
     //void initDefault();
     void effectsReSort(SORT_TYPE st=(SORT_TYPE)(255));
 
@@ -1768,7 +1962,7 @@ private:
 
     /**
      * проверка на существование "дефолтных" конфигов для всех статичных эффектов
-     * 
+     *
      */
     void chckdefconfigs(const char *folder);
 
@@ -1795,7 +1989,7 @@ private:
 
     /**
      * процедура открывает индекс-файл на запись в переданный хендл,
-     * возвращает хендл 
+     * возвращает хендл
      */
     File& openIndexFile(File& fhandle, const char *folder);
 
@@ -1877,7 +2071,7 @@ public:
 
     // текущий эффект или его копия
     const uint16_t getEn() {return curEff;}
-    //const uint16_t 
+    //const uint16_t
 
     // следующий эффект, кроме canBeSelected==false
     uint16_t getNext();
@@ -1889,7 +2083,7 @@ public:
 
     void moveSelected();
     // перейти на количество шагов, к ближйшему большему (для DEMO)
-    
+
     void moveByCnt(byte cnt){ uint16_t eff = getByCnt(cnt); directMoveBy(eff); }
     // получить номер эффекта смещенного на количество шагов (для DEMO)
     uint16_t getByCnt(byte cnt);
