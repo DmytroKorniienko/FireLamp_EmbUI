@@ -3746,14 +3746,13 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 #endif
     for (byte x = 0; x < WIDTH*2 ; x++) {
       for (byte y = 0; y < HEIGHT*2; y++) {
-       // EffectMath::drawPixelXY(x, y, CHSV(hue, satur - pgm_read_byte(&aquariumGIF[(y + deltaHue2) % 32U][(x + deltaHue) % 32U]) * CAUSTICS_BR / 100U, _video));
-        ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH*2, HEIGHT*2, WIDTH*2 * HEIGHT*2)] = CHSV((uint8_t)hue, satur - pgm_read_byte(&aquariumGIF[y % 32U][x % 32U]) * CAUSTICS_BR / 100U, _video);
+        ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH*2, HEIGHT*2, WIDTH*2 * HEIGHT*2)] = satur - pgm_read_byte(&aquariumGIF[y % 32U][x % 32U]) * CAUSTICS_BR / 100U;
       }
     }
 
     for (float x = 0; (uint8_t)x < WIDTH ; x+=0.25) {
       for (float y = 0; (uint8_t)y < HEIGHT; y+=0.25) {
-        EffectMath::drawPixelXYF(x, y, ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)]);
+        EffectMath::drawPixelXYF(x, y, CHSV((uint8_t)hue,ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
       }
     }
   } 

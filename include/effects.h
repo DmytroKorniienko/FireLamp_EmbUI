@@ -1036,7 +1036,7 @@ private:
     //uint8_t deltaHue = 0U;
     //uint8_t deltaHue2 = 0U;
     //uint8_t step = 0;
-    std::vector<CRGB> ledbuff;
+    std::vector<uint8_t> ledbuff;
     byte xsin;
     byte ysin;
 
