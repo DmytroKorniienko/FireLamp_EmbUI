@@ -1227,18 +1227,19 @@ private:
     //uint8_t deltaHue = 0U;
     //uint8_t deltaHue2 = 0U;
     //uint8_t step = 0;
-    std::vector<uint8_t> ledbuff;
+    byte ledbuff[WIDTH*2 * HEIGHT*2];
     byte xsin;
     byte ysin;
     byte satur;
-    bool glare = false;
+    byte glare = 0;
+    byte iconIdx = 0;
 
     void nGlare();
     void nPatterns();
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
 
 public:
-    void load() override;
+    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

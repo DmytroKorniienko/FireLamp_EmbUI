@@ -217,6 +217,24 @@ void EffectCalc::scale2pallete(){
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
+#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+void wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
+  // extract the fractional parts and derive their inverses
+  uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
+  // calculate the intensities for each affected pixel
+  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  // multiply the intensities by the colour, and saturating-add them to the pixels
+  for (uint8_t i = 0; i < 4; i++) {
+    //uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
+    uint16_t xy = myLamp.getPixelNumber((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
+    myLamp.getUnsafeLedsArray()[xy].r = qadd8(myLamp.getUnsafeLedsArray()[xy].r, col.r * wu[i] >> 8);
+    myLamp.getUnsafeLedsArray()[xy].g = qadd8(myLamp.getUnsafeLedsArray()[xy].g, col.g * wu[i] >> 8);
+    myLamp.getUnsafeLedsArray()[xy].b = qadd8(myLamp.getUnsafeLedsArray()[xy].b, col.b * wu[i] >> 8);
+  }
+}
+
+
 // ------------- конфетти --------------
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
@@ -1037,9 +1055,6 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 }
 
 // ----------- Эффекты "Лава, Зебра, etc"
-
-
-
 void Effect3DNoise::fillNoiseLED()
 {
   uint8_t dataSmoothing = 0;
@@ -3856,21 +3871,47 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 
 // ------------- цвет + вода в бассейне ------------------
 // (с) SottNick. 03.2020
-// переписал на программные субпиксельные блики - (c) kostyamat
-void EffectAquarium::load() {
+// переписал на программные субпиксельные блики - (c) kostyamat 
+/*void EffectAquarium::load() {
   ledbuff.resize(WIDTH*2 * HEIGHT*2);
-}
+}*/
 
 bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
   return aquariumRoutine(*&ledarr, &*opt);
 }
 
-void nPatterns() {
+void EffectAquarium::nPatterns() {
+  if (glare == 1) 
+    iconIdx = (millis() >> 15) % 12;//beatsin88(3 * EffectMath::fmap((float)speed, 1., 255., 5., 15.), 0, 12);
+  else 
+    iconIdx = glare - 3;
+ #ifdef MIC_EFFECTS
+  byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
+#else
+  byte _video = 255;
+#endif
+  for (byte x = 0; x < WIDTH * 2; x++)
+  {
+    for (byte y = 0; y < HEIGHT * 2; y++)
+    {
+      ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)] = (pgm_read_byte(&patterns[iconIdx][y % 10][x % 10]));
+    }
+  }
 
-  
+  for (byte x = 0; (uint8_t)x < WIDTH; x += 1)
+  {
+    for (byte y = 0; (uint8_t)y < HEIGHT; y += 1)
+    {
+      byte val = ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)];
+      EffectMath::drawPixelXY(x, HEIGHT-1 - y, CHSV((uint8_t)((uint16_t)hue - val* 31), map((satur + 32 * val), 1, 510, 1, 255), _video));
+
+    }
+  }
 }
+  
 
 void EffectAquarium::nGlare() {
+
 #ifdef MIC_EFFECTS
   byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
 #else
@@ -3888,22 +3929,34 @@ void EffectAquarium::nGlare() {
   {
     for (byte y = 0; (uint8_t)y < HEIGHT; y += 1)
     {
-      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
+      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, ledbuff[myLamp.getPixelNumberBuff((x + xsin) % (WIDTH * 2), (y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
+
     }
   }
 }
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 
-  glare = (getCtrlVal(4)==FPSTR(TCONST_FFFF));
+  glare = getCtrlVal(4).toInt();
   satur = getCtrlVal(3).toInt();
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
-  xsin = beatsin88(300 * EffectMath::fmap((float)speed, 1., 255., 5., 15.), 0, WIDTH * 2);
-  ysin = beatsin88(450 * EffectMath::fmap((float)speed, 1., 255., 5., 15.), 0, HEIGHT * 2);
 
-  if (glare) // если блики включены
+  xsin = beatsin88(350 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, WIDTH * 2 * 4);
+  ysin = beatsin88(450 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, HEIGHT * 2 * 4);
+
+  switch (glare) { // 
+  case 0:
+    break;
+  case 2:
     nGlare();
-  else {
+    break;
+  default:
+    nPatterns();
+    break;
+  }
+
+  if (!glare) {// если блики включены
+
     for (int16_t i = 0U; i < NUM_LEDS; i++)
     {
 #ifdef MIC_EFFECTS
@@ -3929,6 +3982,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   else {
     hue += speedfactor;
   }
+  //EffectMath::blur2d(32);
   return true;
 }
 
@@ -5733,22 +5787,6 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
 
 // ----------- Эфеект "ДНК"
 // База https://pastebin.com/jwvC1sNF адаптация и доработки kostyamat
-#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-void wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-    //uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
-    uint16_t xy = myLamp.getPixelNumber((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
-    myLamp.getUnsafeLedsArray()[xy].r = qadd8(myLamp.getUnsafeLedsArray()[xy].r, col.r * wu[i] >> 8);
-    myLamp.getUnsafeLedsArray()[xy].g = qadd8(myLamp.getUnsafeLedsArray()[xy].g, col.g * wu[i] >> 8);
-    myLamp.getUnsafeLedsArray()[xy].b = qadd8(myLamp.getUnsafeLedsArray()[xy].b, col.b * wu[i] >> 8);
-  }
-}
 
 bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
 {
