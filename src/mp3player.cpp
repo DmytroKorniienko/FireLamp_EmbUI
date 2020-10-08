@@ -51,7 +51,8 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
     LOG(println, F("Unable to begin:"));
     LOG(println, F("1.Please recheck the connection!"));
     LOG(println, F("2.Please insert the SD card!"));
-    while(true);
+    ready = false;
+    return;
   }
   ready = true;
 
@@ -155,12 +156,32 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
 {
   stop();
-  playFolder(effnb%6+1,1); // тест
+  playFolder(3, effnb%256);
+  //loop(effnb%256);
+}
+
+void MP3PLAYERDEVICE::playName(uint16_t effnb)
+{
+  stop();
+  playFolder(2, effnb%256);
+  //loop(effnb%256);
 }
 
 void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
   volume(0);
-  playFolder((random(7)+1)%7,1); // тест
+  switch(val){
+    case ALARM_SOUND_TYPE::AT_FIRST :
+      playFolder(1,1);
+      break;
+    case ALARM_SOUND_TYPE::AT_RANDOM :
+      playFolder(random(5)+1,1);
+      break;
+    case ALARM_SOUND_TYPE::AT_RANDOMMP3 :
+      playMp3Folder(random(mp3filescount)+1);
+      break;
+    default:
+    break;
+  }
 }
 
 #endif

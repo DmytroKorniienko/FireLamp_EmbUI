@@ -3867,6 +3867,7 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
 
 void nPatterns() {
 
+  
 }
 
 void EffectAquarium::nGlare() {
@@ -3922,7 +3923,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 #endif
     }
   }
-  if (speed == 1) {
+  if (speed == 1) { 
     hue = scale;
   }
   else {
