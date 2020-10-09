@@ -1565,10 +1565,8 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
-
-  //EffectMath::blur2d(40); // без размытия как-то пиксельно, по-моему...
-  //dimAll(160); // < -- затухание эффекта для последующего кадров
-  //fadeToBlackBy(leds, NUM_LEDS, 256U - scale);
+  EffectMath::blur2d(15); // нужно ли размытие?
+  fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
 
   for (uint8_t i = 1; i < WIDTH; i += 2) {
     //leds[XY( i, e_centerY)] += CHSV(i * 2 , 255, 255);
@@ -1592,10 +1590,10 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
-  //EffectMath::blur2d(40); // без размытия как-то пиксельно, по-моему...
-  //dimAll(140); // < -- затухание эффекта для последующего кадрв
-  fadeToBlackBy(leds, NUM_LEDS, 255 - map(scale, 1, 255, 180, 254));
+  EffectMath::blur2d(15); // нужно ли размытие?
+  fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
   //uint8_t beat = beatsin8(5, 127, 180);
+  
   for (uint8_t i = 1; i < WIDTH; i += 2) {
     //leds[XY( i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
     leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
@@ -1619,8 +1617,8 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
 
 bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
   hue++;
-  //EffectMath::blur2d(40);
-  //fadeToBlackBy(leds, NUM_LEDS, 260U - scale);
+  EffectMath::blur2d(15); // нужно ли размытие?
+  fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
   //FastLED.clear();
   for (uint8_t y = 2; y < HEIGHT; y += 5) {
     for (uint8_t x = 2; x < WIDTH; x += 5) {
