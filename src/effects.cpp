@@ -1566,20 +1566,24 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
 
-  EffectMath::blur2d(40); // без размытия как-то пиксельно, по-моему...
+  //EffectMath::blur2d(40); // без размытия как-то пиксельно, по-моему...
   //dimAll(160); // < -- затухание эффекта для последующего кадров
-  fadeToBlackBy(leds, NUM_LEDS, 256U - scale);
-  float beat2 = (10.0 -  (float)beatsin8(3, 10, 20)) / 10.;
+  //fadeToBlackBy(leds, NUM_LEDS, 256U - scale);
+
   for (uint8_t i = 1; i < WIDTH; i += 2) {
     //leds[XY( i, e_centerY)] += CHSV(i * 2 , 255, 255);
     leds[myLamp.getPixelNumber( i, e_centerY)] += CHSV(i * 2 , 255, 255);
   }
   // Noise
-  e_x[0] += 3000;
-  e_y[0] += 3000;
-  e_z[0] += 3000;
-  e_scaleX[0] = 8000;
-  e_scaleY[0] = 8000;
+  float pointspeedfactor = speed/128. + 0.5; // насколько быстро будут перемещаться сами точки
+  float beat2 = (10.0 -  (float)beatsin8(3, 10, 20)) / 10. * pointspeedfactor;
+  uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
+  uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
+  e_x[0] += 1500*sc2; // 3000;
+  e_y[0] += 1500*sc2; // 3000;
+  e_z[0] += 1500*sc2; // 3000;
+  e_scaleX[0] = sc; //8000;
+  e_scaleY[0] = sc; //8000;
   FillNoise(0);
 
   EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);
@@ -1588,7 +1592,7 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
-  EffectMath::blur2d(40); // без размытия как-то пиксельно, по-моему...
+  //EffectMath::blur2d(40); // без размытия как-то пиксельно, по-моему...
   //dimAll(140); // < -- затухание эффекта для последующего кадрв
   fadeToBlackBy(leds, NUM_LEDS, 255 - map(scale, 1, 255, 180, 254));
   //uint8_t beat = beatsin8(5, 127, 180);
@@ -1597,11 +1601,13 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
     leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
   }
   // Noise
-  e_x[0] += 3000;
-  e_y[0] += 3000;
-  e_z[0] += 3000;
-  e_scaleX[0] = 8000;
-  e_scaleY[0] = 8000;
+  uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
+  uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
+  e_x[0] += 1500*sc2; // 3000;
+  e_y[0] += 1500*sc2; // 3000;
+  e_z[0] += 1500*sc2; // 3000;
+  e_scaleX[0] = sc; //8000;
+  e_scaleY[0] = sc; //8000;
   FillNoise(0);
   //MoveX(1);
   //MoveY(1);
@@ -1614,7 +1620,7 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
 bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
   hue++;
   //EffectMath::blur2d(40);
-  fadeToBlackBy(leds, NUM_LEDS, 260U - scale);
+  //fadeToBlackBy(leds, NUM_LEDS, 260U - scale);
   //FastLED.clear();
   for (uint8_t y = 2; y < HEIGHT; y += 5) {
     for (uint8_t x = 2; x < WIDTH; x += 5) {
@@ -1625,11 +1631,13 @@ bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
     }
   }
   // Noise
-  e_x[0] += 3000;
-  e_y[0] += 3000;
-  e_z[0] += 3000;
-  e_scaleX[0] = 8000;
-  e_scaleY[0] = 8000;
+  uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
+  uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
+  e_x[0] += 1500*sc2; // 3000;
+  e_y[0] += 1500*sc2; // 3000;
+  e_z[0] += 1500*sc2; // 3000;
+  e_scaleX[0] = sc; //8000;
+  e_scaleY[0] = sc; //8000;
   FillNoise(0);
 
   EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);
