@@ -46,7 +46,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 //#include "user_config.h" - если включить, то UI тоже будет слать лог по телнет и это вызовет падения при большом потоке лога
 
-typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников
+typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_SECOND, AT_THIRD, AT_FOURTH, AT_FIFTH, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников
 
 // Задержка после записи в ФС, не менять, если не сказано дополнительно!
 #ifndef DELAY_AFTER_FS_WRITING

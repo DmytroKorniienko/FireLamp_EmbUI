@@ -132,7 +132,8 @@ struct {
     bool playTime:1; // воспроизводить время?
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
-    uint8_t alarmSound:2; // звук будильника ALARM_SOUND_TYPE
+    uint8_t alarmSound:3; // звук будильника ALARM_SOUND_TYPE
+    uint8_t reserved:4;
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
 uint32_t lampflags; // набор битов для конфига

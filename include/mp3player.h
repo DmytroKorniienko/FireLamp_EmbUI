@@ -47,22 +47,22 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       struct {
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
-        bool inAdv:1; // выводится сообщение времени
       };
       uint32_t flags;
     };
     uint8_t cur_volume = 0;
     uint16_t mp3filescount = 193; // кол-во файлов в каталоге MP3
     uint8_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
+    uint16_t cur_effnb=0;
     SoftwareSerial mp3player;
     Ticker delayedCall;
     Ticker periodicCall;
     void printSatusDetail();
     void playAdvertise(int filenb);
+    void playFolder0(int filenb);
   public:
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
     bool isReady() {return ready;}
-    bool isInAdv() {return inAdv;};
     bool isOn() {return on && ready;}
     void setIsOn(bool val) {on = val; if(!on) stop();}
     void playTime(int hours, int minutes);

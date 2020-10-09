@@ -59,7 +59,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println, F("DFPlayer Mini online."));
   EQ(DFPLAYER_EQ_NORMAL);
   outputDevice(DFPLAYER_DEVICE_SD);
-  periodicCall.attach_scheduled(1, std::bind(&MP3PLAYERDEVICE::handle, this));   // "ленивый" опрос 1 раз в сек
+  periodicCall.attach_scheduled(1, std::bind(&MP3PLAYERDEVICE::handle, this));   // "ленивый" опрос - раз в 1 сек
   volume(5);  //Set volume value. From 0 to 30
   //outputSetting(true, 15); //output setting, enable the output and set the gain to 15
   //volume(15);  //Set volume value. From 0 to 30
@@ -92,6 +92,8 @@ void MP3PLAYERDEVICE::printSatusDetail(){
       LOG(print, F("Number:"));
       LOG(print, value);
       LOG(println, F(" Play Finished!"));
+      if(cur_effnb>0)
+        playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
       break;
     case DFPlayerError:
       LOG(print, F("DFPlayerError:"));
@@ -137,34 +139,41 @@ void MP3PLAYERDEVICE::handle()
 
 void MP3PLAYERDEVICE::playTime(int hours, int minutes)
 {
-  //delayedCall.once(1, std::bind([this](int hours=12, int minutes=37){
-    //stopAdvertise();
-    if(!isReady() || !isOn()) return; // || isInAdv()
+  if(!isReady() || !isOn()) return; // || isInAdv()
+
+  int currentState = readState();
+  LOG(printf_P,PSTR("readState()=%d\n"), currentState);
+  if(currentState == 513 || currentState == -1)
+  {
     playAdvertise(hours);
     nextAdv = minutes+100;
     delayedCall.once_scheduled(1.75, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 1.75 секунды после произношения часов
-  //}));
+  } else {
+    playLargeFolder(0x00, hours);
+    nextAdv = minutes+100;
+    delayedCall.once_scheduled(1.75, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 1.75 секунды после произношения часов
+  }
+}
+
+void MP3PLAYERDEVICE::playFolder0(int filenb) {
+  playLargeFolder(0x00, filenb);
 }
 
 void MP3PLAYERDEVICE::playAdvertise(int filenb) {
-  inAdv=true;
   advertise(filenb);
-  //readState()
-  inAdv=false;
 }
 
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
 {
   stop();
   playFolder(3, effnb%256);
-  //loop(effnb%256);
+  cur_effnb = effnb;
 }
 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)
 {
   stop();
   playFolder(2, effnb%256);
-  //loop(effnb%256);
 }
 
 void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
@@ -172,6 +181,18 @@ void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
   switch(val){
     case ALARM_SOUND_TYPE::AT_FIRST :
       playFolder(1,1);
+      break;
+    case ALARM_SOUND_TYPE::AT_SECOND :
+      playFolder(1,2);
+      break;
+    case ALARM_SOUND_TYPE::AT_THIRD :
+      playFolder(1,3);
+      break;
+    case ALARM_SOUND_TYPE::AT_FOURTH :
+      playFolder(1,4);
+      break;
+    case ALARM_SOUND_TYPE::AT_FIFTH :
+      playFolder(1,5);
       break;
     case ALARM_SOUND_TYPE::AT_RANDOM :
       playFolder(random(5)+1,1);
