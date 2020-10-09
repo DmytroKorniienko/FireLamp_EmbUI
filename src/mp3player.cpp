@@ -83,14 +83,19 @@ void MP3PLAYERDEVICE::printSatusDetail(){
       LOG(println, F("Card Online!"));
       setVolume(cur_volume); // в случае перетыкания карты или сборса плеера - восстановим громкость
       break;
-    case DFPlayerPlayFinished:
-      LOG(print, F("Number:"));
-      LOG(print, value);
-      LOG(println, F(" Play Finished!"));
-      delayedCall.once(0.2,std::bind([this](){
-        if(cur_effnb>0)
-          playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
-      }));
+    case DFPlayerPlayFinished: {
+        LOG(print, F("Number:"));
+        LOG(print, value);
+        LOG(println, F(" Play Finished!"));
+        int currentState = readState();
+        LOG(printf_P,PSTR("readState()=%d\n"), currentState);
+        if(currentState == 512 || currentState == -1){
+          delayedCall.once(0.2,std::bind([this](){
+            if(cur_effnb>0)
+              playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
+          }));
+        }
+      }
       break;
     case DFPlayerError:
       LOG(print, F("DFPlayerError:"));
