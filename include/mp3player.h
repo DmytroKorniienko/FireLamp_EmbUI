@@ -47,6 +47,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       struct {
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
+        bool mp3mode:1; // режим mp3 плеера
       };
       uint32_t flags;
     };
@@ -71,6 +72,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
     void setTempVolume(uint8_t vol) { volume(vol); }
     void setEqType(uint8_t val) { EQ(val); }
+    void setPlayMP3(bool flag) {mp3mode = flag;}
     void StartAlarmSound(ALARM_SOUND_TYPE val);
     void StopAndRestoreVolume() { stop(); volume(cur_volume); }
     void handle();

@@ -91,8 +91,15 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         LOG(printf_P,PSTR("readState()=%d\n"), currentState);
         if(currentState == 512 || currentState == -1){
           delayedCall.once(0.2,std::bind([this](){
-            if(cur_effnb>0)
-              playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
+            if(!mp3mode){
+              if(cur_effnb>0)
+                playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
+            } else {
+              cur_effnb++;
+              if(cur_effnb>mp3filescount)
+                cur_effnb=1;
+              playMp3Folder(cur_effnb);
+            }
           }));
         }
       }
@@ -167,9 +174,16 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
 
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
 {
-  stop();
-  playFolder(3, effnb%256);
-  cur_effnb = effnb;
+  if(!mp3mode){
+    stop();
+    playFolder(3, effnb%256);
+    cur_effnb = effnb;
+  } else {
+    int shift=cur_effnb-effnb%256;
+    cur_effnb = cur_effnb + shift;
+    if(cur_effnb<0) cur_effnb=1;
+    playMp3Folder(cur_effnb);
+  }
 }
 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)

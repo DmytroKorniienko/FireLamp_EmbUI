@@ -409,6 +409,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.playEffect = false; // воспроизводить эффект?
       flags.alarmSound = ALARM_SOUND_TYPE::AT_NONE;
       flags.MP3eq = 0;
+      flags.playMP3 = false;
 
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)

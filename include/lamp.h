@@ -132,7 +132,8 @@ struct {
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
     uint8_t alarmSound:3; // звук будильника ALARM_SOUND_TYPE
-    uint8_t reserved:4;
+    bool playMP3:1; // режим mp3-плеера
+    uint8_t reserved:3;
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
 uint32_t lampflags; // набор битов для конфига
@@ -340,6 +341,7 @@ public:
     void setPlayTime(bool flag) {flags.playTime = flag;}
     void setPlayName(bool flag) {flags.playName = flag;}
     void setPlayEffect(bool flag) {flags.playEffect = flag;}
+    void setPlayMP3(bool flag) {flags.playMP3 = flag;}
     void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 

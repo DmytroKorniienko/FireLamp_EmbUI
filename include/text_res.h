@@ -300,7 +300,7 @@ static const char TINTF_0AB[] PROGMEM = "Рок";
 static const char TINTF_0AC[] PROGMEM = "Джаз";
 static const char TINTF_0AD[] PROGMEM = "Классика";
 static const char TINTF_0AE[] PROGMEM = "Бас";
-static const char TINTF_0AF[] PROGMEM = "";
+static const char TINTF_0AF[] PROGMEM = "Режим MP3 плеера";
 static const char TINTF_0B0[] PROGMEM = "";
 
 //-------------------------
@@ -475,7 +475,7 @@ static const char TCONST_00A4[] PROGMEM = "playName";
 static const char TCONST_00A5[] PROGMEM = "playEffect";
 static const char TCONST_00A6[] PROGMEM = "alarmSound";
 static const char TCONST_00A7[] PROGMEM = "eqSetings";
-static const char TCONST_00A8[] PROGMEM = "";
+static const char TCONST_00A8[] PROGMEM = "playMP3";
 static const char TCONST_00A9[] PROGMEM = "";
 static const char TCONST_00AA[] PROGMEM = "";
 static const char TCONST_00AB[] PROGMEM = "";

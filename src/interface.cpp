@@ -820,6 +820,7 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
     interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
     interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
+    interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0AF), false);
 
     interf->select(FPSTR(TCONST_00A6), String(myLamp.getLampSettings().alarmSound), String(FPSTR(TINTF_0A3)), false);
     interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
@@ -866,6 +867,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
+    myLamp.setPlayMP3((*data)[FPSTR(TCONST_00A8)]==FPSTR(TCONST_FFFF)); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
 
     //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
     SETPARAM(FPSTR(TCONST_00A2)); // тоже пишет в плеер, разносим во времени
@@ -1801,6 +1803,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
     obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
+    obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
 
     set_settings_mp3(nullptr, &obj);
     obj.clear();
