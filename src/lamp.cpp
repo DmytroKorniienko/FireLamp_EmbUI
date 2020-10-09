@@ -1014,7 +1014,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
 #ifdef MP3PLAYER
-  if(mp3!=nullptr && mp3->isReady() && flags.playEffect)
+  if(mp3!=nullptr && mp3->isReady() && (flags.playEffect || flags.playMP3))
     mp3->playEffect(effects.getEn());
 #endif
 
