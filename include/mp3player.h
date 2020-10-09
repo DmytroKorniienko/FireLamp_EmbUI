@@ -65,7 +65,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
     bool isReady() {return ready;}
     bool isOn() {return on && ready;}
-    void setIsOn(bool val) {on = val; if(!on) stop();}
+    void setIsOn(bool val) {on = val; if(!on) stop(); else playEffect(cur_effnb); }
     void playTime(int hours, int minutes);
     void playEffect(uint16_t effnb);
     void playName(uint16_t effnb);
