@@ -87,8 +87,10 @@ void MP3PLAYERDEVICE::printSatusDetail(){
       LOG(print, F("Number:"));
       LOG(print, value);
       LOG(println, F(" Play Finished!"));
-      if(cur_effnb>0)
-        playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
+      delayedCall.once(0.2,std::bind([this](){
+        if(cur_effnb>0)
+          playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
+      }));
       break;
     case DFPlayerError:
       LOG(print, F("DFPlayerError:"));
