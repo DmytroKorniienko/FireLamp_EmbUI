@@ -1898,6 +1898,7 @@ private:
     float gravity = 15;
     bool blurred = false;
     bool revCol = false;
+    bool tiltDirec;
     float speedfactor;
 
     typedef struct
