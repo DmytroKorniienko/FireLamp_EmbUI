@@ -859,13 +859,19 @@ void show_settings_mp3(Interface *interf, JsonObject *data){
 
 void set_settings_mp3(Interface *interf, JsonObject *data){
     if (!data) return;
+
+    uint8_t val = (*data)[FPSTR(TCONST_00A7)].as<uint8_t>(); myLamp.setEqType(val); mp3->setEqType(val); // пишет в плеер!
+
     myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
 
-    uint8_t val = (*data)[FPSTR(TCONST_00A7)].as<uint8_t>(); myLamp.setEqType(val); mp3->setEqType(val);
-    SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
+    //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
+    SETPARAM(FPSTR(TCONST_00A2)); // тоже пишет в плеер, разносим во времени
+    sysTicker.once(0.3,std::bind([](){
+        mp3->setVolume(jee.param(FPSTR(TCONST_00A2)).toInt());
+    }));
 
     save_lamp_flags();
     section_settings_frame(interf, data);
@@ -1789,12 +1795,12 @@ void sync_parameters(){
     set_mp3flag(nullptr, &obj);
     obj.clear();
 
-    obj[FPSTR(TCONST_00A2)] = jee.param(FPSTR(TCONST_00A2));
+    obj[FPSTR(TCONST_00A2)] = jee.param(FPSTR(TCONST_00A2));  // пишет в плеер!
     obj[FPSTR(TCONST_00A3)] = tmp.playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
-    obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq);
+    obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
 
     set_settings_mp3(nullptr, &obj);
     obj.clear();

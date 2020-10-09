@@ -58,7 +58,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
 
   LOG(println, F("DFPlayer Mini online."));
   outputDevice(DFPLAYER_DEVICE_SD);
-  periodicCall.attach_scheduled(1, std::bind(&MP3PLAYERDEVICE::handle, this));   // "ленивый" опрос - раз в 1 сек
+  periodicCall.attach_scheduled(1.21, std::bind(&MP3PLAYERDEVICE::handle, this)); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
   //volume(5);  //Set volume value. From 0 to 30
 }
 
@@ -81,6 +81,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
       break;
     case DFPlayerCardOnline:
       LOG(println, F("Card Online!"));
+      setVolume(cur_volume); // в случае перетыкания карты или сборса плеера - восстановим громкость
       break;
     case DFPlayerPlayFinished:
       LOG(print, F("Number:"));
