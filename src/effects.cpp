@@ -6182,8 +6182,8 @@ void EffectPopcorn::load() {
 }
 
 void EffectPopcorn::restart_rocket(uint8_t r) {
-  rockets[r].xd = random8() + 32;
-  if (rockets[r].x > (int)(WIDTH / 2) * 256) {
+  rockets[r].xd = (random8() + WIDTH*2)*(random8(1)?1:-1); // наклон?
+  if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > (int)(WIDTH) * 256 && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
     // leap towards the centre of the screen
     rockets[r].xd = -rockets[r].xd;
   }
