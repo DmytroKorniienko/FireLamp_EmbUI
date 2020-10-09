@@ -108,13 +108,13 @@ struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool MIRR_V:1; // отзрекаливание по V
     bool MIRR_H:1; // отзрекаливание по H
-    bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
+    bool reserved0:1;
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
-    bool isStringPrinting:1; // печатается ли прямо сейчас строка?
-    bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
-    bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
+    bool reserved1:1;
+    bool reserved2:1;
+    bool reserved3:1;
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
     bool isDebug:1; // признак режима отладки
@@ -125,8 +125,7 @@ struct {
     //--------16 штук граница-------------------
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool isMicOn:1; // глобальное включение/выключение микрофона
-    uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
-    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+    uint8_t MP3eq:3; // вид эквалайзера
     bool isShowSysMenu:1; // показывать ли системное меню
     bool isOnMP3:1; // включен ли плеер?
     bool playTime:1; // воспроизводить время?
@@ -140,9 +139,26 @@ uint32_t lampflags; // набор битов для конфига
 } LAMPFLAGS;
 #pragma pack(pop)
 
+// тут флаги, которые не нужно сохранять в конфиг
+#pragma pack(push,1)
+typedef union {
+struct {
+    bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
+    bool isStringPrinting:1; // печатается ли прямо сейчас строка?
+    bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
+    bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
+    uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
+    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+};
+uint16_t lampflags; // набор битов для конфига
+} INTERNALFLAGS;
+#pragma pack(pop)
+
+
 class LAMP {
 private:
     LAMPFLAGS flags;
+    INTERNALFLAGS iflags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
     byte txtOffset = 0; // смещение текста относительно края матрицы
@@ -237,8 +253,8 @@ public:
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
 #ifdef MIC_EFFECTS
-    void setMicCalibration() {flags.isCalibrationRequest = true;}
-    bool isMicCalibration() {return flags.isCalibrationRequest;}
+    void setMicCalibration() {iflags.isCalibrationRequest = true;}
+    bool isMicCalibration() {return iflags.isCalibrationRequest;}
     float getMicScale() {return mic_scale;}
     void setMicScale(float scale) {mic_scale = scale;}
     float getMicNoise() {return mic_noise;}
@@ -269,7 +285,7 @@ public:
         }
     }
     bool isMicOnOff() {return flags.isMicOn;}
-    void setMicAnalyseDivider(uint8_t val) {flags.micAnalyseDivider = val&3;}
+    void setMicAnalyseDivider(uint8_t val) {iflags.micAnalyseDivider = val&3;}
 #endif
 
 #ifdef VERTGAUGE
@@ -294,7 +310,7 @@ public:
 
     void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
-    bool isPrintingNow() { return flags.isStringPrinting; }
+    bool isPrintingNow() { return iflags.isStringPrinting; }
     LAMP();
 
     void handle();          // главная функция обработки эффектов
@@ -304,8 +320,8 @@ public:
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
     bool getClearingFlag() {return flags.isEffClearing;}
-    void disableEffectsUntilText() {flags.isEffectsDisabledUntilText = true; FastLED.clear();}
-    void setOffAfterText() {flags.isOffAfterText = true;}
+    void disableEffectsUntilText() {iflags.isEffectsDisabledUntilText = true; FastLED.clear();}
+    void setOffAfterText() {iflags.isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
     bool IsEventsHandled() {return flags.isEventsHandled;}
     bool isLampOn() {return flags.ONflag;}
@@ -325,6 +341,7 @@ public:
     void setPlayName(bool flag) {flags.playName = flag;}
     void setPlayEffect(bool flag) {flags.playEffect = flag;}
     void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
+    void setEqType(uint8_t val) {flags.MP3eq = val;}
 
     void periodicTimeHandle();
 

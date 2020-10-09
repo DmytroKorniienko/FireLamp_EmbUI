@@ -832,6 +832,15 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
     interf->json_section_end();
 
+    interf->select(FPSTR(TCONST_00A7), String(myLamp.getLampSettings().MP3eq), String(FPSTR(TINTF_0A8)), false);
+    interf->option(String(DFPLAYER_EQ_NORMAL), FPSTR(TINTF_0A9));
+    interf->option(String(DFPLAYER_EQ_POP), FPSTR(TINTF_0AA));
+    interf->option(String(DFPLAYER_EQ_ROCK), FPSTR(TINTF_0AB));
+    interf->option(String(DFPLAYER_EQ_JAZZ), FPSTR(TINTF_0AC));
+    interf->option(String(DFPLAYER_EQ_CLASSIC), FPSTR(TINTF_0AD));
+    interf->option(String(DFPLAYER_EQ_BASS), FPSTR(TINTF_0AE));
+    interf->json_section_end();
+
     interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->json_section_end();
 
@@ -854,8 +863,10 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
-    
+
+    uint8_t val = (*data)[FPSTR(TCONST_00A7)].as<uint8_t>(); myLamp.setEqType(val); mp3->setEqType(val);
     SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
+
     save_lamp_flags();
     section_settings_frame(interf, data);
 }
@@ -1779,13 +1790,14 @@ void sync_parameters(){
     obj.clear();
 
     obj[FPSTR(TCONST_00A2)] = jee.param(FPSTR(TCONST_00A2));
+    obj[FPSTR(TCONST_00A3)] = tmp.playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
+    obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq);
+
     set_settings_mp3(nullptr, &obj);
     obj.clear();
-
-    myLamp.setPlayTime(tmp.playTime);
-    myLamp.setPlayName(tmp.playName);
-    myLamp.setPlayEffect(tmp.playEffect);
-    myLamp.setAlatmSound((ALARM_SOUND_TYPE)tmp.alarmSound);
 #endif
 
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);

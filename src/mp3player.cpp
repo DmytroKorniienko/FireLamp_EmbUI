@@ -57,15 +57,9 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   ready = true;
 
   LOG(println, F("DFPlayer Mini online."));
-  EQ(DFPLAYER_EQ_NORMAL);
   outputDevice(DFPLAYER_DEVICE_SD);
   periodicCall.attach_scheduled(1, std::bind(&MP3PLAYERDEVICE::handle, this));   // "ленивый" опрос - раз в 1 сек
-  volume(5);  //Set volume value. From 0 to 30
-  //outputSetting(true, 15); //output setting, enable the output and set the gain to 15
-  //volume(15);  //Set volume value. From 0 to 30
-  //LOG(println, readFileCounts()); //read all file counts in SD card
-  //LOG(println, readCurrentFileNumber()); //read current play file number
-  //LOG(println, readFileCountsInFolder(1)); //read fill counts in folder SD:/03
+  //volume(5);  //Set volume value. From 0 to 30
 }
 
 void MP3PLAYERDEVICE::printSatusDetail(){

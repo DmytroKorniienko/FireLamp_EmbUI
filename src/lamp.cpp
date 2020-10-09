@@ -143,14 +143,14 @@ void LAMP::handle()
   // будильник обрабатываем раз в секунду
   alarmWorker();
 
-  if(flags.isEffectsDisabledUntilText && !flags.isStringPrinting) {
+  if(iflags.isEffectsDisabledUntilText && !iflags.isStringPrinting) {
     setBrightness(0,false,false); // напечатали, можно гасить матрицу :)
-    flags.isEffectsDisabledUntilText = false;
+    iflags.isEffectsDisabledUntilText = false;
   }
 
   // отложенное включение/выключение
-  if(flags.isOffAfterText && !flags.isStringPrinting) {
-    flags.isOffAfterText = false;
+  if(iflags.isOffAfterText && !iflags.isStringPrinting) {
+    iflags.isOffAfterText = false;
     changePower(false);
   }
 
@@ -179,12 +179,12 @@ void LAMP::alarmWorker(){
     static time_t startmillis;
 
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
-      flags.dawnFlag = false;
+      iflags.dawnFlag = false;
       return;
     }
 
     // проверка рассвета, первый вход в функцию
-    if (!flags.dawnFlag){
+    if (!iflags.dawnFlag){
       startmillis = millis();
       memset(dawnColorMinus,0,sizeof(dawnColorMinus));
       dawnCounter = 0;
@@ -246,7 +246,7 @@ void LAMP::alarmWorker(){
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
         leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
     }
-    flags.dawnFlag = true;
+    iflags.dawnFlag = true;
 }
 
 void LAMP::effectsTick(){
@@ -264,11 +264,11 @@ void LAMP::effectsTick(){
 
   if (_effectsTicker.active()) {
     //if(millis()<5000) return; // затычка до выяснения
-    if(!flags.isEffectsDisabledUntilText){
+    if(!iflags.isEffectsDisabledUntilText){
 #ifdef USELEDBUF
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
-        if(!flags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
+        if(!iflags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
           ledsbuff.resize(0);
           ledsbuff.shrink_to_fit();
         }
@@ -290,7 +290,7 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (flags.isEffectsDisabledUntilText || effects.worker->status() || flags.isStringPrinting) {
+  if (iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else {
@@ -376,24 +376,24 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
     {
       flags.MIRR_V = false; // отзрекаливание по V
       flags.MIRR_H = false; // отзрекаливание по H
-      flags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
+      iflags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
       flags.ONflag = false; // флаг включения/выключения
       flags.isDebug = false; // флаг отладки
       flags.isFaderON = true; // признак того, что используется фейдер для смены эффектов
       flags.isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
       flags.isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
 
-      flags.isStringPrinting = false; // печатается ли прямо сейчас строка?
-      flags.isEffectsDisabledUntilText = false;
-      flags.isOffAfterText = false;
+      iflags.isStringPrinting = false; // печатается ли прямо сейчас строка?
+      iflags.isEffectsDisabledUntilText = false;
+      iflags.isOffAfterText = false;
       flags.isEventsHandled = true;
       _brt =0;
       _steps = 0;
       _brtincrement = 0;
 #ifdef MIC_EFFECTS
-      flags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+      iflags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       flags.isMicOn = true; // глобальное испльзование микрофона
-      flags.micAnalyseDivider = 1; // анализ каждый раз
+      iflags.micAnalyseDivider = 1; // анализ каждый раз
 #endif
 #ifdef VERTGAUGE
       gauge_time = millis();
@@ -408,6 +408,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.playName = false; // воспроизводить имя?
       flags.playEffect = false; // воспроизводить эффект?
       flags.alarmSound = ALARM_SOUND_TYPE::AT_NONE;
+      flags.MP3eq = 0;
 
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
@@ -451,7 +452,7 @@ void LAMP::startAlarm(){
 }
 
 void LAMP::stopAlarm(){
-  flags.dawnFlag = false;
+  iflags.dawnFlag = false;
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
 
   myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
@@ -645,7 +646,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
   if(textOffset==-128) textOffset=this->txtOffset;
 
   if(text==nullptr){ // текст пустой
-    if(!flags.isStringPrinting){ // ничего сейчас не печатается
+    if(!iflags.isStringPrinting){ // ничего сейчас не печатается
       if(docArrMessages.isNull()){ // массив пустой
         return; // на выход
       }
@@ -665,7 +666,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         return; // на выход
     }
   } else { // текст не пустой
-    if(!flags.isStringPrinting){ // ничего сейчас не печатается
+    if(!iflags.isStringPrinting){ // ничего сейчас не печатается
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
@@ -700,7 +701,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   static String toPrint;
   static CRGB _letterColor;
 
-  flags.isStringPrinting = true;
+  iflags.isStringPrinting = true;
   int8_t offs=(textOffset==-128?txtOffset:textOffset);
 
   if(text!=nullptr && text[0]!='\0'){
@@ -712,10 +713,10 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 
   if(toPrint.length()==0) {
-    flags.isStringPrinting = false;
+    iflags.isStringPrinting = false;
     return; // нечего печатать
   } else {
-    flags.isStringPrinting = true;
+    iflags.isStringPrinting = true;
   }
 
   if(tmStringStepTime.isReadyManual()){
@@ -723,7 +724,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
       tmStringStepTime.reset();
     }
     else {
-      flags.isStringPrinting = false;
+      iflags.isStringPrinting = false;
       toPrint.clear(); // все напечатали
       sendStringToLamp(); // получаем новую порцию
     }
@@ -819,7 +820,7 @@ void LAMP::micHandler()
 {
   static uint8_t counter=0;
 
-  if(mw==nullptr && !flags.isCalibrationRequest){ // обычный режим
+  if(mw==nullptr && !iflags.isCalibrationRequest){ // обычный режим
     //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
     samp_freq = mw->process(noise_reduce); // возвращаемое значение - частота семплирования
@@ -828,8 +829,8 @@ void LAMP::micHandler()
 
     if(!counter) // раз на N измерений берем частоту, т.к. это требует обсчетов
       last_freq = mw->analyse(); // возвращаемое значение - частота главной гармоники
-    if(flags.micAnalyseDivider)
-      counter = (counter+1)%(0x01<<(flags.micAnalyseDivider-1)); // как часто выполнять анализ
+    if(iflags.micAnalyseDivider)
+      counter = (counter+1)%(0x01<<(iflags.micAnalyseDivider-1)); // как часто выполнять анализ
     else
       counter = 1; // при micAnalyseDivider == 0 - отключено
 
@@ -851,7 +852,7 @@ void LAMP::micHandler()
     if(!mw->isCaliblation()){ // калибровка конец
       mic_noise = mw->getNoise();
       mic_scale = mw->getScale();
-      flags.isCalibrationRequest = false; // завершили
+      iflags.isCalibrationRequest = false; // завершили
       delete mw;
       mw = nullptr;
 
@@ -1032,7 +1033,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(flags.ONflag && !flags.isEffectsDisabledUntilText){
+  if(flags.ONflag && !iflags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
 #ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
