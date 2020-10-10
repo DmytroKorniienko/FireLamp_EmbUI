@@ -1437,20 +1437,24 @@ private:
     byte csum = 0;
     byte _bri = 255U;
     byte buff[20 * 20];
-    uint8_t xsin, ysin;
+    uint32_t xsin, ysin;
     unsigned long lastrun2;
     byte _sc = 0;
     int8_t _speedX, _speedY;
 
-    CHSV colorMR[8] = {
+    CHSV colorMR[12] = {
         CHSV(0, 0, 0),              // 0 - Black
         CHSV(HUE_RED, 255, 255),    // 1 - Red
         CHSV(HUE_GREEN , 255, 255),  // 2 - Green
         CHSV(HUE_BLUE, 255, 255),   // 3 - Blue
         CHSV(HUE_YELLOW, 255, 255), // 4 - Yellow
-        CHSV(0, 0, 255),            // 5 - White
-        CHSV(0, 255, 255),              // 6 - 1-й случайный цвет
-        CHSV(0, 255, 255),              // 7 - 2-й случайный цвет
+        CHSV(0, 0, 220),            // 5 - White
+        CHSV(0, 255, 255),              // 6 - плавно меняеться в цикле (фон)
+        CHSV(0, 255, 255),              // 7 - цвет равен 6 но +64
+        CHSV(HUE_ORANGE, 255, 255), 
+        CHSV(HUE_PINK, 255, 255), 
+        CHSV(HUE_PURPLE, 255, 255), 
+        CHSV(HUE_AQUA, 255, 255), 
     };
 
     void setDynCtrl(UIControl*_val);
