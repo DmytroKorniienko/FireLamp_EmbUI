@@ -175,13 +175,13 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
 {
   if(!mp3mode){
-    stop();
-    playFolder(3, effnb%256);
-    prev_effnb = cur_effnb%256;
+    //stop();
     cur_effnb = effnb%256;
+    playFolder(3, cur_effnb);
+    prev_effnb = effnb%256;
   } else {
     int shift=effnb%256-prev_effnb%256;
-    prev_effnb = cur_effnb%256;
+    prev_effnb = effnb%256;
     cur_effnb = ((int32_t)cur_effnb + shift)%256;
     if(cur_effnb>mp3filescount)
       cur_effnb%=mp3filescount;
