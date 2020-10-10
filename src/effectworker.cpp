@@ -139,8 +139,10 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());
     break;
   case EFF_ENUM::EFF_DRIFT :
-  case EFF_ENUM::EFF_DRIFT2 :
     worker = std::unique_ptr<EffectDrift>(new EffectDrift());
+    break;
+  case EFF_ENUM::EFF_POPCORN :
+    worker = std::unique_ptr<EffectPopcorn>(new EffectPopcorn());
     break;
   case EFF_ENUM::EFF_TWINKLES :
     worker = std::unique_ptr<EffectTwinkles>(new EffectTwinkles());
@@ -235,8 +237,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_TEST :
     worker = std::unique_ptr<EffectTest>(new EffectTest());
     break;
-  case EFF_ENUM::EFF_POPCORN :
-    worker = std::unique_ptr<EffectPopcorn>(new EffectPopcorn());
+  case EFF_ENUM::EFF_TEST2 :
+    worker = std::unique_ptr<EffectTest>(new EffectTest());
     break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :

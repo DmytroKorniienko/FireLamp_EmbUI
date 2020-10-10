@@ -865,6 +865,8 @@ private:
   uint8_t dri_phase;
   float _dri_speed;
   uint8_t _dri_delta;
+  byte driftType = 0;
+
 
   bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
   bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
@@ -1429,22 +1431,25 @@ private:
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
+    byte buff[20 * 20];
+    uint8_t xsin, ysin;
+    unsigned long lastrun2;
+    byte _sc = 0;
+    int8_t _speedX, _speedY;
 
     CHSV colorMR[8] = {
         CHSV(0, 0, 0),              // 0 - Black
         CHSV(HUE_RED, 255, 255),    // 1 - Red
-        CHSV(HUE_PURPLE , 255, 255),  // 2 - Green
+        CHSV(HUE_GREEN , 255, 255),  // 2 - Green
         CHSV(HUE_BLUE, 255, 255),   // 3 - Blue
         CHSV(HUE_YELLOW, 255, 255), // 4 - Yellow
         CHSV(0, 0, 255),            // 5 - White
-        CHSV(0, 0, 0),              // 6 - 1-й случайный цвет
-        CHSV(0, 0, 0),              // 7 - 2-й случайный цвет
+        CHSV(0, 255, 255),              // 6 - 1-й случайный цвет
+        CHSV(0, 255, 255),              // 7 - 2-й случайный цвет
     };
 
-    void drawPattern(uint8_t ptrn, uint8_t X, uint8_t Y, uint8_t W, uint8_t H, bool dir);
-    void drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8_t W, uint8_t H);
-
-
+    void setDynCtrl(UIControl*_val);
+    void drawPicture_XY(uint8_t iconIdx);
     bool patternsRoutine(CRGB *leds, EffectWorker *param);
 
 public:

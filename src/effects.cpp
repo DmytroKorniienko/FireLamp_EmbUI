@@ -1918,10 +1918,11 @@ void EffectDrift::load(){
 bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
   //EffectMath::blur2d(beatsin8(3U, 5, 10 + scale*3));
   //EffectMath::dimAll(beatsin8(2U, 246, 252));
-  if (getCtrlVal(3) == "false")
+  driftType = getCtrlVal(3).toInt();
+  if (driftType == 1 or driftType == 2)
     FastLED.clear();
   else
-    fadeToBlackBy(ledarr, NUM_LEDS, beatsin8(2U, 1, 8));
+    fadeToBlackBy(ledarr, NUM_LEDS, beatsin88(350. * EffectMath::fmap((float)speed, 1., 255., 1., 5.), 256, 4096) / 256);
 
 // есть разница когда коэффициент как переключатель 2-20, и дробный, так скорость можно крутить плавнее
 // Особенно, если коеффициент участвует в умножении
@@ -1931,12 +1932,14 @@ bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
     dri_phase++;    // 13 ms это примерно каждый кадр и есть
   //}
 
-  switch (effect)
+  switch (driftType)
   {
-  case EFF_ENUM::EFF_DRIFT :
+  case 1:
+  case 3:
     return incrementalDriftRoutine(*&ledarr, &*opt);
     break;
-  case EFF_ENUM::EFF_DRIFT2 :
+  case 2:
+  case 4:
     return incrementalDriftRoutine2(*&ledarr, &*opt);
     break;
   default:
@@ -1954,7 +1957,9 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
   {
     int8_t x = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
     int8_t y = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
-    EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps * 2U + _dri_delta) ); // используем массив палитр из других эффектов выше
+    //EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta) ); // используем массив палитр из других эффектов выше
+    wu_pixel(x*256, y*256, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta));
+
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
@@ -1985,7 +1990,7 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
     {
       x = beatsin8((WIDTH - i) * _dri_speed, WIDTH - 1 - i, i + 1U, 0, dri_phase);
       y = beatsin8((HEIGHT - i) * _dri_speed, HEIGHT - 1 - i, i + 1U, 0, 64U + dri_phase);
-      color = ColorFromPalette(*curPalette, ~(i * WIDTH_steps * 2U + _dri_delta));
+      color = ColorFromPalette(*curPalette, ~(i * WIDTH_steps + _dri_delta)); //i * WIDTH_steps * 2U + _dri_delta
     }
     EffectMath::drawPixelXYF(x, y, color);
   }
@@ -3876,8 +3881,8 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 // ------------- цвет + вода в бассейне ------------------
-// (с) SottNick. 03.2020
-// переписал на программные субпиксельные блики - (c) kostyamat 
+// Идея и паттерн Бликов на воде (с) SottNick. 03.2020
+// переписал на программные блики + паттерны - (c) kostyamat 
 /*void EffectAquarium::load() {
   ledbuff.resize(WIDTH*2 * HEIGHT*2);
 }*/
@@ -4797,140 +4802,100 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
 
 // ---- Эффект "Узоры"
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
-// Сдвиг всей матрицы вверх
-void shiftDown() {
-  for (byte x = 0; x < WIDTH; x++) {
-    for (byte y = 0; y < HEIGHT; y++) {
-      EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x, y + 1));
-    }
-  }
-}
 
-// Сдвиг всей матрицы вверх
-void shiftUp() {
-  for (byte x = 0; x < WIDTH; x++) {
-    for (byte y = HEIGHT; y > 0; y--) {
-      EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x, y - 1));
-    }
+void EffectPatterns::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3) {// pattern
+    _sc = _val->getVal().toInt() - 1;
+
   }
 }
 
 bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
-  if (dryrun(3.0))
-    return false;
-  EVERY_N_MILLIS((1005000U / speed)){
-    if (scale == 1)
-      dir = !dir;
-    loadingFlag = true;
-  }
-
-  if (csum != (127U^scale)) {
-    loadingFlag = true;
-    csum = (127U^scale);
-  }
-  if (scale != 1)
-    dir = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
-
   return patternsRoutine(*&ledarr, &*opt);
 }
 
-void EffectPatterns::load() {
-  FastLED.clear(true);
-}
+void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
+  memset8(buff, 7, 400);
+  FastLED.clear();
 
-// Заполнение матрицы указанным паттерном
-// ptrn - индекс узора в массив узоров patterns[] в patterns.h
-// X   - позиция X вывода узора
-// Y   - позиция Y вывода узора
-// W   - ширина паттерна
-// H   - высота паттерна
-// dir - рисовать 'u' снизу, сдвигая вверх; 'd' - сверху, сдвигая вниз
-void EffectPatterns::drawPattern(uint8_t ptrn, uint8_t X, uint8_t Y, uint8_t W, uint8_t H, bool dir) {
-
-  if (dir)
-    shiftDown();
-  else
-    shiftUp();
-
-  uint8_t y = dir ? (HEIGHT - 1) : 0;
-
-  // Если ширина паттерна не кратна ширине матрицы - отрисовывать со сдвигом? чтобы рисунок был максимально по центру
-  int8_t offset_x = -((WIDTH % W) / 2) + 1;
-  //_bri = random8(96U, 255U);
-
-  for (uint8_t x = 0; x < WIDTH + W; x++) {
-    int8_t xx = offset_x + x;
-    if (xx >= 0 && xx < (int8_t)WIDTH) {
-      uint8_t in = (uint8_t)pgm_read_byte(&(patterns[ptrn][lineIdx][x % 10]));
-      CHSV color = colorMR[in];
-      CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
-      EffectMath::drawPixelXY(xx, y, color2);
+  for (byte x = 0; x < 20; x++)
+  {
+    for (byte y = 0; y < 20; y++)
+    {
+      buff[myLamp.getPixelNumberBuff(x, y, 20, 20, 400)] = (pgm_read_byte(&patterns[iconIdx][y % 10][x % 10]));
     }
   }
 
-  if (dir) {
-    lineIdx = (lineIdx > 0) ? (lineIdx - 1) : (H - 1);
-  } else {
-    lineIdx = (lineIdx < H - 1) ? (lineIdx + 1) : 0;
-  }
-}
+  for (uint8_t x = 0; x < WIDTH; x += 1)
+  {
+    for (uint8_t y = 0; y < HEIGHT; y += 1)
+    {
+      byte in = buff[myLamp.getPixelNumberBuff(((uint8_t)x +xsin) % 20, ((uint8_t)y + ysin) % 20, 20, 20, 400)];
 
-// Отрисовка указанной картинки с размерами WxH в позиции XY
-void EffectPatterns::drawPicture_XY(uint8_t iconIdx, uint8_t X, uint8_t Y, uint8_t W, uint8_t H) {
-  if (loadingFlag) {
-    loadingFlag = false;
-    _bri = random8(96U, 255U);
-  }
-
-  for (byte x = 0; x < W; x++) {
-    for (byte y = 0; y < H; y++) {
-      uint8_t in = (uint8_t)pgm_read_byte(&(patterns[iconIdx][y][x]));
-      if (in != 0) {
+        //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
         CHSV color = colorMR[in];
         CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
-        EffectMath::drawPixelXY(X+x,Y+H-y, color2);
-      }
+        EffectMath::drawPixelXYF(x, HEIGHT-1 - y, color2, 50);
+
     }
   }
 }
+
+void EffectPatterns::load() {
+  if (_sc == 0)
+    patternIdx = random(0, MAX_PATTERN);
+   // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
+  colorMR[6] = CHSV(random8(), 255U, 255U);
+  colorMR[7] = CHSV(0U, 0U, 255U);
+  colorMR[7].hue = colorMR[6].hue + 64; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  while (fabs(colorMR[7].h - colorMR[6].h) < 64)
+  {
+    colorMR[7].hue++;
+  }
+}
+
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  if (loadingFlag)
-  {
-    loadingFlag = false;
-    int8_t _sc = map(scale, 1U, MAX_PATTERN + 1, -1, MAX_PATTERN); // мапим к ползунку масштаба
-    if (_sc < 0)
-    {
-      patternIdx = random(0, MAX_PATTERN + 1);
-      if (patternIdx > MAX_PATTERN)
-        patternIdx = 0;
-    }
-    else
-    {
-      patternIdx = _sc;
-    }
-    //fadeToBlackBy(leds, NUM_LEDS, 25);
-    if (dir)
-      lineIdx = 9; // Картинка спускается сверху вниз - отрисовка с нижней строки паттерна (паттерн 10x10)
-    else
-      lineIdx = 0; // Картинка поднимается сверху вниз - отрисовка с верхней строки паттерна
-    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
-    colorMR[6] = CHSV(random8(), 255U, 255U);
-    if (random8() % 10 == 0)
-    {
-      colorMR[7] = CHSV(0U, 0U, 255U);
-    }
-    else
-    {
-      colorMR[7] = CHSV(random8(), 255U, 255U);
-      while (fabs(colorMR[7].h - colorMR[6].h) < 32)
-      {
-        colorMR[7] = CHSV(random8(), 255U, 255U);
-      }
-    }
+  _speedX = map(scale, 1, 63, EFFECTS_RUN_TIMER - 64, 64 - EFFECTS_RUN_TIMER);
+  if (millis() - lastrun >=  (uint8_t)(64 - fabs(_speedX))) {
+    if (_speedX == 0)
+      xsin = 0;
+    else if (_speedX < 0)
+      xsin++;
+    else if (_speedX > 0)
+      xsin--;
+    lastrun = millis();
   }
-  drawPattern(patternIdx, 0, 0, 10, 10, dir);
+
+  _speedY = map(speed, 1, 63, EFFECTS_RUN_TIMER - 64, 64 - EFFECTS_RUN_TIMER);
+  if (millis() - lastrun2 >=  (uint8_t)(64 - fabs(_speedY))) {
+    if (_speedY == 0)
+      ysin = 0;
+    else if (_speedY < 0)
+      ysin--;
+    else if (_speedY > 0)
+      ysin++;
+    lastrun2 = millis();
+  }
+
+  if (_sc == 0) {
+    EVERY_N_MILLISECONDS(60000. / EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 128., 1., 3.)) {
+      patternIdx ++;
+      if (patternIdx > MAX_PATTERN) patternIdx = 0;
+    }
+  } else patternIdx = _sc;
+  
+  colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 350., 1200.), 0, 255), 255, 255);
+  colorMR[7].hue = colorMR[6].hue + 64; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  while (fabs(colorMR[7].h - colorMR[6].h) < 64)
+  {
+    colorMR[7].hue++;
+  }
+  //fadeToBlackBy(leds, NUM_LEDS, 50);
+  drawPicture_XY(patternIdx);
+  //EffectMath::nightMode(leds);
   return true;
 }
 
