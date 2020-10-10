@@ -1068,6 +1068,7 @@ class EffectPicasso : public EffectCalc {
         int8_t hue_step = 0;
     } Particle;
 private:
+    GradientPalette *myPal;
     Particle particles[20];
     unsigned numParticles = 0;
     void generate(bool reset = false);
@@ -1115,6 +1116,7 @@ public:
     }
     ~EffectPicasso() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 // ------ Эффект "Прыгуны" (c) obliterator
@@ -1135,6 +1137,7 @@ private:
     bool leapersRoutine(CRGB *leds, EffectWorker *param);
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 class EffectLiquidLamp : public EffectCalc {
@@ -1152,6 +1155,7 @@ class EffectLiquidLamp : public EffectCalc {
         unsigned tr = 0;
     } Particle;
 private:
+    GradientPalette *myPal;
     unsigned MASS_MIN = 10;
     unsigned MASS_MAX = 50;
     Particle particles[20];
@@ -1198,6 +1202,7 @@ public:
     }
     ~EffectLiquidLamp() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 // ----------- Эффект "Вихри" адаптация SottNick

@@ -3548,6 +3548,15 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
   return true;
 }
 
+
+void EffectPicasso::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3){
+    int pn = map(_val->getVal().toInt(), 1, 21, 0, palettes->size() - 1);
+    myPal = (*palettes)[pn];
+  }
+}
+
 bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
   generate();
   position();
@@ -3558,9 +3567,6 @@ bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
   unsigned sc = EffectMath::fmap(scale, 0U, 255U, 12, 7);
   // отсечка расчетов (оптимизация скорости)
   unsigned tr = sc * 2 / 3;
-
-  int pn = map(getCtrlVal(3).toInt(), 1, 21, 0, palettes->size() - 1);
-  GradientPalette *myPal = (*palettes)[pn];
 
   for (unsigned x = 0; x < WIDTH; x++) {
     for (unsigned y = 0; y < HEIGHT; y++) {
@@ -3680,8 +3686,14 @@ void EffectLeapers::generate(bool reset){
   numParticles = num;
 }
 
+void EffectLeapers::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3){
+    _rv = _val->getVal().toInt() ? _val->getVal().toInt() : 13;
+  }
+}
+
 bool EffectLeapers::leapersRoutine(CRGB *leds, EffectWorker *param){
-  _rv = getCtrlVal(3).toInt() ? getCtrlVal(3).toInt() : 13;
   generate();
 
   EffectMath::dimAll(0);
@@ -3776,11 +3788,17 @@ void EffectLiquidLamp::physic(){
   }
 }
 
-bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
-  int pn = map(getCtrlVal(3).toInt(), 1, 17, 0, palettes->size() - 1);
-  GradientPalette *myPal = (*palettes)[pn];
-  physic_on = (getCtrlVal(4) == F("false"))? 0 : 1;
+void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3){
+    int pn = map(_val->getVal().toInt(), 1, 17, 0, palettes->size() - 1);
+    myPal = (*palettes)[pn];
+  } else if(_val->getId()==4){
+    physic_on = (_val->getVal() == FPSTR(TCONST_FFFF));
+  }
+}
 
+bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
   generate();
   position();
   if (physic_on) {
