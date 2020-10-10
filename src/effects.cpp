@@ -4852,8 +4852,8 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
       byte in = buff[myLamp.getPixelNumberBuff(((uint8_t)x +xsin) % 20, ((uint8_t)y + ysin) % 20, 20, 20, 400)];
 
         //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
-        CHSV color = colorMR[in];
-        CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
+        CHSV color2 = colorMR[in];
+        //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
         EffectMath::drawPixelXYF(x, HEIGHT-1 - y, color2, 50);
 
     }
@@ -4865,19 +4865,15 @@ void EffectPatterns::load() {
     patternIdx = random(0, MAX_PATTERN);
    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
   colorMR[6] = CHSV(random8(), 255U, 255U);
-  colorMR[7] = CHSV(0U, 0U, 255U);
   colorMR[7].hue = colorMR[6].hue + 64; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
-  while (fabs(colorMR[7].h - colorMR[6].h) < 64)
-  {
-    colorMR[7].hue++;
-  }
+
 }
 
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  _speedX = map(scale, 1, 63, EFFECTS_RUN_TIMER - 64, 64 - EFFECTS_RUN_TIMER);
-  if (millis() - lastrun >=  (uint8_t)(64 - fabs(_speedX))) {
+  _speedX = map(scale, 1, 65, -32, 32);
+  if (millis() - lastrun - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedX))) {
     if (_speedX == 0)
       xsin = 0;
     else if (_speedX < 0)
@@ -4887,8 +4883,8 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
     lastrun = millis();
   }
 
-  _speedY = map(speed, 1, 63, EFFECTS_RUN_TIMER - 64, 64 - EFFECTS_RUN_TIMER);
-  if (millis() - lastrun2 >=  (uint8_t)(64 - fabs(_speedY))) {
+  _speedY = map(speed, 1, 65, -32, 32);
+  if (millis() - lastrun2  - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedY))) {
     if (_speedY == 0)
       ysin = 0;
     else if (_speedY < 0)
@@ -4899,7 +4895,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   }
 
   if (_sc == 0) {
-    EVERY_N_MILLISECONDS(60000. / EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 128., 1., 3.)) {
+    EVERY_N_MILLISECONDS(60000. / EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 65., 1., 3.)) {
       patternIdx ++;
       if (patternIdx > MAX_PATTERN) patternIdx = 0;
     }
@@ -4907,13 +4903,8 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   
   colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 350., 1200.), 0, 255), 255, 255);
   colorMR[7].hue = colorMR[6].hue + 64; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
-  while (fabs(colorMR[7].h - colorMR[6].h) < 64)
-  {
-    colorMR[7].hue++;
-  }
-  //fadeToBlackBy(leds, NUM_LEDS, 50);
   drawPicture_XY(patternIdx);
-  //EffectMath::nightMode(leds);
+
   return true;
 }
 
