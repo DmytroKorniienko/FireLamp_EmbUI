@@ -599,6 +599,7 @@ void set_onflag(Interface *interf, JsonObject *data){
                 }));
 #endif
         } else {
+            jee.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
             myLamp.changePower(newpower);
             sysTicker.once(3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 resetAutoTimers();
