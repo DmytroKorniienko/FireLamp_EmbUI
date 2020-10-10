@@ -58,7 +58,7 @@ Buttons *myButtons;
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
-void setup() {
+ICACHE_FLASH_ATTR void setup() {
     Serial.begin(115200);
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
@@ -114,7 +114,7 @@ void setup() {
     jee.begin(); // Инициализируем JeeUI2 фреймворк.
 }
 
-void loop() {
+ICACHE_FLASH_ATTR void loop() {
     jee.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
@@ -125,12 +125,12 @@ void loop() {
 #endif
 }
 
-void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
+ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
 }
 
 // нужно подчистить эту функцию, печатать инфо можно более аккуратным способом
-void sendData(){
+ICACHE_FLASH_ATTR void sendData(){
   static unsigned long i;
   static unsigned int in;
 
@@ -148,7 +148,7 @@ void sendData(){
  * 1) убираем функции с ICACHE из класса лампы
  * 2) Тикер не может дернуть нестатический метод класса
  */
-void buttonhelper(bool state){
+ICACHE_FLASH_ATTR void buttonhelper(bool state){
   myButtons->buttonPress(state);
 }
 

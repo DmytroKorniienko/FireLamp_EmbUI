@@ -1,8 +1,11 @@
 #define MAX_PATTERN 13
+#ifdef ESP8266
+#define FASTLED_USE_PROGMEM             (1)
+#endif
 
 typedef uint8_t Pattern[10][10];
 
-const Pattern patterns[] PROGMEM = {
+static const Pattern patterns[] PROGMEM = {
 {// 0 зигзаг ********
 {6,6,6,6,6,7,7,7,7,7},  
 {7,6,6,6,6,6,7,7,7,7},

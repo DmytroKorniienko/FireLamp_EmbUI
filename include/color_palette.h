@@ -1,5 +1,8 @@
 #ifndef __COLOR_PALETTE_H
 #define __COLOR_PALETTE_H
+#ifdef ESP8266
+#define FASTLED_USE_PROGMEM             (1)
+#endif
 
 #include "FastLED.h"
 #include "colorutils.h"

@@ -2043,9 +2043,9 @@ void httpCallback(const String &param, const String &value){
 
     if (param == FPSTR(TCONST_0070)) action = RA_ON;
     else if (param == FPSTR(TCONST_0081)) action = RA_OFF;
-    else if (param == FPSTR(TCONST_001B)) action = RA_DEMO;
+    else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
     else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
-    else if (param == FPSTR(TCONST_0012))  action = RA_BRIGHT;
+    else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
     else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
     else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
     else if (param == FPSTR(TCONST_0082)) action = RA_EFFECT;
