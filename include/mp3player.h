@@ -52,9 +52,10 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       uint32_t flags;
     };
     uint8_t cur_volume = 0;
-    uint16_t mp3filescount = 193; // кол-во файлов в каталоге MP3
+    uint16_t mp3filescount = 255; // кол-во файлов в каталоге MP3
     uint8_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
-    uint16_t cur_effnb=0;
+    uint16_t cur_effnb=0; // текущий эффект
+    uint16_t prev_effnb=0; // предыдущий эффект
     SoftwareSerial mp3player;
     Ticker delayedCall;
     Ticker periodicCall;
@@ -71,6 +72,8 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void playName(uint16_t effnb);
     void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
     void setTempVolume(uint8_t vol) { volume(vol); }
+    void setMP3count(uint16_t cnt) {mp3filescount = cnt;} // кол-во файлов в папке MP3
+    uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
     void StartAlarmSound(ALARM_SOUND_TYPE val);

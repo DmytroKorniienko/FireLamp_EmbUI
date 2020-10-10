@@ -177,14 +177,19 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
   if(!mp3mode){
     stop();
     playFolder(3, effnb%256);
-    cur_effnb = effnb;
+    prev_effnb = cur_effnb%256;
+    cur_effnb = effnb%256;
   } else {
-    int shift=effnb%256-cur_effnb;
-    cur_effnb = cur_effnb + shift;
-    if(cur_effnb<=0 || cur_effnb>mp3filescount)
+    int shift=effnb%256-prev_effnb%256;
+    prev_effnb = cur_effnb%256;
+    cur_effnb = ((int32_t)cur_effnb + shift)%256;
+    if(cur_effnb>mp3filescount)
+      cur_effnb%=mp3filescount;
+    else if(cur_effnb==0)
       cur_effnb=1;
     playMp3Folder(cur_effnb);
   }
+
 }
 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)

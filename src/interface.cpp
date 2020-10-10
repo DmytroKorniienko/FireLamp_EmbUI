@@ -817,11 +817,18 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
 
     interf->json_section_begin(FPSTR(TCONST_00A0));
     interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), false);
-    interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
-    interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
-    interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
-    interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0AF), false);
-
+    interf->spacer(FPSTR(TINTF_0B1));
+    interf->json_section_line(FPSTR(TINTF_0B1)); // расположить в одной линии
+        interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
+        interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
+    interf->json_section_end();
+    interf->json_section_line(FPSTR(TINTF_0B1)); // расположить в одной линии
+        interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
+        interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0AF), false);
+    interf->json_section_end();
+    interf->number(FPSTR(TCONST_00A9), mp3->getMP3count(), FPSTR(TINTF_0B0), false);
+    SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
+    
     interf->select(FPSTR(TCONST_00A6), String(myLamp.getLampSettings().alarmSound), String(FPSTR(TINTF_0A3)), false);
     interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
     interf->option(String(ALARM_SOUND_TYPE::AT_FIRST), FPSTR(TINTF_0A0));
@@ -869,6 +876,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
     myLamp.setPlayMP3((*data)[FPSTR(TCONST_00A8)]==FPSTR(TCONST_FFFF)); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
 
+    SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
     //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
     SETPARAM(FPSTR(TCONST_00A2)); // тоже пишет в плеер, разносим во времени
     sysTicker.once(0.3,std::bind([](){
@@ -1705,6 +1713,7 @@ void create_parameters(){
     jee.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
     jee.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
     jee.var_create(FPSTR(TCONST_00A2),F("15")); // громкость
+    jee.var_create(FPSTR(TCONST_00A9),F("255")); // кол-во файлов в папке mp3
 #endif
     jee.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
@@ -1804,6 +1813,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
     obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
     obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A9)] = jee.param(FPSTR(TCONST_00A9));
 
     set_settings_mp3(nullptr, &obj);
     obj.clear();
