@@ -43,6 +43,10 @@
 #define __IDPREFIX F("JeeUI2-")
 #endif
 
+#ifndef __CFGSIZE
+#define __CFGSIZE (2048)
+#endif
+
 static const char PGmimetxt[] PROGMEM  = "text/plain";
 static const char PGmimecss[] PROGMEM  = "text/css";
 static const char PGmimexml[] PROGMEM  = "text/css";
@@ -76,7 +80,7 @@ class jeeui2
     AsyncMqttClient mqttClient;
 
   public:
-    jeeui2() : cfg(4096), section_handle(), server(80), ws("/ws"){
+    jeeui2() : cfg(__CFGSIZE), section_handle(), server(80), ws("/ws"){
 //      *ip='\0';
       *mc='\0';
 //      *mac='\0';

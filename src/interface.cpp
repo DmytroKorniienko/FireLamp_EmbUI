@@ -1555,9 +1555,9 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 #endif
 
     interf->button(FPSTR(TCONST_005C), FPSTR(TINTF_011));
-
+#ifdef ESP_USE_BUTTON
     interf->button(FPSTR(TCONST_0076), FPSTR(TINTF_013));
-
+#endif
     interf->button(FPSTR(TCONST_007A), FPSTR(TINTF_082));
 
     block_lamp_config(interf, data);
@@ -1780,11 +1780,11 @@ void create_parameters(){
     jee.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     jee.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
     jee.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
+#endif
 #ifdef MP3PLAYER
     jee.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
     jee.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
     jee.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
-#endif
 #endif
 }
 
