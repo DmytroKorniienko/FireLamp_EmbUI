@@ -159,17 +159,26 @@ void EffectCalc::setDynCtrl(UIControl*_val){
 void EffectCalc::palettesload(){
   palettes.reserve(FASTLED_PALETTS_COUNT);
   palettes.push_back(&RainbowStripeColors_p);
-  //palettes.push_back(&CloudColors_p);
-  //palettes.push_back(&WaterfallColors_p);
   palettes.push_back(&ForestColors_p);
   palettes.push_back(&NormalFire_p);
   palettes.push_back(&LavaColors_p);
   palettes.push_back(&OceanColors_p);
   palettes.push_back(&PartyColors_p);
-  palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&RainbowColors_p);
-  //palettes.push_back(&RainbowStripeColors_p);
-  //palettes.push_back(&WhiteBlackColors_p);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&CloudColors_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&SodiumFireColors_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&WaterfallColors_p);
+  palettes.push_back(&AutumnColors_p);
+  palettes.push_back(&EveningColors_p);
+  palettes.push_back(&StepkosColors_p);
+  palettes.push_back(&VioletColors_p); 
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
@@ -1224,15 +1233,16 @@ void EffectBBalls::setscl(const byte _scl){
 
 void EffectBBalls::regen(){
   FastLED.clear();
+  randomSeed(millis());
   if (scale <= 16) {
     bballsNUM_BALLS =  map(scale, 1, 16, 1, bballsMaxNUM_BALLS);
   } else {
     bballsNUM_BALLS =  map(scale, 32, 17, 1, bballsMaxNUM_BALLS);
   }
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
-    bballsCOLOR[i] = random16(random8(), random8());
+    bballsCOLOR[i] = random(0, 255);
     bballsBri[i] = 156;
-    bballsX[i] = random8(0, WIDTH-1);
+    bballsX[i] = random(0, WIDTH-1);
     bballsBri[i] = halo ? 200 : (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
     bballsTLast[i] = millis();
     bballsPos[i] = 0.0f;                                 // Balls start on the ground
@@ -1261,7 +1271,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
     bballsTCycle =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
 
     // A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
-    bballsHi = 0.5f * bballsGRAVITY * pow( bballsTCycle / (float)(1550 - speed * 3) , 2.0 ) + bballsVImpact[i] * bballsTCycle / (float)(1525 - speed * 3);
+    bballsHi = 0.55 * bballsGRAVITY * pow( bballsTCycle / (float)(1550 - speed * 3) , 2.0 ) + bballsVImpact[i] * bballsTCycle / (float)(1550 - speed * 3);
 
     if ( bballsHi < 0 ) {
       bballsTLast[i] = millis();
@@ -1278,7 +1288,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
       }
     }
     bballsPos[i] = bballsHi * (float)(HEIGHT - 1) / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 0.8) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 1.5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
       bballsShift[i] = 0.0f;
       if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
         if (bballsX[i] <= 0) bballsX[i] = (WIDTH - 1U);
@@ -1382,15 +1392,15 @@ bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, EffectWorker *param)
       // and add them together with weightening
       uint8_t  dx =  fabs(x - x1);
       uint8_t  dy =  fabs(y - y1);
-      uint8_t dist = 2 * sqrt((dx * dx) + (dy * dy));
+      uint8_t dist = 2 * EffectMath::sqrt((dx * dx) + (dy * dy));
 
       dx =  fabs(x - x2);
       dy =  fabs(y - y2);
-      dist += sqrt((dx * dx) + (dy * dy));
+      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
 
       dx =  fabs(x - x3);
       dy =  fabs(y - y3);
-      dist += sqrt((dx * dx) + (dy * dy));
+      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
 
       // inverse result
       byte color = scale*4 / (dist==0?1:dist);
@@ -2865,7 +2875,7 @@ void EffectCube2d::cubesize(){
     for (uint8_t i = 0U; i < cntX; i++)
     {
       x = i * (sizeX + 1U);
-      if (scale == 9U)
+      if (scale == FASTLED_PALETTS_COUNT + 1U)
         color = CHSV(46U, 0U, 32U + random8(256U-32U));
       else
 
@@ -4463,16 +4473,15 @@ void EffectMunch::load() {
 }
 
  bool EffectMunch::run(CRGB *ledarr, EffectWorker *opt) {
-   if (dryrun(3.0))
+   if (dryrun(2.0))
     return false;
   return munchRoutine(*&ledarr, &*opt);
 }
 
 bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
-  byte rand = 4;
-  if (scale%32 > 0)  rand = scale%32;
-  if (getCtrlVal(3) == FPSTR(TCONST_FFFF)) rand = random8(1, 9); // Хрень, конечно, но хоть какое-то разнообразие.
+  byte rand = getCtrlVal(3).toInt();
+  if (getCtrlVal(3).toInt() == 0) rand = beatsin8(5, 0, 8); // Хрень, конечно, но хоть какое-то разнообразие.
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
       leds[myLamp.getPixelNumber(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
@@ -6118,6 +6127,8 @@ void EffectTest::load() {
 // (C) Aaron Gotwalt (Soulmate)
 // адаптация и доработки kostyamat
 bool EffectPopcorn::run(CRGB *ledarr, EffectWorker *opt) {
+  //random16_add_entropy(micros());
+  randomSeed(micros());
   return popcornRoutine(*&ledarr, &*opt);
 }
 
@@ -6128,7 +6139,7 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
   else FastLED.clear();// fadeToBlackBy(leds, NUM_LEDS, 250);
   move();
   paint(*&leds);
-  //if (blurred) EffectMath::nightMode(leds);
+
   return true;
 }
 
@@ -6163,7 +6174,7 @@ void EffectPopcorn::load() {
 
 void EffectPopcorn::restart_rocket(uint8_t r) {
   tiltDirec = !tiltDirec; // "Мальчик" <> "Девочка"
-  rockets[r].xd = (random8() + WIDTH*2) * (tiltDirec ? 1 : -1); // Наклон. "Мальчики" налево, "девочки" направо. :)
+  rockets[r].xd = (random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH*HEIGHT + (WIDTH*2))); // * (tiltDirec ? 1 : -1); // Наклон. "Мальчики" налево, "девочки" направо. :)
   if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > (int)(WIDTH) * 256 && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
     // leap towards the centre of the screen
     rockets[r].xd = -rockets[r].xd;
