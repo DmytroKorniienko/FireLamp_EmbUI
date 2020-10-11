@@ -19,9 +19,9 @@ json_frame_interface - формирование интерфейса
 json_frame_value - формирование данных
 
 Пример.
-extern jeeui2 jee;
+extern EmbUI embui;
 AsyncWebSocket ws("/ws");
-Interface *interf = new Interface(&jee, client);
+Interface *interf = new Interface(&embui, client);
 interf->json_frame_interface("Огненная лампа");
 ...
 interf->json_frame_flush();
@@ -114,21 +114,21 @@ interf->json_frame_flush();
 Так же обработчик можно установить на группу параметров "paramname*"
 
 Обработка directly параметров одной ф-ей
-jee.section_handle_add(F("bright"), set_effects_param);
-jee.section_handle_add(F("speed"), set_effects_param);
-jee.section_handle_add(F("scale"), set_effects_param);
+embui.section_handle_add(F("bright"), set_effects_param);
+embui.section_handle_add(F("speed"), set_effects_param);
+embui.section_handle_add(F("scale"), set_effects_param);
 
 Обрабока отправки данных из секции
-jee.section_handle_add(F("set_wifi"), set_settings_wifi);
+embui.section_handle_add(F("set_wifi"), set_settings_wifi);
 
 Обработка кнопки - загрузка секции
-jee.section_handle_add(F("show_wifi"), show_settings_wifi);
+embui.section_handle_add(F("show_wifi"), show_settings_wifi);
 
 Обработка флага переключателя
-jee.section_handle_add(F("Mic"), set_micflag);
+embui.section_handle_add(F("Mic"), set_micflag);
 
 Обработка группы
-jee.section_handle_add(F("evconf*"), show_event_conf);
+embui.section_handle_add(F("evconf*"), show_event_conf);
 
 Внимание!!! обработчик может быть вызван без передачи указателя на интерфейс или данные.
 

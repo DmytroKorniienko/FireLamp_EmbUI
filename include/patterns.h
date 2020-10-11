@@ -1,7 +1,8 @@
 #define MAX_PATTERN 17
-#ifdef ESP8266
-#define FASTLED_USE_PROGMEM             (1)
-#endif
+// переместил в platformio.ini
+// #ifdef ESP8266
+// #define FASTLED_USE_PROGMEM             (1)
+// #endif
 
 typedef uint8_t Pattern[10][10];
 

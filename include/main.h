@@ -37,13 +37,12 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #pragma once
 #include <Arduino.h>
-#include "JeeUI2.h"
+#include "EmbUI.h"
 #include "config.h"
 #include "lamp.h"
 #include "buttons.h"
 
 // глобальные переменные для работы с ними в программе
-extern jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 extern LAMP myLamp; // Объект лампы
 #ifdef ESP_USE_BUTTON
 extern Buttons *myButtons;

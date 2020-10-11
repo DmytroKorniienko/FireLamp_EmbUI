@@ -46,7 +46,7 @@ Ticker sysTicker;              // системный планировщик
 
 void resetAutoTimers() // сброс таймера демо и настройка автосохранений
 {
-    jee.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
+    embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     myLamp.demoTimer(T_RESET);
     myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
 }
@@ -57,12 +57,12 @@ void AUX_toggle(bool key)
     if (key)
     {
         digitalWrite(AUX_PIN, AUX_LEVEL);
-        jee.var(FPSTR(TCONST_000E), (FPSTR(TCONST_FFFF)));
+        embui.var(FPSTR(TCONST_000E), (FPSTR(TCONST_FFFF)));
     }
     else
     {
         digitalWrite(AUX_PIN, !AUX_LEVEL);
-        jee.var(FPSTR(TCONST_000E), (FPSTR(TCONST_FFFE)));
+        embui.var(FPSTR(TCONST_000E), (FPSTR(TCONST_FFFE)));
     }
 }
 #endif
@@ -92,7 +92,7 @@ void pubCallback(Interface *interf){
 void block_menu(Interface *interf, JsonObject *data){
     if (!interf) return;
     // создаем меню
-    jee.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
+    embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     interf->json_section_menu();
 
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));
@@ -235,7 +235,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
 }
 
 void delayedcall_show_effects_config(){
-    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 3000) : nullptr;
+    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 3000) : nullptr;
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
@@ -378,7 +378,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), eff->eff_nb);
         }
 
-        jee.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
+        embui.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
     }
 
     show_effects_param(interf, data);
@@ -394,7 +394,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
         if(myLamp.isLampOn())
             myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
         if (myLamp.IsGlobalBrightness()) {
-            jee.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
+            embui.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
         }
         if(myLamp.effects.worker)
             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
@@ -474,7 +474,7 @@ void show_main_flags(Interface *interf, JsonObject *data){
 }
 
 void delayedcall_effects_main(){
-    Interface *interf = jee.ws.count()? new Interface(&jee, &jee.ws, 3000) : nullptr;
+    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 3000) : nullptr;
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
@@ -616,13 +616,13 @@ void set_demoflag(Interface *interf, JsonObject *data){
     bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
     switch (myLamp.getMode()) {
         case MODE_NORMAL:
-            if (newdemo) myLamp.startDemoMode(jee.param(FPSTR(TCONST_0026)).toInt()); break;
+            if (newdemo) myLamp.startDemoMode(embui.param(FPSTR(TCONST_0026)).toInt()); break;
         case MODE_DEMO:
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
     }
 #ifdef RESTORE_STATE
-    jee.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
+    embui.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
 #endif
 }
 
@@ -663,7 +663,7 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_0028), FPSTR(TINTF_018));
 
     interf->json_section_begin(FPSTR(TCONST_0029));
-    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=jee.param(FPSTR(TCONST_002A)); cfg+=")";
+    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=embui.param(FPSTR(TCONST_002A)); cfg+=")";
 
     interf->select(FPSTR(TCONST_002A), cfg);
     if(LittleFS.begin()){
@@ -741,7 +741,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
     if (act == FPSTR(TCONST_002D)) {
         myLamp.changePower(false);
         String filename = String(FPSTR(TCONST_0031)) + name;
-        jee.load(filename.c_str());
+        embui.load(filename.c_str());
 
         // filename = String(FPSTR(TCONST_002C)) + name;
         // myLamp.effects.loadConfig(filename.c_str());
@@ -755,12 +755,12 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
             default_buttons();
         }
 #endif
-        jee.var(FPSTR(TCONST_002A), name);
+        embui.var(FPSTR(TCONST_002A), name);
         sync_parameters();
         myLamp.changePower(true);
     } else {
         String filename = String(FPSTR(TCONST_0031)) + name;
-        jee.save(filename.c_str(), true);
+        embui.save(filename.c_str(), true);
 
         // filename = String(FPSTR(TCONST_002C)) + name;
         // myLamp.effects.saveConfig(filename.c_str());
@@ -791,8 +791,8 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
 void set_lamp_textsend(Interface *interf, JsonObject *data){
     if (!data) return;
     String tmpStr = (*data)[FPSTR(TCONST_0036)];
-    jee.var(FPSTR(TCONST_0036), tmpStr);
-    jee.var(FPSTR(TCONST_0035), (*data)[FPSTR(TCONST_0035)]);
+    embui.var(FPSTR(TCONST_0036), tmpStr);
+    embui.var(FPSTR(TCONST_0035), (*data)[FPSTR(TCONST_0035)]);
 
     tmpStr.replace(F("#"), F("0x"));
     myLamp.sendString((*data)[FPSTR(TCONST_0035)], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
@@ -880,7 +880,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
     SETPARAM(FPSTR(TCONST_00A2)); // тоже пишет в плеер, разносим во времени
     sysTicker.once(0.3,std::bind([](){
-        mp3->setVolume(jee.param(FPSTR(TCONST_00A2)).toInt());
+        mp3->setVolume(embui.param(FPSTR(TCONST_00A2)).toInt());
     }));
 
     save_lamp_flags();
@@ -1008,8 +1008,8 @@ void set_settings_wifiAP(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0043));
     SETPARAM(FPSTR(TCONST_0044));
 
-    jee.save();
-    jee.wifi_connect();
+    embui.save();
+    embui.wifi_connect();
 
     section_settings_frame(interf, data);
 }
@@ -1026,7 +1026,7 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
     const char *pwd = (*data)[FPSTR(TCONST_0041)];
 
     if(ssid){
-        jee.wifi_connect(ssid, pwd);
+        embui.wifi_connect(ssid, pwd);
     } else {
         LOG(println, F("WiFi: No SSID defined!"));
     }
@@ -1036,14 +1036,14 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(FPSTR(TCONST_0046), strncpy(jee.m_host, jee.param(FPSTR(TCONST_0046)).c_str(), sizeof(jee.m_host)-1));
-    SETPARAM(FPSTR(TCONST_0048), strncpy(jee.m_user, jee.param(FPSTR(TCONST_0048)).c_str(), sizeof(jee.m_user)-1));
-    SETPARAM(FPSTR(TCONST_0049), strncpy(jee.m_pass, jee.param(FPSTR(TCONST_0049)).c_str(), sizeof(jee.m_pass)-1));
-    SETPARAM(FPSTR(TCONST_007B), strncpy(jee.m_pref, jee.param(FPSTR(TCONST_007B)).c_str(), sizeof(jee.m_pref)-1));
-    SETPARAM(FPSTR(TCONST_0047), jee.m_port = jee.param(FPSTR(TCONST_0047)).toInt());
+    SETPARAM(FPSTR(TCONST_0046), strncpy(embui.m_host, embui.param(FPSTR(TCONST_0046)).c_str(), sizeof(embui.m_host)-1));
+    SETPARAM(FPSTR(TCONST_0048), strncpy(embui.m_user, embui.param(FPSTR(TCONST_0048)).c_str(), sizeof(embui.m_user)-1));
+    SETPARAM(FPSTR(TCONST_0049), strncpy(embui.m_pass, embui.param(FPSTR(TCONST_0049)).c_str(), sizeof(embui.m_pass)-1));
+    SETPARAM(FPSTR(TCONST_007B), strncpy(embui.m_pref, embui.param(FPSTR(TCONST_007B)).c_str(), sizeof(embui.m_pref)-1));
+    SETPARAM(FPSTR(TCONST_0047), embui.m_port = embui.param(FPSTR(TCONST_0047)).toInt());
     SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
 
-    jee.save();
+    embui.save();
 
     section_settings_frame(interf, data);
 }
@@ -1121,7 +1121,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
     myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == FPSTR(TCONST_FFFF));
     myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == FPSTR(TCONST_FFFF));
 
-    SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, jee.param(FPSTR(TCONST_0026)).toInt()); }}));
+    SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
     SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
@@ -1579,7 +1579,7 @@ void section_main_frame(Interface *interf, JsonObject *data){
 
     interf->json_frame_flush();
 
-    if(!jee.wifi_sta){
+    if(!embui.wifi_sta){
         // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
         show_settings_wifi(interf, data);
     }
@@ -1635,7 +1635,7 @@ void set_sys_settings(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0098));
     myLamp.sendString(String(FPSTR(TINTF_096)).c_str(), CRGB::Red);
     sysTicker.once(10,std::bind([]{
-        jee.save();
+        embui.save();
         ESP.restart();
     }));
     section_effects_frame(interf,data);
@@ -1657,134 +1657,134 @@ void save_lamp_flags(){
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
-    jee.var_create(FPSTR(TCONST_0094), "0"); // Дефолтный набор флагов // myLamp.getLampFlags()
+    embui.var_create(FPSTR(TCONST_0094), "0"); // Дефолтный набор флагов // myLamp.getLampFlags()
 
     //WiFi
-    jee.var_create(FPSTR(TCONST_003F), F(""));
-    jee.var_create(FPSTR(TCONST_0043),  FPSTR(TCONST_FFFE));     // режим AP-only (только точка доступа), не трогать
-    jee.var_create(FPSTR(TCONST_0044), F(""));      // пароль внутренней точки доступа
+    embui.var_create(FPSTR(TCONST_003F), F(""));
+    embui.var_create(FPSTR(TCONST_0043),  FPSTR(TCONST_FFFE));     // режим AP-only (только точка доступа), не трогать
+    embui.var_create(FPSTR(TCONST_0044), F(""));      // пароль внутренней точки доступа
 
     // параметры подключения к MQTT
-    jee.var_create(FPSTR(TCONST_0046), F("")); // Дефолтные настройки для MQTT
-    jee.var_create(FPSTR(TCONST_0047), F("1883"));
-    jee.var_create(FPSTR(TCONST_0048), F(""));
-    jee.var_create(FPSTR(TCONST_0049), F(""));
-    jee.var_create(FPSTR(TCONST_007B), jee.mc);  // m_pref == MAC по дефолту
-    jee.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
-    jee.var_create(FPSTR(TCONST_0016), F("1"));
-    jee.var_create(FPSTR(TCONST_002A),F("cfg1"));
+    embui.var_create(FPSTR(TCONST_0046), F("")); // Дефолтные настройки для MQTT
+    embui.var_create(FPSTR(TCONST_0047), F("1883"));
+    embui.var_create(FPSTR(TCONST_0048), F(""));
+    embui.var_create(FPSTR(TCONST_0049), F(""));
+    embui.var_create(FPSTR(TCONST_007B), embui.mc);  // m_pref == MAC по дефолту
+    embui.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
+    embui.var_create(FPSTR(TCONST_0016), F("1"));
+    embui.var_create(FPSTR(TCONST_002A),F("cfg1"));
 #ifdef ESP_USE_BUTTON
-    jee.var_create(FPSTR(TCONST_001F), FPSTR(TCONST_FFFF)); // не трогать пока...
+    embui.var_create(FPSTR(TCONST_001F), FPSTR(TCONST_FFFF)); // не трогать пока...
 #endif
 #ifdef AUX_PIN
-    jee.var_create(FPSTR(TCONST_000E), FPSTR(TCONST_FFFE));
+    embui.var_create(FPSTR(TCONST_000E), FPSTR(TCONST_FFFE));
 #endif
-    jee.var_create(FPSTR(TCONST_0035), F(""));
-    jee.var_create(FPSTR(TCONST_0036), FPSTR(TCONST_007C));
-    jee.var_create(FPSTR(TCONST_0051), F("100"));
-    jee.var_create(FPSTR(TCONST_0052), F("0"));
-    jee.var_create(FPSTR(TCONST_0053), F("0"));
-    jee.var_create(FPSTR(TCONST_0050), F("1"));
-    jee.var_create(FPSTR(TCONST_0018), F("127"));
+    embui.var_create(FPSTR(TCONST_0035), F(""));
+    embui.var_create(FPSTR(TCONST_0036), FPSTR(TCONST_007C));
+    embui.var_create(FPSTR(TCONST_0051), F("100"));
+    embui.var_create(FPSTR(TCONST_0052), F("0"));
+    embui.var_create(FPSTR(TCONST_0053), F("0"));
+    embui.var_create(FPSTR(TCONST_0050), F("1"));
+    embui.var_create(FPSTR(TCONST_0018), F("127"));
 
     // date/time related vars
-    jee.var_create(FPSTR(TCONST_0057), "");
-    jee.var_create(FPSTR(TCONST_0058), "");
-    jee.var_create(FPSTR(TCONST_0054), F("0"));
-    jee.var_create(FPSTR(TCONST_0055), FPSTR(TCONST_007D));
+    embui.var_create(FPSTR(TCONST_0057), "");
+    embui.var_create(FPSTR(TCONST_0058), "");
+    embui.var_create(FPSTR(TCONST_0054), F("0"));
+    embui.var_create(FPSTR(TCONST_0055), FPSTR(TCONST_007D));
 
 #ifdef MIC_EFFECTS
-    jee.var_create(FPSTR(TCONST_0039),F("1.28"));
-    jee.var_create(FPSTR(TCONST_003A),F("0.00"));
-    jee.var_create(FPSTR(TCONST_003B),F("0"));
+    embui.var_create(FPSTR(TCONST_0039),F("1.28"));
+    embui.var_create(FPSTR(TCONST_003A),F("0.00"));
+    embui.var_create(FPSTR(TCONST_003B),F("0"));
 #endif
 
 #ifdef RESTORE_STATE
-    jee.var_create(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE));
+    embui.var_create(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE));
 #endif
 
-    jee.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
+    embui.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
 
     // пины и системные настройки
 #ifdef ESP_USE_BUTTON
-    jee.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
+    embui.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
 #endif
 #ifdef MP3PLAYER
-    jee.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
-    jee.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
-    jee.var_create(FPSTR(TCONST_00A2),F("15")); // громкость
-    jee.var_create(FPSTR(TCONST_00A9),F("255")); // кол-во файлов в папке mp3
+    embui.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
+    embui.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
+    embui.var_create(FPSTR(TCONST_00A2),F("15")); // громкость
+    embui.var_create(FPSTR(TCONST_00A9),F("255")); // кол-во файлов в папке mp3
 #endif
-    jee.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
+    embui.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
     // далее идут обработчики параметров
-    jee.section_handle_add(FPSTR(TCONST_0099), set_sys_settings);
+    embui.section_handle_add(FPSTR(TCONST_0099), set_sys_settings);
 
-    jee.section_handle_add(FPSTR(TCONST_0094), set_lamp_flags);
+    embui.section_handle_add(FPSTR(TCONST_0094), set_lamp_flags);
 
-    jee.section_handle_add(FPSTR(TCONST_007E), section_main_frame);
-    jee.section_handle_add(FPSTR(TCONST_0020), show_main_flags);
+    embui.section_handle_add(FPSTR(TCONST_007E), section_main_frame);
+    embui.section_handle_add(FPSTR(TCONST_0020), show_main_flags);
 
-    jee.section_handle_add(FPSTR(TCONST_0000), section_effects_frame);
-    jee.section_handle_add(FPSTR(TCONST_0011), show_effects_param);
-    jee.section_handle_add(FPSTR(TCONST_0016), set_effects_list);
-    jee.section_handle_add(FPSTR(TCONST_0012), set_effects_bright);
-    jee.section_handle_add(FPSTR(TCONST_0013), set_effects_speed);
-    jee.section_handle_add(FPSTR(TCONST_0014), set_effects_scale);
-    jee.section_handle_add(FPSTR(TCONST_007F), set_effects_dynCtrl);
+    embui.section_handle_add(FPSTR(TCONST_0000), section_effects_frame);
+    embui.section_handle_add(FPSTR(TCONST_0011), show_effects_param);
+    embui.section_handle_add(FPSTR(TCONST_0016), set_effects_list);
+    embui.section_handle_add(FPSTR(TCONST_0012), set_effects_bright);
+    embui.section_handle_add(FPSTR(TCONST_0013), set_effects_speed);
+    embui.section_handle_add(FPSTR(TCONST_0014), set_effects_scale);
+    embui.section_handle_add(FPSTR(TCONST_007F), set_effects_dynCtrl);
 
-    jee.section_handle_add(FPSTR(TCONST_0022), set_eff_prev);
-    jee.section_handle_add(FPSTR(TCONST_0023), set_eff_next);
+    embui.section_handle_add(FPSTR(TCONST_0022), set_eff_prev);
+    embui.section_handle_add(FPSTR(TCONST_0023), set_eff_next);
 
-    jee.section_handle_add(FPSTR(TCONST_000F), show_effects_config);
-    jee.section_handle_add(FPSTR(TCONST_0010), set_effects_config_list);
-    jee.section_handle_add(FPSTR(TCONST_0005), set_effects_config_param);
+    embui.section_handle_add(FPSTR(TCONST_000F), show_effects_config);
+    embui.section_handle_add(FPSTR(TCONST_0010), set_effects_config_list);
+    embui.section_handle_add(FPSTR(TCONST_0005), set_effects_config_param);
 
-    jee.section_handle_add(FPSTR(TCONST_001A), set_onflag);
-    jee.section_handle_add(FPSTR(TCONST_001B), set_demoflag);
-    jee.section_handle_add(FPSTR(TCONST_001C), set_gbrflag);
+    embui.section_handle_add(FPSTR(TCONST_001A), set_onflag);
+    embui.section_handle_add(FPSTR(TCONST_001B), set_demoflag);
+    embui.section_handle_add(FPSTR(TCONST_001C), set_gbrflag);
 #ifdef OTA
-    jee.section_handle_add(FPSTR(TCONST_0027), set_otaflag);
+    embui.section_handle_add(FPSTR(TCONST_0027), set_otaflag);
 #endif
 #ifdef AUX_PIN
-    jee.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
+    embui.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
 #endif
-    jee.section_handle_add(FPSTR(TCONST_009A), section_sys_settings_frame);
-    jee.section_handle_add(FPSTR(TCONST_0003), section_lamp_frame);
-    jee.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
-    jee.section_handle_add(FPSTR(TCONST_0030), edit_lamp_config);
-    jee.section_handle_add(FPSTR(TCONST_0029), edit_lamp_config);
+    embui.section_handle_add(FPSTR(TCONST_009A), section_sys_settings_frame);
+    embui.section_handle_add(FPSTR(TCONST_0003), section_lamp_frame);
+    embui.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
+    embui.section_handle_add(FPSTR(TCONST_0030), edit_lamp_config);
+    embui.section_handle_add(FPSTR(TCONST_0029), edit_lamp_config);
 
-    jee.section_handle_add(FPSTR(TCONST_0004), section_settings_frame);
-    jee.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
-    jee.section_handle_add(FPSTR(TCONST_003E), set_settings_wifi);
-    jee.section_handle_add(FPSTR(TCONST_0042), set_settings_wifiAP);
-    jee.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
-    jee.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
-    jee.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
-    jee.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
-    jee.section_handle_add(FPSTR(TCONST_0056), set_settings_time);
+    embui.section_handle_add(FPSTR(TCONST_0004), section_settings_frame);
+    embui.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
+    embui.section_handle_add(FPSTR(TCONST_003E), set_settings_wifi);
+    embui.section_handle_add(FPSTR(TCONST_0042), set_settings_wifiAP);
+    embui.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
+    embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
+    embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
+    embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
+    embui.section_handle_add(FPSTR(TCONST_0056), set_settings_time);
 #ifdef MIC_EFFECTS
-    jee.section_handle_add(FPSTR(TCONST_0079), show_settings_mic);
-    jee.section_handle_add(FPSTR(TCONST_0038), set_settings_mic);
-    jee.section_handle_add(FPSTR(TCONST_001E), set_micflag);
-    jee.section_handle_add(FPSTR(TCONST_003C), set_settings_mic_calib);
+    embui.section_handle_add(FPSTR(TCONST_0079), show_settings_mic);
+    embui.section_handle_add(FPSTR(TCONST_0038), set_settings_mic);
+    embui.section_handle_add(FPSTR(TCONST_001E), set_micflag);
+    embui.section_handle_add(FPSTR(TCONST_003C), set_settings_mic_calib);
 #endif
-    jee.section_handle_add(FPSTR(TCONST_005C), show_settings_event);
-    jee.section_handle_add(FPSTR(TCONST_005D), show_event_conf);
-    jee.section_handle_add(FPSTR(TCONST_006C), set_event_conf);
-    jee.section_handle_add(FPSTR(TCONST_001D), set_eventflag);
+    embui.section_handle_add(FPSTR(TCONST_005C), show_settings_event);
+    embui.section_handle_add(FPSTR(TCONST_005D), show_event_conf);
+    embui.section_handle_add(FPSTR(TCONST_006C), set_event_conf);
+    embui.section_handle_add(FPSTR(TCONST_001D), set_eventflag);
 #ifdef ESP_USE_BUTTON
-    jee.section_handle_add(FPSTR(TCONST_0076), show_settings_butt);
-    jee.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
-    jee.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
-    jee.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
-    jee.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
+    embui.section_handle_add(FPSTR(TCONST_0076), show_settings_butt);
+    embui.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
+    embui.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
+    embui.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
+    embui.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
 #endif
 #ifdef MP3PLAYER
-    jee.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
-    jee.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
-    jee.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
+    embui.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
+    embui.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
+    embui.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
 #endif
 }
 
@@ -1793,7 +1793,7 @@ void sync_parameters(){
     JsonObject obj = doc.to<JsonObject>();
 
     LAMPFLAGS tmp;
-    tmp.lampflags = jee.param(FPSTR(TCONST_0094)).toInt();
+    tmp.lampflags = embui.param(FPSTR(TCONST_0094)).toInt();
 
 #ifdef LAMP_DEBUG
     obj[FPSTR(TCONST_0095)] = tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -1806,14 +1806,14 @@ void sync_parameters(){
     set_mp3flag(nullptr, &obj);
     obj.clear();
 
-    obj[FPSTR(TCONST_00A2)] = jee.param(FPSTR(TCONST_00A2));  // пишет в плеер!
+    obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
     obj[FPSTR(TCONST_00A3)] = tmp.playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
     obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
     obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    obj[FPSTR(TCONST_00A9)] = jee.param(FPSTR(TCONST_00A9));
+    obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
 
     set_settings_mp3(nullptr, &obj);
     obj.clear();
@@ -1828,22 +1828,22 @@ void sync_parameters(){
     obj.clear();
 
     if (myLamp.IsGlobalBrightness()) {
-        CALL_SETTER(FPSTR(TCONST_0012), jee.param(FPSTR(TCONST_0018)), set_effects_bright);
+        CALL_SETTER(FPSTR(TCONST_0012), embui.param(FPSTR(TCONST_0018)), set_effects_bright);
     } else {
-        myLamp.setGlobalBrightness(jee.param(FPSTR(TCONST_0018)).toInt()); // починить бросок яркости в 255 при первом включении
+        myLamp.setGlobalBrightness(embui.param(FPSTR(TCONST_0018)).toInt()); // починить бросок яркости в 255 при первом включении
     }
 
 #ifdef RESTORE_STATE
     obj[FPSTR(TCONST_001A)] = tmp.ONflag ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_onflag(nullptr, &obj);
     obj.clear();
-    CALL_SETTER(FPSTR(TCONST_001B), jee.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
+    CALL_SETTER(FPSTR(TCONST_001B), embui.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
 #endif
 
-    CALL_SETTER(FPSTR(TCONST_0016), jee.param(FPSTR(TCONST_0016)), set_effects_list);
+    CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
 
 #ifdef AUX_PIN
-    CALL_SETTER(FPSTR(TCONST_000E), jee.param(FPSTR(TCONST_000E)), set_auxflag);
+    CALL_SETTER(FPSTR(TCONST_000E), embui.param(FPSTR(TCONST_000E)), set_auxflag);
 #endif
 
     myLamp.setClearingFlag(tmp.isEffClearing);
@@ -1856,16 +1856,16 @@ void sync_parameters(){
     set_micflag(nullptr, &obj);
     obj.clear();
 
-    obj[FPSTR(TCONST_0039)] = jee.param(FPSTR(TCONST_0039));
-    obj[FPSTR(TCONST_003A)] = jee.param(FPSTR(TCONST_003A));
-    obj[FPSTR(TCONST_003B)] = jee.param(FPSTR(TCONST_003B));
+    obj[FPSTR(TCONST_0039)] = embui.param(FPSTR(TCONST_0039));
+    obj[FPSTR(TCONST_003A)] = embui.param(FPSTR(TCONST_003A));
+    obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B));
     set_settings_mic(nullptr, &obj);
     obj.clear();
 #endif
 
 #ifdef ESP_USE_BUTTON
     // в отдельном классе, в список флагов лампы не входит!
-    CALL_SETTER(FPSTR(TCONST_001F), jee.param(FPSTR(TCONST_001F)), set_btnflag);
+    CALL_SETTER(FPSTR(TCONST_001F), embui.param(FPSTR(TCONST_001F)), set_btnflag);
 #endif
 
     obj[FPSTR(TCONST_004E)] = tmp.isFaderON ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -1877,12 +1877,12 @@ void sync_parameters(){
     obj[FPSTR(TCONST_009E)] = tmp.showName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     
-    obj[FPSTR(TCONST_0050)] = jee.param(FPSTR(TCONST_0050));
-    obj[FPSTR(TCONST_0051)] = jee.param(FPSTR(TCONST_0051));
-    obj[FPSTR(TCONST_0052)] = jee.param(FPSTR(TCONST_0052));
-    obj[FPSTR(TCONST_0053)] = jee.param(FPSTR(TCONST_0053));
-    obj[FPSTR(TCONST_0054)] = jee.param(FPSTR(TCONST_0054));
-    obj[FPSTR(TCONST_0055)] = jee.param(FPSTR(TCONST_0055));
+    obj[FPSTR(TCONST_0050)] = embui.param(FPSTR(TCONST_0050));
+    obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
+    obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
+    obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
+    obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
+    obj[FPSTR(TCONST_0055)] = embui.param(FPSTR(TCONST_0055));
 
     set_settings_other(nullptr, &obj);
     obj.clear();
@@ -1927,7 +1927,7 @@ void remote_action(RA action, ...){
             }
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFFECT: {
-            jee.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
+            embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list);
             break;
         }
@@ -1981,7 +1981,7 @@ void remote_action(RA action, ...){
             if (value && *value) {
                 String filename = String(FPSTR(TCONST_0031));
                 filename.concat(value);
-                jee.load(filename.c_str());
+                embui.load(filename.c_str());
             }
             break;
         case RA::RA_EFF_CONFIG:
@@ -1999,9 +1999,9 @@ void remote_action(RA action, ...){
             }
             break;
         case RA::RA_SEND_TEXT: {
-            String tmpStr = jee.param(FPSTR(TCONST_0036));
+            String tmpStr = embui.param(FPSTR(TCONST_0036));
             if (value && *value) {
-                String tmpStr = jee.param(FPSTR(TCONST_0036));
+                String tmpStr = embui.param(FPSTR(TCONST_0036));
                 tmpStr.replace(F("#"),F("0x"));
                 CRGB::HTMLColorCode color = (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0);
 
@@ -2063,7 +2063,7 @@ void httpCallback(const String &param, const String &value){
     else if (param == FPSTR(TCONST_008A))  action = RA_AUX_TOGLE;
 #endif
     remote_action(action, value.c_str(), NULL);
-    jee.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
+    embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
 }
 
 // обработка эвентов лампы

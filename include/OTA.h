@@ -49,7 +49,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "config.h"
-#include "JeeUI2.h"
+#include "EmbUI.h"
 #ifdef OTA
 #include <ArduinoOTA.h>
 //#include <ESP8266WiFi.h>

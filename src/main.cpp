@@ -37,7 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 //#define __IDPREFIX F("JeeUI2-")
 #include <Arduino.h>
-#include "JeeUI2.h"
+#include "EmbUI.h"
 #include "config.h"
 #include "lamp.h"
 #include "buttons.h"
@@ -47,7 +47,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 // глобальные переменные для работы с ними в программе
-jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
 Ticker _isrHelper;       // планировщик для обработки прерываний
 #ifdef ESP_USE_BUTTON
@@ -63,29 +62,29 @@ ICACHE_FLASH_ATTR void setup() {
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
-    jee.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
+    embui.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
 
 #if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
-    jee.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
+    embui.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
 #elif defined(__DISABLE_BUTTON0)
-    jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
+    embui.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
 
-    jee.init();
+    embui.init();
    
     create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-    myLamp.effects.setEffSortType((SORT_TYPE)jee.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
+    myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     
     myLamp.events.loadConfig();
-    myLamp.lamp_init(jee.param(F("CLmt")).toInt());
+    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
 
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
 
 #ifdef ESP_USE_BUTTON
-    myLamp.setbPin(jee.param(F("PINB")).toInt());
+    myLamp.setbPin(embui.param(F("PINB")).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
     if (!myButtons->loadConfig()) {
       default_buttons();
@@ -95,13 +94,13 @@ ICACHE_FLASH_ATTR void setup() {
 #endif
 
     // восстанавливаем настройки времени
-    myLamp.timeProcessor.tzsetup((jee.param(F("TZSET")).c_str()));
-    myLamp.timeProcessor.setcustomntp((jee.param(F("userntp")).c_str()));
+    myLamp.timeProcessor.tzsetup((embui.param(F("TZSET")).c_str()));
+    myLamp.timeProcessor.setcustomntp((embui.param(F("userntp")).c_str()));
     myLamp.events.setEventCallback(event_worker);
 
 #ifdef MP3PLAYER
-    int rxpin = jee.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : jee.param(FPSTR(TCONST_009B)).toInt();
-    int txpin = jee.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : jee.param(FPSTR(TCONST_009C)).toInt();
+    int rxpin = embui.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : embui.param(FPSTR(TCONST_009B)).toInt();
+    int txpin = embui.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : embui.param(FPSTR(TCONST_009C)).toInt();
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
 #endif
 
@@ -109,13 +108,13 @@ ICACHE_FLASH_ATTR void setup() {
 
     myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
-    jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 
-    jee.begin(); // Инициализируем JeeUI2 фреймворк.
+    embui.begin(); // Инициализируем JeeUI2 фреймворк.
 }
 
 ICACHE_FLASH_ATTR void loop() {
-    jee.handle(); // цикл, необходимый фреймворку
+    embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
     // эта функция будет слать периодическую информацию, но позже, когда до этого руки дойдут
@@ -156,7 +155,7 @@ ICACHE_FLASH_ATTR void buttonhelper(bool state){
  *  Button pin interrupt handler
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
-    jee.autoSaveReset();
+    embui.autoSaveReset();
     detachInterrupt(myLamp.getbPin());
     _isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
     myButtons->setpinTransition(!myButtons->getpinTransition());
