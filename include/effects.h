@@ -1071,6 +1071,9 @@ private:
     GradientPalette *myPal;
     Particle particles[20];
     unsigned numParticles = 0;
+    byte pn;
+    byte hue;
+    CRGBPalette16 myGenPal;
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
@@ -1161,6 +1164,9 @@ private:
     Particle particles[20];
     unsigned numParticles = 0;
     unsigned physic_on = 1;
+    int8_t pn;
+    byte hue;
+    CRGBPalette16 myGenPal;
     void generate(bool reset = false);
     void position();
     void physic();

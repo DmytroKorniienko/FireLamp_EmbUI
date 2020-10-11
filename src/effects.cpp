@@ -3561,13 +3561,36 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
 
 void EffectPicasso::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3){
-    int pn = map(_val->getVal().toInt(), 1, 21, 0, palettes->size() - 1);
-    myPal = (*palettes)[pn];
+  if(_val->getId()==4){
+    hue = _val->getVal().toInt();
   }
+  if(_val->getId()==3){
+     pn = map(_val->getVal().toInt(), 0, 21, 0, palettes->size() - 1);
+     myPal = (*palettes)[pn];
+  }
+  myGenPal = CRGBPalette16(CHSV(hue+215U, 255U, 255U)
+                          ,CHSV(hue+215U, 255U, 244U)
+                          ,CHSV(hue+215U, 255U, 232U)
+                          ,CHSV(hue+215U, 255U, 221U)
+                          ,CHSV(hue+215U, 255U, 210U)
+                          ,CHSV(hue+215U, 255U, 198U)
+                          ,CHSV(hue+215U, 255U, 187U)
+                          ,CHSV(hue+215U, 255U, 176U)
+                          ,CHSV(hue+215U, 255U, 164U)
+                          ,CHSV(hue+215U, 255U, 153U)
+                          ,CHSV(hue+222U, 255U, 170U)
+                          ,CHSV(hue+229U, 255U, 187U)
+                          ,CHSV(hue+236U, 255U, 204U)
+                          ,CHSV(hue+242U, 255U, 221U)
+                          ,CHSV(hue+249U, 255U, 238U)
+                          ,CHSV(hue     , 255U, 255U)
+                          );
+
 }
 
 bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
+
+
   generate();
   position();
 
@@ -3595,10 +3618,11 @@ bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
 
         if (sum >= 255) { sum = 255; break; }
       }
-
-      CRGB color = myPal->GetColor((uint8_t)sum, 255);
-      EffectMath::drawPixelXY(x, y, color);
-    }
+      CRGB color;
+      if (pn > 0) color = myPal->GetColor((uint8_t)sum, 255);
+      else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
+      EffectMath::drawPixelXYF(x, y, color, 50); // эффект хоть и не субпиксельный. Но имхо, за счет компенсатора пересвета, эта функция рисует магче 
+      }
   }
 
   return true;
@@ -3801,11 +3825,33 @@ void EffectLiquidLamp::physic(){
 void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
-    int pn = map(_val->getVal().toInt(), 1, 17, 0, palettes->size() - 1);
+    pn = map(_val->getVal().toInt(), 0, 17, 0, palettes->size() - 1);
     myPal = (*palettes)[pn];
-  } else if(_val->getId()==4){
+  } 
+  if(_val->getId()==5)
     physic_on = (_val->getVal() == FPSTR(TCONST_FFFF));
-  }
+
+  if(_val->getId()==4)
+    hue = _val->getVal().toInt();
+
+  myGenPal = CRGBPalette16(CHSV(hue+215U, 255U, 255U)
+                          ,CHSV(hue+215U, 255U, 244U)
+                          ,CHSV(hue+215U, 255U, 232U)
+                          ,CHSV(hue+215U, 255U, 221U)
+                          ,CHSV(hue+215U, 255U, 210U)
+                          ,CHSV(hue+215U, 255U, 198U)
+                          ,CHSV(hue+215U, 255U, 187U)
+                          ,CHSV(hue+215U, 255U, 176U)
+                          ,CHSV(hue+215U, 255U, 164U)
+                          ,CHSV(hue+215U, 255U, 153U)
+                          ,CHSV(hue+222U, 255U, 170U)
+                          ,CHSV(hue+229U, 255U, 187U)
+                          ,CHSV(hue+236U, 255U, 204U)
+                          ,CHSV(hue+242U, 255U, 221U)
+                          ,CHSV(hue+249U, 255U, 238U)
+                          ,CHSV(hue     , 255U, 255U)
+                          );
+  
 }
 
 bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
@@ -3830,8 +3876,10 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
         if (sum > 255) { sum = 255; break; }
       }
 
-      CRGB color = myPal->GetColor((uint8_t)sum, 255);
-      EffectMath::drawPixelXY(x, y, color);
+      CRGB color;
+      if (pn > 0) color = myPal->GetColor((uint8_t)sum, 255);
+      else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
+      EffectMath::drawPixelXYF(x, y, color, 50);
     }
   }
   return true;

@@ -77,7 +77,8 @@ void AUX_toggle(bool key)
 #endif
 
 // Вывод номеров эффектов в списке, в WebUI
-#define EFF_NUMBER (numList ? (String(eff->eff_nb) + ". ") : "")
+//#define EFF_NUMBER (numList ? (String(eff->eff_nb) + ". ") : "")
+#define EFF_NUMBER   (numList ? (eff->eff_nb <= 255 ? (String(eff->eff_nb) + ". ") : (String((byte)(eff->eff_nb & 0xFF)) + "." + String((byte)(eff->eff_nb >> 8) - 1U) + ". ")) : "")
 
 void pubCallback(Interface *interf){
     if (!interf) return;
