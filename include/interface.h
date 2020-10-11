@@ -38,44 +38,6 @@ typedef enum _remote_action {
     RA_WIFI_REC
 } RA;
 
-#define TOGLE_STATE(val, curr) (val == F("true"))? true : (val == F("false"))? false : !curr;
-
-#define SETPARAM(key, call...) if (data->containsKey(key)) { \
-    embui.var(key, (*data)[key]); \
-    call; \
-}
-
-#define CALL_SETTER(key, val, call) { \
-    obj[key] = val; \
-    call(nullptr, &obj); \
-    obj.clear(); \
-}
-
-#define CALL_INTF(key, val, call) { \
-    obj[key] = val; \
-    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1000) : nullptr; \
-    call(interf, &obj); \
-    if (interf) { \
-        interf->json_frame_value(); \
-        interf->value(key, val, false); \
-        interf->json_frame_flush(); \
-        delete interf; \
-    } \
-}
-
-#define CALL_INTF_OBJ(call) { \
-    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1000) : nullptr; \
-    call(interf, &obj); \
-    if (interf) { \
-        interf->json_frame_value(); \
-        for (JsonPair kv : obj) { \
-            interf->value(kv.key().c_str(), kv.value(), false); \
-        } \
-        interf->json_frame_flush(); \
-        delete interf; \
-    } \
-}
-
 void section_main_frame(Interface *interf, JsonObject *data);
 void section_effects_frame(Interface *interf, JsonObject *data);
 void section_lamp_frame(Interface *interf, JsonObject *data);
