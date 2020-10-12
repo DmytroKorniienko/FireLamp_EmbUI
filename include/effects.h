@@ -1071,7 +1071,7 @@ private:
     GradientPalette *myPal;
     Particle particles[20];
     unsigned numParticles = 0;
-    byte pn;
+    int8_t pn;
     byte hue;
     CRGBPalette16 myGenPal;
     void generate(bool reset = false);
@@ -1136,7 +1136,7 @@ private:
     void generate(bool reset = false);
     void restart_leaper(Leaper * l);
     void move_leaper(Leaper * l);
-    void wu_pixel(uint32_t x, uint32_t y, CRGB col);
+    //void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     bool leapersRoutine(CRGB *leds, EffectWorker *param);
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1241,8 +1241,8 @@ private:
     //uint8_t deltaHue2 = 0U;
     //uint8_t step = 0;
     byte ledbuff[WIDTH*2 * HEIGHT*2];
-    byte xsin;
-    byte ysin;
+    uint16_t xsin;
+    uint16_t ysin;
     byte satur;
     byte glare = 0;
     byte iconIdx = 0;

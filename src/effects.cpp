@@ -3565,8 +3565,8 @@ void EffectPicasso::setDynCtrl(UIControl*_val) {
     hue = _val->getVal().toInt();
   }
   if(_val->getId()==3){
-     pn = map(_val->getVal().toInt(), 0, 21, 0, palettes->size() - 1);
-     myPal = (*palettes)[pn];
+     pn = _val->getVal().toInt() - 1;
+     myPal = (*palettes)[constrain(pn, 0, 20)];
   }
   myGenPal = CRGBPalette16(CHSV(hue+215U, 255U, 255U)
                           ,CHSV(hue+215U, 255U, 244U)
@@ -3619,7 +3619,7 @@ bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
         if (sum >= 255) { sum = 255; break; }
       }
       CRGB color;
-      if (pn > 0) color = myPal->GetColor((uint8_t)sum, 255);
+      if (pn != -1) color = myPal->GetColor((uint8_t)sum, 255);
       else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
       EffectMath::drawPixelXYF(x, y, color, 50); // эффект хоть и не субпиксельный. Но имхо, за счет компенсатора пересвета, эта функция рисует магче 
       }
@@ -3825,8 +3825,8 @@ void EffectLiquidLamp::physic(){
 void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
-    pn = map(_val->getVal().toInt(), 0, 17, 0, palettes->size() - 1);
-    myPal = (*palettes)[pn];
+    pn = _val->getVal().toInt()- 1;
+    myPal = (*palettes)[constrain(pn, 0, 16)];
   } 
   if(_val->getId()==5)
     physic_on = (_val->getVal() == FPSTR(TCONST_FFFF));
@@ -3877,7 +3877,7 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       }
 
       CRGB color;
-      if (pn > 0) color = myPal->GetColor((uint8_t)sum, 255);
+      if (pn != -1) color = myPal->GetColor((uint8_t)sum, 255);
       else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
       EffectMath::drawPixelXYF(x, y, color, 50);
     }
@@ -3985,11 +3985,11 @@ void EffectAquarium::nPatterns() {
     }
   }
 
-  for (byte x = 0; (uint8_t)x < WIDTH; x += 1)
+  for (byte x = 0; x < WIDTH; x ++)
   {
-    for (byte y = 0; (uint8_t)y < HEIGHT; y += 1)
+    for (byte y = 0; y < HEIGHT; y ++)
     {
-      byte val = ledbuff[myLamp.getPixelNumberBuff(((uint8_t)x + xsin) % (WIDTH * 2), ((uint8_t)y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)];
+      byte val = ledbuff[myLamp.getPixelNumberBuff((xsin + x) % (WIDTH * 2), (ysin + y) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)];
       EffectMath::drawPixelXY(x, HEIGHT-1 - y, CHSV((uint8_t)((uint16_t)hue - val* 31), map((satur + 32 * val), 1, 510, 1, 255), _video));
 
     }
@@ -4012,11 +4012,11 @@ void EffectAquarium::nGlare() {
     }
   }
 
-  for (byte x = 0; (uint8_t)x < WIDTH; x += 1)
+  for (uint32_t x = 0; x < WIDTH; x ++)
   {
-    for (byte y = 0; (uint8_t)y < HEIGHT; y += 1)
+    for (uint16_t y = 0; y < HEIGHT; y ++)
     {
-      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, ledbuff[myLamp.getPixelNumberBuff((x + xsin) % (WIDTH * 2), (y + ysin) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
+      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, ledbuff[myLamp.getPixelNumberBuff((xsin + x) % (WIDTH * 2), (ysin + y) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2, WIDTH * 2 * HEIGHT * 2)], _video));
 
     }
   }
@@ -4028,8 +4028,8 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   satur = getCtrlVal(3).toInt();
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
 
-  xsin = beatsin88(350 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, WIDTH * 2 * 4);
-  ysin = beatsin88(450 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, HEIGHT * 2 * 4);
+  xsin = beatsin88(175 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, WIDTH * WIDTH);
+  ysin = beatsin88(225 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, HEIGHT * HEIGHT);
 
   switch (glare) { // 
   case 0:
@@ -4894,24 +4894,24 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
   memset8(buff, 7, 400);
   FastLED.clear();
 
-  for (byte x = 0; x < 20; x++)
+  for (byte x = 0; x < 20U; x++)
   {
-    for (byte y = 0; y < 20; y++)
+    for (byte y = 0; y < 20U; y++)
     {
-      buff[myLamp.getPixelNumberBuff(x, y, 20, 20, 400)] = (pgm_read_byte(&patterns[iconIdx][y % 10][x % 10]));
+      buff[myLamp.getPixelNumberBuff(x, y, 20U, 20U, 400)] = (pgm_read_byte(&patterns[iconIdx][y % 10U][x % 10U]));
     }
   }
 
-  for (uint8_t x = 0; x < WIDTH; x += 1)
+  for (uint8_t x = 0; x < WIDTH; x ++)
   {
-    for (uint8_t y = 0; y < HEIGHT; y += 1)
+    for (uint8_t y = 0; y < HEIGHT; y ++)
     {
-      byte in = buff[myLamp.getPixelNumberBuff(((uint8_t)x +xsin) % 20, ((uint8_t)y + ysin) % 20, 20, 20, 400)];
+      byte in = buff[myLamp.getPixelNumberBuff((xsin + x) % 20U, (ysin + y) % 20U, 20U, 20U, 400)];
 
         //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
         CHSV color2 = colorMR[in];
         //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
-        EffectMath::drawPixelXYF(x, HEIGHT-1 - y, color2, 50);
+        EffectMath::drawPixelXY(x, HEIGHT-1 - y, color2);
 
     }
   }
