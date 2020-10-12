@@ -3879,7 +3879,7 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       CRGB color;
       if (pn != -1) color = myPal->GetColor((uint8_t)sum, 255);
       else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
-      EffectMath::drawPixelXYF(x, y, color, 50);
+      EffectMath::drawPixelXY(x, y, color);
     }
   }
   return true;
@@ -4922,7 +4922,7 @@ void EffectPatterns::load() {
     patternIdx = random(0, MAX_PATTERN);
    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
   colorMR[6] = CHSV(random8(), 255U, 255U);
-  colorMR[7].hue = colorMR[6].hue + 64; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
 
 }
 
@@ -4959,7 +4959,9 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   } else patternIdx = _sc;
   
   colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 350., 1200.), 0, 255), 255, 255);
-  colorMR[7].hue = colorMR[6].hue + 64; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 150, 900), 0, 255);
+  colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 450, 1300), 0, 255);
   drawPicture_XY(patternIdx);
 
   return true;
