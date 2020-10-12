@@ -48,12 +48,12 @@ DECLARE_GRADIENT_PALETTE(BlacK_Red_Magenta_Yellow_gp);
 DECLARE_GRADIENT_PALETTE(Blue_Cyan_Yellow_gp);
 
 class GradientPalette{
-    CRGBPalette16 pl;
+    CRGBPalette32 pl;
     int sh;
     int mn;
     int mx;
     public:
-    GradientPalette(CRGBPalette16 pallete, uint8_t shift = 0, uint8_t min = 0, uint8_t max = 0) {
+    GradientPalette(CRGBPalette32 pallete, uint8_t shift = 0, uint8_t min = 0, uint8_t max = 0) {
         pl = pallete; sh = shift; mn = min; mx = max;
     }
     CRGB GetColor(uint8_t idx, uint8_t br) {
@@ -78,9 +78,18 @@ class GradientPaletteList{
 
     GradientPalette *operator[](int i){ return palletes[i]; }
 
-    int size(){ return palletes.size(); };
-    int add(CRGBPalette16 pallete, int shift, uint8_t min = 0, uint8_t max = 0) {
+    int size(){ return palletes.size(); }
+    void del(int idx){ palletes.remove(idx); }
+    int add(CRGBPalette32 pallete, int shift, uint8_t min = 0, uint8_t max = 0) {
         palletes.add(new GradientPalette(pallete, shift, min, max));
+        return size();
+    }
+    int add(int idx, CRGBPalette32 pallete, int shift, uint8_t min = 0, uint8_t max = 0) {
+        GradientPalette *pl = palletes.get(idx);
+        if (pl) {
+            delete pl;
+            palletes.set(idx, new GradientPalette(pallete, shift, min, max));
+        }
         return size();
     }
 };
