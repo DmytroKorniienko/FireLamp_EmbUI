@@ -121,14 +121,14 @@ void EffectCalc::setspd(const byte _spd){
  * setBrt - установка шкалы для воркера
  */
 void EffectCalc::setscl(byte _scl){
-  scale = _scl;
   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
-
+    scale = _scl;
   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
     palettemap(palettes, _scl, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
     paletteIdx = _scl;
-  }
+  } 
+
 }
 
 /**
@@ -221,6 +221,8 @@ void EffectCalc::scale2pallete(){
   if(!isCtrlPallete){
     palettemap(palettes, (*ctrls)[2]->getVal().toInt());
   }
+  
+  setscl(getCtrlVal(2).toInt());
 }
 
 // непустой дефолтный деструктор (если понадобится)
@@ -2394,6 +2396,7 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
   if (curPalette == nullptr) {
     return false;
   }
+  sparking = 64 + getCtrlVal(3).toInt();
 
 #if HEIGHT / 6 > 6
   #define FIRE_BASE 6
@@ -2417,7 +2420,7 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
     }
 
     // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-    if (random8() < sparking)
+    if (random(255) < sparking)
     {
       int j = random(FIRE_BASE);
       noise3d[0][x][j] = qadd8(noise3d[0][x][j], random(96, 255)); // 196, 255
