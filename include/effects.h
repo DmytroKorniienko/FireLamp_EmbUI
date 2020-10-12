@@ -674,6 +674,12 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ============= FIRE 2012 /  ОГОНЬ 2012 ===============
+// based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+/*
+ * Эффект "Огонь 2012"
+ */
 class EffectFire2012 : public EffectCalc {
 private:
 #define NUMPALETTES 10
@@ -683,10 +689,10 @@ private:
     uint8_t cooling = 80U; // 70
   // SPARKING: What chance (out of 255) is there that a new spark will be lit?
   // Higher chance = more roaring fire.  Lower chance = more flickery fire.
-    const uint8_t sparking = 90U; // 130
+     uint8_t sparking = 90U; // 130
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-    const uint8_t fireSmoothing = 70U; // 90
+    const uint8_t fireSmoothing = 60U; // 90
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
 
 
