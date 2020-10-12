@@ -114,8 +114,22 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     myLamp.effects.loadeffname(tmpName,confEff->eff_nb);
     interf->json_section_begin(FPSTR(TCONST_0005));
     interf->text(FPSTR(TCONST_0092), tmpName, FPSTR(TINTF_089), false);
+
     interf->checkbox(FPSTR(TCONST_0006), confEff->canBeSelected()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_003), false);
     interf->checkbox(FPSTR(TCONST_0007), confEff->isFavorite()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_004), false);
+
+    interf->spacer();
+
+    interf->select(FPSTR(TCONST_0050), FPSTR(TINTF_040));
+    interf->option(String(SORT_TYPE::ST_BASE), FPSTR(TINTF_041));
+    interf->option(String(SORT_TYPE::ST_END), FPSTR(TINTF_042));
+    interf->option(String(SORT_TYPE::ST_IDX), FPSTR(TINTF_043));
+    interf->option(String(SORT_TYPE::ST_AB), FPSTR(TINTF_085));
+    interf->option(String(SORT_TYPE::ST_AB2), FPSTR(TINTF_08A));
+#ifdef MIC_EFFECTS
+    interf->option(String(SORT_TYPE::ST_MIC), FPSTR(TINTF_08D));  // эффекты с микрофоном
+#endif
+    interf->json_section_end();
 
     interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0009), FPSTR(TINTF_005));
@@ -140,6 +154,8 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
     if(optionsTicker.active())
         optionsTicker.detach();
+    
+    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
