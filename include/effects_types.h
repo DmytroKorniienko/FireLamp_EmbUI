@@ -181,7 +181,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
 static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 5, 3, 2, // 0-15
   2, 2, 2, 2, 2, 2, 2, 2, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
-  1, 3, 3, 3, 3, 3, 4, 5, 7, 5, 2, 1, 5, 5, 1, 1, // 32 - 47
+  1, 3, 3, 3, 3, 3, 6, 5, 7, 5, 2, 1, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 5, 3, 3, 5, 2, // 48 - 63
   4, 1, 1, 1, 2, 1, 1, 3, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
@@ -269,7 +269,7 @@ static const char E_TEST[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@
 static const char E_POPCORN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":0,\"val\":8,\"min\":1,\"max\":21,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Размытие\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Обратные Цвета\"}]}";
 static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":8,\"min\":0,\"max\":21,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":8,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}]}";
 static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":8,\"min\":0,\"max\":17,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":8,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Физика\"}]}";
-static const char E_F2012_MIC[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
+static const char E_F2012_MIC[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Масштаб\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Палитра\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":8,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 1\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 2\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 3\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";

@@ -92,7 +92,7 @@ bool EffectCalc::dryrun(float n, uint8_t delay){
 bool EffectCalc::status(){return active;}
 
 /**
- * setBrt - установка яркости для воркера
+ * setbrt - установка яркости для воркера
  */
 void EffectCalc::setbrt(const byte _brt){
   brightness = _brt;
@@ -105,7 +105,7 @@ void EffectCalc::setbrt(const byte _brt){
 }
 
 /**
- * setSpd - установка скорости для воркера
+ * setspd - установка скорости для воркера
  */
 void EffectCalc::setspd(const byte _spd){
   speed = _spd;
@@ -118,7 +118,7 @@ void EffectCalc::setspd(const byte _spd){
 }
 
 /**
- * setBrt - установка шкалы для воркера
+ * setscl - установка шкалы для воркера
  */
 void EffectCalc::setscl(byte _scl){
   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
@@ -182,7 +182,6 @@ void EffectCalc::palettesload(){
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
-
 }
 
 /**
@@ -214,15 +213,13 @@ void EffectCalc::scale2pallete(){
   if (!usepalettes)
     return;
 
+  LOG(println, F("Reset all controls"));
+  setbrt((*ctrls)[0]->getVal().toInt());
+  setspd((*ctrls)[1]->getVal().toInt());
+  setscl((*ctrls)[2]->getVal().toInt());
   for(int i=3;i<ctrls->size();i++){
     setDynCtrl((*ctrls)[i]);
   }
-
-  if(!isCtrlPallete){
-    palettemap(palettes, (*ctrls)[2]->getVal().toInt());
-  }
-  
-  setscl(getCtrlVal(2).toInt());
 }
 
 // непустой дефолтный деструктор (если понадобится)
@@ -2396,7 +2393,7 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
   if (curPalette == nullptr) {
     return false;
   }
-  sparking = 64 + getCtrlVal(3).toInt();
+  sparking = 64 + scale;
 
 #if HEIGHT / 6 > 6
   #define FIRE_BASE 6
