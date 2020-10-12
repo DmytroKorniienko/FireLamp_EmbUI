@@ -1956,6 +1956,7 @@ private:
 
     String originalName;    // имя эффекта дефолтное
     String effectName;      // имя эффекта (предварительно заданное или из конфига)
+    String soundfile;       // имя/путь к звуковому файлу (DF Player Mini)
     uint8_t version;        // версия эффекта
 
     LList<EffectListElem*> effects; // список эффектов с флагами из индекса
@@ -2078,7 +2079,11 @@ public:
 
     const String &getEffectName() {return effectName;}
     void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
-        {if(to->eff_nb==curEff) effectName=name; else {EffectWorker *tmp=new EffectWorker(to); tmp->selEff=to->eff_nb; tmp->setEffectName(name,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
+        {if(to->eff_nb==curEff) effectName=name; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setEffectName(name,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
+    
+    const String &getSoundfile() {return soundfile;}
+    void setSoundfile(const String &_soundfile, EffectListElem*to) // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
+        {if(to->eff_nb==curEff) soundfile=_soundfile; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setSoundfile(_soundfile,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
     const String &getOriginalName() {return originalName;}
 
     /**
@@ -2090,6 +2095,15 @@ public:
     * @param folder - какой-то префикс для каталога
     */
     void loadeffname(String& effectName, const uint16_t nb, const char *folder=nullptr);
+    
+    /**
+    * вычитать только имя\путь звука из конфиг-файла и записать в предоставленную строку
+    * в случае отсутствия/повреждения возвращает пустую строку
+    * @param effectName - String куда записать результат
+    * @param nb  - айди эффекта
+    * @param folder - какой-то префикс для каталога
+    */
+    void loadsoundfile(String& effectName, const uint16_t nb, const char *folder=nullptr);
 
     // текущий эффект или его копия
     const uint16_t getEn() {return curEff;}

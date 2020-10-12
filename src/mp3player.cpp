@@ -93,7 +93,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           delayedCall.once(0.2,std::bind([this](){
             if(!mp3mode){
               if(cur_effnb>0)
-                playEffect(cur_effnb); // начать повтороное воспроизведение в эффекте
+                playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
             } else {
               cur_effnb++;
               if(cur_effnb>mp3filescount)
@@ -172,13 +172,25 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
   advertise(filenb);
 }
 
-void MP3PLAYERDEVICE::playEffect(uint16_t effnb)
+void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile)
 {
+  soundfile = _soundfile;
+
   if(!mp3mode){
-    //stop();
-    cur_effnb = effnb%256;
-    playFolder(3, cur_effnb);
-    prev_effnb = effnb%256;
+    int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();;
+    int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
+    //LOG(printf_P, PSTR("%d %d\n"), folder, filenb);
+    if(!filenb){
+      cur_effnb = effnb%256;
+      playFolder(3, cur_effnb);
+      prev_effnb = effnb%256;
+    } else if(!folder){
+      //mp3
+      playMp3Folder(filenb);
+    } else {
+      //folder#
+      playFolder(folder, filenb);
+    }
   } else {
     int shift=effnb%256-prev_effnb%256;
     prev_effnb = effnb%256;

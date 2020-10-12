@@ -59,6 +59,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     SoftwareSerial mp3player;
     Ticker delayedCall;
     Ticker periodicCall;
+    String soundfile; // хранилище пути/имени
     void printSatusDetail();
     void playAdvertise(int filenb);
     void playFolder0(int filenb);
@@ -66,9 +67,9 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
     bool isReady() {return ready;}
     bool isOn() {return on && ready;}
-    void setIsOn(bool val) {on = val; if(!on) stop(); else playEffect(cur_effnb); }
+    void setIsOn(bool val) {on = val; if(!on) stop(); else playEffect(cur_effnb, soundfile); }
     void playTime(int hours, int minutes);
-    void playEffect(uint16_t effnb);
+    void playEffect(uint16_t effnb, const String &_soundfile);
     void playName(uint16_t effnb);
     void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
     void setTempVolume(uint8_t vol) { volume(vol); }

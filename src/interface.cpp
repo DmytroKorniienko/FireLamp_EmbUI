@@ -110,11 +110,14 @@ static EffectListElem *confEff = nullptr;
 void block_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff) return;
 
-    String tmpName;
+    String tmpName, tmpSoundfile;
     myLamp.effects.loadeffname(tmpName,confEff->eff_nb);
+    myLamp.effects.loadsoundfile(tmpSoundfile,confEff->eff_nb);
     interf->json_section_begin(FPSTR(TCONST_0005));
     interf->text(FPSTR(TCONST_0092), tmpName, FPSTR(TINTF_089), false);
-
+#ifdef MP3PLAYER
+    interf->text(FPSTR(TCONST_00AB), tmpSoundfile, FPSTR(TINTF_0B2), false);
+#endif
     interf->checkbox(FPSTR(TCONST_0006), confEff->canBeSelected()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_003), false);
     interf->checkbox(FPSTR(TCONST_0007), confEff->isFavorite()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_004), false);
 
@@ -193,6 +196,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         confEff->canBeSelected((*data)[FPSTR(TCONST_0006)] == FPSTR(TCONST_FFFF));
         confEff->isFavorite((*data)[FPSTR(TCONST_0007)] == FPSTR(TCONST_FFFF));
         myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], confEff);
+        myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], confEff);
     }
 
     resetAutoTimers();

@@ -373,17 +373,37 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
  * @param nb  - айди эффекта
  * @param folder - какой-то префикс для каталога
  */
-void EffectWorker::loadeffname(String& effectName, const uint16_t nb, const char *folder)
+void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
   DynamicJsonDocument doc(2048);
   bool ok = deserializeFile(doc, filename.c_str());
   if (ok && doc[F("name")]){
-    effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
+    _effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
   } else if(!ok) {
     // LittleFS.remove(filename);
     // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
-    effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
+    _effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
+  }
+}
+
+/**
+* вычитать только имя\путь звука из конфиг-файла и записать в предоставленную строку
+* в случае отсутствия/повреждения возвращает пустую строку
+* @param effectName - String куда записать результат
+* @param nb  - айди эффекта
+* @param folder - какой-то префикс для каталога
+*/
+void EffectWorker::loadsoundfile(String& _soundfile, const uint16_t nb, const char *folder)
+{
+  String filename = geteffectpathname(nb,folder);
+  DynamicJsonDocument doc(2048);
+  bool ok = deserializeFile(doc, filename.c_str());
+  LOG(printf_P,PSTR("snd: %s\n"),doc[F("snd")].as<String>().c_str());
+  if (ok && doc[F("snd")]){
+    _soundfile = doc[F("snd")].as<String>(); // перенакрываем именем из конфига, если есть
+  } else if(!ok) {
+    _soundfile = "";
   }
 }
 
@@ -449,6 +469,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
   flags.mask = doc.containsKey(F("flags")) ? doc[F("flags")].as<uint8_t>() : 255;
   const char* name = doc[F("name")];
   effectName = name ? name : (String)(FPSTR(T_EFFNAMEID[(uint8_t)nb]));
+  soundfile = doc.containsKey(F("snd")) ? doc[F("snd")].as<String>() : "";
   //LOG(printf_P, PSTR("Load MEM: %s - CFG: %s - DEF: %s\n"), effectName.c_str(), doc[F("name")].as<String>().c_str(), worker->getName().c_str());
   // вычитываею список контроллов
   // повторные - скипаем, нехватающие - создаем
@@ -559,6 +580,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   doc[F("flags")] = flags.mask;
   doc[F("name")] = effectName;
   doc[F("ver")] = version;
+  doc[F("snd")] = soundfile;
   JsonArray arr = doc.createNestedArray(F("ctrls"));
   for (int i = 0; i < controls.size(); i++)
       {
