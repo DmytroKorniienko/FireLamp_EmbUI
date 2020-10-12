@@ -1077,9 +1077,6 @@ private:
     GradientPalette *myPal;
     Particle particles[20];
     unsigned numParticles = 0;
-    int8_t pn;
-    byte hue;
-    CRGBPalette16 myGenPal;
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
@@ -1090,6 +1087,7 @@ private:
 public:
     EffectPicasso() {
         palettes = new GradientPaletteList();
+        palettes->add(MBVioletColors_gp, 0, 16); // будет заменен генератором
         palettes->add(MBVioletColors_gp, 0, 16);
 
         palettes->add(ib_jul01_gp, 60, 16, 200);
@@ -1170,9 +1168,6 @@ private:
     Particle particles[20];
     unsigned numParticles = 0;
     unsigned physic_on = 1;
-    int8_t pn;
-    byte hue;
-    CRGBPalette16 myGenPal;
     void generate(bool reset = false);
     void position();
     void physic();
@@ -1182,6 +1177,7 @@ private:
 public:
     EffectLiquidLamp() {
         palettes = new GradientPaletteList();
+        palettes->add(MBVioletColors_gp, 0, 16);
         // эта политра создана под эффект
         palettes->add(MBVioletColors_gp, 0, 16);
         // палитры частично подогнаные под эффект
@@ -1463,10 +1459,10 @@ private:
         CHSV(0, 0, 220),            // 5 - White
         CHSV(0, 255, 255),              // 6 - плавно меняеться в цикле (фон)
         CHSV(0, 255, 255),              // 7 - цвет равен 6 но +64
-        CHSV(HUE_ORANGE, 255, 255), 
-        CHSV(HUE_PINK, 255, 255), 
-        CHSV(HUE_PURPLE, 255, 255), 
-        CHSV(HUE_AQUA, 255, 255), 
+        CHSV(HUE_ORANGE, 255, 255),
+        CHSV(HUE_PINK, 255, 255),
+        CHSV(HUE_PURPLE, 255, 255),
+        CHSV(HUE_AQUA, 255, 255),
     };
 
     void setDynCtrl(UIControl*_val);
@@ -2086,7 +2082,7 @@ public:
     const String &getEffectName() {return effectName;}
     void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
         {if(to->eff_nb==curEff) effectName=name; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setEffectName(name,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
-    
+
     const String &getSoundfile() {return soundfile;}
     void setSoundfile(const String &_soundfile, EffectListElem*to) // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
         {if(to->eff_nb==curEff) soundfile=_soundfile; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setSoundfile(_soundfile,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
@@ -2101,7 +2097,7 @@ public:
     * @param folder - какой-то префикс для каталога
     */
     void loadeffname(String& effectName, const uint16_t nb, const char *folder=nullptr);
-    
+
     /**
     * вычитать только имя\путь звука из конфиг-файла и записать в предоставленную строку
     * в случае отсутствия/повреждения возвращает пустую строку

@@ -267,8 +267,8 @@ static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver
 static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":0,\"val\":8,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_TEST[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}]}";
 static const char E_POPCORN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":0,\"val\":8,\"min\":1,\"max\":21,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Размытие\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Обратные Цвета\"}]}";
-static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":8,\"min\":0,\"max\":21,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":8,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}]}";
-static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":8,\"min\":0,\"max\":17,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":8,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Физика\"}]}";
+static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":21,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}]}";
+static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":18,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Физика\"}]}";
 static const char E_F2012_MIC[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Масштаб\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Палитра\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 
 // Инженерный
@@ -336,7 +336,7 @@ static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, 
 static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xfa9422, 0xf8cc73, 0xa16456, 0xd6bcc4, 0x2b2c54};
 static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0xdf0450, 0xfc7ca9, 0x900562, 0xad4c8c, 0xc2b2b5, 0x312f54};
 static const TProgmemRGBPalette16 StepkosColors_p FL_PROGMEM = {0xc83160, 0x8c2682, 0x5b0bac, 0x2d00ff, 0x0012d8, 0x0000ac, 0x03006b};
-static const TProgmemRGBPalette16 VioletColors_p FL_PROGMEM = {0xce9bdd, 0x84349b, 0x642474, 0x612672, 0x040404}; 
+static const TProgmemRGBPalette16 VioletColors_p FL_PROGMEM = {0xce9bdd, 0x84349b, 0x642474, 0x612672, 0x040404};
 /*
 
 

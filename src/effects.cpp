@@ -127,7 +127,7 @@ void EffectCalc::setscl(byte _scl){
   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
     palettemap(palettes, _scl, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
     paletteIdx = _scl;
-  } 
+  }
 
 }
 
@@ -178,7 +178,7 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&EveningColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&VioletColors_p); 
+  palettes.push_back(&VioletColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
@@ -1602,7 +1602,7 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
   EffectMath::blur2d(15); // нужно ли размытие?
   fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
   //uint8_t beat = beatsin8(5, 127, 180);
-  
+
   for (uint8_t i = 1; i < WIDTH; i += 2) {
     //leds[XY( i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
     leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
@@ -3561,31 +3561,35 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
 
 void EffectPicasso::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==4){
-    hue = _val->getVal().toInt();
+  uint8_t idx = _val->getId();
+  if (idx == 3) {
+    myPal = (*palettes)[constrain(_val->getVal().toInt(), 0, 21)];
   }
-  if(_val->getId()==3){
-     pn = _val->getVal().toInt() - 1;
-     myPal = (*palettes)[constrain(pn, 0, 20)];
-  }
-  myGenPal = CRGBPalette16(CHSV(hue+215U, 255U, 255U)
-                          ,CHSV(hue+215U, 255U, 244U)
-                          ,CHSV(hue+215U, 255U, 232U)
-                          ,CHSV(hue+215U, 255U, 221U)
-                          ,CHSV(hue+215U, 255U, 210U)
-                          ,CHSV(hue+215U, 255U, 198U)
-                          ,CHSV(hue+215U, 255U, 187U)
-                          ,CHSV(hue+215U, 255U, 176U)
-                          ,CHSV(hue+215U, 255U, 164U)
-                          ,CHSV(hue+215U, 255U, 153U)
-                          ,CHSV(hue+222U, 255U, 170U)
-                          ,CHSV(hue+229U, 255U, 187U)
-                          ,CHSV(hue+236U, 255U, 204U)
-                          ,CHSV(hue+242U, 255U, 221U)
-                          ,CHSV(hue+249U, 255U, 238U)
-                          ,CHSV(hue     , 255U, 255U)
-                          );
+  if (idx == 4) {
+    byte hue = _val->getVal().toInt();
+    TDynamicRGBGradientPalette_byte dynpal[20] = {
+        0,  0,  0,  0,
+        1,  0,  0,  0,
+        80,  0,  0,  0,
+        150,  0,  0,  0,
+        255,  0,  0,  0
+    };
+    uint8_t *ptr = (uint8_t *)dynpal + 1;
+    CRGB color = CHSV(hue + 255, 255U, 255U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue + 135, 255U, 200U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue + 160, 255U, 120U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue + 150, 255U, 255U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue  + 255, 255U, 255U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
 
+    CRGBPalette32 pal;
+    pal.loadDynamicGradientPalette(dynpal);
+    palettes->add(0, pal, 0, 16);
+  }
 }
 
 bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
@@ -3618,10 +3622,8 @@ bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
 
         if (sum >= 255) { sum = 255; break; }
       }
-      CRGB color;
-      if (pn != -1) color = myPal->GetColor((uint8_t)sum, 255);
-      else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
-      EffectMath::drawPixelXYF(x, y, color, 50); // эффект хоть и не субпиксельный. Но имхо, за счет компенсатора пересвета, эта функция рисует магче 
+      CRGB color = myPal->GetColor((uint8_t)sum, 255);
+      EffectMath::drawPixelXY(x, y, color);
       }
   }
 
@@ -3824,34 +3826,38 @@ void EffectLiquidLamp::physic(){
 
 void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3){
-    pn = _val->getVal().toInt()- 1;
-    myPal = (*palettes)[constrain(pn, 0, 16)];
-  } 
-  if(_val->getId()==5)
+  uint8_t idx = _val->getId();
+  if (idx == 3) {
+    myPal = (*palettes)[constrain(_val->getVal().toInt(), 0, 18)];
+  } else
+  if (idx == 4) {
+    byte hue = _val->getVal().toInt();
+    TDynamicRGBGradientPalette_byte dynpal[20] = {
+        0,  0,  0,  0,
+        1,  0,  0,  0,
+        80,  0,  0,  0,
+        150,  0,  0,  0,
+        255,  0,  0,  0
+    };
+    uint8_t *ptr = (uint8_t *)dynpal + 1;
+    CRGB color = CHSV(hue + 255, 255U, 255U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue + 135, 255U, 200U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue + 160, 255U, 120U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue + 150, 255U, 255U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+    color = CHSV(hue  + 255, 255U, 255U);
+    memcpy(ptr, color.raw, sizeof(color.raw)); ptr += 4;
+
+    CRGBPalette32 pal;
+    pal.loadDynamicGradientPalette(dynpal);
+    palettes->add(0, pal, 0, 16);
+  } else
+  if (idx == 5) {
     physic_on = (_val->getVal() == FPSTR(TCONST_FFFF));
-
-  if(_val->getId()==4)
-    hue = _val->getVal().toInt();
-
-  myGenPal = CRGBPalette16(CHSV(hue+215U, 255U, 255U)
-                          ,CHSV(hue+215U, 255U, 244U)
-                          ,CHSV(hue+215U, 255U, 232U)
-                          ,CHSV(hue+215U, 255U, 221U)
-                          ,CHSV(hue+215U, 255U, 210U)
-                          ,CHSV(hue+215U, 255U, 198U)
-                          ,CHSV(hue+215U, 255U, 187U)
-                          ,CHSV(hue+215U, 255U, 176U)
-                          ,CHSV(hue+215U, 255U, 164U)
-                          ,CHSV(hue+215U, 255U, 153U)
-                          ,CHSV(hue+222U, 255U, 170U)
-                          ,CHSV(hue+229U, 255U, 187U)
-                          ,CHSV(hue+236U, 255U, 204U)
-                          ,CHSV(hue+242U, 255U, 221U)
-                          ,CHSV(hue+249U, 255U, 238U)
-                          ,CHSV(hue     , 255U, 255U)
-                          );
-  
+  }
 }
 
 bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
@@ -3876,9 +3882,7 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
         if (sum > 255) { sum = 255; break; }
       }
 
-      CRGB color;
-      if (pn != -1) color = myPal->GetColor((uint8_t)sum, 255);
-      else color = ColorFromPalette(myGenPal, sum, 255U, NOBLEND);
+      CRGB color = myPal->GetColor((uint8_t)sum, 255);
       EffectMath::drawPixelXY(x, y, color);
     }
   }
@@ -3958,7 +3962,7 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 
 // ------------- цвет + вода в бассейне ------------------
 // Идея и паттерн Бликов на воде (с) SottNick. 03.2020
-// переписал на программные блики + паттерны - (c) kostyamat 
+// переписал на программные блики + паттерны - (c) kostyamat
 /*void EffectAquarium::load() {
   ledbuff.resize(WIDTH*2 * HEIGHT*2);
 }*/
@@ -3968,9 +3972,9 @@ bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 void EffectAquarium::nPatterns() {
-  if (glare == 1) 
+  if (glare == 1)
     iconIdx = (millis() >> 15) % 12;//beatsin88(3 * EffectMath::fmap((float)speed, 1., 255., 5., 15.), 0, 12);
-  else 
+  else
     iconIdx = glare - 3;
  #ifdef MIC_EFFECTS
   byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
@@ -3995,7 +3999,7 @@ void EffectAquarium::nPatterns() {
     }
   }
 }
-  
+
 
 void EffectAquarium::nGlare() {
 
@@ -4031,7 +4035,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   xsin = beatsin88(175 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, WIDTH * WIDTH);
   ysin = beatsin88(225 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, HEIGHT * HEIGHT);
 
-  switch (glare) { // 
+  switch (glare) { //
   case 0:
     break;
   case 2:
@@ -4063,7 +4067,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 #endif
     }
   }
-  if (speed == 1) { 
+  if (speed == 1) {
     hue = scale;
   }
   else {
@@ -4942,7 +4946,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
       if (patternIdx > MAX_PATTERN) patternIdx = 0;
     }
   } else patternIdx = _sc%(sizeof(patterns)/sizeof(Pattern));
-  
+
   colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 350., 1200.), 0, 255), 255, 255);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
   colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 150, 900), 0, 255);
