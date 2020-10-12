@@ -4876,8 +4876,8 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 // ---- Эффект "Узоры"
-// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
-
+// Идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+// (c) kostyamat
 void EffectPatterns::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3) {// pattern
@@ -4892,8 +4892,7 @@ bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
 
 void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
   memset8(buff, 7, 400);
-  EffectMath::dimAll(254);
-  //FastLED.clear();
+  FastLED.clear();
 
   for (byte x = 0; x < 20U; x++)
   {
@@ -4907,13 +4906,13 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
   {
     for (uint8_t y = 0; y < HEIGHT; y ++)
     {
-      byte in = buff[myLamp.getPixelNumberBuff((int)(xsin + x) % 20U, (int)(ysin + y) % 20U, 20U, 20U, 400)];
+      byte in = buff[myLamp.getPixelNumberBuff((xsin + x) % 20U, (ysin + y) % 20U, 20U, 20U, 400)];
 
         //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
         CHSV color2 = colorMR[in];
         //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
+        EffectMath::drawPixelXY(x, HEIGHT-1 - y, color2);
 
-        EffectMath::drawPixelXY(x, HEIGHT - 1 - y, color2);
     }
   }
 }
@@ -4930,23 +4929,39 @@ void EffectPatterns::load() {
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  _speedX = EffectMath::fmap(scale, 1, 65, -0.75, 0.75);
-  _speedY = EffectMath::fmap(speed, 1, 65, -0.75, 0.75);
+  _speedX = map(scale, 1, 65, -32, 32);
+  if (millis() - lastrun - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedX))) {
+    if (_speedX == 0)
+      xsin = 0;
+    else if (_speedX < 0)
+      xsin++;
+    else if (_speedX > 0)
+      xsin--;
+    lastrun = millis();
+  }
 
-  xsin += _speedX;
-  ysin += _speedY;
+  _speedY = map(speed, 1, 65, -32, 32);
+  if (millis() - lastrun2  - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedY))) {
+    if (_speedY == 0)
+      ysin = 0;
+    else if (_speedY < 0)
+      ysin--;
+    else if (_speedY > 0)
+      ysin++;
+    lastrun2 = millis();
+  }
 
   if (_sc == 0) {
-    EVERY_N_SECONDS(5) {
+    EVERY_N_MILLISECONDS(60000. / EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 65., 1., 3.)) {
       patternIdx ++;
       if (patternIdx > MAX_PATTERN) patternIdx = 0;
     }
   } else patternIdx = _sc;
   
-  colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 350., 1200.), 0, 255), 255, 255);
+  colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 350., 1200.), 0, 255), 255, 255);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
-  colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 150, 900), 0, 255);
-  colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 450, 1300), 0, 255);
+  colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 150, 900), 0, 255);
+  colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 450, 1300), 0, 255);
   drawPicture_XY(patternIdx);
 
   return true;
