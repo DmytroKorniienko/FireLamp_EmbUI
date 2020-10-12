@@ -1439,8 +1439,7 @@ public:
 };
 
 // ---- Эффект "Узоры"
-// Идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
-// (c) kostyamat
+// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
 class EffectPatterns : public EffectCalc {
 private:
     int8_t patternIdx = -1;
@@ -1450,10 +1449,10 @@ private:
     byte csum = 0;
     byte _bri = 255U;
     byte buff[20 * 20];
-    uint32_t xsin, ysin;
+    float xsin, ysin;
     unsigned long lastrun2;
     byte _sc = 0;
-    int8_t _speedX, _speedY;
+    float _speedX, _speedY;
 
     CHSV colorMR[12] = {
         CHSV(0, 0, 0),              // 0 - Black
