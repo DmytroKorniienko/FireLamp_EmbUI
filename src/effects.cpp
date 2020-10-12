@@ -4941,7 +4941,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
       patternIdx ++;
       if (patternIdx > MAX_PATTERN) patternIdx = 0;
     }
-  } else patternIdx = _sc;
+  } else patternIdx = _sc%(sizeof(patterns)/sizeof(Pattern));
   
   colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 350., 1200.), 0, 255), 255, 255);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
