@@ -238,7 +238,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     worker = std::unique_ptr<EffectTest>(new EffectTest());
     break;
   case EFF_ENUM::EFF_TEST2 :
-    worker = std::unique_ptr<EffectPatternsOrig>(new EffectPatternsOrig());
+    worker = std::unique_ptr<EffectTest>(new EffectTest());
     break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
