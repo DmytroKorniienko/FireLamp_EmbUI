@@ -3388,8 +3388,12 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
   switch(fillType){
     case 1:
       for (uint8_t y = 0; y < HEIGHT; y++) {
-        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(((int)xSmokePos-y)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
-        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-((int)xSmokePos-y)-1)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color;
+        float v, f = xSmokePos-y;
+        f = modff(f, &v); v = (int)v%WIDTH;
+        v = v+f;
+
+        EffectMath::drawPixelXYF_X(v, y, color);
+        EffectMath::drawPixelXYF(WIDTH-1-v, y, color);
       }
       break;
     case 2:
@@ -3400,8 +3404,12 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
       break;
     case 3:
       for (uint8_t y = 0; y < HEIGHT; y++) {
-        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((int)((xSmokePos-y)*1.5)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color; // на то что Х может оказаться отрицательным - ложим болт :)
-        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber((WIDTH-(int)((xSmokePos-y)*1.5)-1)%WIDTH-(int)(xSmokePos2)%WIDTH, y)] += color; // увеличим частоту в 1.5
+        float v, f = xSmokePos-y*1.5;
+        f = modff(f, &v); v = (int)v%WIDTH;
+        v = v+f;
+
+        EffectMath::drawPixelXYF_X(v, y, color);
+        EffectMath::drawPixelXYF(WIDTH-1-v, y, color);
       }
       break;
     case 4:
@@ -3425,28 +3433,20 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
     default:
       break;
   }
-  //EffectMath::blur2d(25); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
+  EffectMath::blur2d(35); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
   if(!isDebug()){
     // Noise
-    // uint16_t sc = (uint16_t)speed * 6 + 500;
-    // uint16_t sc2 = (float)speed/127.0 + 1.5;
-    uint16_t sc = (uint16_t)scale * 10 + 500; //64 + 1000;
-    uint16_t sc2 = (float)speed/100.0+1.0; //1.5...3.5;
-
-    e_x[0] += sc;
-    e_y[0] += sc;
-    e_z[0] += sc;
-    e_scaleX[0] = sc2;
-    e_scaleY[0] = sc2;
-    FillNoise(0);
-    //MoveX(3);
-    //MoveY(3);
-
+    uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
+    uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
+    e_x[0] += 1500*sc2; // 3000;
+    e_y[0] += 1500*sc2; // 3000;
+    e_z[0] += 1500*sc2; // 3000;
+    e_scaleX[0] = sc; //8000;
+    e_scaleY[0] = sc; //8000;
+    FillNoise(0); 
 
     EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);//4
     EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);//4
-
-    //EffectMath::blur2d(25); // без размытия как-то пиксельно, наверное...
   }
   return true;
 }
