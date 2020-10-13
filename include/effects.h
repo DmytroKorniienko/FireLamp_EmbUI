@@ -1510,6 +1510,47 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ---- Эффект "Узоры"
+// Идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+// (c) kostyamat
+class EffectPatternsOrig : public EffectCalc {
+private:
+    int8_t patternIdx = -1;
+    int8_t lineIdx = 0;
+    bool loadingFlag = true;
+    bool dir = false;
+    byte csum = 0;
+    byte _bri = 255U;
+    byte buff[20 * 20];
+    uint32_t xsin, ysin;
+    unsigned long lastrun2;
+    byte _sc = 0;
+    int8_t _speedX, _speedY;
+
+    CHSV colorMR[12] = {
+        CHSV(0, 0, 0),              // 0 - Black
+        CHSV(HUE_RED, 255, 255),    // 1 - Red
+        CHSV(HUE_GREEN , 255, 255),  // 2 - Green
+        CHSV(HUE_BLUE, 255, 255),   // 3 - Blue
+        CHSV(HUE_YELLOW, 255, 255), // 4 - Yellow
+        CHSV(0, 0, 220),            // 5 - White
+        CHSV(0, 255, 255),              // 6 - плавно меняеться в цикле (фон)
+        CHSV(0, 255, 255),              // 7 - цвет равен 6 но +64
+        CHSV(HUE_ORANGE, 255, 255), 
+        CHSV(HUE_PINK, 255, 255), 
+        CHSV(HUE_PURPLE, 255, 255), 
+        CHSV(HUE_AQUA, 255, 255), 
+    };
+
+    void setDynCtrl(UIControl*_val);
+    void drawPicture_XY(uint8_t iconIdx);
+    bool patternsRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // ------ Эффект "Дикие шарики"
 // (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
 class EffectNBals : public EffectCalc {

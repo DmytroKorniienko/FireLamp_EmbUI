@@ -4922,6 +4922,7 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
         EffectMath::drawPixelXY(x, HEIGHT - 1 - y, color2);
     }
   }
+
 }
 
 void EffectPatterns::load() {
@@ -4953,6 +4954,98 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
   colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 150, 900), 0, 255);
   colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 450, 1300), 0, 255);
+  drawPicture_XY(patternIdx);
+
+  return true;
+}
+
+// ---- Эффект "Узоры"
+// Идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+// (c) kostyamat
+void EffectPatternsOrig::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3) {// pattern
+    _sc = _val->getVal().toInt() - 1;
+
+  }
+}
+
+bool EffectPatternsOrig::run(CRGB *ledarr, EffectWorker *opt) {
+  return patternsRoutine(*&ledarr, &*opt);
+}
+
+void EffectPatternsOrig::drawPicture_XY(uint8_t iconIdx) {
+  memset8(buff, 7, 400);
+  FastLED.clear();
+
+  for (byte x = 0; x < 20U; x++)
+  {
+    for (byte y = 0; y < 20U; y++)
+    {
+      buff[myLamp.getPixelNumberBuff(x, y, 20U, 20U, 400)] = (pgm_read_byte(&patterns[iconIdx][y % 10U][x % 10U]));
+    }
+  }
+
+  for (uint8_t x = 0; x < WIDTH; x ++)
+  {
+    for (uint8_t y = 0; y < HEIGHT; y ++)
+    {
+      byte in = buff[myLamp.getPixelNumberBuff((xsin + x) % 20U, (ysin + y) % 20U, 20U, 20U, 400)];
+
+        //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
+        CHSV color2 = colorMR[in];
+        //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
+        EffectMath::drawPixelXY(x, HEIGHT-1 - y, color2);
+
+    }
+  }
+}
+
+void EffectPatternsOrig::load() {
+  if (_sc == 0)
+    patternIdx = random(0, MAX_PATTERN);
+   // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
+  colorMR[6] = CHSV(random8(), 255U, 255U);
+  colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+
+}
+
+
+bool EffectPatternsOrig::patternsRoutine(CRGB *leds, EffectWorker *param)
+{
+  _speedX = map(scale, 1, 65, -32, 32);
+  if (millis() - lastrun - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedX))) {
+    if (_speedX == 0)
+      xsin = 0;
+    else if (_speedX < 0)
+      xsin++;
+    else if (_speedX > 0)
+      xsin--;
+    lastrun = millis();
+  }
+
+  _speedY = map(speed, 1, 65, -32, 32);
+  if (millis() - lastrun2  - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedY))) {
+    if (_speedY == 0)
+      ysin = 0;
+    else if (_speedY < 0)
+      ysin--;
+    else if (_speedY > 0)
+      ysin++;
+    lastrun2 = millis();
+  }
+
+  if (_sc == 0) {
+    EVERY_N_MILLISECONDS(60000. / EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 65., 1., 3.)) {
+      patternIdx ++;
+      if (patternIdx > MAX_PATTERN) patternIdx = 0;
+    }
+  } else patternIdx = _sc;
+  
+  colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 350., 1200.), 0, 255), 255, 255);
+  colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 150, 900), 0, 255);
+  colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 450, 1300), 0, 255);
   drawPicture_XY(patternIdx);
 
   return true;
