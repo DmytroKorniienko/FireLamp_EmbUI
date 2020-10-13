@@ -4896,18 +4896,11 @@ bool EffectPatterns::run(CRGB *ledarr, EffectWorker *opt) {
   return patternsRoutine(*&ledarr, &*opt);
 }
 
-void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
-  memset8(buff, 7, 400);
-  EffectMath::dimAll(254);
-  //FastLED.clear();
-
-  for (byte x = 0; x < 20U; x++)
-  {
-    for (byte y = 0; y < 20U; y++)
-    {
-      buff[myLamp.getPixelNumberBuff(x, y, 20U, 20U, 400)] = (pgm_read_byte(&patterns[iconIdx][y % 10U][x % 10U]));
-    }
-  }
+void EffectPatterns::drawPicture_XY() {
+  float vx, vy, f;
+  vx = modff(xsin, &f);
+  vy = modff(ysin, &f);
+  FastLED.clear();
 
   for (uint8_t x = 0; x < WIDTH; x ++)
   {
@@ -4915,11 +4908,11 @@ void EffectPatterns::drawPicture_XY(uint8_t iconIdx) {
     {
       byte in = buff[myLamp.getPixelNumberBuff((int)(xsin + x) % 20U, (int)(ysin + y) % 20U, 20U, 20U, 400)];
 
-        //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
-        CHSV color2 = colorMR[in];
-        //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
+      //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
+      CHSV color2 = colorMR[in];
+      //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
 
-        EffectMath::drawPixelXY(x, HEIGHT - 1 - y, color2);
+      EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0); // (float)(HEIGHT-1)+
     }
   }
 }
@@ -4930,7 +4923,6 @@ void EffectPatterns::load() {
    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
   colorMR[6] = CHSV(random8(), 255U, 255U);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
-
 }
 
 
@@ -4942,6 +4934,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   xsin += _speedX;
   ysin += _speedY;
 
+  int8_t chkIdx = patternIdx;
   if (_sc == 0) {
     EVERY_N_SECONDS(5) {
       patternIdx ++;
@@ -4949,11 +4942,21 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
     }
   } else patternIdx = _sc%(sizeof(patterns)/sizeof(Pattern));
 
+  if(chkIdx != patternIdx){
+    for (byte x = 0; x < 20U; x++)
+    {
+      for (byte y = 0; y < 20U; y++)
+      {
+        buff[myLamp.getPixelNumberBuff(x, y, 20U, 20U, 400)] = (pgm_read_byte(&patterns[patternIdx][y % 10U][x % 10U]));
+      }
+    }
+  }
+
   colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 350., 1200.), 0, 255), 255, 255);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
   colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 150, 900), 0, 255);
   colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 450, 1300), 0, 255);
-  drawPicture_XY(patternIdx);
+  drawPicture_XY();
 
   return true;
 }

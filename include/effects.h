@@ -1468,7 +1468,7 @@ private:
     };
 
     void setDynCtrl(UIControl*_val);
-    void drawPicture_XY(uint8_t iconIdx);
+    void drawPicture_XY();
     bool patternsRoutine(CRGB *leds, EffectWorker *param);
 
 public:
