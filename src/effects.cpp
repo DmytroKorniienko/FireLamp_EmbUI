@@ -4955,7 +4955,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 150, 900), 0, 255);
   colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 450, 1300), 0, 255);
   drawPicture_XY(patternIdx);
-
+  Serial.println((uint16_t)xsin);
   return true;
 }
 
@@ -5014,7 +5014,7 @@ void EffectPatternsOrig::load() {
 bool EffectPatternsOrig::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
   _speedX = map(scale, 1, 65, -32, 32);
-  if (millis() - lastrun - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedX))) {
+  if (millis() - lastrun - 5 > (uint8_t)(128 - fabs(4*_speedX))) {
     if (_speedX == 0)
       xsin = 0;
     else if (_speedX < 0)
@@ -5025,7 +5025,7 @@ bool EffectPatternsOrig::patternsRoutine(CRGB *leds, EffectWorker *param)
   }
 
   _speedY = map(speed, 1, 65, -32, 32);
-  if (millis() - lastrun2  - EFFECTS_RUN_TIMER/8 > (uint8_t)(128 - fabs(4*_speedY))) {
+  if (millis() - lastrun2  - 5 > (uint8_t)(128 - fabs(4*_speedY))) {
     if (_speedY == 0)
       ysin = 0;
     else if (_speedY < 0)
@@ -5047,7 +5047,7 @@ bool EffectPatternsOrig::patternsRoutine(CRGB *leds, EffectWorker *param)
   colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 150, 900), 0, 255);
   colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 1., 255., 450, 1300), 0, 255);
   drawPicture_XY(patternIdx);
-
+  Serial.println((uint16_t)xsin);
   return true;
 }
 
