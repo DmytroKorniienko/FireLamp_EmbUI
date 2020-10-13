@@ -3856,6 +3856,9 @@ void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
     palettes->add(0, pal, 0, 16);
   } else
   if (idx == 5) {
+    filter = _val->getVal().toInt();
+  } else
+  if (idx == 6) {
     physic_on = (_val->getVal() == FPSTR(TCONST_FFFF));
   }
 }
@@ -3883,9 +3886,49 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
         }
         if (sum > 255) { sum = 255; break; }
       }
-
+      buff[x][y] = sum;
       CRGB color = myPal->GetColor((uint8_t)sum, 255);
       EffectMath::drawPixelXY(x, y, color);
+    }
+  }
+
+  if (filter < 2) {
+    for (unsigned x = 0; x < WIDTH; x++) {
+      for (unsigned y = 0; y < HEIGHT; y++) {
+        CRGB color = myPal->GetColor(buff[x][y], filter? buff[x][y] : 255);
+        EffectMath::drawPixelXY(x, y, color);
+      }
+    }
+  } else {
+    float min =0, max = 0;
+    // Оператор Щарра
+    int oper_h[3][3] = {{3, 10, 3}, {0, 0, 0}, {-3, -10, -3}};
+    int oper_v[3][3] = {{3, 0, -3}, {10, 0, -10}, {3, 0, -3}};
+    for (unsigned x = 0; x < WIDTH - 1; x++) {
+      for (unsigned y = 0; y < HEIGHT - 1; y++) {
+        int valh = 0, valv = 0;
+        for (int j = -1; j <= 1; j++) {
+          for (int i = -1; i <= 1; i++) {
+            valh += oper_h[j + 1][i + 1] * buff[(int)x + j][(int)y + i];
+            valv += oper_v[j + 1][i + 1] * buff[(int)x + j][(int)y + i];
+          }
+        }
+        float val = EffectMath::sqrt((valh * valh) + (valv * valv));
+        buff2[x][y] = val;
+        if (val < min) min = val;
+        if (val > max) max = val;
+      }
+    }
+
+    for (unsigned x = 0; x < WIDTH - 1; x++) {
+      for (unsigned y = 0; y < HEIGHT - 1; y++) {
+        float val = buff2[x][y];
+        unsigned step = filter - 1;
+        val = 1 - (val - min) / (max - min);
+        while (step) { val *= val; --step; } // почему-то это быстрее чем pow
+        CRGB color = myPal->GetColor(buff[x][y], val * 255);
+        EffectMath::drawPixelXY(x, y, color);
+      }
     }
   }
   return true;
