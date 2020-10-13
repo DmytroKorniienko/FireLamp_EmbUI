@@ -4931,7 +4931,8 @@ void EffectPatterns::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3) {// pattern
     _sc = _val->getVal().toInt() - 1;
-
+  } else if(_val->getId()==4) {// субпиксель
+    _subpixel = _val->getVal()==FPSTR(TCONST_FFFF);
   }
 }
 
@@ -4943,7 +4944,9 @@ void EffectPatterns::drawPicture_XY() {
   float vx, vy, f;
   vx = modff(xsin, &f);
   vy = modff(ysin, &f);
-  FastLED.clear();
+
+  if(_subpixel && !(speed==33 && scale==33))
+    FastLED.clear();
 
   for (uint8_t x = 0; x < WIDTH; x ++)
   {
@@ -4954,8 +4957,16 @@ void EffectPatterns::drawPicture_XY() {
       //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
       CHSV color2 = colorMR[in];
       //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
-
-      EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0); // (float)(HEIGHT-1)+
+      if(_subpixel && !(speed==33 && scale==33)){
+        if(speed==33)
+          EffectMath::drawPixelXYF_X(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+        else if(scale==33)
+          EffectMath::drawPixelXYF_Y(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+        else
+          EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+      }
+      else
+        EffectMath::drawPixelXY(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2);
     }
   }
 }
@@ -4981,7 +4992,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   if (_sc == 0) {
     EVERY_N_SECONDS(5) {
       patternIdx ++;
-      if (patternIdx > MAX_PATTERN) patternIdx = 0;
+      if (patternIdx >= MAX_PATTERN) patternIdx = 0;
     }
   } else patternIdx = _sc%(sizeof(patterns)/sizeof(Pattern));
 

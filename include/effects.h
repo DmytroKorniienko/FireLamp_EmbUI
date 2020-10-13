@@ -1443,7 +1443,7 @@ class EffectPatterns : public EffectCalc {
 private:
     int8_t patternIdx = -1;
     int8_t lineIdx = 0;
-    bool loadingFlag = true;
+    bool _subpixel = false;
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
