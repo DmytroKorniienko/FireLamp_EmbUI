@@ -1074,7 +1074,7 @@ class EffectPicasso : public EffectCalc {
         int8_t hue_step = 0;
     } Particle;
 private:
-    GradientPalette *myPal;
+    uint8_t pidx = 0;
     Particle particles[20];
     unsigned numParticles = 0;
     void generate(bool reset = false);
@@ -1162,12 +1162,14 @@ class EffectLiquidLamp : public EffectCalc {
         unsigned tr = 0;
     } Particle;
 private:
-    GradientPalette *myPal;
     unsigned MASS_MIN = 10;
     unsigned MASS_MAX = 50;
     Particle particles[20];
+    uint8_t buff[WIDTH][HEIGHT];
+    uint8_t pidx = 0;
     unsigned numParticles = 0;
     unsigned physic_on = 1;
+    unsigned filter = 0;
     void generate(bool reset = false);
     void position();
     void physic();

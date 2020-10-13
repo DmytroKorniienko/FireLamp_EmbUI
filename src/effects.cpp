@@ -3563,7 +3563,7 @@ void EffectPicasso::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   uint8_t idx = _val->getId();
   if (idx == 3) {
-    myPal = (*palettes)[constrain(_val->getVal().toInt(), 0, 21)];
+    pidx = constrain(_val->getVal().toInt(), 0, 21);
   }
   if (idx == 4) {
     byte hue = _val->getVal().toInt();
@@ -3593,10 +3593,10 @@ void EffectPicasso::setDynCtrl(UIControl*_val) {
 }
 
 bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
-
-
   generate();
   position();
+
+  GradientPalette *myPal = (*palettes)[pidx];
 
  // сила возмущения
   unsigned mx = EffectMath::fmap(scale, 0U, 255U, 200U, 80U);
@@ -3828,7 +3828,7 @@ void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   uint8_t idx = _val->getId();
   if (idx == 3) {
-    myPal = (*palettes)[constrain(_val->getVal().toInt(), 0, 18)];
+    pidx = constrain(_val->getVal().toInt(), 0, 18);
   } else
   if (idx == 4) {
     byte hue = _val->getVal().toInt();
@@ -3866,6 +3866,8 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
   if (physic_on) {
     physic();
   }
+
+  GradientPalette *myPal = (*palettes)[pidx];
 
   for (unsigned x = 0; x < WIDTH; x++) {
     for (unsigned y = 0; y < HEIGHT; y++) {
