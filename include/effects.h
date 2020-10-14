@@ -740,7 +740,7 @@ private:
     void fillnoise8();
 
     uint8_t ihue;
-    uint8_t colorLoop;
+    bool colorLoop;
     uint16_t _speed;             // speed is set dynamically once we've started up
     uint16_t _scale;             // scale is set dynamically once we've started up
     uint16_t x;
@@ -755,6 +755,7 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 class EffectSpiro : public EffectCalc {

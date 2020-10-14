@@ -136,9 +136,9 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
 
     interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0009), FPSTR(TINTF_005));
-    if (confEff->eff_nb&0xFF00) { // пока удаление только для копий, но в теории можно удалять что угодно
+    //if (confEff->eff_nb&0xFF00) { // пока удаление только для копий, но в теории можно удалять что угодно
         interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
-    }
+    //}
 
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(TCONST_000D));
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0093), FPSTR(TINTF_08B), FPSTR(TCONST_000D));
@@ -164,7 +164,21 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     if (act == FPSTR(TCONST_0009)) {
         myLamp.effects.copyEffect(confEff); // копируем текущий
     } else if (act == FPSTR(TCONST_000A)) {
-        myLamp.effects.deleteEffect(confEff); // удаляем текущий
+        uint16_t tmpEffnb = confEff->eff_nb;
+        LOG(printf_P,PSTR("confEff->eff_nb=%d\n"), tmpEffnb);
+        if(tmpEffnb==myLamp.effects.getCurrent()){
+            myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
+            myLamp.effects.deleteEffect(confEff); // удаляем текущий
+            remote_action(RA_EFF_NEXT, NULL);
+        } else {
+            myLamp.effects.deleteEffect(confEff); // удаляем текущий
+        }
+        String tmpStr=F("- ");
+        tmpStr+=String(tmpEffnb);
+        myLamp.sendString(tmpStr.c_str(), CRGB::Red);
+        //confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
+        section_main_frame(interf, data);
+        return;
     } else if (act == FPSTR(TCONST_000B)) {
 #ifndef DELAYED_EFFECTS
         sysTicker.once(5,std::bind([]{

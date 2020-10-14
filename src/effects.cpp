@@ -167,6 +167,7 @@ void EffectCalc::palettesload(){
   palettes.push_back(&RainbowColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&CloudColors_p);
+  palettes.push_back(&StepkosColors2_p);
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&WoodFireColors_p);
   palettes.push_back(&SodiumFireColors_p);
@@ -178,7 +179,6 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&EveningColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&StepkosColors2_p);
   palettes.push_back(&VioletColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
@@ -1112,7 +1112,7 @@ void Effect3DNoise::fillNoiseLED()
       }
       // brighten up, as the color palette itself often contains the
       // light/dark dynamic range desired
-      if ( bri > 127 )
+      if ( bri > 127 && colorLoop)
       {
         bri = 255;
       }
@@ -1143,44 +1143,16 @@ void Effect3DNoise::fillnoise8()
 }
 
 void Effect3DNoise::load(){
-  switch (effect)
-  {
-  case EFF_ENUM::EFF_RAINBOW :
-    curPalette = &RainbowColors_p;
-    colorLoop = 1;
-    break;
-  case EFF_ENUM::EFF_RAINBOW_STRIPE :
-    curPalette = &RainbowStripeColors_p;
-    colorLoop = 1;
-    break;
-  case EFF_ENUM::EFF_ZEBRA :
-    curPalette = &ZeebraColors_p;
-    colorLoop = 1;
-    break;
-  case EFF_ENUM::EFF_FOREST :
-    curPalette = &ForestColors_p;
-    colorLoop = 0;
-    break;
-  case EFF_ENUM::EFF_OCEAN :
-    curPalette = &OceanColors_p;
-    colorLoop = 0;
-     break;
-  case EFF_ENUM::EFF_PLASMA :
-    curPalette = &PartyColors_p;
-    colorLoop = 1;
-    break;
-  case EFF_ENUM::EFF_CLOUDS :
-    curPalette = &CloudColors_p;
-    colorLoop = 0;
-    break;
-  case EFF_ENUM::EFF_LAVA :
-    curPalette = &LavaColors_p;
-    colorLoop = 0;
-    break;
-  default:
-    return;
-  }
+  palettesload();
+  fillnoise8();
+}
 
+void Effect3DNoise::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
+  if(_val->getId()==3 && _val->getVal().toInt()==0)
+    curPalette = &ZeebraColors_p;
+  else if(_val->getId()==4)
+    colorLoop = (_val->getVal() == FPSTR(TCONST_FFFF));
 }
 
 bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
@@ -1194,23 +1166,7 @@ bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
     _speed = NOISE_SCALE_AMP*speed/255;
   #endif
 
-  switch (effect)
-  {
-  case EFF_ENUM::EFF_MADNESS :
-    fillnoise8();
-    for (uint8_t i = 0; i < WIDTH; i++)
-    {
-      for (uint8_t j = 0; j < HEIGHT; j++)
-      {
-        CRGB thisColor = CHSV(noise[j][i], 255, noise[i][j]);
-        EffectMath::drawPixelXY(i, j, thisColor);                         //leds[getPixelNumber(i, j)] = CHSV(noise[j][i], 255, noise[i][j]);
-      }
-    }
-    ihue += 1;
-    break;
-  default:
-    fillNoiseLED();
-  }
+  fillNoiseLED();
   return true;
 }
 

@@ -127,15 +127,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_LIGHTERS :
     worker = std::unique_ptr<EffectLighters>(new EffectLighters());
     break;
-  case EFF_ENUM::EFF_MADNESS :
-  case EFF_ENUM::EFF_CLOUDS :
-  case EFF_ENUM::EFF_LAVA :
-  case EFF_ENUM::EFF_PLASMA :
-  case EFF_ENUM::EFF_RAINBOW :
-  case EFF_ENUM::EFF_RAINBOW_STRIPE :
-  case EFF_ENUM::EFF_ZEBRA :
-  case EFF_ENUM::EFF_FOREST :
-  case EFF_ENUM::EFF_OCEAN :
+  case EFF_ENUM::EFF_3DNOISE :
     worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());
     break;
   case EFF_ENUM::EFF_DRIFT :
@@ -810,11 +802,12 @@ void EffectWorker::deleteEffect(const EffectListElem *eff)
       prevEff = effects[i]->eff_nb;
       if(effects[i]->eff_nb==eff->eff_nb){
           //deleteFromIndexFile(eff->eff_nb);
+          removeConfig(eff->eff_nb);
           delete effects.remove(i);
           break;
       }
   }
-  directMoveBy(prevEff);
+  //directMoveBy(prevEff);
 }
 
 // копирование эффекта
