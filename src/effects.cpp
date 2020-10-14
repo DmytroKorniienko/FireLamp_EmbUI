@@ -178,9 +178,8 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&EveningColors_p);
   palettes.push_back(&StepkosColors_p);
-
   palettes.push_back(&StepkosColors2_p);
-  //palettes.push_back(&VioletColors_p);
+  palettes.push_back(&VioletColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
