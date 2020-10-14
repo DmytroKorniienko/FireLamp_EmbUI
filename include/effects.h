@@ -476,6 +476,7 @@ private:
     bool isMinute=false;
 
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
+    bool palleteTest(CRGB *leds, EffectWorker *param);
     void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

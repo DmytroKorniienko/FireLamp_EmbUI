@@ -558,6 +558,8 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   cfg.replace(F("@name@"), efname);
   cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
   cfg.replace(F("@nb@"), String(nb));
+  cfg.replace(F("@pal@"), String(FASTLED_PALETTS_COUNT));
+  
   File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   if (configFile){
     /*

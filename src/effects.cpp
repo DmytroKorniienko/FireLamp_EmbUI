@@ -178,7 +178,9 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&EveningColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&VioletColors_p);
+
+  palettes.push_back(&StepkosColors2_p);
+  //palettes.push_back(&VioletColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
@@ -198,8 +200,8 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val,
   palettepos = (uint8_t)((float)_val/ptPallete);
   curPalette = _pals.at(palettepos);
   palettescale = _val-ptPallete*(palettepos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
-
-  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%4.2f, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
+  
+  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%4.2f, palettescale=%d\n"), _pals.size(), palettepos, ptPallete, palettescale);
 }
 
 /**
@@ -3237,16 +3239,19 @@ bool EffectCube2d::cube2dClassicRoutine(CRGB *leds, EffectWorker *param)
 
 //-------------- Эффект "Часы"
 bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
-  if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
-      EffectMath::dimAll(254);
-    return true;
-  } else {
-    lastrun = millis();
-    if (myLamp.isPrintingNow()) // если выводится бегущая строка, то эффект приостанавливаем! Специально обученный костыль, т.к. вывод статического и динамического текста одноверенно не совместимы
+  if(isDebug())
+    return palleteTest(ledarr, opt);
+  else {
+    if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
+        EffectMath::dimAll(254);
       return true;
+    } else {
+      lastrun = millis();
+      if (myLamp.isPrintingNow()) // если выводится бегущая строка, то эффект приостанавливаем! Специально обученный костыль, т.к. вывод статического и динамического текста одноверенно не совместимы
+        return true;
+    }
+    return timePrintRoutine(ledarr, opt);
   }
-
-  return timePrintRoutine(*&ledarr, &*opt);
 }
 
 void EffectTime::load(){
@@ -3258,6 +3263,16 @@ void EffectTime::load(){
     hColor[0] = ColorFromPalette(*curPalette, random8());
     mColor[0] = ColorFromPalette(*curPalette, random8());
   }
+}
+
+bool EffectTime::palleteTest(CRGB *leds, EffectWorker *param)
+{
+  FastLED.clear();
+  float sf = 0.996078431372549+speed/255.; // смещение, для скорости 1 смещения не будет, т.к. суммарный коэф. == 1
+  for(uint8_t y=0; y<HEIGHT; y++)
+    for(uint8_t x=0; x<WIDTH; x++)
+      EffectMath::drawPixelXY(WIDTH-1-x,HEIGHT-1-y,ColorFromPalette(*curPalette, (y*x*sf), 127));
+  return true;
 }
 
 bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
@@ -5587,17 +5602,19 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   speedFactor = (float)speed / 512.0 + 0.025;
   fadeToBlackBy(leds, NUM_LEDS, speed<25 ? 5 : speed/2 ); // длина хвоста будет зависеть от скорости
 #ifdef MIC_EFFECTS
-  hue+=(speedFactor+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
+  hue+=(speedFactor/snakeCount+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
 #else
-  hue+=speedFactor;
+  hue+=speedFactor/snakeCount;
 #endif
+  hue = hue>255? hue-255 : hue;
 
   for (int i = snakeCount - 1; i >= 0; i--)
   {
     EffectSnake::Snake &snake = snakes[i];
+
     fill_palette(colors, SNAKE_LENGTH, (
-      (speed==1 || speed==255) ? ((i+1)*8) : (speed<=127 ? hue+i : (float)((int)hue%255)*i/4.0+1)
-    ), i, *curPalette, 255-(i*5+53), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
+      (speed<25 || speed>230) ? (i ? hue : 255-hue) : (i ? hue*(i+1) : (255-hue)*(i+1))
+    ), 1, *curPalette, 255-(i*8), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
 
     snake.shuffleDown(speedFactor, subPix);
 
