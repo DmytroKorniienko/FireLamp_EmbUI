@@ -626,7 +626,7 @@ void set_onflag(Interface *interf, JsonObject *data){
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
-            myLamp.changePower(newpower);
+            myLamp.changePower(true);
 #ifndef ESP_USE_BUTTON
             if(millis()<10000)
                 sysTicker.once(3,std::bind([]{
@@ -635,7 +635,7 @@ void set_onflag(Interface *interf, JsonObject *data){
 #endif
         } else {
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
-            sysTicker.once(0.5,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
+            sysTicker.once(1,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 myLamp.changePower(false);
             }));
         }

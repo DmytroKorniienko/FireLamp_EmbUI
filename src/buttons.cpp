@@ -190,6 +190,9 @@ void Buttons::buttonTick(){
 		return;
 	}
 
+	if(!holding)
+		startLampState=myLamp.isLampOn();
+
 	Button btn(startLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {

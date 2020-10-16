@@ -737,7 +737,7 @@ void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял �
     colored = _val->getVal() == FPSTR(TCONST_FFFF);
   }
   if(_val->getId()==4) {
-    isOld = _val->getVal() == FPSTR(TCONST_FFFF);
+    isNew = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 }
 
@@ -749,18 +749,24 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
   {
     if(colored){
       lightersPos[0U][i] += lightersSpeed[0U][i]*speedfactor;
-      lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
+      if(isNew)
+        lightersPos[1U][i] -= lightersSpeed[0U][i]*speedfactor;
+      else
+        lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
     } else {
       lightersPos[0U][i] += lightersSpeed[0U][LIGHTERS_AM-1]*speedfactor;
-      lightersPos[1U][i] -= lightersSpeed[1U][LIGHTERS_AM-1]*speedfactor;
+      if(isNew)
+        lightersPos[1U][i] -= lightersSpeed[0U][LIGHTERS_AM-1]*speedfactor;
+      else
+        lightersPos[1U][i] -= lightersSpeed[1U][LIGHTERS_AM-1]*speedfactor;
     }
-    if (!isOld){
+    if (isNew){
       EffectMath::dimAll(256-map(speed,1,255,2,1));
-      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? 127 : 0), (colored ? 255 : light[i])));
+      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? light[i] : 0), (colored ? 255 : light[i])));
     }
     else {
       EffectMath::dimAll(256-map(speed,1,255,2,1));
-      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? 127 : 0), (colored ? 255 : light[i])));
+      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? light[i] : 0), (colored ? 255 : light[i])));
     }
     if(lightersPos[1U][i]<-1){
       lightersPos[0U][i] = (float)random(-(WIDTH*10-2), (WIDTH*10-2)) / 10.0f;

@@ -725,7 +725,7 @@ public:
 class EffectStarFall : public EffectLighters {
 private:
     bool colored = false;
-    bool isOld = false;
+    bool isNew = false;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
 
