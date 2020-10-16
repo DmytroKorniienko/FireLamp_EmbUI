@@ -715,17 +715,26 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 
 // ------------- звездопад/метель -------------
 bool EffectStarFall::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun(3.0))
-    return false;
   return snowStormStarfallRoutine(*&ledarr, &*opt);
+}
+
+void EffectStarFall::load(){
+  randomSeed(millis());
+  for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+  {
+    lightersPos[0U][i] = (float)random(-(WIDTH*10-2), (WIDTH*10-2)) / 10.0f;
+    lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
+    lightersSpeed[0U][i] = (float)random(10, 20) / 10.0f;
+    lightersSpeed[1U][i] = (float)random(10, 20) / 10.0f;
+    lightersColor[i] = random(0U, 255U);
+    light[i] = 127;
+  }
 }
 
 void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  //colored = getCtrlVal(3) != FPSTR(TCONST_FFFF); // да можно и так обратиться, если уверены, что есть только один контрол 3+, только везде желательно использовать == FPSTR(TCONST_FFFF) или != FPSTR(TCONST_FFFF)
-  // либо можно распознать id и сделать кастомное действие лишь для конкретного id
   if(_val->getId()==3) {
-    colored = _val->getVal() != FPSTR(TCONST_FFFF);
+    colored = _val->getVal() == FPSTR(TCONST_FFFF);
   }
   if(_val->getId()==4) {
     isOld = _val->getVal() == FPSTR(TCONST_FFFF);
@@ -734,54 +743,34 @@ void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял �
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
-  // заполняем головами комет левую и верхнюю линию
-  for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
+  float speedfactor = (float)speed / (colored ? 2048.0f : 1024.0f) + 0.15f;
+  
+  for (uint8_t i = 0U; i < map(speed,1,255,1,(colored ? LIGHTERS_AM/2-1 : LIGHTERS_AM/2U-1)); i++) // LIGHTERS_AM
   {
-    if (EffectMath::getPixColorXY(0U, i) == 0U &&
-        (random(0, (colored ? SNOW_DENSE : STAR_DENSE)) == 0) &&
-        EffectMath::getPixColorXY(0U, i + 1U) == 0U &&
-        EffectMath::getPixColorXY(0U, i - 1U) == 0U)
-    {
-      EffectMath::setLed(myLamp.getPixelNumber(0U, i), CHSV(random(0, 200), (colored ? SNOW_SATURATION : STAR_SATURATION), 255U));
+    if(colored){
+      lightersPos[0U][i] += lightersSpeed[0U][i]*speedfactor;
+      lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
+    } else {
+      lightersPos[0U][i] += lightersSpeed[0U][LIGHTERS_AM-1]*speedfactor;
+      lightersPos[1U][i] -= lightersSpeed[1U][LIGHTERS_AM-1]*speedfactor;
+    }
+    if (!isOld){
+      EffectMath::dimAll(256-map(speed,1,255,2,1));
+      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? 127 : 0), (colored ? 255 : light[i])));
+    }
+    else {
+      EffectMath::dimAll(256-map(speed,1,255,2,1));
+      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? 127 : 0), (colored ? 255 : light[i])));
+    }
+    if(lightersPos[1U][i]<-1){
+      lightersPos[0U][i] = (float)random(-(WIDTH*10-2), (WIDTH*10-2)) / 10.0f;
+      lightersPos[1U][i] = random(HEIGHT,HEIGHT+4);
+      lightersSpeed[0U][i] = (float)random(15, 25) / 10.0f;
+      lightersSpeed[1U][i] = (float)random(15, 25) / 10.0f;
+      lightersColor[i] = random(0U, 255U);
+      light[i] = random(127U, 255U);
     }
   }
-
-  for (uint8_t i = 0U; i < WIDTH / 2U; i++)
-  {
-    if (EffectMath::getPixColorXY(i, HEIGHT - 1U) == 0U &&
-        (random(0, (colored ? SNOW_DENSE : STAR_DENSE)) == 0U) &&
-        EffectMath::getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
-        EffectMath::getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
-    {
-      EffectMath::setLed(myLamp.getPixelNumber(i, HEIGHT - 1U), CHSV(random(0, 200), (colored ? SNOW_SATURATION : STAR_SATURATION), 255U));
-    }
-  }
-
-  // сдвигаем по диагонали
-  for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
-  {
-    for (uint8_t x = WIDTH - 1U; x > 0U; x--)
-    {
-      EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x - 1U, y + 1U));
-    }
-  }
-
-  if (isOld) {
-    fadeToBlackBy(leds, NUM_LEDS, 15);
-    EffectMath::blur2d(25);
-  } else {
-
-    // уменьшаем яркость левой и верхней линии, формируем "хвосты"
-    for (uint8_t i = HEIGHT / 2U; i < HEIGHT; i++)
-    {
-      EffectMath::fadePixel(0U, i, (colored ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
-    }
-    for (uint8_t i = 0U; i < WIDTH / 2U; i++)
-    {
-      EffectMath::fadePixel(i, HEIGHT - 1U, (colored < 127 ? SNOW_TAIL_STEP : STAR_TAIL_STEP));
-    }
-  }
-
   return true;
 }
 
@@ -799,7 +788,6 @@ void EffectLighters::load(){
     lightersColor[i] = random(0U, 255U);
     light[i] = 127;
   }
-
 }
 
 bool EffectLighters::run(CRGB *ledarr, EffectWorker *opt){

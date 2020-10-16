@@ -705,28 +705,29 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- звездопад/метель -------------
-class EffectStarFall : public EffectCalc {
-private:
-    bool colored = false;
-    bool isOld = false;
-    bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
-
-public:
-    void load() override {FastLED.clear();}
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
+// ------------- светлячки -------------
 class EffectLighters : public EffectCalc {
-private:
+protected:
     uint16_t lightersIdx;
     float lightersSpeed[2U][LIGHTERS_AM];
     uint8_t lightersColor[LIGHTERS_AM];
     float lightersPos[2U][LIGHTERS_AM];
     byte light[LIGHTERS_AM];
-
+private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------- звездопад/метель -------------
+class EffectStarFall : public EffectLighters {
+private:
+    bool colored = false;
+    bool isOld = false;
+    bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
