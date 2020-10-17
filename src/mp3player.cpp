@@ -45,7 +45,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   mp3player.begin(9600);
   setTimeOut(200); //Set serial communictaion time out 200ms
   LOG(println);
-  LOG(println, F("DFRobot DFPlayer Mini Demo"));
+  LOG(println, F("DFRobot DFPlayer Mini"));
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
   if (!begin(mp3player)) {  //Use softwareSerial to communicate with mp3.
     LOG(println, F("Unable to begin:"));
@@ -59,7 +59,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println, F("DFPlayer Mini online."));
   outputDevice(DFPLAYER_DEVICE_SD);
   periodicCall.attach_scheduled(1.21, std::bind(&MP3PLAYERDEVICE::handle, this)); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
-  //volume(5);  //Set volume value. From 0 to 30
+  volume(5);  // start volume
 }
 
 void MP3PLAYERDEVICE::printSatusDetail(){

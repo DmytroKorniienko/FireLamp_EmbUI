@@ -627,6 +627,10 @@ void set_onflag(Interface *interf, JsonObject *data){
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
             myLamp.changePower(true);
+#ifdef MP3PLAYER
+            if(myLamp.getLampSettings().isOnMP3)
+                mp3->setIsOn(true);
+#endif
 #ifndef ESP_USE_BUTTON
             if(millis()<10000)
                 sysTicker.once(3,std::bind([]{
@@ -637,6 +641,9 @@ void set_onflag(Interface *interf, JsonObject *data){
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
             sysTicker.once(1,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 myLamp.changePower(false);
+#ifdef MP3PLAYER
+                mp3->setIsOn(false);
+#endif
             }));
         }
     }
