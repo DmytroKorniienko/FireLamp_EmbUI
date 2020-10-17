@@ -1834,6 +1834,8 @@ void sync_parameters(){
     DynamicJsonDocument doc(1024);
     JsonObject obj = doc.to<JsonObject>();
 
+    myLamp.semqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
+
     LAMPFLAGS tmp;
     tmp.lampflags = embui.param(FPSTR(TCONST_0094)).toInt();
 

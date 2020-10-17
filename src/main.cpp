@@ -126,19 +126,46 @@ ICACHE_FLASH_ATTR void loop() {
 
 ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
+  if(topic.startsWith(FPSTR(TCONST_00AC))){
+    String sendtopic=topic;
+    sendtopic.replace(FPSTR(TCONST_00AC), "");
+    if(sendtopic==FPSTR(TCONST_00AE)){
+        sendtopic=String(FPSTR(TCONST_008B))+sendtopic;
+        String effcfg = myLamp.effects.geteffconfig(myLamp.effects.getCurrent());
+        embui.publish(sendtopic, effcfg, false); // отправляем обратно в MQTT в топик embui/pub/
+    } else if(sendtopic==FPSTR(TCONST_00AD)){
+        sendData(true);
+    }
+  }
 }
 
 // нужно подчистить эту функцию, печатать инфо можно более аккуратным способом
-ICACHE_FLASH_ATTR void sendData(){
-  static unsigned long i;
-  static unsigned int in;
+ICACHE_FLASH_ATTR void sendData(bool force){
+    static unsigned long i;
 
-  if(i + (in * 1000) > millis() || myLamp.getmqtt_int() == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
-  i = millis();
-  in = myLamp.getmqtt_int();
-  // всё, что ниже будет выполняться через интервалы
+    if((i + (myLamp.getmqtt_int() * 1000) > millis() || myLamp.getmqtt_int() == 0) && !force) return; // если не пришло время, или интервал = 0 - выходим из функции
+    i = millis();
+    // всё, что ниже будет выполняться через интервалы
 
-  // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
+    // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
+    LOG(print, F("sendData :"));
+    DynamicJsonDocument obj(512);
+    //JsonObject obj = doc.to<JsonObject>();
+    obj[FPSTR(TCONST_0001)] = String(myLamp.timeProcessor.getFormattedShortTime());
+    obj[FPSTR(TCONST_0002)] = String(ESP.getFreeHeap());
+    obj[FPSTR(TCONST_008F)] = String(millis()/1000);
+    String sendtopic=FPSTR(TCONST_008B);
+    sendtopic+=FPSTR(TCONST_00AD);
+    String out;
+    serializeJson(obj, out);
+    //LOG(println, out.c_str());
+    embui.publish(sendtopic, out, false); // отправляем обратно в MQTT в топик embui/pub/
+    obj.clear();
+
+    // также отправим конфиг текущего эффекта
+    sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
+    String effcfg = myLamp.effects.geteffconfig(myLamp.effects.getCurrent());
+    embui.publish(sendtopic, effcfg, false);
 }
 
 #ifdef ESP_USE_BUTTON

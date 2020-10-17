@@ -564,11 +564,8 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   }
 }
 
-void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
-  // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
-  File configFile;
-  String filename = geteffectpathname(nb,folder);
-  configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+String EffectWorker::geteffconfig(uint16_t nb)
+{
   DynamicJsonDocument doc(2048);
   doc[F("nb")] = nb;
   doc[F("flags")] = flags.mask;
@@ -589,13 +586,19 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
       }
   String cfg_str;
   serializeJson(doc, cfg_str);
-  //LOG(println,cfg_str);
-  configFile.print(cfg_str);
   doc.clear();
-  configFile.close();
+  //LOG(println,cfg_str);
+  return cfg_str;
 }
 
-
+void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
+  // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
+  File configFile;
+  String filename = geteffectpathname(nb,folder);
+  configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
+  configFile.print(geteffconfig(nb));
+  configFile.close();
+}
 
 /**
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
@@ -797,9 +800,9 @@ void EffectWorker::deleteFromIndexFile(const uint16_t effect)
 // удалить эффект
 void EffectWorker::deleteEffect(const EffectListElem *eff)
 {
-  uint16_t prevEff = EFF_ENUM::EFF_NONE;
+  //uint16_t prevEff = EFF_ENUM::EFF_NONE;
   for(int i=0; i<effects.size(); i++){
-      prevEff = effects[i]->eff_nb;
+      //prevEff = effects[i]->eff_nb;
       if(effects[i]->eff_nb==eff->eff_nb){
           //deleteFromIndexFile(eff->eff_nb);
           removeConfig(eff->eff_nb);

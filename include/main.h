@@ -54,7 +54,7 @@ extern MP3PLAYERDEVICE *mp3;
 #endif
 
 void mqttCallback(const String &topic, const String &payload);
-void sendData();
+void  sendData(bool force=false);
 
 void create_parameters();
 void sync_parameters();

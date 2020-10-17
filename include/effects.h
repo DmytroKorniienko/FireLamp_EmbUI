@@ -2067,6 +2067,9 @@ public:
     // тип сортировки
     void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
 
+    // Получить конфиг текущего эффекта
+    String geteffconfig(uint16_t nb);
+
     // конструктор копий эффектов
     EffectWorker(const EffectListElem* base, const EffectListElem* copy);
     // Конструктор для отложенного эффекта
