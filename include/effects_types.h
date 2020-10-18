@@ -179,7 +179,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 5, 3, 6, // 0-15
+  1, 2, 2, 2, 2, 1, 5, 1, 5, 5, 3, 4, 1, 7, 3, 6, // 0-15
   0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
   1, 3, 3, 5, 5, 3, 6, 5, 7, 5, 2, 1, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 2, // 48 - 63
@@ -265,7 +265,7 @@ static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1 = случайный, 255 = белый)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
 static const char E_RAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
 static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
-static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_POPCORN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Размытие\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Обратные Цвета\"}]}";
 static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}]}";
 static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":18,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}, {\"id\":5,\"type\":0,\"val\":0,\"min\":0,\"max\":4,\"step\":1,\"name\":\"Фильтр\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"Физика\"}]}";
