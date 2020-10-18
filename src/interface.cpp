@@ -1940,12 +1940,9 @@ void remote_action(RA action, ...){
     char *key = NULL, *val = NULL, *value = NULL;
     va_list prm;
     va_start(prm, action);
-    while ((key = (char *)va_arg(prm, char *))) {
-        val = (char *)va_arg(prm, char *);
-        if(key && val){
-            LOG(printf_P, PSTR("%s = %s"), key, val);
-            obj[key] = val;
-        }
+    while ((key = (char *)va_arg(prm, char *)) && (val = (char *)va_arg(prm, char *))) {
+        LOG(printf_P, PSTR("%s = %s"), key, val);
+        obj[key] = val;
     }
     va_end(prm);
     if (key && !val) {
