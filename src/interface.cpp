@@ -1934,22 +1934,25 @@ void sync_parameters(){
 
 void remote_action(RA action, ...){
     LOG(printf_P, PSTR("RA %d: "), action);
-    StaticJsonDocument<128> doc;
+    DynamicJsonDocument doc(512);
     JsonObject obj = doc.to<JsonObject>();
 
     char *key = NULL, *val = NULL, *value = NULL;
     va_list prm;
     va_start(prm, action);
-    while ((key = (char *)va_arg(prm, char *)) && (val = (char *)va_arg(prm, char *))) {
-        LOG(printf_P, PSTR("%s = %s"), key, val);
-        obj[key] = val;
+    while ((key = (char *)va_arg(prm, char *))) {
+        val = (char *)va_arg(prm, char *);
+        if(key && val){
+            LOG(printf_P, PSTR("%s = %s"), key, val);
+            obj[key] = val;
+        }
     }
     va_end(prm);
     if (key && !val) {
         value = key;
         LOG(printf_P, PSTR("%s"), value);
     }
-    LOG(println, PSTR(""));
+    LOG(println);
 
     switch (action) {
         case RA::RA_ON:
@@ -1987,7 +1990,8 @@ void remote_action(RA action, ...){
             CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
             break;
         case RA::RA_EXTRA:
-            CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
+            //CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
+            CALL_INTF_OBJ(set_effects_dynCtrl);
             break;
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
@@ -2079,6 +2083,7 @@ void remote_action(RA action, ...){
 #endif
         default:;
     }
+    obj.clear();
 }
 
 void httpCallback(const String &param, const String &value, bool isset){
@@ -2086,6 +2091,7 @@ void httpCallback(const String &param, const String &value, bool isset){
     LOG(printf_P, PSTR("HTTP: %s - %s\n"), param.c_str(), value.c_str());
 
     if(!isset) {
+        LOG(println, F("GET"));
         if (param == FPSTR(TCONST_0070)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
         else if (param == FPSTR(TCONST_0081)) embui.publish(String(FPSTR(TCONST_008B)) + param, !myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
         else if (param == FPSTR(TCONST_00AA)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.getMode() == LAMPMODE::MODE_DEMO ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
@@ -2093,7 +2099,16 @@ void httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0013)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.effects.getControls()[1]->getVal(), false);
         else if (param == FPSTR(TCONST_0014)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.effects.getControls()[2]->getVal(), false);
         else if (param == FPSTR(TCONST_0082)) embui.publish(String(FPSTR(TCONST_008B)) + param, String(myLamp.effects.getCurrent()), false);
+        else if (param.startsWith(FPSTR(TCONST_0015))) {
+            LList<UIControl*>&controls = myLamp.effects.getControls();
+            for(int i=3; i<controls.size();i++){
+                if(param == String(FPSTR(TCONST_0015))+String(controls[i]->getId())){
+                    embui.publish(String(FPSTR(TCONST_008B)) + param, controls[i]->getVal(), false);
+                }
+            }
+        }
     } else {
+        LOG(println, F("SET"));
         if (param == FPSTR(TCONST_0070)) action = RA_ON;
         else if (param == FPSTR(TCONST_0081)) action = RA_OFF;
         else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
@@ -2107,6 +2122,7 @@ void httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0085)) action = RA_EFF_RAND;
         else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
         else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
+        else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); return; }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;
 #endif
