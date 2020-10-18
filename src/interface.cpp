@@ -2083,27 +2083,39 @@ void remote_action(RA action, ...){
     obj.clear();
 }
 
-void httpCallback(const String &param, const String &value, bool isset){
+String httpCallback(const String &param, const String &value, bool isset){
+    String result = F("Ok");
     RA action = RA_UNKNOWN;
     LOG(printf_P, PSTR("HTTP: %s - %s\n"), param.c_str(), value.c_str());
 
     if(!isset) {
         LOG(println, F("GET"));
-        if (param == FPSTR(TCONST_0070)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
-        else if (param == FPSTR(TCONST_0081)) embui.publish(String(FPSTR(TCONST_008B)) + param, !myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
-        else if (param == FPSTR(TCONST_00AA)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.getMode() == LAMPMODE::MODE_DEMO ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
-        else if (param == FPSTR(TCONST_0012)) embui.publish(String(FPSTR(TCONST_008B)) + param, String(myLamp.getLampBrightness()), false);
-        else if (param == FPSTR(TCONST_0013)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.effects.getControls()[1]->getVal(), false);
-        else if (param == FPSTR(TCONST_0014)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.effects.getControls()[2]->getVal(), false);
-        else if (param == FPSTR(TCONST_0082)) embui.publish(String(FPSTR(TCONST_008B)) + param, String(myLamp.effects.getCurrent()), false);
+        if (param == FPSTR(TCONST_0070))
+            { result = myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
+        else if (param == FPSTR(TCONST_0081))
+            { result = !myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
+        else if (param == FPSTR(TCONST_00AA))
+            { result = myLamp.getMode() == LAMPMODE::MODE_DEMO ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
+        else if (param == FPSTR(TCONST_0012))
+            { result = String(myLamp.getLampBrightness()); }
+        else if (param == FPSTR(TCONST_0013))
+            { result = myLamp.effects.getControls()[1]->getVal(); }
+        else if (param == FPSTR(TCONST_0014))
+            { result = myLamp.effects.getControls()[2]->getVal(); }
+        else if (param == FPSTR(TCONST_0082))
+            { result = String(myLamp.effects.getCurrent());  }
         else if (param.startsWith(FPSTR(TCONST_0015))) {
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=3; i<controls.size();i++){
                 if(param == String(FPSTR(TCONST_0015))+String(controls[i]->getId())){
-                    embui.publish(String(FPSTR(TCONST_008B)) + param, controls[i]->getVal(), false);
+                    result = controls[i]->getVal();
+                    embui.publish(String(FPSTR(TCONST_008B)) + param, result, false);
+                    return result;
                 }
             }
         }
+        embui.publish(String(FPSTR(TCONST_008B)) + param, result, false);
+        return result;
     } else {
         LOG(println, F("SET"));
         if (param == FPSTR(TCONST_0070)) action = RA_ON;
@@ -2119,7 +2131,7 @@ void httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0085)) action = RA_EFF_RAND;
         else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
         else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
-        else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); return; }
+        else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); return result; }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;
 #endif
@@ -2131,6 +2143,7 @@ void httpCallback(const String &param, const String &value, bool isset){
         remote_action(action, value.c_str(), NULL);
         embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
     }
+    return result;
 }
 
 // обработка эвентов лампы

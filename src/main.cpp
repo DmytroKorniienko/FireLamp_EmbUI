@@ -148,7 +148,7 @@ ICACHE_FLASH_ATTR void sendData(bool force){
     // всё, что ниже будет выполняться через интервалы
 
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
-    LOG(print, F("sendData :"));
+    LOG(println, F("sendData :"));
     DynamicJsonDocument obj(512);
     //JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0001)] = String(myLamp.timeProcessor.getFormattedShortTime());
@@ -158,7 +158,7 @@ ICACHE_FLASH_ATTR void sendData(bool force){
     sendtopic+=FPSTR(TCONST_00AD);
     String out;
     serializeJson(obj, out);
-    //LOG(println, out.c_str());
+    LOG(println, out);
     embui.publish(sendtopic, out, false); // отправляем обратно в MQTT в топик embui/pub/
     obj.clear();
 
