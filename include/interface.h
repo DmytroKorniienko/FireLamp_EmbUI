@@ -46,7 +46,7 @@ void pubCallback(Interface *interf);
 void save_lamp_flags();
 
 void remote_action(RA action, ...);
-void httpCallback(const String &param, const String &value);
+void httpCallback(const String &param, const String &value, bool isset);
 #ifdef ESP_USE_BUTTON
 void default_buttons();
 #endif

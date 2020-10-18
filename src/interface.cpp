@@ -2081,33 +2081,43 @@ void remote_action(RA action, ...){
     }
 }
 
-void httpCallback(const String &param, const String &value){
+void httpCallback(const String &param, const String &value, bool isset){
     RA action = RA_UNKNOWN;
     LOG(printf_P, PSTR("HTTP: %s - %s\n"), param.c_str(), value.c_str());
 
-    if (param == FPSTR(TCONST_0070)) action = RA_ON;
-    else if (param == FPSTR(TCONST_0081)) action = RA_OFF;
-    else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
-    else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
-    else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
-    else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
-    else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
-    else if (param == FPSTR(TCONST_0082)) action = RA_EFFECT;
-    else if (param == FPSTR(TCONST_0083)) action = RA_EFF_NEXT;
-    else if (param == FPSTR(TCONST_0084)) action = RA_EFF_PREV;
-    else if (param == FPSTR(TCONST_0085)) action = RA_EFF_RAND;
-    else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
-    else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
+    if(!isset) {
+        if (param == FPSTR(TCONST_0070)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
+        else if (param == FPSTR(TCONST_0081)) embui.publish(String(FPSTR(TCONST_008B)) + param, !myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
+        else if (param == FPSTR(TCONST_00AA)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.getMode() == LAMPMODE::MODE_DEMO ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), false);
+        else if (param == FPSTR(TCONST_0012)) embui.publish(String(FPSTR(TCONST_008B)) + param, String(myLamp.getLampBrightness()), false);
+        else if (param == FPSTR(TCONST_0013)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.effects.getControls()[1]->getVal(), false);
+        else if (param == FPSTR(TCONST_0014)) embui.publish(String(FPSTR(TCONST_008B)) + param, myLamp.effects.getControls()[2]->getVal(), false);
+        else if (param == FPSTR(TCONST_0082)) embui.publish(String(FPSTR(TCONST_008B)) + param, String(myLamp.effects.getCurrent()), false);
+    } else {
+        if (param == FPSTR(TCONST_0070)) action = RA_ON;
+        else if (param == FPSTR(TCONST_0081)) action = RA_OFF;
+        else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
+        else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
+        else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
+        else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
+        else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
+        else if (param == FPSTR(TCONST_0082)) action = RA_EFFECT;
+        else if (param == FPSTR(TCONST_0083)) action = RA_EFF_NEXT;
+        else if (param == FPSTR(TCONST_0084)) action = RA_EFF_PREV;
+        else if (param == FPSTR(TCONST_0085)) action = RA_EFF_RAND;
+        else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
+        else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
 #ifdef OTA
-    else if (param == FPSTR(TCONST_0027)) action = RA_OTA;
+        else if (param == FPSTR(TCONST_0027)) action = RA_OTA;
 #endif
 #ifdef AUX_PIN
-    else if (param == FPSTR(TCONST_0088)) action = RA_AUX_ON;
-    else if (param == FPSTR(TCONST_0089))  action = RA_AUX_OFF;
-    else if (param == FPSTR(TCONST_008A))  action = RA_AUX_TOGLE;
+        else if (param == FPSTR(TCONST_0088)) action = RA_AUX_ON;
+        else if (param == FPSTR(TCONST_0089))  action = RA_AUX_OFF;
+        else if (param == FPSTR(TCONST_008A))  action = RA_AUX_TOGLE;
 #endif
-    remote_action(action, value.c_str(), NULL);
-    embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
+        remote_action(action, value.c_str(), NULL);
+        embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
+    }
 }
 
 // обработка эвентов лампы
