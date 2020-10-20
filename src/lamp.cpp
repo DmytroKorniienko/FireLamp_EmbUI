@@ -257,13 +257,8 @@ void LAMP::effectsTick(){
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
   uint32_t _begin = millis();
-  if (isAlarm()) {
-    doPrintStringToLamp(); // обработчик печати строки
-    _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
-    return;
-  }
 
-  if (_effectsTicker.active()) {
+  if (_effectsTicker.active() && !isAlarm()) {
     //if(millis()<5000) return; // затычка до выяснения
     if(!iflags.isEffectsDisabledUntilText){
 #ifdef USELEDBUF
@@ -283,10 +278,12 @@ void LAMP::effectsTick(){
 #endif
       }
     }
-  } else return;
+  }
 
-  if (!isAlarm())
+  if (isAlarm() || iflags.isStringPrinting) {
     doPrintStringToLamp(); // обработчик печати строки
+  }
+
 #ifdef VERTGAUGE
   GaugeMix();
 #endif
@@ -294,7 +291,7 @@ void LAMP::effectsTick(){
   if (iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
-  } else {
+  } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
     _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
   }
@@ -311,17 +308,13 @@ void LAMP::frameShow(const uint32_t ticktime){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
-  if (!_effectsTicker.active() ) return;
+
+  // EVERY_N_SECONDS(1){
+  //   LOG(println, F("FastLED.show()"));
+  // }
 
   FastLED.show();
-// восстановление кадра с прорисованным эффектом из буфера (без текста и индикаторов)
-// #ifdef USELEDBUF
-//   if (!ledsbuff.empty()) {
-//     std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
-//     ledsbuff.resize(0);
-//     ledsbuff.shrink_to_fit();
-//   }
-// #endif
+  if (!_effectsTicker.active() || (!_brt && !isLampOn()) ) return;
 
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
@@ -635,7 +628,7 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
       disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
-      setBrightness(1, false, false); // выводить будем минимальной яркостью getNormalizedLampBrightness()
+      setBrightness(2, false, false); // выводить будем минимальной яркостью в 2 пункта
       sendStringToLamp(text, letterColor, true);
   } else {
       sendStringToLamp(text, letterColor);

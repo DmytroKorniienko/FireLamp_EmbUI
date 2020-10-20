@@ -626,7 +626,7 @@ void set_onflag(Interface *interf, JsonObject *data){
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
-            myLamp.changePower(true);
+            myLamp.changePower(newpower);
 #ifdef MP3PLAYER
             if(myLamp.getLampSettings().isOnMP3)
                 mp3->setIsOn(true);
@@ -639,10 +639,14 @@ void set_onflag(Interface *interf, JsonObject *data){
 #endif
         } else {
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
+            //myLamp.changePower(newpower);
             sysTicker.once(1,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 myLamp.changePower(false);
 #ifdef MP3PLAYER
                 mp3->setIsOn(false);
+#endif
+#ifdef RESTORE_STATE
+                save_lamp_flags(); // злобный баг, забыть передернуть флаги здесь)))), не вздумать убрать!!! Отлавливал его кучу времени
 #endif
             }));
         }
@@ -1078,11 +1082,11 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(FPSTR(TCONST_0046), strncpy(embui.m_host, embui.param(FPSTR(TCONST_0046)).c_str(), sizeof(embui.m_host)-1));
-    SETPARAM(FPSTR(TCONST_0048), strncpy(embui.m_user, embui.param(FPSTR(TCONST_0048)).c_str(), sizeof(embui.m_user)-1));
-    SETPARAM(FPSTR(TCONST_0049), strncpy(embui.m_pass, embui.param(FPSTR(TCONST_0049)).c_str(), sizeof(embui.m_pass)-1));
-    SETPARAM(FPSTR(TCONST_007B), strncpy(embui.m_pref, embui.param(FPSTR(TCONST_007B)).c_str(), sizeof(embui.m_pref)-1));
-    SETPARAM(FPSTR(TCONST_0047), embui.m_port = embui.param(FPSTR(TCONST_0047)).toInt());
+    SETPARAM(FPSTR(TCONST_0046));
+    SETPARAM(FPSTR(TCONST_0048));
+    SETPARAM(FPSTR(TCONST_0049));
+    SETPARAM(FPSTR(TCONST_007B));
+    SETPARAM(FPSTR(TCONST_0047));
     SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
 
     embui.save();
@@ -1621,7 +1625,7 @@ void section_main_frame(Interface *interf, JsonObject *data){
 
     interf->json_frame_flush();
 
-    if(!embui.wifi_sta){
+    if(!embui.sysData.wifi_sta && embui.param(FPSTR(TCONST_0043))==FPSTR(TCONST_FFFE)){
         // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
         show_settings_wifi(interf, data);
     }
