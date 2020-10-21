@@ -5841,22 +5841,42 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
 // ----------- Эфеект "ДНК"
 // База https://pastebin.com/jwvC1sNF адаптация и доработки kostyamat
 
+void EffectDNA::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3){
+    rotate = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+}
+
 bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
 {
   speeds = map(speed, 1, 255, 10, 60);
   fadeToBlackBy(leds, NUM_LEDS, speeds);
 
-  for (uint8_t i = 0; i < LED_ROWS; i++)
+  int maxV, maxH;
+  if(!rotate){
+    maxV = LED_ROWS;
+    maxH = LED_COLS;
+  } else {
+    maxV = LED_COLS;
+    maxH = LED_ROWS;
+  }
+
+  for (uint8_t i = 0; i < maxV; i++)
   {
     uint16_t ms = millis();
-    uint32_t x = beatsin16(speeds, 0, (LED_COLS - 1) * 256, 0, i * freq);
+    uint32_t x = beatsin16(speeds, 0, (maxH - 1) * 256, 0, i * freq);
     uint32_t y = i * 256;
-    uint32_t x1 = beatsin16(speeds, 0, (LED_COLS - 1) * 256, 0, i * freq + 32768);
+    uint32_t x1 = beatsin16(speeds, 0, (maxH - 1) * 256, 0, i * freq + 32768);
 
-    CRGB col = CHSV(ms / 29 + i * 255 / (LED_ROWS - 1), 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn));
-    CRGB col1 = CHSV(ms / 29 + i * 255 / (LED_ROWS - 1) + 128, 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn + 128));
-    wu_pixel (x , y, col);
-    wu_pixel (x1 , y, col1);
+    CRGB col = CHSV(ms / 29 + i * 255 / (maxV - 1), 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn));
+    CRGB col1 = CHSV(ms / 29 + i * 255 / (maxV - 1) + 128, 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn + 128));
+    if(!rotate){
+      wu_pixel (x , y, col);
+      wu_pixel (x1 , y, col1);
+    } else {
+      wu_pixel (y , x, col);
+      wu_pixel (y , x1, col1);
+    }
   }
 
   EffectMath::blur2d(16);
