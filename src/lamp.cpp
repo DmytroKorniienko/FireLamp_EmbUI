@@ -45,7 +45,9 @@ void LAMP::lamp_init(const uint16_t curlimit)
 {
   setcurLimit(curlimit);
   // Такую коррекцию стоит оставить, с ней можно получить хотя бы более менее жёлтый цвет. Иначе он всегда зеленит (коррекцию нашел на просторах, люди рекомендуют)
-  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xFFB0F0); /*.setCorrection(TypicalLEDStrip)*/
+  //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalPixelString);
+  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(0xFFE08C)*/; // цветокоррекция нафиг не нужна, проверяется на минимальной яркости в белой лампе
 
   brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
   if (curlimit > 0){
