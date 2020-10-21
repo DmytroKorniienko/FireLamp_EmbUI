@@ -91,14 +91,16 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         LOG(printf_P,PSTR("readState()=%d\n"), currentState);
         if(currentState == 512 || currentState == -1){
           delayedCall.once(0.2,std::bind([this](){
-            if(!mp3mode){
-              if(cur_effnb>0)
-                playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
-            } else {
-              cur_effnb++;
-              if(cur_effnb>mp3filescount)
-                cur_effnb=1;
-              playMp3Folder(cur_effnb);
+            if(isOn()){
+              if(!mp3mode){
+                if(cur_effnb>0)
+                  playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
+              } else {
+                cur_effnb++;
+                if(cur_effnb>mp3filescount)
+                  cur_effnb=1;
+                playMp3Folder(cur_effnb);
+              }
             }
           }));
         }
@@ -148,7 +150,7 @@ void MP3PLAYERDEVICE::handle()
 
 void MP3PLAYERDEVICE::playTime(int hours, int minutes)
 {
-  if(!isReady() || !isOn()) return; // || isInAdv()
+  if(!isReady()) return;
 
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d\n"), currentState);
