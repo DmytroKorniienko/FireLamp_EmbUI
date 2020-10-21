@@ -1844,9 +1844,10 @@ private:
     double freq = 3000;
     float mn =255.0/13.8;
     uint8_t speeds = 30;
+    bool rotate = false;
 
     bool DNARoutine(CRGB *leds, EffectWorker *param);
-    //void setDynCtrl(UIControl*_val) override;
+    void setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
