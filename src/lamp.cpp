@@ -220,7 +220,7 @@ void LAMP::alarmWorker(){
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
-      mp3->setTempVolume(map(dawnPosition,0,255,1,30)); // запуск звука будильника
+      mp3->setTempVolume(map(dawnPosition,0,255,1,(flags.limitAlarmVolume ? mp3->getVolume() : 30))); // запуск звука будильника
 #endif
       
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
@@ -404,6 +404,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.alarmSound = ALARM_SOUND_TYPE::AT_NONE;
       flags.MP3eq = 0;
       flags.playMP3 = false;
+      flags.limitAlarmVolume = false;
 
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)

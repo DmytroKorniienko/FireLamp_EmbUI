@@ -872,8 +872,6 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
         interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
         interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0AF), false);
     interf->json_section_end();
-    interf->number(FPSTR(TCONST_00A9), mp3->getMP3count(), FPSTR(TINTF_0B0), false);
-    SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
     
     interf->select(FPSTR(TCONST_00A6), String(myLamp.getLampSettings().alarmSound), String(FPSTR(TINTF_0A3)), false);
     interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
@@ -885,6 +883,7 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->option(String(ALARM_SOUND_TYPE::AT_RANDOM), FPSTR(TINTF_0A1));
     interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
     interf->json_section_end();
+    interf->checkbox(FPSTR(TCONST_00AF), myLamp.getLampSettings().limitAlarmVolume ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0B3), false);
 
     interf->select(FPSTR(TCONST_00A7), String(myLamp.getLampSettings().MP3eq), String(FPSTR(TINTF_0A8)), false);
     interf->option(String(DFPLAYER_EQ_NORMAL), FPSTR(TINTF_0A9));
@@ -894,6 +893,9 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->option(String(DFPLAYER_EQ_CLASSIC), FPSTR(TINTF_0AD));
     interf->option(String(DFPLAYER_EQ_BASS), FPSTR(TINTF_0AE));
     interf->json_section_end();
+    
+    interf->number(FPSTR(TCONST_00A9), mp3->getMP3count(), FPSTR(TINTF_0B0), false);
+    //SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
 
     interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(TCONST_0008));
     interf->json_section_end();
@@ -921,6 +923,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
     myLamp.setPlayMP3((*data)[FPSTR(TCONST_00A8)]==FPSTR(TCONST_FFFF)); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
+    myLamp.setLimitAlarmVolume((*data)[FPSTR(TCONST_00AF)]==FPSTR(TCONST_FFFF));
 
     SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
     //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
@@ -1862,6 +1865,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
     obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
+    obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
 
     set_settings_mp3(nullptr, &obj);
     obj.clear();

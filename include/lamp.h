@@ -114,7 +114,7 @@ struct {
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
     bool reserved1:1;
     bool reserved2:1;
-    bool reserved3:1;
+    bool limitAlarmVolume:1; // ограничивать громкость будильника
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
     bool isDebug:1; // признак режима отладки
@@ -342,6 +342,7 @@ public:
     void setPlayName(bool flag) {flags.playName = flag;}
     void setPlayEffect(bool flag) {flags.playEffect = flag;}
     void setPlayMP3(bool flag) {flags.playMP3 = flag;}
+    void setLimitAlarmVolume(bool flag) {flags.limitAlarmVolume = flag;}
     void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 

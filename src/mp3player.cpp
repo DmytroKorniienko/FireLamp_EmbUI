@@ -229,7 +229,7 @@ void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
       playFolder(1,5);
       break;
     case ALARM_SOUND_TYPE::AT_RANDOM :
-      playFolder(random(5)+1,1);
+      playFolder(1,random(5)+1);
       break;
     case ALARM_SOUND_TYPE::AT_RANDOMMP3 :
       playMp3Folder(random(mp3filescount)+1);

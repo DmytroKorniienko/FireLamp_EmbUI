@@ -304,7 +304,7 @@ static const char TINTF_0AF[] PROGMEM = "MP3 плеер";
 static const char TINTF_0B0[] PROGMEM = "Кол-во файлов в папке MP3";
 static const char TINTF_0B1[] PROGMEM = "Режимы озвучивания";
 static const char TINTF_0B2[] PROGMEM = "Папка\\номер звукового файла (примеры: MP3\\17, 5\\19)";
-static const char TINTF_0B3[] PROGMEM = "";
+static const char TINTF_0B3[] PROGMEM = "Ограничить громкость будильника";
 static const char TINTF_0B4[] PROGMEM = "";
 static const char TINTF_0B5[] PROGMEM = "";
 static const char TINTF_0B6[] PROGMEM = "";
@@ -499,7 +499,7 @@ static const char TCONST_00AB[] PROGMEM = "soundfile";
 static const char TCONST_00AC[] PROGMEM = "embui/get/";
 static const char TCONST_00AD[] PROGMEM = "state";
 static const char TCONST_00AE[] PROGMEM = "eff_config";
-static const char TCONST_00AF[] PROGMEM = "";
+static const char TCONST_00AF[] PROGMEM = "limitAlarmVolume";
 static const char TCONST_00B0[] PROGMEM = "";
 
 static const char TCONST_FFFE[] PROGMEM = "false";
