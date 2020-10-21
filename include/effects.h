@@ -634,15 +634,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-class EffectMatrix : public EffectCalc {
-private:
-
-    bool matrixRoutine(CRGB *leds, EffectWorker *param);
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
 // ------------- снегопад ----------
 class EffectSnow : public EffectCalc {
 private:
@@ -716,6 +707,15 @@ protected:
 private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
 
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------- матрица -------------
+class EffectMatrix : public EffectLighters {
+private:
+    bool matrixRoutine(CRGB *leds, EffectWorker *param);
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

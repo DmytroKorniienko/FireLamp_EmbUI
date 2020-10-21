@@ -615,14 +615,42 @@ EVERY_N_SECONDS(1){
 
 // ------------- матрица ---------------
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun(3.0))
-    return false;
+  // if (dryrun(3.0))
+  //   return false;
   return matrixRoutine(*&ledarr, &*opt);
+}
+
+void EffectMatrix::load(){
+  randomSeed(millis());
+  for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+  {
+    lightersPos[0U][i] = random(0, WIDTH);
+    lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
+    lightersSpeed[0U][i] = 1;
+    lightersSpeed[1U][i] = (float)random(10, 20) / 10.0f;
+    lightersColor[i] = 83;
+    light[i] = random(196,255);
+  }
 }
 
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
+  float speedfactor = (float)speed / 1048.0f + 0.1f;
+  EffectMath::dimAll(240);
 
+  for (uint8_t i = 0U; i < map(scale,1,255,1,LIGHTERS_AM); i++)
+  {
+    lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
+    EffectMath::drawPixelXYF_X(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255, light[i]));
+
+    if(lightersPos[1U][i]<-1){
+      lightersPos[0U][i] = random(0, WIDTH);
+      lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
+      lightersSpeed[1U][i] = (float)random(15, 25) / 10.0f;
+      light[i] = random(127U, 255U);
+    }
+  }
+/*
   for (uint8_t x = 0U; x < WIDTH; x++)
   {
     // обрабатываем нашу матрицу снизу вверх до второй сверху строчки
@@ -668,6 +696,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
       EffectMath::drawPixelXY(x, HEIGHT - 1U, thisColor - 0x0a1000);                                     // в остальных случаях снижаем яркость на 1 уровень
       //EffectMath::drawPixelXY(x, HEIGHT - 1U, thisColor - 0x050800);                                     // для длинных хвостов
   }
+  */
   return true;
 }
 
@@ -680,7 +709,7 @@ bool EffectSnow::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 {
 
-  nextFrame = nextFrame + (float)getCtrlVal(1).toInt() / 255.1 + 0.1;
+  nextFrame = nextFrame + (float)speed / 255.1 + 0.1;
 
   EVERY_N_SECONDS(1){
     LOG(printf_P, PSTR("%5.2f : %5.2f\n"),nextFrame, EFFECT_FPS_SCALER*nextFrame );
@@ -745,7 +774,7 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
   float speedfactor = (float)speed / (colored ? 2048.0f : 1024.0f) + 0.15f;
   
-  for (uint8_t i = 0U; i < map(speed,1,255,1,(colored ? LIGHTERS_AM/2-1 : LIGHTERS_AM/2U-1)); i++) // LIGHTERS_AM
+  for (uint8_t i = 0U; i < map(speed,1,255,1,(colored ? LIGHTERS_AM/2 : LIGHTERS_AM)); i++) // LIGHTERS_AM
   {
     if(colored){
       lightersPos[0U][i] += lightersSpeed[0U][i]*speedfactor;

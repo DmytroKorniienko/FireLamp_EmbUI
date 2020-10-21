@@ -290,7 +290,7 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
+  if (isAlarm() || iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else if(isLampOn()) {
@@ -316,7 +316,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   // }
 
   FastLED.show();
-  if (!_effectsTicker.active() || (!_brt && !isLampOn()) ) return;
+  if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
