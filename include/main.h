@@ -37,8 +37,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #pragma once
 #include <Arduino.h>
-#include "EmbUI.h"
 #include "config.h"
+#include "EmbUI.h"
 #include "lamp.h"
 #include "buttons.h"
 

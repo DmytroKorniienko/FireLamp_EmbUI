@@ -84,7 +84,7 @@ void pubCallback(Interface *interf){
     if (!interf) return;
     //return; // Временно для увеличения стабильности. Пока разбираюсь с падениями.
     interf->json_frame_value();
-    interf->value(FPSTR(TCONST_0001), myLamp.timeProcessor.getFormattedShortTime(), true);
+    interf->value(FPSTR(TCONST_0001), embui.timeProcessor.getFormattedShortTime(), true);
     interf->value(FPSTR(TCONST_0002), String(ESP.getFreeHeap()), true);
     interf->value(FPSTR(TCONST_008F), String(millis()/1000), true);
     interf->json_frame_flush();
@@ -1214,10 +1214,10 @@ void set_settings_time(Interface *interf, JsonObject *data){
 
     String datetime=(*data)[FPSTR(TCONST_0059)];
     if (datetime.length())
-        myLamp.timeProcessor.setTime(datetime);
+        embui.timeProcessor.setTime(datetime);
 
-    SETPARAM(FPSTR(TCONST_0057), myLamp.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
-    SETPARAM(FPSTR(TCONST_0058), myLamp.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
+    SETPARAM(FPSTR(TCONST_0057), embui.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
+    SETPARAM(FPSTR(TCONST_0058), embui.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
 
     myLamp.sendStringToLamp(String(F("%TM")).c_str(), CRGB::Green);
 
@@ -2157,7 +2157,7 @@ String httpCallback(const String &param, const String &value, bool isset){
 // обработка эвентов лампы
 void event_worker(const EVENT *event){
     RA action = RA_UNKNOWN;
-    LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), myLamp.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), embui.timeProcessor.getFormattedShortTime().c_str());
 
     switch (event->event) {
     case EVENT_TYPE::ON: action = RA_ON; break;
