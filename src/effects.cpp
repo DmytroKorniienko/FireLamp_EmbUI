@@ -691,10 +691,10 @@ bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 
   EVERY_N_SECONDS(10){
     //windfactor = 0.1;
-    windfactor = ((float)random(1,10)/100.0)*(1-random(3)); // ветер
+    windfactor = ((float)random(6,12)/100.0)*(1-random(3)); // ветер
   }
 
-  EVERY_N_MILLIS(500){ // затухание ветра
+  EVERY_N_MILLIS(750){ // затухание ветра
     if(windfactor>0)
       windfactor-=0.0075;
     else if(windfactor<0)
