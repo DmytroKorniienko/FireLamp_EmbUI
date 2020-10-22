@@ -1177,6 +1177,12 @@ bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
     _speed = NOISE_SCALE_AMP*speed/255;
   #endif
 
+  EVERY_N_SECONDS(1)
+  {
+    if(colorLoop)
+      fillnoise8(); // периодический сдвиг шума :), а не только лишь при инициализации
+  }
+  
   fillNoiseLED();
   return true;
 }
