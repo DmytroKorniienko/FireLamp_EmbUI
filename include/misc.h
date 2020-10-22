@@ -39,12 +39,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define __MISC_H
 
 #include <Arduino.h>
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
-#elif defined ESP32
-#include <WiFi.h>
-#endif
-//#include "user_config.h" - если включить, то UI тоже будет слать лог по телнет и это вызовет падения при большом потоке лога
 
 typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_SECOND, AT_THIRD, AT_FOURTH, AT_FIFTH, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников
 

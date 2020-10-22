@@ -36,14 +36,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 //#define __IDPREFIX F("JeeUI2-")
-#include <Arduino.h>
-#include "EmbUI.h"
-#include "config.h"
-#include "lamp.h"
-#include "buttons.h"
 #include "main.h"
+#include "buttons.h"
 #ifdef USE_FTP
-#include "ftpSrv.h"
+ #include "ftpSrv.h"
 #endif
 
 // глобальные переменные для работы с ними в программе
@@ -93,9 +89,6 @@ ICACHE_FLASH_ATTR void setup() {
     attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
 #endif
 
-    // восстанавливаем настройки времени
-    myLamp.timeProcessor.tzsetup((embui.param(F("TZSET")).c_str()));
-    myLamp.timeProcessor.setcustomntp((embui.param(F("userntp")).c_str()));
     myLamp.events.setEventCallback(event_worker);
 
 #ifdef MP3PLAYER
@@ -106,7 +99,7 @@ ICACHE_FLASH_ATTR void setup() {
 
     sync_parameters();
 
-    myLamp.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
+    embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
     embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
 
@@ -151,7 +144,7 @@ ICACHE_FLASH_ATTR void sendData(bool force){
     LOG(println, F("sendData :"));
     DynamicJsonDocument obj(512);
     //JsonObject obj = doc.to<JsonObject>();
-    obj[FPSTR(TCONST_0001)] = String(myLamp.timeProcessor.getFormattedShortTime());
+    obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
     obj[FPSTR(TCONST_0002)] = String(ESP.getFreeHeap());
     obj[FPSTR(TCONST_008F)] = String(millis()/1000);
     String sendtopic=FPSTR(TCONST_008B);

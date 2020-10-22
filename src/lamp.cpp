@@ -35,9 +35,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#include "lamp.h"
 #include "main.h"
-#include "misc.h"
 
 extern LAMP myLamp; // Объект лампы
 
@@ -137,7 +135,7 @@ void LAMP::handle()
   EVERY_N_SECONDS(15){
     // fps counter
     LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
-    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), embui.timeProcessor.getFormattedShortTime().c_str());
   }
   avgfps = (avgfps+fps) / 2;
   fps = 0; // сброс FPS раз в секунду
@@ -164,8 +162,6 @@ void LAMP::handle()
 #ifdef OTA
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
 #endif
-
-  //timeProcessor.handleTime();                         // Обновление времени
 
   // обработчик событий (пока не выкину в планировщик)
   if (flags.isEventsHandled) {
@@ -238,7 +234,7 @@ void LAMP::alarmWorker(){
 
 #ifdef PRINT_ALARM_TIME
     EVERY_N_SECONDS(1){
-      if (timeProcessor.seconds00()) {
+      if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
         sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
@@ -655,7 +651,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 #ifdef MP3PLAYER
         String tmpStr = var[F("s")];
         if(mp3!=nullptr && mp3->isReady() && (isAlarm() || isLampOn()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-          mp3->playTime(timeProcessor.getHours(), timeProcessor.getMinutes());
+          mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes());
 #endif
         arr.remove(0); // удаляем отправленный
       }
@@ -669,7 +665,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 #ifdef MP3PLAYER
       String tmpStr = text;
       if(mp3!=nullptr && mp3->isReady() && (isAlarm() || isLampOn()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-        mp3->playTime(timeProcessor.getHours(), timeProcessor.getMinutes());
+        mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes());
 #endif
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
@@ -704,7 +700,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 
   if(text!=nullptr && text[0]!='\0'){
     toPrint.concat(text);
-    toPrint.replace(F("%TM"), timeProcessor.getFormattedShortTime());
+    toPrint.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
     toPrint.replace(F("%IP"), WiFi.localIP().toString());
     toPrint.replace(F("%EN"), effects.getEffectName());
     _letterColor = letterColor;
@@ -733,15 +729,15 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 
 void LAMP::newYearMessageHandle()
 {
-  if(!tmNewYearMessage.isReady() || timeProcessor.isDirtyTime())
+  if(!tmNewYearMessage.isReady() || embui.timeProcessor.isDirtyTime())
     return;
 
   {
     char strMessage[256]; // буффер
-    time_t calc = NEWYEAR_UNIXDATETIME - timeProcessor.getUnixTime(); // тут забит гвоздями 2020 год, не работоспособно
+    time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime(); // тут забит гвоздями 2020 год, не работоспособно
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, localtime(TimeProcessor::now())->tm_year);
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year);
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, PSTR("секунд"));
     } else if(calc/60<60){
@@ -767,7 +763,7 @@ void LAMP::newYearMessageHandle()
 
 void LAMP::periodicTimeHandle()
 {
-  const tm* t = localtime(timeProcessor.now());
+  const tm* t = localtime(embui.timeProcessor.now());
   if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
     return;
 

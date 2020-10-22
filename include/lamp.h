@@ -42,9 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h" // подключаем эффекты, там же их настройки
 #include "effects.h"
 #include "OTA.h"
-#include "timeProcessor.h"
 #include "events.h"
-#include <Ticker.h>
 #include "../../include/LList.h"
 #include "interface.h"
 
@@ -305,9 +303,6 @@ public:
     void semqtt_int(int val) {mqtt_int = val;}
 
     LAMPMODE getMode() {return mode;}
-
-    TimeProcessor timeProcessor;
-    void refreshTimeManual() { timeProcessor.timerefresh(); }
 
     void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);

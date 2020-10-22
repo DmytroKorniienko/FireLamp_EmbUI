@@ -3252,7 +3252,7 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
     EVERY_N_SECONDS(5){
       FastLED.clear();
 
-      String tmp = myLamp.timeProcessor.getFormattedShortTime();
+      String tmp = embui.timeProcessor.getFormattedShortTime();
       if(HEIGHT>=16){
         uint8_t xPos = random(LET_WIDTH*2,WIDTH);
         myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
@@ -3285,7 +3285,7 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
       hColor[0] = ColorFromPalette(*curPalette, random8());
       mColor[0] = ColorFromPalette(*curPalette, random8());
     }
-    String tmp = myLamp.timeProcessor.getFormattedShortTime();
+    String tmp = embui.timeProcessor.getFormattedShortTime();
     uint8_t shift = beatsin8(speed/5, -1, 1);
     if(HEIGHT>=16){
       myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
