@@ -615,8 +615,6 @@ EVERY_N_SECONDS(1){
 
 // ------------- матрица ---------------
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
-  // if (dryrun(3.0))
-  //   return false;
   return matrixRoutine(*&ledarr, &*opt);
 }
 
@@ -635,8 +633,8 @@ void EffectMatrix::load(){
 
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
-  float speedfactor = (float)speed / 1048.0f + 0.1f;
-  EffectMath::dimAll(240);
+  float speedfactor = (float)speed / 1048.0f + 0.05f;
+  EffectMath::dimAll(speed<50?250:240);
 
   for (uint8_t i = 0U; i < map(scale,1,255,1,LIGHTERS_AM); i++)
   {
@@ -650,53 +648,6 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
       light[i] = random(127U, 255U);
     }
   }
-/*
-  for (uint8_t x = 0U; x < WIDTH; x++)
-  {
-    // обрабатываем нашу матрицу снизу вверх до второй сверху строчки
-    for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
-    {
-      uint32_t thisColor = EffectMath::getPixColorXY(x, y);                                              // берём цвет нашего пикселя
-      uint32_t upperColor = EffectMath::getPixColorXY(x, y + 1U);                                        // берём цвет пикселя над нашим
-      if (upperColor >= 0x900000 && random(7 * HEIGHT) != 0U)                  // если выше нас максимальная яркость, игнорим этот факт с некой вероятностью или опускаем цепочку ниже
-        EffectMath::drawPixelXY(x, y, upperColor);
-      else if (thisColor == 0U && random((255 - scale) * HEIGHT) == 0U)  // если наш пиксель ещё не горит, иногда зажигаем новые цепочки
-      //else if (thisColor == 0U && random((255 - scale) * HEIGHT*3) == 0U)  // для длинных хвостов
-        EffectMath::drawPixelXY(x, y, 0x9bf800);
-      else if (thisColor <= 0x050800)                                                        // если наш пиксель почти погас, стараемся сделать затухание медленней
-      {
-        if (thisColor >= 0x030000)
-          EffectMath::drawPixelXY(x, y, 0x020300);
-        else if (thisColor != 0U)
-          EffectMath::drawPixelXY(x, y, 0U);
-      }
-      else if (thisColor >= 0x900000)                                                        // если наш пиксель максимальной яркости, резко снижаем яркость
-        EffectMath::drawPixelXY(x, y, 0x558800);
-      else
-        EffectMath::drawPixelXY(x, y, thisColor - 0x0a1000);                                             // в остальных случаях снижаем яркость на 1 уровень
-        //EffectMath::drawPixelXY(x, y, thisColor - 0x050800);                                             // для длинных хвостов
-    }
-    // аналогично обрабатываем верхний ряд пикселей матрицы
-    uint32_t thisColor = EffectMath::getPixColorXY(x, HEIGHT - 1U);
-    if (thisColor == 0U)                                                                     // если наш верхний пиксель не горит, заполняем его с вероятностью .Scale
-    {
-      if (random(255 - scale) == 0U)
-        EffectMath::drawPixelXY(x, HEIGHT - 1U, 0x9bf800);
-    }
-    else if (thisColor <= 0x050800)                                                          // если наш верхний пиксель почти погас, стараемся сделать затухание медленней
-    {
-      if (thisColor >= 0x030000)
-        EffectMath::drawPixelXY(x, HEIGHT - 1U, 0x020300);
-      else
-        EffectMath::drawPixelXY(x, HEIGHT - 1U, 0U);
-    }
-    else if (thisColor >= 0x900000)                                                          // если наш верхний пиксель максимальной яркости, резко снижаем яркость
-      EffectMath::drawPixelXY(x, HEIGHT - 1U, 0x558800);
-    else
-      EffectMath::drawPixelXY(x, HEIGHT - 1U, thisColor - 0x0a1000);                                     // в остальных случаях снижаем яркость на 1 уровень
-      //EffectMath::drawPixelXY(x, HEIGHT - 1U, thisColor - 0x050800);                                     // для длинных хвостов
-  }
-  */
   return true;
 }
 
@@ -705,40 +656,78 @@ bool EffectSnow::run(CRGB *ledarr, EffectWorker *opt){
   return snowRoutine(*&ledarr, &*opt);
 }
 
-#define EFFECT_FPS_SCALER (1.0) //0.25...5.0
+void EffectSnow::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3)
+    size = _val->getVal().toInt();
+}
+
+void EffectSnow::resetSnow(){
+  for(uint16_t i=0; i<WIDTH; i++){
+    if(!random(map(scale,1,255,100,(speed<127?10:5)))){
+      for(uint16_t n=0; n<snowsize; n++){
+        if(snow[n].y<=0 && topLine[i]<(float)HEIGHT-3.51){ // отступ от предыдущей
+          snow[n].x=i+((random(2)?-1:1) * random(3,17)/10.0); // разброс позиции X
+          snow[n].y=HEIGHT-1;
+          snow[n].value = random(map(speed,1,255,32,196),255);
+          topLine[i]=snow[n].y;
+          break;
+        }
+      }
+    }
+  }
+}
+
+void EffectSnow::load(){
+  randomSeed(millis());
+  memset(snow,0,sizeof(snow));
+  memset(topLine,10,sizeof(topLine));
+  resetSnow();
+}
+
 bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
 {
+  float speedfactor = (float)speed / 384.0f + 0.05f;
+  EffectMath::dimAll(127);
 
-  nextFrame = nextFrame + (float)speed / 255.1 + 0.1;
-
-  EVERY_N_SECONDS(1){
-    LOG(printf_P, PSTR("%5.2f : %5.2f\n"),nextFrame, EFFECT_FPS_SCALER*nextFrame );
+  EVERY_N_SECONDS(10){
+    //windfactor = 0.1;
+    windfactor = ((float)random(1,10)/100.0)*(1-random(3)); // ветер
   }
 
-    // сдвигаем всё вниз
-    for (uint8_t x = 0U; x < WIDTH; x++)
-    {
-      for (uint8_t y = 0U; y < HEIGHT - 1; y++)
-      {
-        CRGB curentColor = leds[myLamp.getPixelNumber(x, y + EFFECT_FPS_SCALER*nextFrame)];
-        EffectMath::drawPixelXY(x, y, (unsigned int)curentColor > 0 ? curentColor : CRGB::Black);
-      }
-    }
+  EVERY_N_MILLIS(500){ // затухание ветра
+    if(windfactor>0)
+      windfactor-=0.0075;
+    else if(windfactor<0)
+      windfactor+=0.0075;   
+  }
 
-    for (uint8_t x = 0U; x < WIDTH && EFFECT_FPS_SCALER*nextFrame>1.0; x++)
-    {
-      // заполняем случайно верхнюю строку
-      // а также не даём двум блокам по вертикали вместе быть
-      if (EffectMath::getPixColorXY(x, HEIGHT - 2U) == 0U && (random(0, 260 - scale) <= 5)) {
-        CHSV color = CHSV(0, 0, random8(48U, 255U));
-        EffectMath::drawPixelXY(x, HEIGHT - 1U, color/*0xE0FFFF - 0x101010 * random(0, 4)*/);
-      }
-      else
-        EffectMath::drawPixelXY(x, HEIGHT - 1U, CRGB::Black/*0x000000*/);
+  resetSnow();
+  for(uint16_t i=0; i<WIDTH; i++){
+    topLine[i] -= speedfactor;
+  }
+  for(uint16_t n=0; n<snowsize; n++){
+    snow[n].y -= speedfactor;
+    snow[n].x += windfactor;
+
+    switch(size){
+      case 1:
+        EffectMath::drawPixelXY(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value)); // рисуем
+        break;
+      case 2:
+        EffectMath::drawPixelXYF_Y(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value), 0); // рисуем
+        break;
+      case 3:
+        EffectMath::drawPixelXYF(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value), 0); // рисуем
+        break;
+      default:
+        EffectMath::drawPixelXYF(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value), 0); // рисуем
+        break;
     }
-  //}
-  // т.к. не храним позицию, то смещаем все синхронно, но в идеале - хранить позиции
-  nextFrame = (EFFECT_FPS_SCALER * nextFrame > 1.0 ? (EFFECT_FPS_SCALER * nextFrame - (int)(nextFrame * EFFECT_FPS_SCALER)) : (nextFrame));
+    
+    if(snow[n].y<0 && snow[n].value){
+      snow[n].value--; // гасим
+    }
+  }
   return true;
 }
 
@@ -773,7 +762,8 @@ void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял �
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
   float speedfactor = (float)speed / (colored ? 2048.0f : 1024.0f) + 0.15f;
-  
+  EffectMath::dimAll(255-map(speed,1,255,25,15));
+
   for (uint8_t i = 0U; i < map(speed,1,255,1,(colored ? LIGHTERS_AM/2 : LIGHTERS_AM)); i++) // LIGHTERS_AM
   {
     if(colored){
@@ -790,11 +780,9 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
         lightersPos[1U][i] -= lightersSpeed[1U][LIGHTERS_AM-1]*speedfactor;
     }
     if (isNew){
-      EffectMath::dimAll(256-map(speed,1,255,2,1));
       EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? light[i] : 0), (colored ? 255 : light[i])));
     }
     else {
-      EffectMath::dimAll(256-map(speed,1,255,2,1));
       EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? light[i] : 0), (colored ? 255 : light[i])));
     }
     if(lightersPos[1U][i]<-1){

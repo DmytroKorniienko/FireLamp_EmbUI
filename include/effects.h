@@ -637,10 +637,21 @@ public:
 // ------------- снегопад ----------
 class EffectSnow : public EffectCalc {
 private:
-    float nextFrame;
+    typedef struct point{
+        float x;
+        float y;
+        uint8_t value; // colorValue
+    } POINT;
+    uint8_t size = 1;
+    static const uint_fast16_t snowsize = WIDTH*HEIGHT/2;
+    float topLine[WIDTH]; // признак свободности верхней линии
+    POINT snow[snowsize];
+    float windfactor = 0.0f;
+
     bool snowRoutine(CRGB *leds, EffectWorker *param);
-
-
+    void load() override;
+    void resetSnow();
+    void setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
