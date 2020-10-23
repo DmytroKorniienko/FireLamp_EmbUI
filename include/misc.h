@@ -335,7 +335,7 @@ class timerMinim
 };
 
 //----------------------------------------------------
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+#if defined(LAMP_DEBUG) && 1==0 // DEBUG_TELNET_OUTPUT // Deprecated
 	//#define LOG                   telnet
 	#define LOG(func, ...) telnet.func(__VA_ARGS__)
 #elif defined(LAMP_DEBUG)
@@ -345,17 +345,18 @@ class timerMinim
 	#define LOG(func, ...) ;
 #endif
 
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-#define TELNET_PORT           (23U)                         // номер telnet порта
-extern WiFiServer telnetServer;
-extern WiFiClient telnet;
-extern bool telnetGreetingShown;
-void handleTelnetClient();
+// Deprecated
+// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+// #define TELNET_PORT           (23U)                         // номер telnet порта
+// extern WiFiServer telnetServer;
+// extern WiFiClient telnet;
+// extern bool telnetGreetingShown;
+// void handleTelnetClient();
 
-// WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
-// WiFiClient telnet;                                          // обработчик событий telnet клиента
-// bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
+// // WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
+// // WiFiClient telnet;                                          // обработчик событий telnet клиента
+// // bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
 
-#endif
+// #endif
 
 #endif

@@ -69,16 +69,17 @@ void LAMP::lamp_init(const uint16_t curlimit)
 #endif
 #endif
 
-  // TELNET
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-  telnetServer.begin();
-  for (uint8_t i = 0; i < 100; i++)                         // пауза 10 секунд в отладочном режиме, чтобы успеть подключиться по протоколу telnet до вывода первых сообщений
-  {
-    handleTelnetClient();
-    delay(100);
-    ESP.wdtFeed();
-  }
-#endif
+// Deprecated
+// // TELNET
+// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+//   telnetServer.begin();
+//   for (uint8_t i = 0; i < 100; i++)                         // пауза 10 секунд в отладочном режиме, чтобы успеть подключиться по протоколу telnet до вывода первых сообщений
+//   {
+//     handleTelnetClient();
+//     delay(100);
+//     ESP.wdtFeed();
+//   }
+// #endif
 
 #ifdef VERTGAUGE
       if(VERTGAUGE){
@@ -122,9 +123,10 @@ void LAMP::handle()
   }
 #endif
 
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-  handleTelnetClient();
-#endif
+// Deprecated
+// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+//   handleTelnetClient();
+// #endif
 
   // все что ниже, будет выполняться раз в 0.999 секундy
   static unsigned long wait_handlers;

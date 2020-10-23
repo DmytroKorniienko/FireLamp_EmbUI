@@ -37,39 +37,40 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "misc.h"
 
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
-WiFiClient telnet;                                          // обработчик событий telnet клиента
-bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
+// Deprecated
+// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+// WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
+// WiFiClient telnet;                                          // обработчик событий telnet клиента
+// bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
 
-void handleTelnetClient()
-{
-  if (telnetServer.hasClient())
-  {
-    if (!telnet || !telnet.connected())
-    {
-      if (telnet)
-      {
-        telnet.stop();                                      // клиент отключился
-        telnetGreetingShown = false;
-      }
-      telnet = telnetServer.available();                    // готов к подключению нового клиента
-    }
-    else
-    {
-      telnetServer.available().stop();                      // один клиент уже подключен, блокируем подключение нового
-      telnetGreetingShown = false;
-    }
-  }
+// void handleTelnetClient()
+// {
+//   if (telnetServer.hasClient())
+//   {
+//     if (!telnet || !telnet.connected())
+//     {
+//       if (telnet)
+//       {
+//         telnet.stop();                                      // клиент отключился
+//         telnetGreetingShown = false;
+//       }
+//       telnet = telnetServer.available();                    // готов к подключению нового клиента
+//     }
+//     else
+//     {
+//       telnetServer.available().stop();                      // один клиент уже подключен, блокируем подключение нового
+//       telnetGreetingShown = false;
+//     }
+//   }
 
-  if (telnet && telnet.connected() && telnet.available())
-  {
-    if (!telnetGreetingShown)
-    {
-      telnet.println(F("Подключение к устройтву по протоколу telnet установлено\n-------"));
-      telnetGreetingShown = true;
-    }
-  }
-}
+//   if (telnet && telnet.connected() && telnet.available())
+//   {
+//     if (!telnetGreetingShown)
+//     {
+//       telnet.println(F("Подключение к устройтву по протоколу telnet установлено\n-------"));
+//       telnetGreetingShown = true;
+//     }
+//   }
+// }
 
-#endif
+// #endif
