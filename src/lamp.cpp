@@ -201,13 +201,6 @@ void LAMP::alarmWorker(){
     if (((millis() - startmillis) / 1000 > (5 + DAWN_TIMEOUT) * 60+30)) {
       // рассвет закончился
       stopAlarm();
-      // #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
-      // digitalWrite(ALARM_PIN, !ALARM_LEVEL);
-      // #endif
-
-      // #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
-      // digitalWrite(MOSFET_PIN, ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL);
-      // #endif
       return;
     }
 
@@ -443,6 +436,14 @@ void LAMP::startAlarm(){
 #ifdef MP3PLAYER
   mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
 #endif
+
+#if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
+  digitalWrite(ALARM_PIN, ALARM_LEVEL);
+#endif
+
+#if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
+  digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
+#endif
 }
 
 void LAMP::stopAlarm(){
@@ -453,6 +454,14 @@ void LAMP::stopAlarm(){
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
   mp3->StopAndRestoreVolume(); // восстановить уровень громкости
+#endif
+
+#if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
+  digitalWrite(ALARM_PIN, !ALARM_LEVEL);
+#endif
+
+#if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
+  digitalWrite(MOSFET_PIN, flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL);
 #endif
 
   LOG(printf_P, PSTR("Отключение будильника рассвет, ONflag=%d\n"), flags.ONflag);
