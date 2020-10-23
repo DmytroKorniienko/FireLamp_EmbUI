@@ -303,15 +303,19 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
     CRGB clr = EffectMath::getPixColorXY(xn, yn);
-    if(xn<(int)WIDTH-1 && yn<(int)HEIGHT-1 && yn>0 && xn>0){
-      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    } else if(yn==0 || yn==HEIGHT-1 || xn==0) {
-      clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-      clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-      clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-    }
+    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+
+    // if(xn<(int)WIDTH-1 && yn<(int)HEIGHT-1 && yn>0 && xn>0){
+    //   clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    //   clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    //   clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+    // } else if((yn==0 || yn==HEIGHT-1 || xn==0) && xx<127) {
+    //   clr.r = qadd8(clr.r, (color.r * 64) >> 8);
+    //   clr.g = qadd8(clr.g, (color.g * 64) >> 8);
+    //   clr.b = qadd8(clr.b, (color.b * 64) >> 8);
+    // }
     EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
   }
   #undef WU_WEIGHT

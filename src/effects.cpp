@@ -4935,9 +4935,9 @@ void EffectPatterns::drawPicture_XY() {
   if(_subpixel && !(speed==33 && scale==33))
     FastLED.clear();
 
-  for (uint8_t x = 0; x < WIDTH; x ++)
+  for (uint8_t x = 0; x < WIDTH; x++)
   {
-    for (uint8_t y = 0; y < HEIGHT; y ++)
+    for (uint8_t y = 0; y < HEIGHT; y++)
     {
       byte in = buff[myLamp.getPixelNumberBuff((int)(xsin + x) % 20U, (int)(ysin + y) % 20U, 20U, 20U, 400)];
 
@@ -4949,8 +4949,14 @@ void EffectPatterns::drawPicture_XY() {
           EffectMath::drawPixelXYF_X(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
         else if(scale==33)
           EffectMath::drawPixelXYF_Y(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
-        else
+        else{
           EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+          if(y == HEIGHT-1)
+            EffectMath::drawPixelXYF_X(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 50); // закостыливаем ликвидацию мерцания нижей линии, коряво, но разбираться буду позже
+          if(x == 0)
+            EffectMath::drawPixelXYF_Y(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 50); // закостыливаем ликвидацию мерцания левой линии, коряво, но разбираться буду позже
+
+        }
       }
       else
         EffectMath::drawPixelXY(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2);
