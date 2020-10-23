@@ -5862,8 +5862,10 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 // ----------- Эфеект "ДНК"
-// База https://pastebin.com/jwvC1sNF адаптация и доработки kostyamat
-
+// Yaroslaw Turbin 04.09.2020
+// https://vk.com/ldirko
+// https://pastebin.com/jwvC1sNF
+// адаптация и доработки kostyamat
 void EffectDNA::setDynCtrl(UIControl*_val){
   if(_val->getId()==3){
     rotate = _val->getVal() == FPSTR(TCONST_FFFF);
