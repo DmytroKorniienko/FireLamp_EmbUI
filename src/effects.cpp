@@ -5914,7 +5914,10 @@ bool EffectDNA::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 // ----------- Эффект "Огненная Лампа"
-// База https://pastebin.com/eKqe4zzA переделака на субпиксель и доработки - kostyamat
+// Yaroslaw Turbin, 22.06.2020 
+// https://vk.com/ldirko
+// https://pastebin.com/eKqe4zzA
+// переделака на субпиксель и доработки - kostyamat
 void EffectFire2020::load() {
   regenNoise();
   palettesload();    // подгружаем палитры

@@ -1849,7 +1849,10 @@ public:
 };
 
 // ----------- Эфеект "ДНК"
-// База https://pastebin.com/jwvC1sNF адаптация и доработки kostyamat
+// Yaroslaw Turbin 04.09.2020
+// https://vk.com/ldirko
+// https://pastebin.com/jwvC1sNF
+// адаптация и доработки kostyamat
 class EffectDNA : public EffectCalc {
 private:
     double freq = 3000;
@@ -1866,7 +1869,10 @@ public:
 };
 
 // ----------- Эффект "Огненная Лампа"
-// База https://pastebin.com/eKqe4zzA переделака на субпиксель и доработки - kostyamat
+// Yaroslaw Turbin, 22.06.2020 
+// https://vk.com/ldirko
+// https://pastebin.com/eKqe4zzA
+// переделака на субпиксель и доработки - kostyamat
 class EffectFire2020 : public EffectCalc {
 private:
  /*   int scale = 60; // scale of fire
