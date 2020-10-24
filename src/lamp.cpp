@@ -1012,13 +1012,13 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   if(mode==LAMPMODE::MODE_DEMO && flags.showName){
     myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
-      if(mp3!=nullptr && mp3->isOn() && flags.playName && !flags.playMP3) // воспроизведение 
+      if(mp3!=nullptr && mp3->isOn() && flags.playName && !flags.playMP3 && effects.getEn()>0) // воспроизведение 
         mp3->playName(effects.getEn());
 #endif
   }
 
 #ifdef MP3PLAYER
-  if(mp3!=nullptr && mp3->isOn() && (flags.playEffect || (flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
+  if(mp3!=nullptr && mp3->isOn() && effects.getEn()>0 && (flags.playEffect || (flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
     LOG(printf_P, PSTR("soundfile:%s, effect:%d, delayed:%d\n"), effects.getSoundfile().c_str(), effects.getEn(), (flags.playName && !flags.playMP3));
     mp3->playEffect(effects.getEn(), effects.getSoundfile(), (flags.playName && !flags.playMP3)); // flags.playName - влияние на отложенное воспроизведение, но не для MP3-плеера
   }
