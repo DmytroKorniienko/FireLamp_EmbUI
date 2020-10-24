@@ -337,12 +337,12 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {0x000000, 0x06
 static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black};
 // Добавил "белую" палитру для "Огонь 2012", в самом конце 4-го ползунка, огонь горит белым цветом, - красиво для белой динамической подсветки
 static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, CRGB::Gray, CRGB::White, CRGB::WhiteSmoke};
-// stepko где-то нашел пару палитр
-static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xfa9422, 0xf8cc73, 0xa16456, 0xd6bcc4, 0x2b2c54};
-static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0xdf0450, 0xfc7ca9, 0x900562, 0xad4c8c, 0xc2b2b5, 0x312f54};
-static const TProgmemRGBPalette16 StepkosColors_p FL_PROGMEM = {0xc83160, 0x8c2682, 0x5b0bac, 0x2d00ff, 0x0012d8, 0x0000ac, 0x03006b};
-static const TProgmemRGBPalette16 StepkosColors2_p FL_PROGMEM = {0x0000ff, 0x0f00f0, 0x1e00e1, 0x2d00d2, 0x3c00c3, 0x4b00b4, 0x5a00a5, 0x690096, 0x780087, 0x870078, 0x9600cd, 0xa50050, 0xb40041, 0xc30032, 0xd20023, 0xe10014};
-static const TProgmemRGBPalette16 VioletColors_p FL_PROGMEM = {0xce9bdd, 0x84349b, 0x642474, 0x612672, 0x040404};
+// stepko нашел и перерисовал палитры в https://colorswall.com/
+static const TProgmemRGBPalette16 AcidColors_p FL_PROGMEM = {0xffff00, 0xd2dc28, 0xd2c83c, 0x711323, 0x6c000c, 0x5a0c00, 0x6d373a, 0xaa5a62, 0x605d36,  0x313164, 0x483a67, 0x3a2465, 0x4b1665, 0x4b0069, 0x31004c, 0x200046};
+static const TProgmemRGBPalette16 StepkosColors_p FL_PROGMEM = {0x0000ff, 0x0f00f0, 0x1e00e1, 0x2d00d2, 0x3c00c3, 0x4b00b4, 0x5a00a5, 0x690096, 0x780087, 0x870078, 0x9600cd, 0xa50050, 0xb40041, 0xc30032, 0xd20023, 0xe10014};
+static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xbc2300, 0xc84416, 0xdc642c, 0xe69664, 0xfbb979, 0xca503d, 0x882c1c, 0x9a3631, 0xa9624e, 0xcc9762, 0xdcc0b5, 0xc1a29f, 0x826468, 0x4a3334, 0x231a1a, 0x161113};
+static const TProgmemRGBPalette16 VioletColors_p FL_PROGMEM = {0x4b00ff, 0x4700ef, 0x4300df, 0x3f00cf, 0x3b00bf, 0x3700af, 0x33009f, 0x2f008f, 0x2b007f, 0x27006f, 0x23005f, 0x1f004f, 0x1b003f, 0x17002f, 0x13001f, 0x000000};
+static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0x1e0443, 0x6d0081, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x7900a1, 0x820055, 0xc80000, 0xe57b00, 0xff9d5a, 0xc58b32, 0xd8d400, 0xffff00};
 /*
 
 

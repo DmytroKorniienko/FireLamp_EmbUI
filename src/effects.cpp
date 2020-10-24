@@ -167,7 +167,7 @@ void EffectCalc::palettesload(){
   palettes.push_back(&RainbowColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&CloudColors_p);
-  palettes.push_back(&StepkosColors2_p);
+  palettes.push_back(&EveningColors_p);
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&WoodFireColors_p);
   palettes.push_back(&SodiumFireColors_p);
@@ -177,7 +177,7 @@ void EffectCalc::palettesload(){
   palettes.push_back(&PotassiumFireColors_p);
   palettes.push_back(&WaterfallColors_p);
   palettes.push_back(&AutumnColors_p);
-  palettes.push_back(&EveningColors_p);
+  palettes.push_back(&AcidColors_p);
   palettes.push_back(&StepkosColors_p);
   palettes.push_back(&VioletColors_p);
 
