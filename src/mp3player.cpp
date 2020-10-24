@@ -88,7 +88,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         LOG(print, value);
         LOG(println, F(" Play Finished!"));
         int currentState = readState();
-        LOG(printf_P,PSTR("readState()=%d\n"), currentState);
+        LOG(printf_P,PSTR("readState()=%d, mp3mode=%d\n"), currentState, mp3mode);
         if(currentState == 512 || currentState == -1){
           delayedCall.once(0.2,std::bind([this](){
             if(isOn()){
@@ -174,24 +174,26 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
   advertise(filenb);
 }
 
-void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile)
+void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool delayed)
 {
   soundfile = _soundfile;
-
+  int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();
+  int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
+  LOG(printf_P, PSTR("soundfile:%s, folder:%d, filenb:%d, effnb:%d\n"), soundfile.c_str(), folder, filenb, effnb%256);
   if(!mp3mode){
-    int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();;
-    int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
-    //LOG(printf_P, PSTR("%d %d\n"), folder, filenb);
     if(!filenb){
       cur_effnb = effnb%256;
-      playFolder(3, cur_effnb);
+      if(!delayed)
+        playFolder(3, cur_effnb);
       prev_effnb = effnb%256;
     } else if(!folder){
       //mp3
-      playMp3Folder(filenb);
+      if(!delayed)
+        playMp3Folder(filenb);
     } else {
       //folder#
-      playFolder(folder, filenb);
+      if(!delayed)
+        playFolder(folder, filenb);
     }
   } else {
     int shift=effnb%256-prev_effnb%256;
@@ -201,19 +203,21 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile)
       cur_effnb%=mp3filescount;
     else if(cur_effnb==0)
       cur_effnb=1;
-    playMp3Folder(cur_effnb);
+    if(!delayed)
+      playMp3Folder(cur_effnb);
   }
-
 }
 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)
 {
-  stop();
+  //stop();
+  LOG(printf_P, PSTR("playName, effnb:%d\n"), effnb%256);
   playFolder(2, effnb%256);
 }
 
 void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
   volume(0);
+  delay(100);
   switch(val){
     case ALARM_SOUND_TYPE::AT_FIRST :
       playFolder(1,1);

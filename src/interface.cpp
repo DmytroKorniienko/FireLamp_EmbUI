@@ -916,6 +916,7 @@ void show_settings_mp3(Interface *interf, JsonObject *data){
 void set_settings_mp3(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    resetAutoTimers(); // сдвинем таймеры автосейва, т.к. длительная операция
     uint8_t val = (*data)[FPSTR(TCONST_00A7)].as<uint8_t>(); myLamp.setEqType(val); mp3->setEqType(val); // пишет в плеер!
 
     myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)]==FPSTR(TCONST_FFFF));
