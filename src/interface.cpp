@@ -1895,12 +1895,19 @@ void sync_parameters(){
 
 #ifdef RESTORE_STATE
     obj[FPSTR(TCONST_001A)] = tmp.ONflag ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    if(tmp.ONflag){ // если лампа включена, то устанавливаем эффект ДО включения
+        CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
+    }
     set_onflag(nullptr, &obj);
+    if(!tmp.ONflag){ // иначе - после
+        CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
+    }
     obj.clear();
-    CALL_SETTER(FPSTR(TCONST_001B), embui.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
-#endif
-
+    if(myLamp.isLampOn())
+        CALL_SETTER(FPSTR(TCONST_001B), embui.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
+#else
     CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
+#endif
 
 #ifdef AUX_PIN
     CALL_SETTER(FPSTR(TCONST_000E), embui.param(FPSTR(TCONST_000E)), set_auxflag);
