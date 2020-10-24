@@ -789,8 +789,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         String filename = String(FPSTR(TCONST_0031)) + name;
         embui.load(filename.c_str());
 
-        // filename = String(FPSTR(TCONST_002C)) + name;
-        // myLamp.effects.loadConfig(filename.c_str());
+        filename = String(FPSTR(TCONST_002C)) + name;
+        myLamp.effects.initDefault(filename.c_str());
 
         filename = String(FPSTR(TCONST_0032)) + name;
         myLamp.events.loadConfig(filename.c_str());
@@ -808,8 +808,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         String filename = String(FPSTR(TCONST_0031)) + name;
         embui.save(filename.c_str(), true);
 
-        // filename = String(FPSTR(TCONST_002C)) + name;
-        // myLamp.effects.saveConfig(filename.c_str());
+        filename = String(FPSTR(TCONST_002C)) + name;
+        myLamp.effects.makeIndexFileFromList(filename.c_str());
 
         filename = String(FPSTR(TCONST_0032)) + name;
         myLamp.events.saveConfig(filename.c_str());

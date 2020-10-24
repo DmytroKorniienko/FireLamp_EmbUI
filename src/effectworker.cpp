@@ -276,11 +276,15 @@ void EffectWorker::clearControlsList()
   controls.clear();
 }
 
-void EffectWorker::initDefault()
+void EffectWorker::initDefault(const char *folder)
 {
-  String filename(F("/eff_index.json"));
+  String filename;
   DynamicJsonDocument doc(4096); // отожрет много памяти, но имена все равно не храним, так что хрен с ним, писать ручной парсер как-то лень
 
+  if(folder && folder[0])
+    filename = folder;
+  else
+    filename = F("/eff_index.json");
 
   TRYAGAIN:
   if (!deserializeFile(doc, filename.c_str())){
@@ -680,14 +684,15 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
  */
 File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
 
-  String filename((char *)0);
+  String filename;
 
-  if (!folder || !*folder){
-    filename.concat("/");
+  if (folder && folder[0]){ // если указан каталог и первый символ не пустой, то берем как есть
     filename.concat(folder);
-  }
-
-  filename.concat(F("/eff_index.json"));
+    LOG(print, F("index:"));
+    LOG(println, filename.c_str());
+  } else
+    filename.concat(F("/eff_index.json"));
+  
   fhandle = LittleFS.open(filename, "w");
   return fhandle;
 }
@@ -782,7 +787,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   indexFile.close();
 
   LOG(println,F("Индекс эффектов создан из FS!"));
-  initDefault(); // перечитаем вновь созданный индекс
+  initDefault(tofolder); // перечитаем вновь созданный индекс
 }
 
 // создать или обновить текущий индекс эффекта

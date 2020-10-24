@@ -2045,7 +2045,7 @@ private:
 
 public:
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
-    void initDefault(); // пусть вызывается позже и явно
+    void initDefault(const char *folder = nullptr); // пусть вызывается позже и явно
     ~EffectWorker() { clearEffectList(); clearControlsList(); }
 
     LList<UIControl*>&getControls() { return isSelected() ? controls : selcontrols; }
