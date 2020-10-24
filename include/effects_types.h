@@ -337,7 +337,7 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {0x000000, 0x06
 static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black, CRGB::White, CRGB::Black, CRGB::Black, CRGB::Black};
 // Добавил "белую" палитру для "Огонь 2012", в самом конце 4-го ползунка, огонь горит белым цветом, - красиво для белой динамической подсветки
 static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, CRGB::Gray, CRGB::White, CRGB::WhiteSmoke};
-// stepko где-то нашел пару палитр
+// stepko нашел и перерисовал палитры в https://colorswall.com/
 static const TProgmemRGBPalette16 AcidColors_p FL_PROGMEM = {0xffff00, 0xd2dc28, 0xd2c83c, 0x711323, 0x6c000c, 0x5a0c00, 0x6d373a, 0xaa5a62, 0x605d36,  0x313164, 0x483a67, 0x3a2465, 0x4b1665, 0x4b0069, 0x31004c, 0x200046};
 static const TProgmemRGBPalette16 StepkosColors_p FL_PROGMEM = {0x0000ff, 0x0f00f0, 0x1e00e1, 0x2d00d2, 0x3c00c3, 0x4b00b4, 0x5a00a5, 0x690096, 0x780087, 0x870078, 0x9600cd, 0xa50050, 0xb40041, 0xc30032, 0xd20023, 0xe10014};
 static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xbc2300, 0xc84416, 0xdc642c, 0xe69664, 0xfbb979, 0xca503d, 0x882c1c, 0x9a3631, 0xa9624e, 0xcc9762, 0xdcc0b5, 0xc1a29f, 0x826468, 0x4a3334, 0x231a1a, 0x161113};
