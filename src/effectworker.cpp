@@ -803,14 +803,15 @@ void EffectWorker::deleteFromIndexFile(const uint16_t effect)
 }
 
 // удалить эффект
-void EffectWorker::deleteEffect(const EffectListElem *eff)
+void EffectWorker::deleteEffect(const EffectListElem *eff, bool isCfgRemove)
 {
   //uint16_t prevEff = EFF_ENUM::EFF_NONE;
   for(int i=0; i<effects.size(); i++){
       //prevEff = effects[i]->eff_nb;
       if(effects[i]->eff_nb==eff->eff_nb){
           //deleteFromIndexFile(eff->eff_nb);
-          removeConfig(eff->eff_nb);
+          if(isCfgRemove)
+            removeConfig(eff->eff_nb);
           delete effects.remove(i);
           break;
       }

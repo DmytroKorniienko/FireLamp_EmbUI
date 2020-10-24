@@ -2173,7 +2173,7 @@ public:
     // копирование эффекта
     void copyEffect(const EffectListElem *base);
     // удалить эффект
-    void deleteEffect(const EffectListElem *eff);
+    void deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
 };
 
 typedef enum _PERIODICTIME {
