@@ -1859,7 +1859,9 @@ public:
 };
 
 // --------------  Эффект "Цветение"
-// (c) Idir Idir (Soulmate)
+//Yaroslaw Turbin
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
 class EffectFlower : public EffectCalc {
 private:
     float c = 0.5;   //diameter
@@ -1875,7 +1877,13 @@ public:
 };
 
 //------------ Эффект "Дождь за окном..."
-// (c) Idir Idir (Soulmate) переделан кардинально (с)kostyamat
+//Digital Rain implementation
+//fastled 16x16 matrix demo
+//Yaroslaw Turbin 24.08.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+// База https://pastebin.com/1yymjFxR
+//переделан кардинально (с)kostyamat
 class EffectCRain : public EffectCalc
 {
 private:

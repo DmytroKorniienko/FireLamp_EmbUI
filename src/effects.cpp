@@ -5728,7 +5728,9 @@ void EffectSnake2::Snake::draw(CRGB colors[SNAKE2_LENGTH], float speedfactor, in
 }
 
 // --------------  Эффект "Цветение"
-// (c) Idir Idir (Soulmate)
+//Yaroslaw Turbin
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
 bool EffectFlower::run(CRGB *ledarr, EffectWorker *opt ) {
   return flowerRoutine(*&ledarr, &*opt);
 }
@@ -5775,7 +5777,13 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 //------------ Эффект "Дождь за окном..."
-// (c) Idir Idir (Soulmate) переделан кардинально (с)kostyamat
+//Digital Rain implementation
+//fastled 16x16 matrix demo
+//Yaroslaw Turbin 24.08.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+// База https://pastebin.com/1yymjFxR
+//переделан кардинально (с)kostyamat
 void EffectCRain::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
