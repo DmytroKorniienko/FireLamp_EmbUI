@@ -51,6 +51,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #define RESTORE_STATE 1                                     // востанавливать состояние вкл/выкл, демо, после перезагрузки.
 //#define DELAYED_EFFECTS         (1U)                        // отложенная загрузка эффектов
+//#define CASHED_EFFECTS_NAMES    (1U)                        // кешировать имена эффектов, ВНИМАНИЕ!!! жрет память, использовать на свой страх и риск
 #define SHOWSYSCONFIG                                       // Показывать системное меню
 
 //-----------------------------------

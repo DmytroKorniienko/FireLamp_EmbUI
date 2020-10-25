@@ -371,6 +371,10 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
  */
 void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const char *folder)
 {
+#ifdef CASHED_EFFECTS_NAMES
+  EffectListElem *tmp = getEffect(nb);
+  _effectName = tmp->getName();
+#else
   String filename = geteffectpathname(nb,folder);
   DynamicJsonDocument doc(2048);
   bool ok = deserializeFile(doc, filename.c_str());
@@ -381,6 +385,7 @@ void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const cha
     // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
     _effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
   }
+#endif
 }
 
 /**
