@@ -136,6 +136,9 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           break;
         case Advertise:
           LOG(println, F("In Advertise"));
+          // возникла ошибка с минутами, попробуем еще раз
+          restartSound();
+          delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
           break;
         default:
           break;
@@ -178,6 +181,7 @@ void MP3PLAYERDEVICE::playFolder0(int filenb) {
 }
 
 void MP3PLAYERDEVICE::playAdvertise(int filenb) {
+  LOG(printf_P, PSTR("Advertise filenb: %d\n"), filenb);
   advertise(filenb);
 }
 
