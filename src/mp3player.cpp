@@ -62,6 +62,28 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   volume(5);  // start volume
 }
 
+void MP3PLAYERDEVICE::restartSound()
+{
+  int currentState = readState();
+  LOG(printf_P,PSTR("readState()=%d, mp3mode=%d\n"), currentState, mp3mode);
+  if(currentState == 512 || currentState == -1){
+    delayedCall.once(0.2,std::bind([this](){
+      if(isOn()){
+        if(!mp3mode){
+          if(cur_effnb>0)
+            playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
+        } else {
+          cur_effnb++;
+          if(cur_effnb>mp3filescount)
+            cur_effnb=1;
+          playMp3Folder(cur_effnb);
+        }
+      }
+    }));
+  }
+}
+
+
 void MP3PLAYERDEVICE::printSatusDetail(){
   uint8_t type = readType();
   int value = read();
@@ -87,23 +109,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         LOG(print, F("Number:"));
         LOG(print, value);
         LOG(println, F(" Play Finished!"));
-        int currentState = readState();
-        LOG(printf_P,PSTR("readState()=%d, mp3mode=%d\n"), currentState, mp3mode);
-        if(currentState == 512 || currentState == -1){
-          delayedCall.once(0.2,std::bind([this](){
-            if(isOn()){
-              if(!mp3mode){
-                if(cur_effnb>0)
-                  playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
-              } else {
-                cur_effnb++;
-                if(cur_effnb>mp3filescount)
-                  cur_effnb=1;
-                playMp3Folder(cur_effnb);
-              }
-            }
-          }));
-        }
+        restartSound();
       }
       break;
     case DFPlayerError:
@@ -126,6 +132,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           break;
         case FileMismatch:
           LOG(println, F("Cannot Find File"));
+          restartSound();
           break;
         case Advertise:
           LOG(println, F("In Advertise"));

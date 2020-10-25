@@ -63,6 +63,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void printSatusDetail();
     void playAdvertise(int filenb);
     void playFolder0(int filenb);
+    void restartSound();
   public:
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
     bool isReady() {return ready;}
