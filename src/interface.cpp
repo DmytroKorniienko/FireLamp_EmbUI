@@ -871,11 +871,11 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->json_section_begin(FPSTR(TCONST_00A0));
     interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), false);
     interf->spacer(FPSTR(TINTF_0B1));
-    interf->json_section_line(FPSTR(TINTF_0B1)); // расположить в одной линии
+    interf->json_section_line(); // расположить в одной линии
         interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
         interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
     interf->json_section_end();
-    interf->json_section_line(FPSTR(TINTF_0B1)); // расположить в одной линии
+    interf->json_section_line(); // расположить в одной линии
         interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
         interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0AF), false);
     interf->json_section_end();
@@ -1907,6 +1907,7 @@ void sync_parameters(){
     set_settings_mp3(nullptr, &obj);
     obj.clear();
 
+    mp3->setupplayer(myLamp.effects.getEn(), myLamp.effects.getSoundfile()); // установить начальные значения звука
     obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_mp3flag(nullptr, &obj);
     obj.clear();
