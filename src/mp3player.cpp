@@ -137,7 +137,8 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         case Advertise:
           LOG(println, F("In Advertise"));
           // возникла ошибка с минутами, попробуем еще раз
-          restartSound();
+          restartSound(); // тут будет отложенный запуск через 0.2 секунды
+          delay(300);
           delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
           break;
         default:
@@ -168,11 +169,11 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes)
   {
     playAdvertise(hours);
     nextAdv = minutes+100;
-    delayedCall.once_scheduled(1.75, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 1.75 секунды после произношения часов
+    delayedCall.once_scheduled(1.95, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 1.95 секунды после произношения часов
   } else {
     playLargeFolder(0x00, hours);
     nextAdv = minutes+100;
-    delayedCall.once_scheduled(1.75, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 1.75 секунды после произношения часов
+    delayedCall.once_scheduled(1.85, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 1.85 секунды после произношения часов
   }
 }
 
