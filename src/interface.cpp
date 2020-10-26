@@ -1574,7 +1574,10 @@ void set_debugflag(Interface *interf, JsonObject *data){
 void set_mp3flag(Interface *interf, JsonObject *data){
     if (!data) return;
     myLamp.setONMP3((*data)[FPSTR(TCONST_009D)] == FPSTR(TCONST_FFFF));
-    mp3->setIsOn(myLamp.isONMP3());
+    if(myLamp.isLampOn())
+        mp3->setIsOn(myLamp.isONMP3(), true); // при включенной лампе - форсировать воспроизведение
+    else
+        mp3->setIsOn(myLamp.isONMP3(), (myLamp.getLampSettings().isOnMP3 && millis()>5000)); // при выключенной - только для mp3 и не после перезагрузки
     save_lamp_flags();
 }
 #endif
@@ -1860,25 +1863,6 @@ void sync_parameters(){
     obj.clear();
 #endif
 
-#ifdef MP3PLAYER
-    obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    set_mp3flag(nullptr, &obj);
-    obj.clear();
-
-    obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
-    obj[FPSTR(TCONST_00A3)] = tmp.playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
-    obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
-    obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
-    obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-
-    set_settings_mp3(nullptr, &obj);
-    obj.clear();
-#endif
-
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_eventflag(nullptr, &obj);
     obj.clear();
@@ -1907,6 +1891,25 @@ void sync_parameters(){
         CALL_SETTER(FPSTR(TCONST_001B), embui.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
 #else
     CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
+#endif
+
+#ifdef MP3PLAYER
+    obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
+    obj[FPSTR(TCONST_00A3)] = tmp.playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
+    obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
+    obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
+    obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+
+    set_settings_mp3(nullptr, &obj);
+    obj.clear();
+
+    obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    set_mp3flag(nullptr, &obj);
+    obj.clear();
 #endif
 
 #ifdef AUX_PIN

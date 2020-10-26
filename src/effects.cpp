@@ -5907,8 +5907,8 @@ bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
     uint32_t y = i * 256;
     uint32_t x1 = beatsin16(speeds, 0, (maxH - 1) * 256, 0, i * freq + 32768);
 
-    CRGB col = CHSV(ms / 29 + i * 255 / (maxV - 1), 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn));
-    CRGB col1 = CHSV(ms / 29 + i * 255 / (maxV - 1) + 128, 255, beatsin8(speeds, 60, BRIGHTNESS, 0, i * mn + 128));
+    CRGB col = CHSV(ms / 29 + i * 255 / (maxV - 1), 255, beatsin8(speeds, 60, BRIGHTNESS, 0, (float)i * mn));
+    CRGB col1 = CHSV(ms / 29 + i * 255 / (maxV - 1) + 128, 255, beatsin8(speeds, 60, BRIGHTNESS, 0, (float)i * mn + 128));
     if(!rotate){
       wu_pixel (x , y, col);
       wu_pixel (x1 , y, col1);
