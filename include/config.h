@@ -227,7 +227,7 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifndef CFG_AUTOSAVE_TIMEOUT
-#define CFG_AUTOSAVE_TIMEOUT       (15*1000U)                   // таймаут сохранения конфигурации эффекта, по умолчанию - 15 секунд
+#define CFG_AUTOSAVE_TIMEOUT       (20*1000U)                   // таймаут сохранения конфигурации эффекта, по умолчанию - 20 секунд
 #endif
 
 #ifndef TEXT_OFFSET

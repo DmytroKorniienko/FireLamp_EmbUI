@@ -843,6 +843,7 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
 
 void set_lamp_textsend(Interface *interf, JsonObject *data){
     if (!data) return;
+    resetAutoTimers(); // откладываем автосохранения
     String tmpStr = (*data)[FPSTR(TCONST_0036)];
     embui.var(FPSTR(TCONST_0036), tmpStr);
     embui.var(FPSTR(TCONST_0035), (*data)[FPSTR(TCONST_0035)]);

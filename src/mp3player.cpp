@@ -64,6 +64,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
 
 void MP3PLAYERDEVICE::restartSound()
 {
+  playname = false;
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d, mp3mode=%d\n"), currentState, mp3mode);
   if(currentState == 512 || currentState == -1){
@@ -82,7 +83,6 @@ void MP3PLAYERDEVICE::restartSound()
     }));
   }
 }
-
 
 void MP3PLAYERDEVICE::printSatusDetail(){
   uint8_t type = readType();
@@ -109,7 +109,9 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         LOG(print, F("Number:"));
         LOG(print, value);
         LOG(println, F(" Play Finished!"));
-        restartSound();
+        if(restartTimeout+5000<millis()){ // c момента инициализации таймаута прошло более 5 секунд (нужно чтобы не прерывало вывод времени в режиме без звука)
+          restartSound();
+        }
       }
       break;
     case DFPlayerError:
@@ -132,14 +134,18 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           break;
         case FileMismatch:
           LOG(println, F("Cannot Find File"));
-          restartSound();
+          if(playname) // только для случая когда нет файла с именем эффекта, если нет самой озвучки эффекта, то не рестартуем
+            restartSound();
           break;
         case Advertise:
           LOG(println, F("In Advertise"));
           // возникла ошибка с минутами, попробуем еще раз
-          restartSound(); // тут будет отложенный запуск через 0.2 секунды
-          delay(300);
-          delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
+          if(restartTimeout+10000<millis()){ // c момента инициализации таймаута прошло более 10 секунд, избавляюсь от зацикливания попыток
+            restartTimeout=millis();
+            restartSound(); // тут будет отложенный запуск через 0.2 секунды
+            delay(300);
+            delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
+          }
           break;
         default:
           break;
@@ -174,6 +180,7 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes)
     playLargeFolder(0x00, hours);
     nextAdv = minutes+100;
     delayedCall.once_scheduled(1.85, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 1.85 секунды после произношения часов
+    restartTimeout = millis();
   }
 }
 
@@ -188,6 +195,7 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
 
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool delayed)
 {
+  playname = false;
   soundfile = _soundfile;
   int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();
   int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
@@ -222,7 +230,7 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool 
 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)
 {
-  //stop();
+  playname = true;
   LOG(printf_P, PSTR("playName, effnb:%d\n"), effnb%256);
   playFolder(2, effnb%256);
 }

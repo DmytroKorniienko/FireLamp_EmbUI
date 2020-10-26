@@ -60,6 +60,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     Ticker delayedCall;
     Ticker periodicCall;
     String soundfile; // хранилище пути/имени
+    unsigned long restartTimeout; // таймаут воспроизведения имени эффекта
     void printSatusDetail();
     void playAdvertise(int filenb);
     void playFolder0(int filenb);
