@@ -876,14 +876,20 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), false);
     interf->spacer(FPSTR(TINTF_0B1));
     interf->json_section_line(); // расположить в одной линии
-        interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
         interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
     interf->json_section_end();
     interf->json_section_line(); // расположить в одной линии
         interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09E), false);
         interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0AF), false);
     interf->json_section_end();
-    
+
+    //interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09C), false);
+    interf->select(FPSTR(TCONST_00A3), String(myLamp.getLampSettings().playTime), String(FPSTR(TINTF_09C)), false);
+    interf->option(String(TIME_SOUND_TYPE::TS_NONE), FPSTR(TINTF_0B6));
+    interf->option(String(TIME_SOUND_TYPE::TS_VER1), FPSTR(TINTF_0B7));
+    interf->option(String(TIME_SOUND_TYPE::TS_VER2), FPSTR(TINTF_0B8));
+    interf->json_section_end();
+
     interf->select(FPSTR(TCONST_00A6), String(myLamp.getLampSettings().alarmSound), String(FPSTR(TINTF_0A3)), false);
     interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
     interf->option(String(ALARM_SOUND_TYPE::AT_FIRST), FPSTR(TINTF_0A0));
@@ -930,7 +936,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     resetAutoTimers(); // сдвинем таймеры автосейва, т.к. длительная операция
     uint8_t val = (*data)[FPSTR(TCONST_00A7)].as<uint8_t>(); myLamp.setEqType(val); mp3->setEqType(val); // пишет в плеер!
 
-    myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)]==FPSTR(TCONST_FFFF));
+    myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)].as<int>());
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
     myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
@@ -1899,7 +1905,7 @@ void sync_parameters(){
 
 #ifdef MP3PLAYER
     obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
-    obj[FPSTR(TCONST_00A3)] = tmp.playTime ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_00A3)] = tmp.playTime;
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);

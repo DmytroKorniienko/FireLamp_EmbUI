@@ -126,12 +126,12 @@ struct {
     uint8_t MP3eq:3; // вид эквалайзера
     bool isShowSysMenu:1; // показывать ли системное меню
     bool isOnMP3:1; // включен ли плеер?
-    bool playTime:1; // воспроизводить время?
+    bool reserved3:1;
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
     uint8_t alarmSound:3; // звук будильника ALARM_SOUND_TYPE
     bool playMP3:1; // режим mp3-плеера
-    uint8_t reserved:3;
+    uint8_t playTime:3; // воспроизводить время?
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
 };
 uint32_t lampflags; // набор битов для конфига
@@ -333,7 +333,7 @@ public:
     void setTextOffset(uint8_t val) { txtOffset=val;}
     void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
 
-    void setPlayTime(bool flag) {flags.playTime = flag;}
+    void setPlayTime(uint8_t val) {flags.playTime = val;}
     void setPlayName(bool flag) {flags.playName = flag;}
     void setPlayEffect(bool flag) {flags.playEffect = flag;}
     void setPlayMP3(bool flag) {flags.playMP3 = flag;}

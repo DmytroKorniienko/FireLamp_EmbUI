@@ -165,22 +165,31 @@ void MP3PLAYERDEVICE::handle()
 #endif
 }
 
-void MP3PLAYERDEVICE::playTime(int hours, int minutes)
+void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
 {
   if(!isReady()) return;
 
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d\n"), currentState);
-  if(currentState == 513 || currentState == -1)
-  {
-    playAdvertise(hours);
-    nextAdv = minutes+100;
-    delayedCall.once_scheduled(1.95, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 1.95 секунды после произношения часов
-  } else {
-    playLargeFolder(0x00, hours);
-    nextAdv = minutes+100;
-    delayedCall.once_scheduled(1.85, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 1.85 секунды после произношения часов
-    restartTimeout = millis();
+  if(tst==TIME_SOUND_TYPE::TS_VER1){
+    if(currentState == 513 || currentState == -1)
+    {
+      playAdvertise(3000+hours);
+      nextAdv = minutes+3100;
+      delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
+    } else {
+      playLargeFolder(0x00, 3000+hours);
+      nextAdv = minutes+3100;
+      delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
+      restartTimeout = millis();
+    }
+  } else if(tst==TIME_SOUND_TYPE::TS_VER2){
+    if(currentState == 513 || currentState == -1)
+    {
+      playAdvertise(hours*100+minutes);
+    } else {
+      playLargeFolder(0x00, hours*100+minutes);
+    }
   }
 }
 

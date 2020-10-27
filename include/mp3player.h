@@ -54,14 +54,14 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     };
     uint8_t cur_volume = 0;
     uint16_t mp3filescount = 255; // кол-во файлов в каталоге MP3
-    uint8_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
+    uint16_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
     uint16_t cur_effnb=0; // текущий эффект
     uint16_t prev_effnb=0; // предыдущий эффект
     SoftwareSerial mp3player;
     Ticker delayedCall;
     Ticker periodicCall;
     String soundfile; // хранилище пути/имени
-    unsigned long restartTimeout; // таймаут воспроизведения имени эффекта
+    unsigned long restartTimeout = millis(); // таймаут воспроизведения имени эффекта
     void printSatusDetail();
     void playAdvertise(int filenb);
     void playFolder0(int filenb);
@@ -72,7 +72,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     bool isReady() {return ready;}
     bool isOn() {return on && ready;}
     void setIsOn(bool val, bool forcePlay=true) {on = val; if(!on) stop(); else if(forcePlay) playEffect(cur_effnb, soundfile);}
-    void playTime(int hours, int minutes);
+    void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
     void playName(uint16_t effnb);
     void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
