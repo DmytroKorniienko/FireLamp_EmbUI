@@ -64,7 +64,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
 
 void MP3PLAYERDEVICE::restartSound()
 {
-  playname = false;
+  isplayname = false;
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d, mp3mode=%d\n"), currentState, mp3mode);
   if(currentState == 512 || currentState == -1){
@@ -134,7 +134,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           break;
         case FileMismatch:
           LOG(println, F("Cannot Find File"));
-          if(playname) // только для случая когда нет файла с именем эффекта, если нет самой озвучки эффекта, то не рестартуем
+          if(isplayname) // только для случая когда нет файла с именем эффекта, если нет самой озвучки эффекта, то не рестартуем
             restartSound();
           break;
         case Advertise:
@@ -195,7 +195,7 @@ void MP3PLAYERDEVICE::playAdvertise(int filenb) {
 
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool delayed)
 {
-  playname = false;
+  isplayname = false;
   soundfile = _soundfile;
   int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();
   int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
@@ -230,7 +230,7 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool 
 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)
 {
-  playname = true;
+  isplayname = true;
   LOG(printf_P, PSTR("playName, effnb:%d\n"), effnb%256);
   playFolder(2, effnb%256);
 }

@@ -48,6 +48,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
+        bool isplayname:1; // проигрывается имя
       };
       uint32_t flags;
     };
