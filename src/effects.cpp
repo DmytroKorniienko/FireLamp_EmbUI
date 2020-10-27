@@ -226,24 +226,6 @@ void EffectCalc::scale2pallete(){
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
-#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-void wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-    //uint16_t xy = XY((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
-    uint16_t xy = myLamp.getPixelNumber((x >> 8) + (i & 1), (y >> 8) + ((i >> 1) & 1));
-    myLamp.getUnsafeLedsArray()[xy].r = qadd8(myLamp.getUnsafeLedsArray()[xy].r, col.r * wu[i] >> 8);
-    myLamp.getUnsafeLedsArray()[xy].g = qadd8(myLamp.getUnsafeLedsArray()[xy].g, col.g * wu[i] >> 8);
-    myLamp.getUnsafeLedsArray()[xy].b = qadd8(myLamp.getUnsafeLedsArray()[xy].b, col.b * wu[i] >> 8);
-  }
-}
-
-
 // ------------- конфетти --------------
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
@@ -1941,7 +1923,7 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
     int8_t x = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
     int8_t y = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
     //EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta) ); // используем массив палитр из других эффектов выше
-    wu_pixel(x*256, y*256, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta));
+    EffectMath::wu_pixel(x*256, y*256, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta));
 
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
@@ -5906,15 +5888,17 @@ bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
     uint32_t x = beatsin16(speeds, 0, (maxH - 1) * 256, 0, i * freq);
     uint32_t y = i * 256;
     uint32_t x1 = beatsin16(speeds, 0, (maxH - 1) * 256, 0, i * freq + 32768);
+    CRGB col = CHSV(ms / 29 + i * 255 / (maxV - 1), 255, beatsin8(speeds, 50, BRIGHTNESS, 0, (float)i * mn));
+    CRGB col1 = CHSV(ms / 29 + i * 255 / (maxV - 1) + 128, 255, beatsin8(speeds, 50, BRIGHTNESS, 0, (float)i * mn + 127));
 
-    CRGB col = CHSV(ms / 29 + i * 255 / (maxV - 1), 255, beatsin8(speeds, 60, BRIGHTNESS, 0, (float)i * mn));
-    CRGB col1 = CHSV(ms / 29 + i * 255 / (maxV - 1) + 128, 255, beatsin8(speeds, 60, BRIGHTNESS, 0, (float)i * mn + 128));
     if(!rotate){
-      wu_pixel (x , y, col);
-      wu_pixel (x1 , y, col1);
+      if(!isDebug())
+        EffectMath::wu_pixel (x1 , y, col);
+      EffectMath::wu_pixel (x , y, col1);
     } else {
-      wu_pixel (y , x, col);
-      wu_pixel (y , x1, col1);
+      if(!isDebug())
+        EffectMath::wu_pixel (y , x, col1);
+      EffectMath::wu_pixel (y , x1, col);
     }
   }
 
@@ -6322,10 +6306,12 @@ void EffectPopcorn::paint(CRGB *leds) {
     uint8_t ix = 255 - xx;
     uint8_t iy = 255 - yy;
     uint8_t wu[4] = {
+      #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
       WU_WEIGHT(ix, iy),
       WU_WEIGHT(xx, iy),
       WU_WEIGHT(ix, yy),
       WU_WEIGHT(xx, yy)
+      #undef WU_WEIGHT
     };
 
     // multiply the intensities by the colour, and saturating-add them to the pixels

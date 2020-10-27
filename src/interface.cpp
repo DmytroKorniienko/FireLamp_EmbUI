@@ -1146,8 +1146,8 @@ void block_settings_other(Interface *interf, JsonObject *data){
 #endif
 
     interf->spacer(FPSTR(TINTF_001));
-    interf->range(FPSTR(TCONST_0051), 10, 100, 10, FPSTR(TINTF_044));
-    interf->range(FPSTR(TCONST_0052), -1, 10, 1, FPSTR(TINTF_045));
+    interf->range(FPSTR(TCONST_0051), 10, 100, 5, FPSTR(TINTF_044));
+    interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
 
     interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
     interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));

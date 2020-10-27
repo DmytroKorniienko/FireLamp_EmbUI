@@ -381,6 +381,7 @@ public:
     static uint32_t getPixColorXY(uint16_t x, uint16_t y); // функция получения цвета пикселя в матрице по его координатам
     static void fillAll(const CRGB &color); // залить все
     static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
+    static void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
     static void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=50);

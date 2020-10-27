@@ -289,6 +289,26 @@ void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // фун�
   }
 }
 
+void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
+  // extract the fractional parts and derive their inverses
+  uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
+  // calculate the intensities for each affected pixel
+  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  // multiply the intensities by the colour, and saturating-add them to the pixels
+  for (uint8_t i = 0; i < 4; i++) {
+    uint16_t xn = (x >> 8) + (i & 1); uint16_t yn = (y >> 8) + ((i >> 1) & 1);
+    CRGB clr = EffectMath::getPixColorXY(xn, yn);
+    clr.r = qadd8(clr.r, (col.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (col.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (col.b * wu[i]) >> 8);
+
+    EffectMath::drawPixelXY(xn, yn, clr);
+  }
+  #undef WU_WEIGHT
+}
+
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
 {
   if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
