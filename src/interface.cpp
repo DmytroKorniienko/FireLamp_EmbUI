@@ -216,8 +216,11 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     else {
         confEff->canBeSelected((*data)[FPSTR(TCONST_0006)] == FPSTR(TCONST_FFFF));
         confEff->isFavorite((*data)[FPSTR(TCONST_0007)] == FPSTR(TCONST_FFFF));
-        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], confEff);
         myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], confEff);
+#ifdef CASHED_EFFECTS_NAMES
+        confEff->setName((*data)[FPSTR(TCONST_0092)]);
+#endif
+        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], confEff);
     }
 
     resetAutoTimers();
@@ -2055,14 +2058,15 @@ void remote_action(RA action, ...){
                 String filename = String(FPSTR(TCONST_0031));
                 filename.concat(value);
                 embui.load(filename.c_str());
+                sync_parameters();
             }
             break;
         case RA::RA_EFF_CONFIG:
-            // if (value && *value) {
-            //     String filename = String(FPSTR(TCONST_002C));
-            //     filename.concat(value);
-            //     myLamp.effects.loadConfig(filename.c_str());
-            // }
+            if (value && *value) {
+                String filename = String(FPSTR(TCONST_002C));
+                filename.concat(value);
+                myLamp.effects.initDefault(filename.c_str());
+            }
             break;
         case RA::RA_EVENTS_CONFIG:
             if (value && *value) {

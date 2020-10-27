@@ -178,7 +178,7 @@ public:
     uint8_t getMS(){ return ms; }
 #ifdef CASHED_EFFECTS_NAMES
     String& getName() {return name;}
-    void setName(String& _name) {name = _name;}
+    void setName(const String& _name) {name = _name;}
 #endif
 };
 
@@ -2166,7 +2166,19 @@ public:
 
     const String &getEffectName() {return effectName;}
     void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
-        {if(to->eff_nb==curEff) effectName=name; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setEffectName(name,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
+        {
+            if(to->eff_nb==curEff){
+                effectName=name;
+            }
+            else {
+                EffectWorker *tmp=new EffectWorker(to);
+                tmp->curEff=to->eff_nb;
+                tmp->selEff=to->eff_nb;
+                tmp->setEffectName(name,to);
+                tmp->saveeffconfig(to->eff_nb);
+                delete tmp;
+            }
+        }
 
     const String &getSoundfile() {return soundfile;}
     void setSoundfile(const String &_soundfile, EffectListElem*to) // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
