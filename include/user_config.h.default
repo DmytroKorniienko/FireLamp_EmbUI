@@ -65,6 +65,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef MP3PLAYER
 #define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
 #define MP3_RX_PIN            (D6)                         // RX mp3 player TX (D6)
+#define MP3_SERIAL_TIMEOUT    (300U)                       // 300мс по умолчанию, диапазон 200...1000, подбирается экспериментально, не желательно сильно повышать
 #endif
 
 
