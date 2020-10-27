@@ -43,7 +43,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   ready = false;
 
   mp3player.begin(9600);
-  setTimeOut(200); //Set serial communictaion time out 200ms
+  setTimeOut(300); //Set serial communictaion time out 300ms
   LOG(println);
   LOG(println, F("DFRobot DFPlayer Mini"));
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
