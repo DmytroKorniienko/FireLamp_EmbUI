@@ -35,7 +35,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-//#define __IDPREFIX F("JeeUI2-")
 #include "main.h"
 #include "buttons.h"
 #ifdef USE_FTP
@@ -66,12 +65,14 @@ ICACHE_FLASH_ATTR void setup() {
     embui.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
 
-    embui.init();
-   
-    create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
+    // EmbUI
+    //create_parameters(); // теперь это weak метод EmbUI, вызывается внутри фреймворка на стадии begin чтобы слить конфиг на флеше с дефолтовыми перменными
+    embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
+    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+    embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
+
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-    
     myLamp.events.loadConfig();
     myLamp.lamp_init(embui.param(F("CLmt")).toInt());
 
@@ -98,13 +99,7 @@ ICACHE_FLASH_ATTR void setup() {
 #endif
 
     sync_parameters();
-
-    embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
-
-    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
-
-    embui.begin(); // Инициализируем JeeUI2 фреймворк.
-}
+}   // End setup()
 
 ICACHE_FLASH_ATTR void loop() {
     embui.handle(); // цикл, необходимый фреймворку
@@ -168,6 +163,7 @@ ICACHE_FLASH_ATTR void sendData(bool force){
  * 2) Тикер не может дернуть нестатический метод класса
  */
 ICACHE_FLASH_ATTR void buttonhelper(bool state){
+  embui.autoSaveReset();
   myButtons->buttonPress(state);
 }
 
@@ -175,7 +171,6 @@ ICACHE_FLASH_ATTR void buttonhelper(bool state){
  *  Button pin interrupt handler
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
-    embui.autoSaveReset();
     detachInterrupt(myLamp.getbPin());
     _isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
     myButtons->setpinTransition(!myButtons->getpinTransition());
