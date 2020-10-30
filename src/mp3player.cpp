@@ -47,8 +47,12 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println);
   LOG(println, F("DFRobot DFPlayer Mini"));
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
-  if (!begin(mp3player)) {  //Use softwareSerial to communicate with mp3.
-    LOG(println, F("Unable to begin:"));
+  uint8_t retry_cnt=0;
+  while(!begin(mp3player) && retry_cnt++<5){ //Use softwareSerial to communicate with mp3.
+    LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d..."), retry_cnt);
+    delay(MP3_SERIAL_TIMEOUT);
+  }
+  if (!begin(mp3player) && retry_cnt++<5) {
     LOG(println, F("1.Please recheck the connection!"));
     LOG(println, F("2.Please insert the SD card!"));
     ready = false;
