@@ -68,9 +68,9 @@ ICACHE_FLASH_ATTR void setup() {
     // EmbUI
     //create_parameters(); // теперь это weak метод EmbUI, вызывается внутри фреймворка на стадии begin чтобы слить конфиг на флеше с дефолтовыми перменными
     embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
-    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
     embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
-
+    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+    
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     myLamp.events.loadConfig();
