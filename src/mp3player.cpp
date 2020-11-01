@@ -49,7 +49,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
   uint8_t retry_cnt=0;
   while(!begin(mp3player) && retry_cnt++<5){ //Use softwareSerial to communicate with mp3.
-    LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d..."), retry_cnt);
+    LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d...\n"), retry_cnt);
     delay(MP3_SERIAL_TIMEOUT);
   }
   if (!begin(mp3player) && retry_cnt++<5) {

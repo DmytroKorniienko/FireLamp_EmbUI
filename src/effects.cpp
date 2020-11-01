@@ -1282,9 +1282,9 @@ bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectWorker *param)
   const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2) ;
   float e_s3_speed = 0.004 * speed + 0.015; // speed of the movement along the Lissajous curves
-  float e_s3_size = 3 * (float)scale/255.0 + 2;    // amplitude of the curves
+  float e_s3_size = EffectMath::fmap(scale,1,255,3,9); // amplitude of the curves
 
-  float time_shift = millis(); //float(millis()%(uint32_t)(30000*(1.0/((float)myLamp.effects.getSpeed()/255))));
+  float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
 
   for (uint8_t y = 0; y < HEIGHT; y++) {
     for (uint8_t x = 0; x < WIDTH; x++) {
