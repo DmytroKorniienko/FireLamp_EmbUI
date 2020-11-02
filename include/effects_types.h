@@ -141,6 +141,7 @@ EFF_TEST,                                     //  (Тест)
 EFF_TEST2,                                    // Пока пусто
 EFF_PICASSO4,                                 // Меташары
 EFF_LIQUIDLAMP,                               // Лаваламп
+EFF_SMOKEBALLS,                               // Дымовые шашки stepko
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -272,7 +273,7 @@ static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"v
 static const char E_F2012_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Масштаб\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_DNA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"},{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Поворот\"}]}";
 static const char E_SNOW_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"val\":\"1\",\"min\":1,\"max\":3,\"name\":\"Сглаживание\"}]}";
-
+static const char E_SMOKEBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}]}";
 static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра (0 = без цвета)\"},{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Сглаживание\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 
 // Инженерный
@@ -436,37 +437,6 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
 #define CENTER_max  max(WIDTH / 2, HEIGHT / 2) // Наибольшее значение центра
 #define WIDTH_steps  256U / WIDTH   // диапазон значений приходящихся на 1 пиксель ширины матрицы
 #define HEIGHT_steps 256U / HEIGHT // диапазон значений приходящихся на 1 пиксель высоты матрицы
-
-// ============= Fire Effect =================
-#define SPARKLES              (1U)                     // вылетающие угольки вкл выкл
-#define UNIVERSE_FIRE                                  // универсальный огонь 2-в-1 Цветной+Белый
-
-//these values are substracetd from the generated values to give a shape to the animation
-static const uint8_t valueMask[8][16] PROGMEM =
-{
-  {0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  },
-  {0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  },
-  {0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  },
-  {0  , 32 , 64 , 128, 128, 64 , 32 , 0  , 0  , 32 , 64 , 128, 128, 64 , 32 , 0  },
-  {32 , 64 , 96 , 160, 160, 96 , 64 , 32 , 32 , 64 , 96 , 160, 160, 96 , 64 , 32 },
-  {64 , 96 , 128, 192, 192, 128, 96 , 64 , 64 , 96 , 128, 192, 192, 128, 96 , 64 },
-  {96 , 128, 160, 255, 255, 160, 128, 96 , 96 , 128, 160, 255, 255, 160, 128, 96 },
-  {128, 160, 192, 255, 255, 192, 160, 128, 128, 160, 192, 255, 255, 192, 160, 128}
-};
-
-//these are the hues for the fire,
-//should be between 0 (red) to about 25 (yellow)
-static const uint8_t hueMask[8][16] PROGMEM =
-{
-  {25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25 },
-  {25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19 },
-  {19, 16, 8 , 1 , 1 , 8 , 13, 16, 19, 16, 8 , 1 , 1 , 8 , 13, 16 },
-  {13, 13, 5 , 1 , 1 , 5 , 11, 13, 13, 13, 5 , 1 , 1 , 5 , 11, 13 },
-  {11, 11, 5 , 1 , 1 , 5 , 11, 11, 11, 11, 5 , 1 , 1 , 5 , 11, 11 },
-  {8 , 5 , 1 , 0 , 0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 , 0 , 1 , 5 , 8  },
-  {5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5  },
-  {1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1  }
-};
 
 
 
