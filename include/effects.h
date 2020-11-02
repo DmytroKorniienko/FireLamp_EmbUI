@@ -1977,8 +1977,11 @@ class EffectSmokeballs: public EffectCalc {
   byte sSpeed[WAVES_AMOUNT];
   float maxMin[WAVES_AMOUNT][2];
   CRGB waveColors[WAVES_AMOUNT];
-  void load();
-  void run();
+  public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
