@@ -489,16 +489,33 @@ void LAMP::startDemoMode(byte tmout)
   demoTimer(T_ENABLE, tmout);
 }
 
-void LAMP::startNormalMode()
+void LAMP::storeEffect()
 {
-  mode = LAMPMODE::MODE_NORMAL;
-  demoTimer(T_DISABLE);
+  storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+  storedBright = getLampBrightness();
+  LOG(printf_P, PSTR("Store: %d,%d\n"),storedEffect,storedBright);
+}
+
+void LAMP::restoreStored()
+{
+  LOG(printf_P, PSTR("Restore: %d,%d\n"),storedEffect,storedBright);
+  if(storedBright)
+    setLampBrightness(storedBright);
   if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
+    effects.directMoveBy(storedEffect);
     remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
   } else
   if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
     remote_action(RA::RA_EFF_RAND, NULL);
   }
+  mode = LAMPMODE::MODE_NORMAL;
+}
+
+void LAMP::startNormalMode()
+{
+  mode = LAMPMODE::MODE_NORMAL;
+  demoTimer(T_DISABLE);
+  restoreStored();
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
@@ -985,10 +1002,14 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
         effects.setSelected(effects.getByCnt(random(0, effects.getModeAmount())));
         break;
     case EFFSWITCH::SW_WHITE_HI:
+        storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
+        myLamp.setMode(LAMPMODE::MODE_WHITELAMP);
         break;
     case EFFSWITCH::SW_WHITE_LO:
+        storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
+        myLamp.setMode(LAMPMODE::MODE_WHITELAMP);
         break;
     default:
         return;

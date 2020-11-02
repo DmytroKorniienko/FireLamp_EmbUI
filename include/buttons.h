@@ -58,12 +58,15 @@ class Button{
 class Buttons {
 	private:
 #pragma pack(push,1)
- struct {
-	bool buttonEnabled:1; // кнопка обрабатывается если true
-	bool holding:1; // кнопка удерживается
-	bool holded:1; // кнопка удерживалась (touch.isHolded() можно проверить только однократно!!!)
-	bool pinTransition:1;  // ловим "нажатие" кнопки
- };
+	union {
+		struct {
+			bool buttonEnabled:1; // кнопка обрабатывается если true
+			bool holding:1; // кнопка удерживается
+			bool holded:1; // кнопка удерживалась (touch.isHolded() можно проверить только однократно!!!)
+			bool pinTransition:1;  // ловим "нажатие" кнопки
+		};
+		uint8_t btnflags = 0; // очистим флаги
+	};
  #pragma pack(pop)
 	uint8_t pin; // пин
 	uint8_t pullmode; // подтяжка

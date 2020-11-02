@@ -1992,8 +1992,12 @@ void remote_action(RA action, ...){
         case RA::RA_ON:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag);
             break;
-        case RA::RA_OFF:
-            CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE), set_onflag);
+        case RA::RA_OFF: {
+                LAMPMODE mode = myLamp.getMode();
+                if(mode==LAMPMODE::MODE_WHITELAMP || mode==LAMPMODE::MODE_DEMO)
+                    myLamp.restoreStored();
+                CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE), set_onflag);
+            }
             break;
         case RA::RA_DEMO:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено

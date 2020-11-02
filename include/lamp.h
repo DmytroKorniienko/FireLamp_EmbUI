@@ -176,6 +176,7 @@ private:
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
+    uint8_t storedBright;
 
     PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
@@ -303,6 +304,7 @@ public:
     void semqtt_int(int val) {mqtt_int = val;}
 
     LAMPMODE getMode() {return mode;}
+    void setMode(LAMPMODE _mode) {mode=_mode;}
 
     void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
@@ -347,6 +349,8 @@ public:
     void stopAlarm();
     void startDemoMode(byte tmout = 60); // дефолтное значение, настраивается из UI
     void startNormalMode();
+    void restoreStored();
+    void storeEffect();
 #ifdef OTA
     void startOTAUpdate();
 #endif
