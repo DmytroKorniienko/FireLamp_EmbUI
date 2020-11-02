@@ -6377,7 +6377,7 @@ bool EffectSmokeBalls::load(){
     palettesload();
     for (byte j = 0; j < WAVES_AMOUNT; j++) {
       reg[j] = random(WIDTH*10);
-      sSpeed[j] = random(1,modes[currentMode].Speed)/random(1,10);
+      sSpeed[j] = random(1,speed)/random(1,10);
       maxMin[j][0] = random(Offest);
       maxMin[j][0] = random(Offest,Offest*2);
       waveColors[j] = ColorFromPalette(*curPalette, random(0, 9) * 28);
@@ -6390,7 +6390,7 @@ bool EffectSmokeBalls::run(){
   blurScreen(20);
   for (byte j = 0; j < WAVES_AMOUNT; j++) {
     pos[j]= (beatsin8(sSpeed[j],maxMin[j][0]+reg[j],maxMin[j][1]+reg[j])-Offest);
-    drawPixelXYF(pos[j]/10, 0.05, waveColors[j]);
+    EffectMath::drawPixelXYF(pos[j]/10, 0.05, waveColors[j]);
     EVERY_N_SECONDS(random(10,120)){
     reg[j] + random(-20,20);}
     }
