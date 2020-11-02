@@ -6365,29 +6365,3 @@ void EffectPopcorn::move() {
     rockets[r].yd = (rockets[r].yd * 224) >> 8; //224
   }
 }
-
-
-bool EffectSmokeBalls::load(){
-    palettesload();
-    for (byte j = 0; j < WAVES_AMOUNT; j++) {
-      reg[j] = random(WIDTH*10);
-      sSpeed[j] = random(1,speed)/random(1,10);
-      maxMin[j][0] = random(Offest);
-      maxMin[j][0] = random(Offest,Offest*2);
-      waveColors[j] = ColorFromPalette(*curPalette, random(0, 9) * 28);
-      pos[j]= reg[j];
-    }
-  }
-bool EffectSmokeBalls::run(){
-  shiftUp();
-  dimAll(230);
-  blurScreen(20);
-  for (byte j = 0; j < WAVES_AMOUNT; j++) {
-    pos[j]= (beatsin8(sSpeed[j],maxMin[j][0]+reg[j],maxMin[j][1]+reg[j])-Offest);
-    EffectMath::drawPixelXYF(pos[j]/10, 0.05, waveColors[j]);
-    EVERY_N_SECONDS(random(10,120)){
-    reg[j] + random(-20,20);}
-    }
-
-  }
-
