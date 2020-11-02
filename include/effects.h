@@ -1968,6 +1968,17 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+class EffectSmokeballs: public EffectCalc {
+    private:
+  byte WAVES_AMOUNT = WIDTH/2;
+  byte Offest = 50;
+  float reg[WAVES_AMOUNT];
+  float pos[WAVES_AMOUNT];
+  byte sSpeed[WAVES_AMOUNT];
+  float maxMin[WAVES_AMOUNT][2];
+  CRGB waveColors[WAVES_AMOUNT];
+  void load();
+  void run();
 // --------- конец секции эффектов
 
 class EffectWorker {
