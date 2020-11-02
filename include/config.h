@@ -112,6 +112,9 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #ifndef MP3_SERIAL_TIMEOUT
 #define MP3_SERIAL_TIMEOUT    (300U)                       // 300мс по умолчанию, диапазон 200...1000, подбирается экспериментально, не желательно сильно повышать
 #endif
+#ifndef DFPALYER_START_DELAY
+#define DFPALYER_START_DELAY  (500U)                       // 500мс по умолчанию, диапазон 10...1000, подбирается экспериментально, не желательно сильно повышать, безусловная задержка до инициализации
+#endif
 #endif
 
 #ifndef LAMP_PIN
