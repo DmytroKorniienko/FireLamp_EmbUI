@@ -142,6 +142,7 @@ EFF_TEST2,                                    // Пока пусто
 EFF_PICASSO4,                                 // Меташары
 EFF_LIQUIDLAMP,                               // Лаваламп
 EFF_SMOKEBALLS,                               // Дымовые шашки stepko
+EFF_AQURIUMGEN,                               // Аквариум на генераторе    
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
