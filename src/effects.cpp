@@ -6391,4 +6391,77 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   }
   return true;
 }
+void EffectSmokeballs::shiftUp(){         //Наверное после смены Узоров даная функция пропала
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = HEIGHT; y > 0; y--) {
+      drawPixelXY(x, y, getPixColorXY(x, y - 1));
+    }
+  }
+}
+
+
+void EffectGenAquarium::load(){
+randomSeed(millis());
+    for (byte i = 0; i < LIGHTERS_AM; i++) {
+
+      if (i >= 0 && i <= 1) {
+        lightersPosReg[0][i] = (WIDTH / (i + 1) * 10) - 40;
+        lightersPosReg[1][i] = -10;
+      }
+      else if (i >= 2 && i <= 3) {
+        lightersPosReg[0][i] = (WIDTH / (i - 1) * 10) - 40;
+        lightersPosReg[1][i] = HEIGHT * 10;
+      }
+      else if (i >= 4 && i <= 5) {
+        lightersPosReg[0][i] = -10;
+        lightersPosReg[1][i] = (HEIGHT / (i - 3) * 10) - 40;
+      }
+      else if (i >= 6 && i <= 7) {
+        lightersPosReg[0][i] = WIDTH * 10;
+        lightersPosReg[1][i] = (HEIGHT / (i - 5) * 10) - 40;
+      }* /
+      lightersPosReg[0][i] = 7;
+      lightersPosReg[1][i] = 7;
+      lightersSpeed[0][i] = random(1, modes[currentMode].Speed * 5);
+      lightersSpeed[1][i] = random(1, modes[currentMode].Speed * 5);
+      MaxLightPos[0][i] = random(0, OFFEST);
+      MaxLightPos[1][i] = random(0, OFFEST);
+      MaxLightPos[2][i] = random(OFFEST, OFFEST * 2);
+      MaxLightPos[3][i] = random(OFFEST, OFFEST * 2);
+      lightersPos[1][i] = lightersPosReg[1][i];
+      lightersPos[0][i] = lightersPosReg[0][i];
+  }
+bool EffectGenAquarium::run(CRGB *ledarr, EffectWorker *opt){
+ FastLED.clear();
+  for (byte i = 0; i < LIGHTERS_AM; i++) {
+    for (byte j = 1; j < LIGHTERS_AM - 1; j++) {
+      if (i >= 0 && i <= 3) {
+        lightersPos[0][i] = (beatsin8(lightersSpeed[0][i], MaxLightPos[0][i] + lightersPosReg[0][i], MaxLightPos[2][i] + lightersPosReg[0][i]) - OFFEST);
+        lightersPos[1][i] = lightersPosReg[1][i];
+      }
+      else if (i > 4 && i <= 7) {
+        lightersPos[0][i] = lightersPosReg[0][i];
+        lightersPos[1][i] = (beatsin8(lightersSpeed[0][i], MaxLightPos[1][i] + lightersPosReg[1][i], MaxLightPos[3][i] + lightersPosReg[1][i]) - OFFEST);
+      }
+      EVERY_N_SECONDS(random(5, 120)) {
+        if (i >= 0 && i <= 3) {
+          lightersPosReg[0][i] + random(OFFEST * -1, OFFEST);
+        }
+        else if (i > 4 && i <= 7) {
+          lightersPosReg[1][i] + random(OFFEST * -1, OFFEST);
+        } MaxLightPos[0][i] = random(0, OFFEST);
+        MaxLightPos[1][i] = random(0, OFFEST);
+        MaxLightPos[2][i] = random(OFFEST, OFFEST * 2);
+        MaxLightPos[3][i] = random(OFFEST, OFFEST * 2);
+      }
+      DrawLine(lightersPos[0][0] / 10, lightersPos[1][0] / 10, lightersPos[0][2] / 10, lightersPos[1][2] / 10, CRGB::White);
+      DrawLine(lightersPos[0][0] / 10, lightersPos[1][0] / 10, lightersPos[0][3] / 10, lightersPos[1][3] / 10, CRGB::White);
+      DrawLine(lightersPos[0][1] / 10, lightersPos[1][1] / 10, lightersPos[0][3] / 10, lightersPos[1][3] / 10, CRGB::White);
+      DrawLine(lightersPos[0][4] / 10, lightersPos[1][4] / 10, lightersPos[0][6] / 10, lightersPos[1][6] / 10, CRGB::White);
+      DrawLine(lightersPos[0][4] / 10, lightersPos[1][4] / 10, lightersPos[0][7] / 10, lightersPos[1][7] / 10, CRGB::White);
+      DrawLine(lightersPos[0][5] / 10, lightersPos[1][5] / 10, lightersPos[0][7] / 10, lightersPos[1][7] / 10, CRGB::White);
+    }
+  }
+  return true;
+}
 

@@ -2027,6 +2027,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//--------------Дымовые шашки--------------------------
+//Stepko
 #define WAVES_AMOUNT (WIDTH/2U)
 class EffectSmokeballs: public EffectCalc {
   private:
@@ -2041,7 +2043,20 @@ class EffectSmokeballs: public EffectCalc {
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
-
+//---------Аквариум на генераторе-------------------------
+//Stepko
+#define LIGHTERS_AM (8)
+class EffectGenAquarium: public
+    private:
+byte OFFEST (50) //максимум отклонение от спавна(колво пикс*10)
+float lightersPosReg[2][LIGHTERS_AM];
+float lightersPos[2][LIGHTERS_AM];
+byte lightersSpeed[2][LIGHTERS_AM];
+byte MaxLightPos[4][LIGHTERS_AM];
+ public:
+  void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 class EffectWorker {
@@ -2054,6 +2069,7 @@ private:
     uint16_t curEff = (uint16_t)EFF_NONE;     ///< энумератор текущего эффекта
     uint16_t selEff = (uint16_t)EFF_NONE;     ///< энумератор выбранного эффекта (для отложенного перехода)
 
+    
     String originalName;    // имя эффекта дефолтное
     String effectName;      // имя эффекта (предварительно заданное или из конфига)
     String soundfile;       // имя/путь к звуковому файлу (DF Player Mini)
