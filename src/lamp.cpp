@@ -508,7 +508,6 @@ void LAMP::restoreStored()
   if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
     remote_action(RA::RA_EFF_RAND, NULL);
   }
-  mode = LAMPMODE::MODE_NORMAL;
 }
 
 void LAMP::startNormalMode()

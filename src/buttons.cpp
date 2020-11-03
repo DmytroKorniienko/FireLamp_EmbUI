@@ -173,9 +173,8 @@ void Buttons::buttonTick(){
 
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
 			LOG(println,F("Сброс состояния кнопки после окончания действий"));
-			touch.resetStates();
+			resetStates();
 			startLampState = myLamp.isLampOn();
-			holded = false;
 			for (int i = 0; i < buttons.size(); i++) {
 				buttons[i]->flags.onetime&=1;
 			}

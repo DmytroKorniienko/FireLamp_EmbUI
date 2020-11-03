@@ -650,7 +650,7 @@ void set_onflag(Interface *interf, JsonObject *data){
         } else {
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
             //myLamp.changePower(newpower);
-            sysTicker.once(1,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
+            sysTicker.once(0.1,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 myLamp.changePower(false);
 #ifdef MP3PLAYER
                 mp3->setIsOn(false);
@@ -1993,9 +1993,17 @@ void remote_action(RA action, ...){
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag);
             break;
         case RA::RA_OFF: {
+                // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
                 LAMPMODE mode = myLamp.getMode();
-                if(mode==LAMPMODE::MODE_WHITELAMP || mode==LAMPMODE::MODE_DEMO)
-                    myLamp.restoreStored();
+                //resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
+                if(mode==LAMPMODE::MODE_DEMO || mode==LAMPMODE::MODE_WHITELAMP){
+                    myLamp.startNormalMode();
+                    //myLamp.restoreStored();
+                    embui.var(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE)); // отключить демо
+                    if (myLamp.IsGlobalBrightness()) {
+                        embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
+                    }
+                }
                 CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE), set_onflag);
             }
             break;

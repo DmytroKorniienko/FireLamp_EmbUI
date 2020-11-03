@@ -77,6 +77,8 @@ class Buttons {
 	LList<Button*> buttons;
 	timerMinim holdtm; // таймаут удержания кнопки в мс
 
+	void resetStates() {holding=false; holded=false; touch.resetStates();}
+
 	public:
 	bool getpinTransition() { return pinTransition; }
 	void setpinTransition(bool val) { pinTransition = val; }
