@@ -2028,8 +2028,8 @@ public:
 };
 
 //--------------Дымовые шашки--------------------------
-//Stepko
-#define WAVES_AMOUNT (WIDTH/2U)
+// (c) Stepko
+#define WAVES_AMOUNT 32
 class EffectSmokeballs: public EffectCalc {
   private:
     byte Offest = 50;
@@ -2037,27 +2037,15 @@ class EffectSmokeballs: public EffectCalc {
     float pos[WAVES_AMOUNT];
     byte sSpeed[WAVES_AMOUNT];
     float maxMin[WAVES_AMOUNT][2];
-    CRGB waveColors[WAVES_AMOUNT];
+    byte waveColors[WAVES_AMOUNT];
     void shiftUp();
+    void setDynCtrl(UIControl*_val) override;
   public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//---------Аквариум на генераторе-------------------------
-//Stepko
-//#define LIGHTERS_AM (8)
-#define OFFEST (50) //максимум отклонение от спавна(колво пикс*10)
-class EffectGenAquarium: public EffectCalc {
-    private:
-float lightersPosReg[2][LIGHTERS_AM];
-float lightersPos[2][LIGHTERS_AM];
-byte lightersSpeed[2][LIGHTERS_AM];
-byte MaxLightPos[4][LIGHTERS_AM];
- public:
-  void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
