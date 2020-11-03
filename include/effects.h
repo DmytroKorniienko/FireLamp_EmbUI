@@ -2038,17 +2038,17 @@ class EffectSmokeballs: public EffectCalc {
     byte sSpeed[WAVES_AMOUNT];
     float maxMin[WAVES_AMOUNT][2];
     CRGB waveColors[WAVES_AMOUNT];
-    void shiftUp() {};
+    void shiftUp();
   public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 //---------Аквариум на генераторе-------------------------
 //Stepko
-#define LIGHTERS_AM (8)
-class EffectGenAquarium: public
+//#define LIGHTERS_AM (8)
+#define OFFEST (50) //максимум отклонение от спавна(колво пикс*10)
+class EffectGenAquarium: public EffectCalc {
     private:
-byte OFFEST (50) //максимум отклонение от спавна(колво пикс*10)
 float lightersPosReg[2][LIGHTERS_AM];
 float lightersPos[2][LIGHTERS_AM];
 byte lightersSpeed[2][LIGHTERS_AM];
