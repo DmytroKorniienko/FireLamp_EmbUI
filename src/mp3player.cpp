@@ -163,11 +163,9 @@ void MP3PLAYERDEVICE::printSatusDetail(){
 
 void MP3PLAYERDEVICE::handle()
 {
-#ifdef LAMP_DEBUG  
-  if (available()) {
+  if (available()) { // эта часть не только пишет ошибки, но также отлавливает изменение состояний!!!
     printSatusDetail(); //Print the detail message from DFPlayer to handle different errors and states.
   }
-#endif
 }
 
 void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
