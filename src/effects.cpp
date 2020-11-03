@@ -6400,7 +6400,7 @@ void EffectSmokeballs::shiftUp(){         //Наверное после смен
 }
 
 
-void GenAquarium::load(){
+void EffectGenAquarium::load(){
 randomSeed(millis());
     for (byte i = 0; i < LIGHTERS_AM; i++) {
 
@@ -6431,7 +6431,7 @@ randomSeed(millis());
       lightersPos[1][i] = lightersPosReg[1][i];
       lightersPos[0][i] = lightersPosReg[0][i];
   }
-bool GenAquarium::run(CRGB *ledarr, EffectWorker *opt){
+bool EffectGenAquarium::run(CRGB *ledarr, EffectWorker *opt){
  FastLED.clear();
   for (byte i = 0; i < LIGHTERS_AM; i++) {
     for (byte j = 1; j < LIGHTERS_AM - 1; j++) {
