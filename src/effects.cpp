@@ -1821,11 +1821,8 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 // ============= SWIRL /  ВОДОВОРОТ ===============
-// Prismata Loading Animation
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
-// v1.1 - +dither by PalPalych 12.04.2020
-// Aurora: https://github.com/pixelmatix/aurora
-// Copyright (c) 2014 Jason Coon
+// https://gist.github.com/kriegsman/5adca44e14ad025e6d3b
+// Copyright (c) 2014 Mark Kriegsman
 void EffectSwirl::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
@@ -1846,15 +1843,16 @@ bool EffectSwirl::swirlRoutine(CRGB *leds, EffectWorker *param)
   // blur it repeatedly.  Since the blurring is 'lossy', there's
   // an automatic trend toward black -- by design.
 #if (WIDTH < 25)
-  EffectMath::blur2d(beatsin8(2, 10, 128 + scale*3));
+  byte blurAmount = beatsin8(2, 10, 180);
+  EffectMath::blur2d(blurAmount);
 #else
   // Never mind, on my 64x96 array, the dots are just too small
    EffectMath::blur2d(172);
 #endif
 
   // Use two out-of-sync sine waves
-  uint8_t i = beatsin8(27*(speed/100.0)+5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
-  uint8_t j = beatsin8(41*(speed/100.0)+5, e_swi_BORDER, WIDTH - e_swi_BORDER);
+  uint8_t i = beatsin8(27 * ((float)speed / 100.0) + 5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
+  uint8_t j = beatsin8(41 * ((float)speed / 100.0) + 5, e_swi_BORDER, WIDTH - e_swi_BORDER);
   // Also calculate some reflections
   uint8_t ni = (WIDTH - 1U)-i;
   uint8_t nj = (WIDTH - 1U)-j;
@@ -4894,8 +4892,9 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 // ---- Эффект "Узоры"
-// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
-
+// (c) kostyamat (Kostyantyn Matviyevskyy) 2020
+// переделано kDn
+// идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
 void EffectPatterns::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3) {// pattern

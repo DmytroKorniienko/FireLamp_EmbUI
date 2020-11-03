@@ -913,11 +913,8 @@ public:
 };
 
 // ============= SWIRL /  ВОДОВОРОТ ===============
-// Prismata Loading Animation
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
-// v1.1 - +dither by PalPalych 12.04.2020
-// Aurora: https://github.com/pixelmatix/aurora
-// Copyright (c) 2014 Jason Coon
+// https://gist.github.com/kriegsman/5adca44e14ad025e6d3b
+// Copyright (c) 2014 Mark Kriegsman
 class EffectSwirl : public EffectCalc {
 private:
     bool swirlRoutine(CRGB *leds, EffectWorker *param);
@@ -1503,7 +1500,9 @@ public:
 };
 
 // ---- Эффект "Узоры"
-// https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+// (c) kostyamat (Kostyantyn Matviyevskyy) 2020
+// переделано kDn
+// идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
 class EffectPatterns : public EffectCalc {
 private:
     int8_t patternIdx = -1;
