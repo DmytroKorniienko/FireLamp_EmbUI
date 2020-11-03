@@ -2043,6 +2043,7 @@ class EffectSmokeballs: public EffectCalc {
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
 //---------Аквариум на генераторе-------------------------
 //Stepko
 //#define LIGHTERS_AM (8)

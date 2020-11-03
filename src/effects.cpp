@@ -6378,6 +6378,7 @@ void EffectSmokeballs::load(){
       pos[j]= reg[j];
     }
   }
+  
 bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   shiftUp();
   EffectMath::dimAll(230);
@@ -6391,6 +6392,7 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   }
   return true;
 }
+
 void EffectSmokeballs::shiftUp(){         //Наверное после смены Узоров даная функция пропала
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = HEIGHT; y > 0; y--) {
