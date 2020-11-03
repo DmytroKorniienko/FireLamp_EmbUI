@@ -125,6 +125,7 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), ho
 	touch.setClickTimeout(BUTTON_CLICK_TIMEOUT);
 	touch.setTimeout(BUTTON_TIMEOUT);
 	touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
+	touch.resetStates();
 	_buttonTicker.attach_scheduled(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
 }
 
