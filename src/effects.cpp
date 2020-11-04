@@ -6377,8 +6377,7 @@ void EffectSmokeballs::load(){
   for (byte j = 0; j < WAVES_AMOUNT; j++) {
     reg[j] = random(WIDTH*10);
     sSpeed[j] = random(1,255)/random(1,10);
-    maxMin[j][0] = random(Offest);
-    maxMin[j][0] = random(Offest,Offest*2);
+    maxMin[j] = random(Offest, Offest*2); 
     waveColors[j] = random(0, 9) * 28; 
     pos[j]= reg[j];
   }
@@ -6388,11 +6387,14 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   shiftUp();
   EffectMath::dimAll(230);
   EffectMath::blur2d(20);
-  for (byte j = 0; j < scale*2; j++) {
-    pos[j] = (beatsin8(sSpeed[j], maxMin[j][0] + reg[j], maxMin[j][1] + reg[j]) - Offest);
+  for (byte j = 0; j < map(scale, 1, 16, 2, WAVES_AMOUNT); j++) {
+    pos[j] = (beatsin8(sSpeed[j], maxMin[j] + reg[j], reg[j]) - Offest);
     EffectMath::drawPixelXYF(pos[j]/10, 0.05, ColorFromPalette(*curPalette, waveColors[j]));
-    EVERY_N_SECONDS(random(10,120)){
+  }
+  EVERY_N_SECONDS(20){
+    for (byte j = 0; j < map(scale, 1, 16, 2, WAVES_AMOUNT); j++) {
       reg[j] += random(-20,20);
+      waveColors[j] += 28;
     }
   }
   return true;
