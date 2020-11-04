@@ -4913,34 +4913,34 @@ void EffectPatterns::drawPicture_XY() {
   vx = modff(xsin, &f);
   vy = modff(ysin, &f);
 
-  if(_subpixel && !(speed==33 && scale==33))
-    FastLED.clear();
+  //FastLED.clear();
+  EffectMath::dimAll(127);
 
-  for (uint8_t x = 0; x < WIDTH; x++)
+  for (uint16_t x = 0; x < WIDTH; x++)
   {
-    for (uint8_t y = 0; y < HEIGHT; y++)
+    for (uint16_t y = 0; y < HEIGHT; y++)
     {
       byte in = buff[myLamp.getPixelNumberBuff((int)(xsin + x) % 20U, (int)(ysin + y) % 20U, 20U, 20U, 400)];
-
-      //CRGB color = ColorFromPalette(*curPalette, map(in, 0, 7, 0, 255), 255 - map(in, 0, 7, 0, 127));
       CHSV color2 = colorMR[in];
-      //CHSV color2 = color.v != 0 ? CHSV(color.h, color.s, _bri) : color;
-      if(_subpixel && !(speed==33 && scale==33)){
+
+      if(_subpixel){
         if(speed==33)
           EffectMath::drawPixelXYF_X(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
         else if(scale==33)
           EffectMath::drawPixelXYF_Y(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
         else{
-          EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
-          if(y == HEIGHT-1)
-            EffectMath::drawPixelXYF_X(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 50); // закостыливаем ликвидацию мерцания нижей линии, коряво, но разбираться буду позже
-          if(x == 0)
-            EffectMath::drawPixelXYF_Y(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 50); // закостыливаем ликвидацию мерцания левой линии, коряво, но разбираться буду позже
-
+            EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
         }
+      } else {
+        EffectMath::drawPixelXY(x, (HEIGHT-1)-y, color2);
       }
-      else
-        EffectMath::drawPixelXY(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2);
+    }
+  }
+  for (uint16_t x = 0; x < WIDTH; x++){
+    for (uint16_t y = 0; y < HEIGHT; y++){ // лучше вывод рамки фоном, чем мерцание по краю картинки, доп. цикл из-за особенностей сабпикселя
+      if(_subpixel && speed!=33 && scale!=33 && (x==WIDTH-1 || x==0 || y==0 || y==HEIGHT-1)){
+        EffectMath::drawPixelXY(x, (float)(HEIGHT-1)-y, colorMR[6]);
+      }
     }
   }
 }
