@@ -382,7 +382,7 @@ bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
     }
 
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-    for (int k = HEIGHT - 1; k >= 2; k--) {
+    for (unsigned int k = HEIGHT - 1; k >= 2; k--) {
       heat[x][k] = (heat[x][k - 1] + heat[x][k - 2] + heat[x][k - 2]) / 3;
     }
 
@@ -6401,7 +6401,7 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
 void EffectSmokeballs::shiftUp(){       
   float speedfactor = EffectMath::fmap(speed, 1., 255., .02, .25); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
   for (byte x = 0; x < WIDTH; x++) {
-    for (float y = HEIGHT; y > 0; y-= speedfactor) {
+    for (float y = (float)HEIGHT; y > 0.; y-= speedfactor) {
       EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x, y - 1));
     }
   }
@@ -6412,8 +6412,8 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);
   offsetX = beatsin16(6. * speedfactor, -180, 180);
   offsetY = beatsin16(6. * speedfactor, -180, 180, 12000);
-  for (int x = 0; x < LED_COLS; x++) {
-    for (int y = 0; y < LED_ROWS; y++) {
+  for (uint x = 0; x < LED_COLS; x++) {
+    for (uint y = 0; y < LED_ROWS; y++) {
       int16_t index = myLamp.getPixelNumber(x, y);
 
       if (index < 0) break;
