@@ -2044,6 +2044,15 @@ class EffectSmokeballs: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------- Эффект "Клеточка"
+// из примеров программы Soulmate, автор пока неизвестен
+class EffectCell: public EffectCalc {
+  private:
+    int16_t offsetX = 0;
+    int16_t offsetY = 0;
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 
 // --------- конец секции эффектов
 

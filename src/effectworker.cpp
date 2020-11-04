@@ -130,6 +130,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_3DNOISE :
     worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());
     break;
+  case EFF_ENUM::EFF_CELL :
+    worker = std::unique_ptr<EffectCell>(new EffectCell());
+    break;
   case EFF_ENUM::EFF_DRIFT :
     worker = std::unique_ptr<EffectDrift>(new EffectDrift());
     break;
