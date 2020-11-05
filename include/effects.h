@@ -2176,6 +2176,9 @@ public:
     // Получить конфиг текущего эффекта
     String geteffconfig(uint16_t nb);
 
+    // Получить конфиг эффекта из ФС
+    String getfseffconfig(uint16_t nb);
+
     // конструктор копий эффектов
     EffectWorker(const EffectListElem* base, const EffectListElem* copy);
     // Конструктор для отложенного эффекта

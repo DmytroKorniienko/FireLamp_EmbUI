@@ -2036,7 +2036,7 @@ void remote_action(RA action, ...){
             embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(value), false);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(value).toInt()), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(value).toInt()), false);
             break;
         }
         case RA::RA_BRIGHT_NF:

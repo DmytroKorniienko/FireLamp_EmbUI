@@ -119,7 +119,7 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
     sendtopic.replace(FPSTR(TCONST_00AC), "");
     if(sendtopic==FPSTR(TCONST_00AE)){
         sendtopic=String(FPSTR(TCONST_008B))+sendtopic;
-        String effcfg = myLamp.effects.geteffconfig(myLamp.effects.getCurrent());
+        String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
         embui.publish(sendtopic, effcfg, false); // отправляем обратно в MQTT в топик embui/pub/
     } else if(sendtopic==FPSTR(TCONST_00AD)){
         sendData(true);
@@ -152,7 +152,7 @@ ICACHE_FLASH_ATTR void sendData(bool force){
 
     // также отправим конфиг текущего эффекта
     sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
-    String effcfg = myLamp.effects.geteffconfig(myLamp.effects.getCurrent());
+    String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
     embui.publish(sendtopic, effcfg, false);
 }
 

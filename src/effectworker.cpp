@@ -576,8 +576,22 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   }
 }
 
+String EffectWorker::getfseffconfig(uint16_t nb)
+{
+  String cfg_str;
+  String filename = geteffectpathname(nb);
+  File jfile = LittleFS.open(filename, "r");
+  if(jfile)
+    cfg_str = jfile.readString();
+  jfile.close();
+
+  return cfg_str;
+}
+
+
 String EffectWorker::geteffconfig(uint16_t nb)
 {
+  // конфиг текущего эффекта
   DynamicJsonDocument doc(2048);
   doc[F("nb")] = nb;
   doc[F("flags")] = flags.mask;
