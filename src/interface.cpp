@@ -2019,7 +2019,6 @@ void remote_action(RA action, ...){
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено
             CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFF), set_demoflag);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), FPSTR(TCONST_FFFF), false);
             myLamp.startDemoMode();
             break;
         case RA::RA_DEMO_NEXT:
@@ -2028,7 +2027,10 @@ void remote_action(RA action, ...){
             } else {
                 myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
             }
-            return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
+            sysTicker.once(1,std::bind([]{
+                remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
+            }));
+            break;
         case RA::RA_EFFECT: {
             embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list); // публикация будет здесь
