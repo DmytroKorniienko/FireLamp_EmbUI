@@ -2293,17 +2293,30 @@ void default_buttons(){
 }
 #endif
 
+void show_progress(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_frame_interface();
+    interf->json_section_hidden(FPSTR(TCONST_005A), String(FPSTR(TINTF_056)) + String(F(" : ")) + (*data)[FPSTR(TINTF_05A)].as<String>()+ String("%"));
+    interf->json_section_end();
+    interf->json_frame_flush();
+}
+
 uint8_t uploadProgress(size_t len, size_t total){
+    DynamicJsonDocument doc(256);
+    JsonObject obj = doc.to<JsonObject>();
     static int prev = 0;
     float part = total / 50.0;
     int curr = len / part;
+    uint8_t progress = 100*len/total;
     if (curr != prev) {
         prev = curr;
         for (int i = 0; i < curr; i++) Serial.print(F("="));
         Serial.print(F("\n"));
+        obj[FPSTR(TINTF_05A)] = String(progress);
+        CALL_INTF_OBJ(show_progress);
     }
 #ifdef VERTGAUGE
     myLamp.GaugeShow(len, total, 100);
 #endif
-    return curr;
+    return progress;
 }
