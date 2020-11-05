@@ -685,7 +685,8 @@ void set_demoflag(Interface *interf, JsonObject *data){
 #ifdef OTA
 void set_otaflag(Interface *interf, JsonObject *data){
     //if (!data) return;
-    myLamp.startOTAUpdate();
+    //myLamp.startOTAUpdate();
+    remote_action(RA_OTA, NULL, NULL);
 
     interf->json_frame_interface();
     interf->json_section_content();
@@ -1111,6 +1112,7 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
 
     embui.save();
+    embui.mqttReconnect();
 
     section_settings_frame(interf, data);
 }
@@ -2191,7 +2193,6 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_008A))  action = RA_AUX_TOGLE;
 #endif
         remote_action(action, value.c_str(), NULL);
-        embui.publish(String(FPSTR(TCONST_008B)) + param,value,false); // отправляем обратно в MQTT в топик jee/pub/
     }
     return result;
 }
