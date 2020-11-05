@@ -481,12 +481,14 @@ void LAMP::stopAlarm(){
  */
 void LAMP::startDemoMode(byte tmout)
 {
+  demoTimer(T_ENABLE, tmout);
+  if(mode == LAMPMODE::MODE_DEMO) return;
+  
   storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
   remote_action(RA::RA_DEMO_NEXT, NULL);
   myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
-  demoTimer(T_ENABLE, tmout);
 }
 
 void LAMP::storeEffect()

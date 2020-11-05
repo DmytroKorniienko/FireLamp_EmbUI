@@ -2019,6 +2019,7 @@ void remote_action(RA action, ...){
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено
             CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFF), set_demoflag);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
+            resetAutoTimers();
             myLamp.startDemoMode();
             break;
         case RA::RA_DEMO_NEXT:
