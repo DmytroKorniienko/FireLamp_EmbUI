@@ -686,6 +686,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
 #ifdef RESTORE_STATE
     embui.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
 #endif
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
 }
 
 #ifdef OTA
@@ -699,6 +700,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
     interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(TCONST_0008));
     interf->json_section_end();
     interf->json_frame_flush();
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
 }
 #endif
 
@@ -2018,7 +2020,6 @@ void remote_action(RA action, ...){
         case RA::RA_DEMO:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено
             CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFF), set_demoflag);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
             resetAutoTimers();
             myLamp.startDemoMode();
             break;
