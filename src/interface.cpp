@@ -428,6 +428,8 @@ void set_effects_list(Interface *interf, JsonObject *data){
 
     show_effects_param(interf, data);
     myLamp.demoTimer(T_RESET);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(eff->eff_nb), false);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(eff->eff_nb).toInt()), false);
 }
 
 void set_effects_bright(Interface *interf, JsonObject *data){
@@ -445,7 +447,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
-
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), false);
     resetAutoTimers();
 }
 
@@ -455,7 +457,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
     myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
-
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], false);
     resetAutoTimers();
 }
 
@@ -465,7 +467,7 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
     myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
-
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], false);
     resetAutoTimers();
 }
 
@@ -647,6 +649,8 @@ void set_onflag(Interface *interf, JsonObject *data){
                     myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
                 }));
 #endif
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFF), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
         } else {
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
             //myLamp.changePower(newpower);
@@ -658,6 +662,8 @@ void set_onflag(Interface *interf, JsonObject *data){
 #ifdef RESTORE_STATE
                 save_lamp_flags(); // злобный баг, забыть передернуть флаги здесь)))), не вздумать убрать!!! Отлавливал его кучу времени
 #endif
+                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFE), false);
+                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
             }));
         }
     }
@@ -1993,9 +1999,6 @@ void remote_action(RA action, ...){
     switch (action) {
         case RA::RA_ON:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFF), false);
-            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0081), FPSTR(TCONST_FFFE), false);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
             break;
         case RA::RA_OFF: {
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
@@ -2005,25 +2008,19 @@ void remote_action(RA action, ...){
                     myLamp.startNormalMode();
                     //myLamp.restoreStored();
                     embui.var(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE)); // отключить демо
-                    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), FPSTR(TCONST_FFFE), false);
                     if (myLamp.IsGlobalBrightness()) {
                         embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
                     }
                 }
                 CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE), set_onflag);
             }
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFE), false);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
-            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0081), FPSTR(TCONST_FFFF), false);
             break;
         case RA::RA_DEMO:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено
             CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFF), set_demoflag);
-            myLamp.startDemoMode();
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFF), false);
-            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0081), FPSTR(TCONST_FFFE), false);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), FPSTR(TCONST_FFFF), false);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), FPSTR(TCONST_FFFF), false);
+            myLamp.startDemoMode();
             break;
         case RA::RA_DEMO_NEXT:
             if (myLamp.getLampSettings().dRand) {
@@ -2034,24 +2031,19 @@ void remote_action(RA action, ...){
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFFECT: {
             embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
-            CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(value), false);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(value).toInt()), false);
+            CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list); // публикация будет здесь
             break;
         }
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
         case RA::RA_BRIGHT:
             CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(value), false);
             break;
         case RA::RA_SPEED:
             CALL_INTF(FPSTR(TCONST_0013), value, set_effects_speed);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), String(value), false);
             break;
         case RA::RA_SCALE:
             CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), String(value), false);
             break;
         case RA::RA_EXTRA:
             //CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
