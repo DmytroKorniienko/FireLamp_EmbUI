@@ -1993,6 +1993,9 @@ void remote_action(RA action, ...){
     switch (action) {
         case RA::RA_ON:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFF), false);
+            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0081), FPSTR(TCONST_FFFE), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
             break;
         case RA::RA_OFF: {
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
@@ -2002,17 +2005,25 @@ void remote_action(RA action, ...){
                     myLamp.startNormalMode();
                     //myLamp.restoreStored();
                     embui.var(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE)); // отключить демо
+                    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), FPSTR(TCONST_FFFE), false);
                     if (myLamp.IsGlobalBrightness()) {
                         embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
                     }
                 }
                 CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFE), set_onflag);
             }
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFE), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
+            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0081), FPSTR(TCONST_FFFF), false);
             break;
         case RA::RA_DEMO:
             CALL_INTF(FPSTR(TCONST_001A), FPSTR(TCONST_FFFF), set_onflag); // включим, если было отключено
             CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFF), set_demoflag);
             myLamp.startDemoMode();
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFF), false);
+            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0081), FPSTR(TCONST_FFFE), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), FPSTR(TCONST_FFFF), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), false);
             break;
         case RA::RA_DEMO_NEXT:
             if (myLamp.getLampSettings().dRand) {
@@ -2024,18 +2035,23 @@ void remote_action(RA action, ...){
         case RA::RA_EFFECT: {
             embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(value), false);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(value).toInt()), false);
             break;
         }
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
         case RA::RA_BRIGHT:
             CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(value), false);
             break;
         case RA::RA_SPEED:
             CALL_INTF(FPSTR(TCONST_0013), value, set_effects_speed);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), String(value), false);
             break;
         case RA::RA_SCALE:
             CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), String(value), false);
             break;
         case RA::RA_EXTRA:
             //CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
@@ -2289,4 +2305,5 @@ uint8_t uploadProgress(size_t len, size_t total){
 #ifdef VERTGAUGE
     myLamp.GaugeShow(len, total, 100);
 #endif
+    return curr;
 }
