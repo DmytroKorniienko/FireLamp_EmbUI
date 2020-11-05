@@ -2028,16 +2028,17 @@ public:
 
 //--------------Дымовые шашки--------------------------
 // (c) Stepko
-#define WAVES_AMOUNT 32
+#define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
-    byte Offest = 50;
-    float reg[WAVES_AMOUNT];
-    float pos[WAVES_AMOUNT];
-    byte sSpeed[WAVES_AMOUNT];
-    float maxMin[WAVES_AMOUNT][2];
-    byte waveColors[WAVES_AMOUNT];
+    uint16_t reg[WAVES_AMOUNT];
+    uint16_t pos[WAVES_AMOUNT];
+    float sSpeed[WAVES_AMOUNT];
+    uint8_t maxMin[WAVES_AMOUNT];
+    float speedfactor;
+    uint8_t waveColors[WAVES_AMOUNT];
     void shiftUp();
+    void regen();
     void setDynCtrl(UIControl*_val) override;
   public:
     void load() override;

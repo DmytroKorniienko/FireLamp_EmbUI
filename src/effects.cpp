@@ -382,7 +382,7 @@ bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
     }
 
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-    for (int k = HEIGHT - 1; k >= 2; k--) {
+    for (unsigned int k = HEIGHT - 1; k >= 2; k--) {
       heat[x][k] = (heat[x][k - 1] + heat[x][k - 2] + heat[x][k - 2]) / 3;
     }
 
@@ -6374,34 +6374,44 @@ void EffectSmokeballs::setDynCtrl(UIControl*_val){
 
 void EffectSmokeballs::load(){
   palettesload();
+  regen();
+}
+
+void EffectSmokeballs::regen() {
+  randomSeed(millis());
   for (byte j = 0; j < WAVES_AMOUNT; j++) {
-    reg[j] = random(WIDTH*10);
-    sSpeed[j] = random(1,255)/random(1,10);
-    maxMin[j][0] = random(Offest);
-    maxMin[j][0] = random(Offest,Offest*2);
-    waveColors[j] = random(0, 9) * 28; 
-    pos[j]= reg[j];
+    reg[j] =  random((WIDTH * 10) - ((WIDTH / 3) * 20)); // сумма maxMin + reg не должна выскакивать за макс.Х
+    sSpeed[j] = EffectMath::randomf(5., (float)(16 * WIDTH)); //random(50, 16 * WIDTH) / random(1, 10);
+    maxMin[j] = random((WIDTH / 2) * 10, (WIDTH / 3) * 20);
+    waveColors[j] = random(0, 9) * 28;
+    pos[j] = reg[j];
   }
 }
 
 bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
+  speedfactor = EffectMath::fmap(speed, 1., 255., .02, .1); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
+  uint8_t _amount = map(scale, 1, 16, 2, WAVES_AMOUNT);
   shiftUp();
-  EffectMath::dimAll(230);
+  EffectMath::dimAll(240);
   EffectMath::blur2d(20);
-  for (byte j = 0; j < scale*2; j++) {
-    pos[j] = (beatsin8(sSpeed[j], maxMin[j][0] + reg[j], maxMin[j][1] + reg[j]) - Offest);
-    EffectMath::drawPixelXYF(pos[j]/10, 0.05, ColorFromPalette(*curPalette, waveColors[j]));
-    EVERY_N_SECONDS(random(10,120)){
+  for (byte j = 0; j < _amount; j++) {
+    pos[j] = beatsin16((uint8_t)(sSpeed[j] * (speedfactor * 5.)), reg[j], maxMin[j] + reg[j], waveColors[j]*256, waveColors[j]*8);
+      EffectMath::drawPixelXYF((float)pos[j] / 10., 0.05, ColorFromPalette(*curPalette, waveColors[j]));
+  }
+  EVERY_N_SECONDS(20){
+    for (byte j = 0; j < _amount; j++) {
       reg[j] += random(-20,20);
+      waveColors[j] += 28;
     }
   }
+
+  if (random8(255) > 253 ) regen();
   return true;
 }
 
 void EffectSmokeballs::shiftUp(){       
-  float speedfactor = EffectMath::fmap(speed, 1., 255., .02, .25); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
   for (byte x = 0; x < WIDTH; x++) {
-    for (float y = HEIGHT; y > 0; y-= speedfactor) {
+    for (float y = (float)HEIGHT; y > 0.; y-= speedfactor) {
       EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x, y - 1));
     }
   }
@@ -6412,8 +6422,8 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);
   offsetX = beatsin16(6. * speedfactor, -180, 180);
   offsetY = beatsin16(6. * speedfactor, -180, 180, 12000);
-  for (int x = 0; x < LED_COLS; x++) {
-    for (int y = 0; y < LED_ROWS; y++) {
+  for (uint x = 0; x < LED_COLS; x++) {
+    for (uint y = 0; y < LED_ROWS; y++) {
       int16_t index = myLamp.getPixelNumber(x, y);
 
       if (index < 0) break;
