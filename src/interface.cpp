@@ -2271,12 +2271,12 @@ void default_buttons(){
     myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
     myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
     myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
-    myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клие скорость
+    myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
     myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
 #endif
 
-void uploadProgress(size_t len, size_t total){
+uint8_t uploadProgress(size_t len, size_t total){
     static int prev = 0;
     float part = total / 50.0;
     int curr = len / part;

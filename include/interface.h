@@ -51,4 +51,4 @@ String httpCallback(const String &param, const String &value, bool isset);
 void default_buttons();
 #endif
 
-void uploadProgress(size_t len, size_t total);
+uint8_t uploadProgress(size_t len, size_t total);
