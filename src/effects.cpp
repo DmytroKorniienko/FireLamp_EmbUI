@@ -6401,7 +6401,6 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   EVERY_N_SECONDS(20){
     for (byte j = 0; j < _amount; j++) {
       reg[j] += random(-20,20);
-      Serial.println(pos[j] / 10.);
       waveColors[j] += 28;
     }
   }
