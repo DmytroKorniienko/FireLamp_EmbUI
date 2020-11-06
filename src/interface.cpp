@@ -1210,6 +1210,9 @@ void show_settings_other(Interface *interf, JsonObject *data){
 
 void set_settings_other(Interface *interf, JsonObject *data){
     if (!data) return;
+    
+    resetAutoTimers();
+
     myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF));
     myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF));
     myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF));
@@ -1704,6 +1707,11 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->json_section_end(); // конец контейнера
         interf->spacer();
         interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),0,16000);
+
+        //interf->json_section_main(FPSTR(TCONST_005F), "");
+        interf->frame2(FPSTR(TCONST_005F), FPSTR(TCONST_005F));
+        //interf->json_section_end();
+
         interf->button_submit(FPSTR(TCONST_0099), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
         interf->spacer();
