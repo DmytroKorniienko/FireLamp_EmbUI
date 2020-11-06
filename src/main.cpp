@@ -120,7 +120,7 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
     if(sendtopic==FPSTR(TCONST_00AE)){
         sendtopic=String(FPSTR(TCONST_008B))+sendtopic;
         String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
-        embui.publish(sendtopic, effcfg, false); // отправляем обратно в MQTT в топик embui/pub/
+        embui.publish(sendtopic, effcfg, true); // отправляем обратно в MQTT в топик embui/pub/
     } else if(sendtopic==FPSTR(TCONST_00AD)){
         sendData(true);
     }
@@ -147,13 +147,13 @@ ICACHE_FLASH_ATTR void sendData(bool force){
     String out;
     serializeJson(obj, out);
     LOG(println, out);
-    embui.publish(sendtopic, out, false); // отправляем обратно в MQTT в топик embui/pub/
+    embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
     obj.clear();
 
     // также отправим конфиг текущего эффекта
     sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
     String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
-    embui.publish(sendtopic, effcfg, false);
+    embui.publish(sendtopic, effcfg, true);
 }
 
 #ifdef ESP_USE_BUTTON
