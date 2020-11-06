@@ -370,15 +370,22 @@ void block_effects_param(Interface *interf, JsonObject *data){
         }
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
-                interf->range(
-                controls[i]->getId()==0 ? String(FPSTR(TCONST_0012)) : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013)) : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
-                    : String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
-                ,i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness()
-                ,controls[i]->getMin().toInt()
-                ,controls[i]->getMax().toInt()
-                ,controls[i]->getStep().toInt()
-                ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D)
-                , true);
+                {
+                    String ctrlName = controls[i]->getId()==0 ? String(FPSTR(TCONST_0012))
+                        : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013))
+                        : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
+                        : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
+                    int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
+                    interf->range(
+                        ctrlName
+                        ,value
+                        ,controls[i]->getMin().toInt()
+                        ,controls[i]->getMax().toInt()
+                        ,controls[i]->getStep().toInt()
+                        ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D)
+                        , true);
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, String(value), false);
+                }
                 break;
             case CONTROL_TYPE::EDIT :
                 interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -386,6 +393,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 , controls[i]->getName()
                 , true
                 );
+                embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), false);
                 break;
             case CONTROL_TYPE::CHECKBOX :
                 interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -393,6 +401,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 , controls[i]->getName()
                 , true
                 );
+                embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), false);
                 break;
             default:
                 break;
@@ -474,12 +483,15 @@ void set_effects_scale(Interface *interf, JsonObject *data){
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    String ctrlName;
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=3; i<controls.size();i++){
-        if((*data).containsKey(String(FPSTR(TCONST_0015))+String(controls[i]->getId()))){
-            controls[i]->setVal((*data)[String(FPSTR(TCONST_0015))+String(controls[i]->getId())]);
-            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[String(FPSTR(TCONST_0015))+String(controls[i]->getId())].as<String>().c_str());
+        ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
+        if((*data).containsKey(ctrlName)){
+            controls[i]->setVal((*data)[ctrlName]);
+            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
             myLamp.effects.worker->setDynCtrl(controls[i]);
+            embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, (*data)[ctrlName], false);
         }
     }
     resetAutoTimers();
@@ -2182,8 +2194,8 @@ String httpCallback(const String &param, const String &value, bool isset){
         return result;
     } else {
         LOG(println, F("SET"));
-        if (param == FPSTR(TCONST_0070)) action = RA_ON;
-        else if (param == FPSTR(TCONST_0081)) action = RA_OFF;
+        if (param == FPSTR(TCONST_0070)) { action = (value!=FPSTR(TCONST_FFFE) ? RA_ON : RA_OFF); }
+        else if (param == FPSTR(TCONST_0081)) { action = (value!=FPSTR(TCONST_FFFE) ? RA_OFF : RA_ON); }
         else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
         else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
         else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
