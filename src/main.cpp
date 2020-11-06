@@ -98,6 +98,13 @@ ICACHE_FLASH_ATTR void setup() {
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
 #endif
 
+#ifdef ESP32
+  embui.server.addHandler(new SPIFFSEditor(LittleFS, http_username,http_password));
+#elif defined(ESP8266)
+  //server.addHandler(new SPIFFSEditor(http_username,http_password, LittleFS));
+  embui.server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
+#endif
+
     sync_parameters();
 }   // End setup()
 

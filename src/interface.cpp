@@ -801,7 +801,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
     String name = (*data)[FPSTR(TCONST_002A)];
     String act = (*data)[FPSTR(TCONST_0029)];
 
-    if (act == FPSTR(TCONST_000A)) {
+    if (act == FPSTR(TCONST_00B2)) {
         String filename = String(FPSTR(TCONST_0031)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 
@@ -816,7 +816,9 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 #endif
     } else
     if (act == FPSTR(TCONST_002D)) {
-        myLamp.changePower(false);
+        //myLamp.changePower(false);
+        resetAutoTimers();
+
         String filename = String(FPSTR(TCONST_0031)) + name;
         embui.load(filename.c_str());
 
@@ -833,8 +835,14 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         }
 #endif
         embui.var(FPSTR(TCONST_002A), name);
-        sync_parameters();
-        myLamp.changePower(true);
+
+        String str = String(F("CFG:")) + name;
+        myLamp.sendString(str.c_str(), CRGB::Red);
+
+        sysTicker.once(3,std::bind([](){
+            sync_parameters();
+        }));
+        //myLamp.changePower(true);
     } else {
         String filename = String(FPSTR(TCONST_0031)) + name;
         embui.save(filename.c_str(), true);
@@ -1764,7 +1772,7 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_007B), embui.mc);  // m_pref == MAC по дефолту
     embui.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
     embui.var_create(FPSTR(TCONST_0016), F("1"));
-    embui.var_create(FPSTR(TCONST_002A),F("cfg1"));
+    embui.var_create(FPSTR(TCONST_002A), F("cfg1.json"));
 #ifdef ESP_USE_BUTTON
     embui.var_create(FPSTR(TCONST_001F), FPSTR(TCONST_FFFF)); // не трогать пока...
 #endif
