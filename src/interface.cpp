@@ -337,12 +337,14 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 
     confEff = myLamp.effects.getEffect(num);
     show_effects_config_param(interf, data);
-    myLamp.demoTimer(T_RESET);
+    resetAutoTimers();
 }
 
 void block_effects_param(Interface *interf, JsonObject *data){
-    if (!interf) return;
-    interf->json_section_begin(FPSTR(TCONST_0011));
+    //if (!interf) return;
+    bool isinterf = (interf != nullptr); // буду публиковать, даже если WebUI клиентов нет
+
+    if(isinterf) interf->json_section_begin(FPSTR(TCONST_0011));
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     uint8_t ctrlCaseType; // тип контрола, старшие 4 бита соответствуют CONTROL_CASE, младшие 4 - CONTROL_TYPE
@@ -376,7 +378,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
                         : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
-                    interf->range(
+                    if(isinterf) interf->range(
                         ctrlName
                         ,value
                         ,controls[i]->getMin().toInt()
@@ -388,7 +390,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 }
                 break;
             case CONTROL_TYPE::EDIT :
-                interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                if(isinterf) interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
                 , controls[i]->getVal()
                 , controls[i]->getName()
                 , true
@@ -396,7 +398,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
                 break;
             case CONTROL_TYPE::CHECKBOX :
-                interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                if(isinterf) interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
                 , controls[i]->getVal()
                 , controls[i]->getName()
                 , true
@@ -407,14 +409,15 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 break;
         }
     }
-    interf->json_section_end();
+    if(isinterf) interf->json_section_end();
 }
 
 void show_effects_param(Interface *interf, JsonObject *data){
-    if (!interf) return;
-    interf->json_frame_interface();
+    //if (!interf) return;
+    bool isinterf = (interf != nullptr); // буду публиковать, даже если WebUI клиентов нет
+    if(isinterf) interf->json_frame_interface();
     block_effects_param(interf, data);
-    interf->json_frame_flush();
+    if(isinterf) interf->json_frame_flush();
 }
 
 void set_effects_list(Interface *interf, JsonObject *data){
@@ -436,7 +439,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     }
 
     show_effects_param(interf, data);
-    myLamp.demoTimer(T_RESET);
+    resetAutoTimers();
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(eff->eff_nb), true);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(eff->eff_nb).toInt()), true);
 }
@@ -663,6 +666,7 @@ void set_onflag(Interface *interf, JsonObject *data){
 #endif
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFF), true);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?FPSTR(TCONST_FFFF):FPSTR(TCONST_FFFE)), true);
         } else {
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
             //myLamp.changePower(newpower);
@@ -676,6 +680,7 @@ void set_onflag(Interface *interf, JsonObject *data){
 #endif
                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), FPSTR(TCONST_FFFE), true);
                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
+                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?FPSTR(TCONST_FFFF):FPSTR(TCONST_FFFE)), true);
             }));
         }
     }
@@ -699,6 +704,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
     embui.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
 #endif
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?FPSTR(TCONST_FFFF):FPSTR(TCONST_FFFE)), true);
 }
 
 #ifdef OTA
