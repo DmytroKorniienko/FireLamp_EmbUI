@@ -63,6 +63,7 @@ typedef struct {
         struct {
             bool isMicOn:1;
             bool isDebug:1;
+            bool isRandDemo:1;
         };
     };
 } LAMPSTATE;
@@ -199,6 +200,7 @@ private:
 protected:
     EFF_ENUM effect;        /**< энумератор эффекта */
     bool isDebug() {return lampstate!=nullptr ? lampstate->isDebug : false;}
+    bool isRandDemo() {return lampstate!=nullptr ? lampstate->isRandDemo : false;}
     bool isActive() {return active;}
     void setActive(bool flag) {active=flag;}
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
@@ -225,11 +227,19 @@ protected:
         //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
 
         // Добавлена поддержка вариантов следования индексов контролов вида 0,1,2,5,7 т.е. с пропусками
+        dummy.clear();
         if(idx<ctrls->size() && idx>=0 && idx<=2 && (*ctrls)[idx]->getId()==idx){
             return (*ctrls)[idx]->getVal();
         } else {
             for(int i = 3; i<ctrls->size(); i++){
-                if((*ctrls)[i]->getId()==idx) return (*ctrls)[i]->getVal();
+                if((*ctrls)[i]->getId()==idx){
+                    if(isRandDemo()){
+                        dummy = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+                        return dummy;
+                    }
+                    else
+                        return (*ctrls)[i]->getVal();
+                }
             }
         }
         return dummy;
@@ -249,7 +259,7 @@ public:
      * pre_init метод, вызывается отдельно после создания экземпляра эффекта до каких либо иных инициализаций
      * это нужно чтобы объект понимал кто он и возможно было вычитать конфиг для мультиэфектов, никаких иных действий здесь не предполагается
     */
-    void pre_init(EFF_ENUM _eff, EffectWorker *_pworker, LList<UIControl *> *_ctrls) {effect = _eff; pworker = _pworker; ctrls = _ctrls;}
+    void pre_init(EFF_ENUM _eff, EffectWorker *_pworker, LList<UIControl *> *_ctrls, LAMPSTATE* _state) {effect = _eff; pworker = _pworker; ctrls = _ctrls; lampstate = _state;}
 
     /**
      * intit метод, вызывается отдельно после создания экземпляра эффекта для установки базовых переменных

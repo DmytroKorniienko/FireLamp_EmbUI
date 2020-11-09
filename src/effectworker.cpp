@@ -249,7 +249,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   }
 
   if(worker){
-    worker->pre_init(static_cast<EFF_ENUM>(effect%256), this, &(getControls()));
+    worker->pre_init(static_cast<EFF_ENUM>(effect%256), this, &(getControls()), lampstate);
     originalName = effectName = FPSTR(T_EFFNAMEID[(uint8_t)effect]); // сначла заполним дефолтным именем, а затем лишь вычитаем из конфига
     if(isCfgProceed){ // читаем конфиг только если это требуется, для индекса - пропускаем
       loadeffconfig(effect);

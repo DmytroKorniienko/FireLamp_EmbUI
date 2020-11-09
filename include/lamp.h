@@ -359,7 +359,7 @@ public:
     void setNYUnixTime(time_t tm){ NEWYEAR_UNIXDATETIME = tm; }
     void setNumInList(bool flag) {flags.numInList = flag;}
     void setEffHasMic(bool flag) {flags.effHasMic = flag;}
-    void setDRand(bool flag) {flags.dRand = flag;}
+    void setDRand(bool flag) {flags.dRand = flag; lampState.isRandDemo = (flag && mode==LAMPMODE::MODE_DEMO); }
     void setShowName(bool flag) {flags.showName = flag;}
 
     // ---------- служебные функции -------------

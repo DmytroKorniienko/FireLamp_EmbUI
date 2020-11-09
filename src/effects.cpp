@@ -44,13 +44,22 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   for(int i=0; i<controls->size(); i++){
     switch(i){
       case 0:
-        brightness = (*controls)[i]->getVal().toInt();
+        if(isRandDemo()){
+          brightness = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+        } else
+          brightness = (*controls)[i]->getVal().toInt();
         break;
       case 1:
-        speed = (*controls)[i]->getVal().toInt();
+        if(isRandDemo()){
+          speed = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+        } else
+          speed = (*controls)[i]->getVal().toInt();
         break;
       case 2:
-        scale = (*controls)[i]->getVal().toInt();
+        if(isRandDemo()){
+          scale = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+        } else
+          scale = (*controls)[i]->getVal().toInt();
         break;
       default:
         setDynCtrl((*controls)[i]);
@@ -95,12 +104,15 @@ bool EffectCalc::status(){return active;}
  * setbrt - установка яркости для воркера
  */
 void EffectCalc::setbrt(const byte _brt){
-  brightness = _brt;
+  if(isRandDemo()){
+    brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
+  } else
+    brightness = _brt;
   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
   if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, _brt, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
-    paletteIdx = _brt;
+    palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
+    paletteIdx = brightness;
   }
 }
 
@@ -108,12 +120,15 @@ void EffectCalc::setbrt(const byte _brt){
  * setspd - установка скорости для воркера
  */
 void EffectCalc::setspd(const byte _spd){
-  speed = _spd;
+  if(isRandDemo()){
+    speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
+  } else
+    speed = _spd;
   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
   if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, _spd, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
-    paletteIdx = _spd;
+    palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
+    paletteIdx = speed;
   }
 }
 
@@ -122,11 +137,14 @@ void EffectCalc::setspd(const byte _spd){
  */
 void EffectCalc::setscl(byte _scl){
   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
+  if(isRandDemo()){
+    scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
+  } else
     scale = _scl;
   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
-    palettemap(palettes, _scl, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
-    paletteIdx = _scl;
+    palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
+    paletteIdx = scale;
   }
 
 }
@@ -140,12 +158,15 @@ void EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return;
 
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
-    paletteIdx = _val->getVal().toInt();
+    if(isRandDemo()){
+      paletteIdx = random(_val->getMin().toInt(),_val->getMax().toInt()+1);
+    } else
+      paletteIdx = _val->getVal().toInt();
     palettemap(palettes, paletteIdx, _val->getMin().toInt(), _val->getMax().toInt());
     isCtrlPallete = true;
   }
 
-  LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
+  //LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
 
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
     isMicActive = (_val->getVal()==FPSTR(TCONST_FFFF) && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
