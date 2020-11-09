@@ -45,19 +45,19 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
     switch(i){
       case 0:
         if(isRandDemo()){
-          brightness = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+          brightness = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
         } else
           brightness = (*controls)[i]->getVal().toInt();
         break;
       case 1:
         if(isRandDemo()){
-          speed = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+          speed = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
         } else
           speed = (*controls)[i]->getVal().toInt();
         break;
       case 2:
         if(isRandDemo()){
-          scale = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
+          scale = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
         } else
           scale = (*controls)[i]->getVal().toInt();
         break;
