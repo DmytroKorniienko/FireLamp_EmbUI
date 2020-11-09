@@ -146,7 +146,6 @@ void EffectCalc::setscl(byte _scl){
     palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
     paletteIdx = scale;
   }
-
 }
 
 /**

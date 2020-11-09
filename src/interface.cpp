@@ -2103,9 +2103,11 @@ void remote_action(RA action, ...){
             break;
 #endif
         case RA::RA_EFF_NEXT:
+            resetAutoTimers(); // сборс таймера демо, если есть перемещение
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFF_PREV:
+            resetAutoTimers(); // сборс таймера демо, если есть перемещение
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFF_RAND:
