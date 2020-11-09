@@ -434,12 +434,12 @@ void set_effects_list(Interface *interf, JsonObject *data){
         } else {
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), eff->eff_nb);
         }
-
-        embui.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
+        if(myLamp.getMode()==LAMPMODE::MODE_NORMAL)
+            embui.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
+        resetAutoTimers();
     }
 
     show_effects_param(interf, data);
-    resetAutoTimers();
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(eff->eff_nb), true);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(eff->eff_nb).toInt()), true);
 }
@@ -734,6 +734,7 @@ void set_auxflag(Interface *interf, JsonObject *data){
 void set_gbrflag(Interface *interf, JsonObject *data){
     if (!data) return;
     myLamp.setIsGlobalBrightness((*data)[FPSTR(TCONST_001C)] == FPSTR(TCONST_FFFF));
+    embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_00B4)), String(myLamp.IsGlobalBrightness() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE)), true);
     save_lamp_flags();
     if (myLamp.isLampOn()) {
         myLamp.setBrightness(myLamp.getNormalizedLampBrightness());
@@ -2073,10 +2074,14 @@ void remote_action(RA action, ...){
             }));
             break;
         case RA::RA_EFFECT: {
-            embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
+            if(myLamp.getMode()==LAMPMODE::MODE_NORMAL)
+                embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list); // публикация будет здесь
             break;
         }
+        case RA::RA_GLOBAL_BRIGHT:
+            CALL_INTF(FPSTR(TCONST_001C), value, set_gbrflag);
+            break;
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
         case RA::RA_BRIGHT:
@@ -2197,6 +2202,8 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
         else if (param == FPSTR(TCONST_0081))
             { result = !myLamp.isLampOn() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
+        else if (param == FPSTR(TCONST_00B4))
+            { result = myLamp.IsGlobalBrightness() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
         else if (param == FPSTR(TCONST_00AA))
             { result = myLamp.getMode() == LAMPMODE::MODE_DEMO ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
         else if (param == FPSTR(TCONST_0012))
@@ -2234,6 +2241,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0085)) action = RA_EFF_RAND;
         else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
         else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
+        else if (param == FPSTR(TCONST_00B4)) action = RA_GLOBAL_BRIGHT;
         else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;

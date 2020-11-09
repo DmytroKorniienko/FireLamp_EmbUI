@@ -35,7 +35,8 @@ typedef enum _remote_action {
     RA_SEND_IP,
     RA_WHITE_HI,
     RA_WHITE_LO,
-    RA_WIFI_REC
+    RA_WIFI_REC,
+    RA_GLOBAL_BRIGHT
 } RA;
 
 void section_main_frame(Interface *interf, JsonObject *data);
