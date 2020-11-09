@@ -945,7 +945,7 @@ private:
   uint8_t _dri_delta;
   byte driftType = 0;
 
-
+  void setDynCtrl(UIControl*_val) override;
   bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
   bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
 

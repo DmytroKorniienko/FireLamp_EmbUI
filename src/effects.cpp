@@ -659,8 +659,13 @@ bool EffectSnow::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 void EffectSnow::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3)
-    size = _val->getVal().toInt();
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      size = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      size = _val->getVal().toInt();
+  }
 }
 
 void EffectSnow::resetSnow(){
@@ -753,12 +758,18 @@ void EffectStarFall::load(){
 
 void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3) {
-    colored = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
-  if(_val->getId()==4) {
-    isNew = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      colored = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      colored = _val->getVal() == FPSTR(TCONST_FFFF);
+  }  
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      isNew = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      isNew = _val->getVal() == FPSTR(TCONST_FFFF);
+  }    
 }
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
@@ -1162,10 +1173,14 @@ void Effect3DNoise::load(){
 
 void Effect3DNoise::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
-  if(_val->getId()==3 && _val->getVal().toInt()==0)
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      colorLoop = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      colorLoop = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+  if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
-  else if(_val->getId()==4)
-    colorLoop = (_val->getVal() == FPSTR(TCONST_FFFF));
 }
 
 bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
@@ -1229,8 +1244,11 @@ void EffectBBalls::regen(){
 
 void EffectBBalls::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-    if(_val->getId()==3) { // ореол
-    halo = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      halo = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      halo = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 }
 
@@ -1770,7 +1788,12 @@ void EffectFlock::load(){
 
 void EffectFlock::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
-  predatorPresent = (_val->getVal() == FPSTR(TCONST_FFFF));
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      predatorPresent = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      predatorPresent = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 void EffectFlock::setspd(const byte _spd)
@@ -1898,10 +1921,20 @@ void EffectDrift::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
+void EffectDrift::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      driftType = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      driftType = _val->getVal().toInt();
+  }
+}
+
 bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
   //EffectMath::blur2d(beatsin8(3U, 5, 10 + scale*3));
   //EffectMath::dimAll(beatsin8(2U, 246, 252));
-  driftType = getCtrlVal(3).toInt();
+
   if (driftType == 1 or driftType == 2)
     FastLED.clear();
   else
@@ -2206,7 +2239,12 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
 
 void EffectRadar::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  subPix = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+  }  
 }
 
 bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
@@ -2417,11 +2455,18 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
 void EffectRain::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3) // Тучка
-    clouds = _val->getVal() == FPSTR(TCONST_FFFF);
-
-  if(_val->getId()==4) // sizeY
-    storm = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      storm = _val->getVal() == FPSTR(TCONST_FFFF);
+  } 
 }
 
 bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
@@ -2791,18 +2836,30 @@ bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
 void EffectCube2d::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  uint8_t cubeScaleX = EffectMath::ceil8(7, WIDTH/2-1);       // масштаб "шкалы" в макс. размерность прямоугольника по X
+  uint8_t cubeScaleY = EffectMath::ceil8(7, HEIGHT/2-1);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
 
-  if(_val->getType()==0 && _val->getId()==3){ // sizeX
-    uint8_t cubeScaleX = EffectMath::ceil8(7, WIDTH/2-1);       // масштаб "шкалы" в макс. размерность прямоугольника по X
-    sizeX = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleX);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      sizeX = EffectMath::ceil8(random(_val->getMin().toInt(), _val->getMax().toInt()+1), cubeScaleX);
+    } else
+      sizeX = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleX);
   }
-  if(_val->getType()==0 && _val->getId()==4){ // sizeY
-    uint8_t cubeScaleY = EffectMath::ceil8(7, HEIGHT/2-1);      // масштаб вторичной "шкалы" в макс. размерность прямоугольника по Y
-    sizeY = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleY);
+
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      sizeY = EffectMath::ceil8(random(_val->getMin().toInt(), _val->getMax().toInt()+1), cubeScaleY);
+    } else
+      sizeY = EffectMath::ceil8(_val->getVal().toInt(), cubeScaleY);
   }
-  if(_val->getType()==2 && _val->getId()==5){ // sizeY
-    classic = _val->getVal() == FPSTR(TCONST_FFFF);  // переключатель "Класика" (старый вариант поведения от Сотнег)
+
+  if(_val->getId()==5){
+    if(isRandDemo()){
+      classic = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      classic = _val->getVal() == FPSTR(TCONST_FFFF);
   }
+
   cubesize();
 }
 
@@ -3341,7 +3398,12 @@ void EffectMStreamSmoke::FillNoise(int8_t layer) {
 
 void EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  fillType = getCtrlVal(3).toInt();
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      fillType = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      fillType = _val->getVal().toInt();
+  }  
 }
 
 // (c) SottNick
@@ -3549,11 +3611,20 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
 void EffectPicasso::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   uint8_t idx = _val->getId();
-  if (idx == 3) {
-    pidx = constrain(_val->getVal().toInt(), 0, 21);
-  }
+
+  if(idx==3){
+    if(isRandDemo()){
+      pidx = constrain(random(_val->getMin().toInt(), _val->getMax().toInt()+1), 0, 21);
+    } else
+      pidx = constrain(_val->getVal().toInt(), 0, 21);
+  }  
+
   if (idx == 4) {
-    byte hue = _val->getVal().toInt();
+    byte hue;
+    if(isRandDemo()){
+      hue = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      hue = _val->getVal().toInt();
     TDynamicRGBGradientPalette_byte dynpal[20] = {
         0,  0,  0,  0,
         1,  0,  0,  0,
@@ -3712,7 +3783,10 @@ void EffectLeapers::generate(bool reset){
 void EffectLeapers::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
-    _rv = _val->getVal().toInt() ? _val->getVal().toInt() : 13;
+    if(isRandDemo()){
+      _rv = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      _rv = _val->getVal().toInt() ? _val->getVal().toInt() : 13;
   }
 }
 
@@ -3814,11 +3888,20 @@ void EffectLiquidLamp::physic(){
 void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   uint8_t idx = _val->getId();
-  if (idx == 3) {
-    pidx = constrain(_val->getVal().toInt(), 0, 18);
-  } else
+
+  if(idx==3){
+    if(isRandDemo()){
+      pidx = constrain(random(_val->getMin().toInt(), _val->getMax().toInt()+1), 0, 18);
+    } else
+      pidx = constrain(_val->getVal().toInt(), 0, 18);
+  }  
+
   if (idx == 4) {
-    byte hue = _val->getVal().toInt();
+    byte hue;
+    if(isRandDemo()){
+      hue = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      hue = _val->getVal().toInt();
     TDynamicRGBGradientPalette_byte dynpal[20] = {
         0,  0,  0,  0,
         1,  0,  0,  0,
@@ -4213,7 +4296,12 @@ if (setup) { // однократная настройка при старте э
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 void EffectFireworks::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  flashing = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      flashing = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      flashing = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 CRGB &Dot::piXY(CRGB *leds, byte x, byte y) {
@@ -4502,10 +4590,12 @@ void EffectOsc::load() {
 
 void EffectOsc::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  // теперь проверяем уже поведение для этого эффекта
-  // LOG(printf_P,PSTR("_val->getType():%d, _val->getId():%d, _val->getVal():%s\n"),_val->getType(),_val->getId(),_val->getVal().c_str());
-
-  _rv = getCtrlVal(3).toInt();
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      _rv = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      _rv = _val->getVal().toInt();
+  }
 }
 
 bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt)
@@ -4693,17 +4783,23 @@ void EffectButterfly::load()
 void EffectButterfly::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      wings = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      wings = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 
-  if(_val->getType()==2 && _val->getId()==3)
-    wings = _val->getVal() == FPSTR(TCONST_FFFF);
-  if(_val->getType()==2 && _val->getId()==4){
-    isColored = _val->getVal() != FPSTR(TCONST_FFFF);
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      isColored = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      isColored = _val->getVal() != FPSTR(TCONST_FFFF);
 
     for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
     {
       butterflysColor[i] = (isColored) ? random8() : 0U;
     }
-
   }
 }
 
@@ -4917,10 +5013,18 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
 // идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
 void EffectPatterns::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3) {// pattern
-    _sc = _val->getVal().toInt() - 1;
-  } else if(_val->getId()==4) {// субпиксель
-    _subpixel = _val->getVal()==FPSTR(TCONST_FFFF);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      _sc = random(_val->getMin().toInt(), _val->getMax().toInt());
+    } else
+      _sc = _val->getVal().toInt() - 1;
+  }
+
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      _subpixel = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      _subpixel = _val->getVal()==FPSTR(TCONST_FFFF);
   }
 }
 
@@ -5521,8 +5625,14 @@ void EffectAttract::setspd(const byte _spd)
 
 void EffectAttract::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3) // масса
-    _mass = _val->getVal().toInt();
+
+  // масса
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      _mass = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      _mass = _val->getVal().toInt();
+  }
   setup();
 }
 
@@ -5571,10 +5681,18 @@ void EffectSnake::load() {
 
 void EffectSnake::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==4)
-    subPix = (_val->getVal() == FPSTR(TCONST_FFFF));
-  if(_val->getId()==3)
-    snakeCount = _val->getVal().toInt();
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      snakeCount = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      snakeCount = _val->getVal().toInt();
+  }
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
@@ -5659,10 +5777,19 @@ void EffectSnake2::load() {
 
 void EffectSnake2::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3)
-    disko = (_val->getVal() == FPSTR(TCONST_FFFF));
-  if(_val->getId()==4)
-    subPix = (_val->getVal() == FPSTR(TCONST_FFFF));
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      disko = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      disko = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
@@ -5788,11 +5915,19 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 void EffectCRain::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3) // Тучка
-    clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 
-  if(_val->getId()==4) // sizeY
-    storm = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      storm = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
@@ -5882,8 +6017,12 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
 // https://pastebin.com/jwvC1sNF
 // адаптация и доработки kostyamat
 void EffectDNA::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
   if(_val->getId()==3){
-    rotate = _val->getVal() == FPSTR(TCONST_FFFF);
+    if(isRandDemo()){
+      rotate = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      rotate = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 }
 
@@ -6274,10 +6413,20 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
 
 void EffectPopcorn::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==4) // Размытие
-    blurred = _val->getVal() == FPSTR(TCONST_FFFF);
-  if(_val->getId()==5) // Реверс цветов
-    revCol = _val->getVal() == FPSTR(TCONST_FFFF);
+  // Размытие
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      blurred = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      blurred = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+  // Реверс цветов
+  if(_val->getId()==5){
+    if(isRandDemo()){
+      revCol = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      revCol = _val->getVal() == FPSTR(TCONST_FFFF);
+  }  
 }
 
 void EffectPopcorn::setscl(const byte _scl){ // вот тут перегрузим масштаб
