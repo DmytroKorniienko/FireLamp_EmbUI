@@ -760,13 +760,13 @@ void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял �
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      colored = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      colored = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       colored = _val->getVal() == FPSTR(TCONST_FFFF);
   }  
   if(_val->getId()==4){
     if(isRandDemo()){
-      isNew = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      isNew = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       isNew = _val->getVal() == FPSTR(TCONST_FFFF);
   }    
@@ -1175,7 +1175,7 @@ void Effect3DNoise::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
   if(_val->getId()==4){
     if(isRandDemo()){
-      colorLoop = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      colorLoop = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       colorLoop = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -1246,7 +1246,7 @@ void EffectBBalls::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
   if(_val->getId()==3){
     if(isRandDemo()){
-      halo = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      halo = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       halo = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -1790,7 +1790,7 @@ void EffectFlock::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
   if(_val->getId()==3){
     if(isRandDemo()){
-      predatorPresent = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      predatorPresent = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       predatorPresent = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -2241,7 +2241,7 @@ void EffectRadar::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       subPix = _val->getVal() == FPSTR(TCONST_FFFF);
   }  
@@ -2457,13 +2457,13 @@ void EffectRain::setDynCtrl(UIControl*_val)
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       clouds = _val->getVal() == FPSTR(TCONST_FFFF);
   }
   if(_val->getId()==4){
     if(isRandDemo()){
-      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       storm = _val->getVal() == FPSTR(TCONST_FFFF);
   } 
@@ -2855,7 +2855,7 @@ void EffectCube2d::setDynCtrl(UIControl*_val)
 
   if(_val->getId()==5){
     if(isRandDemo()){
-      classic = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      classic = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       classic = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -4298,7 +4298,7 @@ void EffectFireworks::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      flashing = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      flashing = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       flashing = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -4785,14 +4785,14 @@ void EffectButterfly::setDynCtrl(UIControl*_val)
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      wings = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      wings = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       wings = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 
   if(_val->getId()==4){
     if(isRandDemo()){
-      isColored = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      isColored = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       isColored = _val->getVal() != FPSTR(TCONST_FFFF);
 
@@ -5022,7 +5022,7 @@ void EffectPatterns::setDynCtrl(UIControl*_val) {
 
   if(_val->getId()==4){
     if(isRandDemo()){
-      _subpixel = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      _subpixel = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       _subpixel = _val->getVal()==FPSTR(TCONST_FFFF);
   }
@@ -5689,7 +5689,7 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
   }
   if(_val->getId()==4){
     if(isRandDemo()){
-      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       subPix = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -5779,14 +5779,14 @@ void EffectSnake2::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      disko = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      disko = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       disko = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 
   if(_val->getId()==4){
     if(isRandDemo()){
-      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       subPix = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -5917,14 +5917,14 @@ void EffectCRain::setDynCtrl(UIControl*_val)
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       clouds = _val->getVal() == FPSTR(TCONST_FFFF);
   }
 
   if(_val->getId()==4){
     if(isRandDemo()){
-      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       storm = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -6020,7 +6020,7 @@ void EffectDNA::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
   if(_val->getId()==3){
     if(isRandDemo()){
-      rotate = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      rotate = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       rotate = _val->getVal() == FPSTR(TCONST_FFFF);
   }
@@ -6416,14 +6416,14 @@ void EffectPopcorn::setDynCtrl(UIControl*_val) {
   // Размытие
   if(_val->getId()==4){
     if(isRandDemo()){
-      blurred = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      blurred = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       blurred = _val->getVal() == FPSTR(TCONST_FFFF);
   }
   // Реверс цветов
   if(_val->getId()==5){
     if(isRandDemo()){
-      revCol = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      revCol = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
       revCol = _val->getVal() == FPSTR(TCONST_FFFF);
   }  
