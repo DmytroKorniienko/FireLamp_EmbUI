@@ -703,6 +703,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
 #ifdef RESTORE_STATE
     embui.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
 #endif
+    myLamp.setDRand(myLamp.getLampSettings().dRand);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?FPSTR(TCONST_FFFF):FPSTR(TCONST_FFFE)), true);
 }
