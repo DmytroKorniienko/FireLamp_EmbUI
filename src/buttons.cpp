@@ -19,6 +19,7 @@ const char *btn_get_desc(BA action){
 		case BA_WHITE_HI: return PSTR("WHITE HI");
 		case BA_WHITE_LO: return PSTR("WHITE LO");
 		case BA_WIFI_REC: return PSTR("WIFI REC");
+		case BA_EFFECT: return PSTR("EFFECT");
 		default:;
 	}
 	return PSTR("");
@@ -28,11 +29,11 @@ bool Button::activate(btnflags& flg, bool reverse){
 		uint8_t newval;
 		RA ract = RA_UNKNOWN;
 		bool ret = false;
-		if (reverse) direction = !direction;
+		if (reverse) flags.direction = !flags.direction;
 		switch (action) {
 			case BA_BRIGHT:
-				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) direction = !direction;
+				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
+				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 10);
 #endif
@@ -40,8 +41,8 @@ bool Button::activate(btnflags& flg, bool reverse){
 				return true;
 			case BA_SPEED: {
 				byte speed = (myLamp.effects.getControls()[1]->getVal()).toInt();
-				newval = constrain( speed + (speed / 25 + 1) * (direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) direction = !direction;
+				newval = constrain( speed + (speed / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
+				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 100);
 #endif
@@ -50,8 +51,8 @@ bool Button::activate(btnflags& flg, bool reverse){
 			}
 			case BA_SCALE: {
 				byte scale = (myLamp.effects.getControls()[2]->getVal()).toInt();
-				newval = constrain(scale + (scale / 25 + 1) * (direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) direction = !direction;
+				newval = constrain(scale + (scale / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
+				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 150);
 #endif
@@ -74,11 +75,15 @@ bool Button::activate(btnflags& flg, bool reverse){
 			case BA_WHITE_HI: ract = RA_WHITE_HI; break;
 			case BA_WHITE_LO: ract = RA_WHITE_LO; break;
 			case BA_WIFI_REC: ract = RA_WIFI_REC; break;
+			case BA_EFFECT: ract = RA_EFFECT; break;
 			default:;
 		}
 		if(!(flg.onetime&2)){ // только если не установлен бит сработавшего однократного события
 			LOG(printf_P,PSTR("Button send action: %d\n"), ract);
-			remote_action(ract, NULL);
+			if(param.isEmpty())
+				remote_action(ract, NULL);
+			else
+				remote_action(ract, param.c_str(), NULL);
 		}
 		return ret;
 }
@@ -248,7 +253,12 @@ int Buttons::loadConfig(const char *cfg){
 			JsonObject item = arr[i];
 			uint8_t mask = item[F("flg")].as<uint8_t>();
 			BA ac = (BA)item[F("ac")].as<int>();
-			buttons.add(new Button(mask, ac));
+			if(item.containsKey(F("p"))){
+				String param = item[F("p")].as<String>();
+				buttons.add(new Button(mask, ac, param));
+			} else {
+				buttons.add(new Button(mask, ac));
+			}
 		}
 		doc.clear();
 	}
@@ -269,11 +279,11 @@ void Buttons::saveConfig(const char *cfg){
 
 		for (int i = 0; i < buttons.size(); i++) {
 			Button *btn = buttons[i];
-			configFile.printf_P(PSTR("%s{\"flg\":%u,\"ac\":%u}"),
-				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action
+			configFile.printf_P(PSTR("%s{\"flg\":%u,\"ac\":%u,\"p\":\"%s\"}"),
+				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action, btn->getParam().c_str()
 			);
-			LOG(printf_P, PSTR("%s{\"flg\":%u,\"ac\":%u}"),
-				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action
+			LOG(printf_P, PSTR("%s{\"flg\":%u,\"ac\":%u,\"p\":\"%s\"}"),
+				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action, btn->getParam().c_str()
 			);
 		}
 		configFile.print("]");

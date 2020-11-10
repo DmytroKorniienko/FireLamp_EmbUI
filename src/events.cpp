@@ -26,8 +26,9 @@ void EVENT_MANAGER::check_event(EVENT *event)
     // если сегодня + периодический
     if(event->repeat && event->unixtime <= _now && tm->tm_yday == tme->tm_yday){
         //LOG(printf_P, PSTR("%d %d\n"),hour(current_time)*60+minute(current_time), event->repeat);
-        if(!((( tm->tm_hour * 60 + tm->tm_min )-( tme->tm_hour * 60 + tme->tm_min ))%event->repeat)){
-            if(((tm->tm_hour * 60 + tm->tm_min)<(tme->tm_hour * 60 + tme->tm_min + event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
+        int tmdiff = ( tm->tm_hour * 60 + tm->tm_min )-( tme->tm_hour * 60 + tme->tm_min ); 
+        if(tmdiff>=0 && !(tmdiff%event->repeat)){
+            if(((tm->tm_hour * 60 + tm->tm_min)<=(tme->tm_hour * 60 + tme->tm_min + event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
                 cb_func(event); // сработало событие
                 return;
             }
@@ -43,9 +44,10 @@ void EVENT_MANAGER::check_event(EVENT *event)
                 cb_func(event); // сработало событие
                 return;
             }
-            if(event->repeat && tm->tm_hour==tme->tm_hour){ // периодический в сегодняшний день
-                if(!((( tm->tm_hour * 60 + tm->tm_min )-( tme->tm_hour * 60 + tme->tm_min ))%event->repeat)){
-                    if(((tm->tm_hour * 60 + tm->tm_min)<(tme->tm_hour * 60 + tme->tm_min+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
+            if(event->repeat && tm->tm_hour>=tme->tm_hour){ // периодический в сегодняшний день
+                int tmdiff = ( tm->tm_hour * 60 + tm->tm_min )-( tme->tm_hour * 60 + tme->tm_min ); 
+                if(tmdiff>=0 && !(tmdiff%event->repeat)){
+                    if(((tm->tm_hour * 60 + tm->tm_min)<=(tme->tm_hour * 60 + tme->tm_min+event->stopat)) || !event->stopat){ // еще не вышли за ограничения окончания события или его нет
                         cb_func(event); // сработало событие
                         return;
                     }

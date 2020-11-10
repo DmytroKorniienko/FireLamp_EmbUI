@@ -1320,7 +1320,7 @@ void block_settings_event(Interface *interf, JsonObject *data){
 
     interf->json_section_line();
     interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(TCONST_002F));
-    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_00B6), FPSTR(TINTF_006), FPSTR(TCONST_000C));
     interf->json_section_end();
 
     interf->json_section_end();
@@ -1416,7 +1416,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
         edit = true;
     }
 
-    if (act == FPSTR(TCONST_000A)) {
+    if (act == FPSTR(TCONST_00B6)) {
         myLamp.events.delEvent(event);
         myLamp.events.saveConfig();
         show_settings_event(interf, data);
@@ -1500,7 +1500,7 @@ void block_settings_butt(Interface *interf, JsonObject *data){
 
     interf->json_section_line();
     interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(TCONST_002F));
-    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_00B6), FPSTR(TINTF_006), FPSTR(TCONST_000C));
     interf->json_section_end();
 
     interf->json_section_end();
@@ -1528,6 +1528,7 @@ void set_butt_conf(Interface *interf, JsonObject *data){
     bool hold = ((*data)[FPSTR(TCONST_0071)] == FPSTR(TCONST_FFFF));
     bool onetime = ((*data)[FPSTR(TCONST_0072)] == FPSTR(TCONST_FFFF));
     uint8_t clicks = (*data)[FPSTR(TCONST_0073)];
+    String param = (*data)[FPSTR(TCONST_00B5)].as<String>();
     BA action = (BA)(*data)[FPSTR(TCONST_0074)].as<long>();
 
     if (data->containsKey(FPSTR(TCONST_006F))) {
@@ -1542,8 +1543,9 @@ void set_butt_conf(Interface *interf, JsonObject *data){
         btn->flags.hold = hold;
         btn->flags.click = clicks;
         btn->flags.onetime = onetime;
+        btn->setParam(param);
     } else {
-        myButtons->add(new Button(on, hold, clicks, onetime, action));
+        myButtons->add(new Button(on, hold, clicks, onetime, action, param));
     }
 
     myButtons->saveConfig();
@@ -1565,7 +1567,7 @@ void show_butt_conf(Interface *interf, JsonObject *data){
         }
     }
 
-    if (act == FPSTR(TCONST_000A)) {
+    if (act == FPSTR(TCONST_00B6)) {
         myButtons->remove(num);
         myButtons->saveConfig();
         show_settings_butt(interf, data);
@@ -1588,9 +1590,11 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     interf->select(FPSTR(TCONST_0074), String(btn? btn->action : 0), String(FPSTR(TINTF_07A)), false);
     for (int i = 1; i < BA::BA_END; i++) {
-        interf->option(String(i), btn_get_desc((BA)i));
+        interf->option(String(i), FPSTR(btn_get_desc((BA)i)));
     }
     interf->json_section_end();
+
+    interf->text(FPSTR(TCONST_00B5),(btn? btn->getParam() : String("")),FPSTR(TINTF_0B9),false);
 
     interf->checkbox(FPSTR(TCONST_0070), (btn? btn->flags.on : 0)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07C), false);
     interf->checkbox(FPSTR(TCONST_0071), (btn? btn->flags.hold : 0)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_07D), false);
@@ -2337,6 +2341,7 @@ void default_buttons(){
 #endif
     myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
     myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons->add(new Button(true, false, 7, true, BA::BA_EFFECT, String(F("254")))); // 7 кликов - эффект часы
     myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
     myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
     myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб

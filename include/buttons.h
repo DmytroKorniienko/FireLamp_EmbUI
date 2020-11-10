@@ -22,6 +22,7 @@ typedef enum _button_action {
 	BA_WHITE_HI,
 	BA_WHITE_LO,
 	BA_WIFI_REC,
+	BA_EFFECT,
 	BA_END			// признак конца enum
 } BA;
 
@@ -35,24 +36,26 @@ class Button{
 			uint8_t hold:1;
 			uint8_t click:3;
 			uint8_t onetime:2; // признак однократного срабатывания при удержании и старший бит - то что срабатывание уже было
+			uint8_t direction:1; // направление изменения
 		};
 	} btnflags;
-
-	bool direction; // направление изменения
-
 
 	friend bool operator== (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) == (f2.flags.mask&0x1F)); }
 	friend bool operator!= (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) != (f2.flags.mask&0x1F)); }
 
 	public:
-		Button(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE) { direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; flags.onetime=onetime; action = act; }
-		Button(uint8_t mask, BA act = BA_NONE) { direction = false; flags.mask = mask; action = act; }
+		Button(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE, const String& _param=String()) { flags.direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; flags.onetime=onetime; action = act; param=_param; }
+		Button(uint8_t mask, BA act = BA_NONE, const String& _param=String()) { flags.direction = false; flags.mask = mask; action = act; param=_param; }
 
 		bool activate(btnflags& flg, bool reverse);
 		String getName();
+		const String& getParam() {return param;}
+		void setParam(const String&_param) {param=_param;}
 
 		BA action;
 		btnflags flags;
+	private:
+		String param;
 };
 
 class Buttons {
