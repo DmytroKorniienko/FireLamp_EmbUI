@@ -427,6 +427,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     EffectListElem *eff = myLamp.effects.getEffect(num);
     if (!eff) return;
 
+    myLamp.setDRand(myLamp.getLampSettings().dRand); // сборосить флаг рандомного демо
     LOG(printf_P, PSTR("EFF LIST n:%d, o:%d, on:%d, md:%d\n"), eff->eff_nb, curr, myLamp.isLampOn(), myLamp.getMode());
     if (eff->eff_nb != curr) {
         if (!myLamp.isLampOn()) {
@@ -697,6 +698,8 @@ void set_demoflag(Interface *interf, JsonObject *data){
         case MODE_NORMAL:
             if (newdemo) myLamp.startDemoMode(embui.param(FPSTR(TCONST_0026)).toInt()); break;
         case MODE_DEMO:
+        case MODE_ALARMCLOCK:
+        case MODE_WHITELAMP:
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
     }
@@ -2042,10 +2045,11 @@ void remote_action(RA action, ...){
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
                 LAMPMODE mode = myLamp.getMode();
                 //resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
-                if(mode==LAMPMODE::MODE_DEMO || mode==LAMPMODE::MODE_WHITELAMP){
-                    myLamp.startNormalMode();
+                if(mode!=LAMPMODE::MODE_NORMAL){
+                    //myLamp.startNormalMode();
                     //myLamp.restoreStored();
-                    embui.var(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE)); // отключить демо
+                    //embui.var(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE)); // отключить демо
+                    CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE), set_demoflag); // отключить демо, если было включено
                     if (myLamp.IsGlobalBrightness()) {
                         embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
                     }
