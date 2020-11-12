@@ -560,11 +560,26 @@ bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param)
 
 // ------------- цвета -----------------
 void EffectColors::load(){
-    EffectMath::fillAll(CHSV(scale, 255U, 55U)); // еще не наступила смена цвета, поэтому выводим текущий
+    EffectMath::fillAll(CHSV(scale, 255U, 55U));
 }
 
 bool EffectColors::run(CRGB *ledarr, EffectWorker *opt){
   return colorsRoutine(*&ledarr, &*opt);
+}
+
+void EffectColors::setscl(const byte _scl){
+  EffectCalc::setscl(_scl);
+  modeColor = scale;
+}
+
+void EffectColors::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      mode = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      mode = _val->getVal().toInt();
+  }
 }
 
 bool EffectColors::colorsRoutine(CRGB *leds, EffectWorker *param)
@@ -574,6 +589,7 @@ bool EffectColors::colorsRoutine(CRGB *leds, EffectWorker *param)
 
   ihue = (speed==1)?scale:ihue;
   step=(step+1)%(delay+1);
+
   if(step!=delay) {
 
 #ifdef MIC_EFFECTS
@@ -604,10 +620,37 @@ EVERY_N_SECONDS(1){
     }
   } else {
     // выключен микрофон
-    EffectMath::fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+    switch(mode){
+      case 1:
+        if(!step){
+          if(!modeColor){
+            modeColor = scale;
+            EffectMath::fillAll(CHSV(modeColor, 255U, 255U));
+          }
+          else {
+            modeColor = 0;
+            FastLED.clear();
+          }          
+        }
+        break;
+      case 2:
+        EffectMath::fillAll(CHSV(ihue, 255U, 255U));
+        break;
+      case 3:
+        if(!step){
+          if(scale<=127)
+            modeColor = ~modeColor;
+          else
+            modeColor = modeColor ? 0 : map(scale,128,255,1,255);
+          EffectMath::fillAll(CHSV(modeColor, 255U, 255U));
+        }
+        break;
+      default:
+        EffectMath::fillAll(CHSV(ihue, 255U, 255U));      
+    }
   }
 #else
-  EffectMath::fillAll(CHSV(ihue, 255U, 255U)); // еще не наступила смена цвета, поэтому выводим текущий
+  EffectMath::fillAll(CHSV(ihue, 255U, 255U));
 #endif
   } else {
     ihue += scale; // смещаемся на следущий

@@ -678,9 +678,12 @@ public:
 class EffectColors : public EffectCalc {
 private:
     uint8_t ihue;
+    uint8_t mode;
+    uint8_t modeColor;
 
     bool colorsRoutine(CRGB *leds, EffectWorker *param);
-
+    void setscl(const byte _scl) override;
+    void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
