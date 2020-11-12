@@ -106,7 +106,7 @@ struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool MIRR_V:1; // отзрекаливание по V
     bool MIRR_H:1; // отзрекаливание по H
-    bool reserved0:1;
+    bool isWarning:1; // выводится ли индикация предупреждения
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
@@ -207,6 +207,7 @@ private:
     Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     Ticker _effectsTicker;          // планировщик обработки эффектов
+    Ticker _warningTicker;          // планировщик обработки эффектов
     //Ticker _nextLoop;               // планировщик для тасок на ближайший луп
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
@@ -228,6 +229,10 @@ private:
 #endif
     static void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
 
+    CRGB warn_color;
+    uint32_t warn_duration;
+    uint16_t warn_blinkHalfPeriod;
+
     void doPrintStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool fillStringManual(const char* text,  const CRGB &letterColor, bool stopText = false, bool isInverse = false, int32_t pos = 0, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT); // -2147483648
     void drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight);
@@ -242,6 +247,8 @@ private:
     void frameShow(const uint32_t ticktime);
 
 public:
+    void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, bool forcerestart=true); // Неблокирующая мигалка
+
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
@@ -300,6 +307,7 @@ public:
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
+    bool isWarning() {return flags.isWarning;}
     int getmqtt_int() {return mqtt_int;}
     void semqtt_int(int val) {mqtt_int = val;}
 

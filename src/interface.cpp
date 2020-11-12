@@ -2173,6 +2173,28 @@ void remote_action(RA action, ...){
             }
             break;
         }
+        case RA::RA_WARNING: {
+            String str=value;
+            DynamicJsonDocument doc(256);
+            deserializeJson(doc,str);
+            JsonArray arr = doc.as<JsonArray>();
+
+            LOG(print, "value: "); LOG(println, value);
+            
+            uint32_t col=CRGB::Red, dur=1000, per=250;
+
+            for (size_t i = 0; i < arr.size(); i++) {
+                switch(i){
+                    case 0: col = arr[i]; break;
+                    case 1: dur = arr[i]; break;
+                    case 2: per = arr[i]; break;
+                    default : break;
+                }
+			}
+            myLamp.showWarning2(col,dur,per);
+            break; 
+        }
+
         case RA::RA_SEND_IP:
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
@@ -2225,6 +2247,8 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = myLamp.effects.getControls()[2]->getVal(); }
         else if (param == FPSTR(TCONST_0082))
             { result = String(myLamp.effects.getCurrent());  }
+        else if (param == FPSTR(TCONST_00B7))
+            { myLamp.showWarning2(CRGB::Orange,5000,500); }
         else if (param.startsWith(FPSTR(TCONST_0015))) {
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=3; i<controls.size();i++){
@@ -2253,6 +2277,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0086)) action = RA_REBOOT;
         else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
         else if (param == FPSTR(TCONST_00B4)) action = RA_GLOBAL_BRIGHT;
+        else if (param == FPSTR(TCONST_00B7)) action = RA_WARNING;
         else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;

@@ -251,7 +251,7 @@ void LAMP::effectsTick(){
    */
   uint32_t _begin = millis();
 
-  if (_effectsTicker.active() && !isAlarm()) {
+  if (_effectsTicker.active() && !isAlarm() && !isWarning()) {
     //if(millis()<5000) return; // затычка до выяснения
     if(!iflags.isEffectsDisabledUntilText){
 #ifdef USELEDBUF
@@ -1160,3 +1160,36 @@ void LAMP::showWarning(
   //myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
 }
 //-----------------------------
+// ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; неблокирующий код, рисует поверх эффекта!) -------------
+void LAMP::showWarning2(
+  const CRGB &color,                                        /* цвет вспышки                                                 */
+  uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
+  uint16_t blinkHalfPeriod,                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
+  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения */
+{
+  if(forcerestart || !_warningTicker.active()){
+    warn_color = color;
+    warn_duration = duration;
+    warn_blinkHalfPeriod = blinkHalfPeriod;
+    flags.isWarning = true;
+  }
+
+  if(flags.isWarning)
+    EffectMath::fillAll(warn_color);
+
+  if(!forcerestart)
+    flags.isWarning=!flags.isWarning;
+  if(warn_duration>warn_blinkHalfPeriod)
+    warn_duration-=warn_blinkHalfPeriod;
+  else
+    warn_duration=0;
+  if(warn_duration){
+    if(_warningTicker.active())
+      _warningTicker.detach();
+    _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, !flags.isWarning));
+  }
+  else {
+    flags.isWarning = false;
+    _warningTicker.detach();
+  }
+}
