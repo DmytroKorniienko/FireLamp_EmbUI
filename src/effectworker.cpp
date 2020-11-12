@@ -845,14 +845,20 @@ void EffectWorker::deleteEffect(const EffectListElem *eff, bool isCfgRemove)
 void EffectWorker::copyEffect(const EffectListElem *base)
 {
   EffectListElem *copy = new EffectListElem(base); // создать копию переданного эффекта
-  uint16_t foundcnt=0;
+  //uint8_t foundcnt=0;
+  uint16_t maxfoundnb=base->eff_nb;
   for(int i=0; i<effects.size();i++){
-    if((effects[i]->eff_nb&0x00FF)==(copy->eff_nb&0x00FF)) // найдены копии
-      foundcnt++;
+    if(effects[i]->eff_nb>255 && ((effects[i]->eff_nb&0x00FF)==(copy->eff_nb&0x00FF))){ // найдены копии
+      //foundcnt++;
+      if(maxfoundnb<effects[i]->eff_nb) maxfoundnb=effects[i]->eff_nb;
+    }
   }
-  if(foundcnt){
-    copy->eff_nb=(((foundcnt+1) << 8 ) | (copy->eff_nb&0xFF)); // в старшем байте увеличиваем значение на число имеющихся копий
-  }
+  //if(foundcnt){
+    // if(!foundcnt)
+    //   copy->eff_nb=(((foundcnt+1) << 8 ) | (copy->eff_nb&0xFF)); // в старшем байте увеличиваем значение на число имеющихся копий
+    // else
+      copy->eff_nb=(((((maxfoundnb&0xFF00)>>8)+1) << 8 ) | (copy->eff_nb&0xFF)); // в старшем байте увеличиваем значение на число имеющихся копий
+  //}
 
   EffectWorker *effect = new EffectWorker(base,copy); // создать параметры для него (конфиг, индекс и т.д.)
   effects.add(copy);
