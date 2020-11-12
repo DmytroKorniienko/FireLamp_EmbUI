@@ -243,11 +243,12 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         String effname((char *)0);
         EffectListElem *eff = nullptr;
         MIC_SYMB;
-        bool numList = myLamp.getLampSettings().numInList;
+        //bool numList = myLamp.getLampSettings().numInList;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
             interf->option(String(eff->eff_nb),
-                EFF_NUMBER + 
+                //EFF_NUMBER + 
+                String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
                 String(effname) + 
                 MIC_SYMBOL
             );
@@ -258,11 +259,12 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         LOG(println,F("DBG1: using slow Names generation"));
         String effname((char *)0);
         MIC_SYMB;
-        bool numList = myLamp.getLampSettings().numInList;
+        //bool numList = myLamp.getLampSettings().numInList;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
             interf->option(String(eff->eff_nb),
-                EFF_NUMBER + 
+                //EFF_NUMBER + 
+                String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
                 String(effname) + 
                 MIC_SYMBOL
             );
@@ -288,11 +290,12 @@ void delayedcall_show_effects_config(){
     EffectListElem *eff = nullptr;
     String effname((char *)0);
     MIC_SYMB;
-    bool numList = myLamp.getLampSettings().numInList;
+    //bool numList = myLamp.getLampSettings().numInList;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
         myLamp.effects.loadeffname(effname, eff->eff_nb);
         interf->option(String(eff->eff_nb),
-            EFF_NUMBER + 
+            //EFF_NUMBER + 
+            String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
             String(effname) + 
             MIC_SYMBOL                
         );
