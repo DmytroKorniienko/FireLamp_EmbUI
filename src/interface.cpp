@@ -2178,9 +2178,6 @@ void remote_action(RA action, ...){
             DynamicJsonDocument doc(256);
             deserializeJson(doc,str);
             JsonArray arr = doc.as<JsonArray>();
-
-            LOG(print, "value: "); LOG(println, value);
-            
             uint32_t col=CRGB::Red, dur=1000, per=250;
 
             for (size_t i = 0; i < arr.size(); i++) {
