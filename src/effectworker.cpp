@@ -133,6 +133,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_CELL :
     worker = std::unique_ptr<EffectCell>(new EffectCell());
     break;
+  case EFF_ENUM::EFF_F_LYING :
+    worker = std::unique_ptr<EffectF_lying>(new EffectF_lying());
+    break;
   case EFF_ENUM::EFF_DRIFT :
     worker = std::unique_ptr<EffectDrift>(new EffectDrift());
     break;

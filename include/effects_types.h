@@ -84,8 +84,8 @@ EFF_EVERYTHINGFALL,                           // Водо/огне/лава/ра
 EFF_FIRE,                                     // Огонь
 EFF_PAINTBALL,                                // Пейнтбол
 EFF_3DNOISE,                                  // 3D-шум
-EFF_CELL,                                     // Клеточка
-EFF_NONE02,                                   // пусто
+EFF_CELL,                                     // Клеточки
+EFF_F_LYING,                                   // Ф_лайн
 EFF_NONE03,                                   // пусто
 EFF_NONE04,                                   // пусто
 EFF_NONE05,                                   // пусто
@@ -155,7 +155,7 @@ EFF_TIME = (253U)                             // Часы (служебный, �
  */
 static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_005, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
-  TEFF_016, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
+  TEFF_016, TEFF_017, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
   TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
   TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
@@ -181,7 +181,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 4, 2, 2, 3, 5, 1, 5, 5, 3, 4, 1, 7, 3, 6, // 0-15
-  1, 0, 0, 0, 0, 0, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
+  1, 1, 0, 0, 0, 0, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
   3, 3, 3, 5, 5, 3, 6, 5, 7, 7, 2, 1, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 2, // 48 - 63
   4, 1, 1, 1, 2, 1, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
@@ -288,7 +288,7 @@ static const char E_TEST2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_WHITE_CFG, E_COLORS_CFG, E_DEFMICUI_CFG, E_SPARCLES_CFG, E_SNOW_CFG, E_STARFAIL_CFG, E_DEFUI, E_LIGHTERS_CFG, E_LIGHT2_CFG, E_CUBE_CFG, E_PULS_CFG, E_DEFUI, E_NFIRE_CFG, E_2_CFG, E_PALMICUI_CFG, // 0-15
-  E_2_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
+  E_2_CFG, E_4PAL_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
   E_3PAL_CFG, E_DRIFT_CFG, E_POPCORN_CFG, E_3PAL255_CFG, E_RADAR255_CFG, E_WAVES_CFG, E_F2012_MIC_CFG, E_RAIN_CFG, E_CRAIN_CFG, E_DNA_CFG, E_F2018_CFG, E_DEFUI, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
   E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM_CFG, E_FWORK_CFG, E_2_CFG, E_MUNCH_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_SHAD_CFG, E_PATT_CFG, E_ARR_CFG, E_NBAL_CFG, E_ATTRACT_CFG, E_SNAKE_CFG, // 48 - 63
   E_SNAKE2_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_TEST_CFG, E_SMOKEBALLS, E_MBL_CFG, E_LIQLAM_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79

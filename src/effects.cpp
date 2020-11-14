@@ -6646,6 +6646,46 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
       leds[index] += CHSV(hue, 200, sin8(y * 30 + offsetY));
     }
   }
-  EffectMath::nightMode(leds); // пригасим немного, чтобы видеть структуру, и убрать пересветы
+  EffectMath::nightMode(leds); // пригасим немного, чтобы видить структуру, и убрать пересветы
   return true;
+}
+
+// ----------- Эффект "Ф_лайн"
+void EffectF_lying::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+}
+
+void EffectF_lying::load() {
+  palettesload();
+}
+
+bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
+  float speedfactor = EffectMath::fmap(speed, 1., 255., 0.5, 2.);
+
+  EVERY_N_MILLISECONDS(30. / speedfactor) { hue++; } //30 - speed of hue change
+
+  uint8_t x1 = beatsin8(18. * speedfactor, 0, (NUM_COLS - 1));
+  uint8_t x2 = beatsin8(23. * speedfactor, 0, (NUM_COLS - 1));
+  uint8_t y1 = beatsin8(20. * speedfactor, 0, (NUM_ROWS - 1));
+  uint8_t y2 = beatsin8(26. * speedfactor, 0, (NUM_ROWS - 1));
+  CHSV color = CHSV(hue, 255, 255);
+  fadeToBlackBy (leds, NUM_LEDS, map(scale, 1, 255, 85, 1));
+  mydrawLine(leds, x1, y1, x2, y2, color);
+  blur2d(leds, NUM_COLS, NUM_ROWS, map(scale, 1, 255, 16, 64));
+  return true;
+}
+
+void EffectF_lying::mydrawLine(CRGB *leds, byte x, byte y, byte x1, byte y1, CHSV color)
+{ // my ugly line draw function )))
+  byte xsteps = abs8(x - x1) + 1;
+  byte ysteps = abs8(y - y1) + 1;
+  byte steps = xsteps >= ysteps ? xsteps : ysteps;
+
+  for (byte i = 1; i <= steps; i++)
+  {
+    byte dx = lerp8by8(x, x1, i * 255 / steps);
+    byte dy = lerp8by8(y, y1, i * 255 / steps);
+     leds[myLamp.getPixelNumber(dx, dy)] += ColorFromPalette(*curPalette, hue, 255); // change to += for brightness look
+     leds[myLamp.getPixelNumber(dy, dx)] += ColorFromPalette(*curPalette, 255 - hue, 255);
+  }
 }

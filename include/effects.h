@@ -2068,6 +2068,23 @@ class EffectCell: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------- Эффект "Ф_лайн"
+//F_lying 
+//Fastled 16x16 rgb led matrix demo
+//Yaroslaw Turbin, 27.10.2020 
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+// https://pastebin.com/pfbQs4y7
+class EffectF_lying: public EffectCalc {
+  private:
+    byte hue = 0;
+    void mydrawLine(CRGB *leds, byte x, byte y, byte x1, byte y1, CHSV color);
+    void setDynCtrl(UIControl*_val);
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
