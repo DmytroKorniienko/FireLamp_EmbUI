@@ -2085,6 +2085,20 @@ class EffectF_lying: public EffectCalc {
     void load() override;
 };
 
+// ---------- Эффект "Тикси Ленд"
+// (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
+class EffectTLand: public EffectCalc {
+  private:
+    byte animation = 0;
+    byte hue;
+    void processFrame(CRGB *leds, double t, double x, double y);
+    float code(double t, double i, double x, double y);
+    //void setDynCtrl(UIControl*_val);
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    //void load() override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {

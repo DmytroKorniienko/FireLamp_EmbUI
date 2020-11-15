@@ -6689,3 +6689,218 @@ void EffectF_lying::mydrawLine(CRGB *leds, byte x, byte y, byte x1, byte y1, CHS
      leds[myLamp.getPixelNumber(dy, dx)] += ColorFromPalette(*curPalette, 255 - hue, 255);
   }
 }
+
+// ---------- Эффект "Тикси Ленд"
+// (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
+bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
+  double t = (double)millis() / map(speed, 1, 255, 1200, 128);
+  hue++;
+  for( double x = 0; x < WIDTH; x++) {
+    for( double y = 0; y < HEIGHT; y++) {
+      processFrame(leds, t, x, y);
+    }
+  }
+  if (scale == 0) {
+    EVERY_N_SECONDS(60) {
+      animation++;
+    }
+  } else {
+    animation = scale;
+  }
+  return true;
+}
+
+void EffectTLand::processFrame(CRGB *leds, double t, double x, double y) {
+  double i = (y * 16) + x;
+  double frame = constrain(code(t, i, x, y), -1, 1) * 255;
+
+  if (frame >= 0) {
+    leds[myLamp.getPixelNumber(x, y)] = CHSV(hue, frame, frame);
+  }
+  else {
+    leds[myLamp.getPixelNumber(x, y)] = CHSV(hue + 64, abs(frame), abs(frame));
+  }
+}
+
+float EffectTLand::code(double t, double i, double x, double y) {
+  //float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);  
+
+  switch (animation) {
+    /**
+     * Motus Art
+     * @motus_art
+     */
+    case 1:
+      // Plasma
+      return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
+      break;
+
+    case 2:
+      // Up&Down
+      return sin(cos(x) * y / 8 + t);
+      break;
+
+    case 3:
+      return sin(atan((y) / (x)) + t);
+      break;
+
+    /**
+     * tixy.land website
+     */
+    case 4:
+      // Emitting rings
+      return sin(t - sqrt(pow((x - 7.5), 2) + pow((y - 6), 2)));
+      break;
+
+    case 5:
+      // Rotation
+      return sin(PI * 2 * atan((y - 8) / (x - 8)) + 5 * t);
+      break;
+
+    case 6:
+      // Vertical fade
+      return sin(y / 8 + t);
+      break;
+
+    case 7:
+      // Smooth noise
+      return cos(t + i + x * y);
+      break;
+
+    case 8:
+      // Waves
+      return sin(x / 2) - sin(x - t) - y + 6;
+      break;
+
+    case 9:
+      // Drop
+      return fmod(8 * t, 13) - hypot(x - 7.5, y - 7.5);
+      break;
+
+    case 10:
+      // Ripples @thespite
+      return sin(t-sqrt(x*x+y*y));
+      break;
+
+    case 11:
+      // Bloop bloop bloop @v21
+      return (x-8)*(y-8) - sin(t)*64;
+      break;
+
+
+    /**
+     * Reddit
+     */
+     case 12:
+      // lurkerurke https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgcwsn/
+      return sin((x - 7.5) * (y - 7.5) / 5 * t + t);
+      break;
+
+    case 13:
+      // SN0WFAKER https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgk7c0/
+      return sin(atan((y - 7.5) / (x - 7.5)) + t * 6);
+      break;
+
+    case 14:
+      // LeadingNegotiation9 https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbjcoho/
+      return pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
+      break;
+
+    case 15:
+      // detunized https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgk30l/
+      return sin(y / 8 + t) + x / 16 - 0.5;
+      break;
+
+    case 16:
+      // Andres_A https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgzdnj/
+      return 1 - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
+      break;
+
+
+    /**
+     * @akella
+     * https://twitter.com/akella/status/1323549082552619008
+     */
+    case 17:
+      return sin(6 * atan2(y - 8, x) + t);
+      break;
+
+    case 18:
+      return sin(i / 5 + (t));
+      break;
+
+    /**
+     * Paul Malin
+     * https://twitter.com/P_Malin/
+     */
+
+    case 19:
+      // Matrix Rain https://twitter.com/P_Malin/status/1323583013880553472
+      return 1 - fmod((x * x - y + t * (fmod(1 + x * x, 5.0)) * 3.0), 16.0) / 16.0;
+      break;
+
+    case 20:
+      // Burst https://twitter.com/P_Malin/status/1323605999274594304
+      return -4 / ((x - 8) * (x - 8) + (y - 8) * (y - 8) - fmod(t, 1) * 200);
+      break;
+
+    case 21:
+      // Rays
+      return sin(atan2(x, y) * 5 + t * 5);
+      break;
+
+    case 22:
+      // Starfield https://twitter.com/P_Malin/status/1323702220320313346
+      return !((int)(x + t * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
+      break;
+
+    case 23:
+      return sin(3 * atan2(y - 7.5 + sin(t) * 5, x - 7.5 + sin(t / 2) * 5) + t * 5);
+      break;
+
+    case 24:
+      return (y - 8) / 3 - tan(x / 6 + 1.87) * sin(t * 2);
+      break;
+
+    case 25:
+      return (y - 8) / 3 - (sin(x / 4 + t * 4));
+      break;
+
+    case 26:
+      return fmod(i, 4) - fmod(y, 4) + sin(t);
+      break;
+
+    case 27:
+      return cos(sin((x * t * .1)) * PI) + cos(sin(y * t * .1 + (sqrt(abs(cos(x * t * .1))))) * PI);
+      break;
+
+    case 28:
+      return -.4 / (hypot(x - fmod(t, 10), y - fmod(t, 8)) - fmod(t, 2) * 9);
+      break;
+
+    case 29:
+      return sin(x / 3 * sin(t / 3) * 2) + cos(y / 4 * sin(t / 2) * 2);
+      break;
+
+    case 30:
+      return sin(x * x * 3 * i / 1e4 - y / 2 + t * 9);
+      break;
+
+    case 31:
+      return 1 - abs((x - 6) * cos(t) + (y - 6) * sin(t));
+      break;
+
+    case 32:
+      return atan((x - 7.5) * (y - 7.5)) - 2.5 * sin(t);
+      break;
+
+    case 33:
+      return 1 - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
+      break;
+
+    default:
+      animation = 1;
+      return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
+      break;
+  }
+}
