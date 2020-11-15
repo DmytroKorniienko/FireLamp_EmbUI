@@ -6894,10 +6894,6 @@ float EffectTLand::code(double t, double i, double x, double y) {
       return atan((x - 7.5) * (y - 7.5)) - 2.5 * sin(t);
       break;
 
-    case 33:
-      return 1 - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
-      break;
-
     default:
       animation = 1;
       return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
