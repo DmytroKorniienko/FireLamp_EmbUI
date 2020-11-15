@@ -1121,12 +1121,13 @@ private:
 
   uint8_t rhue;
   uint8_t nline[WIDTH];
-  uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+  uint8_t noise3d[WIDTH][HEIGHT];
   float speedfactor;
   uint8_t myScale8(uint8_t x);
   bool clouds = false;
   bool storm = false;
   bool splashes = true;
+  CRGB solidRainColor = CRGB(60, 80, 90);
 
   void setDynCtrl(UIControl*_val) override;
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor);

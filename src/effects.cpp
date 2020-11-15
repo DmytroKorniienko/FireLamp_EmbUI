@@ -1802,11 +1802,11 @@ bool EffectPrismata::prismataRoutine(CRGB *leds, EffectWorker *param)
     spirohueoffset += 1;
   }
 
-  fadeToBlackBy(leds, NUM_LEDS, 256U - getCtrlVal(3).toInt()); // делаем шлейф
+  fadeToBlackBy(leds, NUM_LEDS, map(getCtrlVal(3).toInt(), 1, 255, 130, 1)); // делаем шлейф
 
-  for (float x = 0.0f; x <= (float)WIDTH - 1; x += 0.25f) {
-      float y = (float)beatsin8((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 4) / 4.0f;
-      EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, ((uint8_t)x + spirohueoffset) * 4));
+  for (byte x = 0; x < WIDTH; x++) {
+      float y = (float)beatsin16((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 10) / 10.0f;
+      EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(*curPalette, ((uint8_t)x + spirohueoffset) * 4));
     }
   return true;
 }
@@ -2514,14 +2514,14 @@ void EffectRain::setDynCtrl(UIControl*_val)
 
 bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
 {
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., .01, .1);
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., .05, .2);
   return simpleRainRoutine(*&ledarr, &*opt);
 
 }
 
 void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor)
 {
-
+ 
   CRGBPalette16 rain_p(CRGB::Black, rainColor);
   fadeToBlackBy(myLamp.getUnsafeLedsArray(), NUM_LEDS, 255 - tailLength);
 
@@ -2531,27 +2531,29 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     // Step 1.  Move each dot down one cell
     for (uint8_t i = 0; i < HEIGHT; i++)
     {
-      if (noise3d[0][(uint8_t)x][i] >= backgroundDepth) {
-      { // Don't move empty cells
-        if (i > 0)
-          noise3d[0][(uint8_t)x][wrapY(i - 1)] = noise3d[0][(uint8_t)x][i];
-        noise3d[0][(uint8_t)x][i] = 0;
+      if (noise3d[x][i] >= backgroundDepth)
+      {
+        { // Don't move empty cells
+          if (i > 0)
+            noise3d[x][wrapY(i - 1)] = noise3d[x][i];
+          noise3d[x][i] = 0;
+        }
       }
-    }
 
-    // Step 2.  Randomly spawn new dots at top
-    if (random(255) < spawnFreq)
-    {
-      noise3d[0][(uint8_t)x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
-    }
+      // Step 2.  Randomly spawn new dots at top
+      if (random(255) < spawnFreq)
+      {
+        noise3d[x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
+      }
     }
     // Step 3. Map from tempMatrix cells to LED colors;
+    
     for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= speedfactor)
     {
-      if (noise3d[0][(uint8_t)x][(uint8_t)y] >= backgroundDepth)
+      if (noise3d[x][(uint8_t)y] >= backgroundDepth)
       { // Don't write out empty cells
-          EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[0][(uint8_t)x][(uint8_t)y]), 45);
-      }
+          EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[x][(uint8_t)y]), 70);
+      } else EffectMath::drawPixelXYF_Y(x, y, CRGB::Black);
     }
 
     // Step 4. Add splash if called for
@@ -2559,7 +2561,7 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     {
       // FIXME, this is broken
       byte j = nline[(uint8_t)x];
-      byte v = noise3d[0][(uint8_t)x][0];
+      byte v = noise3d[(uint8_t)x][0];
 
       if (j >= backgroundDepth)
       {
@@ -2586,46 +2588,10 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
 
   }
 }
-/*
-uint8_t EffectRain::myScale8(uint8_t x)
-{ // даёт масштабировать каждые 8 градаций (от 0 до 7) бегунка Масштаб в значения от 0 до 255 по типа синусоиде
-  uint8_t x8 = x % 8U;
-  uint8_t x4 = x8 % 4U;
-  if (x4 == 0U)
-    if (x8 == 0U)
-      return 0U;
-    else
-      return 255U;
-  else if (x8 < 4U)
-    return (1U + x4 * 72U); // всего 7шт по 36U + 3U лишних = 255U (чтобы восхождение по синусоиде не было зеркально спуску)
-                            //else
-  return (253U - x4 * 72U); // 253U = 255U - 2U
-}
 
-bool EffectRain::coloredRainRoutine(CRGB *leds, EffectWorker *param) // внимание! этот эффект заточен на работу бегунка Масштаб в диапазоне от 0 до 255. пока что единственный.
-{
-
-  CRGB solidRainColor = CRGB(60, 80, 90);
-  CRGB randomRainColor = CHSV(random(1,255), 255U, 255U);
-  // я хз, как прикрутить а 1 регулятор и длину хвостов и цвет капель
-  // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
-  //rain(60, 200, map8(intensity,5,100), 195, CRGB::Green, false, false, false); // было CRGB::Green
-
-  if (scale > 255U-8U)
-    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), solidRainColor);
-  else if (scale > 255U-16U)
-    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), randomRainColor);
-  else
-    rain(60, 200, map8(42, 5, 100), (31*(scale%8)), CHSV(scale, 255U, 255U));
-  return true;
-}
-*/
 bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
 {
-  CRGB solidRainColor = CRGB(60, 80, 90);
-  //uint8_t Scale = scale;
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
-  //rain(60, 200, map8(intensity,2,60), 10, solidRainColor, true, true, false);
   rain(60, 180, scale, 30, solidRainColor);
   return true;
 }
