@@ -6658,9 +6658,20 @@ void EffectF_lying::mydrawLine(CRGB *leds, byte x, byte y, byte x1, byte y1, CHS
 
 // ---------- Эффект "Тикси Ленд"
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
+void EffectTLand::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3){
+    select = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+}
+
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   double t = (double)millis() / map(speed, 1, 255, 1200, 128);
-  hue++;
+  if (!select) hue++;
+  else {
+    hue = getCtrlVal(4).toInt();
+    hue2 = getCtrlVal(5).toInt();
+  }
   for( double x = 0; x < WIDTH; x++) {
     for( double y = 0; y < HEIGHT; y++) {
       processFrame(leds, t, x, y);
@@ -6681,16 +6692,17 @@ void EffectTLand::processFrame(CRGB *leds, double t, double x, double y) {
   double frame = constrain(code(t, i, x, y), -1, 1) * 255;
 
   if (frame >= 0) {
-    leds[myLamp.getPixelNumber(x, y)] = CHSV(hue, frame, frame);
+
+    EffectMath::drawPixelXYF(x, y, CHSV(hue, frame, frame), 50);
   }
   else {
-    leds[myLamp.getPixelNumber(x, y)] = CHSV(hue + 64, abs(frame), abs(frame));
+
+    EffectMath::drawPixelXYF(x, y, CHSV(select ? hue2 : hue + 64, fabs(frame), fabs(frame)), 50);
   }
 }
 
 float EffectTLand::code(double t, double i, double x, double y) {
   //float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);  
-
   switch (animation) {
     /**
      * Motus Art
@@ -6745,12 +6757,12 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 10:
       // Ripples @thespite
-      return sin(t-sqrt(x*x+y*y));
+      return sin(t - sqrt(x * x + y * y));
       break;
 
     case 11:
       // Bloop bloop bloop @v21
-      return (x-8)*(y-8) - sin(t)*64;
+      return (x - 8) * (y - 8) - sin(t / 2.) * 64;
       break;
 
 
@@ -6764,7 +6776,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 13:
       // SN0WFAKER https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgk7c0/
-      return sin(atan((y - 7.5) / (x - 7.5)) + t * 6);
+      return sin(atan((y - 7.5) / (x - 7.5)) + t);
       break;
 
     case 14:
@@ -6774,7 +6786,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 15:
       // detunized https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgk30l/
-      return sin(y / 8 + t) + x / 16 - 0.5;
+      return sin(y / 8 + t * 0.5) + x / 16 - 0.5;
       break;
 
     case 16:
@@ -6807,21 +6819,21 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 20:
       // Burst https://twitter.com/P_Malin/status/1323605999274594304
-      return -4 / ((x - 8) * (x - 8) + (y - 8) * (y - 8) - fmod(t, 1) * 200);
+      return -10. / ((x - 8.) * (x - 8.) + (y - 8.) * (y - 8.) - fmod(t*0.3, 0.7) * 200.);
       break;
 
     case 21:
       // Rays
-      return sin(atan2(x, y) * 5 + t * 5);
+      return sin(atan2(x, y) * 5 + t * 2);
       break;
 
     case 22:
-      // Starfield https://twitter.com/P_Malin/status/1323702220320313346
-      return !((int)(x + t * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
+      // Starfield https://twitter.com/P_Malin/status/1323702220320313346 
+      return !((int)(x + (t/2.) * 50. / (fmod(y * y, 5.9) + 1.)) & 15) / (fmod(y * y, 5.9) + 1.);
       break;
 
     case 23:
-      return sin(3 * atan2(y - 7.5 + sin(t) * 5, x - 7.5 + sin(t / 2) * 5) + t * 5);
+      return sin(3. * atan2(y - 7.5 + sin(t) * 5., x - 7.5 + sin(t / 2.) * 5) + t * 5.);
       break;
 
     case 24:
@@ -6829,7 +6841,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 25:
-      return (y - 8) / 3 - (sin(x / 4 + t * 4));
+      return (y - 8) / 3 - (sin(x / 4 + t * 2));
       break;
 
     case 26:
@@ -6849,15 +6861,27 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 30:
-      return sin(x * x * 3 * i / 1e4 - y / 2 + t * 9);
+      return sin(x * x * 3 * i / 1e4 - y / 2 + t * 2);
       break;
 
     case 31:
-      return 1 - abs((x - 6) * cos(t) + (y - 6) * sin(t));
+      return 1. - fabs((x - 6.) * cos(t) + (y - 6.) * sin(t));
       break;
 
     case 32:
+      return 1. / 32. * tan(t / 64. * x * tan(i - x)); 
+      break;
+
+    case 33:
       return atan((x - 7.5) * (y - 7.5)) - 2.5 * sin(t);
+      break;
+
+    case 34:
+      return sin(cos(y) * t) * cos(sin(x) * t); 
+      break;
+
+    case 35:
+      return sin(y * (t/4.)) * cos(x * (t/4.));
       break;
 
     default:

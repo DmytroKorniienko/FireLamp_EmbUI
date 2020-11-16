@@ -2092,9 +2092,11 @@ class EffectTLand: public EffectCalc {
   private:
     byte animation = 0;
     byte hue;
+    byte hue2;
+    bool select = false;
     void processFrame(CRGB *leds, double t, double x, double y);
     float code(double t, double i, double x, double y);
-    //void setDynCtrl(UIControl*_val);
+    void setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     //void load() override;
