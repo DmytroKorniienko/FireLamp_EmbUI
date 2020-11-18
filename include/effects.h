@@ -1129,6 +1129,7 @@ private:
   bool storm = false;
   bool splashes = true;
   CRGB solidRainColor = CRGB(60, 80, 90);
+  float fshift = 0.0;
 
   void setDynCtrl(UIControl*_val) override;
   void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor);

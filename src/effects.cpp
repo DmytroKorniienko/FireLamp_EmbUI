@@ -2529,6 +2529,9 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
  
   CRGBPalette16 rain_p(CRGB::Black, rainColor);
   fadeToBlackBy(myLamp.getUnsafeLedsArray(), NUM_LEDS, 255 - tailLength);
+  fshift += speedfactor;
+  float f;
+  fshift=modff(fshift, &f);
 
   // Loop for each column individually
   for (uint8_t x = 0; x < WIDTH; x++)
@@ -2539,26 +2542,29 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
       if (noise3d[x][i] >= backgroundDepth)
       {
         { // Don't move empty cells
-          if (i > 0)
+          if (i > 0 && f > 0){
             noise3d[x][wrapY(i - 1)] = noise3d[x][i];
-          noise3d[x][i] = 0;
+            noise3d[x][i] = 0;
+          }
+          if(!i)
+            noise3d[x][i] = 0;
         }
       }
-
-      // Step 2.  Randomly spawn new dots at top
-      if (random(255) < spawnFreq)
-      {
-        noise3d[x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
-      }
     }
+
+    // Step 2.  Randomly spawn new dots at top
+    if (random(50) < spawnFreq)
+    {
+      noise3d[x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
+    }
+
     // Step 3. Map from tempMatrix cells to LED colors;
-    
-    for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= speedfactor)
+    for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= 1)
     {
       if (noise3d[x][(uint8_t)y] >= backgroundDepth)
       { // Don't write out empty cells
-          EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(rain_p, noise3d[x][(uint8_t)y]), 70);
-      } else EffectMath::drawPixelXYF_Y(x, y, CRGB::Black);
+          EffectMath::drawPixelXYF_Y(x, y - fshift, ColorFromPalette(rain_p, noise3d[x][(uint8_t)y]), 70);
+      } else EffectMath::drawPixelXYF_Y(x, y - fshift, CRGB::Black);
     }
 
     // Step 4. Add splash if called for
