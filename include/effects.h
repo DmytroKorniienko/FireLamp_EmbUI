@@ -2079,8 +2079,10 @@ class EffectCell: public EffectCalc {
 class EffectF_lying: public EffectCalc {
   private:
     byte hue = 0;
-    void mydrawLine(CRGB *leds, byte x, byte y, byte x1, byte y1, CHSV color);
+    void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
     void setDynCtrl(UIControl*_val);
+    const float deviator = 10.;
+    bool type = 0;
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;

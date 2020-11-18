@@ -6619,6 +6619,9 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
 // ----------- Эффект "Ф_лайн"
 void EffectF_lying::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==4){
+    type = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 void EffectF_lying::load() {
@@ -6626,33 +6629,45 @@ void EffectF_lying::load() {
 }
 
 bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
-  float speedfactor = EffectMath::fmap(speed, 1., 255., 0.5, 2.);
+  
+  float speedfactor = EffectMath::fmap(speed, 1., 255., 0.2, 1.);
 
   EVERY_N_MILLISECONDS(30. / speedfactor) { hue++; } //30 - speed of hue change
 
-  uint8_t x1 = beatsin8(18. * speedfactor, 0, (NUM_COLS - 1));
-  uint8_t x2 = beatsin8(23. * speedfactor, 0, (NUM_COLS - 1));
-  uint8_t y1 = beatsin8(20. * speedfactor, 0, (NUM_ROWS - 1));
-  uint8_t y2 = beatsin8(26. * speedfactor, 0, (NUM_ROWS - 1));
-  CHSV color = CHSV(hue, 255, 255);
-  fadeToBlackBy (leds, NUM_LEDS, map(scale, 1, 255, 85, 1));
-  mydrawLine(leds, x1, y1, x2, y2, color);
-  blur2d(leds, NUM_COLS, NUM_ROWS, map(scale, 1, 255, 16, 64));
+  float x1 = (float)beatsin16(18. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator;
+  float x2 = (float)beatsin16(23. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator;
+  float x3 = (float)beatsin16(27. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator; 
+  float x4 = (float)beatsin16(31. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator; 
+
+  float y1 = (float)beatsin16(20. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
+  float y2 = (float)beatsin16(26. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
+  float y3 = (float)beatsin16(15. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
+  float y4 = (float)beatsin16(27. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
+
+  fadeToBlackBy (leds, NUM_LEDS, map(scale, 1, 128, 128, 1));
+  mydrawLine(leds, x1, y1,  x2, y2, 0);
+  mydrawLine(leds, x2, y2,  x3, y3, 32);
+  mydrawLine(leds, x2, y2,  x4, y4, 64);
+  if (type) {
+    mydrawLine(leds, x3, y3,  x4, y4, 96);
+    mydrawLine(leds, x3, y3,  x1, y1, 128);
+    mydrawLine(leds, x4, y4,  x1, y1, 160);
+  }
+  
+  blur2d(leds, NUM_COLS, NUM_ROWS, map(scale, 1, 128, 1, 64));
+
   return true;
 }
 
-void EffectF_lying::mydrawLine(CRGB *leds, byte x, byte y, byte x1, byte y1, CHSV color)
-{ // my ugly line draw function )))
-  byte xsteps = abs8(x - x1) + 1;
-  byte ysteps = abs8(y - y1) + 1;
-  byte steps = xsteps >= ysteps ? xsteps : ysteps;
-
-  for (byte i = 1; i <= steps; i++)
-  {
-    byte dx = lerp8by8(x, x1, i * 255 / steps);
-    byte dy = lerp8by8(y, y1, i * 255 / steps);
-     leds[myLamp.getPixelNumber(dx, dy)] += ColorFromPalette(*curPalette, hue, 255); // change to += for brightness look
-     leds[myLamp.getPixelNumber(dy, dx)] += ColorFromPalette(*curPalette, 255 - hue, 255);
+void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda)
+{
+  if (!type) {
+    EffectMath::drawLineF(x, y, x1, y1, ColorFromPalette(*curPalette, hue + hueLamda, 200));
+    EffectMath::drawPixelXYF(x, y, CRGB ::Gray);
+    EffectMath::drawPixelXYF(x1, y1, CRGB ::Gray);
+  } else {
+    EffectMath::drawCircleF(x, y, x1, ColorFromPalette(*curPalette, hue + hueLamda, 200), false, 0.5);
+    EffectMath::drawCircleF(x1, y1, y1, ColorFromPalette(*curPalette, hue + hueLamda, 200), false, 0.5);
   }
 }
 
