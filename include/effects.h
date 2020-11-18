@@ -376,7 +376,7 @@ public:
   static float randomf(float min, float max);
   static bool isInteger(float val);
   static bool Lightning(CRGB lightningColor = CHSV(30,90,255) /*CRGB(72, 72, 80)*/, uint8_t chanse = 72U);
-  static void Clouds(uint8_t rhue = 2, bool flash = false);
+  static void Clouds(uint8_t rhue = 2, bool flash = false, bool pal = true);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
   static void nightMode(CRGB *leds);
 
@@ -774,6 +774,7 @@ public:
 // ------------- светлячки -------------
 class EffectLighters : public EffectCalc {
 protected:
+    bool subPix = false;
     uint16_t lightersIdx;
     float lightersSpeed[2U][LIGHTERS_AM];
     uint8_t lightersColor[LIGHTERS_AM];
@@ -781,7 +782,7 @@ protected:
     byte light[LIGHTERS_AM];
 private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
-
+    void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

@@ -215,13 +215,10 @@ if (random16() < chanse)
   return false;
 }
 
-void EffectMath::Clouds(uint8_t rhue, bool flash)
+void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
 {
-#ifdef SMARTMATRIX
-  const CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(75, 84, 84), CRGB(49, 75, 75), CRGB::Black);
-#else
-  const CRGBPalette16 rainClouds_p(CRGB::Black, CRGB(35, 44, 44), CRGB(29, 35, 35), CRGB::Black);
-#endif
+  const CRGBPalette16 rainClouds_p(0x000000, 0x232C2C, 0x1D2323, 0xA5A5A5);
+
   //uint32_t random = millis();
   uint8_t dataSmoothing = 50; //196
   uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
@@ -245,8 +242,10 @@ void EffectMath::Clouds(uint8_t rhue, bool flash)
       noise[x * cloudHeight + z] = scale8(noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
       if (flash)
         EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
-      else 
+      else if(pal) 
         nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (250 / cloudHeight));
+      else  
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], CHSV(rhue,noise[x * cloudHeight + z],255), (250 / cloudHeight));
     }
     noiseZ++;
   }

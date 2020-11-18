@@ -799,7 +799,7 @@ void EffectStarFall::load(){
   }
 }
 
-void EffectStarFall::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
+void EffectStarFall::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
@@ -865,7 +865,7 @@ void EffectLighters::load(){
     lightersSpeed[0U][i] = (float)random(-200, 200) / 10.0f;
     lightersSpeed[1U][i] = (float)random(-200, 200) / 10.0f;
     lightersColor[i] = random(0U, 255U);
-    light[i] = 127;
+    light[i] = random(1U, 3U)*127U;
   }
 }
 
@@ -873,32 +873,43 @@ bool EffectLighters::run(CRGB *ledarr, EffectWorker *opt){
   return lightersRoutine(*&ledarr, &*opt);
 }
 
+void EffectLighters::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
+    } else
+      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+}
+
+
 bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
 {
-  bool subPix = false;
-  subPix = (getCtrlVal(3) == FPSTR(TCONST_FFFF));
   float speedfactor = (float)speed / 4096.0f + 0.001f;
 
  // EffectMath::blur2d(speed/10);
   //EffectMath::dimAll(50 + speed/10);
   memset8( leds, 0, NUM_LEDS * 3);
 
-  for (uint8_t i = 0U; i < scale; i++) // масштабируем на LIGHTERS_AM, чтобы не было выхода за диапазон
+  EVERY_N_MILLIS(333)
+  {
+    lightersIdx = (lightersIdx+1)%constrain(scale,1,LIGHTERS_AM);
+    lightersSpeed[0U][lightersIdx] += random(-10, 10);
+    lightersSpeed[1U][lightersIdx] += random(-10, 10);
+    lightersSpeed[0U][lightersIdx] = fmod(lightersSpeed[0U][lightersIdx], 21);
+    lightersSpeed[1U][lightersIdx] = fmod(lightersSpeed[1U][lightersIdx], 21);
+    light[lightersIdx] = random(255U-(scale*8),255U);
+    if(!random(scale+3))
+      light[lightersIdx] = 127;
+  }
+
+  for (uint8_t i = 0U; i < constrain(scale,1,LIGHTERS_AM); i++) // масштабируем на LIGHTERS_AM, чтобы не было выхода за диапазон
   {
     // EVERY_N_SECONDS(1)
     // {
     //   LOG.printf_P("S0:%d S1:%d P0:%3.2f P1:%3.2f, scale:%3.2f\n", lightersSpeed[0U][i], lightersSpeed[1U][i],lightersPos[0U][i],lightersPos[1U][i],speedfactor);
     // }
-
-    EVERY_N_MILLIS(random16(1024))
-    {
-      lightersIdx = (lightersIdx+1)%(uint8_t)(((LIGHTERS_AM/255.0)*scale)+1);
-      lightersSpeed[0U][lightersIdx] += random(-10, 10);
-      lightersSpeed[1U][lightersIdx] += random(-10, 10);
-      lightersSpeed[0U][lightersIdx] = fmod(lightersSpeed[0U][lightersIdx], 21);
-      lightersSpeed[1U][lightersIdx] = fmod(lightersSpeed[1U][lightersIdx], 21);
-    }
-
     lightersPos[0U][i] += lightersSpeed[0U][i]*speedfactor;
     lightersPos[1U][i] += lightersSpeed[1U][i]*speedfactor;
 
@@ -918,15 +929,10 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
       lightersSpeed[0U][i] = -lightersSpeed[0U][i];
     }
 
-    EVERY_N_MILLIS(random16(512, 2048)) {
-      if (light[i] == 127)
-        light[i] = 255;
-      else light[i] = 127;
-    }
     if (subPix)
-      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 200U, light[i]));
+      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]));
     else
-      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV(lightersColor[i], 200U, light[i]));
+      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]));
   }
   return true;
 }
@@ -2514,9 +2520,8 @@ void EffectRain::setDynCtrl(UIControl*_val)
 
 bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
 {
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., .05, .2);
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., .10, 1.0);
   return simpleRainRoutine(*&ledarr, &*opt);
-
 }
 
 void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor)
@@ -2592,7 +2597,7 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
 bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
 {
   // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
-  rain(60, 180, scale, 30, solidRainColor);
+  rain(scale*2, 255, scale, 30, solidRainColor);
   return true;
 }
 
@@ -4597,7 +4602,7 @@ void EffectOsc::load() {
   pointer = (float)myLamp.getMicScale()/ _scaler;
 }
 
-void EffectOsc::setDynCtrl(UIControl*_val) { // так и не понял что это и зачем?
+void EffectOsc::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
@@ -5945,17 +5950,12 @@ bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
 
 void EffectCRain::updaterain(CRGB *leds, float speedFactor)
 {
-
-
   for (byte i = 0; i < WIDTH; i++)
   {
-    for (float j = 0.; j < ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)); j += 0.1)
+    changepattern();
+    for (float j = 0.; j < ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)); j += 0.3)
     {
       byte sat = beatsin8(30, 150, 255);
-      EVERY_N_MILLISECONDS(3)
-      {
-        changepattern();
-      }
       //byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       byte layer = rain[myLamp.getPixelNumber(i, (uint16_t)(j + _speed) + random8(2) % HEIGHT)]; //fake scroll based on shift coordinate
       if (layer)
@@ -5966,7 +5966,6 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
     }
   }
   _speed+= speedFactor;
-
 }
 
 void EffectCRain::load(){
@@ -5977,7 +5976,7 @@ void EffectCRain::raininit(byte rain[NUM_LEDS])
 { //init array of dots. run once
     for (int i = 0; i < NUM_LEDS; i++)
     {
-        if (random8(15) == 0)
+        if (random8(10) == 0)
         {
             rain[i] = 1;
         }
@@ -6000,7 +5999,7 @@ void EffectCRain::changepattern()
 }
 
 bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.20, 1.);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.40, 2.0);
   if(counter > 1.0){
     if (scale != 1)
       hue = scale;
@@ -6015,7 +6014,7 @@ bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 35: 20);
   blurRows(leds, WIDTH, ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)), 10);
   if (clouds)
-    EffectMath::Clouds(2, storm ? EffectMath::Lightning(CHSV(30,90,255), 200U) : false);
+    EffectMath::Clouds(hue, storm ? EffectMath::Lightning(CHSV(30,90,255), 200U) : false, scale==255?true:false);
   else if (storm) EffectMath::Lightning(CHSV(30,90,255), 255U);
   return true;
 }
