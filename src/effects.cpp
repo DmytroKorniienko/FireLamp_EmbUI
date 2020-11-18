@@ -2588,16 +2588,14 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
         nline[(uint8_t)x] = v; // Prep splash for next frame
       }
     }
-
     // Step 5. Add lightning if called for
-
-    // Step 6. Add clouds if called for
-    if (clouds)
-    {
-      EffectMath::Clouds(rhue, (storm ? EffectMath::Lightning() : false));
-    } else if (storm) EffectMath::Lightning();
-
   }
+
+  // Step 6. Add clouds if called for
+  if (clouds)
+  {
+    EffectMath::Clouds(rhue, (storm ? EffectMath::Lightning() : false));
+  } else if (storm) EffectMath::Lightning();
 }
 
 bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
