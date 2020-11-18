@@ -217,7 +217,7 @@ if (random16() < chanse)
 
 void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
 {
-  const CRGBPalette16 rainClouds_p(0x000000, 0x232C2C, 0x1D2323, 0xA5A5A5);
+  const CRGBPalette16 rainClouds_p(0x000000, 0x333C3C, 0x2D3333, 0xB5B5B5);
 
   //uint32_t random = millis();
   uint8_t dataSmoothing = 50; //196
@@ -243,9 +243,9 @@ void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
       if (flash)
         EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
       else if(pal) 
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (250 / cloudHeight));
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (500 / cloudHeight));
       else  
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], CHSV(rhue,noise[x * cloudHeight + z],255), (250 / cloudHeight));
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], CHSV(rhue,noise[x * cloudHeight + z],255), (500 / cloudHeight));
     }
     noiseZ++;
   }
@@ -253,7 +253,7 @@ void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
     for (uint16_t i = 0; i < WIDTH; i++)
     {
       for (byte z = 0; z < 10; z++)
-        EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4., (float)HEIGHT - 1.), CHSV(0, 250, random8(96, 120)));
+        EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4., (float)HEIGHT - 1.), CHSV(0, 250, random8(96, 120)), 0);
     }
     EffectMath::blur2d(100);
   }

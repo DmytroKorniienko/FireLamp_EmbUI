@@ -930,7 +930,7 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
     }
 
     if (subPix)
-      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]));
+      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]), 0);
     else
       EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]));
   }
@@ -2563,7 +2563,7 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     {
       if (noise3d[x][(uint8_t)y] >= backgroundDepth)
       { // Don't write out empty cells
-          EffectMath::drawPixelXYF_Y(x, y - fshift, ColorFromPalette(rain_p, noise3d[x][(uint8_t)y]), 70);
+          EffectMath::drawPixelXYF_Y(x, y - fshift, ColorFromPalette(rain_p, noise3d[x][(uint8_t)y]), 0);
       } else EffectMath::drawPixelXYF_Y(x, y - fshift, CRGB::Black);
     }
 
@@ -5964,7 +5964,7 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
       byte layer = rain[myLamp.getPixelNumber(i, (uint16_t)(j + _speed) + random8(2) % HEIGHT)]; //fake scroll based on shift coordinate
       if (layer)
       {
-        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220), 45);
+        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220), 0);
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
     }
