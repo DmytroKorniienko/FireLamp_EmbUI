@@ -2553,13 +2553,13 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
     }
 
     // Step 2.  Randomly spawn new dots at top
-    if (random(50) < spawnFreq)
+    if (random(255) < spawnFreq)
     {
       noise3d[x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
     }
 
     // Step 3. Map from tempMatrix cells to LED colors;
-    for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= 1)
+    for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= 0.5)
     {
       if (noise3d[x][(uint8_t)y] >= backgroundDepth)
       { // Don't write out empty cells
@@ -2576,8 +2576,8 @@ void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, 
 
       if (j >= backgroundDepth)
       {
-        EffectMath::setLed(myLamp.getPixelNumber(wrapX(x - 2), 0), ColorFromPalette(rain_p, j / 3));
-        EffectMath::setLed(myLamp.getPixelNumber(wrapX(x + 2), 0), ColorFromPalette(rain_p, j / 3));
+        EffectMath::drawPixelXYF_X(x - 1, 0, ColorFromPalette(rain_p, j / 3));
+        EffectMath::drawPixelXYF_X(x + 1, 0, ColorFromPalette(rain_p, j / 3));
         nline[(uint8_t)x] = 0; // Reset splash
       }
 
@@ -6148,18 +6148,18 @@ void EffectFire2020::setDynCtrl(UIControl*_val)
 bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   if(!curPalette) return false;
 
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.033, 0.15);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.15, 1.);
 
   for (uint8_t i = 0; i < NUM_COLS; i++)
   {
-    for (float j = 0.; j < NUM_ROWS; j+= speedfactor)
+    for (float j = 0.; j < NUM_ROWS; j+= 0.5)
     {
-      uint16_t index = ((uint8_t)j + a + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
-      EffectMath::drawPixelXYF_Y((LED_COLS - 1) - i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])),35);
+      uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
+      EffectMath::drawPixelXYF_Y(i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])),35);
     }
   }
   blurRows(leds, WIDTH, HEIGHT, 15);
-  a++;
+  a+= speedfactor; // как-то раньше не догадался так сделать. Мда...
   return true;
 }
 

@@ -1949,26 +1949,13 @@ public:
 // переделака на субпиксель и доработки - kostyamat
 class EffectFire2020 : public EffectCalc {
 private:
- /*   int scale = 60; // scale of fire
-    int speed = 20;   //speed of effect
-*/
     #define NOISE_HEIGHT  (LED_COLS * 4U)
     uint16_t noises[LED_COLS * NOISE_HEIGHT];   //precalculated noise table
     byte colorfade[LED_ROWS];                   //simple colorfade table for speedup
-    byte a = 0;
+    float a = 0;
     byte _pal = 8;
     byte _scale = 60;
     byte csum = 0;
-    void adjust_gamma(CRGB *leds)
-    {
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-            leds[i].r = dim8_video(leds[i].r);
-            leds[i].g = dim8_video(leds[i].g);
-            leds[i].b = dim8_video(leds[i].b);
-        }
-    }
-
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
     void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
