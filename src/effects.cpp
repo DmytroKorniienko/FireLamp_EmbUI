@@ -5957,14 +5957,14 @@ void EffectCRain::updaterain(CRGB *leds, float speedFactor)
   for (byte i = 0; i < WIDTH; i++)
   {
     changepattern();
-    for (float j = 0.; j < ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)); j += 0.3)
+    for (float j = 0.; j < ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)); j += 0.5)
     {
       byte sat = beatsin8(30, 150, 255);
       //byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
       byte layer = rain[myLamp.getPixelNumber(i, (uint16_t)(j + _speed) + random8(2) % HEIGHT)]; //fake scroll based on shift coordinate
       if (layer)
       {
-        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220), 0);
+        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
         //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
       } //random8(2) add glitchy effect
     }
@@ -6003,23 +6003,24 @@ void EffectCRain::changepattern()
 }
 
 bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.40, 2.0);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.0);
   if(counter > 1.0){
     if (scale != 1)
       hue = scale;
     else
-      hue += 0.33;
+      hue += .33;
     //updaterain(leds, speedfactor); // вот хз как лучше с этим дождем... вроде тут оно нафиг не нужно, вынесу наружу
     double f;
     counter=modf(counter, &f);
   }
   counter+=speedfactor;
   updaterain(leds, speedfactor * 0.5);
-  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? 35: 20);
+  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? map(speed, 1, 255, 10, 35) : 20);
   blurRows(leds, WIDTH, ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)), 10);
   if (clouds)
-    EffectMath::Clouds(hue, storm ? EffectMath::Lightning(CHSV(30,90,255), 200U) : false, scale==255?true:false);
-  else if (storm) EffectMath::Lightning(CHSV(30,90,255), 255U);
+    EffectMath::Clouds(hue, storm ? EffectMath::Lightning(CHSV(30, 90, 255), 100U) : false, scale == 255 ? true : false);
+  else if (storm)
+    EffectMath::Lightning(CHSV(30, 90, 255), 255U);
   return true;
 }
 
