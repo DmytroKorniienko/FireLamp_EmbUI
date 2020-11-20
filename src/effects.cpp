@@ -246,6 +246,12 @@ void EffectCalc::scale2pallete(){
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
+// Быстрый ФПСметр
+void fpsmeter() {
+  static uint8_t frame = 0;
+  if (frame++ % 60 == 0) Serial.println(FastLED.getFPS());
+}
+
 // ------------- конфетти --------------
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
@@ -660,6 +666,7 @@ EVERY_N_SECONDS(1){
 
 // ------------- матрица ---------------
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
+  fpsmeter();
   return matrixRoutine(*&ledarr, &*opt);
 }
 
@@ -684,12 +691,12 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
   for (uint8_t i = 0U; i < map(scale,1,255,1,LIGHTERS_AM); i++)
   {
     lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
-    EffectMath::drawPixelXYF_X(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255, light[i]));
+    EffectMath::drawPixelXYF_Y(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255, light[i]));
 
     if(lightersPos[1U][i]<-1){
       lightersPos[0U][i] = random(0, WIDTH);
       lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
-      lightersSpeed[1U][i] = (float)random(15, 25) / 10.0f;
+      lightersSpeed[1U][i] = EffectMath::randomf(1.5, 2.5); //(float)random(15, 25) / 10.0f;
       light[i] = random(127U, 255U);
     }
   }
@@ -1286,7 +1293,7 @@ void EffectBBalls::regen(){
     bballsTLast[i] = millis();
     bballsPos[i] = 0.0f;                                 // Balls start on the ground
     bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
-    bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2.);
+    bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2);
     bballsShift[i] = false;
   }
 }
@@ -6172,10 +6179,12 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
+
 bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
   EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 6 + 6) {
     regenNoise();
   }
+  //fpsmeter();
   return fire2020Routine(*&ledarr, &*opt);
 }
 
@@ -6702,14 +6711,14 @@ void EffectTLand::setDynCtrl(UIControl*_val){
 }
 
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
-  double t = (double)millis() / map(speed, 1, 255, 1200, 128);
+  t = (double)millis() / map(speed, 1, 255, 1200, 128);
   if (!select) hue++;
   else {
     hue = getCtrlVal(4).toInt();
     hue2 = getCtrlVal(5).toInt();
   }
-  for( double x = 0; x < WIDTH; x++) {
-    for( double y = 0; y < HEIGHT; y++) {
+  for( byte x = 0; x < WIDTH; x++) {
+    for( byte y = 0; y < HEIGHT; y++) {
       processFrame(leds, t, x, y);
     }
   }
@@ -6720,25 +6729,26 @@ bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   } else {
     animation = scale;
   }
+  //fpsmeter();
   return true;
 }
 
 void EffectTLand::processFrame(CRGB *leds, double t, double x, double y) {
   double i = (y * 16) + x;
-  double frame = constrain(code(t, i, x, y), -1, 1) * 255;
+  int16_t frame = constrain(code(i, x, y), -1, 1) * 255;
 
   if (frame >= 0) {
 
-    EffectMath::drawPixelXYF(x, y, CHSV(hue, frame, frame), 50);
+    EffectMath::drawPixelXY(x, y, CHSV(hue, frame, frame));
   }
   else {
 
-    EffectMath::drawPixelXYF(x, y, CHSV(select ? hue2 : hue + 64, fabs(frame), fabs(frame)), 50);
+    EffectMath::drawPixelXY(x, y, CHSV(select ? hue2 : hue + 64, frame * -1, frame * -1));
   }
 }
 
-float EffectTLand::code(double t, double i, double x, double y) {
-  //float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);  
+float EffectTLand::code(double i, double x, double y) {
+
   switch (animation) {
     /**
      * Motus Art
@@ -6755,7 +6765,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 3:
-      return sin(atan((y) / (x)) + t);
+      return sin(atan(y / x) + t);
       break;
 
     /**
@@ -6763,7 +6773,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
      */
     case 4:
       // Emitting rings
-      return sin(t - sqrt(pow((x - 7.5), 2) + pow((y - 6), 2)));
+      return sin(t - EffectMath::sqrt(((x - 7.5)*(x - 7.5)) + (y - 6)*(y - 6)));
       break;
 
     case 5:
@@ -6793,7 +6803,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 10:
       // Ripples @thespite
-      return sin(t - sqrt(x * x + y * y));
+      return sin(t - EffectMath::sqrt(x * x + y * y));
       break;
 
     case 11:
@@ -6816,8 +6826,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 14:
-      // LeadingNegotiation9 https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbjcoho/
-      return pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
+      return (cos(((int)y ^ (int)x) * t), cos(((int)x ^ (int)y) * t)); //sin(((int)(x / sin(t) / 50) ^ (int)(y / sin(t) / 50)) + t); //pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
       break;
 
     case 15:
@@ -6827,7 +6836,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 16:
       // Andres_A https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgzdnj/
-      return 1 - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
+      return 1. - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
       break;
 
 
@@ -6840,7 +6849,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 18:
-      return sin(i / 5 + (t));
+      return sin(i / 5 + t);
       break;
 
     /**
@@ -6850,12 +6859,12 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 19:
       // Matrix Rain https://twitter.com/P_Malin/status/1323583013880553472
-      return 1 - fmod((x * x - y + t * (fmod(1 + x * x, 5.0)) * 3.0), 16.0) / 16.0;
+      return 1. - fmod((x * x - y + t * (fmod(1 + x * x, 5)) * 6), 16) / 16;
       break;
 
     case 20:
       // Burst https://twitter.com/P_Malin/status/1323605999274594304
-      return -10. / ((x - 8.) * (x - 8.) + (y - 8.) * (y - 8.) - fmod(t*0.3, 0.7) * 200.);
+      return -10. / ((x - 8) * (x - 8) + (y - 8) * (y - 8) - fmod(t*0.3, 0.7) * 200);
       break;
 
     case 21:
@@ -6865,11 +6874,11 @@ float EffectTLand::code(double t, double i, double x, double y) {
 
     case 22:
       // Starfield https://twitter.com/P_Malin/status/1323702220320313346 
-      return !((int)(x + (t/2.) * 50. / (fmod(y * y, 5.9) + 1.)) & 15) / (fmod(y * y, 5.9) + 1.);
+      return !((int)(x + (t/2) * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
       break;
 
     case 23:
-      return sin(3. * atan2(y - 7.5 + sin(t) * 5., x - 7.5 + sin(t / 2.) * 5) + t * 5.);
+      return sin(3 * atan2(y - 7.5 + sin(t) * 5, x - 7.5 + sin(t) * 5) + t * 5);
       break;
 
     case 24:
@@ -6885,7 +6894,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 27:
-      return cos(sin((x * t * .1)) * PI) + cos(sin(y * t * .1 + (sqrt(abs(cos(x * t * .1))))) * PI);
+      return cos(sin((x * t / 10)) * PI) + cos(sin(y * t / 10 + (EffectMath::sqrt(abs(cos(x * t))))) * PI);
       break;
 
     case 28:
@@ -6901,11 +6910,11 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 31:
-      return 1. - fabs((x - 6.) * cos(t) + (y - 6.) * sin(t));
+      return 1. - fabs((x - 6) * cos(t) + (y - 6) * sin(t));
       break;
 
     case 32:
-      return 1. / 32. * tan(t / 64. * x * tan(i - x)); 
+      return 1. / 32 * tan(t / 64 * x * tan(i - x)); 
       break;
 
     case 33:
@@ -6917,7 +6926,7 @@ float EffectTLand::code(double t, double i, double x, double y) {
       break;
 
     case 35:
-      return sin(y * (t/4.)) * cos(x * (t/4.));
+      return sin(y * (t/4)) * cos(x * (t/4));
       break;
 
     default:

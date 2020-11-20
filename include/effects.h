@@ -2058,7 +2058,7 @@ class EffectCell: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Геометрический Вальс"
+// ----------- Эффект "Геометрический"
 //F_lying 
 //Fastled 16x16 rgb led matrix demo
 //Yaroslaw Turbin, 27.10.2020 
@@ -2092,8 +2092,9 @@ class EffectTLand: public EffectCalc {
     byte hue;
     byte hue2;
     bool select = false;
+    double t;
     void processFrame(CRGB *leds, double t, double x, double y);
-    float code(double t, double i, double x, double y);
+    float code(double i, double x, double y);
     void setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
