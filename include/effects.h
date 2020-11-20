@@ -1949,7 +1949,7 @@ public:
 // переделака на субпиксель и доработки - kostyamat
 class EffectFire2020 : public EffectCalc {
 private:
-    #define NOISE_HEIGHT  (LED_COLS * 4U)
+    #define NOISE_HEIGHT  (LED_ROWS * 3U)
     uint16_t noises[LED_COLS * NOISE_HEIGHT];   //precalculated noise table
     byte colorfade[LED_ROWS];                   //simple colorfade table for speedup
     float a = 0;
@@ -2058,20 +2058,27 @@ class EffectCell: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Ф_лайн"
+// ----------- Эффект "Геометрический Вальс"
 //F_lying 
 //Fastled 16x16 rgb led matrix demo
 //Yaroslaw Turbin, 27.10.2020 
 //https://vk.com/ldirko
 //https://www.reddit.com/user/ldirko/
-// https://pastebin.com/pfbQs4y7
+
+//https://www.reddit.com/r/FastLED/comments/jj4oc9/new_fastled_matrix_example_f_lying_code_in
+//code for arduino: https://wokwi.com/arduino/projects/280541577702539789
+//                  https://wokwi.com/arduino/projects/280607115091902988
 class EffectF_lying: public EffectCalc {
   private:
     byte hue = 0;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
     void setDynCtrl(UIControl*_val);
-    const float deviator = 10.;
-    bool type = 0;
+#ifdef BIGMATRIX
+    const float deviator = 2.;
+#else
+    const float deviator = 5.;
+#endif
+    bool type = false;
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;

@@ -381,7 +381,9 @@ static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
   CRGB::RoyalBlue
 };
 */
-
+#if (WIDTH * HEIGHT) > 576U
+  #define BIGMATRIX
+#endif
 
 // Еще одно представление высоты и ширины матрицы, часто встречаеться последнее время
 #define LED_ROWS HEIGHT

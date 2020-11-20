@@ -6149,14 +6149,22 @@ void EffectFire2020::setDynCtrl(UIControl*_val)
 bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   if(!curPalette) return false;
 
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.15, 1.);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.20, 1.);
 
   for (uint8_t i = 0; i < NUM_COLS; i++)
   {
+#ifdef BIGMATRIX 
+    for (float j = 0.; j < NUM_ROWS; j++)
+#else
     for (float j = 0.; j < NUM_ROWS; j+= 0.5)
+#endif
     {
       uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
-      EffectMath::drawPixelXYF_Y(i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])),35);
+#ifdef BIGMATRIX
+      EffectMath::drawPixelXYF(i, (LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])));
+#else
+      EffectMath::drawPixelXYF_Y(i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
+#endif
     }
   }
   blurRows(leds, WIDTH, HEIGHT, 15);
@@ -6620,7 +6628,16 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   return true;
 }
 
-// ----------- Эффект "Ф_лайн"
+// ----------- Эффект "Геометрический Вальс"
+//F_lying 
+//Fastled 16x16 rgb led matrix demo
+//Yaroslaw Turbin, 27.10.2020 
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+
+//https://www.reddit.com/r/FastLED/comments/jj4oc9/new_fastled_matrix_example_f_lying_code_in
+//code for arduino: https://wokwi.com/arduino/projects/280541577702539789
+//                  https://wokwi.com/arduino/projects/280607115091902988
 void EffectF_lying::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
   if(_val->getId()==4){
@@ -6652,7 +6669,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
   mydrawLine(leds, x1, y1,  x2, y2, 0);
   mydrawLine(leds, x2, y2,  x3, y3, 32);
   mydrawLine(leds, x2, y2,  x4, y4, 64);
-  if (type) {
+  if (!type) {
     mydrawLine(leds, x3, y3,  x4, y4, 96);
     mydrawLine(leds, x3, y3,  x1, y1, 128);
     mydrawLine(leds, x4, y4,  x1, y1, 160);
