@@ -2089,9 +2089,8 @@ class EffectF_lying: public EffectCalc {
 class EffectTLand: public EffectCalc {
   private:
     byte animation = 0;
-    byte hue;
-    byte hue2;
-    bool select = false;
+    byte hue = 0;
+    byte hue2 = 63;
     double t;
     void processFrame(CRGB *leds, double t, double x, double y);
     float code(double i, double x, double y);

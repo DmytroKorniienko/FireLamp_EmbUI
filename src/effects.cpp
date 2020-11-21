@@ -6705,18 +6705,20 @@ void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1,
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
 void EffectTLand::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-  if(_val->getId()==3){
-    select = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
 }
 
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   t = (double)millis() / map(speed, 1, 255, 1200, 128);
-  if (!select) hue++;
+  if (getCtrlVal(3).toInt() == 0) hue++;
   else {
-    hue = getCtrlVal(4).toInt();
-    hue2 = getCtrlVal(5).toInt();
+    hue = getCtrlVal(3).toInt();
   }
+
+  if (getCtrlVal(4).toInt() == 0) hue2++;
+  else {
+    hue2 = getCtrlVal(4).toInt();
+  }
+
   for( byte x = 0; x < WIDTH; x++) {
     for( byte y = 0; y < HEIGHT; y++) {
       processFrame(leds, t, x, y);
@@ -6737,14 +6739,12 @@ void EffectTLand::processFrame(CRGB *leds, double t, double x, double y) {
   double i = (y * 16) + x;
   int16_t frame = constrain(code(i, x, y), -1, 1) * 255;
 
-  if (frame >= 0) {
-
+  if (frame > 0) {
     EffectMath::drawPixelXY(x, y, CHSV(hue, frame, frame));
   }
-  else {
-
-    EffectMath::drawPixelXY(x, y, CHSV(select ? hue2 : hue + 64, frame * -1, frame * -1));
-  }
+  else if (frame < 0) {
+    EffectMath::drawPixelXY(x, y, CHSV(hue2, frame * -1, frame * -1));
+  } else EffectMath::drawPixelXY(x, y, CRGB::Black);
 }
 
 float EffectTLand::code(double i, double x, double y) {
