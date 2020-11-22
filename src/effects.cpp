@@ -6826,7 +6826,7 @@ float EffectTLand::code(double i, double x, double y) {
       break;
 
     case 14:
-      return (cos(((int)y ^ (int)x) * t), cos(((int)x ^ (int)y) * t)); //sin(((int)(x / sin(t) / 50) ^ (int)(y / sin(t) / 50)) + t); //pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
+      return  cos(((int)x ^ (int)y) * t); //sin(((int)(x / sin(t) / 50) ^ (int)(y / sin(t) / 50)) + t); //pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
       break;
 
     case 15:
@@ -6934,4 +6934,68 @@ float EffectTLand::code(double i, double x, double y) {
       return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
       break;
   }
+}
+
+// -------- "LDIRKO Ленд"
+//simple playground for fasled
+//best use with 16x16 matrix and bigger
+//like tixy.land ))
+//...ldir... Yaroslaw Turbin, 18.11.2020 
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+void EffectLLand::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val);
+    if(_val->getId()==3){
+    select = _val->getVal().toInt() == 0;
+  }
+}
+
+void EffectLLand::load() {
+  palettesload();
+}
+
+bool EffectLLand::run(CRGB *leds, EffectWorker *opt) {
+  if (scale > 0) {
+    effnumber = scale - 1;
+  } else {
+    EVERY_N_MILLISECONDS(30000) { effnumber = (effnumber + 1) % effects; } //speed of  effect change
+  }
+  uint16_t i = 0;
+  t = (float)millis() / EffectMath::fmap(speed, 1., 255., 20., 1.);
+  for (uint8_t y = 0; y < LED_ROWS; y++) {
+    for (uint16_t x = 0; x < LED_COLS; x++) {
+      EffectMath::drawPixelXY(x, y, select ? CHSV(code(x, y, i, t), 255, 255) : ColorFromPalette (*curPalette, code(x,y,i,t),255)); 
+      i++;
+    }
+  }
+  //fpsmeter();
+  return true;
+}
+
+uint16_t EffectLLand::code(byte x, byte y, uint16_t i, float t) {
+  uint16_t outputcode = 0;
+  
+  switch (effnumber) {
+    case 0: outputcode = (x * 8 + sin8(t / 2)) ^ (y * 8 - cos8(t / 1.33)); // oldschool demoscene xor pattern with move
+      break;
+    case 1: outputcode = sin8(x * 3 + t / 2) * cos8(y * 3 + t / 3) / 64 + cos8(x * 8); // sin plasma 3
+      break;
+    case 2: outputcode = sin8(x * 8 + sin8(x * 2 + t / 2)) / 2 + sin8(y * 8 + sin8(y * 2 + t / 2) / 2); // sin plasma 
+      break;
+    case 3: outputcode = sin8((x << 4) + t) / 2 + sin8((y << 4) + t) / 2 + t; //sin plasma 4 
+      break;
+    case 4: outputcode = ((x * 8) ^ (y * 8)) + t ; // oldschool demoscene xor pattern static
+      break;
+    case 5: outputcode = (x * 8 + sin8(t / 3)) & (y * 8 - cos8(t / 2)); //Serpinski triangle with move
+      break;
+    case 6: outputcode = inoise8(x * 42, y * 42, t * 2) + t / 3; // perlin noise plasma
+      break;
+    case 7: outputcode = sin8(x * sin8(y + t) / 16 + t) / 5 + sin8(y * 15 + t) / 3 + t / 10; // sin plasma 2
+      break;
+    case 8: outputcode = sin8(y * 5 + 30) / 2 + sin8(x * 5 + 30) / 2 + sin8(t / 5);
+      break;
+    case 9: outputcode = map(inoise8(x * 50, y * 50 - t * 16, 0) - y * 255 / (LED_ROWS - 1), 0, 255, 205, 255); // CHSV fire
+      break;
+  }
+  return outputcode;
 }

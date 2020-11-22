@@ -2100,6 +2100,26 @@ class EffectTLand: public EffectCalc {
     //void load() override;
 };
 
+// -------- "LDIRKO Ленд"
+//simple playground for fasled
+//best use with 16x16 matrix and bigger
+//like tixy.land ))
+//...ldir... Yaroslaw Turbin, 18.11.2020 
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+class EffectLLand: public EffectCalc {
+  private:
+    const byte effects = 10; //how many effects
+    byte effnumber = 0; //start effect
+    float t;
+    uint16_t code(byte x, byte y, uint16_t i, float t);
+    void setDynCtrl(UIControl*_val) override;
+    bool select = false;
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
