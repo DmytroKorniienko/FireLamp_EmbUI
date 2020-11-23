@@ -2092,7 +2092,7 @@ class EffectTLand: public EffectCalc {
     bool ishue;
     bool ishue2;
     byte hue = 0;
-    byte hue2 = 63;
+    byte hue2 = 128;
     byte shift = 0;
     double t;
     void processFrame(CRGB *leds, double t, double x, double y);

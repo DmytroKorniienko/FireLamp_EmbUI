@@ -6709,19 +6709,23 @@ void EffectTLand::setDynCtrl(UIControl*_val){
   if (_val->getId()==3){
     if(isRandDemo()){
       ishue = random(_val->getMin().toInt(), _val->getMax().toInt());
-      hue = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
+      if(ishue)
+        hue = random(_val->getMin().toInt(), _val->getMax().toInt());
     } else {
       ishue = _val->getVal().toInt();
-      hue = _val->getVal().toInt();
+      if(ishue)
+        hue = _val->getVal().toInt();
     }
   }
   if (_val->getId()==4){
     if(isRandDemo()){
       ishue2 = random(_val->getMin().toInt(), _val->getMax().toInt());
-      hue2 = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
+      if(ishue2)
+        hue2 = random(_val->getMin().toInt(), _val->getMax().toInt());
     } else {
       ishue2 = _val->getVal().toInt();
-      hue2 = _val->getVal().toInt();
+      if(ishue2)
+        hue2 = _val->getVal().toInt();
     }
   }
 }
