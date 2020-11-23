@@ -6705,20 +6705,32 @@ void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1,
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
 void EffectTLand::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-  if (getCtrlVal(3).toInt() == 0) hue++;
-  else {
-    hue = getCtrlVal(3).toInt();
-  }
 
-  if (getCtrlVal(4).toInt() == 0) hue2++;
-  else {
-    hue2 = getCtrlVal(4).toInt();
+  if (_val->getId()==3){
+    if(isRandDemo()){
+      ishue = random(_val->getMin().toInt(), _val->getMax().toInt());
+      hue = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
+    } else {
+      ishue = _val->getVal().toInt();
+      hue = _val->getVal().toInt();
+    }
+  }
+  if (_val->getId()==4){
+    if(isRandDemo()){
+      ishue2 = random(_val->getMin().toInt(), _val->getMax().toInt());
+      hue2 = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
+    } else {
+      ishue2 = _val->getVal().toInt();
+      hue2 = _val->getVal().toInt();
+    }
   }
 }
 
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   t = (double)millis() / map(speed, 1, 255, 2400, 256);
   shift = (shift+1)%4; // 0...3
+  if(!ishue) hue++;
+  if(!ishue2) hue2++;
 
   for( byte x = 0; x < WIDTH; x++) {
     for( byte y = 0; y < HEIGHT; y++) {

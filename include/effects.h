@@ -2089,6 +2089,8 @@ class EffectF_lying: public EffectCalc {
 class EffectTLand: public EffectCalc {
   private:
     byte animation = 0;
+    bool ishue;
+    bool ishue2;
     byte hue = 0;
     byte hue2 = 63;
     byte shift = 0;
