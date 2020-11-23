@@ -199,7 +199,7 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&AcidColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&NeonColors_p);
+  palettes.push_back(&OrangeColors_p/*NeonColors_p*/);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
@@ -7000,4 +7000,173 @@ uint16_t EffectLLand::code(byte x, byte y, uint16_t i, float t) {
       break;
   }
   return outputcode;
+}
+
+
+// ----------- Эффект "Осцилятор"
+// (c) Сотнег (SottNick)
+bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
+  if (millis() - timer < (unsigned)map(speed, 1U, 255U, 70, 15)) return true;
+  else timer = millis(); // не могу сообразить, как по другому скоростью управлять
+  CRGB currColors[3];
+  for (uint8_t c = 0; c < 3; c++)
+    currColors[c] = ColorFromPalette(*curPalette, c * 85U + hue);
+
+  // расчёт химической реакции и отрисовка мира
+  uint16_t colorCount[3] = {0U, 0U, 0U};
+  hue++;
+  FastLED.clear();
+  for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+          if (oscillatingWorld[x][y].red){
+             colorCount[0]++;
+             if (greenNeighbours(x, y) > 2)
+                oscillatingWorld[x][y].color = 1U;
+          }
+          else if (oscillatingWorld[x][y].green){
+             colorCount[1]++;
+             if (blueNeighbours(x, y) > 2)
+                oscillatingWorld[x][y].color = 2U;
+          }
+          else {//if (oscillatingWorld[x][y].blue){
+             colorCount[2]++;
+             if (redNeighbours(x, y) > 2)
+                oscillatingWorld[x][y].color = 0U;
+          }
+          drawPixelXYFseamless((float)x + 0.5, (float)y + 0.5, currColors[oscillatingWorld[x][y].color]);
+      }
+  }
+
+
+  // проверка зацикливания
+  if (colorCount[0] == deltaHue && colorCount[1] == deltaHue2 && colorCount[2] == deltaValue) {
+    step++;
+    if (step > 10U){
+      if (colorCount[0] < colorCount[1])
+        step = 0;
+      else
+        step = 1;
+      if (colorCount[2] < colorCount[step])
+        step = 2;
+      colorCount[step] = 0U;
+      step = 0U;
+    }
+  }
+  else
+    step = 0U;
+  
+  // вброс хаоса
+  if (hue == hue2){// чтобы не каждый ход
+    hue2 += random8(220U) + 36U;
+    uint8_t tx = random8(WIDTH);
+    deltaHue = oscillatingWorld[tx][0U].color + 1U;
+    if (deltaHue > 2U) deltaHue = 0U;
+    oscillatingWorld[tx][0U].color = deltaHue;
+    oscillatingWorld[(tx + 1U) % WIDTH][0U].color = deltaHue;
+    oscillatingWorld[(tx + 2U) % WIDTH][0U].color = deltaHue;
+  }
+
+  deltaHue = colorCount[0];
+  deltaHue2 = colorCount[1];
+  deltaValue = colorCount[2];
+
+  // вброс исчезнувшего цвета
+  for (uint8_t c = 0; c < 3; c++)
+  {
+    if (colorCount[c] < 6U){
+      uint8_t tx = random8(WIDTH);
+      uint8_t ty = random8(HEIGHT);
+      if (random8(2U)){
+        oscillatingWorld[tx][ty].color = c;
+        oscillatingWorld[(tx + 1U) % WIDTH][ty].color = c;
+        oscillatingWorld[(tx + 2U) % WIDTH][ty].color = c;
+      }
+      else {
+        oscillatingWorld[tx][ty].color = c;
+        oscillatingWorld[tx][(ty + 1U) % HEIGHT].color = c;
+        oscillatingWorld[tx][(ty + 2U) % HEIGHT].color = c;
+      }
+    }
+  }
+
+  // перенос на следующий цикл
+  for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+          setCellColors(x, y);
+      }
+  }
+
+  fpsmeter();
+  return true;
+}
+
+void EffectOscilator::load() {
+  palettesload();
+  step = 0U;
+ //случайное заполнение
+  for (uint8_t i = 0; i < WIDTH; i++) {
+    for (uint8_t j = 0; j < HEIGHT; j++) {
+      oscillatingWorld[i][j].color = random8(3);
+      setCellColors(i, j);
+    }
+  }
+  timer = millis();
+}
+
+void EffectOscilator::drawPixelXYFseamless(float x, float y, CRGB color)
+{
+  uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
+  // calculate the intensities for each affected pixel
+  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+  // multiply the intensities by the colour, and saturating-add them to the pixels
+  for (uint8_t i = 0; i < 4; i++) {
+    uint8_t xn = (int8_t)(x + (i & 1)) % WIDTH;
+    uint8_t yn = (int8_t)(y + ((i >> 1) & 1)) % HEIGHT;
+    CRGB clr = EffectMath::getPixColorXY(xn, yn);
+    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+    EffectMath::drawPixelXY(xn, yn, clr);
+  }
+}
+
+int EffectOscilator::redNeighbours(uint8_t x, uint8_t y) {
+  return (oscillatingWorld[(x + 1) % WIDTH][y].red) +
+         (oscillatingWorld[x][(y + 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][y].red) +
+         (oscillatingWorld[x][(y + HEIGHT - 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].red);
+    }
+
+int EffectOscilator::blueNeighbours(uint8_t x, uint8_t y) {
+  return (oscillatingWorld[(x + 1) % WIDTH][y].blue) +
+         (oscillatingWorld[x][(y + 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][y].blue) +
+         (oscillatingWorld[x][(y + HEIGHT - 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].blue);
+}
+  
+int EffectOscilator::greenNeighbours(uint8_t x, uint8_t y) {
+  return (oscillatingWorld[(x + 1) % WIDTH][y].green) +
+         (oscillatingWorld[x][(y + 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][y].green) +
+         (oscillatingWorld[x][(y + HEIGHT - 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].green);
+}
+
+void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
+  oscillatingWorld[x][y].red = (oscillatingWorld[x][y].color == 0U);
+  oscillatingWorld[x][y].green = (oscillatingWorld[x][y].color == 1U);
+  oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }

@@ -2121,6 +2121,36 @@ class EffectLLand: public EffectCalc {
     void load() override;
 };
 
+// ----------- Эффект "Осцилятор"
+// (c) Сотнег (SottNick)
+class EffectOscilator: public EffectCalc {
+  private:
+    uint8_t hue, hue2;                                 // постепенный сдвиг оттенка или какой-нибудь другой цикличный счётчик
+    uint8_t deltaHue, deltaHue2;                       // ещё пара таких же, когда нужно много
+    uint8_t step;                                      // какой-нибудь счётчик кадров или последовательностей операций
+    uint8_t deltaValue;  
+    unsigned long timer;
+
+    class oscillatingCell {
+        public:
+        byte red;
+        byte blue;
+        byte green;
+        byte color;
+    };
+
+    oscillatingCell oscillatingWorld[WIDTH][HEIGHT];
+
+    void drawPixelXYFseamless(float x, float y, CRGB color);
+    int redNeighbours(uint8_t x, uint8_t y);
+    int blueNeighbours(uint8_t x, uint8_t y);
+    int greenNeighbours(uint8_t x, uint8_t y);
+    void setCellColors(uint8_t x, uint8_t y);
+    //void setDynCtrl(UIControl*_val) override;
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
 // --------- конец секции эффектов
 
 class EffectWorker {
