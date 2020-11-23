@@ -6706,10 +6706,8 @@ void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1,
 void EffectTLand::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
   if(_val->getId()==5){
-    fine = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
-
-  if (_val->getId()==3){
+    fine = _val->getVal().toInt();
+  } else if (_val->getId()==3){
     if(isRandDemo()){
       ishue = random(_val->getMin().toInt(), _val->getMax().toInt());
       if(ishue)
@@ -6719,8 +6717,7 @@ void EffectTLand::setDynCtrl(UIControl*_val){
       if(ishue)
         hue = _val->getVal().toInt();
     }
-  }
-  if (_val->getId()==4){
+  } else if (_val->getId()==4){
     if(isRandDemo()){
       ishue2 = random(_val->getMin().toInt(), _val->getMax().toInt());
       if(ishue2)
@@ -6735,13 +6732,13 @@ void EffectTLand::setDynCtrl(UIControl*_val){
 
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   t = (double)millis() / map(speed, 1, 255, 1200, 128);
-  shift = (shift+1)%4; // 0...3
+  shift = (shift+1)%fine; // 0...3
   if(!ishue) hue++;
   if(!ishue2) hue2++;
 
   for( byte x = 0; x < WIDTH; x++) {
     for( byte y = 0; y < HEIGHT; y++) {
-      if(fine ? myLamp.getPixelNumber(x,y) : myLamp.getPixelNumber(x,y)%4==shift)
+      if(myLamp.getPixelNumber(x,y)%fine==shift)
         processFrame(leds, t, x, y);
     }
   }
