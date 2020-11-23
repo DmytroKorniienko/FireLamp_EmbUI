@@ -2091,6 +2091,7 @@ class EffectTLand: public EffectCalc {
     byte animation = 0;
     byte hue = 0;
     byte hue2 = 63;
+    byte shift = 0;
     double t;
     void processFrame(CRGB *leds, double t, double x, double y);
     float code(double i, double x, double y);

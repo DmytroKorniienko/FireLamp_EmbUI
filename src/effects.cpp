@@ -6705,10 +6705,6 @@ void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1,
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
 void EffectTLand::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-}
-
-bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
-  t = (double)millis() / map(speed, 1, 255, 1200, 128);
   if (getCtrlVal(3).toInt() == 0) hue++;
   else {
     hue = getCtrlVal(3).toInt();
@@ -6718,10 +6714,16 @@ bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   else {
     hue2 = getCtrlVal(4).toInt();
   }
+}
+
+bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
+  t = (double)millis() / map(speed, 1, 255, 2400, 256);
+  shift = (shift+1)%4; // 0...3
 
   for( byte x = 0; x < WIDTH; x++) {
     for( byte y = 0; y < HEIGHT; y++) {
-      processFrame(leds, t, x, y);
+      if(myLamp.getPixelNumber(x,y)%4==shift)
+        processFrame(leds, t, x, y);
     }
   }
   if (scale == 0) {
