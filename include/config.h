@@ -64,6 +64,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define SHOWSYSCONFIG                                       // Показывать системное меню
 typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
+#ifndef LANG
+#define LANG                  "text_res-RUS.h"                  // Языковой файл по дефолту
+#endif
 
 #ifndef MIC_PIN
 #ifdef ESP8266
@@ -223,6 +226,7 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define BUTTON_TIMEOUT        (500U)                        // с какого момента начинает считаться, что кнопка удерживается в мс
 #endif
 #endif
+
 
 // настройки времени
 //#ifndef TZONE

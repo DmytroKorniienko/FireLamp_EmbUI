@@ -39,7 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
-#include "text_res.h"
+#include LANG                  //"text_res.h"
 
 Ticker optionsTicker;          // планировщик заполнения списка
 Ticker sysTicker;              // системный планировщик

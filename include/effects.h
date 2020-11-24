@@ -42,7 +42,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <ArduinoJson.h>
 #include <string.h>
 #include "LittleFS.h"
-#include "text_res.h"
+#include "config.h"
+#include LANG                //"text_res.h"
 #include "effects_types.h"
 #include "misc.h"
 #include "LList.h"

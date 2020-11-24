@@ -67,6 +67,205 @@ typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2, ST_MIC} SORT_TY
 
 static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
 
+/** набор служебных текстовых констант (не для локализации)
+ */
+static const char TCONST_0000[] PROGMEM = "effects";
+static const char TCONST_0001[] PROGMEM = "pTime";
+static const char TCONST_0002[] PROGMEM = "pMem";
+static const char TCONST_0003[] PROGMEM = "lamp";
+static const char TCONST_0004[] PROGMEM = "settings";
+static const char TCONST_0005[] PROGMEM = "set_effect";
+static const char TCONST_0006[] PROGMEM = "eff_sel";
+static const char TCONST_0007[] PROGMEM = "eff_fav";
+static const char TCONST_0008[] PROGMEM = "gray";
+static const char TCONST_0009[] PROGMEM = "copy";
+static const char TCONST_000A[] PROGMEM = "del*";
+static const char TCONST_000B[] PROGMEM = "makeidx";
+static const char TCONST_000C[] PROGMEM = "red";
+static const char TCONST_000D[] PROGMEM = "black";
+static const char TCONST_000E[] PROGMEM = "AUX";
+static const char TCONST_000F[] PROGMEM = "effects_config";
+static const char TCONST_0010[] PROGMEM = "effListConf";
+static const char TCONST_0011[] PROGMEM = "effects_param";
+static const char TCONST_0012[] PROGMEM = "bright";
+static const char TCONST_0013[] PROGMEM = "speed";
+static const char TCONST_0014[] PROGMEM = "scale";
+static const char TCONST_0015[] PROGMEM = "dynCtrl";
+static const char TCONST_0016[] PROGMEM = "effList";
+static const char TCONST_0017[] PROGMEM = "nofade";
+static const char TCONST_0018[] PROGMEM = "GlobBRI";
+static const char TCONST_0019[] PROGMEM = "flags";
+static const char TCONST_001A[] PROGMEM = "ONflag";
+static const char TCONST_001B[] PROGMEM = "Demo";
+static const char TCONST_001C[] PROGMEM = "GBR";
+static const char TCONST_001D[] PROGMEM = "Events";
+static const char TCONST_001E[] PROGMEM = "Mic";
+static const char TCONST_001F[] PROGMEM = "Btn";
+static const char TCONST_0020[] PROGMEM = "show_flags";
+static const char TCONST_0021[] PROGMEM = "mode";
+static const char TCONST_0022[] PROGMEM = "eff_prev";
+static const char TCONST_0023[] PROGMEM = "eff_next";
+static const char TCONST_0024[] PROGMEM = "#708090";
+static const char TCONST_0025[] PROGMEM = "#5f9ea0";
+static const char TCONST_0026[] PROGMEM = "DTimer";
+static const char TCONST_0027[] PROGMEM = "OTA";
+static const char TCONST_0028[] PROGMEM = "lamp_config";
+static const char TCONST_0029[] PROGMEM = "edit_lamp_config";
+static const char TCONST_002A[] PROGMEM = "fileName";
+static const char TCONST_002B[] PROGMEM = "/backup/idx";
+static const char TCONST_002C[] PROGMEM = "/backup/idx/";
+static const char TCONST_002D[] PROGMEM = "load";
+static const char TCONST_002E[] PROGMEM = "save";
+static const char TCONST_002F[] PROGMEM = "green";
+static const char TCONST_0030[] PROGMEM = "add_lamp_config";
+static const char TCONST_0031[] PROGMEM = "/backup/glb/";
+static const char TCONST_0032[] PROGMEM = "/backup/evn/";
+static const char TCONST_0033[] PROGMEM = "/backup/btn/";
+static const char TCONST_0034[] PROGMEM = "textsend";
+static const char TCONST_0035[] PROGMEM = "msg";
+static const char TCONST_0036[] PROGMEM = "txtColor";
+static const char TCONST_0037[] PROGMEM = "settings_mic";
+static const char TCONST_0038[] PROGMEM = "set_mic";
+static const char TCONST_0039[] PROGMEM = "micScale";
+static const char TCONST_003A[] PROGMEM = "micNoise";
+static const char TCONST_003B[] PROGMEM = "micnRdcLvl";
+static const char TCONST_003C[] PROGMEM = "mic_cal";
+static const char TCONST_003D[] PROGMEM = "settings_wifi";
+static const char TCONST_003E[] PROGMEM = "set_wifi";
+static const char TCONST_003F[] PROGMEM = "hostname";
+static const char TCONST_0040[] PROGMEM = "wcssid";
+static const char TCONST_0041[] PROGMEM = "wcpass";
+static const char TCONST_0042[] PROGMEM = "set_wifiAP";
+static const char TCONST_0043[] PROGMEM = "APonly";
+static const char TCONST_0044[] PROGMEM = "APpwd";
+static const char TCONST_0045[] PROGMEM = "set_mqtt";
+static const char TCONST_0046[] PROGMEM = "m_host";
+static const char TCONST_0047[] PROGMEM = "m_port";
+static const char TCONST_0048[] PROGMEM = "m_user";
+static const char TCONST_0049[] PROGMEM = "m_pass";
+static const char TCONST_004A[] PROGMEM = "mqtt_int";
+static const char TCONST_004B[] PROGMEM = "set_other";
+static const char TCONST_004C[] PROGMEM = "MIRR_H";
+static const char TCONST_004D[] PROGMEM = "MIRR_V";
+static const char TCONST_004E[] PROGMEM = "isFaderON";
+static const char TCONST_004F[] PROGMEM = "DRand";
+static const char TCONST_0050[] PROGMEM = "effSort";
+static const char TCONST_0051[] PROGMEM = "txtSpeed";
+static const char TCONST_0052[] PROGMEM = "txtOf";
+static const char TCONST_0053[] PROGMEM = "perTime";
+static const char TCONST_0054[] PROGMEM = "ny_period";
+static const char TCONST_0055[] PROGMEM = "ny_unix";
+static const char TCONST_0056[] PROGMEM = "set_time";
+static const char TCONST_0057[] PROGMEM = "TZSET";
+static const char TCONST_0058[] PROGMEM = "userntp";
+static const char TCONST_0059[] PROGMEM = "setdatetime";
+static const char TCONST_005A[] PROGMEM = "update";
+static const char TCONST_005B[] PROGMEM = "blue";
+static const char TCONST_005C[] PROGMEM = "show_event";
+static const char TCONST_005D[] PROGMEM = "event_conf";
+static const char TCONST_005E[] PROGMEM = "eventList";
+static const char TCONST_005F[] PROGMEM = "edit";
+static const char TCONST_0060[] PROGMEM = "enabled";
+static const char TCONST_0061[] PROGMEM = "d1";
+static const char TCONST_0062[] PROGMEM = "d2";
+static const char TCONST_0063[] PROGMEM = "d3";
+static const char TCONST_0064[] PROGMEM = "d4";
+static const char TCONST_0065[] PROGMEM = "d5";
+static const char TCONST_0066[] PROGMEM = "d6";
+static const char TCONST_0067[] PROGMEM = "d7";
+static const char TCONST_0068[] PROGMEM = "evList";
+static const char TCONST_0069[] PROGMEM = "repeat";
+static const char TCONST_006A[] PROGMEM = "stopat";
+static const char TCONST_006B[] PROGMEM = "tmEvent";
+static const char TCONST_006C[] PROGMEM = "set_event";
+static const char TCONST_006D[] PROGMEM = "show_button";
+static const char TCONST_006E[] PROGMEM = "butt_conf";
+static const char TCONST_006F[] PROGMEM = "buttList";
+static const char TCONST_0070[] PROGMEM = "on";
+static const char TCONST_0071[] PROGMEM = "hold";
+static const char TCONST_0072[] PROGMEM = "onetime";
+static const char TCONST_0073[] PROGMEM = "clicks";
+static const char TCONST_0074[] PROGMEM = "bactList";
+static const char TCONST_0075[] PROGMEM = "set_butt";
+static const char TCONST_0076[] PROGMEM = "show_butt";
+static const char TCONST_0077[] PROGMEM = "show_time";
+static const char TCONST_0078[] PROGMEM = "show_wifi";
+static const char TCONST_0079[] PROGMEM = "show_mic";
+static const char TCONST_007A[] PROGMEM = "show_other";
+static const char TCONST_007B[] PROGMEM = "m_pref";
+static const char TCONST_007C[] PROGMEM = "#ffffff";
+static const char TCONST_007D[] PROGMEM = "1609459200";
+static const char TCONST_007E[] PROGMEM = "main";
+static const char TCONST_007F[] PROGMEM = "dynCtrl*";
+static const char TCONST_0080[] PROGMEM = "STA";
+static const char TCONST_0081[] PROGMEM = "off";
+static const char TCONST_0082[] PROGMEM = "effect";
+static const char TCONST_0083[] PROGMEM = "move_next";
+static const char TCONST_0084[] PROGMEM = "move_prev";
+static const char TCONST_0085[] PROGMEM = "move_rnd";
+static const char TCONST_0086[] PROGMEM = "reboot";
+static const char TCONST_0087[] PROGMEM = "alarm";
+static const char TCONST_0088[] PROGMEM = "aux_on";
+static const char TCONST_0089[] PROGMEM = "aux_off";
+static const char TCONST_008A[] PROGMEM = "aux_toggle";
+static const char TCONST_008B[] PROGMEM = "embui/pub/";
+static const char TCONST_008C[] PROGMEM = "pin";
+static const char TCONST_008D[] PROGMEM = "act";
+static const char TCONST_008E[] PROGMEM = "isClearing";
+static const char TCONST_008F[] PROGMEM = "pUptime";
+static const char TCONST_0090[] PROGMEM = "numInList";
+static const char TCONST_0091[] PROGMEM = "effHasMic";
+static const char TCONST_0092[] PROGMEM = "effname";
+static const char TCONST_0093[] PROGMEM = "delEffCfg";
+static const char TCONST_0094[] PROGMEM = "syslampFlags";
+static const char TCONST_0095[] PROGMEM = "debug";
+static const char TCONST_0096[] PROGMEM = "isShowSysMenu";
+static const char TCONST_0097[] PROGMEM = "PINB"; // пин кнопки
+static const char TCONST_0098[] PROGMEM = "CLmt"; // лимит тока
+static const char TCONST_0099[] PROGMEM = "sysSettings";
+static const char TCONST_009A[] PROGMEM = "ESPsysSettings";
+static const char TCONST_009B[] PROGMEM = "PINMP3RX";
+static const char TCONST_009C[] PROGMEM = "PINMP3TX";
+static const char TCONST_009D[] PROGMEM = "isOnMP3";
+static const char TCONST_009E[] PROGMEM = "showName";
+static const char TCONST_009F[] PROGMEM = "show_mp3";
+static const char TCONST_00A0[] PROGMEM = "set_mp3";
+static const char TCONST_00A1[] PROGMEM = "settings_mp3";
+static const char TCONST_00A2[] PROGMEM = "mp3volume";
+static const char TCONST_00A3[] PROGMEM = "playTime";
+static const char TCONST_00A4[] PROGMEM = "playName";
+static const char TCONST_00A5[] PROGMEM = "playEffect";
+static const char TCONST_00A6[] PROGMEM = "alarmSound";
+static const char TCONST_00A7[] PROGMEM = "eqSetings";
+static const char TCONST_00A8[] PROGMEM = "playMP3";
+static const char TCONST_00A9[] PROGMEM = "mp3count";
+static const char TCONST_00AA[] PROGMEM = "demo";
+static const char TCONST_00AB[] PROGMEM = "soundfile";
+static const char TCONST_00AC[] PROGMEM = "embui/get/";
+static const char TCONST_00AD[] PROGMEM = "state";
+static const char TCONST_00AE[] PROGMEM = "eff_config";
+static const char TCONST_00AF[] PROGMEM = "limitAlarmVolume";
+static const char TCONST_00B0[] PROGMEM = "delfromlist";
+static const char TCONST_00B1[] PROGMEM = "delall";
+static const char TCONST_00B2[] PROGMEM = "delCfg";
+static const char TCONST_00B3[] PROGMEM = "orange";
+static const char TCONST_00B4[] PROGMEM = "gbright";
+static const char TCONST_00B5[] PROGMEM = "bparam";
+static const char TCONST_00B6[] PROGMEM = "delete";
+static const char TCONST_00B7[] PROGMEM = "warning";
+static const char TCONST_00B8[] PROGMEM = "";
+static const char TCONST_00B9[] PROGMEM = "";
+static const char TCONST_00BA[] PROGMEM = "";
+static const char TCONST_00BB[] PROGMEM = "";
+static const char TCONST_00BC[] PROGMEM = "";
+static const char TCONST_00BD[] PROGMEM = "";
+static const char TCONST_00BE[] PROGMEM = "";
+static const char TCONST_00BF[] PROGMEM = "";
+static const char TCONST_00C0[] PROGMEM = "";
+
+static const char TCONST_FFFE[] PROGMEM = "false";
+static const char TCONST_FFFF[] PROGMEM = "true";
+
 typedef enum : uint8_t {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
 EFF_WHITE_COLOR,                              // Белый свет
@@ -204,85 +403,6 @@ static const uint8_t T_EFFVER[] PROGMEM = {
 typedef enum : uint8_t {ALWAYS=0,ISMICON,ISMICOFF,HIDE} CONTROL_CASE; // старшие 4 бита
 typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4 бита
 
-/**
- * Набор статических строк, определяющих UI эффекта если он отличается от базового
- *
- *  GUI для эффекта по-умолчанию
- * Полный формат для пользовательского (id=3...7) параметра имеет вид: {\"id\":3,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр\"}
- * @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта, @ver@ - версия, @pal@ - максимальная палитра
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48813
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48848
- */
-
-// Дефолтные контролы
-static const char E_DEFUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}]}";
-// Добавил ко всем конфигам чекбокс "Микрофон" с индексом 7. Ввиду модифированного поведения функции myLamp.isMicOnOff(), он будет появляться только если глобально
-// микрофон включен, и эффект обладает зависимостью от микрофона в принципе.
-static const char E_DEFMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-// Общая конфигурация для эффектов с 3-им ползунком для палитр
-static const char E_3PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_3PAL_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_3PAL255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра/Масштаб\"}]}";
-// Общая конфигурация для эффектов только с 2-мя ползунками "Яркость" и "Скорость", пример - эффект"Тихий Океан"
-static const char E_2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}]}"; // 3*16+0 для 2 контрола
-static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}"; // 3*16+0 для 2 контрола
-
-// Общая конфигурация для эффектов с 4-им ползунком для палитр
-static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Эффект (0 = циклично)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-
-static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Цвет\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Количество\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
-static const char E_RADAR255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра/Масштаб\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
-static const char E_WHITE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Оттенок\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_LEAPERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":50,\"step\":1,\"name\":\"Жогово!\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_BUTTERFLY_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Количество / Цвет(ночнник)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Порхание\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Ночник\"}]}";
-static const char E_PULS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Кольца\"}]}";
-static const char E_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размытие\"}]}";
-static const char E_AQUARIUM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Насыщенность\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":0,\"max\":15,\"step\":1,\"name\":\"Блики (0:Откл. 1:Случ.)\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_FREQ_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Усиление\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_OSC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Развертка\"},{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Пульсация\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Уcиление\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-// размерность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
-static const char E_PATT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Скорость (Верт.)\"}, {\"id\":2,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Скорость (Гориз.)\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":39,\"step\":1,\"name\":\"Узор (1 = случайный)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
-static const char E_SHAD_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Скорость\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Затенение\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Линейная скорость\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_ARR_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Режим (1 = случайный)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
-static const char E_F2018_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Оттенок\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Линейная скорость\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_NBAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":25,\"step\":1,\"name\":\"Смещение\"}]}";
-static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Энергия\"}, {\"id\":3,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Масса\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_FLOCK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Хищник\"}]}";
-static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Цвета / Количество\"}]}";
-static const char E_MUNCH_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":8,\"step\":1,\"name\":\"Сдвиг цвета (0 = случайный)\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_COM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1-127 случайный)\"}]}";
-static const char E_DRIFT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Тип 1/2, Размытие 3/4\"}]}";
-static const char E_SMOKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет/Вращение\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Заполнение\"}]}";
-static const char E_CUBE2D_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":22,\"step\":1,\"name\":\"Палитра (0 = случайный цвет)\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Размер (ширина)\"},{\"id\":4,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Размер (высота)\"} ,{\"id\":5,\"type\":2,\"val\":\"false\",\"name\":\"Классика\"}]}";
-static const char E_FLAMP_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет\"}]}";
-static const char E_LIGHT2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер/Цвет\"}]}";
-static const char E_CUBE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Размер/Шлейф(1-85-170-255)\"}]}";
-static const char E_STARFAIL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"} ,{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Снег/Звезды\"} ,{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Метеоры\"}]}"; // 3*16+0 для 2 контрола
-static const char E_SNAKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Кол-во\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_SNAKE2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Цвета Диско\"}, {\"id\":4,\"type\":2,\"val\":\"false\",\"name\":\"Субпиксель\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Частота запусков\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Количество снарядов\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Вспышки\"}]}";
-static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1 = случайный, 255 = белый)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
-static const char E_RAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Тучка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Шторм\"}]}";
-static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
-static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_POPCORN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Плотность\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Размытие\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Обратные Цвета\"}]}";
-static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}]}";
-static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":18,\"step\":1,\"name\":\"Палитра (0 = генератор)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Генератор цвета\"}, {\"id\":5,\"type\":0,\"val\":0,\"min\":0,\"max\":4,\"step\":1,\"name\":\"Фильтр\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"Физика\"}]}";
-static const char E_F2012_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Масштаб\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_DNA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"},{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Поворот\"}]}";
-static const char E_SNOW_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"val\":\"1\",\"min\":1,\"max\":3,\"name\":\"Сглаживание\"}]}";
-static const char E_SMOKEBALLS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра (0 = без цвета)\"},{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Сглаживание\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_COLORS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":3,\"type\":32,\"val\":\"2\",\"min\":1,\"max\":3,\"step\":1,\"name\":\"Режим\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
-static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":0,\"max\":35,\"step\":1,\"name\":\"Эффект (0 = циклично)\"}, {\"id\":3,\"type\":0,\"val\":160,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Цвет 1 (0 = циклично)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Цвет 2 (0 = циклично)\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Качество/Скорость\"}]}";
-static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Размытие\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Круги\"}]}";
-
-// Инженерный
-static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}]}";
-static const char E_TEST2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 1\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 2\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Параметр 3\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 
 /** набор указателей на строки с UI-конфигом для эффектов по-умолчанию
  * индекс элемента массива составляет id из EFF_ENUM
