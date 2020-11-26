@@ -337,10 +337,10 @@ EFF_FFIRE,                                    // Северное сияние
 EFF_FLSNAKE,                                  // Радужный Змей
 EFF_FLOWER,                                   // Цветение
 EFF_TEST,                                     //  (Тест)
-EFF_SMOKEBALLS,                               // Дымовые шашки stepko
+EFF_SMOKEBALLS,                               // Детские сны (c)stepko
 EFF_PICASSO4,                                 // Меташары
 EFF_LIQUIDLAMP,                               // Лаваламп
-EFF_GENAQUARIUM,                               // Аквариум на генераторе    
+EFF_WINDBALLS,                               // Ветер (c)stepko    
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -467,7 +467,7 @@ static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, 
 static const TProgmemRGBPalette16 AcidColors_p FL_PROGMEM = {0xffff00, 0xd2b328, 0xd25228, 0x711323, 0x6c000c, 0x5a0c00, 0x6d373a, 0xaa5a62, 0x604564, 0x313164, 0x332765, 0x3a2465, 0x4b1665, 0x4b0069, 0x31004c, 0x200046};
 static const TProgmemRGBPalette16 StepkosColors_p FL_PROGMEM = {0x0000ff, 0x0f00f0, 0x1e00e1, 0x2d00d2, 0x3c00c3, 0x4b00b4, 0x5a00a5, 0x690096, 0x780087, 0x870078, 0x9600cd, 0xa50050, 0xb40041, 0xc30032, 0xd20023, 0xe10014};
 static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xbc2300, 0xc84416, 0xdc642c, 0xe69664, 0xfbb979, 0xca503d, 0x882c1c, 0x9a3631, 0xa9624e, 0xcc9762, 0xdcc0b5, 0xc1a29f, 0x826468, 0x4a3334, 0x231a1a, 0x161113};
-static const TProgmemRGBPalette16 NeonColors_p FL_PROGMEM = {0x00b1d0, 0x0f93ec, 0x3572ff, 0x4157ff, 0x6162ff, 0x686cff, 0x7473ff, 0x8689e5, 0x9e9dc6, 0x9694ac, 0x979b9b, 0x888b8c, 0x767680, 0x596160, 0x6c736f, 0x7b7359};
+static const TProgmemRGBPalette16 NeonColors_p FL_PROGMEM = {0x9694ac, 0x979b9b, 0x888b8c, 0x767680, 0x696f77, 0x6c736f, 0x4097b8, 0x00b1d0, 0x0f93ec, 0x3572ff, 0x4157ff, 0x6162ff, 0x686cff, 0x7473ff, 0x8689e5, 0x9e9dc6};
 static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0x1e0443, 0x6d0081, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x7900a1, 0x820055, 0xc80000, 0xe57b00, 0xff9d5a, 0xc58b32, 0xd8d400, 0xffff00};
 static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff100, 0xffe100, 0xffd100, 0xffc100, 0xffb100, 0xffa100, 0xff9100, 0xff8100, 0xff7100, 0xff6100, 0xff5100, 0xff4100, 0xff3100, 0xff2100, 0xff1100};
 /*
@@ -482,27 +482,7 @@ static const TProgmemRGBPalette16 NormalFire2_p FL_PROGMEM = {CRGB::Black, CRGB:
 static const TProgmemRGBPalette16 RubidiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue};        // Indigo
 static const TProgmemRGBPalette16 PotassiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink}; // Violet
 static const TProgmemRGBPalette16 SodiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod};           // Yellow
-static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
-  CRGB::Black,
-  CRGB::DarkSlateGray,
-  CRGB::DimGray,
-  CRGB::LightSlateGray,
-
-  CRGB::DimGray,
-  CRGB::DarkSlateGray,
-  CRGB::Silver,
-  CRGB::DarkCyan,
-
-  CRGB::Lavender,
-  CRGB::Silver,
-  CRGB::Azure,
-  CRGB::LightGrey,
-
-  CRGB::GhostWhite,
-  CRGB::Silver,
-  CRGB::White,
-  CRGB::RoyalBlue
-};
+static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {CRGB::Black,CRGB::DarkSlateGray,CRGB::DimGray,CRGB::LightSlateGray,CRGB::DimGray,CRGB::DarkSlateGray,CRGB::Silver,CRGB::DarkCyan,CRGB::Lavender,CRGB::Silver,CRGB::Azure,CRGB::LightGrey,CRGB::GhostWhite,CRGB::Silver,CRGB::White,CRGB::RoyalBlue};
 */
 #if (WIDTH * HEIGHT) > 576U
   #define BIGMATRIX
