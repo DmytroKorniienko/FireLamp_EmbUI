@@ -7189,6 +7189,7 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
 
 //// ----------------------------- Ветер ------------------------------
 //(c)Stepko
+//https://wokwi.com/arduino/projects/282930831791489548
 void EffectwindBalls::load() {
     randomSeed(millis());
     for (byte i = 0; i < LIGHTERS_AM; i++) {
