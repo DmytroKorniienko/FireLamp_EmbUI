@@ -2155,6 +2155,21 @@ class EffectOscilator: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
+
+//// ----------------------------- Ветер/ Мячики за ветром ------------------------------
+//(c)Stepko
+#define LIGHTERS_AM ((WIDTH+HEIGHT)/2)
+class EffectWindballs: public EffectCalc {
+  private:
+int lightersPos[2][LIGHTERS_AM];
+byte lightersSpeed[2];
+byte loopCounter;
+byte lcolor[LIGHTERS_AM];
+byte mass[LIGHTERS_AM];
+  public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 class EffectWorker {
