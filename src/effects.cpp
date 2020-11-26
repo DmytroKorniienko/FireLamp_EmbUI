@@ -7186,3 +7186,38 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].green = (oscillatingWorld[x][y].color == 1U);
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }
+
+//// ----------------------------- Ветер ------------------------------
+//(c)Stepko
+void EffectwindBalls::load() {
+    randomSeed(millis());
+    for (byte i = 0; i < LIGHTERS_AM; i++) {
+      lightersPos[0][i] = random(0, WIDTH * 10);
+      lightersPos[1][i] = random(0, HEIGHT * 10);
+      lightersSpeed[0] = random(25, 50);
+      lightersSpeed[1] = random(25, 50);
+      lcolor[i] = random(0, 9) * 28;
+      mass[i] = random(25,100)/*((HEIGHT+WIDTH)/8)*/;
+    }}
+bool EffectWindballs::run(CRGB *ledarr, EffectWorker *opt){
+  fadeToBlackBy(leds, NUM_LEDS,50);
+  //FastLED.clear();
+  //blur2d (leds, WIDTH, HEIGHT, 20);
+  for (byte i = 0; i < scale; i++) {
+    lcolor[i]++;
+    lightersPos[0][i] += beatsin88(lightersSpeed[0] * speed, 0, mass[i]/10*((HEIGHT+WIDTH)/8)) - mass[i]/10*((HEIGHT+WIDTH)/16);
+    lightersPos[1][i] += beatsin88(lightersSpeed[1] * speed, 0, mass[i]/10*((HEIGHT+WIDTH)/8)) - mass[i]/10*((HEIGHT+WIDTH)/16);
+    if (lightersPos[0][i] < 0) lightersPos[0][i] = (WIDTH - 1) * 10;
+    if (lightersPos[0][i] > (WIDTH-1) * 10) lightersPos[0][i] = 0;
+    if (lightersPos[1][i] < 0) lightersPos[1][i] = (HEIGHT - 1) * 10;
+    if (lightersPos[1][i] > (HEIGHT-1) * 10) lightersPos[1][i] = 0;
+        drawPixelXYF((float)lightersPos[0][i]/10, (float)lightersPos[1][i]/10, CHSV(lcolor[i],255,beatsin8(lightersSpeed[0],200,255)));
+
+  }
+  EVERY_N_SECONDS(10){
+  lightersSpeed[0] = random(25, 50);
+  lightersSpeed[1] = random(25, 50);
+  for (byte i = 0; i < scale; i++)
+    mass[i] + random(-25,25);}
+	return true;
+}
