@@ -7211,7 +7211,7 @@ bool EffectWindballs::run(CRGB *ledarr, EffectWorker *opt){
     if (lightersPos[0][i] > (WIDTH-1) * 10) lightersPos[0][i] = 0;
     if (lightersPos[1][i] < 0) lightersPos[1][i] = (HEIGHT - 1) * 10;
     if (lightersPos[1][i] > (HEIGHT-1) * 10) lightersPos[1][i] = 0;
-        drawPixelXYF((float)lightersPos[0][i]/10, (float)lightersPos[1][i]/10, CHSV(lcolor[i],255,beatsin8(lightersSpeed[0],200,255)));
+        drawPixelXYF((float)lightersPos[0][i]/10, (float)lightersPos[1][i]/10, CHSV(lcolor[i],255,beatsin88(lightersSpeed[0] * speed,200,255)));
 
   }
   EVERY_N_SECONDS(10){
