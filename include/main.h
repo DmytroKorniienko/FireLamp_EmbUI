@@ -35,7 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __MAIN_H_
+#define __MAIN_H_
+
 #include <Arduino.h>
 #include <SPIFFSEditor.h>
 #include "config.h"
@@ -61,3 +63,5 @@ void create_parameters();
 void sync_parameters();
 void event_worker(const EVENT *);
 ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
+
+#endif

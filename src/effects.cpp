@@ -6731,7 +6731,7 @@ void EffectTLand::setDynCtrl(UIControl*_val){
 }
 
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
-  t = (double)millis() / map(speed, 1, 255, 1200, 128);
+  t = (double)(millis()&0xFFFFF) / map(speed, 1, 255, 1200, 128); ; // на больших значениях будет странное поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
   shift = (shift+1)%fine; // 0...3
   if(!ishue) hue++;
   if(!ishue2) hue2++;
@@ -6774,16 +6774,19 @@ float EffectTLand::code(double i, double x, double y) {
      */
     case 1:
       // Plasma
-      return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
+      //return sin(x + t) / 2 + sin(y + t) / 2 + sin(x + y + t) / 3;
+      return (sin16((x + t) * 8192.0) * 0.5 + sin16((y + t) * 8192.0) * 0.5 + sin16((x + y + t) * 8192.0) * 0.3333333333333333) / 32767.0;
       break;
 
     case 2:
       // Up&Down
-      return sin(cos(x) * y / 8 + t);
+      //return sin(cos(x) * y / 8 + t);
+      return sin16((cos16(x*8192.0) / 32767.0 * y / (HEIGHT/2.0) + t)*8192.0)/32767.0;
       break;
 
     case 3:
-      return sin(atan(y / x) + t);
+      //return sin(atan(y / x) + t);
+      return sin16((EffectMath::atan_fast(y / x) + t)*8192.0)/32767.0;
       break;
 
     /**
@@ -6791,17 +6794,20 @@ float EffectTLand::code(double i, double x, double y) {
      */
     case 4:
       // Emitting rings
-      return sin(t - EffectMath::sqrt(((x - 7.5)*(x - 7.5)) + (y - 6)*(y - 6)));
+      //return sin(t - EffectMath::sqrt(((x - 7.5)*(x - 7.5)) + (y - 6)*(y - 6)));
+      return sin16((t - EffectMath::sqrt((x - (WIDTH/2))*(x - (WIDTH/2)) + (y - (HEIGHT/2))*(y - (HEIGHT/2))))*8192.0)/32767.0;
       break;
 
     case 5:
       // Rotation
-      return sin(PI * 2 * atan((y - 8) / (x - 8)) + 5 * t);
+      //return sin(PI * 2 * atan((y - 8) / (x - 8)) + 5 * t);
+      return sin16((PI * 2.5 * EffectMath::atan_fast((y - (HEIGHT/2)) / (x - (WIDTH/2))) + 5 * t) * 8192.0)/32767.0;
       break;
 
     case 6:
       // Vertical fade
-      return sin(y / 8 + t);
+      //return sin(y / 8 + t);
+      return sin16((y / 8 + t)*8192.0)/32767.0;
       break;
 
     case 7:
