@@ -6886,11 +6886,13 @@ float EffectTLand::code(double i, double x, double y) {
      * https://twitter.com/akella/status/1323549082552619008
      */
     case 17:
-      return sin(6 * atan2(y - 8, x) + t);
+      //return sin(6 * atan2(y - 8, x) + t);
+      return sin16((6 * atan2(y - (HEIGHT/2), x) + t)*8192.0)/32767.0;
       break;
 
     case 18:
-      return sin(i / 5 + t);
+      //return sin(i / 5 + t);
+      return sin16((i / 5 + t)*16384.0)/32767.0;
       break;
 
     /**
@@ -6900,58 +6902,80 @@ float EffectTLand::code(double i, double x, double y) {
 
     case 19:
       // Matrix Rain https://twitter.com/P_Malin/status/1323583013880553472
-      return 1. - fmod((x * x - y + t * (fmod(1 + x * x, 5)) * 6), 16) / 16;
+      //return 1. - fmod((x * x - y + t * (fmod(1 + x * x, 5)) * 6), 16) / 16;
+      return 1. - fmod((x * x - (HEIGHT - 1 - y) + t * (1 + fmod(x * x, 5)) * 3), WIDTH) / HEIGHT;
       break;
 
     case 20:
       // Burst https://twitter.com/P_Malin/status/1323605999274594304
-      return -10. / ((x - 8) * (x - 8) + (y - 8) * (y - 8) - fmod(t*0.3, 0.7) * 200);
+      //return -10. / ((x - 8) * (x - 8) + (y - 8) * (y - 8) - fmod(t*0.3, 0.7) * 200);
+      return -10. / ((x - (WIDTH/2)) * (x - (WIDTH/2)) + (y - (HEIGHT/2)) * (y - (HEIGHT/2)) - fmod(t*0.3, 0.7) * 200);
       break;
 
     case 21:
       // Rays
-      return sin(atan2(x, y) * 5 + t * 2);
+      //return sin(atan2(x, y) * 5 + t * 2);
+      return sin16((atan2(x, y) * 5 + t * 2)*8192.0)/32767.0;
       break;
 
     case 22:
       // Starfield https://twitter.com/P_Malin/status/1323702220320313346 
-      return !((int)(x + (t/2) * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
+      //return !((int)(x + (t/2) * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
+      {
+        uint16_t _y = (HEIGHT - y);
+        float d = (fmod(_y * _y, 5.9) + 1.5);
+        return !((int)(x + t * 50 / d) & 15) / d;
+      }
       break;
 
     case 23:
-      return sin(3 * atan2(y - 7.5 + sin(t) * 5, x - 7.5 + sin(t) * 5) + t * 5);
+      //return sin(3 * atan2(y - 7.5 + sin(t) * 5, x - 7.5 + sin(t) * 5) + t * 5);
+      //return sin(3 * atan2(y - 7.5 + sin(t) * 4, x - 7.5 + sin(t) * 4) + t * 1.5 + 5);
+      return sin16((3.5*atan2(y - (HEIGHT/2) + sin16(t*8192.0) * 0.00006, x - (WIDTH/2) + sin16(t*8192.0) * 0.00006) + t * 1.5 + 5)*8192.0)/32767.0;
       break;
 
     case 24:
-      return (y - 8) / 3 - tan(x / 6 + 1.87) * sin(t * 2);
+      //return (y - 8) / 3 - tan(x / 6 + 1.87) * sin(t * 2);
+      return (y - 8) / 3 - tan(x / 6 + 1.87) * sin16(t * 16834.0)/32767.0;
       break;
 
     case 25:
-      return (y - 8) / 3 - (sin(x / 4 + t * 2));
+      //return (y - 8) / 3 - (sin(x / 4 + t * 2));
+      return (y - 8) / 3 - (sin16((x / 4 + t * 2)*8192.0)/32767.0);
       break;
 
     case 26:
-      return fmod(i, 4) - fmod(y, 4) + sin(t);
+      //return fmod(i, 4) - fmod(y, 4) + sin(t);
+      return fmod(i, 4) - fmod(y, 4) + sin16(t*8192.0)/32767.0;
       break;
 
     case 27:
-      return cos(sin((x * t / 10)) * PI) + cos(sin(y * t / 10 + (EffectMath::sqrt(abs(cos(x * t))))) * PI);
+      //return cos(sin((x * t / 10)) * PI) + cos(sin(y * t / 10 + (EffectMath::sqrt(abs(cos(x * t))))) * PI);
+      return cos(sin16(x * t * 819.2) / 32767.0 * PI) + cos16((sin16((y * t / 10 + (EffectMath::sqrt(abs(cos16(x * t * 8192.0)/32767.0))))*8192.0)/32767.0 * PI)*8192.0)/32767.0;
       break;
 
     case 28:
-      return -.4 / (hypot(x - fmod(t, 10), y - fmod(t, 8)) - fmod(t, 2) * 9);
+      //return -.4 / (hypot(x - fmod(t, 10), y - fmod(t, 8)) - fmod(t, 2) * 9);
+      {
+        float _x = x - fmod(t, WIDTH);
+        float _y = y - fmod(t, HEIGHT);
+        return -.4 / (EffectMath::sqrt(_x*_x+_y*_y) - fmod(t, 2) * 9);
+      }
       break;
 
     case 29:
-      return sin(x / 3 * sin(t / 3) * 2) + cos(y / 4 * sin(t / 2) * 2);
+      //return sin(x / 3 * sin(t / 3) * 2) + cos(y / 4 * sin(t / 2) * 2);
+      return sin16(x / 3 * sin16(t * 2730.666666666667) / 2.0) / 32767.0 + cos16(y / 4 * sin16(t * 4096.0) / 2.0) / 32767.0;
       break;
 
     case 30:
-      return sin(x * x * 3 * i / 1e4 - y / 2 + t * 2);
+      //return sin(x * x * 3 * i / 1e4 - y / 2 + t * 2);
+      return sin16((x * x * 3 * i / 1e4 - y / 2 + t * 2)*8192.0)/32767.0;
       break;
 
     case 31:
-      return 1. - fabs((x - 6) * cos(t) + (y - 6) * sin(t));
+      //return 1. - fabs((x - 6) * cos(t) + (y - 6) * sin(t));
+      return 1. - fabs((x - (WIDTH/2)) * cos16(t*8192.0)/32767.0 + (y - (HEIGHT/2)) * sin16(t*8192.0)/32767.0);
       break;
 
     case 32:
@@ -6959,20 +6983,22 @@ float EffectTLand::code(double i, double x, double y) {
       break;
 
     case 33:
-      return atan((x - 7.5) * (y - 7.5)) - 2.5 * sin(t);
+      return EffectMath::atan_fast((x - (WIDTH/2)) * (y - (HEIGHT/2))) - 2.5 * sin16(t*8192.0)/32767.0;
       break;
 
     case 34:
-      return sin(cos(y) * t) * cos(sin(x) * t); 
+      //return sin(cos(y) * t) * cos(sin(x) * t);
+      return sin16(cos16(y*8192.0)* 0.25 * t)/32767.0 * cos16(sin16(x*8192.0)* 0.25 * t)/32767.0;
       break;
 
     case 35:
-      return sin(y * (t/4)) * cos(x * (t/4));
+      //return sin(y * (t/4)) * cos(x * (t/4));
+      return sin16(y * t * 2048.0) / 32767.0 * cos16(x * t * 2048.0) / 32767.0;
       break;
 
     default:
       animation = 1;
-      return sin(x + t) + sin(y + t) + sin(x + y + t) / 3;
+      return sin16(t*8192.0)/32767.0;
       break;
   }
 }
