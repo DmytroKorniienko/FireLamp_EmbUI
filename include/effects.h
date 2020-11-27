@@ -364,6 +364,33 @@ public:
  * сюда не переносим
  *
  */
+
+
+#define M_PI_2	1.57079632679489661923
+
+static const PROGMEM float LUT[102] = {
+     0,           0.0099996664, 0.019997334, 0.029991005, 0.039978687,
+     0.049958397, 0.059928156,  0.069885999, 0.079829983, 0.089758173,
+     0.099668652, 0.10955953,   0.11942893,  0.12927501,  0.13909595,
+     0.14888994,  0.15865526,   0.16839015,  0.17809294,  0.18776195,
+     0.19739556,  0.20699219,   0.21655031,  0.22606839,  0.23554498,
+     0.24497867,  0.25436807,   0.26371184,  0.27300870,  0.28225741,
+     0.29145679,  0.30060568,   0.30970293,  0.31874755,  0.32773849,
+     0.33667481,  0.34555557,   0.35437992,  0.36314702,  0.37185606,
+     0.38050637,  0.38909724,   0.39762798,  0.40609807,  0.41450688,
+     0.42285392,  0.43113875,   0.43936089,  0.44751999,  0.45561564,
+     0.46364760,  0.47161558,   0.47951928,  0.48735857,  0.49513325,
+     0.50284320,  0.51048833,   0.51806855,  0.52558380,  0.53303409,
+     0.54041952,  0.54774004,   0.55499572,  0.56218672,  0.56931317,
+     0.57637525,  0.58337301,   0.59030676,  0.59717667,  0.60398299,
+     0.61072594,  0.61740589,   0.62402308,  0.63057774,  0.63707036,
+     0.64350110,  0.64987046,   0.65617871,  0.66242629,  0.66861355,
+     0.67474097,  0.68080884,   0.68681765,  0.69276786,  0.69865984,
+     0.70449406,  0.71027100,   0.71599114,  0.72165483,  0.72726268,
+     0.73281509,  0.73831260,   0.74375558,  0.74914461,  0.75448018,
+     0.75976276,  0.76499283,   0.77017093,  0.77529752,  0.78037310,
+     0.78539819,  0.79037325};
+
 class EffectMath {
 public:
   static CRGB overrun;
@@ -436,6 +463,64 @@ public:
         u.i = (u.i >> 1) + 0x1FC00000;
         return u.x;
     }
+
+    static float tan2pi_fast(float x) {
+        float y = (1 - x*x);
+        return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
+    }
+
+    static float atan2_fast(float y, float x)
+    {
+        //http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
+        //Volkan SALMA
+
+        const float ONEQTR_PI = PI / 4.0;
+        const float THRQTR_PI = 3.0 * PI / 4.0;
+        float r, angle;
+        float abs_y = fabs(y) + 1e-10f;      // kludge to prevent 0/0 condition
+        if ( x < 0.0f )
+        {
+            r = (x + abs_y) / (abs_y - x);
+            angle = THRQTR_PI;
+        }
+        else
+        {
+            r = (x - abs_y) / (x + abs_y);
+            angle = ONEQTR_PI;
+        }
+        angle += (0.1963f * r * r - 0.9817f) * r;
+        if ( y < 0.0f )
+            return( -angle );     // negate if in quad III or IV
+        else
+            return( angle );
+    }
+
+    static float atan_fast(float x){
+        /*
+        A fast look-up method with enough accuracy
+        */
+        if (x > 0) {
+            if (x <= 1) {
+            int index = round(x * 100);
+            return LUT[index];
+            } else {
+            float re_x = 1 / x;
+            int index = round(re_x * 100);
+            return (M_PI_2 - LUT[index]);
+            }
+        } else {
+            if (x >= -1) {
+            float abs_x = -x;
+            int index = round(abs_x * 100);
+            return -(LUT[index]);
+            } else {
+            float re_x = 1 / (-x);
+            int index = round(re_x * 100);
+            return (LUT[index] - M_PI_2);
+            }
+        }
+    }
+
     // аналог fmap, но не линейная. (linear == fmap)
     static float mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float)){
         if (x <= in_min) return out_min;
