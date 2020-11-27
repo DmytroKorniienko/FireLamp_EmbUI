@@ -2159,7 +2159,7 @@ class EffectOscilator: public EffectCalc {
 //// ----------------------------- Ветер/ Мячики за ветром ------------------------------
 //(c)Stepko
 #define LIGHTERS_AM ((WIDTH+HEIGHT)/2)
-class EffectWindballs: public EffectCalc {
+class EffectWindBalls: public EffectCalc {
   private:
 int lightersPos[2][LIGHTERS_AM];
 byte lightersSpeed[2];
