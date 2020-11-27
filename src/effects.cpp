@@ -6812,27 +6812,32 @@ float EffectTLand::code(double i, double x, double y) {
 
     case 7:
       // Smooth noise
-      return cos(t + i + x * y);
+      //return cos(t + i + x * y);
+      return cos16((t + i + x * y)*8192.0)/32767.0;
       break;
 
     case 8:
       // Waves
-      return sin(x / 2) - sin(x - t) - y + 6;
+      //return sin(x / 2) - sin(x - t) - y + 6;
+      return (sin16(x * 4096.0) - sin16((x - t) * 8192.0)) / 32767.0 - y + (HEIGHT/2);
       break;
 
     case 9:
       // Drop
-      return fmod(8 * t, 13) - hypot(x - 7.5, y - 7.5);
+      //return fmod(8 * t, 13) - hypot(x - 7.5, y - 7.5);
+      return fmod(8 * t, 13) - EffectMath::sqrt((x - (WIDTH/2))*(x - (WIDTH/2))+(y - (HEIGHT/2))*(y - (HEIGHT/2))); //hypot(x - (WIDTH/2), y - (HEIGHT/2));
       break;
 
     case 10:
       // Ripples @thespite
-      return sin(t - EffectMath::sqrt(x * x + y * y));
+      //return sin(t - EffectMath::sqrt(x * x + y * y));
+      return sin16((t - EffectMath::sqrt(x * x + y * y))*8192.0)/32767.0;
       break;
 
     case 11:
       // Bloop bloop bloop @v21
-      return (x - 8) * (y - 8) - sin(t / 2.) * 64;
+      //return (x - 8) * (y - 8) - sin(t / 2.) * 64;
+      return (x - (WIDTH/2)) * (y - (HEIGHT/2)) - sin16(t*4096.0)/512.0;
       break;
 
 
@@ -6841,28 +6846,40 @@ float EffectTLand::code(double i, double x, double y) {
      */
      case 12:
       // lurkerurke https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgcwsn/
-      return sin((x - 7.5) * (y - 7.5) / 5 * t + t);
+      //return sin((x - 7.5) * (y - 7.5) / 5 * t + t);
+      return sin16(((x - (WIDTH/2)) * (y - (HEIGHT/2)) / 5 * t + t)*8192.0)/32767.0;
       break;
 
     case 13:
       // SN0WFAKER https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgk7c0/
-      return sin(atan((y - 7.5) / (x - 7.5)) + t);
+      //return sin(atan((y - 7.5) / (x - 7.5)) + t);
+      return sin16((EffectMath::atan_fast((y - (HEIGHT/2)) / (x - (WIDTH/2))) + t) * 8192.0)/32767.0;
       break;
 
     case 14:
-      return  cos(((int)x ^ (int)y) * t); //sin(((int)(x / sin(t) / 50) ^ (int)(y / sin(t) / 50)) + t); //pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
+      //return  cos(((int)x ^ (int)y) * t); //sin(((int)(x / sin(t) / 50) ^ (int)(y / sin(t) / 50)) + t); //pow(cos(((int)y ^ (int)x) + t), cos((x > y) + t));
+      return  cos16((((int)x ^ (int)y) * t)* 8192.0)/32767.0;
       break;
 
     case 15:
       // detunized https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgk30l/
-      return sin(y / 8 + t * 0.5) + x / 16 - 0.5;
+      //return sin(y / 8 + t * 0.5) + x / 16 - 0.5;
+      return sin16((y / (HEIGHT/2) + t * 0.5)*8192.0)/32767.0 + x / 16 - 0.5;
       break;
 
     case 16:
       // Andres_A https://www.reddit.com/r/programming/comments/jpqbux/minimal_16x16_dots_coding_environment/gbgzdnj/
-      return 1. - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
+      //return 1. - hypot(sin(t) * 9 - x, cos(t) * 9 - y) / 9;
+      //return 1. - hypot(sin(1.5*t) * 16 + x, cos(t*2) * 16 + y) / 4;
+      //return 1. - hypot(8 * sin(1.5*t) + x - 8, (8 * cos(t*2) + y - 8))*(sin(0.5*t+1.0)+1.0); // https://tixy.land/?code=1.+-+hypot%288+*+sin%281.5*t%29+%2B+x+-+8%2C+%288+*+cos%28t*2%29+%2B+y+-+8%29%29*%28sin%280.5*t%2B1.0%29%2B1.0%29
+      {
+        float _x=sin16(12288.0*t)/32767.0 * WIDTH + x - (WIDTH/2);
+        float _y=cos16(16384.0*t)/32767.0 * HEIGHT + y - (HEIGHT/2);
+        //float _size=sin16((0.5*t+1.0)*8192.0)/32767.0+1.0;
+        float _size=1.0/4.0; // 4.0 - постоянный размер шарика
+        return 1. - EffectMath::sqrt(_x*_x+_y*_y)*_size; 
+      }
       break;
-
 
     /**
      * @akella
