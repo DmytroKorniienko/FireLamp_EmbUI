@@ -65,7 +65,7 @@ static const char TEFF_017[] PROGMEM = "Геометрический Вальс"
 static const char TEFF_018[] PROGMEM = "Тикси Ленд";
 static const char TEFF_019[] PROGMEM = "LDIRKO Ленд";
 static const char TEFF_020[] PROGMEM = "Осцилятор";
-static const char TEFF_021[] PROGMEM = "";
+static const char TEFF_021[] PROGMEM = "Ветер(тест)";
 static const char TEFF_022[] PROGMEM = "";
 static const char TEFF_023[] PROGMEM = "";
 static const char TEFF_024[] PROGMEM = "Прыгающие мячики";
@@ -392,7 +392,8 @@ static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"v
 static const char E_F2012_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Масштаб\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_DNA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"},{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Поворот\"}]}";
 static const char E_SNOW_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"val\":\"1\",\"min\":1,\"max\":3,\"name\":\"Сглаживание\"}]}";
-static const char E_SMOKEBALLS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
+static const char E_SMOKEBALLS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"};
+static const char E_WINDBALLS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра (0 = без цвета)\"},{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Сглаживание\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_COLORS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":3,\"type\":32,\"val\":\"2\",\"min\":1,\"max\":3,\"step\":1,\"name\":\"Режим\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":0,\"max\":35,\"step\":1,\"name\":\"Эффект (0 = циклично)\"}, {\"id\":3,\"type\":0,\"val\":160,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Цвет 1 (0 = циклично)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Цвет 2 (0 = циклично)\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Качество/Скорость\"}]}";
