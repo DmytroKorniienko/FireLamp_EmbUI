@@ -6754,7 +6754,7 @@ bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
 }
 
 void EffectTLand::processFrame(CRGB *leds, double t, double x, double y) {
-  double i = (y * 16) + x;
+  double i = (y * WIDTH) + x;
   int16_t frame = constrain(code(i, x, y), -1, 1) * 255;
 
   if (frame > 0) {
@@ -6937,7 +6937,7 @@ float EffectTLand::code(double i, double x, double y) {
     case 24:
       //return (y - 8) / 3 - tan(x / 6 + 1.87) * sin(t * 2);
       //return (y - 8) / 3 - tan(x / 6 + 1.87) * sin16(t * 16834.0)/32767.0;
-      return (y - 8) / 3 - EffectMath::tan2pi_fast(x / 6 + 1.87) * sin16(t * 16834.0)/32767.0;
+      return (y - 8) / 3 - EffectMath::tan2pi_fast((x / 6 + 1.87)/PI*2) * sin16(t * 16834.0)/32767.0;
       break;
 
     case 25:
@@ -6980,7 +6980,9 @@ float EffectTLand::code(double i, double x, double y) {
       break;
 
     case 32:
-      return 1. / 32 * tan(t / 64 * x * tan(i - x));
+      //return 1. / 32 * tan(t / 64 * x * tan(i - x));
+      //return (((x-8)/y+t)&1^1/y*8&1)*y/5;
+      return ((((uint32_t)((x-8)/(HEIGHT-y)+t) & 1 ) ^ (uint32_t)((1./(HEIGHT-y)) * 8)) & 1) * (HEIGHT-y) / 8;
       break;
 
     case 33:

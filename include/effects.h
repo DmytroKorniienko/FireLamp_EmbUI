@@ -466,7 +466,9 @@ public:
 
     static float tan2pi_fast(float x) {
         float y = (1 - x*x);
-        return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
+        return x * (((-0.000221184 * y + 0.0024971104) * y - 0.02301937096) * y + 0.3182994604 + 1.2732402998 / y);
+        //float y = (1 - x*x);
+        //return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
     }
 
     static float atan2_fast(float y, float x)
