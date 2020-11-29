@@ -6749,7 +6749,7 @@ bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   } else {
     animation = scale;
   }
-  //fpsmeter();
+  fpsmeter();
   return true;
 }
 
@@ -7237,4 +7237,72 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].red = (oscillatingWorld[x][y].color == 0U);
   oscillatingWorld[x][y].green = (oscillatingWorld[x][y].color == 1U);
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
+}
+
+// Тест алгоритма Дождя с ветром (с) kostyamat
+void EffectWrain::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3){
+    if(isRandDemo()){
+      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
+    } else
+      clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
+    } else
+      storm = _val->getVal() == FPSTR(TCONST_FFFF);
+  } 
+}
+
+void EffectWrain::reload() {
+  for (byte i = 0; i < counts; i++) {
+    dotPosX[i] = random(0, WIDTH);
+    dotPosY[i] = EffectMath::randomf(1, HEIGHT - 1);
+    dotChaos = EffectMath::randomf(1, 4);         // хаотичность силы ветра
+    dotDirect = random(-1, 2);                    // направление ветра (рандом 2 никогда не возвращает, был удивлен)
+    dotColor[i] = random(0, 9) * 31;              // цвет капли
+    dotAccel[i] = EffectMath::randomf(0.01, 0.1); // делаем частицам немного разное ускорение 
+  }
+}
+
+void EffectWrain::load() {
+  randomSeed(analogRead(A0));
+  reload();
+}
+
+bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.05, .5);
+  //fadeToBlackBy(leds, NUM_LEDS,50);
+  FastLED.clear();
+  for (byte i = 0; i < map(scale, 1, 45, 8, counts); i++) {
+    dotColor[i]++;
+    dotPosX[i] += (speedfactor / dotChaos + dotAccel[i]) * dotDirect; // смещение по горизонтали
+    dotPosY[i] -= (speedfactor + dotAccel[i]);
+
+    // Обеспечиваем бесшовность по Y.
+    if (dotPosY[i] < 0) dotPosY[i] = ((float)HEIGHT - (clouds ? 4.5 : 1.)), dotPosX[i] += EffectMath::randomf(- 1, 1); // двигаем капли туда-сюда по горизонтали
+    if (dotPosY[i] > (HEIGHT-1)) dotPosY[i] = 0;
+
+    // Обеспечиваем бесшовность по X.
+    if (dotPosX[i] < 0) dotPosX[i] = (WIDTH - 1); // Обеспечиваем бесшовность по X.
+    if (dotPosX[i] > (WIDTH-1)) dotPosX[i] = 0;
+    EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256 - beatsin8(3, 1, 208), beatsin8(1, 64, 255)), 0);
+  }
+
+  EVERY_N_MILLIS((unsigned)(5000 / speedfactor)){
+    //reload();
+    dotChaos = EffectMath::randomf(1, 4);
+    dotDirect = random(-1, 2); // оказывается, что random() никогда не возвращает число, равное верхнему лимиту, максимум лимит - 1. :(
+  }
+  
+  if (clouds) {
+    EffectMath::Clouds(beatsin8(1, 0, 255), (storm ? EffectMath::Lightning() : false));
+  } else if (storm) EffectMath::Lightning();
+  rhue++;
+
+  //fpsmeter();
+  return true;
 }
