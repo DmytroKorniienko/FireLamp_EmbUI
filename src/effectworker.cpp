@@ -145,6 +145,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_OSCIL :
     worker = std::unique_ptr<EffectOscilator>(new EffectOscilator());
     break;
+  case EFF_ENUM::EFF_WRAIN : 
+    worker = std::unique_ptr<EffectWrain>(new EffectWrain());
+    break;
   case EFF_ENUM::EFF_DRIFT :
     worker = std::unique_ptr<EffectDrift>(new EffectDrift());
     break;

@@ -335,7 +335,8 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
     //   clr.g = qadd8(clr.g, (color.g * 64) >> 8);
     //   clr.b = qadd8(clr.b, (color.b * 64) >> 8);
     // }
-    EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
+    if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
+    else EffectMath::drawPixelXY(xn, yn, clr);
   }
   #undef WU_WEIGHT
 }

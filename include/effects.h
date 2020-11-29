@@ -2242,6 +2242,29 @@ class EffectOscilator: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
+
+//Тест алгоритма Дождя с ветром (с) kostyamat
+class EffectWrain: public EffectCalc {
+  private:
+    static const byte counts = (WIDTH*2);
+    float dotPosX[counts];
+    float dotPosY[counts];
+    float dotChaos;         // некий хаос в силе ветра
+    int8_t dotDirect;       // направление ветра 
+    byte dotColor[counts];  // цвет капли
+    float dotAccel[counts]; // персональное ускорение каждой капли
+    bool clouds = false;
+    bool storm = false;
+    byte rhue;
+
+    void reload();
+    void setDynCtrl(UIControl*_val) override;
+
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
