@@ -35,33 +35,42 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#ifndef __MAIN_H_
-#define __MAIN_H_
+#include "misc.h"
 
-#include <Arduino.h>
-#include <SPIFFSEditor.h>
-#include "config.h"
-#include "EmbUI.h"
-#include "lamp.h"
-#include "buttons.h"
+// Deprecated
+// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+// WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
+// WiFiClient telnet;                                          // обработчик событий telnet клиента
+// bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
 
-// глобальные переменные для работы с ними в программе
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
-#endif
-#ifdef MP3PLAYER
-#include "mp3player.h"
-extern MP3PLAYERDEVICE *mp3;
-#endif
+// void handleTelnetClient()
+// {
+//   if (telnetServer.hasClient())
+//   {
+//     if (!telnet || !telnet.connected())
+//     {
+//       if (telnet)
+//       {
+//         telnet.stop();                                      // клиент отключился
+//         telnetGreetingShown = false;
+//       }
+//       telnet = telnetServer.available();                    // готов к подключению нового клиента
+//     }
+//     else
+//     {
+//       telnetServer.available().stop();                      // один клиент уже подключен, блокируем подключение нового
+//       telnetGreetingShown = false;
+//     }
+//   }
 
-void mqttCallback(const String &topic, const String &payload);
-void  sendData(bool force=false);
+//   if (telnet && telnet.connected() && telnet.available())
+//   {
+//     if (!telnetGreetingShown)
+//     {
+//       telnet.println(F("Подключение к устройтву по протоколу telnet установлено\n-------"));
+//       telnetGreetingShown = true;
+//     }
+//   }
+// }
 
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
-
-#endif
+// #endif

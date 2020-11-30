@@ -35,122 +35,156 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-//#define __IDPREFIX F("JeeUI2-")
-#include <Arduino.h>
-#include "JeeUI2.h"
-#include "config.h"
-#include "lamp.h"
 #include "main.h"
+#include "buttons.h"
 #ifdef USE_FTP
-#include "ftpServer.h"
+ #include "ftpSrv.h"
 #endif
 
 // глобальные переменные для работы с ними в программе
-SHARED_MEM GSHMEM; // глобальная общая память эффектов
-INTRFACE_GLOBALS iGLOBAL; // объект глобальных переменных интерфейса
-jeeui2 jee; // Создаем объект класса для работы с JeeUI2 фреймворком
 LAMP myLamp;
 Ticker _isrHelper;       // планировщик для обработки прерываний
+#ifdef ESP_USE_BUTTON
+Buttons *myButtons;
+#endif
 
-void setup() {
+#ifdef MP3PLAYER
+MP3PLAYERDEVICE *mp3 = nullptr;
+#endif
+
+ICACHE_FLASH_ATTR void setup() {
     Serial.begin(115200);
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
-    // randomSeed(analogRead(A0)); // А0 не трогаем, да и лучше инициализировать если нужно внутрях эффектов, примеры можно поиском найти, там их есть
-    //Serial.println(F("Starting..."));
-    //jee.mqtt("m21.cloudmqtt.com", 1883, "iukuegvk", "gwo8tlzvGJrR", mqttCallback, true);
+    embui.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
 
-    jee.udp(String(jee.mc)); // Ответ на UDP запрс. в качестве аргуиена - переменная, содержащая id по умолчанию
 #if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
-    jee.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
+    embui.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
 #elif defined(__DISABLE_BUTTON0)
-    jee.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
+    embui.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
-    jee.ap(20000); // если в течении 20 секунд не удастся подключиться к Точке доступа - запускаем свою (параметр "wifi" сменится с AP на STA)
 
-    myLamp.effects.loadConfig();
+    // EmbUI
+    //create_parameters(); // теперь это weak метод EmbUI, вызывается внутри фреймворка на стадии begin чтобы слить конфиг на флеше с дефолтовыми перменными
+    embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
+    embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
+    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+    
+    myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
+    myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     myLamp.events.loadConfig();
-    myLamp.updateParm(updateParm);
+    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
 
-    jee.ui(interface); // обратный вызов - интерфейс
-    jee.update(update); // обратный вызов - вызывается при введении данных в веб интерфейс, нужна для сравнения значений пременных с параметрами
-    jee.httpCallback(httpCallback);
-#ifdef LAMP_DEBUG
-    jee.begin(true); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
-#else
-    jee.begin(false); // Инициализируем JeeUI2 фреймворк. Параметр bool определяет, показывать ли логи работы JeeUI2 (дебаг)
-#endif
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
-    create_parameters(); // создаем дефолтные параметры, отсутствующие в текущем загруженном конфиге
-    update(); // этой функцией получаем значения параметров в переменные (обратный вызов UI)
-    updateParm(); // вызвать обновление параметров UI (синхронизация с конфигом эффектов и кнопкой)
-    if(myLamp.timeProcessor.getIsSyncOnline()){
-      myLamp.refreshTimeManual(); // принудительное обновление времени
+
+#ifdef ESP_USE_BUTTON
+    myLamp.setbPin(embui.param(F("PINB")).toInt());
+    myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
+    if (!myButtons->loadConfig()) {
+      default_buttons();
+      myButtons->saveConfig();
     }
-    if(myLamp.timeProcessor.isDirtyTime())
-      myLamp.setIsEventsHandled(false);
+    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
+#endif
+
     myLamp.events.setEventCallback(event_worker);
 
-    jee.mqtt(jee.param(F("m_host")), jee.param(F("m_port")).toInt(), jee.param(F("m_user")), jee.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
-#ifdef ESP_USE_BUTTON
-    attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, BUTTON_PRESS_TRANSITION);  // цепляем прерывание на кнопку
+#ifdef MP3PLAYER
+    int rxpin = embui.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : embui.param(FPSTR(TCONST_009B)).toInt();
+    int txpin = embui.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : embui.param(FPSTR(TCONST_009C)).toInt();
+    mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
 #endif
-}
 
-void loop() {
-    jee.handle(); // цикл, необходимый фреймворку
+#ifdef ESP32
+  embui.server.addHandler(new SPIFFSEditor(LittleFS, http_username,http_password));
+#elif defined(ESP8266)
+  //server.addHandler(new SPIFFSEditor(http_username,http_password, LittleFS));
+  embui.server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
+#endif
 
+    sync_parameters();
+
+#ifdef LED_BUILTIN    
+    digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
+#endif
+}   // End setup()
+
+ICACHE_FLASH_ATTR void loop() {
+    embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
-    jeebuttonshandle();
-
+    // эта функция будет слать периодическую информацию, но позже, когда до этого руки дойдут
     sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
 #endif
 }
 
-void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
+ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
-  //jee.refresh();
+  if(topic.startsWith(FPSTR(TCONST_00AC))){
+    String sendtopic=topic;
+    sendtopic.replace(FPSTR(TCONST_00AC), "");
+    if(sendtopic==FPSTR(TCONST_00AE)){
+        sendtopic=String(FPSTR(TCONST_008B))+sendtopic;
+        String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
+        embui.publish(sendtopic, effcfg, true); // отправляем обратно в MQTT в топик embui/pub/
+    } else if(sendtopic==FPSTR(TCONST_00AD)){
+        sendData(true);
+    }
+  }
 }
 
-void sendData(){
-  static unsigned long i;
-  static unsigned int in;
+// нужно подчистить эту функцию, печатать инфо можно более аккуратным способом
+ICACHE_FLASH_ATTR void sendData(bool force){
+    static unsigned long i;
 
-  if(i + (in * 1000) > millis() || iGLOBAL.mqtt_int == 0) return; // если не пришло время, или интервал = 0 - выходим из функции
-  i = millis();
-  in = iGLOBAL.mqtt_int;
-  // всё, что ниже будет выполняться через интервалы
+    if((i + (myLamp.getmqtt_int() * 1000) > millis() || myLamp.getmqtt_int() == 0) && !force) return; // если не пришло время, или интервал = 0 - выходим из функции
+    i = millis();
+    // всё, что ниже будет выполняться через интервалы
 
+    // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
+    LOG(println, F("sendData :"));
+    DynamicJsonDocument obj(512);
+    //JsonObject obj = doc.to<JsonObject>();
+    obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
+    obj[FPSTR(TCONST_0002)] = String(ESP.getFreeHeap());
+    obj[FPSTR(TCONST_008F)] = String(millis()/1000);
+    String sendtopic=FPSTR(TCONST_008B);
+    sendtopic+=FPSTR(TCONST_00AD);
+    String out;
+    serializeJson(obj, out);
+    LOG(println, out);
+    embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
+    obj.clear();
 
-#ifdef ESP8266
-  LOG(printf_P, PSTR("MQTT send data, MEM: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), myLamp.timeProcessor.getFormattedShortTime().c_str());
-#else
-  LOG(printf_P, PSTR("MQTT send data, MEM: %d, Time: %s\n"), ESP.getFreeHeap(), myLamp.timeProcessor.getFormattedShortTime().c_str());
-#endif
-  //jee.publish(F("jee/set/BTN_bRefresh"),F("*"));
+    // также отправим конфиг текущего эффекта
+    sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
+    String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
+    embui.publish(sendtopic, effcfg, true);
+}
+
+#ifdef ESP_USE_BUTTON
+/*
+ * Используем обертку и тикер ибо:
+ * 1) убираем функции с ICACHE из класса лампы
+ * 2) Тикер не может дернуть нестатический метод класса
+ */
+ICACHE_FLASH_ATTR void buttonhelper(bool state){
+  embui.autoSaveReset();
+  myButtons->buttonPress(state);
 }
 
 /*
  *  Button pin interrupt handler
  */
 ICACHE_RAM_ATTR void buttonpinisr(){
-  detachInterrupt(BTN_PIN);
-  _isrHelper.once_ms(0, buttonhelper, iGLOBAL.pinTransition);   // вместо флага используем тикер :)
-  iGLOBAL.pinTransition = !iGLOBAL.pinTransition;
-  attachInterrupt(digitalPinToInterrupt(BTN_PIN), buttonpinisr, iGLOBAL.pinTransition ? BUTTON_PRESS_TRANSITION : BUTTON_RELEASE_TRANSITION);  // меням прерывание
+    detachInterrupt(myLamp.getbPin());
+    _isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
+    myButtons->setpinTransition(!myButtons->getpinTransition());
+    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? myButtons->getPressTransitionType() : myButtons->getReleaseTransitionType());  // меням прерывание
 }
-
-/*
- * Используем обертку и тикер ибо:
- * 1) убираем функции с ICACHE из класса лампы
- * 2) Тикер не может дернуть нестатический метод класса
- */
-void buttonhelper(bool state){
-  myLamp.buttonPress(state);
-}
+#endif

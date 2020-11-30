@@ -35,33 +35,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#ifndef __MAIN_H_
-#define __MAIN_H_
+#include <LittleFS.h>
+#include <ESP8266WiFi.h>
+#include <FTPServer.h>
+#include "misc.h"
 
-#include <Arduino.h>
-#include <SPIFFSEditor.h>
-#include "config.h"
-#include "EmbUI.h"
-#include "lamp.h"
-#include "buttons.h"
-
-// глобальные переменные для работы с ними в программе
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
-#endif
-#ifdef MP3PLAYER
-#include "mp3player.h"
-extern MP3PLAYERDEVICE *mp3;
-#endif
-
-void mqttCallback(const String &topic, const String &payload);
-void  sendData(bool force=false);
-
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
-
-#endif
+extern void ftp_setup(void);
+extern void ftp_loop(void);
+extern FTPServer ftpSrv; 

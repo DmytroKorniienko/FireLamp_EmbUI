@@ -49,7 +49,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "config.h"
-#include "JeeUI2.h"
+#include "EmbUI.h"
 #ifdef OTA
 #include <ArduinoOTA.h>
 //#include <ESP8266WiFi.h>
@@ -103,7 +103,6 @@ class OtaManager
         LOG(print,F("Получено второе подтверждение обновления по воздуху\nСтарт режима обновления\n"));
 
         showWarningDelegate(CRGB::Yellow, 2000U, 500U);     // мигание жёлтым цветом 2 секунды (2 раза) - готовность к прошивке
-        startOtaUpdate();
         return true;
       }
 
@@ -144,13 +143,7 @@ class OtaManager
       }
     }
 
-  private:
-    uint64_t momentOfFirstConfirmation = 0;                 // момент времени, когда получено первое подтверждение и с которого начинается отсчёт ожидания второго подтверждения
-    uint64_t momentOfOtaStart = 0;                          // момент времени, когда развёрнута WiFi точка доступа для обновления по воздуху
-    ShowWarningDelegate showWarningDelegate;
-
-    void startOtaUpdate()
-    {
+    void startOtaUpdate() {
       char espHostName[65];
       String id = WiFi.softAPmacAddress();
       id.replace(F(":"), F(""));
@@ -168,12 +161,12 @@ class OtaManager
         {
           strcpy_P(type, PSTR("sketch"));
         }
-        else // U_SPIFFS
+        else // U_LittleFS
         {
           strcpy_P(type, PSTR("filesystem"));
         }
 
-        // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+        // NOTE: if updating LittleFS this would be the place to unmount LittleFS using LittleFS.end()
 
         LOG(printf_P,PSTR("Start updating %s\n"), type);
       });
@@ -228,6 +221,7 @@ class OtaManager
       ArduinoOTA.setRebootOnSuccess(true);
       ArduinoOTA.begin();
       OtaFlag = OtaPhase::InProgress;
+      momentOfOtaStart = millis();
 
       LOG(printf_P,PSTR("Для обновления в Arduino IDE выберите пункт меню Инструменты - Порт - '%s at "), espHostName);
       LOG(print,WiFi.localIP());
@@ -235,6 +229,11 @@ class OtaManager
       LOG(printf_P,PSTR("Затем нажмите кнопку 'Загрузка' в течение %u секунд и по запросу введите пароль '%s'\n"), ESP_CONF_TIMEOUT, OTA_PASS);
       LOG(println,F("Устройство с Arduino IDE должно быть в одной локальной сети с модулем ESP!"));
     }
+
+    private:
+    uint64_t momentOfFirstConfirmation = 0;                 // момент времени, когда получено первое подтверждение и с которого начинается отсчёт ожидания второго подтверждения
+    uint64_t momentOfOtaStart = 0;                          // момент времени, когда развёрнута WiFi точка доступа для обновления по воздуху
+    ShowWarningDelegate showWarningDelegate;
 };
 
 #endif

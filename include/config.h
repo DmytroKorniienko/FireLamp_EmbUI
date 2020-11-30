@@ -44,10 +44,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 
 #include <GyverButton.h>
-
-#ifdef ESP8266
-#define FASTLED_USE_PROGMEM             (1)
-#endif
+// переместил в platformio.ini
+// #ifdef ESP8266
+// #define FASTLED_USE_PROGMEM             (1)
+// #endif
 #define FASTLED_INTERRUPT_RETRY_COUNT   (0)                 // default: 2; // Use this to determine how many times FastLED will attempt to re-transmit a frame if interrupted for too long by interrupts
 #define FASTLED_ESP8266_RAW_PIN_ORDER                       // FASTLED_ESP8266_RAW_PIN_ORDER, FASTLED_ESP8266_D1_PIN_ORDER or FASTLED_ESP8266_NODEMCU_PIN_ORDER
 //#define FASTLED_ALLOW_INTERRUPTS      (0)                   // default: 1; // Use this to force FastLED to allow interrupts in the clockless chipsets (or to force it to disallow), overriding the default on platforms that support this. Set the value to 1 to allow interrupts or 0 to disallow them.
@@ -56,13 +56,17 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //-----------------------------------
 //#define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
-//#define DEBUG_TELNET_OUTPUT  (true)                         // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем)
-//#define USE_FTP                                             // доступ к SPIFFS по FTP, логин/пароль: esp8266
+//#define DEBUG_TELNET_OUTPUT  (true)                         // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем) // Deprecated
+//#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
 //#define OTA                                                 // Обновление по ОТА
 //#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
-
-typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
+//#define MP3PLAYER                                           // Включить использование MP3 плеера (DF Player)
+//#define SHOWSYSCONFIG                                       // Показывать системное меню
+typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
+#ifndef LANG
+#define LANG                  "text_res-RUS.h"                  // Языковой файл по дефолту
+#endif
 
 #ifndef MIC_PIN
 #ifdef ESP8266
@@ -77,8 +81,14 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define MIC_POLLRATE          (50U)                         // как часто опрашиваем микрофон, мс
 #endif
 
+#ifndef HIGH_MAP_FREQ
+#define HIGH_MAP_FREQ         (20000U)                      // верхняя граница слышимого диапазона, используется для мапинга, дефолтное и общепринятое значение 20000Гц
+#endif
+
 #ifdef FAST_ADC_READ
+#ifndef SAMPLING_FREQ
 #define SAMPLING_FREQ         (18000U*2U)
+#endif
 #else
 #define SAMPLING_FREQ         (5000U*2U)
 #endif
@@ -93,6 +103,21 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 #ifndef MIN_PEAK_LEVEL
 #define MIN_PEAK_LEVEL        (50U)                         // Минимальный амплитудный уровень, для эффектов зависящих от микрофона
+#endif
+
+#ifdef MP3PLAYER
+#ifndef MP3_TX_PIN
+#define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
+#endif
+#ifndef MP3_RX_PIN
+#define MP3_RX_PIN            (D6)                         // RX mp3 player TX (D6)
+#endif
+#ifndef MP3_SERIAL_TIMEOUT
+#define MP3_SERIAL_TIMEOUT    (300U)                       // 300мс по умолчанию, диапазон 200...1000, подбирается экспериментально, не желательно сильно повышать
+#endif
+#ifndef DFPALYER_START_DELAY
+#define DFPALYER_START_DELAY  (500U)                       // 500мс по умолчанию, диапазон 10...1000, подбирается экспериментально, не желательно сильно повышать, безусловная задержка до инициализации
+#endif
 #endif
 
 #ifndef LAMP_PIN
@@ -161,9 +186,6 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 #endif
 
-#ifndef FADE
-#define FADE                  true                          // fade by default on brightness change
-#endif
 #ifndef FADE_STEPTIME
 #define FADE_STEPTIME         (50U)                         // default time between fade steps, ms (2 seconds with max steps)
 #endif
@@ -177,12 +199,6 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define FADE_MINCHANGEBRT     (30U)                         // Minimal brightness for effects changer
 #endif
 
-#ifndef RANDOM_DEMO
-#define RANDOM_DEMO           (1)                           // 0,1 - последовательный (0)/рандомный (1) выбор режима демо
-#endif
-#ifndef DEMO_TIMEOUT
-#define DEMO_TIMEOUT          (33)                          // время в секундах для смены режима DEMO
-#endif
 #ifndef USELEDBUF
 #define USELEDBUF                                           // буфер под эффекты, можно закомментировать, в случае если нужно сэкономить память, но будут артефакты обработки
 #endif
@@ -211,13 +227,18 @@ typedef enum {NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 #endif
 
-#ifndef TIME_SYNC_INTERVAL
-#define TIME_SYNC_INTERVAL    (60*60*1000)                  // интервал синхронизации времени, 60*60*1000 => раз в час
+
+// настройки времени
+//#ifndef TZONE
+//#define TZONE                 ("AUTO")
+//#endif
+#ifndef HTTPTIME_SYNC_INTERVAL
+ #define HTTPTIME_SYNC_INTERVAL    (4)                           // интервал синхронизации времени по http, час
 #endif
-#ifndef NTPADDRESS
-#define NTPADDRESS            ("ntp2.colocall.net")         // сервер времени для NTP (альтернативный метод), можно также попробовать "ntp2.colocall.net, pool.ntp.org, europe.pool.ntp.org" и т.д.
+
+#ifndef CFG_AUTOSAVE_TIMEOUT
+#define CFG_AUTOSAVE_TIMEOUT       (20*1000U)                   // таймаут сохранения конфигурации эффекта, по умолчанию - 20 секунд
 #endif
-const char NTP_ADDRESS[] PROGMEM = NTPADDRESS;
 
 #ifndef TEXT_OFFSET
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)

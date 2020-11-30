@@ -35,8 +35,18 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __MISC_H
+#define __MISC_H
+
 #include <Arduino.h>
+
+typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_SECOND, AT_THIRD, AT_FOURTH, AT_FIFTH, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников (8 вариантов максимум)
+typedef enum : uint8_t {TS_NONE=0, TS_VER1, TS_VER2} TIME_SOUND_TYPE; // виды озвучки времени (8 вариантов максимум)
+
+// Задержка после записи в ФС, не менять, если не сказано дополнительно!
+#ifndef DELAY_AFTER_FS_WRITING
+#define DELAY_AFTER_FS_WRITING       (50U)                        // 50мс, меньшие значения могут повлиять на стабильность
+#endif
 
 // шрифты для вывода текста
 const uint8_t fontHEX[][5] PROGMEM = {
@@ -284,12 +294,17 @@ class timerMinim
       _timer = millis();
     }
 
-    void setInterval(uint32_t interval)	                  // установка интервала работы таймера
+    uint32_t getInterval()	                  						 // получение интервала работы таймера
+    {
+    	return _interval;
+    }
+
+    void setInterval(uint32_t interval)	                   // установка интервала работы таймера
     {
       _interval = interval;
     }
 
-    bool isReady()						                              // возвращает true, когда пришло время. Сбрасывается в false сам (AUTO) или вручную (MANUAL)
+    bool isReady()						                             // возвращает true, когда пришло время. Сбрасывается в false сам (AUTO) или вручную (MANUAL)
     {
       if ((uint32_t)millis() - _timer >= _interval && _interval!=0){
         _timer = millis();
@@ -321,7 +336,7 @@ class timerMinim
 };
 
 //----------------------------------------------------
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+#if defined(LAMP_DEBUG) && 1==0 // DEBUG_TELNET_OUTPUT // Deprecated
 	//#define LOG                   telnet
 	#define LOG(func, ...) telnet.func(__VA_ARGS__)
 #elif defined(LAMP_DEBUG)
@@ -331,79 +346,18 @@ class timerMinim
 	#define LOG(func, ...) ;
 #endif
 
-#if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-#define TELNET_PORT           (23U)                         // номер telnet порта
-WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
-WiFiClient telnet;                                          // обработчик событий telnet клиента
-bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
+// Deprecated
+// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
+// #define TELNET_PORT           (23U)                         // номер telnet порта
+// extern WiFiServer telnetServer;
+// extern WiFiClient telnet;
+// extern bool telnetGreetingShown;
+// void handleTelnetClient();
 
-void handleTelnetClient()
-{
-  if (telnetServer.hasClient())
-  {
-    if (!telnet || !telnet.connected())
-    {
-      if (telnet)
-      {
-        telnet.stop();                                      // клиент отключился
-        telnetGreetingShown = false;
-      }
-      telnet = telnetServer.available();                    // готов к подключению нового клиента
-    }
-    else
-    {
-      telnetServer.available().stop();                      // один клиент уже подключен, блокируем подключение нового
-      telnetGreetingShown = false;
-    }
-  }
+// // WiFiServer telnetServer(TELNET_PORT);                       // telnet сервер
+// // WiFiClient telnet;                                          // обработчик событий telnet клиента
+// // bool telnetGreetingShown = false;                           // признак "показано приветствие в telnet"
 
-  if (telnet && telnet.connected() && telnet.available())
-  {
-    if (!telnetGreetingShown)
-    {
-      telnet.println(F("Подключение к устройтву по протоколу telnet установлено\n-------"));
-      telnetGreetingShown = true;
-    }
-  }
-}
+// #endif
 
 #endif
-//----------------------------------------------------
-// устарело
-/*
-class TimerManager
-{
-  public:
-    static bool TimerRunning;                               // флаг "таймер взведён"
-    static bool TimerHasFired;                              // флаг "таймер отработал"
-    static uint8_t TimerOption;                             // индекс элемента в списке List Picker'а
-    static uint64_t TimeToFire;                             // время, в которое должен сработать таймер (millis)
-
-    static void HandleTimer(                                // функция, обрабатывающая срабатывание таймера, гасит матрицу
-      bool* ONflag,
-      bool* settChanged,
-      uint32_t* eepromTimeout,
-      void (*changePower)())
-    {
-      if (!TimerManager::TimerHasFired &&
-           TimerManager::TimerRunning &&
-           millis() >= TimerManager::TimeToFire)
-      {
-        #ifdef GENERAL_DEBUG
-        LOG.print(F("Выключение по таймеру\n\n"));
-        #endif
-
-        TimerManager::TimerRunning = false;
-        TimerManager::TimerHasFired = true;
-        FastLED.clear();
-        delay(2);
-        FastLED.show();
-        *ONflag = !(*ONflag);
-        changePower();
-        *settChanged = true;
-        *eepromTimeout = millis();
-      }
-    }
-};
-*/
-
