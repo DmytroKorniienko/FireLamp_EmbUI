@@ -43,6 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 Ticker optionsTicker;          // планировщик заполнения списка
 Ticker sysTicker;              // системный планировщик
+String tmpData;                // временное хранилище для отложенных операций
 
 void resetAutoTimers() // сброс таймера демо и настройка автосохранений
 {
@@ -674,7 +675,7 @@ void set_onflag(Interface *interf, JsonObject *data){
         } else {
             resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
             //myLamp.changePower(newpower);
-            sysTicker.once(0.1,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
+            sysTicker.once(0.3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 myLamp.changePower(false);
 #ifdef MP3PLAYER
                 mp3->setIsOn(false);
@@ -1224,30 +1225,39 @@ void show_settings_other(Interface *interf, JsonObject *data){
 
 void set_settings_other(Interface *interf, JsonObject *data){
     if (!data) return;
-    
+
+    serializeJson(*data,tmpData);
     resetAutoTimers();
+    sysTicker.once(0.3,std::bind([]{
+        DynamicJsonDocument docum(1024);
+        deserializeJson(docum, tmpData);
+        JsonObject dataStore = docum.as<JsonObject>();
+        JsonObject *data = &dataStore;
 
-    myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF));
-    myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF));
-    myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF));
-    myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == FPSTR(TCONST_FFFF));
-    myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == FPSTR(TCONST_FFFF));
-    myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == FPSTR(TCONST_FFFF));
-    myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == FPSTR(TCONST_FFFF));
+        myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == FPSTR(TCONST_FFFF));
+        myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == FPSTR(TCONST_FFFF));
+        myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == FPSTR(TCONST_FFFF));
+        myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == FPSTR(TCONST_FFFF));
+        myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == FPSTR(TCONST_FFFF));
+        myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == FPSTR(TCONST_FFFF));
+        myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == FPSTR(TCONST_FFFF));
 
-    SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
-    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
-    SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
-    SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
-    SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
-    SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
-    SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime((*data)[FPSTR(TCONST_0055)]));
-#ifdef MIC_EFFECTS
-    myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF));
-#endif
-    myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == FPSTR(TCONST_FFFF));
+        SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
+        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
+        SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
+        SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
+        SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
+        SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
+        SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime((*data)[FPSTR(TCONST_0055)]));
+    #ifdef MIC_EFFECTS
+        myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF));
+    #endif
+        myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == FPSTR(TCONST_FFFF));
 
-    save_lamp_flags();
+        save_lamp_flags();
+        tmpData.clear();
+    }));
+
     section_settings_frame(interf, data);
 }
 
@@ -2013,6 +2023,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_004F)] = tmp.dRand ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_009E)] = tmp.showName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    obj[FPSTR(TCONST_0096)] = tmp.isShowSysMenu ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     
     obj[FPSTR(TCONST_0050)] = embui.param(FPSTR(TCONST_0050));
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));

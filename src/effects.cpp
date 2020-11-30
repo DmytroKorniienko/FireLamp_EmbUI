@@ -666,7 +666,7 @@ EVERY_N_SECONDS(1){
 
 // ------------- матрица ---------------
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
-  fpsmeter();
+  //fpsmeter();
   return matrixRoutine(*&ledarr, &*opt);
 }
 
@@ -3336,23 +3336,24 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
   // #undef WIDTH
   // #define WIDTH 8
 
-  if (speed==1 || speed==255){
+  if (speed==254 || speed==1 || speed==255){
     EVERY_N_SECONDS(5){
       FastLED.clear();
 
       String tmp = embui.timeProcessor.getFormattedShortTime();
       if(HEIGHT>=16){
-        uint8_t xPos = random(LET_WIDTH*2,WIDTH);
-        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
-        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-(LET_HEIGHT*2), xPos);
+        uint8_t xPos = speed!=254 ? random(LET_WIDTH*2,WIDTH) : (WIDTH+LET_WIDTH*2)/2;
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, HEIGHT-(LET_HEIGHT*2), xPos);
       } else if(WIDTH>=21){ // требуется минимум 5*4+1 символов
-        uint8_t xPos = random((LET_WIDTH*2+1),WIDTH);
-        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
-        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));
+        uint8_t xPos = speed!=254 ? random(LET_WIDTH*2+1,WIDTH) : (WIDTH+LET_WIDTH*2+1)/2;
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));
       } else {
-        uint8_t xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
+        //uint8_t xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
+        uint8_t xPos = speed!=254 ? random(LET_WIDTH*2,WIDTH) : (WIDTH+LET_WIDTH*2)/2;
         isMinute=!isMinute;
-        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, random8()), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : isMinute ? 64 : 127), false, HEIGHT-LET_HEIGHT, xPos);
       }
     }
   } else {
@@ -6749,7 +6750,7 @@ bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   } else {
     animation = scale;
   }
-  fpsmeter();
+  //fpsmeter();
   return true;
 }
 
@@ -7164,7 +7165,7 @@ bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
       }
   }
 
-  fpsmeter();
+  //fpsmeter();
   return true;
 }
 
