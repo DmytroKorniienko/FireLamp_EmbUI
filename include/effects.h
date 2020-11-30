@@ -2246,7 +2246,7 @@ class EffectOscilator: public EffectCalc {
 //Тест алгоритма Дождя с ветром (с) kostyamat
 class EffectWrain: public EffectCalc {
   private:
-    static const byte counts = (WIDTH*2);
+    static const byte counts = (WIDTH*3);
     float dotPosX[counts];
     float dotPosY[counts];
     float dotChaos;         // некий хаос в силе ветра
@@ -2255,6 +2255,9 @@ class EffectWrain: public EffectCalc {
     float dotAccel[counts]; // персональное ускорение каждой капли
     bool clouds = false;
     bool storm = false;
+    bool wind = false;
+    byte type = 1;
+    bool randColor = false;
     float rhue;
 
     void reload();
