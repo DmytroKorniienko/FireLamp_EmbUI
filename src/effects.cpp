@@ -6696,8 +6696,8 @@ void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1,
     EffectMath::drawPixelXYF(x, y, CRGB ::Gray);
     EffectMath::drawPixelXYF(x1, y1, CRGB ::Gray);
   } else {
-    EffectMath::drawCircleF(x, y, x1, ColorFromPalette(*curPalette, hue + hueLamda, 200), false, 0.5);
-    EffectMath::drawCircleF(x1, y1, y1, ColorFromPalette(*curPalette, hue + hueLamda, 200), false, 0.5);
+    EffectMath::drawCircleF(x, y, x1, ColorFromPalette(*curPalette, hue + hueLamda, 200));
+    EffectMath::drawCircleF(x1, y1, y1, ColorFromPalette(*curPalette, hue + hueLamda, 200));
   }
 }
 
@@ -7264,7 +7264,7 @@ void EffectWrain::reload() {
     dotChaos = EffectMath::randomf(1, 4);         // хаотичность силы ветра
     dotDirect = random(-1, 2);                    // направление ветра (рандом 2 никогда не возвращает, был удивлен)
     dotColor[i] = random(0, 9) * 31;              // цвет капли
-    dotAccel[i] = EffectMath::randomf(0.01, 0.1); // делаем частицам немного разное ускорение 
+    dotAccel[i] = (float)random(5, 10) / 100; //EffectMath::randomf(0.05, 0.1); // делаем частицам немного разное ускорение 
   }
 }
 
@@ -7274,12 +7274,12 @@ void EffectWrain::load() {
 }
 
 bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
-  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.05, .5);
-  //fadeToBlackBy(leds, NUM_LEDS,50);
-  FastLED.clear();
-  for (byte i = 0; i < map(scale, 1, 45, 8, counts); i++) {
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, .5);
+  fadeToBlackBy(leds, NUM_LEDS, 200. * speedfactor);
+  //FastLED.clear();
+  for (byte i = 0; i < map(scale, 1, 45, 2, counts); i++) {
     dotColor[i]++;
-    dotPosX[i] += (speedfactor / dotChaos + dotAccel[i]) * dotDirect; // смещение по горизонтали
+    dotPosX[i] += (speedfactor * dotChaos + dotAccel[i]) * dotDirect; // смещение по горизонтали
     dotPosY[i] -= (speedfactor + dotAccel[i]);
 
     // Обеспечиваем бесшовность по Y.
@@ -7289,19 +7289,21 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     // Обеспечиваем бесшовность по X.
     if (dotPosX[i] < 0) dotPosX[i] = (WIDTH - 1); // Обеспечиваем бесшовность по X.
     if (dotPosX[i] > (WIDTH-1)) dotPosX[i] = 0;
-    EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256 - beatsin8(3, 1, 208), beatsin8(1, 64, 255)), 0);
+    EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
   }
-
-  EVERY_N_MILLIS((unsigned)(5000 / speedfactor)){
+  uint8_t val = triwave8(rhue += speedfactor);
+  dotChaos = (float)val / 254;
+  if (val == 0) {
+  //EVERY_N_MILLIS((unsigned)(5000 / speedfactor)){
     //reload();
-    dotChaos = EffectMath::randomf(1, 4);
+    //dotChaos = EffectMath::randomf(1, 4);
     dotDirect = random(-1, 2); // оказывается, что random() никогда не возвращает число, равное верхнему лимиту, максимум лимит - 1. :(
   }
   
   if (clouds) {
-    EffectMath::Clouds(beatsin8(1, 0, 255), (storm ? EffectMath::Lightning() : false));
+    EffectMath::Clouds(255, (storm ? EffectMath::Lightning() : false));
   } else if (storm) EffectMath::Lightning();
-  rhue++;
+
 
   //fpsmeter();
   return true;

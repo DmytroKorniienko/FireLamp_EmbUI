@@ -568,7 +568,7 @@ void EffectMath::drawCircle(int x0, int y0, int radius, const CRGB &color){
   }
 }*/
 
-void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color, bool fill, float step){
+void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color, float step){
   float a = radius, b = 0.;
   float radiusError = step - a;
 
@@ -578,19 +578,6 @@ void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color
   }
 
   while (a >= b)  {
-    if (fill) {
-      /*  С этим нужно еще подумать. Как зарисовывать круг. Приспичит, - сделаю
-      EffectMath::drawLineF(a + x0, b + y0, color);
-      EffectMath::drawLineF(b + x0, a + y0, color);
-      EffectMath::drawLineF(-a + x0, b + y0, color);
-      EffectMath::drawLineF(-b + x0, a + y0, color);
-      EffectMath::drawLineF(-a + x0, -b + y0, color);
-      EffectMath::drawLineF(-b + x0, -a + y0, color);
-      EffectMath::drawLineF(a + x0, -b + y0, color);
-      EffectMath::drawLineF(b + x0, -a + y0, color);
-      */
-    }
-    else {
       EffectMath::drawPixelXYF(a + x0, b + y0, color, 50);
       EffectMath::drawPixelXYF(b + x0, a + y0, color, 50);
       EffectMath::drawPixelXYF(-a + x0, b + y0, color, 50);
@@ -599,7 +586,7 @@ void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color
       EffectMath::drawPixelXYF(-b + x0, -a + y0, color, 50);
       EffectMath::drawPixelXYF(a + x0, -b + y0, color, 50);
       EffectMath::drawPixelXYF(b + x0, -a + y0, color, 50);
-    }
+
     b+= step;
     if (radiusError < 0.)
       radiusError += 2. * b + step;
