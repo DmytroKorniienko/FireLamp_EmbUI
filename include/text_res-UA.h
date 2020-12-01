@@ -65,7 +65,7 @@ static const char TEFF_017[] PROGMEM = "Геометричний Вальс";
 static const char TEFF_018[] PROGMEM = "Тіксі Ленд";
 static const char TEFF_019[] PROGMEM = "LDIRKO Ленд";
 static const char TEFF_020[] PROGMEM = "Осцилятор";
-static const char TEFF_021[] PROGMEM = "Дощ з вітром (тест алгоритму)";
+static const char TEFF_021[] PROGMEM = "Дощ з вітром";
 static const char TEFF_022[] PROGMEM = "";
 static const char TEFF_023[] PROGMEM = "";
 static const char TEFF_024[] PROGMEM = "Стрибаючі м'ячики";
@@ -397,6 +397,7 @@ static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\
 static const char E_COLORS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":3,\"type\":32,\"val\":\"2\",\"min\":1,\"max\":3,\"step\":1,\"name\":\"Режим\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":0,\"max\":35,\"step\":1,\"name\":\"Эффект (0 = циклічно)\"}, {\"id\":3,\"type\":0,\"val\":160,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Колір 1 (0 = циклічно)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Колір 2 (0 = циклічно)\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Якість/Швидкість\"}]}";
 static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Розмивання\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Кола\"}]}";
+static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Щільність\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палітра (0 = випадковий колір)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Хмара\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Блискавка\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Розмивання (1-4 з вітром) \"}]}";
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Кількість\"}]}";

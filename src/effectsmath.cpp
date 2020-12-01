@@ -215,17 +215,17 @@ if (random16() < chanse)
   return false;
 }
 
-void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
+// Функция рисует тучу в верхней части матрицы 
+void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal, CRGBPalette16 curPalette)
 {
-  const CRGBPalette16 rainClouds_p(0x000000, 0x333C3C, 0x2D3333, 0xB5B5B5);
-
+  //const CRGBPalette16 rainClouds_p(0x000000, 0x333C3C, 0x2D3333, 0xB5B5B5);
   //uint32_t random = millis();
   uint8_t dataSmoothing = 50; //196
   uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
   uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
   uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
   uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-  const uint16_t cloudHeight = (HEIGHT * 0.2) + 1;
+  const uint8_t cloudHeight = (HEIGHT * 0.2) + 1;
 
   // This is the array that we keep our computed noise values in
   //static uint8_t noise[WIDTH][cloudHeight];
@@ -243,7 +243,7 @@ void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
       if (flash)
         EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
       else if(pal) 
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (500 / cloudHeight));
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(curPalette/*rainClouds_p*/, noise[x * cloudHeight + z], noise[x * cloudHeight + z]), (500 / cloudHeight));
       else  
         nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], CHSV(rhue,noise[x * cloudHeight + z],255), (500 / cloudHeight));
     }
@@ -253,14 +253,15 @@ void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
     for (uint16_t i = 0; i < WIDTH; i++)
     {
       for (byte z = 0; z < 10; z++)
-        EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4., (float)HEIGHT - 1.), CHSV(0, 250, random8(96, 120)), 0);
+        EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4., (float)HEIGHT - 1.), CHSV(0, 250, random8(120, 200)), 0);
     }
     EffectMath::blur2d(100);
   }
 }
 
+// Функция создает вспышки в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
 void EffectMath::addGlitter(uint8_t chanceOfGlitter){
-  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::White;
+  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::Gray;
 }
 
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
@@ -270,7 +271,8 @@ uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получ
   return (((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].r << 16) | ((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].g << 8 ) | (uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].b);
 }
 
-void EffectMath::fillAll(const CRGB &color) // залить все
+// Заливает матрицу выбраным цветом
+void EffectMath::fillAll(const CRGB &color) 
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {

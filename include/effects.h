@@ -404,7 +404,7 @@ public:
   static float randomf(float min, float max);
   static bool isInteger(float val);
   static bool Lightning(CRGB lightningColor = CHSV(30,90,255) /*CRGB(72, 72, 80)*/, uint8_t chanse = 72U);
-  static void Clouds(uint8_t rhue = 2, bool flash = false, bool pal = true);
+  static void Clouds(uint8_t rhue = 2, bool flash = false, bool pal = true, CRGBPalette16 curPalette = rainClouds_p);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
   static void nightMode(CRGB *leds);
 
@@ -2243,19 +2243,26 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//Тест алгоритма Дождя с ветром (с) kostyamat
+//------------ Эффект "Дождь с ветром" 
+// (с) kostyamat 1.12.2020
 class EffectWrain: public EffectCalc {
   private:
-    static const byte counts = (WIDTH*2);
+    static const byte counts = (WIDTH*3);
+    static const uint8_t cloudHeight = (HEIGHT * 0.2) + 1;
     float dotPosX[counts];
     float dotPosY[counts];
-    float dotChaos;         // некий хаос в силе ветра
+    float dotChaos;         // сила ветра
     int8_t dotDirect;       // направление ветра 
     byte dotColor[counts];  // цвет капли
     float dotAccel[counts]; // персональное ускорение каждой капли
+    byte dotBri[counts];    // яркость капли
     bool clouds = false;
     bool storm = false;
-    float rhue;
+    bool white = false;
+    byte type = 1;
+    bool randColor = false;
+    float windProgress;
+    
 
     void reload();
     void setDynCtrl(UIControl*_val) override;
