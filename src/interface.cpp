@@ -253,7 +253,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
                 String(effname) + 
                 MIC_SYMBOL
             );
-            ESP.wdtFeed();
+            delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
         }
     } else {
         EffectListElem *eff = nullptr;
@@ -269,7 +269,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
                 String(effname) + 
                 MIC_SYMBOL
             );
-            ESP.wdtFeed();
+            delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
         }
     }
     interf->json_section_end();
@@ -300,7 +300,7 @@ void delayedcall_show_effects_config(){
             String(effname) + 
             MIC_SYMBOL                
         );
-        ESP.wdtFeed();
+        delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
     }
     interf->json_section_end();
     interf->json_section_end();
@@ -558,7 +558,7 @@ void delayedcall_effects_main(){
                 String(effname) + 
                 MIC_SYMBOL
             );
-            ESP.wdtFeed();
+            delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
         }
     }
     interf->json_section_end();
@@ -609,7 +609,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                     String(effname) + 
                     MIC_SYMBOL                    
                 );
-                ESP.wdtFeed();
+                delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
             }
         }
     } else {
@@ -625,7 +625,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                     String(effname) + 
                     MIC_SYMBOL                    
                 );
-                ESP.wdtFeed();
+                delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
             }
         }
     }
