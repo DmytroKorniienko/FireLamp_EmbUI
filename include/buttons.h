@@ -60,7 +60,7 @@ class Button{
 
 class Buttons {
 	private:
-#pragma pack(push,1)
+#pragma pack(push,2)
 	union {
 		struct {
 			bool buttonEnabled:1; // кнопка обрабатывается если true

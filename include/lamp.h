@@ -100,7 +100,7 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
-#pragma pack(push,1)
+#pragma pack(push,2)
 typedef union {
 struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
@@ -139,7 +139,7 @@ uint32_t lampflags; // набор битов для конфига
 #pragma pack(pop)
 
 // тут флаги, которые не нужно сохранять в конфиг
-#pragma pack(push,1)
+#pragma pack(push,2)
 typedef union {
 struct {
     bool dawnFlag:1; // флаг устанавливается будильником "рассвет"

@@ -23,7 +23,7 @@
 	Версия 3.4: Добавлен метод resetStates(), сбрасывающий состояния и счётчики
 */
 
-#pragma pack(push,1)
+#pragma pack(push,2)
 typedef struct {		
 	bool btn_deb: 1;	
 	bool hold_flag: 1;
