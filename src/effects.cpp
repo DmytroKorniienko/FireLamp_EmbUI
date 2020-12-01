@@ -7239,13 +7239,16 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }
 
-// Тест алгоритма Дождя с ветром (с) kostyamat
+//------------ Эффект "Дождь с ветром" 
+// (с) kostyamat 1.12.2020
 void EffectWrain::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3)
+  if(_val->getId()==3) {
     randColor = _val->getVal().toInt() == 0; 
-
+    white = _val->getVal().toInt() == 1;
+    
+  }
   if(_val->getId()==4){
     if(isRandDemo()){
       clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
@@ -7265,12 +7268,11 @@ void EffectWrain::setDynCtrl(UIControl*_val)
 
 void EffectWrain::reload() {
   for (byte i = 0; i < counts; i++) {
-    dotPosX[i] = random(0, WIDTH);
-    dotPosY[i] = EffectMath::randomf(1, HEIGHT - 1);
-    dotChaos = type <= 4 ? EffectMath::randomf(1, 4) : 0;         // хаотичность силы ветра
-    dotDirect = type <= 4 ? random(-1, 2) : 0;                    // направление ветра (рандом 2 никогда не возвращает, был удивлен)
+    dotPosX[i] = EffectMath::randomf(0, WIDTH-1); // Разбрасываем капли ширине
+    dotPosY[i] = EffectMath::randomf(0, HEIGHT);  // и по высоте
     dotColor[i] = random(0, 9) * 31;              // цвет капли
-    dotAccel[i] = (float)random(5, 10) / 100; //EffectMath::randomf(0.05, 0.1); // делаем частицам немного разное ускорение 
+    dotAccel[i] = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
+    dotBri[i] = random(128, 255);
   }
 }
 
@@ -7311,7 +7313,11 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     dotPosY[i] -= (speedfactor + dotAccel[i]);
 
     // Обеспечиваем бесшовность по Y.
-    if (dotPosY[i] < 0) dotPosY[i] = ((float)HEIGHT - (clouds ? 4.5 : 1.)), dotPosX[i] += EffectMath::randomf(- 1, 1); // двигаем капли туда-сюда по горизонтали
+    if (dotPosY[i] < 0) {                                         // достигли низа, обновляем каплю
+      dotPosY[i] = ((float)HEIGHT - (clouds ? cloudHeight : 1.)); // переносим каплю в начало трека
+      dotPosX[i] += EffectMath::randomf(- 1, 1);                  // сдвигаем каплю туда-сюда по горизонтали
+      dotBri[i] = random(170, 200);                               // задаем капле новое значение яркости
+    }
     if (dotPosY[i] > (HEIGHT-1)) dotPosY[i] = 0;
 
     // Обеспечиваем бесшовность по X.
@@ -7321,8 +7327,14 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     if (randColor) {
       if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
       else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
-    } else {
-      CHSV color = rgb2hsv_approximate(ColorFromPalette(*curPalette, dotColor[i], 200));
+    } else if (white) {
+      CHSV color = rgb2hsv_approximate(CRGB::Gray);
+      color.value = dotBri[i] - 48;
+      if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], color);
+      else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], color);
+    }
+    else {
+      CHSV color = rgb2hsv_approximate(ColorFromPalette(*curPalette, dotColor[i], dotBri[i]));
       color.sat = 128;
       if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], color);
       else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], color);
@@ -7331,7 +7343,7 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
 
   // Раздуваем\угасаем ветер
   if (type <= 4) {
-    uint8_t val = triwave8(rhue += speedfactor);
+    uint8_t val = triwave8(windProgress += speedfactor);
     dotChaos = (float)val / 254;
     if (val == 0) {
       dotDirect = random(-1, 2); //выбираем направление ветра лево-право, рандом 2 не возвращает (как не странно).
@@ -7340,10 +7352,12 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
 
   // Рисуем тучку и молнию
   if (clouds) {
-    EffectMath::Clouds(255, (storm ? EffectMath::Lightning() : false));
+    if (randColor) curPalette = palettes.at(6);  // устанавливаем палитру RainbowColors_p
+    if (white) curPalette = palettes.at(17);     // WaterfallColors_p
+    EffectMath::Clouds(255, (storm ? EffectMath::Lightning() : false), true, *curPalette);
   } else if (storm) EffectMath::Lightning();
 
 
-  //fpsmeter();
+  fpsmeter();
   return true;
 }
