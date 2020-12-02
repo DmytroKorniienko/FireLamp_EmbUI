@@ -60,7 +60,7 @@ class EffectWorker;
 
 typedef struct {
     union {
-        uint8_t flags;
+        uint16_t flags;
         struct {
             bool isMicOn:1;
             bool isDebug:1;
