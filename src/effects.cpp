@@ -252,7 +252,7 @@ void fpsmeter() {
   if (frame++ % 60 == 0) Serial.println(FastLED.getFPS());
 }
 
-// ------------- конфетти --------------
+// ------------- Эффект "Конфетти" --------------
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
     return false;
@@ -665,20 +665,40 @@ EVERY_N_SECONDS(1){
 }
 
 // ------------- матрица ---------------
+void EffectMatrix::setDynCtrl(UIControl*_val)
+{
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  if(_val->getId()==3) {
+     hue = _val->getVal().toInt();
+     if (hue == 1) randColor = true, white = false;
+     else if (hue == 255) white = true, randColor = false;
+     else {
+       randColor = false;
+       white = false;
+     }
+  }
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      gluk = random(_val->getMin().toInt(), _val->getMax().toInt()); 
+    } else
+      gluk = _val->getVal().toInt();
+  }
+}
+
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
   //fpsmeter();
   return matrixRoutine(*&ledarr, &*opt);
 }
 
 void EffectMatrix::load(){
-  randomSeed(millis());
+  randomSeed(analogRead(A0));
   for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
   {
     lightersPos[0U][i] = random(0, WIDTH);
-    lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
+    lightersPos[1U][i] = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
     lightersSpeed[0U][i] = 1;
     lightersSpeed[1U][i] = (float)random(10, 20) / 10.0f;
-    lightersColor[i] = 83;
+    lightersColor[i] = hue;
     light[i] = random(196,255);
   }
 }
@@ -686,105 +706,41 @@ void EffectMatrix::load(){
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
   float speedfactor = (float)speed / 1048.0f + 0.05f;
-  EffectMath::dimAll(speed<50?250:240);
+  EffectMath::dimAll(map(speed, 1, 255, 250, 240));
+  
+  CHSV color;
 
-  for (uint8_t i = 0U; i < map(scale,1,255,1,LIGHTERS_AM); i++)
+  for (uint8_t i = 0U; i < map(scale, 1, 32, 1, LIGHTERS_AM); i++)
   {
     lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
-    EffectMath::drawPixelXYF_Y(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255, light[i]));
 
-    if(lightersPos[1U][i]<-1){
-      lightersPos[0U][i] = random(0, WIDTH);
-      lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
-      lightersSpeed[1U][i] = EffectMath::randomf(1.5, 2.5); //(float)random(15, 25) / 10.0f;
-      light[i] = random(127U, 255U);
+    if (white) {
+      color = rgb2hsv_approximate(CRGB::Gray);
+      color.val = light[i];
+    } else if (randColor) {
+      color = CHSV(++hue, 255, light[i]);
+    } else {
+      color = CHSV(hue, 255, light[i]);
     }
-  }
-  return true;
-}
 
-// ------------- снегопад ----------
-bool EffectSnow::run(CRGB *ledarr, EffectWorker *opt){
-  return snowRoutine(*&ledarr, &*opt);
-}
 
-void EffectSnow::setDynCtrl(UIControl*_val){
-  EffectCalc::setDynCtrl(_val);
-  if(_val->getId()==3){
-    if(isRandDemo()){
-      size = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else
-      size = _val->getVal().toInt();
-  }
-}
+    EffectMath::drawPixelXYF_Y(lightersPos[0U][i], lightersPos[1U][i], color);
 
-void EffectSnow::resetSnow(){
-  for(uint16_t i=0; i<WIDTH; i++){
-    if(!random(map(scale,1,255,100,(speed<127?10:5)))){
-      for(uint16_t n=0; n<snowsize; n++){
-        if(snow[n].y<=0 && topLine[i]<(float)HEIGHT-3.51){ // отступ от предыдущей
-          snow[n].x=i+((random(2)?-1:1) * random(3,17)/10.0); // разброс позиции X
-          snow[n].y=HEIGHT-1;
-          snow[n].value = random(map(speed,1,255,32,196),255);
-          topLine[i]=snow[n].y;
-          break;
-        }
+    if (gluk > 1) 
+      if (random8() < gluk) {
+        lightersPos[0U][i] = lightersPos[0U][i] + random(-1, 2);
+        light[i] = random(196,255);
       }
+
+    if(lightersPos[1U][i] < -1) {
+      lightersPos[0U][i] = random(0, WIDTH);
+      lightersPos[1U][i] = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
+      lightersSpeed[1U][i] = EffectMath::randomf(1.5, 2.5); 
+      light[i] = random(127U, 255U);
+      lightersColor[i] = hue;
     }
   }
-}
 
-void EffectSnow::load(){
-  randomSeed(millis());
-  memset(snow,0,sizeof(snow));
-  memset(topLine,10,sizeof(topLine));
-  resetSnow();
-}
-
-bool EffectSnow::snowRoutine(CRGB *leds, EffectWorker *param)
-{
-  float speedfactor = (float)speed / 384.0f + 0.05f;
-  EffectMath::dimAll(127);
-
-  EVERY_N_SECONDS(10){
-    //windfactor = 0.1;
-    windfactor = ((float)random(6,12)/100.0)*(1-random(3)); // ветер
-  }
-
-  EVERY_N_MILLIS(750){ // затухание ветра
-    if(windfactor>0)
-      windfactor-=0.0075;
-    else if(windfactor<0)
-      windfactor+=0.0075;   
-  }
-
-  resetSnow();
-  for(uint16_t i=0; i<WIDTH; i++){
-    topLine[i] -= speedfactor;
-  }
-  for(uint16_t n=0; n<snowsize; n++){
-    snow[n].y -= speedfactor;
-    snow[n].x += windfactor;
-
-    switch(size){
-      case 1:
-        EffectMath::drawPixelXY(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value)); // рисуем
-        break;
-      case 2:
-        EffectMath::drawPixelXYF_Y(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value), 0); // рисуем
-        break;
-      case 3:
-        EffectMath::drawPixelXYF(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value), 0); // рисуем
-        break;
-      default:
-        EffectMath::drawPixelXYF(snow[n].x, snow[n].y, CHSV(255, 0, snow[n].value), 0); // рисуем
-        break;
-    }
-    
-    if(snow[n].y<0 && snow[n].value){
-      snow[n].value--; // гасим
-    }
-  }
   return true;
 }
 
@@ -2503,116 +2459,6 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
   }
   return true;
 }
-
-// ===== Эффект "Шторм" адаптация и рефакторинг kostyamat
-// https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/FastLED/Sublime_Demos/Sublime_Demos.ino
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
-// там по ссылке ещё остались эффекты с 3 по 9 (в SimplePatternList перечислены)
-void EffectRain::setDynCtrl(UIControl*_val)
-{
-  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3){
-    if(isRandDemo()){
-      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
-    } else
-      clouds = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
-  if(_val->getId()==4){
-    if(isRandDemo()){
-      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
-    } else
-      storm = _val->getVal() == FPSTR(TCONST_FFFF);
-  } 
-}
-
-bool EffectRain::run(CRGB *ledarr, EffectWorker *opt)
-{
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., .10, 1.0);
-  return simpleRainRoutine(*&ledarr, &*opt);
-}
-
-void EffectRain::rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor)
-{
- 
-  CRGBPalette16 rain_p(CRGB::Black, rainColor);
-  fadeToBlackBy(myLamp.getUnsafeLedsArray(), NUM_LEDS, 255 - tailLength);
-  fshift += speedfactor;
-  float f;
-  fshift=modff(fshift, &f);
-
-  // Loop for each column individually
-  for (uint8_t x = 0; x < WIDTH; x++)
-  {
-    // Step 1.  Move each dot down one cell
-    for (uint8_t i = 0; i < HEIGHT; i++)
-    {
-      if (noise3d[x][i] >= backgroundDepth)
-      {
-        { // Don't move empty cells
-          if (i > 0 && f > 0){
-            noise3d[x][wrapY(i - 1)] = noise3d[x][i];
-            noise3d[x][i] = 0;
-          }
-          if(!i)
-            noise3d[x][i] = 0;
-        }
-      }
-    }
-
-    // Step 2.  Randomly spawn new dots at top
-    if (random(255) < spawnFreq)
-    {
-      noise3d[x][HEIGHT - 1] = random(backgroundDepth, maxBrightness);
-    }
-
-    // Step 3. Map from tempMatrix cells to LED colors;
-    for (float y = (float)HEIGHT - (clouds ? 4.5 : 1.); y >= 0.; y-= 0.5)
-    {
-      if (noise3d[x][(uint8_t)y] >= backgroundDepth)
-      { // Don't write out empty cells
-          EffectMath::drawPixelXYF_Y(x, y - fshift, ColorFromPalette(rain_p, noise3d[x][(uint8_t)y]), 0);
-      } else EffectMath::drawPixelXYF_Y(x, y - fshift, CRGB::Black);
-    }
-
-    // Step 4. Add splash if called for
-    if (splashes)
-    {
-      // FIXME, this is broken
-      byte j = nline[(uint8_t)x];
-      byte v = noise3d[(uint8_t)x][0];
-
-      if (j >= backgroundDepth)
-      {
-        EffectMath::drawPixelXYF_X(x - 1, 0, ColorFromPalette(rain_p, j / 3));
-        EffectMath::drawPixelXYF_X(x + 1, 0, ColorFromPalette(rain_p, j / 3));
-        nline[(uint8_t)x] = 0; // Reset splash
-      }
-
-      if (v >= backgroundDepth)
-      {
-        EffectMath::setLed(myLamp.getPixelNumber(wrapX(x - 1), 1), ColorFromPalette(rain_p, v / 2));
-        EffectMath::setLed(myLamp.getPixelNumber(wrapX(x + 1), 1), ColorFromPalette(rain_p, v / 2));
-        nline[(uint8_t)x] = v; // Prep splash for next frame
-      }
-    }
-    // Step 5. Add lightning if called for
-  }
-
-  // Step 6. Add clouds if called for
-  if (clouds)
-  {
-    EffectMath::Clouds(rhue, (storm ? EffectMath::Lightning() : false));
-  } else if (storm) EffectMath::Lightning();
-}
-
-bool EffectRain::simpleRainRoutine(CRGB *leds, EffectWorker *param)
-{
-  // ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds, ligthening )
-  rain(scale*2, 255, scale, 30, solidRainColor);
-  return true;
-}
-
-
 
 // ============= FIRE 2018 /  ОГОНЬ 2018 ===============
 // v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
@@ -5927,108 +5773,6 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 5);
 
   counter += speedFactor;
-  return true;
-}
-
-//------------ Эффект "Дождь за окном..."
-//Digital Rain implementation
-//fastled 16x16 matrix demo
-//Yaroslaw Turbin 24.08.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-// База https://pastebin.com/1yymjFxR
-//переделан кардинально (с)kostyamat
-void EffectCRain::setDynCtrl(UIControl*_val)
-{
-  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3){
-    if(isRandDemo()){
-      clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
-    } else
-      clouds = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
-
-  if(_val->getId()==4){
-    if(isRandDemo()){
-      storm = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
-    } else
-      storm = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
-}
-
-bool EffectCRain::run(CRGB *ledarr, EffectWorker *opt ) {
-  return crainRoutine(*&ledarr, &*opt);
-}
-
-void EffectCRain::updaterain(CRGB *leds, float speedFactor)
-{
-  for (byte i = 0; i < WIDTH; i++)
-  {
-    changepattern();
-    for (float j = 0.; j < ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)); j += 0.5)
-    {
-      byte sat = beatsin8(30, 150, 255);
-      //byte layer = rain[XY(i, (((uint8_t)j + _speed + random8(2)) % HEIGHT))]; //fake scroll based on shift coordinate
-      byte layer = rain[myLamp.getPixelNumber(i, (uint16_t)(j + _speed) + random8(2) % HEIGHT)]; //fake scroll based on shift coordinate
-      if (layer)
-      {
-        EffectMath::drawPixelXYF_Y(i, j, CHSV(scale == 255 ? 144 : hue, scale == 255 ? 96 : sat, scale ==255 ? sat-50: 220));
-        //leds[XY(i, j)] = CHSV(100, 255, BRIGHTNESS);
-      } //random8(2) add glitchy effect
-    }
-  }
-  _speed+= speedFactor;
-}
-
-void EffectCRain::load(){
-    raininit(rain);
-}
-
-void EffectCRain::raininit(byte rain[NUM_LEDS])
-{ //init array of dots. run once
-    for (int i = 0; i < NUM_LEDS; i++)
-    {
-        if (random8(10) == 0)
-        {
-            rain[i] = 1;
-        }
-        else
-        {
-            rain[i] = 0;
-        } //random8(20) number of dots. decrease for more dots
-    }
-}
-
-void EffectCRain::changepattern()
-{
-    int rand1 = random16(NUM_LEDS);
-    int rand2 = random16(NUM_LEDS);
-    if ((rain[rand1] == 1) && (rain[rand2] == 0))
-    { //simple get two random dot 1 and 0 and swap it, this will not change total number of dots
-        rain[rand1] = 0;
-        rain[rand2] = 1;
-    }
-}
-
-bool EffectCRain::crainRoutine(CRGB *leds, EffectWorker *param) {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.0);
-  if(counter > 1.0){
-    if (scale != 1)
-      hue = scale;
-    else
-      hue += .33;
-    //updaterain(leds, speedfactor); // вот хз как лучше с этим дождем... вроде тут оно нафиг не нужно, вынесу наружу
-    double f;
-    counter=modf(counter, &f);
-  }
-  counter+=speedfactor;
-  updaterain(leds, speedfactor * 0.5);
-  fadeToBlackBy(leds, NUM_LEDS, scale < 255 ? map(speed, 1, 255, 10, 35) : 20);
-  blurRows(leds, WIDTH, ((float)HEIGHT - (clouds ? (HEIGHT * 0.2 + 1.5) : 1.)), 10);
-  if (clouds)
-    EffectMath::Clouds(hue, storm ? EffectMath::Lightning(CHSV(30, 90, 255), 100U) : false, scale == 255 ? true : false);
-  else if (storm)
-    EffectMath::Lightning(CHSV(30, 90, 255), 255U);
   return true;
 }
 

@@ -109,9 +109,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_MATRIX :
     worker = std::unique_ptr<EffectMatrix>(new EffectMatrix());
     break;
-  case EFF_ENUM::EFF_SNOW :
+  /*case EFF_ENUM::EFF_SNOW :
     worker = std::unique_ptr<EffectSnow>(new EffectSnow());
-    break;
+    break;*/
   case EFF_ENUM::EFF_SPARKLES :
     worker = std::unique_ptr<EffectSparcles>(new EffectSparcles());
     break;
@@ -175,12 +175,12 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_CUBE2 :
     worker = std::unique_ptr<EffectCube2d>(new EffectCube2d());
     break;
-  case EFF_ENUM::EFF_RAIN :
+  /*case EFF_ENUM::EFF_RAIN :
     worker = std::unique_ptr<EffectRain>(new EffectRain());
     break;
   case EFF_ENUM::EFF_CRAIN :
     worker = std::unique_ptr<EffectCRain>(new EffectCRain());
-    break;
+    break;*/
   case EFF_ENUM::EFF_DNA :
     worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
