@@ -385,32 +385,26 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
   return true;
 }
 
-// ============= водо/огне/лава/радуга/хренопад ===============
+// ========== Эффект "Эффектопад"
+// совместное творчество юзеров форума https://community.alexgyver.ru/
 void EffectEverythingFall::load(){
     palettesload();    // подгружаем дефолтные палитры
-}
-bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
-  if (dryrun(3.0))
-    return false;
-  return fire2012WithPalette(*&ledarr, &*opt);
 }
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 #define SPARKINGNEW 80U // 50 // 30 // 120 // 90 // 60
-bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
+bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
+  if (dryrun(4.0))
+    return false;
 
-  uint8_t coolingnew = constrain((uint16_t)scale * palettes.size() / HEIGHT + 7, 1, 255) ;
-
-  EffectMath::blur2d(20);
-  EffectMath::dimAll(254U - scale * (palettes.size() -1));
+  uint8_t coolingnew = map (scale, 1, 255, 93, 10);
 
   for (uint8_t x = 0; x < WIDTH; x++) {
     // Step 1.  Cool down every cell a little
-    for (unsigned int i = 0; i < HEIGHT; i++) {
-      //heat[x][i] = qsub8(heat[x][i], random8(0, ((COOLINGNEW * 10) / HEIGHT) + 2));
-      heat[x][i] = qsub8(heat[x][i], random8(0, coolingnew));
+    for (uint8_t i = 0; i < HEIGHT; i++) {
+      heat[x][i] = qsub8(heat[x][i], random(0, coolingnew));
     }
 
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
@@ -420,16 +414,17 @@ bool EffectEverythingFall::fire2012WithPalette(CRGB*leds, EffectWorker *param) {
 
     // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
     if (random8() < SPARKINGNEW) {
-      int y = random8(2);
-      heat[x][y] = qadd8(heat[x][y], random8(160, 255));
+      int y = random(2);
+      heat[x][y] = qadd8(heat[x][y], random(160, 255));
     }
 
     // Step 4.  Map from heat cells to LED colors
-    for (unsigned int j = 0; j < HEIGHT; j++) {
+    for (uint8_t j = 0; j < HEIGHT; j++) {
       // Scale the heat value from 0-255 down to 0-240
       // for best results with color palettes.
-      byte colorindex = scale8(heat[x][j], 240);
-      EffectMath::setLed(myLamp.getPixelNumber(x, (HEIGHT - 1) - j), ColorFromPalette(*curPalette, colorindex));
+      byte colorindex = scale8(heat[x][(uint8_t)j], 240);
+      nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, (HEIGHT - 1) - j)], ColorFromPalette(*curPalette, colorindex /*, heat[x][j]*/), 50);
+
     }
   }
   return true;

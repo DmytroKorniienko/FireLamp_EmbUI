@@ -774,11 +774,11 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ========== Эффект "Эффектопад"
+// совместное творчество юзеров форума https://community.alexgyver.ru/
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
-
-    bool fire2012WithPalette(CRGB *leds, EffectWorker *param);
 
 public:
     void load() override;
