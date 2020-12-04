@@ -253,7 +253,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
                 String(effname) + 
                 MIC_SYMBOL
             );
-            delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+            #ifdef ESP8266
+            ESP.wdtFeed();
+            #elif defined ESP32
+            dealy(1);
+            #endif
         }
     } else {
         EffectListElem *eff = nullptr;
@@ -269,7 +273,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
                 String(effname) + 
                 MIC_SYMBOL
             );
-            delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+            #ifdef ESP8266
+            ESP.wdtFeed();
+            #elif defined ESP32
+            dealy(1);
+            #endif
         }
     }
     interf->json_section_end();
@@ -300,7 +308,11 @@ void delayedcall_show_effects_config(){
             String(effname) + 
             MIC_SYMBOL                
         );
-        delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+        #ifdef ESP8266
+        ESP.wdtFeed();
+        #elif defined ESP32
+        dealy(1);
+        #endif
     }
     interf->json_section_end();
     interf->json_section_end();
@@ -558,7 +570,11 @@ void delayedcall_effects_main(){
                 String(effname) + 
                 MIC_SYMBOL
             );
-            delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+            #ifdef ESP8266
+            ESP.wdtFeed();
+            #elif defined ESP32
+            dealy(1);
+            #endif
         }
     }
     interf->json_section_end();
@@ -609,7 +625,11 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                     String(effname) + 
                     MIC_SYMBOL                    
                 );
-                delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+                #ifdef ESP8266
+                ESP.wdtFeed();
+                #elif defined ESP32
+                dealy(1);
+                #endif
             }
         }
     } else {
@@ -625,7 +645,11 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                     String(effname) + 
                     MIC_SYMBOL                    
                 );
-                delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+                #ifdef ESP8266
+                ESP.wdtFeed();
+                #elif defined ESP32
+                dealy(1);
+                #endif
             }
         }
     }
