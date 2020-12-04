@@ -2046,6 +2046,17 @@ void EffectFreq::load()
   memset(x,0,sizeof(x));
 }
 
+void EffectFreq::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==4){
+    if(isRandDemo()){
+      type = random(_val->getMin().toInt(),_val->getMax().toInt()+1);
+    } else {
+      type = _val->getVal().toInt();
+    }
+  }
+}
+
 bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
   myLamp.setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   if (dryrun(3.0))
@@ -2125,11 +2136,16 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
           color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
         }
       }
-      EffectMath::setLed(myLamp.getPixelNumber(freqDiv*xpos,ypos), color);
-      if(freqDiv>1)
-        EffectMath::setLed(myLamp.getPixelNumber(freqDiv*xpos+1,ypos), color);
+      if(!(type>=2)){
+        color = 0;
+      }
+        EffectMath::setLed(myLamp.getPixelNumber(freqDiv*xpos,ypos), color);
+        if(freqDiv>1)
+          EffectMath::setLed(myLamp.getPixelNumber(freqDiv*xpos+1,ypos), color);
+      //}
     }
   }
+
 
   bool isfall=false;
   EVERY_N_MILLISECONDS(70){
@@ -2159,9 +2175,11 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
           color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
       }
     }
-    EffectMath::setLed(myLamp.getPixelNumber(freqDiv*i,ypos), color);
-    if(freqDiv>1)
-      EffectMath::setLed(myLamp.getPixelNumber(freqDiv*i+1,ypos), color);
+    if(type<=2){
+      EffectMath::setLed(myLamp.getPixelNumber(freqDiv*i,ypos), color);
+      if(freqDiv>1)
+        EffectMath::setLed(myLamp.getPixelNumber(freqDiv*i+1,ypos), color);
+    }
   }
   return true;
 }
