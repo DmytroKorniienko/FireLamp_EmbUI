@@ -109,9 +109,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_MATRIX :
     worker = std::unique_ptr<EffectMatrix>(new EffectMatrix());
     break;
-  /*case EFF_ENUM::EFF_SNOW :
-    worker = std::unique_ptr<EffectSnow>(new EffectSnow());
-    break;*/
   case EFF_ENUM::EFF_SPARKLES :
     worker = std::unique_ptr<EffectSparcles>(new EffectSparcles());
     break;
@@ -175,12 +172,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_CUBE2 :
     worker = std::unique_ptr<EffectCube2d>(new EffectCube2d());
     break;
-  /*case EFF_ENUM::EFF_RAIN :
-    worker = std::unique_ptr<EffectRain>(new EffectRain());
-    break;
-  case EFF_ENUM::EFF_CRAIN :
-    worker = std::unique_ptr<EffectCRain>(new EffectCRain());
-    break;*/
   case EFF_ENUM::EFF_DNA :
     worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
@@ -238,8 +229,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SNAKE :
     worker = std::unique_ptr<EffectSnake>(new EffectSnake());
     break;
-  case EFF_ENUM::EFF_SNAKE2 :
-    worker = std::unique_ptr<EffectSnake2>(new EffectSnake2());
+  case EFF_ENUM::EFF_NEXUS :
+    worker = std::unique_ptr<EffectNexus>(new EffectNexus());
     break;
   case EFF_ENUM::EFF_FLOWER :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());

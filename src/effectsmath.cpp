@@ -270,7 +270,8 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+    if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+    else EffectMath::drawPixelXY(xn, y, clr);
   }
 }
 
@@ -295,7 +296,8 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+    if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+    else EffectMath::drawPixelXY(x, yn, clr);
   }
 }
 

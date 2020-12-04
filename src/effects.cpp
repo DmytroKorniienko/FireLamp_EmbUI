@@ -5643,89 +5643,115 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
 }
 
 //------------ Эффект "Nexus"
-// База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
-void EffectSnake2::load() {
+// (с) kostyamat 4.12.2020
+void EffectNexus::reload() {
+  for (byte i = 0; i < NEXUS; i++) {
+    dotDirect[i] = random(0, 4);                     // задаем направление
+    dotPosX[i] = random(0, WIDTH);                   // Разбрасываем частицы по ширине
+    dotPosY[i] = random(0, HEIGHT);                  // и по высоте
+    dotColor[i] = ColorFromPalette(RainbowColors_p, random8(0, 9) * 31, 255); // цвет капли
+    dotAccel[i] = (float)random(5, 11) / 70;        // делаем частицам немного разное ускорение 
+  }
+}
+
+void EffectNexus::load() {
   palettesload();
+  randomSeed(analogRead(A0));
+  reload();
 }
 
-void EffectSnake2::setDynCtrl(UIControl*_val) {
-  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
-  if(_val->getId()==3){
-    if(isRandDemo()){
-      disko = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
-    } else
-      disko = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
+bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, .33);
 
-  if(_val->getId()==4){
-    if(isRandDemo()){
-      subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
-    } else
-      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
-  }
-}
+  fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 11, 33));
 
-bool EffectSnake2::snakeRoutine(CRGB *leds, EffectWorker *param) {
-
-  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 0.6);
-  fadeToBlackBy(leds, NUM_LEDS, 70 + speed/8 ); // длина хвоста будет зависеть от скорости
-  hue += speedFactor;
-
-  for (int i = 0; i < snakeCount; i++)
-  {
-#ifdef MIC_EFFECTS
-    fill_palette(
-        colors,
-        SNAKE2_LENGTH,
-        isMicOn() ? (disko ? myLamp.getMicMapFreq() : myLamp.getMicMapMaxPeak())
-                    : (disko ? (hue += EffectMath::randomf(0, 2. * speedFactor)) : hue),
-                    //: (disko ? ((millis() * speedFactor) / 256) : hue),
-        5,
-        isMicOn() ? RainbowColors_p : *curPalette,
-        isMicOn() ? (uint8_t)((float)myLamp.getMicMapMaxPeak() * EffectMath::fmap((float)scale, 1., 255., 1.25, 10.))
-                    : 255,
-        LINEARBLEND);
-#else
-    fill_palette(
-      colors,
-      SNAKE2_LENGTH,
-      (disko ? (hue += EffectMath::randomf(0, 2. * speedFactor)) : hue),
-      5,
-      *curPalette,
-      255,
-      LINEARBLEND
-  );
-#endif
-
-    Snake *snake = &snakes[i];
-
-    snake->shuffleDown(speedFactor);
-
-    if (random(10) > 8)
+  for (byte i = 0; i < map(scale, 1, 10, 4, NEXUS); i++) {
+    switch (dotDirect[i])
     {
-      snake->newDirection();
+    case 0:   // вверх
+      dotPosY[i] += (speedfactor + dotAccel[i]);
+      break;
+    case 1:   //  вниз 
+      dotPosY[i] -= (speedfactor + dotAccel[i]);
+      break;
+    case 2:   // вправо
+      dotPosX[i] += (speedfactor + dotAccel[i]);
+      break;
+    case 3:   // влево
+      dotPosX[i] -= (speedfactor + dotAccel[i]);
+      break;
+    default:
+      break;
+    } 
+
+    // Обеспечиваем бесшовность по Y. И переносим каплю в начало трека
+    if (dotPosY[i] < 0) {
+      dotPosY[i] = (float)HEIGHT - 1.;    
+      resetDot(i);
     }
 
-    snake->move(speedFactor);
-    snake->draw(colors, speedFactor, i, subPix);
+    if (dotPosY[i] > (HEIGHT - 1)) {
+      dotPosY[i] = 0;
+      resetDot(i);
+    }
+
+    // Обеспечиваем бесшовность по X.
+    if (dotPosX[i] < 0) {
+      dotPosX[i] = (WIDTH - 1);
+      resetDot(i);
+    }
+    if (dotPosX[i] > (WIDTH - 1)) {
+      dotPosX[i] = 0;
+      resetDot(i);
+    }
+
+   switch (dotDirect[i])
+  {
+  case 0:   // вверх
+  case 1:   //  вниз 
+    EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], dotColor[i], 0);
+    break;
+  case 2:   // вправо
+  case 3:   // влево
+    EffectMath::drawPixelXYF_X(dotPosX[i], dotPosY[i], dotColor[i], 0);
+    break;
+  default:
+    break;
+  } 
+
+
   }
-  //if (subPix and !isMicOn()) EffectMath::nightMode(*&leds);
+
+  //fpsmeter();
   return true;
 }
 
-bool EffectSnake2::run(CRGB *ledarr, EffectWorker *opt ) {
-  return snakeRoutine(*&ledarr, &*opt);
-}
-
-void EffectSnake2::Snake::draw(CRGB colors[SNAKE2_LENGTH], float speedfactor, int snakenb, bool subpix)
-{
-  for (int i = 0; i < (int)SNAKE2_LENGTH; i++)
+void EffectNexus::resetDot(uint8_t idx) {
+  randomSeed(micros());
+  dotDirect[idx] = random8(0, 4);                     // задаем направление
+  dotColor[idx] = ColorFromPalette(*curPalette, random(0, 9) * 31, 255);              // цвет 
+  dotAccel[idx] = (float)random(5, 10) / 70;     // делаем частицам немного разное ускорение 
+  switch (dotDirect[idx])
   {
-    if (subpix)
-      EffectMath::drawPixelXYF(pixels[i].x, pixels[i].y, colors[i]);
-    else
-      EffectMath::drawPixelXY(pixels[i].x, pixels[i].y, colors[i]);
-  }
+  case 0:   // вверх
+    dotPosX[idx] = random8(0, WIDTH); // Разбрасываем капли по ширине
+    dotPosY[idx] = 0;  // и по высоте
+    break;
+  case 1:   //  вниз 
+    dotPosX[idx] = random8(0, WIDTH); // Разбрасываем капли по ширине
+    dotPosY[idx] = HEIGHT-1;  // и по высоте
+    break;
+  case 2:   // вправо
+    dotPosX[idx] = 0; // Разбрасываем капли по ширине
+    dotPosY[idx] = random8(0, HEIGHT);  // и по высоте
+    break;
+  case 3:   // влево
+    dotPosX[idx] = WIDTH-1; // Разбрасываем капли по ширине
+    dotPosY[idx] = random8(0, HEIGHT);  // и по высоте
+    break;
+  default:
+    break;
+  } 
 }
 
 // --------------  Эффект "Цветение"
@@ -6310,8 +6336,8 @@ void EffectPopcorn::move() {
   }
 }
 
-//--------------Дымовые шашки--------------------------
-// (c) Stepko
+//-------- Эффект "Детские сны"
+// (c) Stepko https://editor.soulmatelights.com/gallery/505
 void EffectSmokeballs::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
 }

@@ -1800,112 +1800,30 @@ public:
 //------------ Эффект "Nexus"
 // База паттерн "Змейка" из проекта Аврора, 
 // перенос и переписан - kostyamat
-class EffectSnake2 : public EffectCalc
-{
-private:
-    float hue;
-    float speedFactor;
-    static const uint8_t snakeCount = WIDTH / 2U;
-    bool subPix = false;
-    bool disko;
+#define NEXUS (WIDTH)
 
+class EffectNexus: public EffectCalc {
+  private:
+    float dotPosX[NEXUS];
+    float dotPosY[NEXUS];
+    int8_t dotDirect[NEXUS];       // направление точки 
+    CRGB dotColor[NEXUS];          // цвет точки
+    float dotAccel[NEXUS];         // персональное ускорение каждой точки
+    bool white = false;
+    byte type = 1;
+    bool randColor = false;
+    float windProgress;
+    
+
+    void reload();
+    void resetDot(uint8_t idx);
+    //void setDynCtrl(UIControl*_val) override;
+
+  public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
-    enum Direction
-    {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT
-    };
-
-    struct Pixel
-    {
-        float x;
-        float y;
-    };
-
-    CRGB colors[SNAKE_LENGTH];
-    struct Snake
-    {
-        float internal_counter = 0.0;
-        float internal_speedf = 1.0;
-        Pixel pixels[SNAKE_LENGTH];
-
-        Direction direction;
-
-        void newDirection()
-        {
-            switch (direction)
-            {
-            case UP:
-            case DOWN:
-                direction = random(0, 2) == 1 ? RIGHT : LEFT;
-                break;
-
-            case LEFT:
-            case RIGHT:
-                direction = random(0, 2) == 1 ? DOWN : UP;
-
-            default:
-                break;
-            }
-        };
-
-        void shuffleDown(float speedFactor)
-        {
-            internal_counter += speedFactor * internal_speedf;
-
-            if (internal_counter > 1.0)
-            {
-                for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
-                {
-                    pixels[i] = pixels[i - 1];
-                }
-                double f;
-                internal_counter = modf(internal_counter, &f);
-            }
-        }
-
-        void reset()
-        {
-            direction = UP;
-            for (int i = 0; i < (int)SNAKE_LENGTH; i++)
-            {
-                pixels[i].x = 0;
-                pixels[i].y = 0;
-            }
-        }
-
-        void move(float speedfactor)
-        {
-            switch (direction)
-            {
-            case UP:
-                pixels[0].y = pixels[0].y >= HEIGHT ? speedfactor : (pixels[0].y + speedfactor);
-                break;
-            case LEFT:
-                pixels[0].x = pixels[0].x >= WIDTH ? speedfactor : (pixels[0].x + speedfactor);
-                break;
-            case DOWN:
-                pixels[0].y = pixels[0].y <= 0 ? HEIGHT - speedfactor : pixels[0].y - speedfactor;
-                break;
-            case RIGHT:
-                pixels[0].x = pixels[0].x <= 0 ? WIDTH - speedfactor : pixels[0].x - speedfactor;
-                break;
-            }
-        }
-
-        void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix);
-    };
-
-    Snake snakes[snakeCount];
-    void setDynCtrl(UIControl *_val) override;
-    bool snakeRoutine(CRGB *leds, EffectWorker *param);
-
-public:
-    //void load();
-    bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
 };
+
 
 // --------------  Эффект "Цветение"
 //Yaroslaw Turbin
@@ -2030,8 +1948,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//--------------Дымовые шашки--------------------------
-// (c) Stepko
+//-------- Эффект "Детские сны"
+// (c) Stepko https://editor.soulmatelights.com/gallery/505
 #define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
