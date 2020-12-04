@@ -2632,29 +2632,28 @@ void EffectRingsLock::ringsSet(){
   if (curPalette == nullptr) {
     return;
   }
+  //FastLED.clear();
   csum = scale^getCtrlVal(3).toInt();
-  ringWidth = map(scale, 1, 255, 1, 8); // толщина кольца от 1 до 8 для каждой из палитр
+  ringWidth = scale; // толщина кольца от 1 до 8 для каждой из палитр
   ringNb = (float)HEIGHT / ringWidth + ((HEIGHT % ringWidth == 0U) ? 0U : 1U)%HEIGHT; // количество колец
   upRingHue = ringWidth - (ringWidth * ringNb - HEIGHT) / 2U; // толщина верхнего кольца. может быть меньше нижнего
   downRingHue = HEIGHT - upRingHue - (ringNb - 2U) * ringWidth; // толщина нижнего кольца = всё оставшееся
 
-
   for (uint8_t i = 0; i < ringNb; i++)
   {
-    ringColor[i] = random8(255U - WIDTH / 8U); // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
+    if (!i) ringColor[i] = 0; //random(255U - WIDTH / 4U);
+    ringColor[i] = ringColor[i - 1] + 64; // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
     shiftHueDir[i] = random8();
-    huePos[i] = 0U; //random8(WIDTH); само прокрутится постепенно
+    huePos[i] = random8(); 
     stepCount = 0U;
-    //do { // песец конструкцию придумал бредовую
-    //  stepCount = WIDTH - 3U - random8((WIDTH - 3U) * 2U); само присвоится при первом цикле
-    //} while (stepCount < WIDTH / 5U || stepCount > 255U - WIDTH / 5U);
-    currentRing = random8(ringNb);
+    currentRing = random(ringNb);
   }
 }
 
 bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
 {
   uint8_t h, x, y;
+  FastLED.clear();
 
   for (uint8_t i = 0; i < ringNb; i++)
   {
@@ -2669,7 +2668,7 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
          ringColor[i]++;
     } else {
       if (stepCount == 0) { // если сдвиг активного кольца завершён, выбираем следующее
-        currentRing = random8(ringNb);
+        currentRing = random(ringNb);
         do {
           stepCount = WIDTH - 3U - random8((WIDTH - 3U) * 2U); // проворот кольца от хз до хз
         } while (stepCount < WIDTH / 5U || stepCount > 255U - WIDTH / 5U);
@@ -2694,10 +2693,10 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
     for (uint8_t j = 0U; j < ((i == 0U) ? downRingHue : ((i == ringNb - 1U) ? upRingHue : ringWidth)); j++) // от 0 до (толщина кольца - 1)
     {
       y = i * ringWidth + j - ((i == 0U) ? 0U : ringWidth - downRingHue);
-      for (uint8_t k = 0; k < WIDTH / 4U; k++) // Четверть кольца
+      for (uint8_t k = 0; k < WIDTH / 2U - 1; k++) // полукольцо
         {
           x = (huePos[i] + k) % WIDTH; // первая половина кольца
-          EffectMath::setLed(myLamp.getPixelNumber(x, y), ColorFromPalette(*curPalette, ringColor[i] + k * h));
+          EffectMath::setLed(myLamp.getPixelNumber(x, y), ColorFromPalette(*curPalette, ringColor[i]/* + k * h*/));
           x = (WIDTH - 1 + huePos[i] - k) % WIDTH; // вторая половина кольца (зеркальная первой)
           EffectMath::setLed(myLamp.getPixelNumber(x, y), ColorFromPalette(*curPalette, ringColor[i] + k * h));
         }

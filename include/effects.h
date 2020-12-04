@@ -1101,6 +1101,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// -------------- Эффект "Кодовый замок"
+// (c) SottNick
 class EffectRingsLock : public EffectCalc {
 private:
   uint8_t ringWidth; // максимальне количество пикселей в кольце (толщина кольца) от 1 до height / 2 + 1
