@@ -596,6 +596,7 @@ public:
 #ifdef MIC_EFFECTS
 class EffectFreq : public EffectCalc {
 private:
+    uint8_t type=1;
     int8_t peakX[2][WIDTH];
     float samp_freq;
     double last_freq = 0;
@@ -608,6 +609,7 @@ private:
     void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 #endif
 
