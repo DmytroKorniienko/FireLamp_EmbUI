@@ -403,8 +403,6 @@ public:
   static CRGB makeDarker( const CRGB& color, fract8 howMuchDarker = 5);
   static float randomf(float min, float max);
   static bool isInteger(float val);
-  static bool Lightning(CRGB lightningColor = CHSV(30,90,255) /*CRGB(72, 72, 80)*/, uint8_t chanse = 72U);
-  static void Clouds(uint8_t rhue = 2, bool flash = false, bool pal = true, CRGBPalette16 curPalette = rainClouds_p);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
   static void nightMode(CRGB *leds);
 
@@ -2160,10 +2158,11 @@ class EffectOscilator: public EffectCalc {
 
 //------------ Эффект "Дождь с ветром" 
 // (с) kostyamat 1.12.2020
+#define counts  (WIDTH*3)
+
 class EffectWrain: public EffectCalc {
   private:
-    static const byte counts = (WIDTH*3);
-    static const uint8_t cloudHeight = (HEIGHT * 0.2) + 1;
+    static const uint8_t cloudHeight = HEIGHT / 5 + 1;
     float dotPosX[counts];
     float dotPosY[counts];
     float dotChaos;         // сила ветра
@@ -2175,12 +2174,18 @@ class EffectWrain: public EffectCalc {
     bool storm = false;
     bool white = false;
     byte type = 1;
+    bool _flash;
     bool randColor = false;
     float windProgress;
+    uint8_t *_noise = (uint8_t *)malloc(WIDTH * cloudHeight);
+    uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);  
+    uint32_t timer = 0;
     
 
     void reload();
     void setDynCtrl(UIControl*_val) override;
+    bool Lightning(uint16_t chanse);
+    void Clouds(bool flash);
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

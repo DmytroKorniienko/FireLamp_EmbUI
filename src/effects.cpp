@@ -249,6 +249,7 @@ void EffectCalc::scale2pallete(){
 // Быстрый ФПСметр
 void fpsmeter() {
   static uint8_t frame = 0;
+  ESP.wdtFeed();
   if (frame++ % 60 == 0) Serial.println(FastLED.getFPS());
 }
 
@@ -5641,7 +5642,7 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int 
   }
 }
 
-//------------ Эффект "Змеиный Остров"
+//------------ Эффект "Nexus"
 // База паттерн "Змейка" из проекта Аврора, перенос и субпиксель - kostyamat
 void EffectSnake2::load() {
   palettesload();
@@ -5933,7 +5934,7 @@ bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
   return fire2020Routine(*&ledarr, &*opt);
 }
 
-// ----------- Эфеект "Змейки"
+// ----------- Эфеект "Змеиный Остров"
 // (c) Сотнег
 // База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
 // адаптация и доработки kostyamat
@@ -7013,7 +7014,7 @@ void EffectWrain::setDynCtrl(UIControl*_val)
 
 void EffectWrain::reload() {
   for (byte i = 0; i < counts; i++) {
-    dotPosX[i] = EffectMath::randomf(0, WIDTH-1); // Разбрасываем капли ширине
+    dotPosX[i] = EffectMath::randomf(0, WIDTH-1); // Разбрасываем капли по ширине
     dotPosY[i] = EffectMath::randomf(0, HEIGHT);  // и по высоте
     dotColor[i] = random(0, 9) * 31;              // цвет капли
     dotAccel[i] = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
@@ -7028,28 +7029,35 @@ void EffectWrain::load() {
 }
 
 bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
-  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, .5);
-  switch (type)
-  {
-  case 1:
-  case 5:
-    FastLED.clear();
-    break;
-  case 2:
-  case 6:
-    fadeToBlackBy(leds, NUM_LEDS, 200. * speedfactor);
-    break;
-  case 3:
-  case 7:
-    fadeToBlackBy(leds, NUM_LEDS, 100. * speedfactor);
-    break;
-  case 4:
-  case 8:
-    fadeToBlackBy(leds, NUM_LEDS, 50. * speedfactor);
-    break;
-  default:
-    break;
-  } 
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, .75);
+
+  if (_flash and (millis() - timer < 500)) 
+    _flash = true;
+  else _flash = false;
+
+  if (_flash == false) {
+    switch (type)
+    {
+    case 1:
+    case 5:
+      FastLED.clear();
+      break;
+    case 2:
+    case 6:
+      fadeToBlackBy(leds, NUM_LEDS, 200. * speedfactor);
+      break;
+    case 3:
+    case 7:
+      fadeToBlackBy(leds, NUM_LEDS, 100. * speedfactor);
+      break;
+    case 4:
+    case 8:
+      fadeToBlackBy(leds, NUM_LEDS, 50. * speedfactor);
+      break;
+    default:
+      break;
+    } 
+  }
 
   //
   for (byte i = 0; i < map(scale, 1, 45, 2, counts); i++) {
@@ -7058,16 +7066,20 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     dotPosY[i] -= (speedfactor + dotAccel[i]);
 
     // Обеспечиваем бесшовность по Y.
-    if (dotPosY[i] < 0) {                                         // достигли низа, обновляем каплю
+    if (dotPosY[i] < 0)
+    {                                                             // достигли низа, обновляем каплю
       dotPosY[i] = ((float)HEIGHT - (clouds ? cloudHeight : 1.)); // переносим каплю в начало трека
-      dotPosX[i] += EffectMath::randomf(- 1, 1);                  // сдвигаем каплю туда-сюда по горизонтали
+      dotPosX[i] += EffectMath::randomf(-1, 1);                   // сдвигаем каплю туда-сюда по горизонтали
       dotBri[i] = random(170, 200);                               // задаем капле новое значение яркости
     }
-    if (dotPosY[i] > (HEIGHT-1)) dotPosY[i] = 0;
+    if (dotPosY[i] > (HEIGHT - 1))
+      dotPosY[i] = 0;
 
     // Обеспечиваем бесшовность по X.
-    if (dotPosX[i] < 0) dotPosX[i] = (WIDTH - 1); // Обеспечиваем бесшовность по X.
-    if (dotPosX[i] > (WIDTH-1)) dotPosX[i] = 0;
+    if (dotPosX[i] < 0)
+      dotPosX[i] = (WIDTH - 1);
+    if (dotPosX[i] > (WIDTH - 1))
+      dotPosX[i] = 0;
 
     if (randColor) {
       if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
@@ -7095,14 +7107,103 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     }
   } else dotDirect = 0;
 
-  // Рисуем тучку и молнию
+    // Рисуем тучку и молнию
   if (clouds) {
     if (randColor) curPalette = palettes.at(6);  // устанавливаем палитру RainbowColors_p
     if (white) curPalette = palettes.at(17);     // WaterfallColors_p
-    EffectMath::Clouds(255, (storm ? EffectMath::Lightning() : false), true, *curPalette);
-  } else if (storm) EffectMath::Lightning();
+    if (storm) _flash = Lightning(200);
+    Clouds((storm ? _flash : false));
+  } else if (storm) {
+    _flash = Lightning(200);
+  }
 
-
-  fpsmeter();
+  //fpsmeter();
   return true;
+}
+
+bool EffectWrain::Lightning(uint16_t chanse)
+{
+  CRGB lightningColor = CHSV(30,90,255);
+  //uint8_t lightning[WIDTH][HEIGHT];
+  // ESP32 does not like static arrays  https://github.com/espressif/arduino-esp32/issues/2567
+if (random16() < chanse)
+  {            
+    timer = millis();
+    //uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);                                                           // Odds of a lightning bolt
+    lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
+    for (uint8_t ly = HEIGHT - 1; ly > 1; ly--)
+    {
+      for (uint8_t lx = 1; lx < WIDTH - 1; lx++)
+      {
+        if (lightning[lx + ly * WIDTH] == 255)
+        {
+          lightning[lx + ly * WIDTH] = 0;
+          uint8_t dir = random8(4);
+          switch (dir)
+          {
+          case 0:
+            EffectMath::setLed(myLamp.getPixelNumber(lx + 1, ly - 1), lightningColor);
+            lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // move down and right
+            break;
+          case 1:
+            EffectMath::setLed(myLamp.getPixelNumber(lx, ly - 1), lightningColor); 
+            lightning[lx + (ly - 1) * WIDTH] = 255;                                 // move down
+            break;
+          case 2:
+            EffectMath::setLed(myLamp.getPixelNumber(lx - 1, ly - 1), lightningColor);
+            lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // move down and left
+            break;
+          case 3:
+            EffectMath::setLed(myLamp.getPixelNumber(lx - 1, ly - 1), lightningColor);
+            lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // fork down and left
+            EffectMath::setLed(myLamp.getPixelNumber(lx - 1, ly - 1), lightningColor);
+            lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // fork down and right
+            break;
+          }
+        }
+      }
+    }
+
+    //free(lightning);
+    return true;
+  }
+  return false;
+}
+
+// Функция рисует тучу в верхней части матрицы 
+void EffectWrain::Clouds(bool flash)
+{
+  uint8_t dataSmoothing = 50; //196
+  uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
+  uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
+  uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
+  uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
+  //uint8_t *_noise = (uint8_t *)malloc(WIDTH * cloudHeight);
+
+  // This is the array that we keep our computed noise values in
+  //static uint8_t _noise[WIDTH][cloudHeight];
+  for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    int xoffset = noiseScale * x;
+
+    for (uint8_t z = 0; z < cloudHeight; z++) {
+      int yoffset = noiseScale * z ;
+      uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
+      noiseData = qadd8(noiseData, scale8(noiseData, 39));
+      _noise[x * cloudHeight + z] = scale8(_noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
+      if (flash)
+        EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
+      else 
+        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(*curPalette, _noise[x * cloudHeight + z], _noise[x * cloudHeight + z]), (500 / cloudHeight));
+    }
+    noiseZ++;
+  }
+
+  if (millis() - timer < 300) {
+    for (uint8_t i = 0; i < WIDTH; i++)
+    {
+      //for (byte z = 0; z < 10; z++)
+        EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4.5, (float)HEIGHT - 2.5), CHSV(0, 250, random8(120, 200)), 0);
+    }
+  }
 }
