@@ -249,7 +249,12 @@ void EffectCalc::scale2pallete(){
 // Быстрый ФПСметр
 void fpsmeter() {
   static uint8_t frame = 0;
+#ifdef ESP8266
   ESP.wdtFeed();
+#elif defined ESP32
+  dealy(1);
+#endif
+
   if (frame++ % 60 == 0) Serial.println(FastLED.getFPS());
 }
 
@@ -670,17 +675,27 @@ void EffectMatrix::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3) {
-     hue = _val->getVal().toInt();
-     if (hue == 1) randColor = true, white = false;
-     else if (hue == 255) white = true, randColor = false;
-     else {
-       randColor = false;
-       white = false;
-     }
+    if(isRandDemo())
+      hue = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    else
+      hue = _val->getVal().toInt();
+
+    if (hue == 1) {
+      randColor = true;
+      white = false;
+    }
+    else if (hue == 255) {
+      white = true;
+      randColor = false;
+    }
+    else {
+      randColor = false;
+      white = false;
+    }
   }
   if(_val->getId()==4){
     if(isRandDemo()){
-      gluk = random(_val->getMin().toInt(), _val->getMax().toInt()); 
+      gluk = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
     } else
       gluk = _val->getVal().toInt();
   }

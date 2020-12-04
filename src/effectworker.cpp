@@ -691,8 +691,6 @@ EffectWorker::EffectWorker(const EffectListElem* eff, bool fast) : effects(), co
     loadeffconfig(eff->eff_nb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
     //updateIndexFile();
   }
-  //delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
-  // лучше в сам цикл вставлять эти прокладки
 }
 
 // Конструктор для отложенного эффекта, очень не желательно вызывать в цикле!
@@ -703,7 +701,11 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
     workerset(curEff, false);
   }
   loadeffconfig(delayeffnb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
-  delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
+#ifdef ESP8266
+  ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер...
+#elif defined ESP32
+  dealy(1);
+#endif
 }
 
 /**
@@ -808,8 +810,12 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
       firstLine = false; // сбрасываю признак первой строки
       doc.clear();
-      //yield(); // сброс вотчдога при итерациях // вызывает Panic core_esp8266_main.cpp:133 __yield
-      delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
+
+#ifdef ESP8266
+  ESP.wdtFeed();
+#elif defined ESP32
+  dealy(1);
+#endif
   }
   indexFile.print("]");
   indexFile.close();
