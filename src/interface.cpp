@@ -1500,6 +1500,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
     interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
 #endif
+    interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
     interf->json_section_end();
 
     interf->datetime(FPSTR(TCONST_006B), event.getDateTime(), FPSTR(TINTF_06D));
@@ -2387,6 +2388,7 @@ void event_worker(const EVENT *event){
         }
         break;
     }
+    case EVENT_TYPE::SET_EFFECT: action = RA_EFFECT; break;
     default:;
     }
 
