@@ -1292,7 +1292,9 @@ void block_settings_time(Interface *interf, JsonObject *data){
     interf->comment(FPSTR(TINTF_052));
     interf->text(FPSTR(TCONST_0057), FPSTR(TINTF_053));
     interf->text(FPSTR(TCONST_0058), FPSTR(TINTF_054));
-    interf->text(FPSTR(TCONST_0059), FPSTR(TINTF_055));
+    interf->comment(FPSTR(TINTF_055));
+    interf->text(FPSTR(TCONST_0059), "");
+    interf->hidden(FPSTR(TCONST_00B8),""); // скрытое поле для получения времени с устройства
     interf->button_submit(FPSTR(TCONST_0056), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
     interf->spacer();
@@ -1311,9 +1313,16 @@ void show_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(TCONST_00B8)].as<String>().c_str());
+    
     String datetime=(*data)[FPSTR(TCONST_0059)];
     if (datetime.length())
         embui.timeProcessor.setTime(datetime);
+    else if(!embui.sysData.wifi_sta) {
+        datetime=(*data)[FPSTR(TCONST_00B8)].as<String>();
+        if (datetime.length())
+            embui.timeProcessor.setTime(datetime);
+    }
 
     SETPARAM(FPSTR(TCONST_0057), embui.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
     SETPARAM(FPSTR(TCONST_0058), embui.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
@@ -2294,6 +2303,8 @@ String httpCallback(const String &param, const String &value, bool isset){
                 }
             }
         }
+        else if (param == FPSTR(TCONST_0086))
+            { action = RA_REBOOT;  remote_action(action, value.c_str(), NULL); }
         embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
         return result;
     } else {
