@@ -2042,7 +2042,8 @@ class EffectLLand: public EffectCalc {
     uint16_t code(byte x, byte y, uint16_t i, float t);
     void setDynCtrl(UIControl*_val) override;
     bool select = false;
-    float hue = 100;
+    bool randColor = false;
+    float hue = 0;
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
