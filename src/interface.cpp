@@ -519,7 +519,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
 void block_main_flags(Interface *interf, JsonObject *data){
     if (!interf) return;
-    interf->json_section_line(FPSTR(TCONST_0019));
+    interf->json_section_begin(FPSTR(TCONST_0019));
+    interf->json_section_line("");
     interf->checkbox(FPSTR(TCONST_001A), myLamp.isLampOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_00E), true);
     interf->checkbox(FPSTR(TCONST_001B), (myLamp.getMode() == MODE_DEMO)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_00F), true);
     interf->checkbox(FPSTR(TCONST_001C), myLamp.IsGlobalBrightness()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_010), true);
@@ -533,12 +534,15 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #ifdef ESP_USE_BUTTON
     interf->checkbox(FPSTR(TCONST_001F), myButtons->isButtonOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_013), true);
 #endif
-
 #ifdef MP3PLAYER
     interf->checkbox(FPSTR(TCONST_009D), myLamp.isONMP3()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_099), true);
 #endif
 #ifdef LAMP_DEBUG
     interf->checkbox(FPSTR(TCONST_0095), myLamp.isDebugOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_08E), true);
+#endif
+    interf->json_section_end();
+#ifdef MP3PLAYER
+    interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), true);
 #endif
     interf->json_section_end();
 }
@@ -939,9 +943,9 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_00A1), FPSTR(TINTF_099));
 
     interf->checkbox(FPSTR(TCONST_009D), myLamp.isONMP3()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_099), true);
-
+    interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), true);
+    
     interf->json_section_begin(FPSTR(TCONST_00A0));
-    interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), false);
     interf->spacer(FPSTR(TINTF_0B1));
     interf->json_section_line(); // расположить в одной линии
         interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_09D), false);
@@ -1397,6 +1401,10 @@ void set_event_conf(Interface *interf, JsonObject *data){
     String act;
     if (!data) return;
 
+    //String output;
+    //serializeJson((*data), output);
+    //LOG(println, output.c_str());
+
     if (data->containsKey(FPSTR(TCONST_005E))) {
         EVENT *curr = nullptr;
         int i = 1, num = (*data)[FPSTR(TCONST_005E)];
@@ -1430,13 +1438,13 @@ void set_event_conf(Interface *interf, JsonObject *data){
     tm->tm_year=tmEvent.substring(0,4).toInt()-TM_BASE_YEAR;
     tm->tm_mon = tmEvent.substring(5,7).toInt()-1;
     tm->tm_mday=tmEvent.substring(8,10).toInt();
-    tm->tm_hour=tmEvent.substring(11,13).toInt();
+    tm->tm_hour=tmEvent.substring(11,13).toInt()+1; // бред какой-то со временем, пока костыль до разбирательства, т.к. mktime собирает значение на час меньше...
     tm->tm_min=tmEvent.substring(14,16).toInt();
     tm->tm_sec=0;
 
     LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
-    event.unixtime = mktime(tm);;
+    event.unixtime = mktime(tm);
     String tmpMsg = (*data)[FPSTR(TCONST_0035)];
     event.message = (char*)(tmpMsg.c_str());
 
@@ -1684,6 +1692,12 @@ void set_mp3flag(Interface *interf, JsonObject *data){
     else
         mp3->setIsOn(myLamp.isONMP3(), (myLamp.getLampSettings().isOnMP3 && millis()>5000)); // при выключенной - только для mp3 и не после перезагрузки
     save_lamp_flags();
+}
+
+void set_mp3volume(Interface *interf, JsonObject *data){
+    if (!data) return;
+    int volume = (*data)[FPSTR(TCONST_00A2)];
+    SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume(volume));
 }
 #endif
 
@@ -1953,6 +1967,7 @@ void create_parameters(){
 #endif
 #ifdef MP3PLAYER
     embui.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
+    embui.section_handle_add(FPSTR(TCONST_00A2), set_mp3volume);
     embui.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
     embui.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
 #endif
