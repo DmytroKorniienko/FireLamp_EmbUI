@@ -53,7 +53,9 @@ MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
 ICACHE_FLASH_ATTR void setup() {
-    Serial.begin(115200);
+    //Serial.begin(115200);
+    Serial.begin(921600);
+    
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
