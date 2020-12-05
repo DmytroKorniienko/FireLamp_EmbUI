@@ -6816,6 +6816,7 @@ void EffectLLand::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val);
     if(_val->getId()==3){
     select = _val->getVal().toInt() == 0;
+    hue = 100;
   }
 }
 
@@ -6831,9 +6832,10 @@ bool EffectLLand::run(CRGB *leds, EffectWorker *opt) {
   }
   uint16_t i = 0;
   t = (float)millis() / EffectMath::fmap(speed, 1., 255., 20., 1.);
+  hue += 0.2;
   for (uint8_t y = 0; y < LED_ROWS; y++) {
     for (uint16_t x = 0; x < LED_COLS; x++) {
-      EffectMath::drawPixelXY(x, y, select ? CHSV(code(x, y, i, t), 255, 255) : ColorFromPalette (*curPalette, code(x,y,i,t),255)); 
+      EffectMath::drawPixelXY(x, y, select ? CHSV(code(x, y, i, t), 255, 255) : ColorFromPalette (*curPalette, code(x,y,i,t) + (uint8_t)hue, 255)); 
       i++;
     }
   }
