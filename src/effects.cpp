@@ -4484,27 +4484,20 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
 
 #ifdef MIC_EFFECTS
 //----- Эффект "Осциллограф" (c) kostyamat
-void EffectOsc::load() {
-
-}
-
 void EffectOsc::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
-    if(isRandDemo()){
-      _rv = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else
-      _rv = _val->getVal().toInt();
+    gain = _val->getVal().toInt();
   }
 }
 
 bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt) {
-  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15U, 60U))) 
+  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) 
     return false;
   else {
     lastrun = millis();
   }
-  fpsmeter();
+  //fpsmeter();
   return oscRoutine(*&ledarr, &*opt);
 }
 
@@ -4512,32 +4505,37 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
   pointer = (float)myLamp.getMicScale() / _scaler;
   if (speed <= 127) {
     div = EffectMath::fmap(speed, 1., 127., 0.5, 4.);
-    OSC_HV = WIDTH;
+    oscHV = HEIGHT;
   } else{
     div = EffectMath::fmap(speed, 128., 255., 0.5, 4.);
-    OSC_HV = HEIGHT;
+    oscHV = WIDTH;
   }
   //memset8( leds, 0, NUM_LEDS * 3);
   fadeToBlackBy(leds, NUM_LEDS, 200);
-  byte micPick = (isMicOn()? myLamp.getMicMaxPeak() : random8(255));
-  color = CHSV(isMicOn()? myLamp.getMicFreq() : random(255), 255, scale == 1 ? 100 : constrain(micPick * EffectMath::fmap(scale, 1., 255., 1., 5.), 51, 255));
-  for (float x = 0.; (uint8_t)x < OSC_HV; x += div) {
+
+  byte micPick = (isMicOn()? myLamp.getMicMaxPeak() : random8(200));
+  color = CHSV(isMicOn()? myLamp.getMicFreq() : random(240), 255, scale == 1 ? 100 : constrain(micPick * EffectMath::fmap(scale, 1., 255., 1., 5.), 51, 255));
+  
+  for (float x = 0.; (uint8_t)x < oscHV; x += div) {
     if (speed <= 127)
-      EffectMath::drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
+      EffectMath::drawLineF(y[0], x, y[1], (x + div) >= oscHV ? oscHV - 1 : (x + div), color);
     else
-      EffectMath::drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
+      EffectMath::drawLineF(x, y[0], (x + div) >= oscHV ? oscHV - 1 : (x + div), y[1], color);
 
     y[0] = y[1];
     y[1] = EffectMath::fmap(
-                          (isMicOn()? analogRead(MIC_PIN) : random(1024)),
-                          (float)(_rv - 1), 
-                          (pointer * 2) - (float)(_rv - 1), 
-                          0.0f, 
-                          float(OSC_HV - 1));
-    delayMicroseconds((uint16_t)((isMicOn()? 1024U : 1568U) * div));
+                          (isMicOn() ? analogRead(MIC_PIN) :  EffectMath::randomf(pointer - gain, pointer + gain)),
+                          (double)gain,
+                          pointer * 2. - (double)gain,
+                          0., 
+                          oscHV - 1);
+    delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024 * div));
 
   }
-
+  count++;
+  if (count%200 == 0) {
+    Serial.println(oscHV);
+  }
 return true;
 }
 #endif
@@ -5982,7 +5980,7 @@ bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
     regenNoise();
   }
 
-  fpsmeter();
+  //fpsmeter();
   return fire2020Routine(*&ledarr, &*opt);
 }
 

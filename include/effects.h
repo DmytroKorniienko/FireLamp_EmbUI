@@ -1437,18 +1437,19 @@ public:
 // (c) kostyamat
 class EffectOsc : public EffectCalc {
 private:
-    byte OSC_HV;
+    byte oscHV;
     float pointer;
     const float _scaler = 3.3 / 1024;
     CRGB color;
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
-    byte _rv;
-    float y[2] = {0.0f, 0.0f};
+    byte gain;
+    double y[2] = {0., 0.};
     void setDynCtrl(UIControl*_val) override;
+    byte count;
 
 public:
-    void load() override;
+    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 #endif
