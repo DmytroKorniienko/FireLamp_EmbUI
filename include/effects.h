@@ -440,7 +440,7 @@ public:
 
     /** аналог ардуино функции map(), но только для float
    */
-    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max){
+    static double fmap(const double x, const double in_min, const double in_max, const double out_min, const double out_max){
         return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
     }
 
@@ -1438,19 +1438,15 @@ public:
 class EffectOsc : public EffectCalc {
 private:
     byte OSC_HV;
-    byte spd;
     float pointer;
-    const float _scaler = 3.3f / 1024;
-    CRGB color = CHSV(255, 200, 200);
-    const float center = (float)HEIGHT / 2;
-    void wu_pixel(uint32_t x, uint32_t y, CRGB col);
+    const float _scaler = 3.3 / 1024;
+    CRGB color;
     bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
     byte _rv;
-    bool micA;
     float y[2] = {0.0f, 0.0f};
-    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
     void setDynCtrl(UIControl*_val) override;
+
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1880,7 +1876,6 @@ private:
     float a = 0;
     byte _pal = 8;
     byte _scale = 60;
-    byte csum = 0;
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
     void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
