@@ -4479,56 +4479,54 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
 
 #ifdef MIC_EFFECTS
 //----- Эффект "Осциллограф" (c) kostyamat
-void EffectOsc::load() {
-  pointer = (float)myLamp.getMicScale()/ _scaler;
-}
-
 void EffectOsc::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
-    if(isRandDemo()){
-      _rv = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else
-      _rv = _val->getVal().toInt();
+    gain = _val->getVal().toInt();
   }
 }
 
-bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt)
-{
-  if (speed <= 127) {
-    spd = 127;
-    OSC_HV = WIDTH;
-  } else{
-    spd = 0;
-    OSC_HV = HEIGHT;
-  }
-  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, 128 - spd, 255 - spd, 15U, 60U))) {
+bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt) {
+  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) 
     return false;
-  } else {
-    div = EffectMath::fmap(speed, 128.0f - spd, 255.0f - spd, 0.50f, 4.0f);
+  else {
     lastrun = millis();
   }
-  //Serial.println("WTF?");
-
+  //fpsmeter();
   return oscRoutine(*&ledarr, &*opt);
 }
 
 bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
-    //memset8( leds, 0, NUM_LEDS * 3);
+  pointer = (float)myLamp.getMicScale() / _scaler;
+  if (speed <= 127) {
+    div = EffectMath::fmap(speed, 1., 127., 0.5, 4.);
+    oscHV = HEIGHT;
+    oscilLimit = WIDTH;
+  } else{
+    div = EffectMath::fmap(speed, 128., 255., 0.5, 4.);
+    oscHV = WIDTH;
+    oscilLimit = HEIGHT;
+  }
+  //memset8( leds, 0, NUM_LEDS * 3);
   fadeToBlackBy(leds, NUM_LEDS, 200);
 
-  for (float x = 0.0f; x < ((float)OSC_HV - div); x += div) {
-    byte micPick = (isMicOn()? myLamp.getMicMaxPeak() : random8(255));
-    color = CHSV(isMicOn()? myLamp.getMicFreq() : random8(255), 200, scale == 1 ? 96 : constrain(micPick * EffectMath::fmap(scale, 1.0f, 255.0f, 1.0f, 5.0f), 51, 255));
-if (spd == 127) {
-
-    EffectMath::drawLineF(y[0], x, y[1], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), color);
-} else
-    EffectMath::drawLineF(x, y[0], (x + div) >= OSC_HV ? OSC_HV - 1 : (x + div), y[1], color);
+  byte micPick = (isMicOn()? myLamp.getMicMaxPeak() : random8(200));
+  color = CHSV(isMicOn()? myLamp.getMicFreq() : random(240), 255, scale == 1 ? 100 : constrain(micPick * EffectMath::fmap(scale, 1., 255., 1., 5.), 51, 255));
+  
+  for (float x = 0.; (uint8_t)x < oscHV; x += div) {
+    if (speed <= 127)
+      EffectMath::drawLineF(y[0], x, y[1], (x + div) >= oscHV ? oscHV - 1 : (x + div), color);
+    else
+      EffectMath::drawLineF(x, y[0], (x + div) >= oscHV ? oscHV - 1 : (x + div), y[1], color);
 
     y[0] = y[1];
-    y[1] = EffectMath::fmap((float)(isMicOn()? analogRead(MIC_PIN) : random16(1023U)), 0.0f + (float)(_rv - 1), (pointer * 2U) - (float)(_rv - 1), 0.0f, float(OSC_HV - 1U));
-    delayMicroseconds((uint16_t)((isMicOn()? 1024U : 1568U) * div));
+    y[1] = EffectMath::fmap(
+                          (isMicOn() ? analogRead(MIC_PIN) :  EffectMath::randomf(pointer - gain, pointer + gain)),
+                          (double)gain,
+                          pointer * 2. - (double)gain,
+                          0., 
+                          oscilLimit - 1);
+    delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024 * div));
 
   }
 
@@ -5955,17 +5953,14 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   for (uint8_t i = 0; i < NUM_COLS; i++)
   {
 #ifdef BIGMATRIX 
-    for (float j = 0.; j < NUM_ROWS; j++)
+    for (uint8_t j = 0.; j < NUM_ROWS; j++)
 #else
     for (float j = 0.; j < NUM_ROWS; j+= 0.5)
 #endif
     {
       uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
-#ifdef BIGMATRIX
-      EffectMath::drawPixelXYF(i, (LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])));
-#else
       EffectMath::drawPixelXYF_Y(i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
-#endif
+
     }
   }
   blurRows(leds, WIDTH, HEIGHT, 15);
@@ -5975,9 +5970,10 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
 
 
 bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
-  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 6 + 6) {
+  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * NOISE_HEIGHT + NOISE_HEIGHT) {
     regenNoise();
   }
+
   //fpsmeter();
   return fire2020Routine(*&ledarr, &*opt);
 }
