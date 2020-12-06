@@ -4506,9 +4506,11 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
   if (speed <= 127) {
     div = EffectMath::fmap(speed, 1., 127., 0.5, 4.);
     oscHV = HEIGHT;
+    oscilLimit = WIDTH;
   } else{
     div = EffectMath::fmap(speed, 128., 255., 0.5, 4.);
     oscHV = WIDTH;
+    oscilLimit = HEIGHT;
   }
   //memset8( leds, 0, NUM_LEDS * 3);
   fadeToBlackBy(leds, NUM_LEDS, 200);
@@ -4528,7 +4530,7 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
                           (double)gain,
                           pointer * 2. - (double)gain,
                           0., 
-                          oscHV - 1);
+                          oscilLimit - 1);
     delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024 * div));
 
   }

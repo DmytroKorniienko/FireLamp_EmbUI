@@ -1438,6 +1438,7 @@ public:
 class EffectOsc : public EffectCalc {
 private:
     byte oscHV;
+    byte oscilLimit;
     float pointer;
     const float _scaler = 3.3 / 1024;
     CRGB color;
