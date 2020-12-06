@@ -4532,10 +4532,7 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
     delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024 * div));
 
   }
-  count++;
-  if (count%200 == 0) {
-    Serial.println(oscHV);
-  }
+
 return true;
 }
 #endif

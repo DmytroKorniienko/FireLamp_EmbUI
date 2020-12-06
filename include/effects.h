@@ -1446,7 +1446,7 @@ private:
     byte gain;
     double y[2] = {0., 0.};
     void setDynCtrl(UIControl*_val) override;
-    byte count;
+    
 
 public:
     //void load() override;
