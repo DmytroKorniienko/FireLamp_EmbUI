@@ -1114,9 +1114,9 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 void Effect3DNoise::fillNoiseLED()
 {
   uint8_t dataSmoothing = 0;
-  if (_speed < 50)
+  if (speed < 50)
   {
-    dataSmoothing = 200 - (_speed * 4);
+    dataSmoothing = 200 - (speed * 4);
   }
   for (uint8_t i = 0; i < myLamp.getminDim()*2; i++)
   {
@@ -1143,8 +1143,8 @@ void Effect3DNoise::fillNoiseLED()
   z += _speed;
 
   // apply slow drift to X and Y, just for visual variation.
-  x += _speed / 8;
-  y -= _speed / 16;
+  x += _speed * 0.125; // 1/8
+  y -= _speed * 0.0625; // 1/16
 
   for (uint8_t i = 0; i < WIDTH; i++)
   {
@@ -1196,6 +1196,7 @@ void Effect3DNoise::load(){
 
 void Effect3DNoise::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый
+  fillnoise8();
   if(_val->getId()==4){
     if(isRandDemo()){
       colorLoop = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
@@ -1210,19 +1211,13 @@ bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
   #ifdef MIC_EFFECTS
     uint8_t mmf = isMicOn() ? myLamp.getMicMapFreq() : 0;
     uint8_t mmp = isMicOn() ? myLamp.getMicMapMaxPeak() : 0;
-    _scale = (NOISE_SCALE_AMP*scale/255+NOISE_SCALE_ADD)*(mmf>0?(1.5*mmf/255.0):1);
-    _speed = NOISE_SCALE_AMP*speed/255*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
+    _scale = (NOISE_SCALE_AMP*scale/255.0+NOISE_SCALE_ADD)*(mmf>0?(1.5*mmf/255.0):1);
+    _speed = NOISE_SCALE_AMP*speed/512.0*(mmf<LOW_FREQ_MAP_VAL && mmp>MIN_PEAK_LEVEL?10:2.5*mmp/255.0+1);
   #else
-    _scale = NOISE_SCALE_AMP*scale/255+NOISE_SCALE_ADD;
-    _speed = NOISE_SCALE_AMP*speed/255;
+    _scale = NOISE_SCALE_AMP*scale/255.0+NOISE_SCALE_ADD;
+    _speed = NOISE_SCALE_AMP*speed/512.0;
   #endif
 
-  EVERY_N_SECONDS(1)
-  {
-    if(colorLoop)
-      fillnoise8(); // периодический сдвиг шума :), а не только лишь при инициализации
-  }
-  
   fillNoiseLED();
   return true;
 }

@@ -869,11 +869,11 @@ private:
 
     uint8_t ihue;
     bool colorLoop;
-    uint16_t _speed;             // speed is set dynamically once we've started up
-    uint16_t _scale;             // scale is set dynamically once we've started up
-    uint16_t x;
-    uint16_t y;
-    uint16_t z;
+    float _speed;             // speed is set dynamically once we've started up
+    float _scale;             // scale is set dynamically once we've started up
+    float x;
+    float y;
+    float z;
     #if (WIDTH > HEIGHT)
     uint8_t noise[2*HEIGHT][WIDTH];
     #else
