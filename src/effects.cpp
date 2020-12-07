@@ -2333,71 +2333,57 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 // Адаптация от (c) SottNick
 void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
-  // в конфиге - значение кол-ва палитр * 4
-  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT*2+FASTLED_PALETTS_COUNT ? 1 : 0));
-  waveRotation = (scale <= FASTLED_PALETTS_COUNT*2 ? 0 : 1);
-}
-
-// В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
-void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
-  std::size_t idx = (_val-1)%FASTLED_PALETTS_COUNT;
-  if (!_pals.size() || idx>=_pals.size()) {
-    LOG(println,F("No palettes loaded or wrong value!"));
-    return;
-  }
-  curPalette = _pals.at(idx);
-  //LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%d, palettescale=%d, szof=%d\n"), _pals.size(), palettepos, ptPallete, palettescale, sizeof(TProgmemRGBPalette16 *));
-}
-
-void EffectWaves::setscl(const byte _scl){
-  EffectCalc::setscl(_scl);
-
-  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT*2+FASTLED_PALETTS_COUNT ? 1 : 0));
-  waveRotation = (scale <= FASTLED_PALETTS_COUNT*2 ? 0 : 1);  // сильно перебрал управление эффектом
-                                         // не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции.
 }
 
 bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
+  //fpsmeter();
   return wavesRoutine(*&ledarr, &*opt);
 }
 
-bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
-{
+bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
   if (curPalette == nullptr) {
     return false;
   }
 
-  EffectMath::dimAll(254-speed/3); // димирование зависит от скорости, чем быстрее - тем больше димировать
+  EffectMath::dimAll(254 - speed /3); // димирование зависит от скорости, чем быстрее - тем больше димировать
   //EffectMath::blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает... (есть сабпиксель, он сам размывает)
   
   float n = 0;
-  switch (waveRotation)
-  {
-  case 0:
-  case 2:
-    for (float x = 0.0; x < WIDTH; x+= 0.5)
-    {
-      n = (float)quadwave8(x * 4 + waveTheta) / ((float)waveScale + 1.);
-      EffectMath::drawPixelXYF(x, n, ColorFromPalette(*curPalette, whue + x));
-      if (waveCount != 1)
-        EffectMath::drawPixelXYF(x, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + x));
+  for (float i = 0.0; i < (scale <=4 ? WIDTH : HEIGHT); i+= 0.5) {
+    n = (float)quadwave8(i * 4 + waveTheta) / ((float)(scale <=4 ? WIDTH : HEIGHT) / 256 + 1.);
+    switch (scale) {
+      case 1: // одна волна горизонтально, справа на лево 
+        EffectMath::drawPixelXYF(i, n, ColorFromPalette(*curPalette, whue + i));
+        break;
+      case 2: // две волны горизонтально, справа на лево
+        EffectMath::drawPixelXYF(i, n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF(i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
+        break;
+      case 3: // одна волна горизонтально, слева на право 
+        EffectMath::drawPixelXYF((float)WIDTH - 1. - i, n, ColorFromPalette(*curPalette, whue + i));
+        break;
+      case 4: // две волны горизонтально, слева на право
+        EffectMath::drawPixelXYF((float)WIDTH - 1. - i, n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)WIDTH - 1. - i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
+        break;
+      case 5: // одна волна вертликально, сверху вниз
+        EffectMath::drawPixelXYF(n, i, ColorFromPalette(*curPalette, whue + i));
+        break;
+      case 6: // две волны вертликально, сверху вниз
+        EffectMath::drawPixelXYF(n, i, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n, i, ColorFromPalette(*curPalette, whue + i));
+      break;
+      case 7: // одна волна верликально, снизу вверх
+        EffectMath::drawPixelXYF(n, (float)HEIGHT - 1.0 - i, ColorFromPalette(*curPalette, whue + i));
+        break;
+      case 8: // две волны верликально, снизу вверх
+        EffectMath::drawPixelXYF(n, (float)HEIGHT - 1.0 - i, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n, (float)HEIGHT - 1.0 - i, ColorFromPalette(*curPalette, whue + i));
+      break;
     }
-    break;
-
-  case 1:
-  case 3:
-    for (float y = 0.0; y < HEIGHT; y+= 0.5)
-    {
-      n = (float)quadwave8(y * 4 + waveTheta) / ((float)waveScale + 0.9f);
-      EffectMath::drawPixelXYF(n, y, ColorFromPalette(*curPalette, whue + y));
-      if (waveCount != 1)
-        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n, y, ColorFromPalette(*curPalette, whue + y));
-    }
-    break;
   }
-
-  waveTheta+= 5.0*((float)speed/255.0)+1.0;
-  whue+=(float)speed/10.0+1;
+  waveTheta += 5.0 * ((float)speed / 255.0) + 1.0;
+  whue += (float)speed / 10. + 1.;
 
   return true;
 }

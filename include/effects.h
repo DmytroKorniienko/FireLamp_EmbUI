@@ -1026,14 +1026,10 @@ public:
 
 class EffectWaves : public EffectCalc {
 private:
-  uint8_t waveCount = 1;
-  const uint8_t waveScale = 256 / WIDTH;
-  uint8_t waveRotation;
   float whue;
   float waveTheta;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
-  void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
-  void setscl(const byte _scl) override;
+
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
