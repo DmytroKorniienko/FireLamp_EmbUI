@@ -625,6 +625,8 @@ String EffectWorker::geteffconfig(uint16_t nb)
 
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
+  if(millis()<10000) return; // в первые десять секунд после рестарта запрещаем запись
+
   File configFile;
   String filename = geteffectpathname(nb,folder);
   configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
