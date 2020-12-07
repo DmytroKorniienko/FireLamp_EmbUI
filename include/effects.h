@@ -1695,6 +1695,7 @@ private:
     float speedFactor;
     int snakeCount;
     bool subPix = false;
+    bool onecolor = false;
 
     void load() override;
     enum Direction

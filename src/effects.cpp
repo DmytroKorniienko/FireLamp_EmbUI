@@ -2333,8 +2333,8 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 // Адаптация от (c) SottNick
 void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
-  waveCount = (scale <= 16 ? (scale <= 8 ? 0 : 1) : (scale >= 25 ? 1 : 0));
-  waveRotation = (scale <= 16 ? 0 : 1);
+  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT+FASTLED_PALETTS_COUNT/2 ? 1 : 0));
+  waveRotation = (scale <= FASTLED_PALETTS_COUNT*2 ? 0 : 1);
 }
 
 // В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
@@ -2351,8 +2351,8 @@ void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val
 void EffectWaves::setscl(const byte _scl){
   EffectCalc::setscl(_scl);
 
-  waveCount = (scale <= 16 ? (scale <= 8 ? 0 : 1) : (scale >= 25 ? 1 : 0));
-  waveRotation = (scale <= 16 ? 0 : 1);  // сильно перебрал управление эффектом
+  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT+FASTLED_PALETTS_COUNT/2 ? 1 : 0));
+  waveRotation = (scale <= FASTLED_PALETTS_COUNT*2 ? 0 : 1);  // сильно перебрал управление эффектом
                                          // не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции.
 }
 
@@ -5586,6 +5586,12 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
     } else
       subPix = _val->getVal() == FPSTR(TCONST_FFFF);
   }
+  if(_val->getId()==5){
+    if(isRandDemo()){
+      onecolor = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
+    } else
+      onecolor = _val->getVal() == FPSTR(TCONST_FFFF);
+  }
 }
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
@@ -5602,10 +5608,13 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
   {
     EffectSnake::Snake &snake = snakes[i];
 
-    fill_palette(colors, SNAKE_LENGTH, (
-      (speed<25 || speed>230) ? (i ? hue : 255-hue) : (i ? hue*(i+1) : (255-hue)*(i+1))
-    ), 1, *curPalette, 255-(i*8), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
-
+    if(onecolor){
+      fill_palette(colors, SNAKE_LENGTH, hue, 1, *curPalette, 255-(i*8), LINEARBLEND);
+    } else {
+      fill_palette(colors, SNAKE_LENGTH, (
+        (speed<25 || speed>230) ? (i ? hue : 255-hue) : (i ? hue*(i+1) : (255-hue)*(i+1))
+      ), 1, *curPalette, 255-(i*8), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
+    }
     snake.shuffleDown(speedFactor, subPix);
 
 #ifdef MIC_EFFECTS
