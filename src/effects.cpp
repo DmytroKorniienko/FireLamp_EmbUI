@@ -5614,7 +5614,7 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
       fill_palette(colors, SNAKE_LENGTH, hue, 1, *curPalette, 255-(i*8), LINEARBLEND);
     } else {
       fill_palette(colors, SNAKE_LENGTH, (
-        (speed<25 || speed>230) ? (i ? hue : 255-hue) : (i ? hue*(i+1) : (255-hue)*(i+1))
+        (speed<25 || speed>230) ? (i%2 ? hue : 255-hue) : (i%2 ? hue*(i+1) : (255-hue)*(i+1))
       ), 1, *curPalette, 255-(i*8), LINEARBLEND); // вообще в цикле заполнять палитры может быть немножко тяжело... но зато разнообразнее по цветам
     }
     snake.shuffleDown(speedFactor, subPix);
