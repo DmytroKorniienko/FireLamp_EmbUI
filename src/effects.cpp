@@ -2333,13 +2333,14 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 // Адаптация от (c) SottNick
 void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
-  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT+FASTLED_PALETTS_COUNT/2 ? 1 : 0));
+  // в конфиге - значение кол-ва палитр * 4
+  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT*2+FASTLED_PALETTS_COUNT ? 1 : 0));
   waveRotation = (scale <= FASTLED_PALETTS_COUNT*2 ? 0 : 1);
 }
 
 // В виду "творческой" переработки управлени эффетом, пришлось создать спец.метод выбора палитры
 void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
-  std::size_t idx = (_val-1)%8;
+  std::size_t idx = (_val-1)%FASTLED_PALETTS_COUNT;
   if (!_pals.size() || idx>=_pals.size()) {
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
@@ -2351,7 +2352,7 @@ void EffectWaves::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val
 void EffectWaves::setscl(const byte _scl){
   EffectCalc::setscl(_scl);
 
-  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT+FASTLED_PALETTS_COUNT/2 ? 1 : 0));
+  waveCount = (scale <= FASTLED_PALETTS_COUNT*2 ? (scale <= FASTLED_PALETTS_COUNT ? 0 : 1) : (scale >= FASTLED_PALETTS_COUNT*2+FASTLED_PALETTS_COUNT ? 1 : 0));
   waveRotation = (scale <= FASTLED_PALETTS_COUNT*2 ? 0 : 1);  // сильно перебрал управление эффектом
                                          // не стал мапить на 4-й ползунок, потому как в этом случае "масштаб" превращается в переключатель на 4-ре позиции.
 }
