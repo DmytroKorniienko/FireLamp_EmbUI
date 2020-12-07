@@ -6211,20 +6211,104 @@ void EffectTest::load() {
 // ----------- Эфеект "Попкорн"
 // (C) Aaron Gotwalt (Soulmate)
 // адаптация и доработки kostyamat
+
 bool EffectPopcorn::run(CRGB *ledarr, EffectWorker *opt) {
   //random16_add_entropy(micros());
   randomSeed(micros());
   return popcornRoutine(*&ledarr, &*opt);
 }
 
-bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 1.0);
-  gravity = 16. * speedfactor;
-  if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30);
-  else FastLED.clear();// fadeToBlackBy(leds, NUM_LEDS, 250);
-  move();
-  paint(*&leds);
+void EffectPopcorn::restart_rocket(uint8_t r) {
+  //tiltDirec = !tiltDirec; // "Мальчик" <> "Девочка"
+  rockets[r].xd = (float)(random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH * HEIGHT + (WIDTH*2))) / 256.0; // * tiltDirec; // Наклон. "Мальчики" налево, "девочки" направо. :)
+  if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > (WIDTH-1) && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
+    // leap towards the centre of the screen
+    rockets[r].xd = -rockets[r].xd;
+  }
+  // controls the leap height
+  rockets[r].yd = EffectMath::randomf(0.9, EffectMath::fmap(speed, 1., 255., (float)HEIGHT / 1.50, (float)HEIGHT / 3.));// (float)(random8() * 8 + HEIGHT * 10.5) / 256.0;
+  rockets[r].hue = random8();
+  rockets[r].x = EffectMath::randomf(center - (float)WIDTH / 6, center + (float)WIDTH / 6);
+}
 
+void EffectPopcorn::reload(){
+  numRockets = map(scale, 1, 32, 6, WIDTH * 3);
+  rockets.resize(numRockets);
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 0.75);
+
+  for (uint8_t r = 0; r < numRockets; r++) {
+    rockets[r].x = random8(WIDTH);
+    rockets[r].y = random8(HEIGHT);
+    rockets[r].xd = 0;
+    rockets[r].yd = -1;
+    rockets[r].hue = random8();
+  }
+}
+
+bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 0.75);
+
+  if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30);
+  else FastLED.clear();
+  float popcornGravity = 0.1 * speedfactor;
+
+  for (uint8_t r = 0; r < numRockets; r++) {
+    // add the X & Y velocities to the positions
+    rockets[r].x += rockets[r].xd ;
+    if (rockets[r].x > WIDTH - 1)
+      rockets[r].x = rockets[r].x - (WIDTH - 1);
+    if (rockets[r].x < 0)
+      rockets[r].x = WIDTH - 1 + rockets[r].x;
+    rockets[r].y += rockets[r].yd * speedfactor;
+    
+    if (rockets[r].y >= (float)HEIGHT){
+      //rockets[r].y = HEIGHT+HEIGHT - 2 - rockets[r].y;
+      rockets[r].yd = -0.001; //rockets[r].yd;
+    } 
+    
+
+    // bounce off the floor?
+    if (rockets[r].y < 0 && rockets[r].yd < -0.7) { // 0.7 вычислено в экселе. скорость свободного падения ниже этой не падает. если ниже, значит ещё есть ускорение
+      rockets[r].yd = (-rockets[r].yd) * 0.9375;//* 240) >> 8;
+      rockets[r].y = rockets[r].yd; //чё это значило вообще?!
+      rockets[r].y = -rockets[r].y;
+    }
+
+    // settled on the floor?
+    if (rockets[r].y <= -1)
+      restart_rocket(r);
+
+
+    // bounce off the sides of the screen?
+    /*if (rockets[r].x < 0 || rockets[r].x > (int)WIDTH * 256) {
+      rockets[r].xd = (-rockets[r].xd * 248) >> 8;
+      // force back onto the screen, otherwise they eventually sneak away
+      if (rockets[r].x < 0) {
+        rockets[r].x = rockets[r].xd;
+        rockets[r].yd += rockets[r].xd;
+      } else {
+        rockets[r].x = (WIDTH * 256) - rockets[r].xd;
+      }
+    }*/
+
+    // popcornGravity
+    rockets[r].yd -= popcornGravity;
+
+    // viscosity
+    rockets[r].xd *= 0.875;
+    rockets[r].yd *= 0.875;
+
+
+    // make the acme gray, because why not
+    if (-0.004 > rockets[r].yd and rockets[r].yd < 0.004)
+      EffectMath::drawPixelXYF(rockets[r].x, rockets[r].y, revCol ?
+                ColorFromPalette(*curPalette, rockets[r].hue) 
+              : CRGB::Pink, blurred ? 35 : 0);
+    else
+      EffectMath::drawPixelXYF(rockets[r].x, rockets[r].y, revCol ? 
+                CRGB::Gray 
+              : ColorFromPalette(*curPalette, rockets[r].hue), blurred ? 35 : 0);
+  }
   return true;
 }
 
@@ -6249,106 +6333,14 @@ void EffectPopcorn::setDynCtrl(UIControl*_val) {
 void EffectPopcorn::setscl(const byte _scl){ // вот тут перегрузим масштаб
   EffectCalc::setscl(_scl); // вызываем функцию базового класса (т.е. заполнение scale и что еще она там умеет)
   // А теперь расширяем ее нужным поведением
-  NUM_ROCKETS = 5 + scale;
-  rockets.resize(NUM_ROCKETS);
-  for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
-    rockets[r].x = random8() * LED_COLS;
-    rockets[r].y = random8() * LED_ROWS;
-  }
+  numRockets = 5 + scale;
+  rockets.resize(numRockets);
+  reload();
 }
 
 void EffectPopcorn::load() {
-  NUM_ROCKETS = 5 + scale;
-  rockets.resize(NUM_ROCKETS);
-  for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
-    rockets[r].x = random8() * WIDTH;
-    rockets[r].y = random8() * HEIGHT;
-  }
   palettesload();
-}
-
-void EffectPopcorn::restart_rocket(uint8_t r) {
-  tiltDirec = !tiltDirec; // "Мальчик" <> "Девочка"
-  rockets[r].xd = (random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH*HEIGHT + (WIDTH*2))); // * (tiltDirec ? 1 : -1); // Наклон. "Мальчики" налево, "девочки" направо. :)
-  if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > (int)(WIDTH) * 256 && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
-    // leap towards the centre of the screen
-    rockets[r].xd = -rockets[r].xd;
-  }
-  // controls the leap height
-  rockets[r].yd = random8() * 8 + HEIGHT * 10;
-}
-
-void EffectPopcorn::paint(CRGB *leds) {
-  //
-  for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
-    CRGB rgb = revCol ? CRGB::Gray : ColorFromPalette(*curPalette, r * LED_COLS + rockets[r].yd, 255, LINEARBLEND);
-
-    // make the acme gray, because why not
-    if (-1 > rockets[r].yd and rockets[r].yd < 1) revCol ? rgb = ColorFromPalette(*curPalette, r * LED_COLS + rockets[r].yd, 255, LINEARBLEND) : rgb = CRGB::Gray;
-
-    uint8_t xx = rockets[r].x & 0xff;
-    uint8_t yy = rockets[r].y & 0xff;
-    uint8_t ix = 255 - xx;
-    uint8_t iy = 255 - yy;
-    uint8_t wu[4] = {
-      #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-      WU_WEIGHT(ix, iy),
-      WU_WEIGHT(xx, iy),
-      WU_WEIGHT(ix, yy),
-      WU_WEIGHT(xx, yy)
-      #undef WU_WEIGHT
-    };
-
-    // multiply the intensities by the colour, and saturating-add them to the pixels
-    for (uint8_t i = 0; i < 4; i++) {
-      uint8_t x = (rockets[r].x >> 8) + (i & 1);
-      uint8_t y = (rockets[r].y >> 8) + ((i >> 1) & 1);
-      int32_t index = myLamp.getPixelNumber(x, y);
-      if (index < NUM_LEDS)
-      leds[index].r = qadd8(leds[index].r, rgb.r * wu[i] >> 8);
-      leds[index].g = qadd8(leds[index].g, rgb.g * wu[i] >> 8);
-      leds[index].b = qadd8(leds[index].b, rgb.b * wu[i] >> 8);
-    }
-
-  }
-
-}
-
-void EffectPopcorn::move() {
-    for (uint8_t r = 0; r < NUM_ROCKETS; r++) {
-    // add the X & Y velocities to the positions
-    rockets[r].x += (float)rockets[r].xd ;
-    rockets[r].y += (float)rockets[r].yd * speedfactor;
-
-    // bounce off the floor?
-    if (rockets[r].y < 0) {
-      rockets[r].yd = (-rockets[r].yd * 240) >> 8;
-      rockets[r].y = rockets[r].yd;
-      // settled on the floor?
-      if (rockets[r].y <= 200 /*(float)400 - 200 * speedfactor*/) { // if you change gravity, this will probably need changing too (200)
-        restart_rocket(r);
-      }
-    }
-
-    // bounce off the sides of the screen?
-    /*if (rockets[r].x < 0 || rockets[r].x > (int)WIDTH * 256) {
-      rockets[r].xd = (-rockets[r].xd * 248) >> 8;
-      // force back onto the screen, otherwise they eventually sneak away
-      if (rockets[r].x < 0) {
-        rockets[r].x = rockets[r].xd;
-        rockets[r].yd += rockets[r].xd;
-      } else {
-        rockets[r].x = (WIDTH * 256) - rockets[r].xd;
-      }
-    }*/
-
-    // gravity
-    rockets[r].yd -= gravity;
-
-    // viscosity
-    rockets[r].xd = (rockets[r].xd * 224) >> 8; // 224
-    rockets[r].yd = (rockets[r].yd * 224) >> 8; //224
-  }
+  reload();
 }
 
 //-------- Эффект "Детские сны"

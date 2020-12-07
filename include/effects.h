@@ -1920,23 +1920,23 @@ public:
 // адаптация и доработки kostyamat
 class EffectPopcorn : public EffectCalc {
 private:
-    uint8_t NUM_ROCKETS = 10;
-    float gravity = 15;
+    uint8_t numRockets = 10;
     bool blurred = false;
     bool revCol = false;
-    bool tiltDirec;
+    //bool tiltDirec;
     float speedfactor;
+    float center = (float)WIDTH / 2.;
 
     typedef struct
     {
-        int32_t x, y, xd, yd;
+        float x, y, xd, yd;
+        byte hue;
     } Rocket;
 
     std::vector<Rocket> rockets;
 
     void restart_rocket(uint8_t r);
-    void paint(CRGB *leds);
-    void move();
+    void reload();
     bool popcornRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
     void setscl(const byte _scl) override; // перегрузка для масштаба
