@@ -2367,15 +2367,15 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  EffectMath::blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
-  fadeToBlackBy(leds, NUM_LEDS, 15);
-
+  EffectMath::dimAll(254-speed/3); // димирование зависит от скорости, чем быстрее - тем больше димировать
+  //EffectMath::blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает... (есть сабпиксель, он сам размывает)
+  
   float n = 0;
   switch (waveRotation)
   {
   case 0:
   case 2:
-    for (float x = 0.0; x < WIDTH; x+= 0.25)
+    for (float x = 0.0; x < WIDTH; x+= 0.5)
     {
       n = (float)quadwave8(x * 4 + waveTheta) / ((float)waveScale + 1.);
       EffectMath::drawPixelXYF(x, n, ColorFromPalette(*curPalette, whue + x));
@@ -2386,7 +2386,7 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
 
   case 1:
   case 3:
-    for (float y = 0.0; y < HEIGHT; y+= 0.25)
+    for (float y = 0.0; y < HEIGHT; y+= 0.5)
     {
       n = (float)quadwave8(y * 4 + waveTheta) / ((float)waveScale + 0.9f);
       EffectMath::drawPixelXYF(n, y, ColorFromPalette(*curPalette, whue + y));
@@ -2397,7 +2397,8 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param)
   }
 
   waveTheta+= 5.0*((float)speed/255.0)+1.0;
-  whue+=speed/10.0+1;
+  whue+=(float)speed/10.0+1;
+
   return true;
 }
 
