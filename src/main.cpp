@@ -109,7 +109,7 @@ ICACHE_FLASH_ATTR void setup() {
 
     sync_parameters();
 
-#ifdef LED_BUILTIN    
+#if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
 }   // End setup()

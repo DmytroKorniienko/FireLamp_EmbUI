@@ -2350,7 +2350,7 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
   
   float n = 0;
   for (float i = 0.0; i < (scale <=4 ? WIDTH : HEIGHT); i+= 0.5) {
-    n = (float)quadwave8(i * 4 + waveTheta) / ((float)(scale <=4 ? WIDTH : HEIGHT) / 256 + 1.);
+    n = (float)quadwave8(i * 4 + waveTheta) / (256.0 / ((float)(scale <=4 ? WIDTH : HEIGHT)) + 1.0);
     switch (scale) {
       case 1: // одна волна горизонтально, справа на лево 
         EffectMath::drawPixelXYF(i, n, ColorFromPalette(*curPalette, whue + i));
@@ -2360,11 +2360,11 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
         EffectMath::drawPixelXYF(i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
         break;
       case 3: // одна волна горизонтально, слева на право 
-        EffectMath::drawPixelXYF((float)WIDTH - 1. - i, n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - i, n, ColorFromPalette(*curPalette, whue + i));
         break;
       case 4: // две волны горизонтально, слева на право
-        EffectMath::drawPixelXYF((float)WIDTH - 1. - i, n, ColorFromPalette(*curPalette, whue + i));
-        EffectMath::drawPixelXYF((float)WIDTH - 1. - i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - i, n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
         break;
       case 5: // одна волна вертликально, сверху вниз
         EffectMath::drawPixelXYF(n, i, ColorFromPalette(*curPalette, whue + i));
@@ -2383,7 +2383,7 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
     }
   }
   waveTheta += 5.0 * ((float)speed / 255.0) + 1.0;
-  whue += (float)speed / 10. + 1.;
+  whue += (float)speed / 10. + 1.0;
 
   return true;
 }
