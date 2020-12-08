@@ -1433,20 +1433,20 @@ void set_event_conf(Interface *interf, JsonObject *data){
 
     struct tm t;
     tm *tm=&t;
-    Serial.println( tmEvent);   //debug
-    Serial.println( tmEvent.substring(0,4).c_str());
+    localtime_r(TimeProcessor::now(), tm);  // reset struct to local now()
+
+    // set desired date
     tm->tm_year=tmEvent.substring(0,4).toInt()-TM_BASE_YEAR;
     tm->tm_mon = tmEvent.substring(5,7).toInt()-1;
     tm->tm_mday=tmEvent.substring(8,10).toInt();
-    tm->tm_hour=tmEvent.substring(11,13).toInt()+1; // бред какой-то со временем, пока костыль до разбирательства, т.к. mktime собирает значение на час меньше...
+    tm->tm_hour=tmEvent.substring(11,13).toInt();
     tm->tm_min=tmEvent.substring(14,16).toInt();
     tm->tm_sec=0;
 
-    LOG(printf_P, PSTR("Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
+    LOG(printf_P, PSTR("Set Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
     event.unixtime = mktime(tm);
-    String tmpMsg = (*data)[FPSTR(TCONST_0035)];
-    event.message = (char*)(tmpMsg.c_str());
+    event.message = (char*)((*data)[FPSTR(TCONST_0035)].as<char*>());
 
     myLamp.events.addEvent(event);
     myLamp.events.saveConfig();
