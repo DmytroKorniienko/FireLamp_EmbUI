@@ -253,7 +253,7 @@ static const char TCONST_00B4[] PROGMEM = "gbright";
 static const char TCONST_00B5[] PROGMEM = "bparam";
 static const char TCONST_00B6[] PROGMEM = "delete";
 static const char TCONST_00B7[] PROGMEM = "warning";
-static const char TCONST_00B8[] PROGMEM = "";
+static const char TCONST_00B8[] PROGMEM = "devicedatetime";
 static const char TCONST_00B9[] PROGMEM = "";
 static const char TCONST_00BA[] PROGMEM = "";
 static const char TCONST_00BB[] PROGMEM = "";
@@ -272,7 +272,7 @@ EFF_WHITE_COLOR,                              // Белый свет
 EFF_COLORS,                                   // Смена цвета
 EFF_RAINBOW_2D,                               // Радуга универсальная
 EFF_SPARKLES,                                 // Конфетти
-EFF_SNOW,                                     // Снегопад
+EFF_NONE01,                                   // Снегопад
 EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
 EFF_MATRIX,                                   // Матрица
 EFF_LIGHTERS,                                 // Светлячки
@@ -306,8 +306,8 @@ EFF_TWINKLES,                                 // Мерцание
 EFF_RADAR,                                    // Радар
 EFF_WAVES,                                    // Волны
 EFF_FIRE2012,                                 // Огонь 2012
-EFF_RAIN,                                     // Дождь
-EFF_CRAIN,                                    // Дождь за окном...
+EFF_NONE02,                                   // Дождь
+EFF_NONE03,                                   // Дождь за окном...
 EFF_DNA,                                      // ДНК
 EFF_FIRE2018,                                 // Огонь 2018
 EFF_RINGS,                                    // Кодовый замок
@@ -331,7 +331,7 @@ EFF_ARROWS,                                   // Стрелки
 EFF_NBALLS,                                   // Дикие шарики
 EFF_ATTRACT,                                  // Притяжение
 EFF_SNAKE,                                    // Змейки by kDn
-EFF_SNAKE2,                                   // Змеиный Остров
+EFF_NEXUS,                                    // Nexus
 EFF_FLINE,                                    // Парящий огонь
 EFF_FFIRE,                                    // Северное сияние
 EFF_FLSNAKE,                                  // Радужный Змей
@@ -339,8 +339,7 @@ EFF_FLOWER,                                   // Цветение
 EFF_TEST,                                     //  (Тест)
 EFF_SMOKEBALLS,                               // Дымовые шашки stepko
 EFF_PICASSO4,                                 // Меташары
-EFF_LIQUIDLAMP,                               // Лаваламп
-EFF_GENAQUARIUM,                               // Аквариум на генераторе    
+EFF_LIQUIDLAMP,                               // Лаваламп 
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -353,9 +352,9 @@ EFF_TIME = (253U)                             // Часы (служебный, �
  * вместо несуществующих эффектов ставим указатель на 0-ю пустышку
  */
 static const char* const T_EFFNAMEID[] PROGMEM = {
-  TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_005, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
+  TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_000, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
   TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_000, TEFF_000, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
-  TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
+  TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_000, TEFF_000, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
   TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
@@ -379,11 +378,11 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 4, 2, 2, 3, 5, 1, 5, 5, 3, 4, 1, 7, 3, 6, // 0-15
-  1, 3, 1, 1, 1, 5, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
-  3, 3, 3, 5, 5, 3, 6, 1, 7, 7, 2, 1, 5, 5, 1, 1, // 32 - 47
-  3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 2, // 48 - 63
-  4, 1, 1, 1, 2, 1, 5, 3, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
+  1, 2, 4, 2, 2, 0, 5, 1, 5, 5, 3, 4, 3, 7, 3, 6, // 0-15
+  1, 3, 1, 5, 1, 5, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
+  3, 3, 3, 5, 5, 1, 6, 0, 0, 7, 2, 3, 5, 5, 1, 1, // 32 - 47
+  3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 4, // 48 - 63
+  3, 1, 1, 1, 2, 3, 5, 3, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -410,11 +409,11 @@ typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4
  * не обязательно каждому эффекту лепить свой конфиг, можно ставить указатели на эффекты с похожими контролами
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
-  E_DEFUI, E_WHITE_CFG, E_COLORS_CFG, E_DEFMICUI_CFG, E_SPARCLES_CFG, E_SNOW_CFG, E_STARFAIL_CFG, E_DEFUI, E_LIGHTERS_CFG, E_LIGHT2_CFG, E_CUBE_CFG, E_PULS_CFG, E_DEFUI, E_NFIRE_CFG, E_2_CFG, E_PALMICUI_CFG, // 0-15
-  E_2_CFG, E_FLYING, E_TLAND, E_LLEND, E_3PAL_CFG, E_RAIN_CFG, E_DEFUI, E_DEFUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
-  E_3PAL_CFG, E_DRIFT_CFG, E_POPCORN_CFG, E_3PAL255_CFG, E_RADAR255_CFG, E_WAVES_CFG, E_F2012_MIC_CFG, E_RAIN_CFG, E_CRAIN_CFG, E_DNA_CFG, E_F2018_CFG, E_DEFUI, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
+  E_DEFUI, E_WHITE_CFG, E_COLORS_CFG, E_DEFMICUI_CFG, E_SPARCLES_CFG, E_SNOW_CFG, E_STARFAIL_CFG, E_MATRIX, E_LIGHTERS_CFG, E_LIGHT2_CFG, E_CUBE_CFG, E_PULS_CFG, E_4PAL_CFG, E_NFIRE_CFG, E_2_CFG, E_PALMICUI_CFG, // 0-15
+  E_2_CFG, E_FLYING, E_TLAND, E_LLEND, E_3PAL_CFG, E_WRAIN, E_DEFUI, E_DEFUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
+  E_3PAL_CFG, E_DRIFT_CFG, E_POPCORN_CFG, E_3PAL255_CFG, E_RADAR255_CFG, E_WAVES_CFG, E_F2012_MIC_CFG, E_DEFUI, E_DEFUI, E_DNA_CFG, E_F2018_CFG, E_CLOCK, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
   E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM_CFG, E_FWORK_CFG, E_2_CFG, E_MUNCH_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_SHAD_CFG, E_PATT_CFG, E_ARR_CFG, E_NBAL_CFG, E_ATTRACT_CFG, E_SNAKE_CFG, // 48 - 63
-  E_SNAKE2_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_TEST_CFG, E_SMOKEBALLS, E_MBL_CFG, E_LIQLAM_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
+  E_NEXUS, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_TEST_CFG, E_SMOKEBALLS, E_MBL_CFG, E_LIQLAM_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 112 - 127
@@ -463,48 +462,14 @@ static const TProgmemRGBPalette16 ZeebraColors_p FL_PROGMEM = {CRGB::White, CRGB
 // Добавил "белую" палитру для "Огонь 2012", в самом конце 4-го ползунка, огонь горит белым цветом, - красиво для белой динамической подсветки
 static const TProgmemRGBPalette16 WhiteBlackColors_p FL_PROGMEM = {CRGB::Black, CRGB::Gray, CRGB::White, CRGB::WhiteSmoke};
 // stepko нашел и перерисовал палитры в https://colorswall.com/
-//static const TProgmemRGBPalette16 AcidColors_p FL_PROGMEM = {0xffff00, 0xd2dc28, 0xd2c83c, 0x711323, 0x6c000c, 0x5a0c00, 0x6d373a, 0xaa5a62, 0x605d36,  0x313164, 0x483a67, 0x3a2465, 0x4b1665, 0x4b0069, 0x31004c, 0x200046};
 static const TProgmemRGBPalette16 AcidColors_p FL_PROGMEM = {0xffff00, 0xd2b328, 0xd25228, 0x711323, 0x6c000c, 0x5a0c00, 0x6d373a, 0xaa5a62, 0x604564, 0x313164, 0x332765, 0x3a2465, 0x4b1665, 0x4b0069, 0x31004c, 0x200046};
 static const TProgmemRGBPalette16 StepkosColors_p FL_PROGMEM = {0x0000ff, 0x0f00f0, 0x1e00e1, 0x2d00d2, 0x3c00c3, 0x4b00b4, 0x5a00a5, 0x690096, 0x780087, 0x870078, 0x9600cd, 0xa50050, 0xb40041, 0xc30032, 0xd20023, 0xe10014};
 static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xbc2300, 0xc84416, 0xdc642c, 0xe69664, 0xfbb979, 0xca503d, 0x882c1c, 0x9a3631, 0xa9624e, 0xcc9762, 0xdcc0b5, 0xc1a29f, 0x826468, 0x4a3334, 0x231a1a, 0x161113};
 static const TProgmemRGBPalette16 NeonColors_p FL_PROGMEM = {0x00b1d0, 0x0f93ec, 0x3572ff, 0x4157ff, 0x6162ff, 0x686cff, 0x7473ff, 0x8689e5, 0x9e9dc6, 0x9694ac, 0x979b9b, 0x888b8c, 0x767680, 0x596160, 0x6c736f, 0x7b7359};
 static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0x1e0443, 0x6d0081, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x7900a1, 0x820055, 0xc80000, 0xe57b00, 0xff9d5a, 0xc58b32, 0xd8d400, 0xffff00};
 static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff100, 0xffe100, 0xffd100, 0xffc100, 0xffb100, 0xffa100, 0xff9100, 0xff8100, 0xff7100, 0xff6100, 0xff5100, 0xff4100, 0xff3100, 0xff2100, 0xff1100};
-/*
 
-
-static const TProgmemRGBPalette16 WoodFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold};
-static const TProgmemRGBPalette16 AlcoholFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue};  // Blue
-static const TProgmemRGBPalette16 CopperFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen};     // Green
-static const TProgmemRGBPalette16 LithiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink};        // Redstatic
-static const TProgmemRGBPalette16 NormalFire_p FL_PROGMEM = {CRGB::Black, CRGB::Red, 0xff3c00, 0xff7800};                             // пытаюсь сделать что-то более приличное
-static const TProgmemRGBPalette16 NormalFire2_p FL_PROGMEM = {CRGB::Black, CRGB::FireBrick, 0xff3c00, 0xff7800};                      // пытаюсь сделать что-то более приличное
-static const TProgmemRGBPalette16 RubidiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue};        // Indigo
-static const TProgmemRGBPalette16 PotassiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink}; // Violet
-static const TProgmemRGBPalette16 SodiumFireColors_p FL_PROGMEM = {CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod};           // Yellow
-static const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {
-  CRGB::Black,
-  CRGB::DarkSlateGray,
-  CRGB::DimGray,
-  CRGB::LightSlateGray,
-
-  CRGB::DimGray,
-  CRGB::DarkSlateGray,
-  CRGB::Silver,
-  CRGB::DarkCyan,
-
-  CRGB::Lavender,
-  CRGB::Silver,
-  CRGB::Azure,
-  CRGB::LightGrey,
-
-  CRGB::GhostWhite,
-  CRGB::Silver,
-  CRGB::White,
-  CRGB::RoyalBlue
-};
-*/
-#if (WIDTH * HEIGHT) > 576U
+#if  576U < (WIDTH * HEIGHT)
   #define BIGMATRIX
 #endif
 
@@ -1154,5 +1119,5 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 //------------ Эффект "Змеиный Остров"
 #define SNAKE_LENGTH  (HEIGHT / 2U)
 #define SNAKE2_LENGTH (HEIGHT / 2U + WIDTH / 4U)
-#define MAX_SNAKES    (16U) // 16 хватит всем :)
+#define MAX_SNAKES    (16U) 
 

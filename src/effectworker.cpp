@@ -109,9 +109,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_MATRIX :
     worker = std::unique_ptr<EffectMatrix>(new EffectMatrix());
     break;
-  case EFF_ENUM::EFF_SNOW :
-    worker = std::unique_ptr<EffectSnow>(new EffectSnow());
-    break;
   case EFF_ENUM::EFF_SPARKLES :
     worker = std::unique_ptr<EffectSparcles>(new EffectSparcles());
     break;
@@ -175,12 +172,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_CUBE2 :
     worker = std::unique_ptr<EffectCube2d>(new EffectCube2d());
     break;
-  case EFF_ENUM::EFF_RAIN :
-    worker = std::unique_ptr<EffectRain>(new EffectRain());
-    break;
-  case EFF_ENUM::EFF_CRAIN :
-    worker = std::unique_ptr<EffectCRain>(new EffectCRain());
-    break;
   case EFF_ENUM::EFF_DNA :
     worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
@@ -238,8 +229,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SNAKE :
     worker = std::unique_ptr<EffectSnake>(new EffectSnake());
     break;
-  case EFF_ENUM::EFF_SNAKE2 :
-    worker = std::unique_ptr<EffectSnake2>(new EffectSnake2());
+  case EFF_ENUM::EFF_NEXUS :
+    worker = std::unique_ptr<EffectNexus>(new EffectNexus());
     break;
   case EFF_ENUM::EFF_FLOWER :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());
@@ -634,6 +625,8 @@ String EffectWorker::geteffconfig(uint16_t nb)
 
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
+  if(millis()<10000) return; // в первые десять секунд после рестарта запрещаем запись
+
   File configFile;
   String filename = geteffectpathname(nb,folder);
   configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
@@ -700,8 +693,6 @@ EffectWorker::EffectWorker(const EffectListElem* eff, bool fast) : effects(), co
     loadeffconfig(eff->eff_nb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
     //updateIndexFile();
   }
-  //ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
-  // лучше в сам цикл вставлять эти прокладки
 }
 
 // Конструктор для отложенного эффекта, очень не желательно вызывать в цикле!
@@ -712,7 +703,11 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
     workerset(curEff, false);
   }
   loadeffconfig(delayeffnb); // вычитываем конфиг эффекта полностью, если что-то не так, то создаем все что нужно
-  ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер... Для есп32 надо будет этот момент отдельно поглядеть.
+#ifdef ESP8266
+  ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер...
+#elif defined ESP32
+  dealy(1);
+#endif
 }
 
 /**
@@ -817,8 +812,12 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
       firstLine = false; // сбрасываю признак первой строки
       doc.clear();
-      //yield(); // сброс вотчдога при итерациях // вызывает Panic core_esp8266_main.cpp:133 __yield
-      ESP.wdtFeed();
+
+#ifdef ESP8266
+  ESP.wdtFeed();
+#elif defined ESP32
+  dealy(1);
+#endif
   }
   indexFile.print("]");
   indexFile.close();

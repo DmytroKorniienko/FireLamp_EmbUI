@@ -165,102 +165,9 @@ bool EffectMath::isInteger(float val) {
         return true;
 }
 
-/* kostyamat добавил
- функция рисует молнию на любом эффекте
- */
-bool EffectMath::Lightning(CRGB lightningColor, uint8_t chanse)
-{
-  //uint8_t lightning[WIDTH][HEIGHT];
-  // ESP32 does not like static arrays  https://github.com/espressif/arduino-esp32/issues/2567
-if (random16() < chanse)
-  {            
-    uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);                                                           // Odds of a lightning bolt
-    lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
-    for (uint8_t ly = HEIGHT - 1; ly > 1; ly--)
-    {
-      for (uint8_t lx = 1; lx < WIDTH - 1; lx++)
-      {
-        if (lightning[lx + ly * WIDTH] == 255)
-        {
-          lightning[lx + ly * WIDTH] = 0;
-          uint8_t dir = random8(4);
-          switch (dir)
-          {
-          case 0:
-            EffectMath::setLed(myLamp.getPixelNumber(lx + 1, ly - 1), lightningColor);
-            lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // move down and right
-            break;
-          case 1:
-            EffectMath::setLed(myLamp.getPixelNumber(lx, ly - 1), CRGB(128, 128, 128)); // я без понятия, почему у верхней молнии один оттенок, а у остальных - другой
-            lightning[lx + (ly - 1) * WIDTH] = 255;                                 // move down
-            break;
-          case 2:
-            EffectMath::setLed(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
-            lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // move down and left
-            break;
-          case 3:
-            EffectMath::setLed(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
-            lightning[(lx - 1) + (ly - 1) * WIDTH] = 255; // fork down and left
-            EffectMath::setLed(myLamp.getPixelNumber(lx - 1, ly - 1), CRGB(128, 128, 128));
-            lightning[(lx + 1) + (ly - 1) * WIDTH] = 255; // fork down and right
-            break;
-          }
-        }
-      }
-    }
-
-    free(lightning);
-    return true;
-  }
-  return false;
-}
-
-void EffectMath::Clouds(uint8_t rhue, bool flash, bool pal)
-{
-  const CRGBPalette16 rainClouds_p(0x000000, 0x333C3C, 0x2D3333, 0xB5B5B5);
-
-  //uint32_t random = millis();
-  uint8_t dataSmoothing = 50; //196
-  uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
-  uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
-  uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
-  uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-  const uint16_t cloudHeight = (HEIGHT * 0.2) + 1;
-
-  // This is the array that we keep our computed noise values in
-  //static uint8_t noise[WIDTH][cloudHeight];
-  static uint8_t *noise = (uint8_t *)malloc(WIDTH * cloudHeight);
-  for (uint8_t x = 0; x < WIDTH; x++)
-  {
-    int xoffset = noiseScale * x + rhue;
-
-    for (int z = 0; z < cloudHeight; z++)
-    {
-      int yoffset = noiseScale * z - rhue;
-      uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
-      noiseData = qadd8(noiseData, scale8(noiseData, 39));
-      noise[x * cloudHeight + z] = scale8(noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
-      if (flash)
-        EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
-      else if(pal) 
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], ColorFromPalette(rainClouds_p, noise[x * cloudHeight + z]), (500 / cloudHeight));
-      else  
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, HEIGHT - z - 1)], CHSV(rhue,noise[x * cloudHeight + z],255), (500 / cloudHeight));
-    }
-    noiseZ++;
-  }
-  if (flash) {
-    for (uint16_t i = 0; i < WIDTH; i++)
-    {
-      for (byte z = 0; z < 10; z++)
-        EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4., (float)HEIGHT - 1.), CHSV(0, 250, random8(96, 120)), 0);
-    }
-    EffectMath::blur2d(100);
-  }
-}
-
+// Функция создает вспышки в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
 void EffectMath::addGlitter(uint8_t chanceOfGlitter){
-  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::White;
+  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::Gray;
 }
 
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
@@ -270,7 +177,8 @@ uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получ
   return (((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].r << 16) | ((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].g << 8 ) | (uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].b);
 }
 
-void EffectMath::fillAll(const CRGB &color) // залить все
+// Заливает матрицу выбраным цветом
+void EffectMath::fillAll(const CRGB &color) 
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
@@ -362,7 +270,8 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+    if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+    else EffectMath::drawPixelXY(xn, y, clr);
   }
 }
 
@@ -387,7 +296,8 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
         clr.g = qadd8(clr.g, (color.g * 85) >> 8);
         clr.b = qadd8(clr.b, (color.b * 85) >> 8);
       }
-      EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+    if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+    else EffectMath::drawPixelXY(x, yn, clr);
   }
 }
 

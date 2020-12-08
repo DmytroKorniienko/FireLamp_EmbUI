@@ -53,7 +53,9 @@ MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
 ICACHE_FLASH_ATTR void setup() {
-    Serial.begin(115200);
+    //Serial.begin(115200);
+    Serial.begin(460800);
+    
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
@@ -107,7 +109,7 @@ ICACHE_FLASH_ATTR void setup() {
 
     sync_parameters();
 
-#ifdef LED_BUILTIN    
+#if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
 }   // End setup()

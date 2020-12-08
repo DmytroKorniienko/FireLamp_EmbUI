@@ -77,7 +77,7 @@ void LAMP::lamp_init(const uint16_t curlimit)
 //   {
 //     handleTelnetClient();
 //     delay(100);
-//     ESP.wdtFeed();
+//     delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
 //   }
 // #endif
 

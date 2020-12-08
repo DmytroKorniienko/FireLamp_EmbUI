@@ -49,7 +49,7 @@ static const char TEFF_001[] PROGMEM = "Біла лампа";
 static const char TEFF_002[] PROGMEM = "Кольори";
 static const char TEFF_003[] PROGMEM = "Веселка 2D";
 static const char TEFF_004[] PROGMEM = "Конфеті";
-static const char TEFF_005[] PROGMEM = "Снігопад";
+static const char TEFF_005[] PROGMEM = "";
 static const char TEFF_006[] PROGMEM = "Заметіль, Зіркопад, Метеори";
 static const char TEFF_007[] PROGMEM = "Матриця";
 static const char TEFF_008[] PROGMEM = "Світлячки";
@@ -65,7 +65,7 @@ static const char TEFF_017[] PROGMEM = "Геометричний Вальс";
 static const char TEFF_018[] PROGMEM = "Тіксі Ленд";
 static const char TEFF_019[] PROGMEM = "LDIRKO Ленд";
 static const char TEFF_020[] PROGMEM = "Осцилятор";
-static const char TEFF_021[] PROGMEM = "Дощ з вітром (тест алгоритму)";
+static const char TEFF_021[] PROGMEM = "Дощ з Вітром";
 static const char TEFF_022[] PROGMEM = "";
 static const char TEFF_023[] PROGMEM = "";
 static const char TEFF_024[] PROGMEM = "Стрибаючі м'ячики";
@@ -83,8 +83,8 @@ static const char TEFF_035[] PROGMEM = "Мерехтіння";
 static const char TEFF_036[] PROGMEM = "Радар";
 static const char TEFF_037[] PROGMEM = "Хвилі";
 static const char TEFF_038[] PROGMEM = "Вогонь 2012";
-static const char TEFF_039[] PROGMEM = "Шторм";
-static const char TEFF_040[] PROGMEM = "Дощ за вікном...";
+static const char TEFF_039[] PROGMEM = "";
+static const char TEFF_040[] PROGMEM = "";
 static const char TEFF_041[] PROGMEM = "ДНК";
 static const char TEFF_042[] PROGMEM = "Вогонь 2018";
 static const char TEFF_043[] PROGMEM = "Кодовий замок";
@@ -101,19 +101,19 @@ static const char TEFF_053[] PROGMEM = "Феєрверк";
 static const char TEFF_054[] PROGMEM = "Тихий Океан";
 static const char TEFF_055[] PROGMEM = "Вишиванка";
 static const char TEFF_056[] PROGMEM = "Кольоровий шум";
-static const char TEFF_057[] PROGMEM = "Мотильки";
+static const char TEFF_057[] PROGMEM = "Метелики";
 static const char TEFF_058[] PROGMEM = "Тіні";
 static const char TEFF_059[] PROGMEM = "Візерунки";
 static const char TEFF_060[] PROGMEM = "Стрілки";
 static const char TEFF_061[] PROGMEM = "Дикі кульки";
 static const char TEFF_062[] PROGMEM = "Притягування";
 static const char TEFF_063[] PROGMEM = "Змійки";
-static const char TEFF_064[] PROGMEM = "Зміїний Острів";
+static const char TEFF_064[] PROGMEM = "Nexus";
 static const char TEFF_065[] PROGMEM = "Витаючий Вогонь";
 static const char TEFF_066[] PROGMEM = "Багряний Небокрай";
 static const char TEFF_067[] PROGMEM = "Різноколірний Змій";
 static const char TEFF_068[] PROGMEM = "Цвітіння";
-static const char TEFF_069[] PROGMEM = "Змійки від SottNick (тест)";
+static const char TEFF_069[] PROGMEM = "Зміїний Острів";
 static const char TEFF_070[] PROGMEM = "Дитячі сни";
 static const char TEFF_071[] PROGMEM = "Метабульки";
 static const char TEFF_072[] PROGMEM = "Лавова Лампа";
@@ -210,7 +210,7 @@ static const char TINTF_051[] PROGMEM = "Час";
 static const char TINTF_052[] PROGMEM = "Правила TZSET обчислення поясного/сезонного часу (напр 'MSK-3' для Europe/Moscow) потрібний рядок можна взяти тут https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h";
 static const char TINTF_053[] PROGMEM = "правила TZone (рекомендовано задати!)";
 static const char TINTF_054[] PROGMEM = "резервний NTP-сервер (не обов'язково)";
-static const char TINTF_055[] PROGMEM = "Дата/час в форматы YYYY-MM-DDThh:mm:ss (якщо нема інтернета)";
+static const char TINTF_055[] PROGMEM = "Дата/час в форматы YYYY-MM-DDThh:mm:ss (якщо нема інтернета, якщо пусто - взяти з пристрою)";
 static const char TINTF_056[] PROGMEM = "Оновлення";
 static const char TINTF_057[] PROGMEM = "Оновлення по ОТА-PIO";
 static const char TINTF_058[] PROGMEM = "Почати";
@@ -347,19 +347,19 @@ static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 
 // Общая конфигурация для эффектов с 4-им ползунком для палитр
 static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
-static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Эффект (0 = циклічно)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
+static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Эффект (0 = циклічно)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Один колір\"}, {\"id\":4,\"type\":0,\"val\":16,\"min\":0,\"max\":32,\"step\":1,\"name\":\"Зміщення кольору (0 = циклічно)\"}]}";
 
 static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Колір\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Кількість\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Субпіксель\"}]}";
 static const char E_RADAR255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палітра/Масштаб\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Субпіксель\"}]}";
 static const char E_WHITE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Відтінок\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 static const char E_LEAPERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":50,\"step\":1,\"name\":\"Жогово!\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
-static const char E_BUTTERFLY_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Кількість / Колір(Нічник)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Пурхання\\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Нічник\"}]}";
+static const char E_BUTTERFLY_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Кількість/Колір (Нічник)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Пурхання\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Нічник\"}]}";
 static const char E_PULS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Генератор кольору\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 static const char E_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Кільця\"}]}";
 static const char E_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Розмивання\"}]}";
 static const char E_AQUARIUM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Колір\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Насиченість\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":0,\"max\":15,\"step\":1,\"name\":\"Відблиски (0:Відкл. 1:Випадк.)\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
-static const char E_FREQ_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Підсилення\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
+static const char E_FREQ_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Підсилення\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":4,\"type\":0,\"val\":2,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Режим\"}]}";
 static const char E_OSC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Розгортка\"},{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Пульсація\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Підсилення\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 // Розмірность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
 static const char E_PATT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Швидкість (Верт.)\"}, {\"id\":2,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Швидкість (Гориз.)\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":39,\"step\":1,\"name\":\"Узор (1 = випадковий)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Субпіксель\"}]}";
@@ -369,7 +369,7 @@ static const char E_F2018_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 static const char E_NBAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":25,\"step\":1,\"name\":\"Зміщення\"}]}";
 static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Енергія\"}, {\"id\":3,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Маса\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
 static const char E_FLOCK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Хижак\"}]}";
-static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Коліра / Кількість\"}]}";
+static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Кількість/Напрям/Положення\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
 static const char E_MUNCH_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":8,\"step\":1,\"name\":\"Сдвиг Коліра (0 = випадковий)\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 static const char E_COM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Колір (1-127 випадковий)\"}]}";
 static const char E_DRIFT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Тип 1/2, Розмивання 3/4\"}]}";
@@ -380,9 +380,9 @@ static const char E_LIGHT2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"v
 static const char E_CUBE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Розмір/Шлейф(1-85-170-255)\"}]}";
 static const char E_STARFAIL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"} ,{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Сніг/Зірки\"} ,{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Метеори\"}]}"; // 3*16+0 для 2 контрола
 static const char E_SNAKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Кількість\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Субпіксель\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
-static const char E_SNAKE2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Колір Диско\"}, {\"id\":4,\"type\":2,\"val\":\"false\",\"name\":\"Субпіксель\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
+static const char E_NEXUS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":5,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Щільність\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
 static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Частота запусків\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Кількість снарядів\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Спалахи\"}]}";
-static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Колір (1 = випадковий, 255 = білий)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Хмаринка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Блискавка\"}]}";
+static const char E_MATRIX[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":12,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Щільність\"}, {\"id\":3,\"type\":0,\"val\":90,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Колір (1 = випадковий, 255 = білий)\"}, {\"id\":4,\"type\":0,\"val\":20,\"min\":1,\"max\":60,\"step\":1,\"name\":\"Глюк\"}]}";
 static const char E_RAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Щільність\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Хмаринка\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Блискавка\"}]}";
 static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Тип затримки (поточна/dryrun/delay)\"}]}";
 static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Масштаб\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Палітра\"}]}";
@@ -397,6 +397,8 @@ static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\
 static const char E_COLORS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":3,\"type\":32,\"val\":\"2\",\"min\":1,\"max\":3,\"step\":1,\"name\":\"Режим\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Мікрофон\"}]}";
 static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":0,\"max\":35,\"step\":1,\"name\":\"Эффект (0 = циклічно)\"}, {\"id\":3,\"type\":0,\"val\":160,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Колір 1 (0 = циклічно)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Колір 2 (0 = циклічно)\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Якість/Швидкість\"}]}";
 static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Розмивання\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Кола\"}]}";
+static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Щільність\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палітра (0 = випадковий колір)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Хмара\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Блискавка\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Розмивання (1-4 з вітром) \"}]}";
+static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Товщина\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Кількість\"}]}";
