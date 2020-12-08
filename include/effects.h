@@ -1134,19 +1134,16 @@ private:
   uint8_t fieldX, fieldY; // размер всего поля блоков по горизонтали / вертикали (в том числе 1 дополнительная пустая дорожка-разделитель с какой-то из сторон)
   uint8_t currentStep;
   uint8_t pauseSteps; // осталось шагов паузы
-  uint8_t shiftSteps=0; // всего шагов сдвига
+  uint8_t shiftSteps; // всего шагов сдвига
   std::vector<int8_t> moveItems;     // индекс перемещаемого элемента
   //bool movedirection;   // направление смещения
   bool direction; // направление вращения в текущем цикле (вертикаль/горизонталь)
   uint8_t storage[WIDTH][HEIGHT];
   int8_t globalShiftX, globalShiftY;
   uint8_t gX, gY;
-  bool seamlessX = false;
+  bool seamlessX = true;
 
-  //CRGB *ledbuff = new CRGB[NUM_LEDS];
   std::vector<CRGB> ledbuff;
-  //CRGB ledbuff[(WIDTH + WIDTH/2) * (HEIGHT + HEIGHT/2)];
-
 
   void swapBuff();
   void cubesize();

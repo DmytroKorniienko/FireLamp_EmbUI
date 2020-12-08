@@ -399,10 +399,10 @@ public:
         #undef MIRR_V
     }
 
-    // перегрузка для работы с буффером
-    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H, uint16_t NL) // получить номер пикселя в ленте по координатам
+    // для работы с буффером
+    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буффере по координатам
     {
-        NL = W*H;
+        uint16_t NL = W*H;
 
         uint16_t _THIS_Y = y;
         uint16_t _THIS_X = x;
