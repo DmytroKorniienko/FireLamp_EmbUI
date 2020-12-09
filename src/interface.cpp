@@ -913,6 +913,35 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
     interf->color(FPSTR(TCONST_0036), FPSTR(TINTF_01E));
     interf->button_submit(FPSTR(TCONST_0034), FPSTR(TINTF_01F), FPSTR(TCONST_0008));
 
+    interf->json_section_hidden(FPSTR(TCONST_00B9), FPSTR(TINTF_002));
+        interf->json_section_begin(FPSTR(TCONST_00BA));
+            interf->spacer(FPSTR(TINTF_001));
+                interf->range(FPSTR(TCONST_0051), 10, 100, 5, FPSTR(TINTF_044));
+                interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
+
+                interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
+                    interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));
+                    interf->option(String(PERIODICTIME::PT_EVERY_60), FPSTR(TINTF_048));
+                    interf->option(String(PERIODICTIME::PT_EVERY_30), FPSTR(TINTF_049));
+                    interf->option(String(PERIODICTIME::PT_EVERY_15), FPSTR(TINTF_04A));
+                    interf->option(String(PERIODICTIME::PT_EVERY_10), FPSTR(TINTF_04B));
+                    interf->option(String(PERIODICTIME::PT_EVERY_5), FPSTR(TINTF_04C));
+                    interf->option(String(PERIODICTIME::PT_EVERY_1), FPSTR(TINTF_04D));
+                interf->json_section_end();
+
+            interf->spacer(FPSTR(TINTF_04E));
+                interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
+                //interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
+                String datetime;
+                TimeProcessor::getDateTimeString(datetime, embui.param(FPSTR(TCONST_0055)).toInt());
+                interf->text(FPSTR(TCONST_0055), datetime, FPSTR(TINTF_050), false);
+                interf->button_submit(FPSTR(TCONST_00BA), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+            interf->spacer();
+                //interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
+                interf->button(FPSTR(TCONST_0003), FPSTR(TINTF_00B));
+        interf->json_section_end();
+    interf->json_section_end();
+
     interf->json_section_end();
 }
 
@@ -927,14 +956,49 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
     myLamp.sendString((*data)[FPSTR(TCONST_0035)], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
 }
 
-void block_lamp(Interface *interf, JsonObject *data){
-    //Страница "Управление лампой"
+void block_lamptext(Interface *interf, JsonObject *data){
+    //Страница "Вывод текста"
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
 
     interf->json_section_end();
+}
+
+void set_text_config(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
+    SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
+    SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
+    SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
+
+    String newYearTime = (*data)[FPSTR(TCONST_0055)]; // Дата/время наструпления нового года с интерфейса
+    struct tm t;
+    tm *tm=&t;
+    localtime_r(TimeProcessor::now(), tm);  // reset struct to local now()
+
+    // set desired date
+    tm->tm_year = newYearTime.substring(0,4).toInt()-TM_BASE_YEAR;
+    tm->tm_mon  = newYearTime.substring(5,7).toInt()-1;
+    tm->tm_mday = newYearTime.substring(8,10).toInt();
+    tm->tm_hour = newYearTime.substring(11,13).toInt();
+    tm->tm_min  = newYearTime.substring(14,16).toInt();
+    tm->tm_sec  = 0;
+
+    time_t ny_unixtime = mktime(tm);
+    LOG(printf_P, PSTR("Set New Year at %d %d %d %d %d (%d)\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, ny_unixtime);
+
+    //SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime(ny_unixtime));
+    embui.var(FPSTR(TCONST_0055),String(ny_unixtime)); myLamp.setNYUnixTime(ny_unixtime);
+
+    if(!interf){
+        interf = embui.ws.count()? new Interface(&embui, &embui.ws, 3000) : nullptr;
+        section_text_frame(interf, data);
+        delete interf;
+    } else
+        section_text_frame(interf, data);
 }
 
 #ifdef MP3PLAYER
@@ -1217,25 +1281,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
 #ifdef SHOWSYSCONFIG
     interf->checkbox(FPSTR(TCONST_0096), myLamp.getLampSettings().isShowSysMenu ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_093), false); // отображение системного меню
 #endif
-
-    interf->spacer(FPSTR(TINTF_001));
-    interf->range(FPSTR(TCONST_0051), 10, 100, 5, FPSTR(TINTF_044));
-    interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
-
-    interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
-    interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));
-    interf->option(String(PERIODICTIME::PT_EVERY_60), FPSTR(TINTF_048));
-    interf->option(String(PERIODICTIME::PT_EVERY_30), FPSTR(TINTF_049));
-    interf->option(String(PERIODICTIME::PT_EVERY_15), FPSTR(TINTF_04A));
-    interf->option(String(PERIODICTIME::PT_EVERY_10), FPSTR(TINTF_04B));
-    interf->option(String(PERIODICTIME::PT_EVERY_5), FPSTR(TINTF_04C));
-    interf->option(String(PERIODICTIME::PT_EVERY_1), FPSTR(TINTF_04D));
-    interf->json_section_end();
-
-    interf->spacer(FPSTR(TINTF_04E));
-    interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
-    interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
-    
+   
     interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
     interf->spacer();
@@ -1272,11 +1318,6 @@ void set_settings_other(Interface *interf, JsonObject *data){
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
         SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
-        SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
-        SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
-        SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
-        SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
-        SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime((*data)[FPSTR(TCONST_0055)]));
     #ifdef MIC_EFFECTS
         myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF));
     #endif
@@ -1710,10 +1751,10 @@ void section_effects_frame(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
-void section_lamp_frame(Interface *interf, JsonObject *data){
+void section_text_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface(FPSTR(TINTF_080));
-    block_lamp(interf, data);
+    block_lamptext(interf, data);
     interf->json_frame_flush();
 }
 
@@ -1934,10 +1975,12 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
 #endif
     embui.section_handle_add(FPSTR(TCONST_009A), section_sys_settings_frame);
-    embui.section_handle_add(FPSTR(TCONST_0003), section_lamp_frame);
+    embui.section_handle_add(FPSTR(TCONST_0003), section_text_frame);
     embui.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
     embui.section_handle_add(FPSTR(TCONST_0030), edit_lamp_config);
     embui.section_handle_add(FPSTR(TCONST_0029), edit_lamp_config);
+
+    embui.section_handle_add(FPSTR(TCONST_00BA), set_text_config);
 
     embui.section_handle_add(FPSTR(TCONST_0004), section_settings_frame);
     embui.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
@@ -2064,6 +2107,17 @@ void sync_parameters(){
     CALL_SETTER(FPSTR(TCONST_001F), embui.param(FPSTR(TCONST_001F)), set_btnflag);
 #endif
 
+    obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
+    obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
+    obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
+    obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
+    String datetime;
+    TimeProcessor::getDateTimeString(datetime, embui.param(FPSTR(TCONST_0055)).toInt());
+    obj[FPSTR(TCONST_0055)] = datetime;
+    
+    set_text_config(nullptr, &obj);
+    obj.clear();
+
     obj[FPSTR(TCONST_004E)] = tmp.isFaderON ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_008E)] = tmp.isEffClearing ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_004C)] = tmp.MIRR_H ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -2075,11 +2129,6 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0096)] = tmp.isShowSysMenu ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     
     obj[FPSTR(TCONST_0050)] = embui.param(FPSTR(TCONST_0050));
-    obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
-    obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
-    obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
-    obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
-    obj[FPSTR(TCONST_0055)] = embui.param(FPSTR(TCONST_0055));
 
     set_settings_other(nullptr, &obj);
     obj.clear();
