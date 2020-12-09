@@ -46,6 +46,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "../../include/LList.h"
 #include "interface.h"
 
+#ifdef XY_EXTERN
+#include "XY.h"
+#endif
+
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
 #endif
@@ -380,8 +384,9 @@ public:
     CRGB *getUnsafeLedsArray(){return leds;}
 
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-        uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
+    uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
     {
+    #ifndef XY_EXTERN
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
         #define MIRR_V flags.MIRR_V
@@ -397,6 +402,15 @@ public:
     
         #undef MIRR_H
         #undef MIRR_V
+    #else
+        // any out of bounds address maps to the first hidden pixel
+        if ( (x >= WIDTH) || (y >= HEIGHT) ) {
+            return (LAST_VISIBLE_LED + 1);
+        }
+        uint16_t i = (y * WIDTH) + x;
+        uint16_t j = pgm_read_dword(&XYTable[i]);
+        return j;
+    #endif
     }
 
     // для работы с буффером
