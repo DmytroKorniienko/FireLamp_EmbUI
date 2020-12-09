@@ -90,7 +90,7 @@ void pubCallback(Interface *interf){
     //interf->value(FPSTR(TCONST_008F), String(millis()/1000), true);
     char fuptime[16];
     uint32_t tm = millis()/1000;
-    sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,tm/3600,tm/60,tm%60);
+    sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,(tm/3600)%24,(tm/60)%60,tm%60);
     interf->value(FPSTR(TCONST_008F), String(fuptime), true);
     
     interf->json_frame_flush();
