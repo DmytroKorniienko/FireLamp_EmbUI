@@ -284,16 +284,20 @@ public:
         return (uint8_t)(flags.isMicOn?(log(last_freq)-minFreq)*scale:0);
     }
     void setMicOnOff(bool val) {
+        bool found=false;
         flags.isMicOn = val;
         lampState.isMicOn = val;
         LList<UIControl*>&controls = effects.getControls();
         if(val){
             for(int i=3; i<controls.size(); i++) {
-                if(controls[i]->getId()==7)
+                if(controls[i]->getId()==7){
                     effects.worker->setDynCtrl(controls[i]);
+                    found=true;
+                }
             }
-        } else {
-            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), FPSTR(TCONST_FFFE), String(""), String(""), String(""));
+        } 
+        if(!val || !found){
+            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), String(""), String(""), String(""));
             effects.worker->setDynCtrl(ctrl);
             delete ctrl;
         }

@@ -167,6 +167,8 @@ void EffectCalc::setDynCtrl(UIControl*_val){
 
   //LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
 
+  //LOG(println,isMicActive?F("isMicActive=true"):F("isMicActive=false"));
+  //if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
     isMicActive = (_val->getVal()==FPSTR(TCONST_FFFF) && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
 #ifdef MIC_EFFECTS
@@ -2061,6 +2063,7 @@ bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 {
+  if(isMicOn())
   { // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
     MICWORKER *mw = new MICWORKER(myLamp.getMicScale(),myLamp.getMicNoise());
 
@@ -2075,6 +2078,15 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
       samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     }
     delete mw;
+  } else {
+    EVERY_N_MILLIS(random(50,300)){
+      last_max_peak=random(0,128);
+      maxVal=random(0,last_max_peak)/10.0;
+      for(uint16_t i=0; i<(sizeof(x)/sizeof(float))-1U;i++){
+        x[i] = random(0,128)/100.0;
+      }
+      x[sizeof(x)/sizeof(float)-1] = random(60,20000);
+    }
   }
 
   float _scale = (maxVal==0? 0 : last_max_peak/maxVal);
