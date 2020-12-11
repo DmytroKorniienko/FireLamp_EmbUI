@@ -192,7 +192,7 @@ void LAMP::alarmWorker(){
       FastLED.clear();
       brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...getAlarmP()*60 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
@@ -200,7 +200,7 @@ void LAMP::alarmWorker(){
       );
     }
 
-    if (((millis() - startmillis) / 1000 > ((uint16_t)(getAlarmP()) + (uint16_t)(getAlarmT()) * 60U+30U))) {
+    if (((millis() - startmillis) / 1000 > (((uint32_t)(getAlarmP()) + getAlarmT()) * 60UL+30U))) {
       // рассвет закончился
       stopAlarm();
       return;
