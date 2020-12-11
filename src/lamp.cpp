@@ -200,7 +200,7 @@ void LAMP::alarmWorker(){
       );
     }
 
-    if (((millis() - startmillis) / 1000 > (5 + DAWN_TIMEOUT) * 60+30)) {
+    if (((millis() - startmillis) / 1000 > ((uint16_t)(getAlarmP()) + (uint16_t)(getAlarmT()) * 60U+30U))) {
       // рассвет закончился
       stopAlarm();
       return;
@@ -209,7 +209,7 @@ void LAMP::alarmWorker(){
     // проверка рассвета
     EVERY_N_SECONDS(10){
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,300,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
@@ -232,7 +232,10 @@ void LAMP::alarmWorker(){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-        sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
+        if(getAlarmMessage()!=nullptr && getAlarmMessage()[0])
+          sendStringToLamp(getAlarmMessage(), letterColor, true);
+        else
+          sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
       }
     }
 #endif
@@ -430,13 +433,15 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
       }
 }
 
-void LAMP::startAlarm(){
+void LAMP::startAlarm(char *value){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   demoTimer(T_DISABLE);     // гасим Демо-таймер
   effectsTimer(T_ENABLE);
 #ifdef MP3PLAYER
+  mp3->setAlarm(true);
   mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
+  setAlarmMessage(value);
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -456,6 +461,8 @@ void LAMP::stopAlarm(){
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
   mp3->StopAndRestoreVolume(); // восстановить уровень громкости
+  mp3->setAlarm(false);
+  setAlarmMessage(); // очистить сообщение выводимое на лампу в будильнике
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником

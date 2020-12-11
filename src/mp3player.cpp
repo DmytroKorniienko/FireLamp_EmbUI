@@ -49,6 +49,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
   delay(DFPALYER_START_DELAY);
   uint8_t retry_cnt=0;
+  flags = 0;
   while(!begin(mp3player) && retry_cnt++<=5){ //Use softwareSerial to communicate with mp3.
     LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d...\n"), retry_cnt);
     delay(MP3_SERIAL_TIMEOUT);
@@ -71,11 +72,13 @@ void MP3PLAYERDEVICE::restartSound()
 {
   isplayname = false;
   int currentState = readState();
-  LOG(printf_P,PSTR("readState()=%d, mp3mode=%d\n"), currentState, mp3mode);
+  LOG(printf_P,PSTR("readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
   if(currentState == 512 || currentState == -1){
     delayedCall.once(0.2,std::bind([this](){
-      if(isOn()){
-        if(!mp3mode){
+      if(isOn() || (ready && alarm)){
+        if(alarm){
+          ReStartAlarmSound(tAlarm);
+        } else if(!mp3mode){
           if(cur_effnb>0)
             playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
         } else {
@@ -250,6 +253,11 @@ void MP3PLAYERDEVICE::playName(uint16_t effnb)
 void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
   volume(0);
   delay(100);
+  tAlarm = val;
+  ReStartAlarmSound(val);
+}
+
+void MP3PLAYERDEVICE::ReStartAlarmSound(ALARM_SOUND_TYPE val){
   switch(val){
     case ALARM_SOUND_TYPE::AT_FIRST :
       playFolder(1,1);
@@ -267,14 +275,13 @@ void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
       playFolder(1,5);
       break;
     case ALARM_SOUND_TYPE::AT_RANDOM :
-      playFolder(1,random(5)+1);
+      playFolder(1,random(1,5+1));
       break;
     case ALARM_SOUND_TYPE::AT_RANDOMMP3 :
-      playMp3Folder(random(mp3filescount)+1);
+      playMp3Folder(random(1,mp3filescount+1));
       break;
     default:
     break;
   }
 }
-
 #endif

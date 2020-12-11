@@ -196,6 +196,9 @@ private:
     void micHandler();
 #endif
 
+    uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
+    String alarmMessage; // Cообщение будильника рассвет, если задано
+
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
     timerMinim tmConfigSaveTime;    // таймер для автосохранения
@@ -357,7 +360,9 @@ public:
 
     void periodicTimeHandle();
 
-    void startAlarm();
+    void startAlarm(char *value = nullptr);
+    void setAlarmMessage(char *value = nullptr) {if(value) alarmMessage = value; else alarmMessage.clear();}
+    const char *getAlarmMessage() { return alarmMessage.c_str();}
     void stopAlarm();
     void startDemoMode(byte tmout = 60); // дефолтное значение, настраивается из UI
     void startNormalMode();
@@ -374,6 +379,10 @@ public:
     void setDRand(bool flag) {flags.dRand = flag; lampState.isRandDemo = (flag && mode==LAMPMODE::MODE_DEMO); }
     void setShowName(bool flag) {flags.showName = flag;}
 
+    void setAlarmPT(uint8_t val) {alarmPT = val;}
+    uint8_t getAlarmP() { return alarmPT>>4; }
+    uint8_t getAlarmT() { return alarmPT&0x0F; }
+
     // ---------- служебные функции -------------
     uint16_t getmaxDim() {return maxDim;}
     uint16_t getminDim() {return minDim;}
@@ -384,7 +393,7 @@ public:
     CRGB *getUnsafeLedsArray(){return leds;}
 
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-    uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
+        uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
     {
     #ifndef XY_EXTERN
         // хак с макроподстановкой, пусть живет пока

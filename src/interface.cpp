@@ -1286,7 +1286,10 @@ void block_settings_other(Interface *interf, JsonObject *data){
 #ifdef SHOWSYSCONFIG
     interf->checkbox(FPSTR(TCONST_0096), myLamp.getLampSettings().isShowSysMenu ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_093), false); // отображение системного меню
 #endif
-   
+    interf->spacer(FPSTR(TINTF_0BA));
+    interf->range(FPSTR(TCONST_00BB), myLamp.getAlarmP(), 1, 15, 1, FPSTR(TINTF_0BB), false);
+    interf->range(FPSTR(TCONST_00BC), myLamp.getAlarmT(), 1, 15, 1, FPSTR(TINTF_0BC), false);
+
     interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
     interf->spacer();
@@ -1327,6 +1330,12 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == FPSTR(TCONST_FFFF));
     #endif
         myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == FPSTR(TCONST_FFFF));
+
+        uint8_t alatmPT = ((*data)[FPSTR(TCONST_00BB)]).as<uint8_t>()<<4; // старшие 4 бита
+        alatmPT = alatmPT | ((*data)[FPSTR(TCONST_00BC)]).as<uint8_t>(); // младшие 4 бита
+        embui.var(FPSTR(TCONST_00BD), String(alatmPT)); myLamp.setAlarmPT(alatmPT);
+        //SETPARAM(FPSTR(TCONST_00BD), myLamp.setAlarmPT(alatmPT));
+        //LOG(printf_P, PSTR("alatmPT=%d, alatmP=%d, alatmT=%d\n"), alatmPT, myLamp.getAlarmP(), myLamp.getAlarmT());
 
         save_lamp_flags();
         tmpData.clear();
@@ -1934,6 +1943,7 @@ void create_parameters(){
 #endif
 
     embui.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
+    embui.var_create(FPSTR(TCONST_00BD), String(F("85"))); // 5<<4+5, старшие и младшие 4 байта содержат 5
 
     // пины и системные настройки
 #ifdef ESP_USE_BUTTON
@@ -2132,7 +2142,11 @@ void sync_parameters(){
     obj[FPSTR(TCONST_009E)] = tmp.showName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_0096)] = tmp.isShowSysMenu ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    
+
+    uint8_t alarmPT = embui.param(FPSTR(TCONST_00BD)).toInt();
+    obj[FPSTR(TCONST_00BB)] = alarmPT>>4;
+    obj[FPSTR(TCONST_00BC)] = alarmPT&0x0F;
+
     obj[FPSTR(TCONST_0050)] = embui.param(FPSTR(TCONST_0050));
 
     set_settings_other(nullptr, &obj);
@@ -2246,7 +2260,7 @@ void remote_action(RA action, ...){
             myLamp.switcheffect(SW_WHITE_LO);
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_ALARM:
-            myLamp.startAlarm();
+            myLamp.startAlarm(value);
             break;
         case RA::RA_ALARM_OFF:
             myLamp.stopAlarm();
@@ -2373,8 +2387,11 @@ String httpCallback(const String &param, const String &value, bool isset){
                 }
             }
         }
-        else if (param == FPSTR(TCONST_0086))
-            { action = RA_REBOOT;  remote_action(action, value.c_str(), NULL); }
+        else if (param == FPSTR(TCONST_0083)) { action = RA_EFF_NEXT;  remote_action(action, value.c_str(), NULL); }
+        else if (param == FPSTR(TCONST_0084)) { action = RA_EFF_PREV;  remote_action(action, value.c_str(), NULL); }
+        else if (param == FPSTR(TCONST_0085)) { action = RA_EFF_RAND;  remote_action(action, value.c_str(), NULL); }
+        else if (param == FPSTR(TCONST_0086)) { action = RA_REBOOT;  remote_action(action, value.c_str(), NULL); }
+        else if (param == FPSTR(TCONST_0087)) { result = myLamp.isAlarm() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
         embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
         return result;
     } else {
