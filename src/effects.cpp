@@ -2463,9 +2463,9 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
     for (uint8_t y = 0; y < HEIGHT; y++)
     {
       // Blend new data with previous frame. Average data between neighbouring pixels
-      if(curPalette!=palettes.at(0)){
-        nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(HeatColors2_p, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
-      }
+      //if(curPalette!=palettes.at(0)){
+        //nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(HeatColors2_p, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
+     // }
       nblend(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)], ColorFromPalette(*curPalette, ((noise3d[0][x][y] * 0.7) + (noise3d[0][wrapX(x + 1)][y] * 0.3))), fireSmoothing);
     }
   }

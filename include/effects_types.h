@@ -72,7 +72,7 @@ static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
 static const char TCONST_0000[] PROGMEM = "effects";
 static const char TCONST_0001[] PROGMEM = "pTime";
 static const char TCONST_0002[] PROGMEM = "pMem";
-static const char TCONST_0003[] PROGMEM = "lamp";
+static const char TCONST_0003[] PROGMEM = "lamptext";
 static const char TCONST_0004[] PROGMEM = "settings";
 static const char TCONST_0005[] PROGMEM = "set_effect";
 static const char TCONST_0006[] PROGMEM = "eff_sel";
@@ -254,11 +254,11 @@ static const char TCONST_00B5[] PROGMEM = "bparam";
 static const char TCONST_00B6[] PROGMEM = "delete";
 static const char TCONST_00B7[] PROGMEM = "warning";
 static const char TCONST_00B8[] PROGMEM = "devicedatetime";
-static const char TCONST_00B9[] PROGMEM = "";
-static const char TCONST_00BA[] PROGMEM = "";
-static const char TCONST_00BB[] PROGMEM = "";
-static const char TCONST_00BC[] PROGMEM = "";
-static const char TCONST_00BD[] PROGMEM = "";
+static const char TCONST_00B9[] PROGMEM = "text_config";
+static const char TCONST_00BA[] PROGMEM = "edit_text_config";
+static const char TCONST_00BB[] PROGMEM = "alarmP";
+static const char TCONST_00BC[] PROGMEM = "alarmT";
+static const char TCONST_00BD[] PROGMEM = "alarmPT";
 static const char TCONST_00BE[] PROGMEM = "";
 static const char TCONST_00BF[] PROGMEM = "";
 static const char TCONST_00C0[] PROGMEM = "";
@@ -380,7 +380,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
 static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 4, 2, 2, 0, 5, 1, 5, 5, 3, 4, 3, 7, 3, 6, // 0-15
   1, 3, 1, 5, 1, 5, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
-  3, 3, 3, 5, 5, 1, 6, 0, 0, 7, 2, 3, 5, 5, 1, 1, // 32 - 47
+  3, 3, 3, 5, 5, 1, 2, 0, 0, 7, 2, 3, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 4, // 48 - 63
   3, 1, 1, 1, 2, 3, 5, 3, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95

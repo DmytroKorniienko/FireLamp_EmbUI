@@ -46,6 +46,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "../../include/LList.h"
 #include "interface.h"
 
+#ifdef XY_EXTERN
+#include "XY.h"
+#endif
+
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
 #endif
@@ -191,6 +195,9 @@ private:
     MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
     void micHandler();
 #endif
+
+    uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
+    String alarmMessage; // Cообщение будильника рассвет, если задано
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
@@ -353,7 +360,9 @@ public:
 
     void periodicTimeHandle();
 
-    void startAlarm();
+    void startAlarm(char *value = nullptr);
+    void setAlarmMessage(char *value = nullptr) {if(value) alarmMessage = value; else alarmMessage.clear();}
+    const char *getAlarmMessage() { return alarmMessage.c_str();}
     void stopAlarm();
     void startDemoMode(byte tmout = 60); // дефолтное значение, настраивается из UI
     void startNormalMode();
@@ -370,6 +379,10 @@ public:
     void setDRand(bool flag) {flags.dRand = flag; lampState.isRandDemo = (flag && mode==LAMPMODE::MODE_DEMO); }
     void setShowName(bool flag) {flags.showName = flag;}
 
+    void setAlarmPT(uint8_t val) {alarmPT = val;}
+    uint8_t getAlarmP() { return alarmPT>>4; }
+    uint8_t getAlarmT() { return alarmPT&0x0F; }
+
     // ---------- служебные функции -------------
     uint16_t getmaxDim() {return maxDim;}
     uint16_t getminDim() {return minDim;}
@@ -382,6 +395,7 @@ public:
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
         uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
     {
+    #ifndef XY_EXTERN
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
         #define MIRR_V flags.MIRR_V
@@ -397,6 +411,15 @@ public:
     
         #undef MIRR_H
         #undef MIRR_V
+    #else
+        // any out of bounds address maps to the first hidden pixel
+        if ( (x >= WIDTH) || (y >= HEIGHT) ) {
+            return (LAST_VISIBLE_LED + 1);
+        }
+        uint16_t i = (y * WIDTH) + x;
+        uint16_t j = pgm_read_dword(&XYTable[i]);
+        return j;
+    #endif
     }
 
     // для работы с буффером

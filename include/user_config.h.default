@@ -47,6 +47,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // пользовательский файл с настройками user_config.h обновляться не будет
 
 
+#define LANG                   "text_res-RUS.h"             // для других языков при компиляции менять постфикс файла "text_res-***.h". 
+															// Наличие нужного файла перевода смотреть в папке inclede в основной папке проекта 
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
 
 #define RESTORE_STATE 1                                     // востанавливать состояние вкл/выкл, демо, после перезагрузки.

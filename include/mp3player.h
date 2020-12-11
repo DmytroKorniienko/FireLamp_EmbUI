@@ -48,6 +48,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
+        bool alarm:1; // сейчас будильник
         bool isplayname:1; // проигрывается имя
       };
       uint32_t flags;
@@ -57,6 +58,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
     uint16_t cur_effnb=0; // текущий эффект
     uint16_t prev_effnb=0; // предыдущий эффект
+    ALARM_SOUND_TYPE tAlarm;
     SoftwareSerial mp3player;
     Ticker delayedCall;
     Ticker periodicCall;
@@ -82,8 +84,10 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
+    void setAlarm(bool flag) {alarm = flag;}
     void StartAlarmSound(ALARM_SOUND_TYPE val);
-    void StopAndRestoreVolume() { stop(); volume(cur_volume); }
+    void ReStartAlarmSound(ALARM_SOUND_TYPE val);
+    void StopAndRestoreVolume() { stop(); delay(200); volume(cur_volume); }
     void handle();
 };
 #endif
