@@ -1087,9 +1087,9 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
     //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
     SETPARAM(FPSTR(TCONST_00A2)); // тоже пишет в плеер, разносим во времени
-    sysTicker.once(0.3,std::bind([](){
-        mp3->setVolume(embui.param(FPSTR(TCONST_00A2)).toInt());
-    }));
+    // sysTicker.once(0.3,std::bind([](){
+    //     mp3->setVolume(embui.param(FPSTR(TCONST_00A2)).toInt());
+    // }));
 
     save_lamp_flags();
     section_settings_frame(interf, data);
@@ -2077,7 +2077,7 @@ void sync_parameters(){
 #endif
 
 #ifdef MP3PLAYER
-    obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
+    //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
     obj[FPSTR(TCONST_00A3)] = tmp.playTime;
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -2094,6 +2094,15 @@ void sync_parameters(){
     obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_mp3flag(nullptr, &obj);
     obj.clear();
+
+    // sysTicker.once(5,std::bind([]{
+    //     //mp3->setVolume(volume)
+    //     DynamicJsonDocument doc(256);
+    //     JsonObject obj = doc.to<JsonObject>();
+    //     CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
+    // }));
+    CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
+
 #endif
 
 #ifdef AUX_PIN
