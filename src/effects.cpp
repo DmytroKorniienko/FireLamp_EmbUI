@@ -1732,7 +1732,7 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
 
   EffectMath::setLed(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00); // зеленый стоит по центру
 
-  float pointspeedfactor = 256./speed+2.0; // насколько быстро будут перемещаться сами точки
+  float pointspeedfactor = 100./((float)speed+25.0); // насколько быстро будут перемещаться сами точки
 
   float xx = 2 + sin8( millis() / (10*pointspeedfactor)) / 22;
   float yy = 2 + cos8( millis() / (9*pointspeedfactor)) / 22;
