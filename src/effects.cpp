@@ -1737,7 +1737,7 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
 
   EffectMath::setLed(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00); // зеленый стоит по центру
 
-  float pointspeedfactor = 256./speed+2.0; // насколько быстро будут перемещаться сами точки
+  float pointspeedfactor = 100./((float)speed+25.0); // насколько быстро будут перемещаться сами точки
 
   float xx = 2 + sin8( millis() / (10*pointspeedfactor)) / 22;
   float yy = 2 + cos8( millis() / (9*pointspeedfactor)) / 22;
@@ -1748,12 +1748,12 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
   EffectMath::setLed(myLamp.getPixelNumber( xx, yy), 0xFF0000);
 
   if(!isDebug()){
-    uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
-    uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
+    uint16_t sc = (uint16_t)scale * 30 + 500; //64 + 1000;
+    uint16_t sc2 = (float)speed / 100.0 + 1.25; //1.25...3.5;
     for(uint8_t i=0; i<NUM_LAYERS; i++){
-      e_x[i] += 1500*sc2;
-      e_y[i] += 1500*sc2;
-      e_z[i] += 1500*sc2;
+      e_x[i] += 750*sc2;
+      e_y[i] += 750*sc2;
+      e_z[i] += 750*sc2;
       e_scaleX[i] = sc; // 8000;
       e_scaleY[i] = sc; // 8000;
       FillNoise(i);
