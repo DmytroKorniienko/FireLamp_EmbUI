@@ -834,7 +834,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- матрица -------------
+// ------------- Эффект "New Матрица" ---------------
 class EffectMatrix : public EffectLighters {
 private:
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
@@ -842,6 +842,7 @@ private:
     uint8_t hue;
     bool randColor = false;
     bool white = false;
+    float count;
     void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;

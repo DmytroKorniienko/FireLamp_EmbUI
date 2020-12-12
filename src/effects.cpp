@@ -667,7 +667,7 @@ EVERY_N_SECONDS(1){
   return true;
 }
 
-// ------------- матрица ---------------
+// ------------- Эффект "New Матрица" ---------------
 void EffectMatrix::setDynCtrl(UIControl*_val)
 {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
@@ -718,8 +718,8 @@ void EffectMatrix::load(){
 
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
-  float speedfactor = (float)speed / 1048.0f + 0.05f;
-  EffectMath::dimAll(map(speed, 1, 255, 250, 240));
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06, 0.4);
+  EffectMath::dimAll(map(speed, 1, 255, 252, 240));
   
   CHSV color;
 
@@ -731,7 +731,10 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
       color = rgb2hsv_approximate(CRGB::Gray);
       color.val = light[i];
     } else if (randColor) {
-      color = CHSV(++hue, 255, light[i]);
+      EVERY_N_MILLIS(600 / speedfactor) {
+        hue = random(1, 250);
+      }
+      color = CHSV(hue, 255, light[i]);
     } else {
       color = CHSV(hue, 255, light[i]);
     }
@@ -739,7 +742,9 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 
     EffectMath::drawPixelXYF_Y(lightersPos[0U][i], lightersPos[1U][i], color);
 
-    if (gluk > 1) 
+    count += speedfactor;
+
+    if (gluk > 1 and (uint8_t)count%2 == 0) 
       if (random8() < gluk) {
         lightersPos[0U][i] = lightersPos[0U][i] + random(-1, 2);
         light[i] = random(196,255);
