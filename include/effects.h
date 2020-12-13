@@ -706,7 +706,7 @@ public:
 // ------------- эффект "Блуждающий кубик" -------------
 class EffectBall : public EffectCalc {
 private:
-    int8_t ballSize;
+    uint8_t ballSize;
     CHSV ballColor;
     float vectorB[2U];
     float coordB[2U];
