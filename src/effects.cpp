@@ -6557,6 +6557,11 @@ void EffectTLand::setDynCtrl(UIControl*_val){
   }
 }
 
+void EffectTLand::load() {
+  if (scale == 0)
+    animation=random(1,35);
+}
+
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
   t = (double)(millis()&0xFFFFF) / map(speed, 1, 255, 1200, 128); ; // на больших значениях будет странное поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
   shift = (shift+1)%fine; // 0...3
@@ -6570,7 +6575,7 @@ bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
     }
   }
   if (scale == 0) {
-    EVERY_N_SECONDS(60) {
+    EVERY_N_SECONDS(30) {
       animation++;
     }
   } else {

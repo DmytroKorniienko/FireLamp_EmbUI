@@ -2022,7 +2022,7 @@ class EffectTLand: public EffectCalc {
     void setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    //void load() override;
+    void load() override;
 };
 
 // -------- "LDIRKO Ленд"
