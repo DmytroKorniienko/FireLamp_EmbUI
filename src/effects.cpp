@@ -1024,21 +1024,20 @@ bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
 
 // ------------- эффект "блуждающий кубик" -------------
 void EffectBall::load(){
-  byte _scale = getCtrlVal(2).toInt();
   //LOG(printf_P, PSTR("getCtrlVal(5)=%s, %d\n"), getCtrlVal(5).c_str(), getCtrlVal(5).toInt()); /// провека чтения отсутствующего контрола
 
-  if (_scale <= 85)
-    ballSize = map(_scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-  else if (_scale > 85 and _scale <= 170)
-    ballSize = map(_scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  if (scale <= 85)
+    ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  else if (scale > 85 and scale <= 170)
+    ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
   else
-    ballSize = map(_scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+    ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
 
   for (uint8_t i = 0U; i < 2U; i++)
   {
     coordB[i] = i? float(WIDTH - ballSize) / 2 : float(HEIGHT - ballSize) / 2;
-    vectorB[i] = (float)random(0, 240) / 10.0f - 12.0f;
-    ballColor = CHSV(random8(1, 255), 220, random8(100, 255));
+    vectorB[i] = EffectMath::randomf(0, 24.) - 12.0;
+    ballColor = CHSV(random(1, 250), random(200, 255), 255);
   }
 }
 
@@ -1048,15 +1047,12 @@ bool EffectBall::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
 {
-  byte _speed = getCtrlVal(1).toInt();
-  byte _scale = getCtrlVal(2).toInt();
-
-  if (_scale <= 85)
-    ballSize = map(_scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-  else if (_scale > 85 and _scale <= 170)
-    ballSize = map(_scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  if (scale <= 85)
+    ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  else if (scale > 85 and scale <= 170)
+    ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
   else
-    ballSize = map(_scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+    ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
 
 
 // каждые 5 секунд коррекция направления
@@ -1065,53 +1061,52 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
     for (uint8_t i = 0U; i < 2U; i++)
     {
       if(fabs(vectorB[i]) < 12)
-        vectorB[i] += (float)random8(0U, 80U) / 10.0f - 4.0f;
+        vectorB[i] += EffectMath::randomf(0, 8.) - 4.0;
       else if (vectorB[i] > 12)
-        vectorB[i] -= (float)random8(10, 60) / 10.0f;
+        vectorB[i] -= EffectMath::randomf(1, 6);
       else
-        vectorB[i] += (float)random8(10, 60) / 10.0f;
+        vectorB[i] += EffectMath::randomf(1, 6);
       if(!(uint8_t)vectorB[i])
-        vectorB[i] += vectorB[i] > 0 ? 0.25f : -0.25f;
+        vectorB[i] += vectorB[i] > 0 ? 0.25 : -0.25;
 
-     // ballColor = CHSV(random8(1, 255), 220, random8(100, 255));
     }
   }
 
   for (uint8_t i = 0U; i < 2U; i++)
   {
-    coordB[i] += vectorB[i] * ((0.1f * (float)_speed) /127.0f);
+    coordB[i] += vectorB[i] * EffectMath::fmap((float)speed, 1., 255., 0.02, 0.15);
     if ((int8_t)coordB[i] < 0)
     {
       coordB[i] = 0;
       vectorB[i] = -vectorB[i];
-      if (RANDOM_COLOR) ballColor = CHSV(random8(1, 255), 220, random8(100, 255));
+      if (RANDOM_COLOR) ballColor = CHSV(random(1, 250), random(200, 255), 255);
     }
   }
-  if ((int8_t)coordB[0U] > (int16_t)(WIDTH - ballSize))
+  if ((int8_t)coordB[0U] > (int8_t)(WIDTH - ballSize))
   {
     coordB[0U] = (WIDTH - ballSize);
     vectorB[0U] = -vectorB[0U];
-    if (RANDOM_COLOR) ballColor = CHSV(random8(1, 255), 220, random8(100, 255));
+    if (RANDOM_COLOR) ballColor = CHSV(random(1, 250), random(200, 255), 255);
   }
-  if ((int8_t)coordB[1U] > (int16_t)(HEIGHT - ballSize))
+  if ((int8_t)coordB[1U] > (int8_t)(HEIGHT - ballSize))
   {
     coordB[1U] = (HEIGHT - ballSize);
     vectorB[1U] = -vectorB[1U];
-    if (RANDOM_COLOR) ballColor = CHSV(random8(1, 255), 220, random8(100, 255));
+    if (RANDOM_COLOR) ballColor = CHSV(random(1, 250), random(200, 255), 255);
   }
 
-  if (_scale <= 85)  // при масштабе до 85 выводим кубик без шлейфа
+  if (scale <= 85)  // при масштабе до 85 выводим кубик без шлейфа
     memset8( leds, 0, NUM_LEDS * 3);
-  else if (_scale > 85 and _scale <= 170)
-    fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)_speed) /255) + 30); // выводим кубик со шлейфом, длинна которого зависит от скорости.
+  else if (scale > 85 and scale <= 170)
+    fadeToBlackBy(leds, NUM_LEDS, 255 - map(speed, 1, 255, 245, 200)); // выводим кубик со шлейфом, длинна которого зависит от скорости.
   else
-    fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)_speed) /255) + 15); // выводим кубик с длинным шлейфом, длинна которого зависит от скорости.
+    fadeToBlackBy(leds, NUM_LEDS, 255 - map(speed, 1, 255, 253, 248)); // выводим кубик с длинным шлейфом, длинна которого зависит от скорости.
 
-  for (float i = 0.0f; i < (float)ballSize; i+= 0.25f)
+  for (uint8_t i = 0; i < ballSize; i++)
   {
-    for (float j = 0.0f; j < (float)ballSize; j+=0.25f)
+    for (uint8_t j = 0; j < ballSize; j++)
     {
-      EffectMath::drawPixelXYF(coordB[0U] + i, coordB[1U] + j, ballColor);
+      EffectMath::drawPixelXYF(coordB[0U] + (float)i, coordB[1U] + (float)j, ballColor, 0);
     }
   }
   return true;
