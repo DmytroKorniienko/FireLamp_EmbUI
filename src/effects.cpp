@@ -1535,7 +1535,7 @@ void EffectComet::drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2,
   {
     for (int8_t yP = y1; yP <= y2; yP++)
     {
-      EffectMath::setLed(myLamp.getPixelNumber(xP, yP), color);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(xP, yP)] += color;
     }
   }
 }
@@ -1553,6 +1553,7 @@ void EffectComet::FillNoise(int8_t layer) {
     }
   }
 }
+
 void EffectComet::load() {
   eNs_noisesmooth = 200;
   for (uint8_t i = 0; i < NUM_LAYERS; i++) {
@@ -1569,7 +1570,7 @@ void EffectComet::load() {
 bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
   // if (dryrun(4.0))
   //   return false;
-
+  speedy = map(speed, 1, 255, 20, 255);
   switch (effect)
   {
   case EFF_ENUM::EFF_RAINBOWCOMET :
@@ -1587,29 +1588,74 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
   case EFF_ENUM::EFF_FLSNAKE :
     return flsnakeRoutine(*&ledarr, &*opt);
     break;
+  case EFF_ENUM::EFF_SMOKE :
+    return smokeRoutine(*&ledarr, &*opt);
+    break;
   default:
     return false;
   }
 }
 
+bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
+  float speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5);
+  //FastLED.clear();
+  CRGB color;//, color2;
+  hsv2rgb_spectrum(CHSV(scale, (scale == 255) ? 0U : beatsin8(speed, 220, 255, 0, 180), beatsin8(speed / 2, 64, 255)), color);
+
+  //if (random(0, 2) == 1) // встречная спираль движется не всегда синхронно основной
+  spiral += 3. * speedFactor ;
+  if (random8(WIDTH) != 0U) // встречная спираль движется не всегда синхронно основной
+    spiral2 += 3. * speedFactor ;
+
+  for (float i = 0; i < HEIGHT; i+= 0.5) {
+    float n = (float)quadwave8(i * 4 + spiral) / (256.0 / (float)WIDTH + 1.0);
+    float n2 = (float)quadwave8(i * 4 + spiral2) / (256.0 / (float)WIDTH + 1.0);
+
+    EffectMath::drawPixelXYF(n, (float)HEIGHT - 1.0 - i, color, 0);
+    EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n2, (float)HEIGHT - 1.0 - i, color, 0);
+
+  }
+  
+  // скорость движения по массиву noise
+  e_x[0] += 1000 * speedFactor;//1000;
+  e_y[0] += 1000 * speedFactor;//1000;
+  e_z[0] += 1000 * speedFactor;//1000;
+  e_scaleX[0] = 12000;
+  e_scaleY[0] = 8000;
+
+  FillNoise(0);
+
+  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / (getCtrlVal(3).toInt() + 2));//4
+  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 8, 0.33);//4
+
+  EffectMath::blur2d(64); // без размытия как-то пиксельно, наверное...  
+  return true;
+}
+
 bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
-  EffectMath::blur2d(15); // нужно ли размытие?
-  fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
+  //EffectMath::blur2d(15); // нужно ли размытие?
+  fadeToBlackBy(leds, NUM_LEDS, map(scale, 1, 255, 20, 5)); // нужны ли эти фейдеры тут? хз...
+  //FastLED.clear();
+
+  if (scale == 1) {
+    if (count%2 == 0) hue ++;
+  }
+  else hue = scale;
 
   for (uint8_t i = 1; i < WIDTH; i += 2) {
     //leds[XY( i, e_centerY)] += CHSV(i * 2 , 255, 255);
-    leds[myLamp.getPixelNumber( i, e_centerY)] += CHSV(i * 2 , 255, 255);
+    leds[myLamp.getPixelNumber( i, e_centerY)] += CHSV(hue + i * 2 , 255, 255);
   }
   // Noise
-  float pointspeedfactor = speed/128. + 0.5; // насколько быстро будут перемещаться сами точки
-  float beat2 = (10.0 -  (float)beatsin8(3, 10, 20)) / 10. * pointspeedfactor;
-  uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
-  uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
-  e_x[0] += 1500*sc2; // 3000;
-  e_y[0] += 1500*sc2; // 3000;
-  e_z[0] += 1500*sc2; // 3000;
-  e_scaleX[0] = sc; //8000;
-  e_scaleY[0] = sc; //8000;
+  float beat2 = (10.0 -  (float)beatsin88(3 * speedy, 10, 20)) / 10.;
+  //uint16_t sc = map(scale, 1, 255, 1000, 8000); //64 + 1000;
+  e_x[0] += 12 * speedy; // 3000;
+  e_y[0] += 12 * speedy; // 3000;
+  e_z[0] += 12 * speedy; // 3000;
+  e_scaleX[0] = 8000;
+  e_scaleY[0] = 8000;
+  count ++;
+
   FillNoise(0);
 
   EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);
@@ -1618,56 +1664,52 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
-  EffectMath::blur2d(15); // нужно ли размытие?
-  fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
-  //uint8_t beat = beatsin8(5, 127, 180);
-
+  EffectMath::blur2d(32); // нужно ли размытие?
+  fadeToBlackBy(leds, NUM_LEDS, map(scale, 1, 255, 20, 5)); // нужны ли эти фейдеры тут? хз...
+  float beat = (float)beatsin88(5 * speedy, 50, 100) / 100 ;
+  count ++;
+  if (scale == 1) {
+    if (count%2 == 0) hue ++;
+  }
+  else hue = scale;
   for (uint8_t i = 1; i < WIDTH; i += 2) {
-    //leds[XY( i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
-    leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(i * 2, 255, 255);
+    leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(hue + i * 2, 255, 255);
   }
   // Noise
-  uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
-  uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
-  e_x[0] += 1500*sc2; // 3000;
-  e_y[0] += 1500*sc2; // 3000;
-  e_z[0] += 1500*sc2; // 3000;
-  e_scaleX[0] = sc; //8000;
-  e_scaleY[0] = sc; //8000;
+  e_y[0] += 12 * speedy; // 3000;
+  e_z[0] += 12 * speedy; // 3000;
+  e_scaleX[0] = 8000;
+  e_scaleY[0] = 8000;
   FillNoise(0);
-  //MoveX(1);
-  //MoveY(1);
 
-  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 2, 1);
+  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 2, beat);
   EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);
   return true;
 }
 
 bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
   hue++;
-  EffectMath::blur2d(15); // нужно ли размытие?
-  fadeToBlackBy(leds, NUM_LEDS, map(scale,1,255,20,5)); // нужны ли эти фейдеры тут? хз...
-  //FastLED.clear();
+  EffectMath::dimAll(32); 
+
   for (uint8_t y = 2; y < HEIGHT; y += 5) {
     for (uint8_t x = 2; x < WIDTH; x += 5) {
-      EffectMath::drawPixelXY(x, y, CHSV((hue + x * y) *4 , 255, 255));
-      EffectMath::drawPixelXY(x + 1, y,CHSV(hue + (x + 4) * y, 255, 255));
-      EffectMath::drawPixelXY(x, y + 1, CHSV(hue + x * (y + 4), 255, 255));
-      EffectMath::drawPixelXY(x + 1, y + 1,CHSV(hue + (x + 4) * (y + 4), 255, 255));
+      leds[myLamp.getPixelNumber(x, y)]  += CHSV(x * y + hue, 255, 255);
+      leds[myLamp.getPixelNumber(x + 1, y)] += CHSV((x + 4) * y + hue, 255, 255);
+      leds[myLamp.getPixelNumber(x, y + 1)] += CHSV(x * (y + 4) + hue, 255, 255);
+      leds[myLamp.getPixelNumber(x + 1, y + 1)] += CHSV((x + 4) * (y + 4) + hue, 255, 255);
     }
   }
   // Noise
-  uint16_t sc = (uint16_t)scale * 60 + 500; //64 + 1000;
-  uint16_t sc2 = (float)speed / 100.0 + 1.0; //1.5...3.5;
-  e_x[0] += 1500*sc2; // 3000;
-  e_y[0] += 1500*sc2; // 3000;
-  e_z[0] += 1500*sc2; // 3000;
+  uint16_t sc = map(scale, 1, 255, 4000, 12000); //64 + 1000;
+  e_x[0] += 12 * speedy; // 3000;
+  e_y[0] += 12 * speedy; // 3000;
+  e_z[0] += 12 * speedy; // 3000;
   e_scaleX[0] = sc; //8000;
   e_scaleY[0] = sc; //8000;
   FillNoise(0);
 
-  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);
-  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);
+  EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 5);
+  EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 5);
   hue++;
   return true;
 }
@@ -1683,83 +1725,70 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
           255 - white
 */
 
-  // EffectMath::blur2d(e_com_BLUR);    // < -- размытие хвоста
-  // EffectMath::dimAll(254);            // < -- затухание эффекта для последующего кадра
+  EffectMath::blur2d(e_com_BLUR);    // < -- размытие хвоста
+  //EffectMath::dimAll(184);            // < -- затухание эффекта для последующего кадра
+  //fadeToBlackBy(leds, NUM_LEDS, map(scale, 1, 255, 156, 0));
 
   if(isDebug()){
     FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
   }
-
-  CRGB _eNs_color = CRGB::White;
-  if (scale == 1) {
+  CRGB _eNs_color;
+  if (scale == 255) {
+    _eNs_color= CRGB::White;
+  } else if (scale == 1) {
     _eNs_color = CHSV(noise3d[0][0][0] * e_com_3DCOLORSPEED , 255, 255);
   } else if (scale >1 && scale < 128) {
     _eNs_color = CHSV(millis() / ((uint16_t)scale + 1U) * 4 + 10, 255, 255);
   } else {
     _eNs_color = CHSV((scale - 128) * 2, 255, 255);
   }
-  drawFillRect2_fast(e_centerX, e_centerY, e_centerX+1, e_centerY+1, _eNs_color);
+
+  drawFillRect2_fast(e_centerX, e_centerY, e_centerX + 1, e_centerY + 1, _eNs_color);
+
   if(!isDebug()){
     // Noise
-    uint16_t sc = (uint16_t)scale * 30 + 500; //64 + 1000;
-    uint16_t sc2 = (float)speed/100.0+1.0; //1.5...3.5;
-    for(uint8_t i=0; i<NUM_LAYERS; i++){
-      e_x[i] += e_com_TAILSPEED*sc2;
-      e_y[i] += e_com_TAILSPEED*sc2;
-      e_z[i] += e_com_TAILSPEED*sc2;
-      e_scaleX[i] = sc; // 8000;
-      e_scaleY[i] = sc; // 8000;
-      FillNoise(i);
-    }
-    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 2U - 1U);
-    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 2U - 1U);
+    e_x[0] += 12 * speedy; // 2000;
+    e_y[0] += 12 * speedy; // 2000;
+    e_z[0] += 12 * speedy; // 2000;
+    e_scaleX[0] = 4000; //8000;
+    e_scaleY[0] = 4000; //8000;
+    FillNoise(0);
+    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 3U);
+    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 3U, 0.5);
   }
   return true;
 }
 
 bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
-{ // Rainbow Comet by PalPalych
-/*
-  Follow the Rainbow Comet Efect by PalPalych
-  Speed = tail dispersing
-  Scale = 0 - Random 3d color
-          1...127 - time depending color
-          128...254 - selected color
-          255 - white
-*/
+{ 
+  EffectMath::blur2d(e_com_BLUR);      // < -- размытие точек
+  //EffectMath::dimAll(220);     // < -- затухание эффекта для последующего кадра
+  if (scale < 255) fadeToBlackBy(leds, NUM_LEDS, map(scale, 1, 255, 156, 0));
 
   if(isDebug()){
     FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
   }
 
-  //EffectMath::blur2d(scale/10.+5.);      // < -- размытие точек
-  //EffectMath::dimAll(255-speed/66);     // < -- затухание эффекта для последующего кадра
+  EffectMath::drawPixelXYF((float)WIDTH / 2, (float)HEIGHT / 2, 0x00FF00, 0); // зеленый стоит по центру
+  float pointspeedfactor = EffectMath::fmap(speed, 1, 255, 0.2, 1.); // насколько быстро будут перемещаться сами точки
 
-  EffectMath::setLed(myLamp.getPixelNumber( e_centerX, e_centerY), 0x00FF00); // зеленый стоит по центру
+  float xx = 2. + (float)sin8( millis() / (10. / pointspeedfactor)) / 22.;
+  float yy = 2. + (float)cos8( millis() / (9. / pointspeedfactor)) / 22.;
+  EffectMath::drawPixelXYF(xx, yy, 0x0000FF, 0);
 
-  float pointspeedfactor = 100./((float)speed+25.0); // насколько быстро будут перемещаться сами точки
-
-  float xx = 2 + sin8( millis() / (10*pointspeedfactor)) / 22;
-  float yy = 2 + cos8( millis() / (9*pointspeedfactor)) / 22;
-  EffectMath::setLed(myLamp.getPixelNumber( xx, yy), 0x0000FF);
-
-  xx = 4 + sin8( millis() / (10*pointspeedfactor)) / 32;
-  yy = 4 + cos8( millis() / (7*pointspeedfactor)) / 32;
-  EffectMath::setLed(myLamp.getPixelNumber( xx, yy), 0xFF0000);
+  xx = 4. + (float)sin8( millis() / (10. / pointspeedfactor)) / 32.;
+  yy = 4. + (float)sin8( millis() / (7. / pointspeedfactor)) / 32.;
+  EffectMath::drawPixelXYF(xx, yy, 0xFF0000, 0);
 
   if(!isDebug()){
-    uint16_t sc = (uint16_t)scale * 30 + 500; //64 + 1000;
-    uint16_t sc2 = (float)speed / 100.0 + 1.25; //1.25...3.5;
-    for(uint8_t i=0; i<NUM_LAYERS; i++){
-      e_x[i] += 750*sc2;
-      e_y[i] += 750*sc2;
-      e_z[i] += 750*sc2;
-      e_scaleX[i] = sc; // 8000;
-      e_scaleY[i] = sc; // 8000;
-      FillNoise(i);
-    }
-    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 2);
-    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 2, 0.33);
+    e_x[0] += 3000 * pointspeedfactor;
+    e_y[0] += 3000 * pointspeedfactor;
+    e_z[0] += 3000 * pointspeedfactor;
+    e_scaleX[0] = map(scale, 1, 255, 2000, 6000);
+    e_scaleY[0] = e_scaleX[0];
+    FillNoise(0);
+    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 6);
+    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 6, 0.33);
   }
   return true;
 }
@@ -3313,9 +3342,9 @@ void EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
 bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param)
 {
   CRGB color;
-  if(!isDebug())
-    EffectMath::dimAll(254);
-  else
+  if(isDebug())
+    //EffectMath::dimAll(254);
+  //else
     FastLED.clear();
 
   xSmokePos = xSmokePos + speed / 255.0 + 0.01; // смещение здесь

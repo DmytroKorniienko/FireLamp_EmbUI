@@ -952,6 +952,7 @@ public:
 class EffectComet : public EffectCalc {
 private:
     byte hue;
+    byte hue2;
     uint8_t eNs_noisesmooth;
     uint32_t e_x[NUM_LAYERS];
     uint32_t e_y[NUM_LAYERS];
@@ -959,6 +960,10 @@ private:
     uint32_t e_scaleX[NUM_LAYERS];
     uint32_t e_scaleY[NUM_LAYERS];
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
+    uint8_t count;
+    uint8_t speedy;
+    float spiral;
+    float spiral2;
 
 
     const uint8_t e_centerX =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01);
@@ -972,6 +977,7 @@ private:
     bool firelineRoutine(CRGB *leds, EffectWorker *param);
     bool fractfireRoutine(CRGB *leds, EffectWorker *param);
     bool flsnakeRoutine(CRGB *leds, EffectWorker *param);
+    bool smokeRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     void load() override;

@@ -306,8 +306,8 @@ EFF_TWINKLES,                                 // Мерцание
 EFF_RADAR,                                    // Радар
 EFF_WAVES,                                    // Волны
 EFF_FIRE2012,                                 // Огонь 2012
-EFF_NONE02,                                   // Дождь
-EFF_NONE03,                                   // Дождь за окном...
+EFF_NONE02,                                   // Пусто
+EFF_NONE03,                                   // Пусто
 EFF_DNA,                                      // ДНК
 EFF_FIRE2018,                                 // Огонь 2018
 EFF_RINGS,                                    // Кодовый замок
@@ -333,7 +333,7 @@ EFF_ATTRACT,                                  // Притяжение
 EFF_SNAKE,                                    // Змейки by kDn
 EFF_NEXUS,                                    // Nexus
 EFF_FLINE,                                    // Парящий огонь
-EFF_FFIRE,                                    // Северное сияние
+EFF_FFIRE,                                    // Кровавые небеса
 EFF_FLSNAKE,                                  // Радужный Змей
 EFF_FLOWER,                                   // Цветение
 EFF_TEST,                                     //  (Тест)
@@ -497,7 +497,7 @@ static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff10
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
 #define e_com_TAILSPEED             (500)         // скорость смещения хвоста
 #define e_com_BLUR                  (24U)         // размытие хвоста
-#define e_com_3DCOLORSPEED          (5U)          // скорость случайного изменения цвета (0й - режим)
+#define e_com_3DCOLORSPEED          (3U)          // скорость случайного изменения цвета (0й - режим)
 
 // ------------- светлячки со шлейфом -------------
 //#define BALLS_AMOUNT          (7U)                          // максимальное количество "шариков"
