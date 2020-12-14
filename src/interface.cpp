@@ -102,9 +102,9 @@ void block_menu(Interface *interf, JsonObject *data){
     embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     interf->json_section_menu();
 
-    interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));
-    interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));
-    interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));
+    interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));   //  Эффекты
+    interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));   //  Вывод текста
+    interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));   //  настройки
 #ifdef SHOWSYSCONFIG
     if(myLamp.isShowSysMenu())
         interf->option(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
@@ -113,6 +113,10 @@ void block_menu(Interface *interf, JsonObject *data){
 }
 
 static EffectListElem *confEff = nullptr;
+/**
+ * Страница с контролами параметров эфеекта
+ * 
+ */
 void block_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf || !confEff) return;
 
@@ -157,13 +161,21 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+/**
+ * Сформировать и вывести контролы для настроек параметров эффекта
+ */
 void show_effects_config_param(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface();
     block_effects_config_param(interf, data);
     interf->json_frame_flush();
 }
+
 void delayedcall_effects_main();
+
+/**
+ * обработчик установок эффекта
+ */
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
     if(optionsTicker.active())
@@ -522,6 +534,10 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     resetAutoTimers();
 }
 
+/**
+ * Блок с наборами основных переключателей лампы
+ * вкл/выкл, демо, кнопка и т.п.
+ */
 void block_main_flags(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_begin(FPSTR(TCONST_0019));
@@ -552,6 +568,10 @@ void block_main_flags(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+/**
+ * Формирование и вывод интерфейса с основными переключателями
+ * вкл/выкл, демо, кнопка и т.п.
+ */
 void show_main_flags(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface();
@@ -594,12 +614,12 @@ void delayedcall_effects_main(){
         optionsTicker.detach();
 }
 
+// Страница "Управление эффектами"
 void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 #ifndef DELAYED_EFFECTS
     fast=false;
 #endif
 
-    // Страница "Управление эффектами"
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_0000), FPSTR(TINTF_000));
 
@@ -684,6 +704,9 @@ void set_eff_next(Interface *interf, JsonObject *data){
     remote_action(RA::RA_EFF_NEXT, NULL);
 }
 
+/**
+ * Обработка вкл/выкл лампы
+ */
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
     bool newpower = TOGLE_STATE((*data)[FPSTR(TCONST_001A)], myLamp.isLampOn());
@@ -1893,6 +1916,9 @@ void save_lamp_flags(){
     obj.clear();
 }
 
+/**
+ * Набор конфигурационных переменных и обработчиков интерфейса
+ */
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
