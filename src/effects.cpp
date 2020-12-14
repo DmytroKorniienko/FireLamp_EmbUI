@@ -41,6 +41,7 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   effect=_eff;
   lampstate = _lampstate;
 
+  if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
   for(int i=0; i<controls->size(); i++){
     switch(i){
       case 0:
