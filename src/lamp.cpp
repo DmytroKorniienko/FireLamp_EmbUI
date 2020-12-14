@@ -686,7 +686,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
         String tmpStr = var[F("s")];
-        if(mp3!=nullptr && mp3->isOn() && (isAlarm() || isLampOn()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+        if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
           mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
         arr.remove(0); // удаляем отправленный
@@ -700,7 +700,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
-      if(mp3!=nullptr && mp3->isOn() && (isAlarm() || isLampOn()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+      if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
         mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
     } else { // идет печать, помещаем в очередь
