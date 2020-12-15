@@ -542,6 +542,7 @@ void LAMP::startOTAUpdate()
 bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int32_t pos, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
   static int32_t offset = (flags.MIRR_V ? 0 : WIDTH);
+  uint8_t bcount = 0;
 
   if(pos)
     offset = (flags.MIRR_V ? 0 + pos : WIDTH - pos);
@@ -554,18 +555,20 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   uint16_t i = 0, j = 0;
   while (text[i] != '\0')
   {
-    if ((uint8_t)text[i] > 191)                           // работаем с русскими буквами
+    if ((uint8_t)text[i] > 191)                           // работаем с UTF8 после префикса
     {
+      bcount = (uint8_t)text[i]; // кол-во октетов для UTF-8
       i++;
     }
     else
     {
       if(!flags.MIRR_V)
-        drawLetter(text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+        drawLetter(bcount, text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
       else
-        drawLetter(text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+        drawLetter(bcount, text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
       i++;
       j++;
+      bcount = 0;
     }
   }
 
@@ -585,7 +588,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   return false;
 }
 
-void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
 {
   uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
@@ -610,7 +613,7 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor,
       thisByte = 0x00;
     else
     {
-      thisByte = getFont(letter, i);
+      thisByte = getFont(bcount, letter, i);
     }
 
     for (uint16_t j = 0; j < letHeight; j++)
@@ -638,21 +641,47 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor,
   }
 }
 
-uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпретатор кода символа в массиве fontHEX (для Arduino IDE 1.8.* и выше)
+uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // интерпретатор кода символа в массиве fontHEX (для Arduino IDE 1.8.* и выше)
 {
   asciiCode = asciiCode - '0' + 16;                         // перевод код символа из таблицы ASCII в номер согласно нумерации массива
 
-  if (asciiCode <= 90)                                      // печатаемые символы и английские буквы
-  {
-    return pgm_read_byte(&fontHEX[asciiCode][row]);
-  }
-  else if (asciiCode >= 112 && asciiCode <= 159)
-  {
-    return pgm_read_byte(&fontHEX[asciiCode - 17][row]);
-  }
-  else if (asciiCode >= 96 && asciiCode <= 111)
-  {
-    return pgm_read_byte(&fontHEX[asciiCode + 47][row]);
+  // if (asciiCode <= 90)                                      // печатаемые символы и английские буквы
+  // {
+  //   return pgm_read_byte(&fontHEX[asciiCode][row]);
+  // }
+  // else if (asciiCode >= 112 && asciiCode <= 159)
+  // {
+  //   return pgm_read_byte(&fontHEX[asciiCode - 17][row]);
+  // }
+  // else if (asciiCode >= 96 && asciiCode <= 111)
+  // {
+  //   return pgm_read_byte(&fontHEX[asciiCode + 47][row]);
+  // }
+
+  if (asciiCode <= 94) {
+    return pgm_read_byte(&(fontHEX[asciiCode][row]));     // для английских букв и символов
+  } else if ((bcount == 209) && asciiCode == 116) {         // є
+    return pgm_read_byte(&(fontHEX[162][row])); 
+  } else if ((bcount == 209) && asciiCode == 118) {        // і
+    return pgm_read_byte(&(fontHEX[73][row])); 
+  } else if ((bcount == 209) && asciiCode == 119) {         // ї
+    return pgm_read_byte(&(fontHEX[163][row])); 
+  } else if ((bcount == 208) && asciiCode == 100) {        // Є
+    return pgm_read_byte(&(fontHEX[160][row])); 
+  } else if ((bcount == 208) && asciiCode == 102) {         // І
+    return pgm_read_byte(&(fontHEX[41][row])); 
+  } else if ((bcount == 208) && asciiCode == 103) {        // Ї
+    return pgm_read_byte(&(fontHEX[161][row])); 
+  } else if ((bcount == 208) && asciiCode == 97) {         // Ё
+    return pgm_read_byte(&(fontHEX[100][row])); 
+  } else if ((bcount == 209) && asciiCode == 113) {        // ё
+    return pgm_read_byte(&(fontHEX[132][row])); 
+  } else if ((bcount == 208 || bcount == 209) && asciiCode >= 112 && asciiCode <= 159) {      // русские символы
+    return pgm_read_byte(&(fontHEX[asciiCode - 17][row]));
+  } else if ((bcount == 208 || bcount == 209) && asciiCode >= 96 && asciiCode <= 111) {
+    return pgm_read_byte(&(fontHEX[asciiCode + 47][row]));
+  } else if ((bcount == 194) && asciiCode == 144) {                                          // Знак градуса '°'
+    return pgm_read_byte(&(fontHEX[159][row]));
   }
 
   return 0;
