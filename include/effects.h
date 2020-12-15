@@ -719,12 +719,13 @@ public:
 };
 
 // -------- Эффект "Светлячки со шлейфом"
+#define _AMOUNT 16U
 class EffectLighterTracers : public EffectCalc {
 private:
-    float vector[BALLS_AMOUNT][2U];
-    float coord[BALLS_AMOUNT][2U];
-    int16_t ballColors[BALLS_AMOUNT];
-    byte light[BALLS_AMOUNT];
+    float vector[_AMOUNT][2U];
+    float coord[_AMOUNT][2U];
+    int16_t ballColors[_AMOUNT];
+    byte light[_AMOUNT];
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
 
 public:

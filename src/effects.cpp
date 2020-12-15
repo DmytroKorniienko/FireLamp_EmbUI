@@ -921,7 +921,7 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
 
 // ------------- светлячки со шлейфом -------------
 void EffectLighterTracers::load(){
-  for (uint8_t j = 0U; j < BALLS_AMOUNT; j++)
+  for (uint8_t j = 0U; j < _AMOUNT; j++)
   {
     int8_t sign;
     // забиваем случайными данными
@@ -950,11 +950,10 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)speed) /255) + 40); // выводим кубик со шлейфом, длинна которого зависит от скорости.
 
   // движение шариков
-  int maxBalls = (uint8_t)((BALLS_AMOUNT/255.0)*scale+0.99);
+  uint8_t maxBalls = scale;
   for (uint8_t j = 0U; j < maxBalls; j++)
   {
-    // цвет зависит от масштаба
-    ballColors[j] = scale * (maxBalls-j) * BALLS_AMOUNT + j;
+    ballColors[j] = (maxBalls-j) * _AMOUNT + j;
 
     // движение шариков
     for (uint8_t i = 0U; i < 2U; i++)
@@ -977,7 +976,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
       coord[j][1U] = (HEIGHT - 1);
       vector[j][1U] = -vector[j][1U];
     }
-    EVERY_N_MILLIS(random16(1024)) {
+    EVERY_N_MILLIS(random16(256, 1024)) {
       if (light[j] == 127)
         light[j] = 255;
       else light[j] = 127;
@@ -6552,7 +6551,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
   float y4 = (float)beatsin16(27. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
 
   fadeToBlackBy (leds, NUM_LEDS, map(scale, 1, 128, 128, 1));
-  
+
   mydrawLine(leds, x1, y1,  x2, y2, 0);
   mydrawLine(leds, x2, y2,  x3, y3, 32);
   mydrawLine(leds, x2, y2,  x4, y4, 64);
