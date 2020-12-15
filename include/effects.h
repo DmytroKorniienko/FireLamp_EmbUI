@@ -964,7 +964,11 @@ private:
     uint8_t speedy;
     float spiral;
     float spiral2;
-
+    float speedFactor;
+    uint8_t effId = 1;      // 2, 1-6
+    uint8_t colorId;        // 3, 1-255
+    uint8_t smooth = 1;     // 4, 1-12
+    uint8_t blur;           // 5, 1-64
 
     const uint8_t e_centerX =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01);
     const uint8_t e_centerY = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01);
@@ -978,6 +982,7 @@ private:
     bool fractfireRoutine(CRGB *leds, EffectWorker *param);
     bool flsnakeRoutine(CRGB *leds, EffectWorker *param);
     bool smokeRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;

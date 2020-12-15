@@ -57,12 +57,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SWIRL :
     worker = std::unique_ptr<EffectSwirl>(new EffectSwirl());
     break;
-  case EFF_ENUM::EFF_RAINBOWCOMET :
-  case EFF_ENUM::EFF_RAINBOWCOMET3 :
-  case EFF_ENUM::EFF_FLINE :
-  case EFF_ENUM::EFF_FFIRE :
-  case EFF_ENUM::EFF_FLSNAKE :
-  case EFF_ENUM::EFF_SMOKE :
+  case EFF_ENUM::EFF_COMET :
     worker = std::unique_ptr<EffectComet>(new EffectComet());
     break;
   case EFF_ENUM::EFF_FLOCK :
@@ -161,9 +156,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_RADAR :
     worker = std::unique_ptr<EffectRadar>(new EffectRadar());
     break;
-/*  case EFF_ENUM::EFF_SMOKE :
+  case EFF_ENUM::EFF_SMOKE :
     worker = std::unique_ptr<EffectMStreamSmoke>(new EffectMStreamSmoke());
-    break;*/
+    break;
   case EFF_ENUM::EFF_FIRE2018 :
     worker = std::unique_ptr<EffectFire2018>(new EffectFire2018());
     break;

@@ -65,15 +65,15 @@ static const char TEFF_017[] PROGMEM = "Geometric Waltz";
 static const char TEFF_018[] PROGMEM = "Tixy.Land";
 static const char TEFF_019[] PROGMEM = "LDIRKO.Land";
 static const char TEFF_020[] PROGMEM = "Oscillator";
-static const char TEFF_021[] PROGMEM = "Rain with Wind (test)";
+static const char TEFF_021[] PROGMEM = "Storm";
 static const char TEFF_022[] PROGMEM = "";
 static const char TEFF_023[] PROGMEM = "";
 static const char TEFF_024[] PROGMEM = "Bouncing balls";
 static const char TEFF_025[] PROGMEM = "Sinusoid 3";
 static const char TEFF_026[] PROGMEM = "Metasphere";
 static const char TEFF_027[] PROGMEM = "Spiral";
-static const char TEFF_028[] PROGMEM = "Rainbow comet";
-static const char TEFF_029[] PROGMEM = "Three comets";
+static const char TEFF_028[] PROGMEM = "Comets, Soaring Fires +";
+static const char TEFF_029[] PROGMEM = "";
 static const char TEFF_030[] PROGMEM = "Prismata";
 static const char TEFF_031[] PROGMEM = "Flock and Predator";
 static const char TEFF_032[] PROGMEM = "Whirlpool";
@@ -109,9 +109,9 @@ static const char TEFF_061[] PROGMEM = "Wild balls";
 static const char TEFF_062[] PROGMEM = "Attract";
 static const char TEFF_063[] PROGMEM = "Snakes";
 static const char TEFF_064[] PROGMEM = "Nexus";
-static const char TEFF_065[] PROGMEM = "Soaring Fire";
-static const char TEFF_066[] PROGMEM = "Bloody Skies";
-static const char TEFF_067[] PROGMEM = "Rainbow Serpent";
+static const char TEFF_065[] PROGMEM = "";
+static const char TEFF_066[] PROGMEM = "";
+static const char TEFF_067[] PROGMEM = "";
 static const char TEFF_068[] PROGMEM = "Flowering";
 static const char TEFF_069[] PROGMEM = "Snakes Island";
 static const char TEFF_070[] PROGMEM = "Children's Dreams";
@@ -371,7 +371,7 @@ static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"
 static const char E_FLOCK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Predator\"}]}";
 static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Quantity/Direction/Position\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
 static const char E_MUNCH_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":8,\"step\":1,\"name\":\"Shift color (0 = random)\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_COM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1-127 random)\"}]}";
+//static const char E_COM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1-127 random)\"}]}";
 static const char E_DRIFT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Type 1/2, Degradation 3/4\"}]}";
 static const char E_SMOKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color/Rotation\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Completion\"}]}";
 static const char E_CUBE2D_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":22,\"step\":1,\"name\":\"Palette (0 = random Color)\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Size (width)\"},{\"id\":4,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Size (height)\"} ,{\"id\":5,\"type\":2,\"val\":\"false\",\"name\":\"Классика\"}]}";
@@ -399,6 +399,7 @@ static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":
 static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Degradation\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Circles\"}]}";
 static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Scale\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette (0 = random colour)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Clouds\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Storm\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Bluring (1-4 with wind) \"}]}";
 static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Size\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
+static const char E_COMET[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Effect\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = random, 255 = white)\"}, {\"id\":4,\"type\":0,\"val\":6,\"min\":1,\"max\":12,\"step\":1,\"name\":\"Scope\"}, {\"id\":5,\"type\":0,\"val\":32,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Blur\"}]}";
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Quantity\"}]}";
