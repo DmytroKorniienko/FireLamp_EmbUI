@@ -2440,13 +2440,13 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
   if (curPalette == nullptr) {
     return false;
   }
-
-  EffectMath::dimAll(254 - speed /3); // димирование зависит от скорости, чем быстрее - тем больше димировать
-  //EffectMath::blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает... (есть сабпиксель, он сам размывает)
+  float speedFactor = EffectMath::fmap(speed, 1, 255, 0.25, 1);
+  EffectMath::dimAll(255 - 10 * speedFactor); // димирование зависит от скорости, чем быстрее - тем больше димировать
+  EffectMath::blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает... (есть сабпиксель, он сам размывает)
   
   float n = 0;
   for (float i = 0.0; i < (scale <=4 ? WIDTH : HEIGHT); i+= 0.5) {
-    n = (float)quadwave8(i * 4 + waveTheta) / (256.0 / ((float)(scale <=4 ? WIDTH : HEIGHT)) + 1.0);
+    n = (float)quadwave8(i * 4 + waveTheta) / (256.0 / ((float)(scale <=4 ? WIDTH : HEIGHT) -1));
     switch (scale) {
       case 1: // одна волна горизонтально, справа на лево 
         EffectMath::drawPixelXYF(i, n, ColorFromPalette(*curPalette, whue + i));
@@ -2478,8 +2478,8 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
       break;
     }
   }
-  waveTheta += 5.0 * ((float)speed / 255.0) + 1.0;
-  whue += (float)speed / 10. + 1.0;
+  waveTheta += 5.0 * speedFactor;
+  whue += 10 * speedFactor;
 
   return true;
 }
@@ -6552,6 +6552,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
   float y4 = (float)beatsin16(27. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
 
   fadeToBlackBy (leds, NUM_LEDS, map(scale, 1, 128, 128, 1));
+  
   mydrawLine(leds, x1, y1,  x2, y2, 0);
   mydrawLine(leds, x2, y2,  x3, y3, 32);
   mydrawLine(leds, x2, y2,  x4, y4, 64);

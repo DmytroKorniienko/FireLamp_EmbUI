@@ -2002,7 +2002,7 @@ class EffectF_lying: public EffectCalc {
 #ifdef BIGMATRIX
     const float deviator = 2.;
 #else
-    const float deviator = 5.;
+    const float deviator = 4;
 #endif
     bool type = false;
   public:
