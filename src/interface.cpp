@@ -1789,7 +1789,8 @@ void set_mp3volume(Interface *interf, JsonObject *data){
 
 void set_mp3_player(Interface *interf, JsonObject *data){
     if (!data) return;
-
+    
+    if(!myLamp.isONMP3()) return;
     uint16_t cur_palyingnb = mp3->getCurPlayingNb();
     if(data->containsKey(FPSTR(TCONST_00BE))){
         mp3->playEffect(cur_palyingnb-1,"");
