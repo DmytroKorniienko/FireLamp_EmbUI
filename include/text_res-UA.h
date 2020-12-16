@@ -314,10 +314,26 @@ static const char TINTF_0B9[] PROGMEM = "Параметр";
 static const char TINTF_0BA[] PROGMEM = "Будильник Світанок";
 static const char TINTF_0BB[] PROGMEM = "Тривалість світанку";
 static const char TINTF_0BC[] PROGMEM = "Світіння після світанку";
-static const char TINTF_0BD[] PROGMEM = "";
-static const char TINTF_0BE[] PROGMEM = "";
-static const char TINTF_0BF[] PROGMEM = "";
-static const char TINTF_0C0[] PROGMEM = "";
+static const char TINTF_0BD[] PROGMEM = "<";
+static const char TINTF_0BE[] PROGMEM = ">";
+static const char TINTF_0BF[] PROGMEM = "<+5";
+static const char TINTF_0C0[] PROGMEM = "+5>";
+static const char TINTF_0C1[] PROGMEM = "";
+static const char TINTF_0C2[] PROGMEM = "";
+static const char TINTF_0C3[] PROGMEM = "";
+static const char TINTF_0C4[] PROGMEM = "";
+static const char TINTF_0C5[] PROGMEM = "";
+static const char TINTF_0C6[] PROGMEM = "";
+static const char TINTF_0C7[] PROGMEM = "";
+static const char TINTF_0C8[] PROGMEM = "";
+static const char TINTF_0C9[] PROGMEM = "";
+static const char TINTF_0CA[] PROGMEM = "";
+static const char TINTF_0CB[] PROGMEM = "";
+static const char TINTF_0CC[] PROGMEM = "";
+static const char TINTF_0CD[] PROGMEM = "";
+static const char TINTF_0CE[] PROGMEM = "";
+static const char TINTF_0CF[] PROGMEM = "";
+static const char TINTF_0D0[] PROGMEM = "";
 
 
 //-------------------------

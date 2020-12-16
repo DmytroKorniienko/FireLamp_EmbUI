@@ -563,6 +563,15 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #endif
     interf->json_section_end();
 #ifdef MP3PLAYER
+    interf->json_section_line("");
+    if(mp3->isMP3Mode()){
+        interf->button(FPSTR(TCONST_00BE), FPSTR(TINTF_0BD), FPSTR(TCONST_0008));
+        interf->button(FPSTR(TCONST_00BF), FPSTR(TINTF_0BE), FPSTR(TCONST_0008));
+        interf->button(FPSTR(TCONST_00C0), FPSTR(TINTF_0BF), FPSTR(TCONST_0008));
+        interf->button(FPSTR(TCONST_00C1), FPSTR(TINTF_0C0), FPSTR(TCONST_0008));
+    }
+    //interf->button("time", FPSTR(TINTF_016), FPSTR(TCONST_0025));    
+    interf->json_section_end();
     interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), true);
 #endif
     interf->json_section_end();
@@ -1777,6 +1786,22 @@ void set_mp3volume(Interface *interf, JsonObject *data){
     int volume = (*data)[FPSTR(TCONST_00A2)];
     SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume(volume));
 }
+
+void set_mp3_player(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    uint16_t cur_palyingnb = mp3->getCurPlayingNb();
+    if(data->containsKey(FPSTR(TCONST_00BE))){
+        mp3->playEffect(cur_palyingnb-1,"");
+    } else if(data->containsKey(FPSTR(TCONST_00BF))){
+        mp3->playEffect(cur_palyingnb+1,"");
+    } else if(data->containsKey(FPSTR(TCONST_00C0))){
+        mp3->playEffect(cur_palyingnb-5,"");
+    } else if(data->containsKey(FPSTR(TCONST_00C1))){
+        mp3->playEffect(cur_palyingnb+5,"");
+    }
+}
+
 #endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
@@ -2054,6 +2079,12 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_00A2), set_mp3volume);
     embui.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
     embui.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
+
+    embui.section_handle_add(FPSTR(TCONST_00BE), set_mp3_player);
+    embui.section_handle_add(FPSTR(TCONST_00BF), set_mp3_player);
+    embui.section_handle_add(FPSTR(TCONST_00C0), set_mp3_player);
+    embui.section_handle_add(FPSTR(TCONST_00C1), set_mp3_player);
+
 #endif
 }
 

@@ -70,9 +70,11 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void restartSound();
   public:
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
+    uint16_t getCurPlayingNb() {return prev_effnb;} // вернуть предыдущий для смещения
     void setupplayer(uint16_t effnb, const String &_soundfile) {soundfile = _soundfile; cur_effnb=effnb;};
     bool isReady() {return ready;}
     bool isOn() {return on && ready;}
+    bool isMP3Mode() {return mp3mode;}
     void setIsOn(bool val, bool forcePlay=true) {on = val; if(!on) stop(); else if(forcePlay) playEffect(cur_effnb, soundfile);}
     void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
