@@ -92,6 +92,11 @@ void pubCallback(Interface *interf){
     uint32_t tm = millis()/1000;
     sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,(tm/3600)%24,(tm/60)%60,tm%60);
     interf->value(FPSTR(TCONST_008F), String(fuptime), true);
+
+    FSInfo fs_info;
+    LittleFS.info(fs_info);
+    //LOG(printf_P,PSTR("FS INFO: fs_info.totalBytes=%d,fs_info.usedBytes=%d\n"),fs_info.totalBytes,fs_info.usedBytes);
+    interf->value(FPSTR(TCONST_00C2), String(fs_info.totalBytes-fs_info.usedBytes), true);
     
     interf->json_frame_flush();
 }
@@ -1789,7 +1794,7 @@ void set_mp3volume(Interface *interf, JsonObject *data){
 
 void set_mp3_player(Interface *interf, JsonObject *data){
     if (!data) return;
-    
+
     if(!myLamp.isONMP3()) return;
     uint16_t cur_palyingnb = mp3->getCurPlayingNb();
     if(data->containsKey(FPSTR(TCONST_00BE))){
