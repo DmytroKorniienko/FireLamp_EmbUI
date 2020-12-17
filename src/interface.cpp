@@ -2338,7 +2338,10 @@ void remote_action(RA action, ...){
             myLamp.stopAlarm();
             break;
         case RA::RA_REBOOT:
-            ESP.restart(); // так лучше :)
+            remote_action(RA::RA_WARNING, F("[16711680,3000,500]"), NULL);
+            sysTicker.once(3,std::bind([]{
+                ESP.restart(); // так лучше :)
+            }));
             break;
         case RA::RA_WIFI_REC:
             CALL_INTF(FPSTR(TINTF_028), FPSTR(TCONST_0080), set_settings_wifi);
