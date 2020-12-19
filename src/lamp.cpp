@@ -412,8 +412,11 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 {
   stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == flags.ONflag) return;  // пропускаем холостые вызовы
-  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? F("ON"): F("Off"));
+  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? F("On"): F("Off"));
   flags.ONflag = flag;
+
+  if(mode == LAMPMODE::MODE_OTA)
+    mode = LAMPMODE::MODE_NORMAL;
 
   if (flag){
     effectsTimer(T_ENABLE);
@@ -425,12 +428,12 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
   }
 
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
-      digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
+  digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
 
-      if (curLimit > 0){
-        FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
-      }
+  if (curLimit > 0){
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
+  }
 }
 
 void LAMP::startAlarm(char *value){

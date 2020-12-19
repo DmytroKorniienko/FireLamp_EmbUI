@@ -769,10 +769,11 @@ void set_demoflag(Interface *interf, JsonObject *data){
     // Специально не сохраняем, считаю что демо при старте не должно запускаться
     bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
     switch (myLamp.getMode()) {
+        case MODE_OTA:
+        case MODE_ALARMCLOCK:
         case MODE_NORMAL:
             if (newdemo) myLamp.startDemoMode(embui.param(FPSTR(TCONST_0026)).toInt()); break;
         case MODE_DEMO:
-        case MODE_ALARMCLOCK:
         case MODE_WHITELAMP:
             if (!newdemo) myLamp.startNormalMode(); break;
         default:;
