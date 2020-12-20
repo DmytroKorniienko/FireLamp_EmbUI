@@ -340,7 +340,7 @@ public:
     void disableEffectsUntilText() {iflags.isEffectsDisabledUntilText = true; FastLED.clear();}
     void setOffAfterText() {iflags.isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
-    bool IsEventsHandled() {return flags.isEventsHandled;}
+    bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);
     bool isLampOn() {return flags.ONflag;}
     bool isDebugOn() {return flags.isDebug;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}

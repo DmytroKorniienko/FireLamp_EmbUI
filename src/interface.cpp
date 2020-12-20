@@ -2118,9 +2118,11 @@ void sync_parameters(){
     obj.clear();
 #endif
 
+    //LOG(printf_P,PSTR("tmp.isEventsHandled=%d\n"), tmp.isEventsHandled);
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_eventflag(nullptr, &obj);
     obj.clear();
+    embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
     obj[FPSTR(TCONST_001C)] = tmp.isGlobalBrightness ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_gbrflag(nullptr, &obj);
