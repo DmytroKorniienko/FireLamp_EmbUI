@@ -45,6 +45,25 @@ Ticker optionsTicker;          // планировщик заполнения с
 Ticker sysTicker;              // системный планировщик
 String tmpData;                // временное хранилище для отложенных операций
 
+bool check_recovery_state(bool isSet){
+    bool state = false; //return state;
+    if(LittleFS.begin()){
+        if(isSet && LittleFS.exists(F("/recovery.state"))){ // если перед созданием такой файл уже есть, то похоже бутлуп
+            state = true;
+            LittleFS.remove(F("/recovery.state"));
+        } else if(isSet){ // создаем файл-маркер, раз его не было
+            File f = LittleFS.open(F("/recovery.state"), "w");
+            f.write(embui.param(F("effList")).c_str());
+            f.flush();
+            f.close();
+            delay(100);
+        } else { // удаляем файл-маркер, инициализация завершена
+            LittleFS.remove(F("/recovery.state"));
+        }
+    }
+    return state;
+}
+
 void resetAutoTimers() // сброс таймера демо и настройка автосохранений
 {
     embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
@@ -2107,6 +2126,11 @@ void sync_parameters(){
     DynamicJsonDocument doc(1024);
     JsonObject obj = doc.to<JsonObject>();
 
+    if(check_recovery_state(true)){
+        LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(F("effList"))).c_str());
+        embui.var(F("effList"),String(0)); // что-то пошло не так, был ребут, сбрасываем эффект
+    }
+
     myLamp.semqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
 
     LAMPFLAGS tmp;
@@ -2234,6 +2258,8 @@ void sync_parameters(){
 
     set_settings_other(nullptr, &obj);
     obj.clear();
+
+    check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
 }
 
 void remote_action(RA action, ...){
