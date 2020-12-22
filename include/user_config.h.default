@@ -150,7 +150,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // // --- РАССВЕТ -------------------------
 // #define DAWN_BRIGHT           (200U)                        // максимальная яркость рассвета (0-255)
 // #define DAWN_TIMEOUT          (1U)                          // сколько рассвет светит после времени будильника, минут
-#define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника (дефолтное поведение в config.h - вывод времени отключен)
+#define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника, если пустая строка в событии будильника (дефолтное поведение в config.h - вывод времени отключен)
 
 #ifdef MIC_EFFECTS
 #define MIC_POLLRATE          (100U)                         // как часто опрашиваем микрофон, мс

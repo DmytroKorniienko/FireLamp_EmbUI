@@ -227,18 +227,19 @@ void LAMP::alarmWorker(){
       }
     }
 
-#ifdef PRINT_ALARM_TIME
     EVERY_N_SECONDS(1){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
         if(getAlarmMessage()!=nullptr && getAlarmMessage()[0])
           sendStringToLamp(getAlarmMessage(), letterColor, true);
-        else
+        else {
+#ifdef PRINT_ALARM_TIME
           sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
+#endif
+        }
       }
     }
-#endif
 
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
         leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
@@ -1083,7 +1084,8 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
 #ifdef MP3PLAYER
   if(mp3!=nullptr && mp3->isOn() && effects.getEn()>0 && (flags.playEffect || ((isLampOn() || millis()>5000) && flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
     LOG(printf_P, PSTR("playEffect soundfile:%s, effect:%d, delayed:%d\n"), effects.getSoundfile().c_str(), effects.getEn(), (flags.playName && !flags.playMP3));
-    mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
+    if(!flags.playMP3) // для mp3-плеера есть отдельное управление
+      mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
   }
 #endif
 
