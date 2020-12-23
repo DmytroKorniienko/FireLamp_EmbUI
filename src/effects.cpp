@@ -3263,6 +3263,7 @@ bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 void EffectTime::load(){
+  FastLED.clear();
   palettesload();    // подгружаем дефолтные палитры
 
   if(((curTimePos<=(signed)LET_WIDTH*2-(LET_WIDTH/2)) || (curTimePos>=(signed)WIDTH+(LET_WIDTH/2))) )
