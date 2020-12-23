@@ -638,6 +638,9 @@ void EffectWorker::chckdefconfigs(const char *folder){
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
+#ifndef MIC_EFFECTS
+    if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
+#endif
 
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
@@ -748,6 +751,9 @@ void EffectWorker::makeIndexFile(const char *folder)
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // EFF_NONE не сохраняем, перебор до 255 включительно
     if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
       continue;
+#ifndef MIC_EFFECTS
+    if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
+#endif
 
     indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, 255);
     firstLine = false; // сбрасываю признак перовой строки
