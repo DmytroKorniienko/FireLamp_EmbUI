@@ -531,7 +531,6 @@ void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
-  delay(1000);
   restoreStored();
 }
 #ifdef OTA
