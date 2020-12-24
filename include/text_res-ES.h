@@ -49,7 +49,7 @@ static const char TEFF_001 [] PROGMEM = "Lámpara blanca";
 static const char TEFF_002 [] PROGMEM = "Colores";
 static const char TEFF_003 [] PROGMEM = "Arcoiris 2D";
 static const char TEFF_004 [] PROGMEM = "Confeti";
-static const char TEFF_005 [] PROGMEM = "";
+static const char TEFF_005 [] PROGMEM = "M&M`s";
 static const char TEFF_006 [] PROGMEM = "Ventisca, Estrellas fugaces, Meteoritos";
 static const char TEFF_007 [] PROGMEM = "Nuevo Matriz";
 static const char TEFF_008 [] PROGMEM = "Luciérnagas";
@@ -365,6 +365,7 @@ static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 // Общая конфигурация для эффектов с 4-им ползунком для палитр
 static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
 static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Efecto (0 = Cíclicamente)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":4,\"type\":0,\"val\":16,\"min\":0,\"max\":32,\"step\":1,\"name\":\"Desplaz.color (0 = Ciclicamente)\"}]}";
+static const char E_PILE[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Llenado (no instantáneamente)\"}, {\"id\":2,\"type\":48,\"val\":\"127\"}]}";
 
 static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Color\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
 static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Cantidad\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";

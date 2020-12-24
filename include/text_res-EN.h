@@ -49,7 +49,7 @@ static const char TEFF_001[] PROGMEM = "White lamp";
 static const char TEFF_002[] PROGMEM = "Colors";
 static const char TEFF_003[] PROGMEM = "Rainbow 2D";
 static const char TEFF_004[] PROGMEM = "Confetti";
-static const char TEFF_005[] PROGMEM = "";
+static const char TEFF_005[] PROGMEM = "M&M`s";
 static const char TEFF_006[] PROGMEM = "Blizzard, Meteor Shower, Meteors";
 static const char TEFF_007[] PROGMEM = "New Matrix";
 static const char TEFF_008[] PROGMEM = "Fireflies";
@@ -364,6 +364,7 @@ static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 // Общая конфигурация для Effectов с 4-им ползунком для палитр
 static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
 static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Effect (0 = cyclically)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":0,\"val\":16,\"min\":0,\"max\":32,\"step\":1,\"name\":\"Color offset (0 = cyclical)\"}]}";
+static const char E_PILE[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Filling (not instantly)\"}, {\"id\":2,\"type\":48,\"val\":\"127\"}]}";
 
 static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Color\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
 static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Quantity\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";

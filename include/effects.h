@@ -2121,6 +2121,25 @@ class EffectWrain: public EffectCalc {
     void load() override;
 };
 
+// ------------- Эффект "Куча"
+// https://editor.soulmatelights.com/gallery/526
+//Yaroslaw Turbin 14.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+class EffectPile : public EffectCalc {
+private:
+    byte hue;
+    void randomdot(CRGB *leds);
+    void randomdel(CRGB *leds);
+    void falldown(CRGB *leds);
+    void updatesand(CRGB *leds);
+    //bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
+    //void setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 class EffectWorker {

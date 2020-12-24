@@ -49,7 +49,7 @@ static const char TEFF_001[] PROGMEM = "Белая лампа";
 static const char TEFF_002[] PROGMEM = "Цвета";
 static const char TEFF_003[] PROGMEM = "Радуга 2D";
 static const char TEFF_004[] PROGMEM = "Конфетти";
-static const char TEFF_005[] PROGMEM = "";
+static const char TEFF_005[] PROGMEM = "Цветные драже";
 static const char TEFF_006[] PROGMEM = "Метель, Звездопад, Метеоры";
 static const char TEFF_007[] PROGMEM = "New Матрица";
 static const char TEFF_008[] PROGMEM = "Светлячки";
@@ -364,7 +364,7 @@ static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ve
 // Общая конфигурация для эффектов с 4-им ползунком для палитр
 static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Эффект (0 = циклично)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}, {\"id\":4,\"type\":0,\"val\":16,\"min\":0,\"max\":32,\"step\":1,\"name\":\"Смещение цвета (0 = циклично)\"}]}";
-
+static const char E_PILE[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Заполнение (не моментально)\"}, {\"id\":2,\"type\":48,\"val\":\"127\"}]}";
 static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Цвет\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Микрофон\"}]}";
 static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Количество\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
 static const char E_RADAR255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Палитра/Масштаб\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cубпиксель\"}]}";
