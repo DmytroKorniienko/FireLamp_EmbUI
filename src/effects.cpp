@@ -811,7 +811,7 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
       color = CHSV(127, 0, light[i]);
       break;
     case 2:
-      if (light[i] > 10) color = CHSV(lightersColor[i], 255 - light[i], light[i] -= 10 * speedfactor);
+      if (light[i] > 10) { byte tmp = light[i] - 10 * speedfactor; color = CHSV(lightersColor[i], 255 - light[i], tmp); light[i]=tmp; }
       else color = rgb2hsv_approximate( CRGB::Black);
       break;
     case 3:
@@ -7464,7 +7464,7 @@ void EffectPile::falldown(CRGB *leds)
 bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
   if (dryrun(3)) return false;
 
-  float speedFactor = EffectMath::fmap(speed, 1, 255, 1, .1);
+  //float speedFactor = EffectMath::fmap(speed, 1, 255, 1, .1);
   EVERY_N_MILLISECONDS(80)
   {
     updatesand(leds);

@@ -211,7 +211,7 @@ private:
     uint8_t _brt, _steps;
     int8_t _brtincrement;
     Ticker _fadeTicker;             // планировщик асинхронного фейдера
-    Ticker _fadeeffectTicker;       // планировщик затухалки между эффектами
+    Ticker _reservedTicker;         // планировщик вспомогательный
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     Ticker _effectsTicker;          // планировщик обработки эффектов
     Ticker _warningTicker;          // планировщик обработки эффектов

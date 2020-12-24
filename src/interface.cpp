@@ -2288,11 +2288,7 @@ void remote_action(RA action, ...){
         case RA::RA_OFF: {
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
                 LAMPMODE mode = myLamp.getMode();
-                //resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
                 if(mode!=LAMPMODE::MODE_NORMAL){
-                    //myLamp.startNormalMode();
-                    //myLamp.restoreStored();
-                    //embui.var(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE)); // отключить демо
                     CALL_INTF(FPSTR(TCONST_001B), FPSTR(TCONST_FFFE), set_demoflag); // отключить демо, если было включено
                     if (myLamp.IsGlobalBrightness()) {
                         embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная

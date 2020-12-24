@@ -359,7 +359,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 #endif
 
 
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _reservedTicker()
 #ifdef OTA
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
@@ -515,11 +515,15 @@ void LAMP::restoreStored()
   if(storedBright)
     setLampBrightness(storedBright);
   if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    effects.directMoveBy(storedEffect);
-    remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
-  } else
-  if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    remote_action(RA::RA_EFF_RAND, NULL);
+    _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
+      remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
+      effects.directMoveBy(storedEffect);
+      //switcheffect(EFFSWITCH::SW_SPECIFIC,true,storedEffect,true);
+    }));
+  } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
+    _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
+      remote_action(RA::RA_EFF_RAND, NULL);
+    }));
   }
 }
 
@@ -527,6 +531,7 @@ void LAMP::startNormalMode()
 {
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
+  delay(1000);
   restoreStored();
 }
 #ifdef OTA
@@ -803,26 +808,29 @@ void LAMP::newYearMessageHandle()
 
   {
     char strMessage[256]; // буффер
-    time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime(); // тут забит гвоздями 2020 год, не работоспособно
+    time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime();
 
     if(calc<0) {
       sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year);
     } else if(calc<300){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, PSTR("секунд"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), PSTR("минут"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), String(FPSTR(TINTF_0C2)).c_str());
     } else if(calc/(60*60)<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), PSTR("часов"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), String(FPSTR(TINTF_0C3)).c_str());
     } else {
-      byte calcN=(int)(calc/(60*60*24))%10; // остаток от деления на 10
+      byte calcT=calc/(60*60*24);
+      byte calcN=calcT%10; // остаток от деления на 10
       String str;
-      if(calcN>=2 && calcN<=4)
-        str = F("дня");
+      if(calcT>=11 && calcT<=20)
+        str = FPSTR(TINTF_0C4);
+      else if(calcN>=2 && calcN<=4)
+        str = FPSTR(TINTF_0C5);
       else if(calc!=11 && calcN==1)
-        str = F("день");
+        str = FPSTR(TINTF_0C6);
       else
-        str = F("дней");
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60*24)), str.c_str());
+        str = FPSTR(TINTF_0C4);
+      sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     }
 
     LOG(printf_P, PSTR("Prepared message: %s\n"), strMessage);
