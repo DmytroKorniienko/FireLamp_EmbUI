@@ -2307,7 +2307,7 @@ void EffectTwinkles::load(){
 
 void EffectTwinkles::setup()
 {
-  tnum = ptPallete-palettescale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
+  //tnum = scale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
   for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
     if (random8(tnum) == 0) {                                // чем ниже tnum, тем чаще будут заполняться элементы лампы
       ledsbuff[idx].r = random8();                           // оттенок пикселя
@@ -2322,7 +2322,7 @@ void EffectTwinkles::setup()
 void EffectTwinkles::setscl(const byte _scl)
 {
   EffectCalc::setscl(_scl); // дернем базовый, где будет пересчет палитры
-  tnum = ptPallete-palettescale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
+  tnum = map(scale, 1, 255, 63, 1); // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
   setup();
 }
 
@@ -2375,7 +2375,7 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
     else
       EffectMath::setLed(idx, ColorFromPalette(*curPalette, ledsbuff[idx].r, ledsbuff[idx].b));
     }
-  EffectMath::blur2d(20); // так они не только разгороються, но и раздуваються. Красивше :)
+  EffectMath::blur2d(32); // так они не только разгороються, но и раздуваються. Красивше :)
   return true;
 }
 
