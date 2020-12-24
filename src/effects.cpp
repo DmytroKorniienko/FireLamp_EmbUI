@@ -772,12 +772,12 @@ void EffectStarFall::load(){
   randomSeed(millis());
   for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
   {
-    lightersPos[0U][i] = (float)random(-(WIDTH*10-2), (WIDTH*10-2)) / 10.0f;
-    lightersPos[1U][i] = random(HEIGHT-4,HEIGHT+4);
-    lightersSpeed[0U][i] = (float)random(10, 20) / 10.0f;
-    lightersSpeed[1U][i] = (float)random(10, 20) / 10.0f;
+    lightersPos[0U][i] = random(-(int)WIDTH, WIDTH);
+    lightersPos[1U][i] = random(HEIGHT - 1, HEIGHT + 4);
+    lightersSpeed[0U][i] = EffectMath::randomf(-1, 1);  // X
+    lightersSpeed[1U][i] = EffectMath::randomf(1, 2);   // Y
     lightersColor[i] = random(0U, 255U);
-    light[i] = 127;
+    light[i] = 255;
   }
 }
 
@@ -785,9 +785,9 @@ void EffectStarFall::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
   if(_val->getId()==3){
     if(isRandDemo()){
-      colored = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
+      effId = random(_val->getMin().toInt(), _val->getMax().toInt()); // для переключателя +2, т.к. true/false
     } else
-      colored = _val->getVal() == FPSTR(TCONST_FFFF);
+      effId = _val->getVal().toInt();;
   }  
   if(_val->getId()==4){
     if(isRandDemo()){
@@ -799,35 +799,56 @@ void EffectStarFall::setDynCtrl(UIControl*_val) {
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
-  float speedfactor = (float)speed / (colored ? 2048.0f : 1024.0f) + 0.15f;
-  EffectMath::dimAll(255-map(speed,1,255,25,15));
-
-  for (uint8_t i = 0U; i < map(speed,1,255,1,(colored ? LIGHTERS_AM/2 : LIGHTERS_AM)); i++) // LIGHTERS_AM
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.25, .5);
+  EffectMath::dimAll(255 - (effId == 2 ? 70 : 60) * speedfactor);
+  CHSV color;
+  for (uint8_t i = 0U; i < map(scale, 1, 10, LIGHTERS_AM/8, LIGHTERS_AM); i++) // LIGHTERS_AM
   {
-    if(colored){
-      lightersPos[0U][i] += lightersSpeed[0U][i]*speedfactor;
-      if(isNew)
-        lightersPos[1U][i] -= lightersSpeed[0U][i]*speedfactor;
-      else
-        lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
+    //color = CHSV((effId > 1 ? lightersColor[i] : 255), (effId > 1 ? light[i] : 0), (effId > 1 ? 255 : light[i]));
+    switch (effId)
+    {
+    case 1:
+      color = CHSV(127, 0, light[i]);
+      break;
+    case 2:
+      fade += speedfactor;
+      if (light[i] > 10) color = CHSV(lightersColor[i], 255 - light[i], light[i] -= 10 * speedfactor);
+      else color = rgb2hsv_approximate( CRGB::Black);
+      break;
+    case 3:
+      color = CHSV(lightersColor[i], 255, light[i]);
+      break;
+    default:
+      break;
+    }
+
+    if (isNew) {
+      lightersPos[0U][i] -= lightersSpeed[0U][effId == 1 ? 0 : i] * speedfactor;
+      lightersPos[1U][i] -= 1 * speedfactor;
     } else {
-      lightersPos[0U][i] += lightersSpeed[0U][LIGHTERS_AM-1]*speedfactor;
-      if(isNew)
-        lightersPos[1U][i] -= lightersSpeed[0U][LIGHTERS_AM-1]*speedfactor;
-      else
-        lightersPos[1U][i] -= lightersSpeed[1U][LIGHTERS_AM-1]*speedfactor;
+      lightersPos[0U][i] += lightersSpeed[0U][i] * (speedfactor / 2);
+      lightersPos[1U][i] -= lightersSpeed[1U][0] * (speedfactor / 2);
     }
-    if (isNew){
-      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? light[i] : 0), (colored ? 255 : light[i])));
-    }
+
+   // if (isNew){
+      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], color, 0);
+   /* }
     else {
-      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV((colored ? lightersColor[i] : 255), (colored ? light[i] : 0), (colored ? 255 : light[i])));
-    }
-    if(lightersPos[1U][i]<-1){
-      lightersPos[0U][i] = (float)random(-(WIDTH*10-2), (WIDTH*10-2)) / 10.0f;
-      lightersPos[1U][i] = random(HEIGHT,HEIGHT+4);
-      lightersSpeed[0U][i] = (float)random(15, 25) / 10.0f;
-      lightersSpeed[1U][i] = (float)random(15, 25) / 10.0f;
+      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], color);
+    }*/
+
+    if(lightersPos[1U][i] < -1) {
+      if (isNew) {
+        lightersPos[0U][i] = random(-(int)WIDTH, WIDTH);
+        lightersPos[1U][i] = effId > 1 ? random(HEIGHT / 2, HEIGHT + 4) : random(HEIGHT - 1, HEIGHT + 4);
+        lightersSpeed[0U][i] = EffectMath::randomf(-1, 1);  // X
+        lightersSpeed[1U][i] = EffectMath::randomf(1, 2);   // Y
+      } else {
+        lightersPos[0U][i] = (float)random(-(WIDTH * 10 - 2), (WIDTH * 10 - 2)) / 10.0f;
+        lightersPos[1U][i] = random(HEIGHT, HEIGHT + 4);
+        lightersSpeed[0U][i] = (float)random(15, 25) / 10.0f;   // X
+        lightersSpeed[1U][i] = lightersSpeed[0U][i]; //(float)random(15, 25) / 10.0f;   // Y
+      }
       lightersColor[i] = random(0U, 255U);
       light[i] = random(127U, 255U);
     }
@@ -4675,7 +4696,7 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
   EffectMath::dimAll(200U);
     uint8_t layer = 0;
 
-  //CRGBPalette16 Pal( pit );
+  CRGBPalette16 Pal( pit );
 
   //modulate the position so that it increases/decreases x
   //(here based on the top left pixel - it could be any position else)
@@ -4717,15 +4738,20 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
     for (uint8_t x = 0; x < WIDTH; x++) {
       //I will add this overlay CRGB later for more colors
       //it´s basically a rainbow mapping with an inverted brightness mask
-      CRGB overlay = CHSV(noise[layer][y][x], 255, noise[layer][x][y]);
+      CRGB overlay;
+      if (palettepos == 14) overlay = CHSV(160,255 - noise[layer][x][y], noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]);
+      else overlay = CHSV(noise[layer][y][x], 255, noise[layer][x][y]);
       //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[layer][15][15]
-      leds[myLamp.getPixelNumber(x, y)] = ColorFromPalette( *curPalette, noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]) + overlay;
+      if (palettepos == 4) EffectMath::drawPixelXYF(x, HEIGHT - y, CHSV(160, 0 , noise[layer][x][y]), 35);
+      else leds[myLamp.getPixelNumber(x, y)] = ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]) + overlay;
     }
   }
 
   //make it looking nice
-  adjust_gamma(*&leds);
-
+  if (palettepos != 4) {
+    adjust_gamma(*&leds);
+    EffectMath::blur2d(32);
+  } else EffectMath::blur2d(48);
   //and show it!
  return true;
 }

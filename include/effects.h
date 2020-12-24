@@ -853,8 +853,9 @@ public:
 // ------------- звездопад/метель -------------
 class EffectStarFall : public EffectLighters {
 private:
-    bool colored = false;
-    bool isNew = false;
+    uint8_t effId = 1;
+    bool isNew = true;
+    float fade;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
 
