@@ -2129,6 +2129,7 @@ class EffectWrain: public EffectCalc {
 class EffectPile : public EffectCalc {
 private:
     byte hue;
+    byte fill;
     void randomdot(CRGB *leds);
     void randomdel(CRGB *leds);
     void falldown(CRGB *leds);

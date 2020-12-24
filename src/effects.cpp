@@ -7383,13 +7383,14 @@ void EffectWrain::Clouds(bool flash)
 //https://www.reddit.com/user/ldirko/
 void EffectPile::load() {
   FastLED.clear();
+  palettesload();
 }
 
 void EffectPile::randomdot(CRGB *leds)
 {
   byte a = LED_COLS / 2; //random8(LED_COLS/4)+LED_COLS*3/8; //
-  if (!random8(4))
-    leds[myLamp.getPixelNumber(a, LED_ROWS - 1)].setHue(random8(hue, hue + 45)); // 0 or 1
+  if (!random8(map(fill, 1, 8, LED_ROWS / 2, 3))) // !random8(4)
+    leds[myLamp.getPixelNumber(a, LED_ROWS - 1)] = ColorFromPalette(*curPalette, random(hue, hue + 45), random(127, 255)); // 0 or 1
 }
 
 void EffectPile::updatesand(CRGB *leds)
@@ -7441,7 +7442,7 @@ void EffectPile::randomdel(CRGB *leds)
 {
   for (uint8_t i = 0; i < NUM_LEDS - 1; i++)
   {
-    if (!random8(map(speed, 1, 8, 2, LED_ROWS / 2)))
+    if (!random8(map(fill, 1, 8, 2, LED_ROWS / 2)))
       leds[i] = 0;
   }
 }
@@ -7462,8 +7463,7 @@ void EffectPile::falldown(CRGB *leds)
 }
 
 bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
-  if (dryrun(3)) return false;
-
+  fill = getCtrlVal(3).toInt();
   //float speedFactor = EffectMath::fmap(speed, 1, 255, 1, .1);
   EVERY_N_MILLISECONDS(80)
   {
@@ -7478,6 +7478,5 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
     falldown(leds);
   }
   hue++;
-  if (hue%MAX_FPS/2 == 0) ESP.wdtFeed();
   return true;
 }
