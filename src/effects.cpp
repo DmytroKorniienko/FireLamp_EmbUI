@@ -7376,7 +7376,7 @@ void EffectWrain::Clouds(bool flash)
   }
 }
 
-// ------------- Эффект "Куча"
+// ------------- Эффект "Цветные драже"
 // https://editor.soulmatelights.com/gallery/526
 //Yaroslaw Turbin 14.12.2020
 //https://vk.com/ldirko
@@ -7478,5 +7478,6 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
     falldown(leds);
   }
   hue++;
+  if (hue % MAX_FPS / 2 == 0) ESP.wdtFeed();  // не знаю почему, но эффект генерит SoftWDT
   return true;
 }

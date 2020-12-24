@@ -2121,7 +2121,7 @@ class EffectWrain: public EffectCalc {
     void load() override;
 };
 
-// ------------- Эффект "Куча"
+// ------------- Эффект "Цветные драже"
 // https://editor.soulmatelights.com/gallery/526
 //Yaroslaw Turbin 14.12.2020
 //https://vk.com/ldirko
