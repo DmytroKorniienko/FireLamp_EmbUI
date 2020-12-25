@@ -4076,10 +4076,10 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ------------- цвет + вода в бассейне ------------------
-// Идея и паттерн Бликов на воде (с) SottNick. 03.2020
+// ------------- Эффект "Блики на воде Цвета"
+// Идея SottNick
 // переписал на программные блики + паттерны - (c) kostyamat
-
+// Генератор бликов (c) stepko
 bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
   return aquariumRoutine(*&ledarr, &*opt);
 }
@@ -4145,7 +4145,6 @@ void EffectAquarium::fillNoiseLED(CRGB *leds) {
       data = qsub8(data, 16);
       data = qadd8(data, scale8(data, 39));
       
-      //uint8_t olddata = noise[i][j];
       uint8_t newdata = scale8(ledbuff[myLamp.getPixelNumberBuff(j, i, WIDTH, HEIGHT)], dataSmoothing) + scale8(data, 256 - dataSmoothing);
       data = newdata;
       
@@ -4213,7 +4212,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   else {
     hue += speedfactor;
   }
-  //EffectMath::blur2d(32);
+
   return true;
 }
 

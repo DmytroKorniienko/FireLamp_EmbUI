@@ -1350,12 +1350,16 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- цвет + вода в бассейне ------------------
-// (с) SottNick. 03.2020
-// переписал на программные субпиксельные блики - (c) kostyamat
+// ------------- Эффект "Блики на воде Цвета"
+// Идея SottNick
+// переписал на программные блики + паттерны - (c) kostyamat
+// Генератор бликов (c) stepko
 class EffectAquarium : public EffectCalc {
 private:
 #define MAX_DIMENSION max(WIDTH, HEIGHT)
+    const uint8_t _scale = 25;
+    const uint8_t _speed = 3;
+
     float hue = 0.;
     uint16_t x;
     uint16_t y;
@@ -1363,11 +1367,9 @@ private:
     byte ledbuff[WIDTH*2 * HEIGHT*2];
     uint16_t xsin;
     uint16_t ysin;
-    byte satur;
-    byte glare = 0;
-    byte iconIdx = 0;
-    const uint8_t _scale = 25;
-    const uint8_t _speed = 3;
+    uint8_t satur;
+    uint8_t glare = 0;
+    uint8_t iconIdx = 0;
 
     void nGlare(CRGB *leds);
     void nPatterns();
@@ -1379,9 +1381,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-#define STARS_NUM (16)
+
 // ----------- Эффект "Звезды"
 // (c) SottNick
+#define STARS_NUM (16)
 class EffectStar : public EffectCalc {
 private:
     float driftx;
