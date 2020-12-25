@@ -1355,20 +1355,24 @@ public:
 // переписал на программные субпиксельные блики - (c) kostyamat
 class EffectAquarium : public EffectCalc {
 private:
+#define MAX_DIMENSION max(WIDTH, HEIGHT)
     float hue = 0.;
-    //uint8_t deltaHue = 0U;
-    //uint8_t deltaHue2 = 0U;
-    //uint8_t step = 0;
+    uint16_t x;
+    uint16_t y;
+    uint16_t z;
     byte ledbuff[WIDTH*2 * HEIGHT*2];
     uint16_t xsin;
     uint16_t ysin;
     byte satur;
     byte glare = 0;
     byte iconIdx = 0;
+    const uint8_t _scale = 25;
+    const uint8_t _speed = 3;
 
-    void nGlare();
+    void nGlare(CRGB *leds);
     void nPatterns();
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
+    void fillNoiseLED(CRGB *leds);
 
 public:
     //void load() override;

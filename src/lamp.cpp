@@ -309,7 +309,11 @@ void LAMP::frameShow(const uint32_t ticktime){
   // EVERY_N_SECONDS(1){
   //   LOG(println, F("FastLED.show()"));
   // }
-
+#ifdef ESP8266
+  if (fps%MAX_FPS == 0) ESP.wdtFeed(); // похоже, пса таки стоит кормить время от времени,
+#elif defined ESP32
+  if (fps%MAX_FPS == 0) dealy(1);
+#endif
   FastLED.show();
   if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
@@ -318,9 +322,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   int32_t delay = EFFECTS_RUN_TIMER + ticktime - millis();
   if (delay < LED_SHOW_DELAY) delay = LED_SHOW_DELAY;
   _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
-#ifdef LAMP_DEBUG
   ++fps;
-#endif
 }
 
 #ifdef VERTGAUGE

@@ -4079,9 +4079,6 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 // ------------- цвет + вода в бассейне ------------------
 // Идея и паттерн Бликов на воде (с) SottNick. 03.2020
 // переписал на программные блики + паттерны - (c) kostyamat
-/*void EffectAquarium::load() {
-  ledbuff.resize(WIDTH*2 * HEIGHT*2);
-}*/
 
 bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
   return aquariumRoutine(*&ledarr, &*opt);
@@ -4116,28 +4113,55 @@ void EffectAquarium::nPatterns() {
   }
 }
 
+CRGBPalette16 currentPalette((PartyColors_p));
 
-void EffectAquarium::nGlare() {
-
-#ifdef MIC_EFFECTS
+void EffectAquarium::nGlare(CRGB *leds) {
+/*#ifdef MIC_EFFECTS
   byte _video = isMicOn() ? constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
 #else
   byte _video = 255;
 #endif
-  for (byte x = 0; x < WIDTH * 2; x++)
-  {
-    for (byte y = 0; y < HEIGHT * 2; y++)
-    {
-      ledbuff[myLamp.getPixelNumberBuff(x, y, WIDTH * 2, HEIGHT * 2)] = satur - pgm_read_byte(&aquariumGIF[y % 32U][x % 32U]) * CAUSTICS_BR / 100U;
+*/
+  fill_solid(currentPalette, 16, CHSV(hue, satur, 200));
+  currentPalette[10] = CHSV(hue, satur - 60, 225);
+  currentPalette[9] = CHSV(hue, 255 - satur, 180);
+  currentPalette[8] = CHSV(hue, 255 - satur, 180);
+  currentPalette[7] = CHSV(hue, satur - 60, 225);
+
+  fillNoiseLED(leds);
+  
+  blur2d(leds, LED_COLS, LED_ROWS, 100);
+}
+
+void EffectAquarium::fillNoiseLED(CRGB *leds) {
+  uint8_t  dataSmoothing = 200 - (_speed * 4);
+  for (uint8_t i = 0; i < MAX_DIMENSION; i++) {
+    int32_t ioffset = _scale * i;
+    for (uint8_t j = 0; j < MAX_DIMENSION; j++) {
+      int32_t joffset = _scale * j;
+      
+      uint8_t data = inoise8(x + ioffset, y + joffset, z);
+      
+      data = qsub8(data, 16);
+      data = qadd8(data, scale8(data, 39));
+      
+      //uint8_t olddata = noise[i][j];
+      uint8_t newdata = scale8(ledbuff[myLamp.getPixelNumberBuff(j, i, WIDTH, HEIGHT)], dataSmoothing) + scale8(data, 256 - dataSmoothing);
+      data = newdata;
+      
+      ledbuff[myLamp.getPixelNumberBuff(j, i, WIDTH, HEIGHT)] = data;
     }
   }
+  z += _speed;
+  x += _speed / 16 * sin8(millis() / 10000);
+  y += _speed / 16 * cos8(millis() / 10000);
+  
+  for (uint8_t i = 0; i < WIDTH; i++) {
+    for (uint8_t j = 0; j < HEIGHT; j++) {
+      uint8_t index = ledbuff[myLamp.getPixelNumberBuff(j, i, WIDTH, HEIGHT)];
 
-  for (uint32_t x = 0; x < WIDTH; x ++)
-  {
-    for (uint16_t y = 0; y < HEIGHT; y ++)
-    {
-      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, ledbuff[myLamp.getPixelNumberBuff((xsin + x) % (WIDTH * 2), (ysin + y) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2)], _video));
-
+      CRGB color = ColorFromPalette(currentPalette, index);
+      EffectMath::drawPixelXY(i, j, color);
     }
   }
 }
@@ -4155,7 +4179,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   case 0:
     break;
   case 2:
-    nGlare();
+    nGlare(leds);
     break;
   default:
     nPatterns();
@@ -7404,8 +7428,7 @@ void EffectPile::updatesand(CRGB *leds)
       indexXadd1Y = myLamp.getPixelNumber(x + 1, y);
       indexXsub1Y = myLamp.getPixelNumber(x - 1, y);
       indexXYadd1 = myLamp.getPixelNumber(x, y + 1);
-      if (!leds[index] && !leds[indexXYadd1])
-        continue;
+      if (!leds[index] && !leds[indexXYadd1]) continue;
       if (!leds[index] && leds[indexXYadd1])
       {
         leds[index] = leds[indexXYadd1];
@@ -7478,6 +7501,6 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
     falldown(leds);
   }
   hue++;
-  if (hue % MAX_FPS / 2 == 0) ESP.wdtFeed();  // не знаю почему, но эффект генерит SoftWDT
+  //if (hue % MAX_FPS / 2 == 0) ESP.wdtFeed();  // не знаю почему, но эффект генерит SoftWDT
   return true;
 }
