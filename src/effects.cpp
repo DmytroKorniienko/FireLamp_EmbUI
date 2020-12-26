@@ -6853,9 +6853,9 @@ float EffectTLand::code(double i, double x, double y) {
       // Starfield https://twitter.com/P_Malin/status/1323702220320313346 
       //return !((int)(x + (t/2) * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
       {
-        uint16_t _y = (HEIGHT - y);
-        float d = (fmod(_y * _y, 5.9) + 1.5);
-        return !((int)(x + t * 50 / d) & 15) / d;
+        uint16_t _y = (HEIGHT - 1 - y);
+        float d = (fmod(_y * _y + 4, 4.1) + 0.85) * 0.5; // коэффициенты тут отвечают за яркость (размер), скорость, смещение, подбираются экспериментально :)
+        return !((int)(x + t * 7.0 / d) & 15) / d; // 7.0 - множитель скорости
       }
       break;
 
