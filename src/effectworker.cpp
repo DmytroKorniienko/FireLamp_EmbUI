@@ -846,18 +846,14 @@ void EffectWorker::deleteFromIndexFile(const uint16_t effect)
 // удалить эффект
 void EffectWorker::deleteEffect(const EffectListElem *eff, bool isCfgRemove)
 {
-  //uint16_t prevEff = EFF_ENUM::EFF_NONE;
   for(int i=0; i<effects.size(); i++){
-      //prevEff = effects[i]->eff_nb;
       if(effects[i]->eff_nb==eff->eff_nb){
-          //deleteFromIndexFile(eff->eff_nb);
           if(isCfgRemove)
             removeConfig(eff->eff_nb);
           delete effects.remove(i);
           break;
       }
   }
-  //directMoveBy(prevEff);
 }
 
 // копирование эффекта
@@ -1032,7 +1028,8 @@ uint16_t EffectWorker::getNext()
 // выбор нового эффекта с отложенной сменой, на время смены эффекта читаем его список контроллов отдельно
 void EffectWorker::setSelected(uint16_t effnb)
 {
-  if(selcontrols.size()!=controls.size() || controls.size()==0 || selcontrols[0]!=controls[0]){
+  //selcontrols.size()!=controls.size() || 
+  if(controls.size()==0 || selcontrols[0]!=controls[0]){
     while(selcontrols.size()>0){ // очистить предыщий набор, если он только не отображен на текущий
       delete selcontrols.shift();
     }
@@ -1045,17 +1042,16 @@ void EffectWorker::setSelected(uint16_t effnb)
   this->selcontrols = tmpEffect->controls; // копирую список контроллов, освобождать будет другой объект
   tmpEffect->controls = fake;
   delete tmpEffect;
-  // for(int i=0; i<selcontrols.size(); i++){
-  //   LOG(println,selcontrols[i]->getName());
-  // }
 }
 
 void EffectWorker::moveSelected(){
-  LOG(println,F("Синхронизация списков!"));
-  workerset(selEff);
-  curEff = selEff;
-  clearControlsList();
-  controls = selcontrols; // теперь оба списка совпадают, смена эффекта завершена
+  LOG(printf_P,PSTR("Синхронизация списков! Эффект: %d\n"), selEff);
+  if(curEff != selEff){
+    workerset(selEff);
+    curEff = selEff;
+    clearControlsList();
+    controls = selcontrols; // теперь оба списка совпадают, смена эффекта завершена
+  }
   //LOG(printf_P,PSTR("%d %d\n"),controls.size(), selcontrols.size());
 }
 

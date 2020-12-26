@@ -793,6 +793,7 @@ void set_onflag(Interface *interf, JsonObject *data){
 
 void set_demoflag(Interface *interf, JsonObject *data){
     if (!data) return;
+    resetAutoTimers();
     // Специально не сохраняем, считаю что демо при старте не должно запускаться
     bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
     switch (myLamp.getMode()) {
@@ -2314,7 +2315,7 @@ void remote_action(RA action, ...){
             } else {
                 myLamp.switcheffect(SW_NEXT_DEMO, myLamp.getFaderFlag());
             }
-            sysTicker.once(1,std::bind([]{
+            sysTicker.once(3,std::bind([]{
                 remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
             }));
             break;

@@ -309,11 +309,11 @@ void LAMP::frameShow(const uint32_t ticktime){
   // EVERY_N_SECONDS(1){
   //   LOG(println, F("FastLED.show()"));
   // }
-#ifdef ESP8266
-  if (fps%MAX_FPS == 0) ESP.wdtFeed(); // похоже, пса таки стоит кормить время от времени,
-#elif defined ESP32
-  if (fps%MAX_FPS == 0) dealy(1);
-#endif
+// #ifdef ESP8266
+//   if (fps%MAX_FPS == 0) ESP.wdtFeed(); // похоже, пса таки стоит кормить время от времени,
+// #elif defined ESP32
+//   if (fps%MAX_FPS == 0) dealy(1);
+// #endif
   FastLED.show();
   if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
@@ -494,6 +494,7 @@ void LAMP::stopAlarm(){
  */
 void LAMP::startDemoMode(byte tmout)
 {
+  LOG(println,F("Demo mode"));
   demoTimer(T_ENABLE, tmout);
   if(mode == LAMPMODE::MODE_DEMO) return;
   
@@ -519,8 +520,7 @@ void LAMP::restoreStored()
   if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
       remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
-      effects.directMoveBy(storedEffect);
-      //switcheffect(EFFSWITCH::SW_SPECIFIC,true,storedEffect,true);
+      //effects.directMoveBy(storedEffect);
     }));
   } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
     _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
@@ -531,6 +531,7 @@ void LAMP::restoreStored()
 
 void LAMP::startNormalMode()
 {
+  LOG(println,F("Normal mode"));
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   restoreStored();
