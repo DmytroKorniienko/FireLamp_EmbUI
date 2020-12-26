@@ -819,9 +819,18 @@ void LAMP::newYearMessageHandle()
     } else if(calc/60<60){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), String(FPSTR(TINTF_0C2)).c_str());
     } else if(calc/(60*60)<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), String(FPSTR(TINTF_0C3)).c_str());
+	    byte calcT=calc/(60*60); // часы
+      byte calcN=calcT%10; // остаток от деления на 10
+      String str;
+      if(calcT<=20 && calcT>=5)
+          str = FPSTR(TINTF_0C3);
+      else if(calcN>=2 && calcN<=4)
+          str = FPSTR(TINTF_0C7);
+      else if(calc==21 && calcN==1)
+          str = FPSTR(TINTF_0C8);
+      sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else {
-      byte calcT=calc/(60*60*24);
+      byte calcT=calc/(60*60*24); // дни
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcT>=11 && calcT<=20)
@@ -839,6 +848,7 @@ void LAMP::newYearMessageHandle()
     sendStringToLamp(strMessage, LETTER_COLOR);
   }
 }
+
 
 void LAMP::periodicTimeHandle()
 {
