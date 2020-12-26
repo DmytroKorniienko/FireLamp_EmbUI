@@ -7462,7 +7462,7 @@ void EffectPile::updatesand(CRGB *leds)
 
 void EffectPile::randomdel(CRGB *leds)
 {
-  for (uint8_t i = 0; i < NUM_LEDS - 1; i++)
+  for (uint16_t i = 0; i < NUM_LEDS - 1; i++)
   {
     if (!random8(map(fill, 1, 8, 2, LED_ROWS / 2)))
       leds[i] = 0;
