@@ -6542,7 +6542,7 @@ void EffectSmokeballs::shiftUp(){
 }
 
 // ----------- Эффект "Клеточка"
-bool EffectCell::run(CRGB *leds, EffectWorker *opt){
+void EffectCell::cell(CRGB *leds) {
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);
   offsetX = beatsin16(6. * speedfactor, -180, 180);
   offsetY = beatsin16(6. * speedfactor, -180, 180, 12000);
@@ -6559,8 +6559,65 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
     }
   }
   EffectMath::nightMode(leds); // пригасим немного, чтобы видить структуру, и убрать пересветы
+} 
+
+bool EffectCell::run(CRGB *leds, EffectWorker *opt){
+  
+  if (scale == 0) {
+    EVERY_N_SECONDS(60) {
+      effId ++;
+      if (effId == 6)
+        effId = 1;
+    }
+  } else effId = constrain(scale, 1, 5);
+
+  switch (effId)
+  {
+  case 1:
+    cell(leds);
+    break;
+  case 2:
+  case 3:
+  case 4:
+    spruce(leds);
+    break;
+  case 5:
+    spider(leds);
+    break;
+
+  default:
+    break;
+  }
+  //fpsmeter();
   return true;
 }
+
+void EffectCell::spruce(CRGB *leds) {
+  hue++;
+  fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 1, 10));
+  uint8_t z;
+  if (effId == 3) z = triwave8(hue);
+  else z = beatsin8(1, 1, 255);
+  for (uint8_t i = 0; i < WIDTH - 1; i++) {
+    x[i] = beatsin16(i * map(speed, 1, 255, 3, 20), i * 2, ((WIDTH - 1) * 4 - 2) - (i * 2 + 2));
+    if (effId == 2) 
+      EffectMath::drawPixelXYF_X(x[i] / 4, i, random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255) : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
+    else
+      EffectMath::drawPixelXYF_X(x[i] / 4, i, CHSV(hue + i * z, 255, 255));
+  }
+}
+
+void EffectCell::spider(CRGB *leds) {
+  fadeToBlackBy(leds, NUM_LEDS, 50);
+  //FastLED.clear();
+  float speedFactor = EffectMath::fmap(speed, 1, 255, 20., 2.); 
+  for (uint8_t c = 0; c < Lines; c++) {
+    float xx = 2. + sin8((float)millis() / speedFactor + 1000 * c * Scale) / 12.;
+    float yy = 2. + cos8((float)millis() / speedFactor + 1500 * c * Scale) / 12.;
+    EffectMath::drawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, CHSV(c * (256 / Lines), 200, 255));
+  }
+}
+
 
 // ----------- Эффект "Геометрический Вальс"
 //F_lying 
@@ -7486,8 +7543,8 @@ void EffectPile::falldown(CRGB *leds)
 
 bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
   fill = getCtrlVal(3).toInt();
-  //float speedFactor = EffectMath::fmap(speed, 1, 255, 1, .1);
   EVERY_N_MILLISECONDS(80)
+  //if (hue%4 == 0)
   {
     updatesand(leds);
     randomdot(leds);
@@ -7500,6 +7557,5 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
     falldown(leds);
   }
   hue++;
-  //if (hue % MAX_FPS / 2 == 0) ESP.wdtFeed();  // не знаю почему, но эффект генерит SoftWDT
   return true;
 }

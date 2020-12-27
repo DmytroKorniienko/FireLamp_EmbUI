@@ -60,7 +60,7 @@ static const char TEFF_012[] PROGMEM = "Ефектопад";
 static const char TEFF_013[] PROGMEM = "Вогняна Лампа"; 
 static const char TEFF_014[] PROGMEM = "Пейнтбол";
 static const char TEFF_015[] PROGMEM = "Шум 3D";
-static const char TEFF_016[] PROGMEM = "Кліточки";
+static const char TEFF_016[] PROGMEM = "Клітинки-Ялинки";
 static const char TEFF_017[] PROGMEM = "Геометричний Вальс";
 static const char TEFF_018[] PROGMEM = "Тіксі Ленд";
 static const char TEFF_019[] PROGMEM = "LDIRKO Ленд";
@@ -416,6 +416,7 @@ static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\"
 static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Щільність\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Палітра (0 = випадковий колір)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Хмара\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Блискавка\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Розмивання (1-4 з вітром) \"}]}";
 static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Товщина\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палітра\"}]}";
 static const char E_COMET[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Ефект\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Колір (1 = випадковий, 255 = білий)\"}, {\"id\":4,\"type\":0,\"val\":6,\"min\":1,\"max\":12,\"step\":1,\"name\":\"Розмах\"}, {\"id\":5,\"type\":0,\"val\":32,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Размивання\"}]}";
+static const char E_CELL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":5,\"step\":1,\"name\":\"Ефект (0 = циклічно)\"}]}"; 
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Кількість\"}]}";

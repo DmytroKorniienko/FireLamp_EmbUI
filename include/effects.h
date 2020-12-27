@@ -1987,8 +1987,17 @@ class EffectSmokeballs: public EffectCalc {
 // из примеров программы Soulmate, автор неизвестен
 class EffectCell: public EffectCalc {
   private:
+    const uint8_t Lines = 5;
+    uint8_t Scale = 6;
     int16_t offsetX = 0;
     int16_t offsetY = 0;
+    float x[WIDTH];
+    uint8_t effId = 1;
+    uint8_t hue;
+    void cell(CRGB *leds);
+    void spider(CRGB *leds);
+    void spruce(CRGB *leds);
+
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };

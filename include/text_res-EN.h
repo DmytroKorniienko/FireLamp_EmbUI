@@ -60,7 +60,7 @@ static const char TEFF_012[] PROGMEM = "Effectfall";
 static const char TEFF_013[] PROGMEM = "Fire Lamp"; 
 static const char TEFF_014[] PROGMEM = "Paintball";
 static const char TEFF_015[] PROGMEM = "Noise 3D effects";
-static const char TEFF_016[] PROGMEM = "Cells";
+static const char TEFF_016[] PROGMEM = "Cells and other";
 static const char TEFF_017[] PROGMEM = "Geometric Waltz";
 static const char TEFF_018[] PROGMEM = "Tixy.Land";
 static const char TEFF_019[] PROGMEM = "LDIRKO.Land";
@@ -416,6 +416,7 @@ static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\"
 static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Scale\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette (0 = random colour)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Clouds\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Storm\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Bluring (1-4 with wind) \"}]}";
 static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Size\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
 static const char E_COMET[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Effect\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = random, 255 = white)\"}, {\"id\":4,\"type\":0,\"val\":6,\"min\":1,\"max\":12,\"step\":1,\"name\":\"Scope\"}, {\"id\":5,\"type\":0,\"val\":32,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Blur\"}]}";
+static const char E_CELL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":5,\"step\":1,\"name\":\"Effect (0 = random)\"}]}"; 
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Quantity\"}]}";
