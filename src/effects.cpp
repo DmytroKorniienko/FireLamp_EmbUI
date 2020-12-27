@@ -7459,105 +7459,11 @@ void EffectWrain::Clouds(bool flash)
 }
 
 // ------------- Эффект "Цветные драже"
-// https://editor.soulmatelights.com/gallery/526
-//Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
+// будет написан заново
 void EffectPile::load() {
   FastLED.clear();
   palettesload();
 }
-
-void EffectPile::randomdot(CRGB *leds)
-{
-  byte a = LED_COLS / 2; //random8(LED_COLS/4)+LED_COLS*3/8; //
-  if (!random8(map(fill, 1, 8, LED_ROWS / 2, 3))) // !random8(4)
-    leds[myLamp.getPixelNumber(a, LED_ROWS - 1)] = ColorFromPalette(*curPalette, random(hue, hue + 45), random(127, 255)); // 0 or 1
-}
-
-void EffectPile::updatesand(CRGB *leds)
-{
-  int index, indexXadd1Y, indexXsub1Y, indexXYadd1;
-  for (uint8_t y = 0; y < LED_ROWS - 1; y++)
-  {
-    for (uint8_t x = 1; x < LED_COLS - 1; x++)
-    {
-      index = myLamp.getPixelNumber(x, y);
-      indexXadd1Y = myLamp.getPixelNumber(x + 1, y);
-      indexXsub1Y = myLamp.getPixelNumber(x - 1, y);
-      indexXYadd1 = myLamp.getPixelNumber(x, y + 1);
-      if (!leds[index] && !leds[indexXYadd1]) continue;
-      if (!leds[index] && leds[indexXYadd1])
-      {
-        leds[index] = leds[indexXYadd1];
-        leds[indexXYadd1] = 0;
-      }
-      if ((leds[index] && leds[indexXYadd1]) && (!leds[indexXsub1Y] && !leds[indexXadd1Y]))
-      {
-        if (random8(2))
-        {
-          leds[indexXsub1Y] = leds[indexXYadd1];
-          leds[indexXYadd1] = 0;
-        }
-        else
-        {
-          leds[indexXadd1Y] = leds[indexXYadd1];
-          leds[indexXYadd1] = 0;
-        }
-      }
-      if (leds[index] && leds[indexXYadd1] && !leds[indexXsub1Y] && leds[indexXadd1Y])
-      {
-        leds[indexXsub1Y] = leds[indexXYadd1];
-        leds[indexXYadd1] = 0;
-      }
-      if (leds[index] && leds[indexXYadd1] && leds[indexXsub1Y] && !leds[indexXadd1Y])
-      {
-        leds[indexXadd1Y] = leds[indexXYadd1];
-        leds[indexXYadd1] = 0;
-      }
-    }
-  }
-}
-
-void EffectPile::randomdel(CRGB *leds)
-{
-  for (uint16_t i = 0; i < NUM_LEDS - 1; i++)
-  {
-    if (!random8(map(fill, 1, 8, 2, LED_ROWS / 2)))
-      leds[i] = 0;
-  }
-}
-
-void EffectPile::falldown(CRGB *leds)
-{
-  for (uint8_t y = 0; y < LED_ROWS - 1; y++)
-  {
-    for (uint8_t x = 0; x < LED_COLS - 1; x++)
-    {
-      if (!leds[myLamp.getPixelNumber(x, y)] && leds[myLamp.getPixelNumber(x, y + 1)])
-      {
-        leds[myLamp.getPixelNumber(x, y)] = leds[myLamp.getPixelNumber(x, y + 1)];
-        leds[myLamp.getPixelNumber(x, y + 1)] = 0;
-      }
-    }
-  }
-}
-
 bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
-  fill = getCtrlVal(3).toInt();
-  EVERY_N_MILLISECONDS(80)
-  //if (hue%4 == 0)
-  {
-    updatesand(leds);
-    randomdot(leds);
-  }
-  EVERY_N_MILLISECONDS(10000)
-  {
-    randomdel(leds);
-    falldown(leds);
-    falldown(leds);
-    falldown(leds);
-  }
-  hue++;
   return true;
 }

@@ -2145,14 +2145,6 @@ class EffectWrain: public EffectCalc {
 //https://www.reddit.com/user/ldirko/
 class EffectPile : public EffectCalc {
 private:
-    byte hue;
-    byte fill;
-    void randomdot(CRGB *leds);
-    void randomdel(CRGB *leds);
-    void falldown(CRGB *leds);
-    void updatesand(CRGB *leds);
-    //bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
-    //void setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
