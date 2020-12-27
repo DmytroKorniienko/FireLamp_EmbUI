@@ -6541,7 +6541,9 @@ void EffectSmokeballs::shiftUp(){
   }
 }
 
-// ----------- Эффект "Клеточка"
+// ----------- Эффект "Ёлки-Палки"
+// Cell из примеров программы Soulmate, автор неизвестен
+// Spaider и Spruce (c) stepko
 void EffectCell::cell(CRGB *leds) {
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);
   offsetX = beatsin16(6. * speedfactor, -180, 180);

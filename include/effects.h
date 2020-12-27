@@ -1983,8 +1983,9 @@ class EffectSmokeballs: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Клеточка"
-// из примеров программы Soulmate, автор неизвестен
+// ----------- Эффект "Ёлки-Палки"
+// Cell из примеров программы Soulmate, автор неизвестен
+// Spaider и Spruce (c) stepko
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
