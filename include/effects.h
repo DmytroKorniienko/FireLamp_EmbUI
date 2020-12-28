@@ -2139,16 +2139,19 @@ class EffectWrain: public EffectCalc {
 };
 
 // ------------- Эффект "Цветные драже"
-// https://editor.soulmatelights.com/gallery/526
-//Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
+#define MAXDOTS 16
 class EffectPile : public EffectCalc {
 private:
-
+  struct dot {float x; float y; uint8_t hue;};
+  struct dot dots[MAXDOTS];
+  float widthPos[WIDTH];
+  bool done = true;
+  float speedfactor = 0.0f;
+  float internal_counter = 0.0f;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    bool clearrows(bool clear=true);
 };
 // --------- конец секции эффектов
 

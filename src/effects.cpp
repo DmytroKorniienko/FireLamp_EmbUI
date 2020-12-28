@@ -7461,9 +7461,130 @@ void EffectWrain::Clouds(bool flash)
 // ------------- Эффект "Цветные драже"
 // будет написан заново
 void EffectPile::load() {
-  FastLED.clear();
-  palettesload();
+  //FastLED.clear();
+  //palettesload();
+
+  for(uint8_t i=0; i<MAXDOTS; i++){
+    dots[i].x = random(2)/2.0 + WIDTH/2 - 1;
+    dots[i].y = HEIGHT+1+(i+1);
+    dots[i].hue = random(0,255);
+  }
+  memset(widthPos,0,sizeof(widthPos)/sizeof(float));
+
+  // for(int16_t i=0;i<WIDTH*HEIGHT; i++){
+  //     if(!random(map(scale,1,255,5,2))){
+  //       leds[i]=CHSV(random(0,255),255,255);
+  //     }
+  // }
 }
 bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
+  speedfactor = EffectMath::fmap(speed,1,255,0.02,0.5);
+
+  if(!done){
+    if(!clearrows(false))
+      return true;
+  }
+
+  for(uint8_t i=0; i<map(scale,1,255,1,MAXDOTS); i++){
+    uint8_t rx=round(dots[i].x);
+    uint8_t ry=round(dots[i].y);
+    if(ry<HEIGHT)
+      EffectMath::drawPixelXY(rx, ry, CRGB::Black);
+    dots[i].y-=speedfactor;
+    ry=round(dots[i].y);
+
+    EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
+    uint16_t pos = constrain(rx,0,WIDTH-1);
+    if(dots[i].y<0.1 || dots[i].y<=widthPos[pos]){
+      int8_t shift = random(2)?-1:1;
+      if(widthPos[constrain(pos+shift,0,WIDTH-1)]>widthPos[constrain(pos-shift,0,WIDTH-1)])
+        shift*=-1;
+      if(pos<WIDTH && pos+shift>=0 && pos+shift<WIDTH && widthPos[constrain(pos+shift,0,WIDTH-1)]<widthPos[pos]){
+        EffectMath::drawPixelXY(rx, ry, CRGB::Black);
+        dots[i].x=constrain(dots[i].x+shift,0,WIDTH-1);
+        rx=round(dots[i].x);
+        EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
+      } else {
+         if(EffectMath::getPixColorXY(pos,widthPos[pos]-1>0?widthPos[pos]-1:widthPos[pos]))
+          widthPos[pos]+=1;
+         else {
+          // костыльное заполнение отверстий для случаев когда две точки падают подряд с минимальным смещением
+          EffectMath::drawPixelXY(rx, ry, CRGB::Black);
+          dots[i].y=widthPos[pos]-1;
+          ry=round(dots[i].y);
+          EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
+         }
+        // EVERY_N_SECONDS(1){
+        //   Serial.print("widthPos["); Serial.print(pos); Serial.print("]="); Serial.print(widthPos[pos]); Serial.println();
+        // }
+        dots[i].y=HEIGHT+1+(i+1);
+        dots[i].x = random(2)/2.0 + WIDTH/2 - 1;
+        dots[i].hue = random(0,255);
+        //done = false;
+        //clearrows(false);
+      }
+    }
+  }
+
+  EVERY_N_SECONDS(10){
+    clearrows(true);
+  }
+
   return true;
 }
+
+bool EffectPile::clearrows(bool clear)
+{
+  CRGB *leds= myLamp.getUnsafeLedsArray();
+  
+  bool state = false;
+  if(clear){
+    for(uint16_t p=0; p<WIDTH*HEIGHT; p++){
+      if(!random(map(scale,1,255,20,2))){
+        leds[p]=CRGB::Black;
+      }
+    }
+    for(uint16_t i=0;i<MAXDOTS;i++){
+      if(dots[i].y<HEIGHT){
+        dots[i].y+=HEIGHT;
+      }
+    }
+    done = false;
+  } else {
+    // проверяем все ли осыпались
+    //state = true;
+    internal_counter += speedfactor;
+    float v;
+    internal_counter = modff(internal_counter, &v);
+    if(v) {
+      state = true;
+      // смещаемся
+      for(uint16_t x=0; x<WIDTH; x++){
+        for(uint16_t y=1; y<HEIGHT; y++){
+          if(leds[myLamp.getPixelNumber(x,y)] && !leds[myLamp.getPixelNumber(x,y-1)]){
+            leds[myLamp.getPixelNumber(x,y-1)] = leds[myLamp.getPixelNumber(x,y)];
+            leds[myLamp.getPixelNumber(x,y)] = CRGB::Black;
+            widthPos[x] = y;
+            state = false;
+          } else if(leds[myLamp.getPixelNumber(x,y)] && x>0 && y>widthPos[x-1]) {
+            leds[myLamp.getPixelNumber(x-1,y-1)] = leds[myLamp.getPixelNumber(x,y)];
+            leds[myLamp.getPixelNumber(x,y)] = CRGB::Black;
+            widthPos[x-1] = y;
+            state = false;
+          }
+          else if(leds[myLamp.getPixelNumber(x,y)] && x<WIDTH-1 && y>widthPos[x+1]) {
+            leds[myLamp.getPixelNumber(x+1,y-1)] = leds[myLamp.getPixelNumber(x,y)];
+            leds[myLamp.getPixelNumber(x,y)] = CRGB::Black;
+            widthPos[x+1] = y;
+            state = false;
+          } else if(!leds[myLamp.getPixelNumber(x,y)] && widthPos[x] > y){
+            widthPos[x] = y;
+          }
+        }
+      }
+    }
+    if(state) done = true;
+  }
+  return state;
+}
+
