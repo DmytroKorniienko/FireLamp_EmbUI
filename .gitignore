@@ -11,3 +11,7 @@ user_*.ini
 .vscode/c_cpp_properties.json
 /data/buttons_config.json
 /Bin/*.*
+backup
+eff
+/data/config_bkp.json
+/data/eff_index.json
