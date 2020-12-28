@@ -435,41 +435,57 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 break;
             default: break;
         }
+        bool isRandDemo = (myLamp.getLampSettings().dRand && myLamp.getMode()==LAMPMODE::MODE_DEMO);
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
                 {
-                    String ctrlName = controls[i]->getId()==0 ? String(FPSTR(TCONST_0012))
+                    String ctrlId = controls[i]->getId()==0 ? String(FPSTR(TCONST_0012))
                         : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013))
                         : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
                         : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
+                    String ctrlName = i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D);
+                    if(isRandDemo && controls[i]->getId()>0)
+                        ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
                     if(isinterf) interf->range(
-                        ctrlName
+                        ctrlId
                         ,value
                         ,controls[i]->getMin().toInt()
                         ,controls[i]->getMax().toInt()
                         ,controls[i]->getStep().toInt()
-                        ,i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D)
+                        , ctrlName
                         , true);
-                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, String(value), true);
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
                 }
                 break;
             case CONTROL_TYPE::EDIT :
-                if(isinterf) interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
-                , controls[i]->getVal()
-                , controls[i]->getName()
-                , true
-                );
-                embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
-                break;
+                {
+                    String ctrlName = controls[i]->getName();
+                    if(isRandDemo && controls[i]->getId()>0)
+                        ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
+                    
+                    if(isinterf) interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                    , controls[i]->getVal()
+                    , ctrlName
+                    , true
+                    );
+                    embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
+                    break;
+                }
             case CONTROL_TYPE::CHECKBOX :
-                if(isinterf) interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
-                , controls[i]->getVal()
-                , controls[i]->getName()
-                , true
-                );
-                embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
-                break;
+                {
+                    String ctrlName = controls[i]->getName();
+                    if(isRandDemo && controls[i]->getId()>0)
+                        ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
+
+                    if(isinterf) interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                    , controls[i]->getVal()
+                    , ctrlName
+                    , true
+                    );
+                    embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
+                    break;
+                }
             default:
                 break;
         }
