@@ -7459,7 +7459,6 @@ void EffectWrain::Clouds(bool flash)
 }
 
 // ------------- Эффект "Цветные драже"
-// будет написан заново
 void EffectPile::load() {
   //FastLED.clear();
   //palettesload();
@@ -7547,6 +7546,8 @@ bool EffectPile::clearrows(bool clear)
     for(uint16_t i=0;i<MAXDOTS;i++){
       if(dots[i].y<HEIGHT){
         dots[i].y+=HEIGHT;
+        dots[i].x = random(2)/2.0 + WIDTH/2 - 1;
+        dots[i].hue = random(0,255);
       }
     }
     done = false;
