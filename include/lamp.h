@@ -259,7 +259,8 @@ private:
 
 public:
     void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
-
+    void warning2Helper();
+    
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям

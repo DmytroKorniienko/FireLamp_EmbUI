@@ -255,7 +255,7 @@ void LAMP::effectsTick(){
    */
   uint32_t _begin = millis();
 
-  if (_effectsTicker.active() && !isAlarm() && !isWarning()) {
+  if (_effectsTicker.active() && !isAlarm()) { // && !isWarning()
     //if(millis()<5000) return; // затычка до выяснения
     if(!iflags.isEffectsDisabledUntilText){
 #ifdef USELEDBUF
@@ -277,7 +277,11 @@ void LAMP::effectsTick(){
     }
   }
 
-  if (isWarning() || isAlarm() || iflags.isStringPrinting) {
+  if(isWarning()) {
+    warning2Helper(); // вывод предупреждения
+  }
+
+  if (isAlarm() || iflags.isStringPrinting) { // isWarning() || 
     doPrintStringToLamp(); // обработчик печати строки
   }
 
@@ -790,7 +794,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs) && (!isWarning() || (isWarning() && fixedPos))){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -799,7 +803,8 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
+    if((!isWarning() || (isWarning() && fixedPos)))
+      fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
   }
 }
 
@@ -1222,6 +1227,39 @@ void LAMP::showWarning(
 }
 //-----------------------------
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; неблокирующий код, рисует поверх эффекта!) -------------
+
+void LAMP::warning2Helper(){
+  if(iflags.isWarning) {
+    switch(iflags.warnType){
+      case 0: EffectMath::fillAll(warn_color); break;
+      case 1: {
+        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        EffectMath::fillAll(warn_color);
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        break;
+      }
+      case 2: {
+        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        EffectMath::fillAll(warn_color);
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
+        break;
+      }
+      case 3: {
+        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        break;
+      }
+      default: break;
+    }
+  }
+}
+
 void LAMP::showWarning2(
   const CRGB &color,                                        /* цвет вспышки                                                 */
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
@@ -1235,36 +1273,6 @@ void LAMP::showWarning2(
     warn_blinkHalfPeriod = blinkHalfPeriod;
     iflags.isWarning = true;
     iflags.warnType = warnType;
-  }
-
-  if(iflags.isWarning) {
-    switch(iflags.warnType){
-      case 0: EffectMath::fillAll(warn_color); break;
-      case 1: {
-        uint16_t cnt = duration/(blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
-        EffectMath::fillAll(warn_color);
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
-        break;
-      }
-      case 2: {
-        uint16_t cnt = duration/(blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
-        EffectMath::fillAll(warn_color);
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
-        break;
-      }
-      case 3: {
-        uint16_t cnt = duration/(blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
-        break;
-      }
-      default: break;
-    }
   }
 
   if(!forcerestart)
