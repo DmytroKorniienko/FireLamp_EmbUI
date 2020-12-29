@@ -7460,7 +7460,7 @@ void EffectWrain::Clouds(bool flash)
 
 // ------------- Эффект "Цветные драже"
 void EffectPile::load() {
-  //FastLED.clear();
+  FastLED.clear();
   //palettesload();
 
   for(uint8_t i=0; i<MAXDOTS; i++){
