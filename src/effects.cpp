@@ -7493,14 +7493,14 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
     ry=round(dots[i].y);
 
     EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
-    uint16_t pos = constrain(rx,0,WIDTH-1);
+    uint16_t pos = constrain(rx,0,(int16_t)WIDTH-1);
     if(dots[i].y<0.1 || dots[i].y<=widthPos[pos]){
       int8_t shift = random(2)?-1:1;
-      if(widthPos[constrain(pos+shift,0,WIDTH-1)]>widthPos[constrain(pos-shift,0,WIDTH-1)])
+      if(widthPos[constrain(pos+shift,0,(int16_t)WIDTH-1)]>widthPos[constrain(pos-shift,0,(int16_t)WIDTH-1)])
         shift*=-1;
-      if(pos<WIDTH && pos+shift>=0 && pos+shift<(int16_t)WIDTH && widthPos[constrain(pos+shift,0,WIDTH-1)]<widthPos[pos]){
+      if(pos<WIDTH && pos+shift>=0 && pos+shift<(int16_t)WIDTH && widthPos[constrain(pos+shift,0,(int16_t)WIDTH-1)]<widthPos[pos]){
         EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-        dots[i].x=constrain(dots[i].x+shift,0,WIDTH-1);
+        dots[i].x=constrain(dots[i].x+shift,0,(int16_t)WIDTH-1);
         rx=round(dots[i].x);
         EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
       } else {
