@@ -277,7 +277,7 @@ void LAMP::effectsTick(){
     }
   }
 
-  if (isAlarm() || iflags.isStringPrinting) {
+  if (isWarning() || isAlarm() || iflags.isStringPrinting) {
     doPrintStringToLamp(); // обработчик печати строки
   }
 
@@ -285,7 +285,7 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isAlarm() || iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
+  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else if(isLampOn()) {
@@ -637,7 +637,7 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
         if(!isInverse)
           EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
+          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
           //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
       }
       else
@@ -645,7 +645,7 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
         if(isInverse)
           EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
         else
-          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
+          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
           //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
       }
     }
@@ -790,7 +790,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm(), fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -799,7 +799,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm(), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
+    fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
   }
 }
 
@@ -1226,20 +1226,49 @@ void LAMP::showWarning2(
   const CRGB &color,                                        /* цвет вспышки                                                 */
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
   uint16_t blinkHalfPeriod,                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
-  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения */
+  uint8_t warnType,                                         /* тип предупреждения 0...3                                     */
+  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения  */
 {
   if(forcerestart || !_warningTicker.active()){
     warn_color = color;
     warn_duration = duration;
     warn_blinkHalfPeriod = blinkHalfPeriod;
-    flags.isWarning = true;
+    iflags.isWarning = true;
+    iflags.warnType = warnType;
   }
 
-  if(flags.isWarning)
-    EffectMath::fillAll(warn_color);
+  if(iflags.isWarning) {
+    switch(iflags.warnType){
+      case 0: EffectMath::fillAll(warn_color); break;
+      case 1: {
+        uint16_t cnt = duration/(blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        EffectMath::fillAll(warn_color);
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        break;
+      }
+      case 2: {
+        uint16_t cnt = duration/(blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        EffectMath::fillAll(warn_color);
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
+        break;
+      }
+      case 3: {
+        uint16_t cnt = duration/(blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        break;
+      }
+      default: break;
+    }
+  }
 
   if(!forcerestart)
-    flags.isWarning=!flags.isWarning;
+    iflags.isWarning=!iflags.isWarning;
   if(warn_duration>warn_blinkHalfPeriod)
     warn_duration-=warn_blinkHalfPeriod;
   else
@@ -1247,10 +1276,10 @@ void LAMP::showWarning2(
   if(warn_duration){
     if(_warningTicker.active())
       _warningTicker.detach();
-    _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, !flags.isWarning));
+    _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
   }
   else {
-    flags.isWarning = false;
+    iflags.isWarning = false;
     _warningTicker.detach();
   }
 }

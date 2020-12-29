@@ -7498,7 +7498,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
       int8_t shift = random(2)?-1:1;
       if(widthPos[constrain(pos+shift,0,WIDTH-1)]>widthPos[constrain(pos-shift,0,WIDTH-1)])
         shift*=-1;
-      if(pos<WIDTH && pos+shift>=0 && pos+shift<WIDTH && widthPos[constrain(pos+shift,0,WIDTH-1)]<widthPos[pos]){
+      if(pos<WIDTH && pos+shift>=0 && pos+shift<(int16_t)WIDTH && widthPos[constrain(pos+shift,0,WIDTH-1)]<widthPos[pos]){
         EffectMath::drawPixelXY(rx, ry, CRGB::Black);
         dots[i].x=constrain(dots[i].x+shift,0,WIDTH-1);
         rx=round(dots[i].x);

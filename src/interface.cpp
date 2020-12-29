@@ -1005,7 +1005,8 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
             interf->spacer(FPSTR(TINTF_001));
                 interf->range(FPSTR(TCONST_0051), 10, 100, 5, FPSTR(TINTF_044));
                 interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
-
+                interf->range(FPSTR(TCONST_00C3), 0, 255, 1, FPSTR(TINTF_0CA));
+                
                 interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
                     interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));
                     interf->option(String(PERIODICTIME::PT_EVERY_60), FPSTR(TINTF_048));
@@ -1060,6 +1061,7 @@ void set_text_config(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
     SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
+    SETPARAM(FPSTR(TCONST_00C3), myLamp.setBFade((*data)[FPSTR(TCONST_00C3)]));
 
     String newYearTime = (*data)[FPSTR(TCONST_0055)]; // Дата/время наструпления нового года с интерфейса
     struct tm t;
@@ -2022,6 +2024,7 @@ void create_parameters(){
 #endif
     embui.var_create(FPSTR(TCONST_0035), F(""));
     embui.var_create(FPSTR(TCONST_0036), FPSTR(TCONST_007C));
+    embui.var_create(FPSTR(TCONST_00C3), String(FADETOBLACKVALUE));
     embui.var_create(FPSTR(TCONST_0051), F("100"));
     embui.var_create(FPSTR(TCONST_0052), F("0"));
     embui.var_create(FPSTR(TCONST_0053), F("0"));
@@ -2250,6 +2253,8 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
     obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
     obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
+    obj[FPSTR(TCONST_00C3)] = embui.param(FPSTR(TCONST_00C3));
+
     String datetime;
     TimeProcessor::getDateTimeString(datetime, embui.param(FPSTR(TCONST_0055)).toInt());
     obj[FPSTR(TCONST_0055)] = datetime;
@@ -2434,17 +2439,18 @@ void remote_action(RA action, ...){
             DynamicJsonDocument doc(256);
             deserializeJson(doc,str);
             JsonArray arr = doc.as<JsonArray>();
-            uint32_t col=CRGB::Red, dur=1000, per=250;
+            uint32_t col=CRGB::Red, dur=1000, per=250, type=0;
 
             for (size_t i = 0; i < arr.size(); i++) {
                 switch(i){
                     case 0: col = arr[i]; break;
                     case 1: dur = arr[i]; break;
                     case 2: per = arr[i]; break;
+                    case 3: type = arr[i]; break;
                     default : break;
                 }
 			}
-            myLamp.showWarning2(col,dur,per);
+            myLamp.showWarning2(col,dur,per,type);
             break; 
         }
 

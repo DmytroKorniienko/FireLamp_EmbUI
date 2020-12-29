@@ -110,7 +110,7 @@ struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool MIRR_V:1; // отзрекаливание по V
     bool MIRR_H:1; // отзрекаливание по H
-    bool isWarning:1; // выводится ли индикация предупреждения
+    bool reserved0:1;
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
@@ -152,6 +152,8 @@ struct {
     bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
     uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
     bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+    bool isWarning:1; // выводится ли индикация предупреждения
+    uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
 };
 uint16_t lampflags; // набор битов для конфига
 } INTERNALFLAGS;
@@ -195,6 +197,8 @@ private:
     MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
     void micHandler();
 #endif
+
+    uint8_t BFade; // затенение фона под текстом
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
     String alarmMessage; // Cообщение будильника рассвет, если задано
@@ -254,7 +258,7 @@ private:
     void frameShow(const uint32_t ticktime);
 
 public:
-    void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, bool forcerestart=true); // Неблокирующая мигалка
+    void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
 
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -318,7 +322,7 @@ public:
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val;}
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
-    bool isWarning() {return flags.isWarning;}
+    bool isWarning() {return iflags.isWarning;}
     int getmqtt_int() {return mqtt_int;}
     void semqtt_int(int val) {mqtt_int = val;}
 
@@ -376,6 +380,8 @@ public:
     void startOTAUpdate();
 #endif
     void newYearMessageHandle();
+    void setBFade(uint8_t val){ BFade = val; }
+    uint8_t getBFade(){ return BFade; }
     void setNYMessageTimer(int in){ tmNewYearMessage.setInterval(in*60*1000); tmNewYearMessage.reset(); }
     void setNYUnixTime(time_t tm){ NEWYEAR_UNIXDATETIME = tm; }
     void setNumInList(bool flag) {flags.numInList = flag;}
