@@ -336,7 +336,8 @@ static const char TINTF_0CE[] PROGMEM = "";
 static const char TINTF_0CF[] PROGMEM = "";
 static const char TINTF_0D0[] PROGMEM = "";
 
-
+static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
+static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";
 //-------------------------
 
 /**
