@@ -147,7 +147,7 @@ struct {
     bool isWarning:1; // выводится ли индикация предупреждения
     uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
 };
-uint16_t lampflags; // набор битов для конфига
+uint32_t lampflags; // набор битов для конфига
 } INTERNALFLAGS;
 //#pragma pack(pop)
 
@@ -284,6 +284,7 @@ public:
         bool found=false;
         flags.isMicOn = val;
         lampState.isMicOn = val;
+        if(effects.getEn()==EFF_NONE) return;
         LList<UIControl*>&controls = effects.getControls();
         if(val){
             for(int i=3; i<controls.size(); i++) {

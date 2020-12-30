@@ -115,8 +115,8 @@ void LAMP::lamp_init(const uint16_t curlimit)
 void LAMP::handle()
 {
 #ifdef MIC_EFFECTS
-  static unsigned long mic_check;
-  if(flags.isMicOn && (flags.ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
+  static unsigned long mic_check = 0; // = 40000; // пропускаю первые 40 секунд
+  if(effects.worker && flags.isMicOn && (flags.ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
     if(effects.worker->isMicOn() || isMicCalibration())
       micHandler();
     mic_check = millis();
@@ -178,7 +178,7 @@ void LAMP::alarmWorker(){
     static CHSV dawnColorMinus[6];                                            // цвет "рассвета"
     static uint8_t dawnCounter = 0;                                           // счётчик первых шагов будильника
     static time_t startmillis;
-
+    
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
       iflags.dawnFlag = false;
       return;
@@ -268,7 +268,7 @@ void LAMP::effectsTick(){
       }
 #endif
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-      if(effects.worker->run(getUnsafeLedsArray(), &effects)) {
+      if(effects.getEn() ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
 #ifdef USELEDBUF
         ledsbuff.resize(NUM_LEDS);
         std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
@@ -289,14 +289,13 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
+  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || (effects.getEn() ? effects.worker->status() : 1) || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
     _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
   }
-
 }
 
 /*
@@ -371,30 +370,24 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
 #endif
     , effects(&lampState)
     {
+      iflags.isStringPrinting = false; // печатается ли прямо сейчас строка?
+      iflags.isEffectsDisabledUntilText = false;
+      iflags.isOffAfterText = false;
+      iflags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
+//#ifdef MIC_EFFECTS
+      iflags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+      iflags.micAnalyseDivider = 1; // анализ каждый раз
+//#endif
+
       flags.MIRR_V = false; // отзрекаливание по V
       flags.MIRR_H = false; // отзрекаливание по H
-      iflags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
       flags.ONflag = false; // флаг включения/выключения
       flags.isDebug = false; // флаг отладки
       flags.isFaderON = true; // признак того, что используется фейдер для смены эффектов
       flags.isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
       flags.isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
-
-      iflags.isStringPrinting = false; // печатается ли прямо сейчас строка?
-      iflags.isEffectsDisabledUntilText = false;
-      iflags.isOffAfterText = false;
       flags.isEventsHandled = true;
-      _brt =0;
-      _steps = 0;
-      _brtincrement = 0;
-#ifdef MIC_EFFECTS
-      iflags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       flags.isMicOn = true; // глобальное испльзование микрофона
-      iflags.micAnalyseDivider = 1; // анализ каждый раз
-#endif
-#ifdef VERTGAUGE
-      gauge_time = millis();
-#endif
       flags.numInList = false;
       flags.effHasMic = false;
       flags.dRand = false;
@@ -409,6 +402,13 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.playMP3 = false;
       flags.limitAlarmVolume = false;
 
+      _brt =0;
+      _steps = 0;
+      _brtincrement = 0;
+
+#ifdef VERTGAUGE
+      gauge_time = millis();
+#endif
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
     }
@@ -620,7 +620,7 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
     finish_pos = (uint16_t)(WIDTH - offset);
   }
 
-  for (uint16_t i = start_pos; i < finish_pos; i++)
+  for (uint16_t i = start_pos; i <= finish_pos; i++)
   {
     uint8_t thisByte;
 
@@ -822,17 +822,28 @@ void LAMP::newYearMessageHandle()
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), String(FPSTR(TINTF_0C2)).c_str());
+      byte calcT=calc/(60*60); // минуты
+      byte calcN=calcT%10; // остаток от деления на 10
+      String str;
+      if(calcN>=2 && calcN<=4) {
+        str = FPSTR(TINTF_0CC); // минуты
+      } else if(calcN==1) {
+        str = FPSTR(TINTF_0CD); // минута
+      } else {
+        str = FPSTR(TINTF_0C2); // минут
+      }
+      sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else if(calc/(60*60)<60){
 	    byte calcT=calc/(60*60); // часы
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
-      if(calcT<=20 && calcT>=5)
-          str = FPSTR(TINTF_0C3);
-      else if(calcN>=2 && calcN<=4)
-          str = FPSTR(TINTF_0C7);
-      else if(calc==21 && calcN==1)
-          str = FPSTR(TINTF_0C8);
+      if(calcN>=2 && calcN<=4) {
+        str = FPSTR(TINTF_0C7); // часа
+      } else if(calcN==1) {
+        str = FPSTR(TINTF_0C8); // час
+      } else {
+        str = FPSTR(TINTF_0C3); // часов
+      }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else {
       byte calcT=calc/(60*60*24); // дни
@@ -907,10 +918,16 @@ void LAMP::periodicTimeHandle()
 void LAMP::micHandler()
 {
   static uint8_t counter=0;
-
+  if(effects.getEn()==EFF_ENUM::EFF_NONE)
+    return;
   if(mw==nullptr && !iflags.isCalibrationRequest){ // обычный режим
-    //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
+    if(!mw) {
+      mw=nullptr;
+      return; // не удалось выделить память, на выход
+    }
+    //delete mw; mw = nullptr; return;
+    
     samp_freq = mw->process(noise_reduce); // возвращаемое значение - частота семплирования
     last_min_peak = mw->getMinPeak();
     last_max_peak = mw->getMaxPeak();
@@ -930,7 +947,7 @@ void LAMP::micHandler()
     //mw->debug();
     delete mw;
     mw = nullptr;
-  } else {
+  } else if(iflags.isCalibrationRequest) {
     if(mw==nullptr){ // калибровка начало
       mw = new MICWORKER();
       mw->calibrate();
@@ -944,7 +961,6 @@ void LAMP::micHandler()
       delete mw;
       mw = nullptr;
 
-      //iGLOBAL.isMicCal = false;
       remote_action(RA::RA_MIC, NULL);
     }
   }
@@ -1088,8 +1104,10 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   //LOG(printf_P,PSTR(">>>>>>>>>>>isEffClearing==%d\n"),isEffClearing);
-  if(flags.isEffClearing)
+  if(flags.isEffClearing || !effects.getEn()){ // для EFF_NONE или для случая когда включена опция - чистим матрицу
     FastLED.clear();
+    FastLED.show();
+  }
 
   // Не-не-не, я против того чтобы за пользователя решать когда ему включать лампу
   // поскольку настройки НУЖНО разрешить крутить и при выключенной лампе.
@@ -1275,7 +1293,7 @@ void LAMP::showWarning2(
     iflags.warnType = warnType;
   }
 
-  if(!forcerestart)
+  if(!forcerestart && warnType!=3)
     iflags.isWarning=!iflags.isWarning;
   if(warn_duration>warn_blinkHalfPeriod)
     warn_duration-=warn_blinkHalfPeriod;

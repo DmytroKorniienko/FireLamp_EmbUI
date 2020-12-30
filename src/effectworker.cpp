@@ -319,9 +319,9 @@ void EffectWorker::initDefault(const char *folder)
       //LOG(printf_P,PSTR("%d : %d\n"),item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>());
   }
   effects.sort([](EffectListElem *&a, EffectListElem *&b){ return a->eff_nb - b->eff_nb;}); // сортирую по eff_nb
-  uint16_t chk = 0; // удаляю дубликаты
+  int32_t chk = -1; // удаляю дубликаты
   for(int i=0; i<effects.size(); i++){
-    if(effects[i]->eff_nb==chk){
+    if((int32_t)effects[i]->eff_nb==chk){
           delete effects.remove(i);
           continue;
         }
@@ -638,8 +638,8 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
  *
  */
 void EffectWorker::chckdefconfigs(const char *folder){
-  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
-    if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
+  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
+    if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
       continue;
 #ifndef MIC_EFFECTS
     if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
@@ -751,14 +751,14 @@ void EffectWorker::makeIndexFile(const char *folder)
   openIndexFile(indexFile, folder);
   indexFile.print("[");
 
-  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE+1); i < (uint16_t)256; i++){ // EFF_NONE не сохраняем, перебор до 255 включительно
-    if (!strlen_P(T_EFFNAMEID[i]))   // пропускаем индексы-"пустышки" без названия
+  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){
+    if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
 #ifndef MIC_EFFECTS
     if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
 #endif
 
-    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, 255);
+    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, i ? 255 : 0); // дефолтный флаг 255 для любого эффекта, кроме 0
     firstLine = false; // сбрасываю признак перовой строки
     //yield();
   }
@@ -802,7 +802,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   sourcedir.concat(F("/eff"));
   Dir dir = LittleFS.openDir(sourcedir);
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(3072);
 
   String fn;
   openIndexFile(indexFile, tofolder);
@@ -811,7 +811,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
 
   while (dir.next()) {
       fn=sourcedir + "/" + dir.fileName();
-      if (!deserializeFile(doc, fn.c_str()) || doc[F("nb")].as<String>()=="0") {
+      if (!deserializeFile(doc, fn.c_str())) { //  || doc[F("nb")].as<String>()=="0"
         continue;
       }
       indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
@@ -913,7 +913,9 @@ EffectListElem *EffectWorker::getFirstEffect()
 
 // вернуть выбранный элемент списка
 EffectListElem *EffectWorker::getEffect(uint16_t select){
+  //LOG(println,F("------"));
   for (int i = 0; i < effects.size(); i++) {
+      //LOG(println,effects[i]->eff_nb);
       if (effects[i]->eff_nb == select) {
           return effects[i];
       }

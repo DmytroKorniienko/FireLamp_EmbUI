@@ -78,7 +78,9 @@ public:
 #else
   static const uint16_t samples=64U;     //This value MUST ALWAYS be a power of 2
 #endif
-  MICWORKER(float scale = 1.28, float noise = 0) { this->vReal = new float[samples]; this->vImag = new float[samples]; this->scale=scale; this->noise=noise; }
+  MICWORKER(float scale = 1.28, float noise = 0) {
+    this->vReal = new float[samples]; this->vImag = new float[samples]; this->scale=scale; this->noise=noise;
+  }
   ~MICWORKER() { delete [] vReal; delete [] vImag; }
   bool isCaliblation() {return _isCaliblation;}
   void calibrate();

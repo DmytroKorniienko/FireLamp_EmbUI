@@ -308,6 +308,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             dealy(1);
             #endif
         }
+        interf->option(String(0),"");
     } else {
         EffectListElem *eff = nullptr;
         LOG(println,F("DBG1: using slow Names generation"));
@@ -329,6 +330,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             #endif
         }
     }
+    interf->option(String(0),"");
     interf->json_section_end();
     LOG(printf_P,PSTR("DBG1: generating Names list took %d ms\n"), millis() - timest);
 
@@ -363,6 +365,7 @@ void delayedcall_show_effects_config(){
         dealy(1);
         #endif
     }
+    interf->option(String(0),"");
     interf->json_section_end();
     interf->json_section_end();
     interf->json_frame_flush();
@@ -537,7 +540,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
         if (myLamp.IsGlobalBrightness()) {
             embui.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
         }
-        if(myLamp.effects.worker)
+        if(myLamp.effects.worker && myLamp.effects.getEn())
             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
@@ -548,6 +551,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
 void set_effects_speed(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    if(!myLamp.effects.getEn()) return;
     myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
     myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
@@ -558,6 +562,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
 void set_effects_scale(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    if(!myLamp.effects.getEn()) return;
     myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
     myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
@@ -568,6 +573,7 @@ void set_effects_scale(Interface *interf, JsonObject *data){
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    if(!myLamp.effects.getEn()) return;
     String ctrlName;
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=3; i<controls.size();i++){
@@ -663,6 +669,7 @@ void delayedcall_effects_main(){
             #endif
         }
     }
+    interf->option(String(0),"");
     interf->json_section_end();
     interf->json_section_end();
     interf->json_frame_flush();
@@ -718,6 +725,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #endif
             }
         }
+        interf->option(String(0),"");
     } else {
         LOG(println,F("DBG2: using slow Names generation"));
         String effname((char *)0);
@@ -738,6 +746,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #endif
             }
         }
+        interf->option(String(0),"");
     }
     interf->json_section_end();
     LOG(printf_P,PSTR("DBG2: generating Names list took %d ms\n"), millis() - timest);
@@ -2233,18 +2242,6 @@ void sync_parameters(){
 // do{ yield(); } while (1==0);
 // ниже возникает wdt reset при включенной build_type = debug - причина неустановлена
 
-#ifdef MIC_EFFECTS
-    obj[FPSTR(TCONST_001E)] = tmp.isMicOn ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
-    set_micflag(nullptr, &obj);
-    obj.clear();
-
-    obj[FPSTR(TCONST_0039)] = embui.param(FPSTR(TCONST_0039));
-    obj[FPSTR(TCONST_003A)] = embui.param(FPSTR(TCONST_003A));
-    obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B));
-    set_settings_mic(nullptr, &obj);
-    obj.clear();
-#endif
-
 #ifdef ESP_USE_BUTTON
     // в отдельном классе, в список флагов лампы не входит!
     CALL_SETTER(FPSTR(TCONST_001F), embui.param(FPSTR(TCONST_001F)), set_btnflag);
@@ -2281,6 +2278,19 @@ void sync_parameters(){
 
     set_settings_other(nullptr, &obj);
     obj.clear();
+
+#ifdef MIC_EFFECTS
+    obj[FPSTR(TCONST_001E)] = tmp.isMicOn ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    myLamp.setMicAnalyseDivider(0);
+    set_micflag(nullptr, &obj);
+    obj.clear();
+
+    obj[FPSTR(TCONST_0039)] = embui.param(FPSTR(TCONST_0039));
+    obj[FPSTR(TCONST_003A)] = embui.param(FPSTR(TCONST_003A));
+    obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B));
+    set_settings_mic(nullptr, &obj);
+    obj.clear();
+#endif
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
 }
