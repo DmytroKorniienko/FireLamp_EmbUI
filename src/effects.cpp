@@ -219,7 +219,7 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val,
     return;
   }
   ptPallete = (_max+0.1)/_pals.size();     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-  palettepos = (uint8_t)((float)_val/ptPallete);
+  palettepos = (uint8_t)(_max ? (float)_val/ptPallete : 0);
   curPalette = _pals.at(palettepos);
   palettescale = _val-ptPallete*(palettepos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
   
@@ -7460,7 +7460,7 @@ void EffectWrain::Clouds(bool flash)
 
 // ------------- Эффект "Цветные драже"
 void EffectPile::load() {
-  FastLED.clear();
+  //FastLED.clear();
   //palettesload();
 
   for(uint8_t i=0; i<MAXDOTS; i++){

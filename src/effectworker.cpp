@@ -250,7 +250,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
 #endif
 
   default:
-    worker = std::unique_ptr<EffectCalc>(new EffectCalc());
+    worker = std::unique_ptr<EffectNone>(new EffectNone()); // std::unique_ptr<EffectCalc>(new EffectCalc());
   }
 
   if(worker){
@@ -426,13 +426,9 @@ bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepat
   if (!filepath || !*filepath)
     return false;
 
-  //uint32_t timest = millis();
-
   File jfile = LittleFS.open(filepath, "r");
   DeserializationError error;
   if (jfile){
-    //ReadBufferingStream jbuff{jfile, FILEIO_BUFFSIZE};
-    //error = deserializeJson(doc, jbuff);
     error = deserializeJson(doc, jfile);
     jfile.close();
   } else {

@@ -308,7 +308,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             dealy(1);
             #endif
         }
-        interf->option(String(0),"");
+        //interf->option(String(0),"");
     } else {
         EffectListElem *eff = nullptr;
         LOG(println,F("DBG1: using slow Names generation"));
@@ -330,7 +330,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             #endif
         }
     }
-    interf->option(String(0),"");
+    //interf->option(String(0),"");
     interf->json_section_end();
     LOG(printf_P,PSTR("DBG1: generating Names list took %d ms\n"), millis() - timest);
 
@@ -365,7 +365,7 @@ void delayedcall_show_effects_config(){
         dealy(1);
         #endif
     }
-    interf->option(String(0),"");
+    //interf->option(String(0),"");
     interf->json_section_end();
     interf->json_section_end();
     interf->json_frame_flush();
@@ -652,6 +652,7 @@ void delayedcall_effects_main(){
     interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
     EffectListElem *eff = nullptr;
     String effname((char *)0);
+    bool isEmptyHidden=false;
     MIC_SYMB;
     bool numList = myLamp.getLampSettings().numInList;
     while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
@@ -667,9 +668,12 @@ void delayedcall_effects_main(){
             #elif defined ESP32
             dealy(1);
             #endif
+        } else if(!eff->eff_nb){
+            isEmptyHidden=true;
         }
     }
-    interf->option(String(0),"");
+    if(isEmptyHidden)
+        interf->option(String(0),"");
     interf->json_section_end();
     interf->json_section_end();
     interf->json_frame_flush();
@@ -708,6 +712,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
         //interf->option(String(myLamp.effects.getSelected()), myLamp.effects.getEffectName());
         String effname((char *)0);
+        bool isEmptyHidden=false;
         MIC_SYMB;
         bool numList = myLamp.getLampSettings().numInList;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
@@ -723,11 +728,15 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #elif defined ESP32
                 dealy(1);
                 #endif
+            } else if(!eff->eff_nb){
+                isEmptyHidden=true;
             }
         }
-        interf->option(String(0),"");
+        if(isEmptyHidden)
+            interf->option(String(0),"");
     } else {
         LOG(println,F("DBG2: using slow Names generation"));
+        bool isEmptyHidden=false;
         String effname((char *)0);
         MIC_SYMB;
         bool numList = myLamp.getLampSettings().numInList;
@@ -744,9 +753,12 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #elif defined ESP32
                 dealy(1);
                 #endif
+            } else if(!eff->eff_nb){
+                isEmptyHidden=true;
             }
         }
-        interf->option(String(0),"");
+        if(isEmptyHidden)
+            interf->option(String(0),"");
     }
     interf->json_section_end();
     LOG(printf_P,PSTR("DBG2: generating Names list took %d ms\n"), millis() - timest);
@@ -2528,6 +2540,18 @@ String httpCallback(const String &param, const String &value, bool isset){
                     return result;
                 }
             }
+        }
+        // что-то случилось с сокетом... уйдем на другой эффект, отсрочим сохранение, удалим конфиг эффекта, вернемся
+        else if (param == F("WS_EVT_ERROR"))  {
+            resetAutoTimers();
+            uint16_t effNum = myLamp.effects.getSelected();
+            myLamp.effects.directMoveBy(EFF_NONE);
+            myLamp.effects.removeConfig(effNum);
+            myLamp.effects.directMoveBy(effNum);
+            //remote_action(RA_EFFECT, String(effNum).c_str(), NULL);
+            String tmpStr=F("- ");
+            tmpStr+=effNum;
+            myLamp.sendString(tmpStr.c_str(), CRGB::Red);
         }
         else if (param == FPSTR(TCONST_0083)) { action = RA_EFF_NEXT;  remote_action(action, value.c_str(), NULL); }
         else if (param == FPSTR(TCONST_0084)) { action = RA_EFF_PREV;  remote_action(action, value.c_str(), NULL); }

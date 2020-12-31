@@ -620,7 +620,7 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
     finish_pos = (uint16_t)(WIDTH - offset);
   }
 
-  for (uint16_t i = start_pos; i <= finish_pos; i++)
+  for (uint16_t i = start_pos; i < finish_pos; i++)
   {
     uint8_t thisByte;
 

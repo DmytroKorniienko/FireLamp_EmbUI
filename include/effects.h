@@ -613,6 +613,14 @@ public:
 };
 #endif
 
+//-------------- Специально обученный пустой эффект :)
+class EffectNone : public EffectCalc {
+private:
+    void load() override { FastLED.clear(); };
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override {return true;};
+};
+
 //-------------- Эффект "Часы"
 class EffectTime : public EffectCalc {
 private:
