@@ -2515,6 +2515,13 @@ void remote_action(RA action, ...){
             break; 
         }
 
+        case RA::RA_FILLMATRIX: {
+            CRGB color=CRGB(String(value).toInt());
+
+            myLamp.fillDrawBuf(color);
+            break; 
+        }
+
         case RA::RA_SEND_IP:
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
@@ -2596,6 +2603,8 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0085)) { action = RA_EFF_RAND;  remote_action(action, value.c_str(), NULL); }
         else if (param == FPSTR(TCONST_0086)) { action = RA_REBOOT;  remote_action(action, value.c_str(), NULL); }
         else if (param == FPSTR(TCONST_0087)) { result = myLamp.isAlarm() ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE); }
+        else if (param == FPSTR(TCONST_00C6)) { char buf[32]; sprintf_P(buf, PSTR("[%d,%d]"), WIDTH, HEIGHT);  result = buf; }
+        
         embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
         return result;
     } else {
@@ -2616,6 +2625,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00B4)) action = RA_GLOBAL_BRIGHT;
         else if (param == FPSTR(TCONST_00B7)) action = RA_WARNING;
         else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
+        else if (param == FPSTR(TCONST_00C7)) action = RA_FILLMATRIX;
         else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;

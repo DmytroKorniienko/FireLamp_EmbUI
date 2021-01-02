@@ -38,7 +38,8 @@ typedef enum _remote_action {
     RA_WIFI_REC,
     RA_GLOBAL_BRIGHT,
     RA_WARNING,
-    RA_DRAW
+    RA_DRAW,
+    RA_FILLMATRIX
 } RA;
 
 void section_main_frame(Interface *interf, JsonObject *data);
