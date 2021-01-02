@@ -7460,7 +7460,7 @@ void EffectWrain::Clouds(bool flash)
 
 // ------------- Эффект "Цветные драже"
 void EffectPile::load() {
-  //FastLED.clear();
+  FastLED.clear();
   //palettesload();
 
   for(uint8_t i=0; i<MAXDOTS; i++){
@@ -7538,11 +7538,7 @@ bool EffectPile::clearrows(bool clear)
   
   bool state = false;
   if(clear){
-    for(uint16_t p=0; p<WIDTH*HEIGHT; p++){
-      if(!random(map(scale,1,255,20,2))){
-        leds[p]=CRGB::Black;
-      }
-    }
+    uint8_t ypos = 0;
     for(uint16_t i=0;i<MAXDOTS;i++){
       if(dots[i].y<HEIGHT){
         dots[i].y+=HEIGHT;
@@ -7550,6 +7546,18 @@ bool EffectPile::clearrows(bool clear)
         dots[i].hue = random(0,255);
       }
     }
+
+    for(uint8_t x=0; x<WIDTH; x++)
+      if(ypos<widthPos[x]) ypos=widthPos[x];
+
+    for(uint8_t y=0; y<ypos; y++){
+      for(uint8_t x=0; x<WIDTH; x++){
+        if(random(map(ypos,1,HEIGHT,10,3))<2){
+          leds[myLamp.getPixelNumber(x,y)]=CRGB::Black;
+        }
+      }
+    }
+
     done = false;
   } else {
     // проверяем все ли осыпались
