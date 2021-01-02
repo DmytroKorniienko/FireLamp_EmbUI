@@ -258,7 +258,6 @@ void LAMP::effectsTick(){
   if (_effectsTicker.active() && !isAlarm()) { // && !isWarning()
     //if(millis()<5000) return; // затычка до выяснения
     if(!iflags.isEffectsDisabledUntilText){
-#ifdef USELEDBUF
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
         if(!iflags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
@@ -266,14 +265,19 @@ void LAMP::effectsTick(){
           ledsbuff.shrink_to_fit();
         }
       }
-#endif
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
       if(effects.getEn() ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
-#ifdef USELEDBUF
         ledsbuff.resize(NUM_LEDS);
         std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
-#endif
       }
+    }
+  }
+
+  if(!drawbuff.empty()){
+    for(uint16_t i=0; i<drawbuff.size() && i<NUM_LEDS; i++){
+      //leds[i] = 
+      if(drawbuff[i])
+        leds[i] = drawbuff[i];
     }
   }
 
@@ -308,15 +312,6 @@ void LAMP::frameShow(const uint32_t ticktime){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
-
-  // EVERY_N_SECONDS(1){
-  //   LOG(println, F("FastLED.show()"));
-  // }
-// #ifdef ESP8266
-//   if (fps%MAX_FPS == 0) ESP.wdtFeed(); // похоже, пса таки стоит кормить время от времени,
-// #elif defined ESP32
-//   if (fps%MAX_FPS == 0) dealy(1);
-// #endif
   FastLED.show();
   if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
@@ -401,6 +396,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.MP3eq = 0;
       flags.playMP3 = false;
       flags.limitAlarmVolume = false;
+      flags.isDraw = false;
 
       _brt =0;
       _steps = 0;
@@ -814,7 +810,7 @@ void LAMP::newYearMessageHandle()
     return;
 
   {
-    char strMessage[256]; // буффер
+    char strMessage[256]; // буфер
     time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime();
 
     if(calc<0) {
@@ -1150,10 +1146,8 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
   if(flags.ONflag && !iflags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
-#ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
-#endif
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }

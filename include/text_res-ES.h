@@ -332,7 +332,7 @@ static const char TINTF_0CA[] PROGMEM = "Oscurecer el fondo";
 static const char TINTF_0CB[] PROGMEM = "Advertencia";
 static const char TINTF_0CC[] PROGMEM = "minutos";
 static const char TINTF_0CD[] PROGMEM = "minuto";
-static const char TINTF_0CE[] PROGMEM = "";
+static const char TINTF_0CE[] PROGMEM = "Dibujo";
 static const char TINTF_0CF[] PROGMEM = "";
 static const char TINTF_0D0[] PROGMEM = "";
 

@@ -331,7 +331,7 @@ static const char TINTF_0CA[] PROGMEM = "Затемнение фона";
 static const char TINTF_0CB[] PROGMEM = "Предупреждение";
 static const char TINTF_0CC[] PROGMEM = "минуты";
 static const char TINTF_0CD[] PROGMEM = "минута";
-static const char TINTF_0CE[] PROGMEM = "";
+static const char TINTF_0CE[] PROGMEM = "Рисование";
 static const char TINTF_0CF[] PROGMEM = "";
 static const char TINTF_0D0[] PROGMEM = "";
 

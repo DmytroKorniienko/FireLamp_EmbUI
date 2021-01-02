@@ -600,6 +600,8 @@ void block_main_flags(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_001B), (myLamp.getMode() == MODE_DEMO)? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_00F), true);
     interf->checkbox(FPSTR(TCONST_001C), myLamp.IsGlobalBrightness()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_010), true);
     interf->checkbox(FPSTR(TCONST_001D), myLamp.IsEventsHandled()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_011), true);
+    interf->checkbox(FPSTR(TCONST_00C4), myLamp.isDrawOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0CE), true);
+
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_001E), myLamp.isMicOnOff()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_012), true);
 #endif
@@ -891,7 +893,7 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_0028), FPSTR(TINTF_018));
 
     interf->json_section_begin(FPSTR(TCONST_0029));
-    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=embui.param(FPSTR(TCONST_002A)); cfg+=")";
+    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=F("firelamp.json"); cfg+=")";
 
     interf->select(FPSTR(TCONST_002A), cfg);
     if(LittleFS.begin()){
@@ -932,7 +934,7 @@ void block_lamp_config(Interface *interf, JsonObject *data){
 
     interf->spacer();
     interf->json_section_begin(FPSTR(TCONST_0030));
-    interf->text(FPSTR(TCONST_002A), FPSTR(TINTF_01A));
+    interf->text(FPSTR(TCONST_002A),String(""), FPSTR(TINTF_01A), false);
     interf->button_submit(FPSTR(TCONST_0030), FPSTR(TINTF_01B));
     interf->json_section_end();
 
@@ -951,6 +953,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
     if (!data || !data->containsKey(FPSTR(TCONST_002A))) return;
     String name = (*data)[FPSTR(TCONST_002A)];
     String act = (*data)[FPSTR(TCONST_0029)];
+    if(name.isEmpty()) return;
 
     if (act == FPSTR(TCONST_00B2)) {
         String filename = String(FPSTR(TCONST_0031)) + name;
@@ -985,7 +988,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
             default_buttons();
         }
 #endif
-        embui.var(FPSTR(TCONST_002A), name);
+        //embui.var(FPSTR(TCONST_002A), name);
 
         String str = String(F("CFG:")) + name;
         myLamp.sendString(str.c_str(), CRGB::Red);
@@ -1844,6 +1847,12 @@ void set_debugflag(Interface *interf, JsonObject *data){
     save_lamp_flags();
 }
 
+void set_drawflag(Interface *interf, JsonObject *data){
+    if (!data) return;
+    myLamp.setDrawBuff((*data)[FPSTR(TCONST_00C4)] == FPSTR(TCONST_FFFF));
+    save_lamp_flags();
+}
+
 #ifdef MP3PLAYER
 void set_mp3flag(Interface *interf, JsonObject *data){
     if (!data) return;
@@ -2037,7 +2046,7 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_007B), embui.mc);  // m_pref == MAC по дефолту
     embui.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
     embui.var_create(FPSTR(TCONST_0016), F("1"));
-    embui.var_create(FPSTR(TCONST_002A), F("cfg1.json"));
+    //embui.var_create(FPSTR(TCONST_002A), F("cfg1.json"));
 #ifdef ESP_USE_BUTTON
     embui.var_create(FPSTR(TCONST_001F), FPSTR(TCONST_FFFF)); // не трогать пока...
 #endif
@@ -2148,8 +2157,14 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
+#endif
+
+    embui.section_handle_add(FPSTR(TCONST_00C4), set_drawflag);
+
+#ifdef LAMP_DEBUG
     embui.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
 #endif
+
 #ifdef MP3PLAYER
     embui.section_handle_add(FPSTR(TCONST_009D), set_mp3flag);
     embui.section_handle_add(FPSTR(TCONST_00A2), set_mp3volume);
@@ -2160,7 +2175,6 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_00BF), set_mp3_player);
     embui.section_handle_add(FPSTR(TCONST_00C0), set_mp3_player);
     embui.section_handle_add(FPSTR(TCONST_00C1), set_mp3_player);
-
 #endif
 }
 
@@ -2177,6 +2191,10 @@ void sync_parameters(){
 
     LAMPFLAGS tmp;
     tmp.lampflags = embui.param(FPSTR(TCONST_0094)).toInt();
+
+    obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
+    set_drawflag(nullptr, &obj);
+    obj.clear();
 
 #ifdef LAMP_DEBUG
     obj[FPSTR(TCONST_0095)] = tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -2477,6 +2495,26 @@ void remote_action(RA action, ...){
             break; 
         }
 
+        case RA::RA_DRAW: {
+            String str=value;
+            DynamicJsonDocument doc(256);
+            deserializeJson(doc,str);
+            JsonArray arr = doc.as<JsonArray>();
+            CRGB col=CRGB::White;
+            uint16_t x=WIDTH/2U, y=HEIGHT/2U;
+
+            for (size_t i = 0; i < arr.size(); i++) {
+                switch(i){
+                    case 0: col = CRGB(arr[i].as<int>()); break;
+                    case 1: x = arr[i]; break;
+                    case 2: y = arr[i]; break;
+                    default : break;
+                }
+			}
+            myLamp.writeDrawBuf(col,x,y);
+            break; 
+        }
+
         case RA::RA_SEND_IP:
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
@@ -2577,6 +2615,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0087)) action = RA_ALARM;
         else if (param == FPSTR(TCONST_00B4)) action = RA_GLOBAL_BRIGHT;
         else if (param == FPSTR(TCONST_00B7)) action = RA_WARNING;
+        else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
         else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;

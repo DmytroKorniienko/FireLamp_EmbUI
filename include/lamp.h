@@ -102,7 +102,7 @@ struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool MIRR_V:1; // отзрекаливание по V
     bool MIRR_H:1; // отзрекаливание по H
-    bool reserved0:1;
+    bool isDraw:1; // режим рисования
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
@@ -341,7 +341,21 @@ public:
     bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);
     bool isLampOn() {return flags.ONflag;}
     bool isDebugOn() {return flags.isDebug;}
+    bool isDrawOn() {return flags.isDraw;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
+    void setDrawBuff(bool flag) {
+        flags.isDraw=flag;
+        if(!flag){
+            if (!drawbuff.empty()) {
+                drawbuff.resize(0);
+                drawbuff.shrink_to_fit();
+            }
+        } else if(drawbuff.empty()){
+            drawbuff.resize(NUM_LEDS);
+            //for(uint16_t i=0; i<NUM_LEDS; i++) {drawbuff[i] = CHSV(random(0,255),0,255);} // тест :)
+        }
+    }
+    void writeDrawBuf(CRGB &color, uint16_t x, uint16_t y) { if(!drawbuff.empty()) { drawbuff[getPixelNumber(x,y)]=color; } }
     bool isONMP3() {return flags.isOnMP3;}
     void setONMP3(bool flag) {flags.isOnMP3=flag;}
     bool isShowSysMenu() {return flags.isShowSysMenu;}
@@ -426,8 +440,8 @@ public:
     #endif
     }
 
-    // для работы с буффером
-    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буффере по координатам
+    // для работы с буфером
+    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
     {
         uint16_t NL = W*H;
 
@@ -500,11 +514,9 @@ public:
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
-    CRGB leds[NUM_LEDS];
-#ifdef USELEDBUF
-    //CRGB ledsbuff[NUM_LEDS]; // буфер под эффекты
-    std::vector<CRGB> ledsbuff;
-#endif
+    CRGB leds[NUM_LEDS]; // основной буфер вывода изображения
+    std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
+    std::vector<CRGB> drawbuff; // буфер для рисования
 };
 
 #endif

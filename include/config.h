@@ -200,9 +200,6 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define FADE_MINCHANGEBRT     (30U)                         // Minimal brightness for effects changer
 #endif
 
-#ifndef USELEDBUF
-#define USELEDBUF                                           // буфер под эффекты, можно закомментировать, в случае если нужно сэкономить память, но будут артефакты обработки
-#endif
 #ifndef MAX_FPS
 #define MAX_FPS               (60U)                         // Максимальное число обсчитываемых и выводимых кадров в секунду
 #endif
