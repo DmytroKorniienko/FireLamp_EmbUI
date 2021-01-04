@@ -211,7 +211,7 @@ private:
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
     Ticker _effectsTicker;          // планировщик обработки эффектов
     Ticker _warningTicker;          // планировщик обработки эффектов
-    //Ticker _nextLoop;               // планировщик для тасок на ближайший луп
+    uint32_t _begin = 0;
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
     void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 

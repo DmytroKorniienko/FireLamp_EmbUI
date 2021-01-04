@@ -253,7 +253,7 @@ void LAMP::effectsTick(){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
-  uint32_t _begin = millis();
+  _begin = millis();
 
   if (_effectsTicker.active() && !isAlarm()) { // && !isWarning()
     //if(millis()<5000) return; // затычка до выяснения
@@ -317,8 +317,8 @@ void LAMP::frameShow(const uint32_t ticktime){
 
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
-  int32_t delay = EFFECTS_RUN_TIMER + ticktime - millis();
-  if (delay < LED_SHOW_DELAY) delay = LED_SHOW_DELAY;
+  int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
+  if (delay < LED_SHOW_DELAY || !effects.worker->status()) delay = LED_SHOW_DELAY;
   _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
   ++fps;
 }
