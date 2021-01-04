@@ -4080,6 +4080,28 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 // Идея SottNick
 // переписал на программные блики + паттерны - (c) kostyamat
 // Генератор бликов (c) stepko
+
+void EffectAquarium::load(){
+  currentPalette=PartyColors_p;
+}
+
+void EffectAquarium::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
+  uint8_t idx = _val->getId();
+
+  if(idx==3){
+    if(isRandDemo()){
+      satur = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      satur = _val->getVal().toInt();
+  } if(idx==4){
+    if(isRandDemo()){
+      glare = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else
+      glare = _val->getVal().toInt();
+  }
+}
+
 bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
   return aquariumRoutine(*&ledarr, &*opt);
 }
@@ -4112,8 +4134,6 @@ void EffectAquarium::nPatterns() {
     }
   }
 }
-
-CRGBPalette16 currentPalette((PartyColors_p));
 
 void EffectAquarium::nGlare(CRGB *leds) {
 /*#ifdef MIC_EFFECTS
@@ -4166,9 +4186,6 @@ void EffectAquarium::fillNoiseLED(CRGB *leds) {
 }
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
-
-  glare = getCtrlVal(4).toInt();
-  satur = getCtrlVal(3).toInt();
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
 
   xsin = beatsin88(175 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, WIDTH * WIDTH);

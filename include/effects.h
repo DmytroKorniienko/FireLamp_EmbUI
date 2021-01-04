@@ -1365,6 +1365,7 @@ public:
 class EffectAquarium : public EffectCalc {
 private:
 #define MAX_DIMENSION max(WIDTH, HEIGHT)
+    CRGBPalette16 currentPalette;
     const uint8_t _scale = 25;
     const uint8_t _speed = 3;
 
@@ -1385,7 +1386,8 @@ private:
     void fillNoiseLED(CRGB *leds);
 
 public:
-    //void load() override;
+    void load() override;
+    void setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
