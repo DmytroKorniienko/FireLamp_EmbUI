@@ -128,6 +128,7 @@ void block_menu(Interface *interf, JsonObject *data){
 
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));   //  Эффекты
     interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));   //  Вывод текста
+    interf->option(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));   //  Рисование
     interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));   //  настройки
 #ifdef SHOWSYSCONFIG
     if(myLamp.isShowSysMenu())
@@ -1068,6 +1069,40 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
     myLamp.sendString((*data)[FPSTR(TCONST_0035)], (CRGB::HTMLColorCode)strtol(tmpStr.c_str(), NULL, 0));
 }
 
+void block_drawing(Interface *interf, JsonObject *data){
+    //Страница "Рисование"
+    if (!interf) return;
+    interf->json_section_main(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));
+
+    DynamicJsonDocument doc(512);
+    JsonObject param = doc.to<JsonObject>();
+
+    param[FPSTR(TCONST_00CD)] = WIDTH;
+    param[FPSTR(TCONST_00CC)] = HEIGHT;
+    param[FPSTR(TCONST_00CB)] = FPSTR(TINTF_0CF);
+
+    interf->checkbox(FPSTR(TCONST_00C4), myLamp.isDrawOn()? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), FPSTR(TINTF_0CE), true);
+    interf->custom(String(FPSTR(TCONST_00C9)),String(FPSTR(TCONST_00C8)),embui.param(FPSTR(TCONST_0036)),String(FPSTR(TINTF_0D0)), param);
+    param.clear();
+
+    interf->json_section_end();
+}
+
+void set_drawing(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    String value = (*data)[FPSTR(TCONST_00C9)];
+    if((*data).containsKey(FPSTR(TCONST_00C9)) && value!=F("null"))
+        remote_action(RA_DRAW, value.c_str(), NULL);
+    else {
+        String key = String(FPSTR(TCONST_00C9))+String(F("_fill"));
+        if((*data).containsKey(key)){
+            value = (*data)[key].as<String>();
+            remote_action(RA_FILLMATRIX, value.c_str(), NULL);
+        }
+    }
+}
+
 void block_lamptext(Interface *interf, JsonObject *data){
     //Страница "Вывод текста"
     if (!interf) return;
@@ -1904,6 +1939,14 @@ void section_text_frame(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
+void section_drawing_frame(Interface *interf, JsonObject *data){
+    // Рисование
+    if (!interf) return;
+    interf->json_frame_interface(FPSTR(TINTF_080));
+    block_drawing(interf, data);
+    interf->json_frame_flush();
+}
+
 void section_settings_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface(FPSTR(TINTF_080));
@@ -2125,6 +2168,7 @@ void create_parameters(){
 #ifdef AUX_PIN
     embui.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
 #endif
+    embui.section_handle_add(FPSTR(TCONST_00C8), section_drawing_frame);
     embui.section_handle_add(FPSTR(TCONST_009A), section_sys_settings_frame);
     embui.section_handle_add(FPSTR(TCONST_0003), section_text_frame);
     embui.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
@@ -2142,6 +2186,9 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
     embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
     embui.section_handle_add(FPSTR(TCONST_0056), set_settings_time);
+
+    embui.section_handle_add(FPSTR(TCONST_00CA), set_drawing);
+
 #ifdef MIC_EFFECTS
     embui.section_handle_add(FPSTR(TCONST_0079), show_settings_mic);
     embui.section_handle_add(FPSTR(TCONST_0038), set_settings_mic);
@@ -2484,7 +2531,13 @@ void remote_action(RA action, ...){
 
             for (size_t i = 0; i < arr.size(); i++) {
                 switch(i){
-                    case 0: col = arr[i]; break;
+                    case 0: {
+                        String tmpStr = arr[i];
+                        tmpStr.replace(F("#"), F("0x"));
+                        long val = strtol(tmpStr.c_str(), NULL, 0);
+                        col = val;
+                        break;
+                    }
                     case 1: dur = arr[i]; break;
                     case 2: per = arr[i]; break;
                     case 3: type = arr[i]; break;
@@ -2505,7 +2558,14 @@ void remote_action(RA action, ...){
 
             for (size_t i = 0; i < arr.size(); i++) {
                 switch(i){
-                    case 0: col = CRGB(arr[i].as<int>()); break;
+                    case 0: {
+                        String tmpStr = arr[i];
+                        tmpStr.replace(F("#"), F("0x"));
+                        unsigned long val = strtol(tmpStr.c_str(), NULL, 0);
+                        LOG(printf_P, PSTR("%s:%d\n"), tmpStr.c_str(), val);
+                        col = val;
+                        break;
+                    }
                     case 1: x = arr[i]; break;
                     case 2: y = arr[i]; break;
                     default : break;
@@ -2516,8 +2576,11 @@ void remote_action(RA action, ...){
         }
 
         case RA::RA_FILLMATRIX: {
-            CRGB color=CRGB(String(value).toInt());
-
+            String tmpStr = value;
+            tmpStr.replace(F("#"), F("0x"));
+            long val = strtol(tmpStr.c_str(), NULL, 0);
+            LOG(printf_P, PSTR("%s:%d\n"), tmpStr.c_str(), val);
+            CRGB color=CRGB(val);
             myLamp.fillDrawBuf(color);
             break; 
         }
