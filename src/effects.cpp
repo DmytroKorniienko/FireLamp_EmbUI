@@ -7631,11 +7631,11 @@ bool EffectPile::clearrows(bool clear)
 //ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
 
 void EffectFairy::particlesUpdate2(uint8_t i) {
-  trackingObjectState[i] -= 1 * (effect == EFF_FOUNT ? speedFactor : 1); //ttl // ещё и сюда надо speedfactor вкорячить. удачи там!
+  trackingObjectState[i] -= 1 * speedFactor; //ttl // ещё и сюда надо speedfactor вкорячить. удачи там!
 
   //apply velocity
-  trackingObjectPosX[i] += trackingObjectSpeedX[i] * (effect == EFF_FOUNT ? speedFactor : 1);
-  trackingObjectPosY[i] += trackingObjectSpeedY[i] * (effect == EFF_FOUNT ? speedFactor : 1);
+  trackingObjectPosX[i] += trackingObjectSpeedX[i] * speedFactor;
+  trackingObjectPosY[i] += trackingObjectSpeedY[i] * speedFactor;
   if(trackingObjectState[i] == 0 || trackingObjectPosX[i] <= -1 || trackingObjectPosX[i] >= WIDTH || trackingObjectPosY[i] <= -1 || trackingObjectPosY[i] >= HEIGHT) 
     trackingObjectIsShift[i] = false;
 }
@@ -7719,13 +7719,13 @@ void EffectFairy::fairyEmit(uint8_t i) {
     if(random8(2U)) { trackingObjectSpeedY[i]=-trackingObjectSpeedY[i]; }
 
     trackingObjectState[i] = random8(20, 80); 
-    trackingObjectHue[i] = random8(); //hue2;
+    trackingObjectHue[i] = hue2;
     trackingObjectIsShift[i] = true; 
 }
 
 bool EffectFairy::fairy(CRGB *leds) {
-  if (dryrun(4, 1))
-    return false;
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.05, .25);
+
   if (loadingFlag) {
     loadingFlag = false;
     deltaValue = 10; // количество зарождающихся частиц за 1 цикл //perCycle = 1;
@@ -7737,16 +7737,16 @@ bool EffectFairy::fairy(CRGB *leds) {
   if (!deltaHue && deltaHue2 && fabs(boids[0].velocity.x) + fabs(boids[0].velocity.y) < 0.15){ 
     deltaHue2 = 0U;
     
-    boids[1].velocity.x = ((float)random8()+255.) / 4080.;
-    boids[1].velocity.y = ((float)random8()+255.) / 2040.;
+    boids[1].velocity.x = (((float)random8()+255.) / 4080.);
+    boids[1].velocity.y = (((float)random8()+255.) / 2040.);
     if (boids[0].location.x > WIDTH * 0.5) boids[1].velocity.x = -boids[1].velocity.x;
     if (boids[0].location.y > HEIGHT * 0.5) boids[1].velocity.y = -boids[1].velocity.y;
   }
   if (!deltaHue2){
     step = 1U;
     
-    boids[0].location.x += boids[1].velocity.x;
-    boids[0].location.y += boids[1].velocity.y;
+    boids[0].location.x += boids[1].velocity.x * speedFactor;
+    boids[0].location.y += boids[1].velocity.y * speedFactor;
     deltaHue2 = (boids[0].location.x <= 0 || boids[0].location.x >= WIDTH-1 || boids[0].location.y <= 0 || boids[0].location.y >= HEIGHT-1);
   }
   else
@@ -7765,7 +7765,7 @@ bool EffectFairy::fairy(CRGB *leds) {
     force.normalize();                                    // Normalize vector (distance doesn't matter here, we just want this vector for direction)
     float strength = (5. * boid.mass) / (d * d);          // Calculate gravitional force magnitude 5.=attractG*attractMass
 //float attractMass = (modes[currentMode].Scale) / 10.0 * .5;
-    force *= strength;                                    // Get force vector --> magnitude * direction
+    force *= strength * speedFactor;                                    // Get force vector --> magnitude * direction
     boid.applyForce(force);
     boid.update();
     
@@ -7778,8 +7778,8 @@ bool EffectFairy::fairy(CRGB *leds) {
     if (!deltaHue) {
       if (random8(3U)){
         d = ((random8(2U)) ? boids[0].velocity.x : boids[0].velocity.y) * ((random8(2U)) ? .2 : -.2);
-        boids[0].velocity.x += d;
-        boids[0].velocity.y -= d;
+        boids[0].velocity.x += d * speedFactor;
+        boids[0].velocity.y -= d * speedFactor;
       }
       else {
         if (fabs(boids[0].velocity.x) < 0.02)
@@ -7791,7 +7791,8 @@ bool EffectFairy::fairy(CRGB *leds) {
   }
 
   //dimAll(255-128/.25*speedfactor); очередной эффект, к которому нужно будет "подобрать коэффициенты"
-    EffectMath::dimAll(127);  
+    //EffectMath::dimAll(127);  
+    EffectMath::dimAll(EffectMath::fmap(speed, 1, 255, 180, 127));
 
   //go over particles and update matrix cells on the way
   for(int i = 0; i<enlargedObjectNUM; i++) {
