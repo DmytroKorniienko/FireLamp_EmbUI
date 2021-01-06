@@ -2163,6 +2163,55 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     bool clearrows(bool clear=true);
 };
+
+//-------- по мотивам Эффектов Particle System -------------------------
+// https://github.com/fuse314/arduino-particle-sys
+// https://github.com/giladaya/arduino-particle-sys
+// https://www.youtube.com/watch?v=S6novCRlHV8&t=51s
+//при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
+//ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
+
+// ============= ЭФФЕКТ ФЕЯ ===============
+// (c) SottNick
+
+#define trackingOBJECT_MAX_COUNT    (WIDTH * 3)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
+#define enlargedOBJECT_MAX_COUNT    (WIDTH * 3) // максимальное количество сложных отслеживаемых объектов (меньше, чем trackingOBJECT_MAX_COUNT)
+
+class EffectFairy : public EffectCalc {
+private:
+    float   trackingObjectPosX[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectPosY[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectSpeedX[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectShift[trackingOBJECT_MAX_COUNT];
+    uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
+    float trackingObjectState[trackingOBJECT_MAX_COUNT];
+    bool    trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
+    uint8_t enlargedObjectNUM;                                       // используемое в эффекте количество объектов
+
+    Boid boids[2];
+
+    uint8_t hue;
+    uint8_t hue2;
+    uint8_t step;
+    uint8_t deltaValue;
+    uint8_t deltaHue;
+    uint8_t deltaHue2;
+    float speedFactor;
+    bool loadingFlag = true;
+
+    void particlesUpdate2(uint8_t i);
+    void fairyEmit(uint8_t i);
+    void fountEmit(uint8_t i);
+    bool fairy(CRGB *leds);
+    void fount(CRGB *leds);
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
