@@ -7480,10 +7480,10 @@ void EffectPile::load() {
   FastLED.clear();
   //palettesload();
 
-  for(uint8_t i=0; i<MAXDOTS; i++){
-    dots[i].x = random(2)/2.0 + WIDTH/2 - 1;
-    dots[i].y = HEIGHT+1+(i+1);
-    dots[i].hue = random(0,255);
+  for (uint8_t i = 0; i < MAXDOTS; i++) {
+    dots[i].x = EffectMath::randomf((float)WIDTH /2 - 1.5, (float)WIDTH /2 + 1.5); //random(2)/2.0 + WIDTH/2 - 1;
+    dots[i].y = (float)HEIGHT + 1. + (i + 2);
+    dots[i].hue = random(0, 255);
   }
   memset(widthPos,0,sizeof(widthPos)/sizeof(float));
 
@@ -7493,56 +7493,63 @@ void EffectPile::load() {
   //     }
   // }
 }
-bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
-  speedfactor = EffectMath::fmap(speed,1,255,0.02,0.5);
+bool EffectPile::run(CRGB *leds, EffectWorker *opt)
+{
+  speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, 0.5);
 
-  if(!done){
-    if(!clearrows(false))
+  if (!done)
+  {
+    if (!clearrows(false))
       return true;
   }
 
-  for(uint8_t i=0; i<map(scale,1,255,1,MAXDOTS); i++){
-    uint8_t rx=round(dots[i].x);
-    uint8_t ry=round(dots[i].y);
-    if(ry<HEIGHT)
+  for (uint8_t i = 0; i < map(scale, 1, 255, 1, MAXDOTS); i++) {
+    uint8_t rx = dots[i].x;
+    uint8_t ry = ceil(dots[i].y);
+    if (ry < HEIGHT)
       EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-    dots[i].y-=speedfactor;
-    ry=round(dots[i].y);
+    dots[i].y -= speedfactor;
+    ry = ceil(dots[i].y);
 
-    EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
-    uint16_t pos = constrain(rx,0,(int16_t)WIDTH-1);
-    if(dots[i].y<0.1 || dots[i].y<=widthPos[pos]){
-      int8_t shift = random(2)?-1:1;
-      if(widthPos[constrain(pos+shift,0,(int16_t)WIDTH-1)]>widthPos[constrain(pos-shift,0,(int16_t)WIDTH-1)])
-        shift*=-1;
-      if(pos<WIDTH && pos+shift>=0 && pos+shift<(int16_t)WIDTH && widthPos[constrain(pos+shift,0,(int16_t)WIDTH-1)]<widthPos[pos]){
+    EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
+    uint16_t pos = constrain(rx, 0, (int16_t)WIDTH - 1);
+    if (dots[i].y < 0.1 || dots[i].y <= widthPos[pos])
+    {
+      int8_t shift = random(2) ? -1 : 1;
+      if (widthPos[constrain(pos + shift, 0, (int16_t)WIDTH - 1)] > widthPos[constrain(pos - shift, 0, (int16_t)WIDTH - 1)])
+        shift *= -1;
+      if (pos < WIDTH && pos + shift >= 0 && pos + shift < (int16_t)WIDTH && widthPos[constrain(pos + shift, 0, (int16_t)WIDTH - 1)] < widthPos[pos])
+      {
         EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-        dots[i].x=constrain(dots[i].x+shift,0,(int16_t)WIDTH-1);
-        rx=round(dots[i].x);
-        EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
-      } else {
-         if(EffectMath::getPixColorXY(pos,widthPos[pos]-1>0?widthPos[pos]-1:widthPos[pos]))
-          widthPos[pos]+=1;
-         else {
+        dots[i].x = constrain(dots[i].x + shift, 0, (int16_t)WIDTH - 1);
+        rx = dots[i].x;
+        EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
+      }
+      else
+      {
+        if (EffectMath::getPixColorXY(pos, widthPos[pos] - 1 > 0 ? widthPos[pos] - 1 : widthPos[pos]))
+          widthPos[pos] += 1;
+        else
+        {
           // костыльное заполнение отверстий для случаев когда две точки падают подряд с минимальным смещением
           EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-          dots[i].y=widthPos[pos]-1;
-          ry=round(dots[i].y);
-          EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue,255,255));
-         }
+          dots[i].y = widthPos[pos] - 1;
+          ry = ceil(dots[i].y);
+          EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
+        }
         // EVERY_N_SECONDS(1){
         //   Serial.print("widthPos["); Serial.print(pos); Serial.print("]="); Serial.print(widthPos[pos]); Serial.println();
         // }
-        dots[i].y=HEIGHT+1+(i+1);
-        dots[i].x = random(2)/2.0 + WIDTH/2 - 1;
-        dots[i].hue = random(0,255);
+        dots[i].y = (float)HEIGHT + 1 + (i + 2);
+        dots[i].x = EffectMath::randomf((float)WIDTH /2 - 1.5, (float)WIDTH /2 + 1.5); //random(2)/2.0 + WIDTH/2 - 1;
+        dots[i].hue = random(0, 255);
         //done = false;
         //clearrows(false);
       }
     }
   }
 
-  EVERY_N_SECONDS(10){
+  EVERY_N_SECONDS(5){
     clearrows(true);
   }
 
@@ -7614,3 +7621,247 @@ bool EffectPile::clearrows(bool clear)
   return state;
 }
 
+
+//-------- по мотивам Эффектов Particle System -------------------------
+// https://github.com/fuse314/arduino-particle-sys
+// https://github.com/giladaya/arduino-particle-sys
+// https://www.youtube.com/watch?v=S6novCRlHV8&t=51s
+
+//при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
+//ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
+
+void EffectFairy::particlesUpdate2(uint8_t i) {
+  trackingObjectState[i] -= 1 * (effect == EFF_FOUNT ? speedFactor : 1); //ttl // ещё и сюда надо speedfactor вкорячить. удачи там!
+
+  //apply velocity
+  trackingObjectPosX[i] += trackingObjectSpeedX[i] * (effect == EFF_FOUNT ? speedFactor : 1);
+  trackingObjectPosY[i] += trackingObjectSpeedY[i] * (effect == EFF_FOUNT ? speedFactor : 1);
+  if(trackingObjectState[i] == 0 || trackingObjectPosX[i] <= -1 || trackingObjectPosX[i] >= WIDTH || trackingObjectPosY[i] <= -1 || trackingObjectPosY[i] >= HEIGHT) 
+    trackingObjectIsShift[i] = false;
+}
+
+// ============= ЭФФЕКТ ИСТОЧНИК ===============
+// (c) SottNick
+// выглядит как https://github.com/fuse314/arduino-particle-sys/blob/master/examples/StarfieldFastLED/StarfieldFastLED.ino
+
+void EffectFairy::fountEmit(uint8_t i) {
+  if (hue++ & 0x01)
+    hue2++;
+
+  trackingObjectPosX[i] = WIDTH * 0.5;
+  trackingObjectPosY[i] = HEIGHT * 0.5;
+
+
+  trackingObjectSpeedX[i] = (((float)random8()-127.)/512.); 
+  trackingObjectSpeedY[i] = EffectMath::sqrt(0.0626-trackingObjectSpeedX[i] * trackingObjectSpeedX[i]); 
+  
+  if(random8(2U)) trackingObjectSpeedY[i]=-trackingObjectSpeedY[i];
+
+  trackingObjectState[i] = EffectMath::randomf(50, 250); 
+  
+ /* if (speed & 0x01)
+    trackingObjectHue[i] = hue2;
+  else */
+    trackingObjectHue[i] = random8();
+  trackingObjectIsShift[i] = true; 
+}
+
+void EffectFairy::fount(CRGB *leds){
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.2, 1.);
+
+  if (loadingFlag) {
+    loadingFlag = false;
+    //deltaValue = 1; // количество зарождающихся частиц за 1 цикл //perCycle = 1;
+    deltaValue = enlargedObjectNUM / (EffectMath::sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) + 1U; // 4 - это потому что за 1 цикл частица пролетает ровно четверть расстояния между 2мя соседними пикселями
+  }
+  step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
+  EffectMath::dimAll(EffectMath::fmap(speed, 1, 255, 180, 127)); //ахах-ха. очередной эффект, к которому нужно будет "подобрать коэффициенты"
+  //EffectMath::dimAll(127);
+
+  //go over particles and update matrix cells on the way
+  for (int i = 0; i < enlargedObjectNUM; i++) {
+    if (!trackingObjectIsShift[i] && step) {
+      fountEmit(i);
+      step--;
+    }
+    if (trackingObjectIsShift[i]) { 
+      particlesUpdate2(i);
+
+      //generate RGB values for particle
+      CRGB baseRGB;
+      /*if (speed & 0x01)
+        baseRGB = ColorFromPalette(*curPalette, trackingObjectHue[i], 255); // 
+      else*/
+        baseRGB = CHSV(trackingObjectHue[i], 255,255); 
+
+      baseRGB.nscale8(trackingObjectState[i]);
+      EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB, 0);
+    }
+  }
+  if (scale & 0x01) EffectMath::blur2d((scale%10+1) * 10); // Размытие зависит от шкалы "Масштаб"
+}
+
+// ============= ЭФФЕКТ ФЕЯ ===============
+// (c) SottNick
+#define FAIRY_BEHAVIOR //типа сложное поведение
+
+void EffectFairy::fairyEmit(uint8_t i) {
+    if (deltaHue++ & 0x01)
+      if (hue++ & 0x01)
+        hue2++;//counter++;
+    trackingObjectPosX[i] = boids[0].location.x;
+    trackingObjectPosY[i] = boids[0].location.y;
+
+    //хотите навставлять speedfactor? - тут не забудьте
+    //trackingObjectSpeedX[i] = ((float)random8()-127.)/512./0.25*speedfactor; 
+    trackingObjectSpeedX[i] = ((float)random8()-127.)/512.; 
+    trackingObjectSpeedY[i] = EffectMath::sqrt(0.0626-trackingObjectSpeedX[i]*trackingObjectSpeedX[i]); 
+    if(random8(2U)) { trackingObjectSpeedY[i]=-trackingObjectSpeedY[i]; }
+
+    trackingObjectState[i] = random8(20, 80); 
+    trackingObjectHue[i] = random8(); //hue2;
+    trackingObjectIsShift[i] = true; 
+}
+
+bool EffectFairy::fairy(CRGB *leds) {
+  if (dryrun(4, 1))
+    return false;
+  if (loadingFlag) {
+    loadingFlag = false;
+    deltaValue = 10; // количество зарождающихся частиц за 1 цикл //perCycle = 1;
+  }
+
+  step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
+  
+#ifdef FAIRY_BEHAVIOR
+  if (!deltaHue && deltaHue2 && fabs(boids[0].velocity.x) + fabs(boids[0].velocity.y) < 0.15){ 
+    deltaHue2 = 0U;
+    
+    boids[1].velocity.x = ((float)random8()+255.) / 4080.;
+    boids[1].velocity.y = ((float)random8()+255.) / 2040.;
+    if (boids[0].location.x > WIDTH * 0.5) boids[1].velocity.x = -boids[1].velocity.x;
+    if (boids[0].location.y > HEIGHT * 0.5) boids[1].velocity.y = -boids[1].velocity.y;
+  }
+  if (!deltaHue2){
+    step = 1U;
+    
+    boids[0].location.x += boids[1].velocity.x;
+    boids[0].location.y += boids[1].velocity.y;
+    deltaHue2 = (boids[0].location.x <= 0 || boids[0].location.x >= WIDTH-1 || boids[0].location.y <= 0 || boids[0].location.y >= HEIGHT-1);
+  }
+  else
+#endif // FAIRY_BEHAVIOR
+  {  
+    PVector attractLocation = PVector(WIDTH * 0.5, HEIGHT * 0.5);
+    //float attractMass = 10;
+    //float attractG = .5;
+    // перемножаем и получаем 5.
+    Boid boid = boids[0];
+    PVector force = attractLocation - boid.location;      // Calculate direction of force
+    float d = force.mag();                                // Distance between objects
+    d = constrain(d, 5.0f, HEIGHT);//видео снято на 5.0f  // Limiting the distance to eliminate "extreme" results for very close or very far objects
+//d = constrain(d, modes[currentMode].Scale / 10.0, HEIGHT);
+
+    force.normalize();                                    // Normalize vector (distance doesn't matter here, we just want this vector for direction)
+    float strength = (5. * boid.mass) / (d * d);          // Calculate gravitional force magnitude 5.=attractG*attractMass
+//float attractMass = (modes[currentMode].Scale) / 10.0 * .5;
+    force *= strength;                                    // Get force vector --> magnitude * direction
+    boid.applyForce(force);
+    boid.update();
+    
+    if (boid.location.x <= -1) boid.location.x = -boid.location.x;
+    else if (boid.location.x >= WIDTH) boid.location.x = -boid.location.x+WIDTH+WIDTH;
+    if (boid.location.y <= -1) boid.location.y = -boid.location.y;
+    else if (boid.location.y >= HEIGHT) boid.location.y = -boid.location.y+HEIGHT+HEIGHT;
+    boids[0] = boid;
+
+    if (!deltaHue) {
+      if (random8(3U)){
+        d = ((random8(2U)) ? boids[0].velocity.x : boids[0].velocity.y) * ((random8(2U)) ? .2 : -.2);
+        boids[0].velocity.x += d;
+        boids[0].velocity.y -= d;
+      }
+      else {
+        if (fabs(boids[0].velocity.x) < 0.02)
+          boids[0].velocity.x = -boids[0].velocity.x;
+        else if (fabs(boids[0].velocity.y) < 0.02)
+          boids[0].velocity.y = -boids[0].velocity.y;
+      }
+    }
+  }
+
+  //dimAll(255-128/.25*speedfactor); очередной эффект, к которому нужно будет "подобрать коэффициенты"
+    EffectMath::dimAll(127);  
+
+  //go over particles and update matrix cells on the way
+  for(int i = 0; i<enlargedObjectNUM; i++) {
+    if (!trackingObjectIsShift[i] && step) {
+      fairyEmit(i);
+      step--;
+    }
+    if (trackingObjectIsShift[i]){ 
+      // вернуться и поглядеть, что это
+      if (scale & 0x01 && trackingObjectSpeedY[i] > -1) trackingObjectSpeedY[i] -= 0.05; //apply acceleration
+      particlesUpdate2(i);
+
+      //generate RGB values for particle
+      CRGB baseRGB = /*ColorFromPalette(*curPalette, trackingObjectHue[i], 255); */CHSV(trackingObjectHue[i], 255,255); // particles[i].hue
+
+      baseRGB.nscale8(trackingObjectState[i]);//эквивалент
+      EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB, 0);
+    }
+  }
+  /*CHSV temp = rgb2hsv_approximate(ColorFromPalette(*curPalette, hue, 255));
+  temp.sat = 160;*/
+  EffectMath::drawPixelXYF(boids[0].location.x, boids[0].location.y, CHSV(hue, 160U, 255U) /*temp*/, 0);  
+  return true;
+}
+
+bool EffectFairy::run(CRGB *leds, EffectWorker *opt) {
+
+  switch (effect)
+  {
+  case EFF_FAIRY:
+    return fairy(leds);
+    break;
+  case EFF_FOUNT:
+    fount(leds);
+    break;
+  
+  default:
+    break;
+  }
+  //fpsmeter();
+  return true;
+}
+
+
+void EffectFairy::setscl(const byte _scl){
+  EffectCalc::setscl(_scl);
+  loadingFlag = true;
+  enlargedObjectNUM = map(scale, 1, 255, 4, trackingOBJECT_MAX_COUNT);
+  if (enlargedObjectNUM > trackingOBJECT_MAX_COUNT)
+    enlargedObjectNUM = trackingOBJECT_MAX_COUNT;
+}
+
+void EffectFairy::load(){
+  //---- Общее для двух эффектов
+  enlargedObjectNUM = map(scale, 1, 255, 4, trackingOBJECT_MAX_COUNT);
+  if (enlargedObjectNUM > trackingOBJECT_MAX_COUNT)
+    enlargedObjectNUM = trackingOBJECT_MAX_COUNT;
+  for (int i = 0; i < enlargedOBJECT_MAX_COUNT; i++)
+    trackingObjectIsShift[i] = false; 
+
+
+  //---- Только для эффекта Фея
+  // лень было придумывать алгоритм для таектории феи, поэтому это будет нулевой "бойд" из эффекта Притяжение
+  boids[0] = Boid(random8(WIDTH), random8(HEIGHT));
+  boids[0].mass = 0.5;//((float)random8(33U, 134U)) / 100.; // random(0.1, 2); // сюда можно поставить регулятор разлёта. чем меньше число, тем дальше от центра будет вылет
+  boids[0].velocity.x = ((float) random8(46U, 100U)) / 500.0;
+  if (random8(2U)) boids[0].velocity.x = -boids[0].velocity.x;
+  boids[0].velocity.y = 0;
+  hue = random8();
+  #ifdef FAIRY_BEHAVIOR
+    deltaHue2 = 1U;
+  #endif
+}

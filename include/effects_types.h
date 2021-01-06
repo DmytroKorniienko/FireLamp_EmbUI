@@ -265,10 +265,10 @@ static const char TCONST_00C0[] PROGMEM = "mp3_p5";
 static const char TCONST_00C1[] PROGMEM = "mp3_n5";
 static const char TCONST_00C2[] PROGMEM = "pFS";
 static const char TCONST_00C3[] PROGMEM = "txtBfade";
-static const char TCONST_00C4[] PROGMEM = "drawbuff";
-static const char TCONST_00C5[] PROGMEM = "draw";
-static const char TCONST_00C6[] PROGMEM = "matrix";
-static const char TCONST_00C7[] PROGMEM = "fillmatrix";
+static const char TCONST_00C4[] PROGMEM = "";
+static const char TCONST_00C5[] PROGMEM = "";
+static const char TCONST_00C6[] PROGMEM = "";
+static const char TCONST_00C7[] PROGMEM = "";
 static const char TCONST_00C8[] PROGMEM = "";
 static const char TCONST_00C9[] PROGMEM = "";
 static const char TCONST_00CA[] PROGMEM = "";
@@ -305,8 +305,8 @@ EFF_T_LEND,                                   // Тикси Ленд
 EFF_LDIRKO,                                   // LDIRKO Ленд 
 EFF_OSCIL,                                    // Осцилятор 
 EFF_WRAIN,                                    // Шторм 
-EFF_NONE07,                                   // пусто
-EFF_NONE08,                                   // пусто
+EFF_FAIRY,                                    // Фея
+EFF_FOUNT,                                    // Источник
 EFF_BBALS,                                    // Прыгающие мячики
 EFF_SINUSOID3,                                // Синусоид 3
 EFF_METABALLS,                                // Метасферы
@@ -369,7 +369,7 @@ EFF_TIME = (253U)                             // Часы (служебный, �
  */
 static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_005, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
-  TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_000, TEFF_000, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_000, TEFF_030, TEFF_031, // 16-31
+  TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_000, TEFF_030, TEFF_031, // 16-31
   TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_000, TEFF_000, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
   TEFF_064, TEFF_000, TEFF_000, TEFF_000, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
@@ -395,7 +395,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
   1, 2, 4, 2, 2, 3, 1, 1, 5, 3, 3, 4, 3, 7, 3, 6, // 0-15
-  3, 3, 1, 5, 1, 5, 0, 0, 5, 1, 1, 5, 5, 0, 3, 3, // 16-31
+  3, 3, 1, 5, 1, 5, 1, 1, 5, 1, 1, 5, 5, 0, 3, 3, // 16-31
   3, 3, 3, 1, 5, 1, 2, 0, 0, 7, 2, 3, 5, 5, 1, 1, // 32 - 47
   3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 4, // 48 - 63
   3, 0, 0, 0, 2, 3, 5, 3, 1, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
@@ -1101,4 +1101,11 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 #define SNAKE_LENGTH  (HEIGHT / 2U)
 #define SNAKE2_LENGTH (HEIGHT / 2U + WIDTH / 4U)
 #define MAX_SNAKES    (16U) 
+
+// SottNick константы
+//константы размера матрицы вычисляется только здесь и не меняется в эффектах
+const uint8_t CENTER_X_MINOR =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01); // центр матрицы по ИКСУ, сдвинутый в меньшую сторону, если ширина чётная
+const uint8_t CENTER_Y_MINOR = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01); // центр матрицы по ИГРЕКУ, сдвинутый в меньшую сторону, если высота чётная
+const uint8_t CENTER_X_MAJOR =   WIDTH / 2  + (WIDTH % 2);           // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
+const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
 
