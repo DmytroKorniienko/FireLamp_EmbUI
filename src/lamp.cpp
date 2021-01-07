@@ -318,7 +318,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
   int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
-  if (delay < LED_SHOW_DELAY || !effects.worker->status()) delay = LED_SHOW_DELAY;
+  if (delay < LED_SHOW_DELAY || !(effects.getEn() ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
   _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
   ++fps;
 }
