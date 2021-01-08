@@ -7850,7 +7850,7 @@ void EffectFairy::load(){
   enlargedObjectNUM = map(scale, 1, 255, 4, trackingOBJECT_MAX_COUNT);
   if (enlargedObjectNUM > trackingOBJECT_MAX_COUNT)
     enlargedObjectNUM = trackingOBJECT_MAX_COUNT;
-  for (int i = 0; i < enlargedOBJECT_MAX_COUNT; i++)
+  for (uint16_t i = 0; i < enlargedOBJECT_MAX_COUNT; i++)
     trackingObjectIsShift[i] = false; 
 
 
