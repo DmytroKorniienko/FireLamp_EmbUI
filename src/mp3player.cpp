@@ -39,8 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef MP3PLAYER
 MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3player(rxPin, txPin) // RX, TX
 {
-  on = false;
-  ready = false;
+  flags = 0;
 
   mp3player.begin(9600);
   setTimeOut(MP3_SERIAL_TIMEOUT); //Set serial communictaion time out ~300ms
@@ -49,7 +48,7 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
   delay(DFPALYER_START_DELAY);
   uint8_t retry_cnt=0;
-  flags = 0;
+
   while(!begin(mp3player) && retry_cnt++<=5){ //Use softwareSerial to communicate with mp3.
     LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d...\n"), retry_cnt);
     delay(MP3_SERIAL_TIMEOUT);
@@ -78,10 +77,10 @@ void MP3PLAYERDEVICE::restartSound()
       if(isOn() || (ready && alarm)){
         if(alarm){
           ReStartAlarmSound(tAlarm);
-        } else if(!mp3mode){
+        } else if(!mp3mode && effectmode){
           if(cur_effnb>0)
             playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
-        } else {
+        } else if(mp3mode) {
           cur_effnb++;
           if(cur_effnb>mp3filescount)
             cur_effnb=1;

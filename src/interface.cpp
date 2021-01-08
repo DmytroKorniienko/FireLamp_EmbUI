@@ -554,7 +554,8 @@ void set_effects_speed(Interface *interf, JsonObject *data){
 
     if(!myLamp.effects.getEn()) return;
     myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
-    myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
+    if(myLamp.effects.worker && myLamp.effects.getEn())
+        myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
     resetAutoTimers();
@@ -565,7 +566,8 @@ void set_effects_scale(Interface *interf, JsonObject *data){
 
     if(!myLamp.effects.getEn()) return;
     myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
-    myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
+    if(myLamp.effects.worker && myLamp.effects.getEn())
+        myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
     resetAutoTimers();
@@ -582,7 +584,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
         if((*data).containsKey(ctrlName)){
             controls[i]->setVal((*data)[ctrlName]);
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
-            myLamp.effects.worker->setDynCtrl(controls[i]);
+            if(myLamp.effects.worker && myLamp.effects.getEn())
+                myLamp.effects.worker->setDynCtrl(controls[i]);
             embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, (*data)[ctrlName], true);
         }
     }
@@ -1222,7 +1225,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
 
     myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)].as<int>());
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]==FPSTR(TCONST_FFFF));
-    myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF));
+    myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]==FPSTR(TCONST_FFFF)); mp3->setPlayEffect(myLamp.getLampSettings().playEffect);
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
     myLamp.setPlayMP3((*data)[FPSTR(TCONST_00A8)]==FPSTR(TCONST_FFFF)); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
     myLamp.setLimitAlarmVolume((*data)[FPSTR(TCONST_00AF)]==FPSTR(TCONST_FFFF));

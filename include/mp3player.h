@@ -48,6 +48,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
+        bool effectmode:1; // режим проигрывания эффектов
         bool alarm:1; // сейчас будильник
         bool isplayname:1; // проигрывается имя
       };
@@ -86,6 +87,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
+    void setPlayEffect(bool flag) {effectmode = flag;}
     void setAlarm(bool flag) {alarm = flag;}
     void StartAlarmSound(ALARM_SOUND_TYPE val);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);

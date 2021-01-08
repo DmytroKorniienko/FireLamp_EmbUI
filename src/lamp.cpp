@@ -266,7 +266,7 @@ void LAMP::effectsTick(){
         }
       }
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-      if(effects.getEn() ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
+      if(effects.worker ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
         ledsbuff.resize(NUM_LEDS);
         std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
       }
@@ -274,10 +274,15 @@ void LAMP::effectsTick(){
   }
 
   if(!drawbuff.empty()){
+    uint8_t mi;
     for(uint16_t i=0; i<drawbuff.size() && i<NUM_LEDS; i++){
-      //leds[i] = 
-      if(drawbuff[i])
+      mi = drawbuff[i].r > drawbuff[i].g ? drawbuff[i].r : drawbuff[i].g;
+      mi = mi > drawbuff[i].b ? mi : drawbuff[i].b;
+      if(mi>=5) {
         leds[i] = drawbuff[i];
+      } else if(mi && mi<5) {
+        EffectMath::setLedsNscale8(i, map(mi,1,4,128,10)); // 5 градаций прозрачности, где 0 - полностью прозрачный
+      }
     }
   }
 
@@ -293,7 +298,7 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || (effects.getEn() ? effects.worker->status() : 1) || iflags.isStringPrinting) {
+  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || (effects.worker ? effects.worker->status() : 1) || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
   } else if(isLampOn()) {
@@ -318,7 +323,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
   int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
-  if (delay < LED_SHOW_DELAY || !(effects.getEn() ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
+  if (delay < LED_SHOW_DELAY || !(effects.worker ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
   _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
   ++fps;
 }
@@ -1144,7 +1149,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(flags.ONflag && !iflags.isEffectsDisabledUntilText){
+  if(effects.worker && flags.ONflag && !iflags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
