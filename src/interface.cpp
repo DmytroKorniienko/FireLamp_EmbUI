@@ -2663,6 +2663,45 @@ String httpCallback(const String &param, const String &value, bool isset){
             String tmpStr=F("- ");
             tmpStr+=effNum;
             myLamp.sendString(tmpStr.c_str(), CRGB::Red);
+            return result;
+        }
+        else if (param == F("showlist"))  {
+            result = F("[");
+            bool first=true;
+            EffectListElem *eff = nullptr;
+            String effname((char *)0);
+            while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+                if (eff->canBeSelected()) {
+                    result = result + String(first ? F("") : F(",")) + eff->eff_nb;
+                    first=false;
+                }
+            }
+            result = result + F("]");
+        }
+        else if (param == F("demolist"))  {
+            result = F("[");
+            bool first=true;
+            EffectListElem *eff = nullptr;
+            String effname((char *)0);
+            while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+                if (eff->isFavorite()) {
+                    result = result + String(first ? F("") : F(",")) + eff->eff_nb;
+                    first=false;
+                }
+            }
+            result = result + F("]");
+        }
+        else if (param == F("effname"))  {
+            String effname((char *)0);
+            uint16_t effnum=String(value).toInt();
+            myLamp.effects.loadeffname(effname, effnum);
+            result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
+        }
+        else if (param == F("effoname"))  {
+            String effname((char *)0);
+            uint16_t effnum=String(value).toInt();
+            effname = FPSTR(T_EFFNAMEID[(uint8_t)effnum]);
+            result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
         }
         else if (param == FPSTR(TCONST_0083)) { action = RA_EFF_NEXT;  remote_action(action, value.c_str(), NULL); }
         else if (param == FPSTR(TCONST_0084)) { action = RA_EFF_PREV;  remote_action(action, value.c_str(), NULL); }
@@ -2693,6 +2732,22 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
         else if (param == FPSTR(TCONST_00C7)) action = RA_FILLMATRIX;
         else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
+        else if (param == F("effname"))  {
+            String effname((char *)0);
+            uint16_t effnum=String(value).toInt();
+            myLamp.effects.loadeffname(effname, effnum);
+            result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
+            embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
+            return result;
+        }
+        else if (param == F("effoname"))  {
+            String effname((char *)0);
+            uint16_t effnum=String(value).toInt();
+            effname = FPSTR(T_EFFNAMEID[(uint8_t)effnum]);
+            result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
+            embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
+            return result;
+        }
 #ifdef OTA
         else if (param == FPSTR(TCONST_0027)) action = RA_OTA;
 #endif
