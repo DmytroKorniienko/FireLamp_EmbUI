@@ -148,6 +148,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_FOUNT :
     worker = std::unique_ptr<EffectFairy>(new EffectFairy());
     break;
+  case EFF_ENUM::EFF_CIRCLES :
+    worker = std::unique_ptr<EffectCircles>(new EffectCircles());
+    break;
   case EFF_ENUM::EFF_DRIFT :
     worker = std::unique_ptr<EffectDrift>(new EffectDrift());
     break;

@@ -66,14 +66,14 @@ static const char TEFF_018[] PROGMEM = "Tixy.Land";
 static const char TEFF_019[] PROGMEM = "LDIRKO.Land";
 static const char TEFF_020[] PROGMEM = "Oscillator";
 static const char TEFF_021[] PROGMEM = "Storm";
-static const char TEFF_022[] PROGMEM = "Fairy (Test)";
-static const char TEFF_023[] PROGMEM = "Fount (Test)";
+static const char TEFF_022[] PROGMEM = "Fairy";
+static const char TEFF_023[] PROGMEM = "Fount";
 static const char TEFF_024[] PROGMEM = "Bouncing balls";
 static const char TEFF_025[] PROGMEM = "Sinusoid 3";
 static const char TEFF_026[] PROGMEM = "Metasphere";
 static const char TEFF_027[] PROGMEM = "Spiral";
 static const char TEFF_028[] PROGMEM = "Comets, Soaring Fires +";
-static const char TEFF_029[] PROGMEM = "";
+static const char TEFF_029[] PROGMEM = "Bulbulator";
 static const char TEFF_030[] PROGMEM = "Prismata";
 static const char TEFF_031[] PROGMEM = "Flock and Predator";
 static const char TEFF_032[] PROGMEM = "Whirlpool";
@@ -434,6 +434,8 @@ static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":
 static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Size\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
 static const char E_COMET[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Effect\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = random, 255 = white)\"}, {\"id\":4,\"type\":0,\"val\":6,\"min\":1,\"max\":12,\"step\":1,\"name\":\"Scope\"}, {\"id\":5,\"type\":0,\"val\":32,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Blur\"}]}";
 static const char E_CELL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":5,\"step\":1,\"name\":\"Effect (0 = random)\"}]}"; 
+static const char E_FAIRY[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Behavior: 1/2\"}]}";
+static const char E_FOUNT[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Color: 1/2\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Blur (0 = not)\"}]}";
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Quantity\"}]}";
