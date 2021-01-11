@@ -117,7 +117,9 @@ void pubCallback(Interface *interf){
     //LOG(printf_P,PSTR("FS INFO: fs_info.totalBytes=%d,fs_info.usedBytes=%d\n"),fs_info.totalBytes,fs_info.usedBytes);
     interf->value(FPSTR(TCONST_00C2), String(fs_info.totalBytes-fs_info.usedBytes), true);
 
-    interf->value(FPSTR(TCONST_00CE), String(WiFi.RSSI()), true);
+    //int32_t rssi = WiFi.RSSI();
+    // (String)F("\U0001F4F6 ") + 
+    interf->value(FPSTR(TCONST_00CE), String(map(WiFi.RSSI(), -87, -45, 0, 100)) + PSTR("% (") + String(WiFi.RSSI()) + PSTR("dBm)"), true);
 
     interf->json_frame_flush();
 }
