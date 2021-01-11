@@ -7659,9 +7659,9 @@ void EffectFairy::fountEmit(uint8_t i) {
 
   trackingObjectState[i] = EffectMath::randomf(50, 250); 
   
- /* if (speed & 0x01)
+  if (type)
     trackingObjectHue[i] = hue2;
-  else */
+  else 
     trackingObjectHue[i] = random8();
   trackingObjectIsShift[i] = true; 
 }
@@ -7676,7 +7676,6 @@ void EffectFairy::fount(CRGB *leds){
   }
   step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
   EffectMath::dimAll(EffectMath::fmap(speed, 1, 255, 180, 127)); //ахах-ха. очередной эффект, к которому нужно будет "подобрать коэффициенты"
-  //EffectMath::dimAll(127);
 
   //go over particles and update matrix cells on the way
   for (int i = 0; i < enlargedObjectNUM; i++) {
@@ -7689,16 +7688,13 @@ void EffectFairy::fount(CRGB *leds){
 
       //generate RGB values for particle
       CRGB baseRGB;
-      /*if (speed & 0x01)
-        baseRGB = ColorFromPalette(*curPalette, trackingObjectHue[i], 255); // 
-      else*/
         baseRGB = CHSV(trackingObjectHue[i], 255,255); 
 
       baseRGB.nscale8(trackingObjectState[i]);
       EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB, 0);
     }
   }
-  if (scale & 0x01) EffectMath::blur2d((scale%10+1) * 10); // Размытие зависит от шкалы "Масштаб"
+  if (blur) EffectMath::blur2d(blur * 10); // Размытие 
 }
 
 // ============= ЭФФЕКТ ФЕЯ ===============
@@ -7802,7 +7798,7 @@ bool EffectFairy::fairy(CRGB *leds) {
     }
     if (trackingObjectIsShift[i]){ 
       // вернуться и поглядеть, что это
-      if (scale & 0x01 && trackingObjectSpeedY[i] > -1) trackingObjectSpeedY[i] -= 0.05; //apply acceleration
+      if (type && trackingObjectSpeedY[i] > -1) trackingObjectSpeedY[i] -= 0.05; //apply acceleration
       particlesUpdate2(i);
 
       //generate RGB values for particle
@@ -7827,8 +7823,7 @@ bool EffectFairy::run(CRGB *leds, EffectWorker *opt) {
     break;
   case EFF_FOUNT:
     fount(leds);
-    break;
-  
+    break; 
   default:
     break;
   }
@@ -7853,7 +7848,6 @@ void EffectFairy::load(){
   for (uint16_t i = 0; i < enlargedOBJECT_MAX_COUNT; i++)
     trackingObjectIsShift[i] = false; 
 
-
   //---- Только для эффекта Фея
   // лень было придумывать алгоритм для таектории феи, поэтому это будет нулевой "бойд" из эффекта Притяжение
   boids[0] = Boid(random8(WIDTH), random8(HEIGHT));
@@ -7865,4 +7859,78 @@ void EffectFairy::load(){
   #ifdef FAIRY_BEHAVIOR
     deltaHue2 = 1U;
   #endif
+}
+
+void EffectFairy::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3) type = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==4) blur = _val->getVal().toInt();
+}
+
+// ---------- Эффект "Бульбулятор"
+// первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
+// адаптация и переделка - kostyamat
+void EffectCircles::load() {
+  palettesload();
+  for (uint8_t i = 0; i < NUMBER_OF_CIRCLES; i++) {
+    circles[i].reset();
+  }
+}
+
+void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
+  int16_t centerX = circle.centerX;
+  int16_t centerY = circle.centerY;
+  int hue = circle.hue;
+  float radius = circle.radius();
+
+  int16_t startX = centerX - ceil(radius);
+  int16_t endX = centerX + ceil(radius);
+  int16_t startY = centerY - ceil(radius);
+  int16_t endY = centerY + ceil(radius);
+
+  for (int16_t x = startX; x < endX; x++) {
+    for (int16_t y = startY; y < endY; y++) {
+      if (y < 0 or y > (int)(HEIGHT - 1)) continue;
+      if (x < 0 or y > (int)(WIDTH - 1)) continue;
+      uint16_t index = myLamp.getPixelNumber(x, y);
+      /*if (index < 0 || index > NUM_LEDS)
+        continue;*/
+      double distance = EffectMath::sqrt(sq(x - centerX) + sq(y - centerY));
+      if (distance > radius)
+        continue;
+
+      uint16_t brightness;
+      if (radius < 1) { // last pixel
+        brightness = 255.0 * radius;
+      } else {
+        double percentage = distance / radius;
+        double fraction = 1.0 - percentage;
+        brightness = 255.0 * fraction;
+      }
+      leds[index] += (color > 1 ? ColorFromPalette(*curPalette, hue, brightness) : CHSV(hue, 255, brightness));
+    }
+  }
+}
+
+void EffectCircles::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3){
+    color = _val->getVal().toInt();
+  }
+}
+
+bool EffectCircles::run(CRGB *leds, EffectWorker *opt) {
+  randomSeed(millis());
+  FastLED.clear();
+  byte count = map(scale, 1, 255, 3, NUMBER_OF_CIRCLES);
+  for (uint8_t i = 0; i < count; i++) {
+    circles[i].bpm += EffectMath::fmap(speed, 1, 255, 0.5, 3.33);
+    if (circles[i].radius() < 0.001) {
+      circles[i].hue = random(0, NUMBER_OF_CIRCLES) * 255 / count;
+      circles[i].move();
+    }
+    drawCircle(leds, circles[i]);
+  }
+  //fpsmeter();
+  return true;
 }

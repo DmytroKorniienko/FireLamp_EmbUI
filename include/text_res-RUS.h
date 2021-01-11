@@ -66,14 +66,14 @@ static const char TEFF_018[] PROGMEM = "Тикси Ленд";
 static const char TEFF_019[] PROGMEM = "LDIRKO Ленд";
 static const char TEFF_020[] PROGMEM = "Осцилятор";
 static const char TEFF_021[] PROGMEM = "Шторм";
-static const char TEFF_022[] PROGMEM = "Фея (Тест)";
-static const char TEFF_023[] PROGMEM = "Источник (Тест)";
+static const char TEFF_022[] PROGMEM = "Фея";
+static const char TEFF_023[] PROGMEM = "Источник";
 static const char TEFF_024[] PROGMEM = "Прыгающие мячики";
 static const char TEFF_025[] PROGMEM = "Синусоид 3";
 static const char TEFF_026[] PROGMEM = "Метасферы";
 static const char TEFF_027[] PROGMEM = "Спираль";
 static const char TEFF_028[] PROGMEM = "Кометы, Парящие Огни +";
-static const char TEFF_029[] PROGMEM = "";
+static const char TEFF_029[] PROGMEM = "Бульбулятор";
 static const char TEFF_030[] PROGMEM = "Призмата";
 static const char TEFF_031[] PROGMEM = "Стая и Хищник";
 static const char TEFF_032[] PROGMEM = "Водоворот";
@@ -434,6 +434,8 @@ static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":
 static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Толщина\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
 static const char E_COMET[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Эффект\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Цвет (1 = случайный, 255 = белый)\"}, {\"id\":4,\"type\":0,\"val\":6,\"min\":1,\"max\":12,\"step\":1,\"name\":\"Размах\"}, {\"id\":5,\"type\":0,\"val\":32,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Размытие\"}]}";
 static const char E_CELL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":5,\"step\":1,\"name\":\"Эффект (0 = циклично)\"}]}"; 
+static const char E_FAIRY[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Поведение: 1/2\"}]}";
+static const char E_FOUNT[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Цвет: 1/2\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Размытие (0 = нет)\"}]}";
 
 // Инженерный
 static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Количество\"}]}";

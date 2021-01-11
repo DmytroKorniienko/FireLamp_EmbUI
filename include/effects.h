@@ -2185,7 +2185,7 @@ private:
     float   trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
     float   trackingObjectShift[trackingOBJECT_MAX_COUNT];
     uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
-    float trackingObjectState[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectState[trackingOBJECT_MAX_COUNT];
     bool    trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
     uint8_t enlargedObjectNUM;                                       // используемое в эффекте количество объектов
 
@@ -2199,6 +2199,8 @@ private:
     uint8_t deltaHue2;
     float speedFactor;
     bool loadingFlag = true;
+    byte type = false;
+    byte blur;
 
     void particlesUpdate2(uint8_t i);
     void fairyEmit(uint8_t i);
@@ -2206,11 +2208,57 @@ private:
     bool fairy(CRGB *leds);
     void fount(CRGB *leds);
     void setscl(const byte _scl) override; // перегрузка для масштаба
+    void setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+// ---------- Эффект "Бульбулятор"
+// первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
+// адаптация и переделка - kostyamat
+#define NUMBER_OF_CIRCLES (WIDTH*2U)
+class EffectCircles : public EffectCalc {
+private:
+    byte color;
+    class Circle
+    {
+    public:
+        //uint16_t offset;
+        int16_t centerX;
+        int16_t centerY;
+        byte hue;
+        float bpm = random(0, 255);
+
+        void move() {
+            centerX = random(0, LED_COLS);
+            centerY = random(0, LED_ROWS);
+        }
+        
+        void reset() {
+            //startTime = millis();
+            centerX = random(0, LED_COLS);
+            centerY = random(0, LED_ROWS);
+            hue = random(0, 255);
+            //offset = random(0, 60000 / bpm);
+        }
+
+        float radius() {
+            float radius = EffectMath::fmap(triwave8(bpm), 0, 254, 0, 5); //beatsin16(bpm, 0, 500, 0, offset) / 100.0;
+            return radius;
+        }
+    };
+
+    Circle circles[NUMBER_OF_CIRCLES] = {};
+
+    void drawCircle(CRGB *leds, Circle circle);
+    void setDynCtrl(UIControl*_val) override;
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+}; 
 
 // --------- конец секции эффектов
 
