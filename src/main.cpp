@@ -150,11 +150,12 @@ ICACHE_FLASH_ATTR void sendData(bool force){
 
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
     LOG(println, F("sendData :"));
-    DynamicJsonDocument obj(512);
+    DynamicJsonDocument obj(256);
     //JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
     obj[FPSTR(TCONST_0002)] = String(ESP.getFreeHeap());
     obj[FPSTR(TCONST_008F)] = String(millis()/1000);
+    obj[FPSTR(TCONST_00CE)] = String(WiFi.RSSI());
     String sendtopic=FPSTR(TCONST_008B);
     sendtopic+=FPSTR(TCONST_00AD);
     String out;
@@ -163,10 +164,10 @@ ICACHE_FLASH_ATTR void sendData(bool force){
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
     obj.clear();
 
-    // также отправим конфиг текущего эффекта
-    sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
-    String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
-    embui.publish(sendtopic, effcfg, true);
+    // // также отправим конфиг текущего эффекта
+    // sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
+    // String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
+    // embui.publish(sendtopic, effcfg, true);
 }
 
 #ifdef ESP_USE_BUTTON

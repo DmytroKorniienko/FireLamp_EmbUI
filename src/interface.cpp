@@ -116,7 +116,9 @@ void pubCallback(Interface *interf){
     LittleFS.info(fs_info);
     //LOG(printf_P,PSTR("FS INFO: fs_info.totalBytes=%d,fs_info.usedBytes=%d\n"),fs_info.totalBytes,fs_info.usedBytes);
     interf->value(FPSTR(TCONST_00C2), String(fs_info.totalBytes-fs_info.usedBytes), true);
-    
+
+    interf->value(FPSTR(TCONST_00CE), String(WiFi.RSSI()), true);
+
     interf->json_frame_flush();
 }
 
@@ -409,6 +411,25 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
     resetAutoTimers();
 }
 
+void publish_ctrls_vals()
+{
+  // конфиг текущего эффекта
+  DynamicJsonDocument doc(1024);
+  doc[F("nb")] = myLamp.effects.getEn();
+  JsonArray arr = doc.createNestedArray(F("ctrls"));
+  for (int i = 0; i <myLamp.effects.getControls().size(); i++)
+      {
+          JsonObject var = arr.createNestedObject();
+          var[F("id")]=myLamp.effects.getControls()[i]->getId();
+          var[F("val")]=myLamp.effects.getControls()[i]->getVal();
+      }
+  String cfg_str;
+  serializeJson(doc, cfg_str);
+  doc.clear();
+  //LOG(println,cfg_str);
+  embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00CF), cfg_str, true);
+}
+
 void block_effects_param(Interface *interf, JsonObject *data){
     //if (!interf) return;
     bool isinterf = (interf != nullptr); // буду публиковать, даже если WebUI клиентов нет
@@ -459,7 +480,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         ,controls[i]->getStep().toInt()
                         , ctrlName
                         , true);
-                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
+                    //embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
                 }
                 break;
             case CONTROL_TYPE::EDIT :
@@ -473,7 +494,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                     , ctrlName
                     , true
                     );
-                    embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
+                    //embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
                     break;
                 }
             case CONTROL_TYPE::CHECKBOX :
@@ -487,13 +508,14 @@ void block_effects_param(Interface *interf, JsonObject *data){
                     , ctrlName
                     , true
                     );
-                    embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
+                    //embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
                     break;
                 }
             default:
                 break;
         }
     }
+    publish_ctrls_vals();
     if(isinterf) interf->json_section_end();
 }
 
@@ -545,7 +567,8 @@ void set_effects_bright(Interface *interf, JsonObject *data){
             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
+    //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
+    publish_ctrls_vals();
     resetAutoTimers();
 }
 
@@ -557,7 +580,8 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     if(myLamp.effects.worker && myLamp.effects.getEn())
         myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
+    //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
+    publish_ctrls_vals();
     resetAutoTimers();
 }
 
@@ -569,7 +593,8 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     if(myLamp.effects.worker && myLamp.effects.getEn())
         myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
+    //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
+    publish_ctrls_vals();
     resetAutoTimers();
 }
 
@@ -586,7 +611,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
             if(myLamp.effects.worker && myLamp.effects.getEn())
                 myLamp.effects.worker->setDynCtrl(controls[i]);
-            embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, (*data)[ctrlName], true);
+            //embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, (*data)[ctrlName], true);
+            publish_ctrls_vals();
         }
     }
     resetAutoTimers();
