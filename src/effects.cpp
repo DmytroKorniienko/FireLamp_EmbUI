@@ -7867,7 +7867,7 @@ void EffectFairy::setDynCtrl(UIControl*_val){
   if(_val->getId()==4) blur = _val->getVal().toInt();
 }
 
-// ---------- Эффект "Круги"
+// ---------- Эффект "Бульбулятор"
 // первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
 void EffectCircles::load() {
@@ -7922,15 +7922,15 @@ void EffectCircles::setDynCtrl(UIControl*_val) {
 bool EffectCircles::run(CRGB *leds, EffectWorker *opt) {
   randomSeed(millis());
   FastLED.clear();
-  byte count = map(scale, 1, 255, 1, NUMBER_OF_CIRCLES);
+  byte count = map(scale, 1, 255, 3, NUMBER_OF_CIRCLES);
   for (uint8_t i = 0; i < count; i++) {
     circles[i].bpm += EffectMath::fmap(speed, 1, 255, 0.5, 3.33);
     if (circles[i].radius() < 0.001) {
-      circles[i].hue = random(0, count) * 255 / count;
+      circles[i].hue = random(0, NUMBER_OF_CIRCLES) * 255 / count;
       circles[i].move();
     }
     drawCircle(leds, circles[i]);
   }
-  fpsmeter();
+  //fpsmeter();
   return true;
 }
