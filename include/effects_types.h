@@ -65,7 +65,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2, ST_MIC} SORT_TYPE; // виды сортировки
 
-static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
+static const char PGidxtemplate[] PROGMEM  = "%s{\"n\":%d,\"f\":%d}";
 
 /** набор служебных текстовых констант (не для локализации)
  */

@@ -110,6 +110,8 @@ typedef union {
         bool isFavorite:1;
     };
 } EFFFLAGS;
+// все установленные биты для EFFFLAGS
+#define SET_ALL_EFFFLAGS (0x03)
 
 class EffectListElem{
 private:
@@ -2268,10 +2270,8 @@ private:
     SORT_TYPE effSort; // порядок сортировки в UI
     const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
-    EFFFLAGS flags; // подумать нужен ли он здесь...
     uint16_t curEff = (uint16_t)EFF_NONE;     ///< энумератор текущего эффекта
     uint16_t selEff = (uint16_t)EFF_NONE;     ///< энумератор выбранного эффекта (для отложенного перехода)
-
     
     String originalName;    // имя эффекта дефолтное
     String effectName;      // имя эффекта (предварительно заданное или из конфига)

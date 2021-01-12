@@ -322,7 +322,10 @@ void EffectWorker::initDefault(const char *folder)
   clearEffectList();
   for (size_t i=0; i<arr.size(); i++) {
       JsonObject item = arr[i];
-      effects.add(new EffectListElem(item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>()));
+      if(item.containsKey("nb")) // на время миграции, далее убрать!!!
+        effects.add(new EffectListElem(item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>()));
+      else
+        effects.add(new EffectListElem(item[F("n")].as<uint16_t>(), item[F("f")].as<uint8_t>()));
       //LOG(printf_P,PSTR("%d : %d\n"),item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>());
   }
   effects.sort([](EffectListElem *&a, EffectListElem *&b){ return a->eff_nb - b->eff_nb;}); // сортирую по eff_nb
@@ -478,7 +481,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
   }
 
   curEff = doc[F("nb")].as<uint16_t>();
-  flags.mask = doc.containsKey(F("flags")) ? doc[F("flags")].as<uint8_t>() : 255;
+  //flags.mask = doc.containsKey(F("flags")) ? doc[F("flags")].as<uint8_t>() : 255;
   const char* name = doc[F("name")];
   effectName = name ? name : (String)(FPSTR(T_EFFNAMEID[(uint8_t)nb]));
   soundfile = doc.containsKey(F("snd")) ? doc[F("snd")].as<String>() : "";
@@ -571,6 +574,7 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
   cfg.replace(F("@nb@"), String(nb));
   cfg.replace(F("@pal@"), String(FASTLED_PALETTS_COUNT));
+  cfg.replace(F("@flags@"), String(SET_ALL_EFFFLAGS));
   
   File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   if (configFile){
@@ -601,8 +605,9 @@ String EffectWorker::geteffconfig(uint16_t nb)
 {
   // конфиг текущего эффекта
   DynamicJsonDocument doc(2048);
+  EffectListElem *eff = getEffect(nb);
   doc[F("nb")] = nb;
-  doc[F("flags")] = flags.mask;
+  doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
   doc[F("name")] = effectName;
   doc[F("ver")] = version;
   doc[F("snd")] = soundfile;
@@ -754,6 +759,8 @@ void EffectWorker::makeIndexFile(const char *folder)
   openIndexFile(indexFile, folder);
   indexFile.print("[");
 
+  EffectListElem *eff;
+  uint8_t flags = SET_ALL_EFFFLAGS;
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
@@ -761,7 +768,11 @@ void EffectWorker::makeIndexFile(const char *folder)
     if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
 #endif
 
-    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, i ? 255 : 0); // дефолтный флаг 255 для любого эффекта, кроме 0
+    eff = getEffect(i);
+    if(eff)
+      flags = eff->flags.mask;
+
+    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, i ? flags : 0); // дефолтный флаг SET_ALL_EFFFLAGS для любого эффекта, кроме 0
     firstLine = false; // сбрасываю признак перовой строки
     //yield();
   }
@@ -817,7 +828,12 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       if (!deserializeFile(doc, fn.c_str())) { //  || doc[F("nb")].as<String>()=="0"
         continue;
       }
-      indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", doc[F("nb")].as<uint16_t>(), doc[F("flags")].as<uint8_t>());
+      uint16_t nb = doc[F("nb")].as<uint16_t>();
+      uint8_t flags = doc[F("flags")].as<uint8_t>();
+      EffectListElem *eff = getEffect(nb);
+      if(eff)
+        flags = eff->flags.mask;
+      indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", nb, flags);
       firstLine = false; // сбрасываю признак первой строки
       doc.clear();
 
