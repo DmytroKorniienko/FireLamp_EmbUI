@@ -117,9 +117,8 @@ void pubCallback(Interface *interf){
     //LOG(printf_P,PSTR("FS INFO: fs_info.totalBytes=%d,fs_info.usedBytes=%d\n"),fs_info.totalBytes,fs_info.usedBytes);
     interf->value(FPSTR(TCONST_00C2), String(fs_info.totalBytes-fs_info.usedBytes), true);
 
-    //int32_t rssi = WiFi.RSSI();
-    // (String)F("\U0001F4F6 ") + 
-    interf->value(FPSTR(TCONST_00CE), String(map(WiFi.RSSI(), -87, -45, 0, 100)) + PSTR("% (") + String(WiFi.RSSI()) + PSTR("dBm)"), true);
+    int32_t rssi = WiFi.RSSI();
+    interf->value(FPSTR(TCONST_00CE), String(constrain(map(rssi, -85, -40, 0, 100),0,100)) + F("% (") + String(rssi) + F("dBm)"), true);
 
     interf->json_frame_flush();
 }
@@ -482,7 +481,8 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         ,controls[i]->getStep().toInt()
                         , ctrlName
                         , true);
-                    //embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
+                    if(controls[i]->getId()<3)
+                        embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
                 }
                 break;
             case CONTROL_TYPE::EDIT :
@@ -569,7 +569,7 @@ void set_effects_bright(Interface *interf, JsonObject *data){
             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
     }
-    //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
     publish_ctrls_vals();
     resetAutoTimers();
 }
@@ -582,7 +582,7 @@ void set_effects_speed(Interface *interf, JsonObject *data){
     if(myLamp.effects.worker && myLamp.effects.getEn())
         myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
-    //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
     publish_ctrls_vals();
     resetAutoTimers();
 }
@@ -595,7 +595,7 @@ void set_effects_scale(Interface *interf, JsonObject *data){
     if(myLamp.effects.worker && myLamp.effects.getEn())
         myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
-    //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
     publish_ctrls_vals();
     resetAutoTimers();
 }
