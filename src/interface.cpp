@@ -422,7 +422,7 @@ void publish_ctrls_vals()
       {
           JsonObject var = arr.createNestedObject();
           var[F("id")]=myLamp.effects.getControls()[i]->getId();
-          var[F("val")]=myLamp.effects.getControls()[i]->getVal();
+          var[F("val")]= i ? myLamp.effects.getControls()[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
       }
   String cfg_str;
   serializeJson(doc, cfg_str);
@@ -2681,7 +2681,7 @@ String httpCallback(const String &param, const String &value, bool isset){
             }
         }
         // что-то случилось с сокетом... уйдем на другой эффект, отсрочим сохранение, удалим конфиг эффекта, вернемся
-        else if (param == F("WS_EVT_ERROR"))  {
+        else if (param == F("sys_WS_EVT_ERROR"))  {
             resetAutoTimers();
             uint16_t effNum = myLamp.effects.getSelected();
             myLamp.effects.directMoveBy(EFF_NONE);
@@ -2692,6 +2692,51 @@ String httpCallback(const String &param, const String &value, bool isset){
             tmpStr+=effNum;
             myLamp.sendString(tmpStr.c_str(), CRGB::Red);
             return result;
+        }
+        // реализация AUTODISCOVERY
+        else if (param == F("sys_AUTODISCOVERY"))  {
+            DynamicJsonDocument hass_discover(1024);
+            String name = embui.param(FPSTR(TCONST_003F));
+            String unique_id = embui.param(FPSTR(TCONST_007B));
+
+            hass_discover[F("~")] = unique_id+F("/embui/"); //String(F("homeassistant/light/"))+name;
+            hass_discover[F("name")] = name;                // name
+            hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
+            hass_discover[F("avty_t")] = F("~/pub/online"); // availability_topic
+            hass_discover[F("pl_avail")] = F("true");       // payload_available
+            hass_discover[F("pl_not_avail")] = F("false");  // payload_not_available
+
+            hass_discover[F("cmd_t")] = F("~/set/on");             // command_topic
+            hass_discover[F("stat_t")] = F("~/pub/on");            // state_topic
+
+            hass_discover[F("bri_cmd_t")] = F("~/set/bright");     // brightness_command_topic
+            hass_discover[F("bri_stat_t")] = F("~/pub/bright");    // brightness_state_topic
+            hass_discover[F("bri_scl")] = 255;
+
+            hass_discover[F("clr_temp_cmd_t")] = F("~/set/speed");     // speed as color temperature
+            hass_discover[F("clr_temp_stat_t")] = F("~/pub/speed");    // speed as color temperature
+            hass_discover[F("min_mireds")] = 1;
+            hass_discover[F("max_mireds")] = 255;
+
+            hass_discover[F("whit_val_cmd_t")] = F("~/set/scale");     // scale as white level
+            hass_discover[F("whit_val_stat_t")] = F("~/pub/scale");    // scale as white level
+            hass_discover[F("whit_val_scl")] = 255;
+
+            hass_discover[F("fx_cmd_t")] = F("~/set/effect");                                   // effect_command_topic
+            hass_discover[F("fx_stat_t")] = F("~/pub/eff_config");                              // effect_state_topic
+            hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");      // effect_template
+
+            hass_discover[F("json_attr_t")] = F("~/pub/eff_config");                            // json_attributes_topic
+
+            // hass_discover[F("rgb_cmd_t")] = "~/rgb/set";       // rgb_command_topic
+            // hass_discover[F("rgb_stat_t")] = "~/rgb/status";   // rgb_state_topic
+
+            String hass_discover_str;
+            serializeJson(hass_discover, hass_discover_str);
+            hass_discover.clear();
+
+            embui.publishto(String(F("homeassistant/light/")) + name + F("/config"), hass_discover_str, true);
+            return hass_discover_str;
         }
         else if (param == F("showlist"))  {
             result = F("[");
