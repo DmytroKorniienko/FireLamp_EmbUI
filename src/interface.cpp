@@ -469,7 +469,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013))
                         : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
                         : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
-                    String ctrlName = i ? controls[i]->getName() : myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D);
+                    String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
                     if(isRandDemo && controls[i]->getId()>0)
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
@@ -550,7 +550,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     }
 
     show_effects_param(interf, data);
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0016), String(eff->eff_nb), true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0082), String(eff->eff_nb), true);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(eff->eff_nb).toInt()), true);
 }
 
@@ -2670,12 +2670,12 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = String(myLamp.effects.getCurrent());  }
         else if (param == FPSTR(TCONST_00B7))
             { myLamp.showWarning2(CRGB::Orange,5000,500); }
-        else if (param.startsWith(FPSTR(TCONST_0015))) {
+        else if (param == FPSTR(TCONST_00D0)) {
             LList<UIControl*>&controls = myLamp.effects.getControls();
-            for(int i=3; i<controls.size();i++){
-                if(param == String(FPSTR(TCONST_0015))+String(controls[i]->getId())){
-                    result = controls[i]->getVal();
-                    embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
+            for(int i=0; i<controls.size();i++){
+                if(value == String(controls[i]->getId())){
+                    result = String(F("[")) + i + String(F(",\"")) + controls[i]->getVal() + String(F("\"]"));
+                    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
                     return result;
                 }
             }
@@ -2702,34 +2702,34 @@ String httpCallback(const String &param, const String &value, bool isset){
             hass_discover[F("~")] = unique_id+F("/embui/"); //String(F("homeassistant/light/"))+name;
             hass_discover[F("name")] = name;                // name
             hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
-            hass_discover[F("avty_t")] = F("~/pub/online"); // availability_topic
+            hass_discover[F("avty_t")] = F("~pub/online"); // availability_topic
             hass_discover[F("pl_avail")] = F("true");       // payload_available
             hass_discover[F("pl_not_avail")] = F("false");  // payload_not_available
 
-            hass_discover[F("cmd_t")] = F("~/set/on");             // command_topic
-            hass_discover[F("stat_t")] = F("~/pub/on");            // state_topic
+            hass_discover[F("cmd_t")] = F("~set/on");             // command_topic
+            hass_discover[F("stat_t")] = F("~pub/on");            // state_topic
 
-            hass_discover[F("bri_cmd_t")] = F("~/set/bright");     // brightness_command_topic
-            hass_discover[F("bri_stat_t")] = F("~/pub/bright");    // brightness_state_topic
+            hass_discover[F("bri_cmd_t")] = F("~set/bright");     // brightness_command_topic
+            hass_discover[F("bri_stat_t")] = F("~pub/bright");    // brightness_state_topic
             hass_discover[F("bri_scl")] = 255;
 
-            hass_discover[F("clr_temp_cmd_t")] = F("~/set/speed");     // speed as color temperature
-            hass_discover[F("clr_temp_stat_t")] = F("~/pub/speed");    // speed as color temperature
+            hass_discover[F("clr_temp_cmd_t")] = F("~set/speed");     // speed as color temperature
+            hass_discover[F("clr_temp_stat_t")] = F("~pub/speed");    // speed as color temperature
             hass_discover[F("min_mireds")] = 1;
             hass_discover[F("max_mireds")] = 255;
 
-            hass_discover[F("whit_val_cmd_t")] = F("~/set/scale");     // scale as white level
-            hass_discover[F("whit_val_stat_t")] = F("~/pub/scale");    // scale as white level
+            hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level
+            hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
             hass_discover[F("whit_val_scl")] = 255;
 
-            hass_discover[F("fx_cmd_t")] = F("~/set/effect");                                   // effect_command_topic
-            hass_discover[F("fx_stat_t")] = F("~/pub/eff_config");                              // effect_state_topic
+            hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
+            hass_discover[F("fx_stat_t")] = F("~pub/eff_config");                              // effect_state_topic
             hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");      // effect_template
 
-            hass_discover[F("json_attr_t")] = F("~/pub/eff_config");                            // json_attributes_topic
+            hass_discover[F("json_attr_t")] = F("~pub/eff_config");                            // json_attributes_topic
 
-            // hass_discover[F("rgb_cmd_t")] = "~/rgb/set";       // rgb_command_topic
-            // hass_discover[F("rgb_stat_t")] = "~/rgb/status";   // rgb_state_topic
+            // hass_discover[F("rgb_cmd_t")] = "~rgb/set";       // rgb_command_topic
+            // hass_discover[F("rgb_stat_t")] = "~rgb/status";   // rgb_state_topic
 
             String hass_discover_str;
             serializeJson(hass_discover, hass_discover_str);
