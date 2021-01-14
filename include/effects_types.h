@@ -276,7 +276,7 @@ static const char TCONST_00CB[] PROGMEM = "blabel";
 static const char TCONST_00CC[] PROGMEM = "height";
 static const char TCONST_00CD[] PROGMEM = "width";
 static const char TCONST_00CE[] PROGMEM = "pRSSI";
-static const char TCONST_00CF[] PROGMEM = "ctrls_vals";
+static const char TCONST_00CF[] PROGMEM = "";
 static const char TCONST_00D0[] PROGMEM = "control";
 
 static const char TCONST_FFFE[] PROGMEM = "false";

@@ -601,7 +601,7 @@ String EffectWorker::getfseffconfig(uint16_t nb)
 }
 
 
-String EffectWorker::geteffconfig(uint16_t nb)
+String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
 {
   // конфиг текущего эффекта
   DynamicJsonDocument doc(2048);
@@ -618,7 +618,7 @@ String EffectWorker::geteffconfig(uint16_t nb)
           var[F("id")]=controls[i]->getId();
           var[F("type")]=controls[i]->getType();
           var[F("name")]=controls[i]->getName();
-          var[F("val")]=controls[i]->getVal();
+          var[F("val")]=(controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : controls[i]->getVal();
           var[F("min")]=controls[i]->getMin();
           var[F("max")]=controls[i]->getMax();
           var[F("step")]=controls[i]->getStep();

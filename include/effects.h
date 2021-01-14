@@ -2379,7 +2379,7 @@ public:
     void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
 
     // Получить конфиг текущего эффекта
-    String geteffconfig(uint16_t nb);
+    String geteffconfig(uint16_t nb, uint8_t replaceBright = 0);
 
     // Получить конфиг эффекта из ФС
     String getfseffconfig(uint16_t nb);

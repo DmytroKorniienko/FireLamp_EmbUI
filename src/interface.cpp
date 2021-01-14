@@ -414,21 +414,7 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 
 void publish_ctrls_vals()
 {
-  // конфиг текущего эффекта
-  DynamicJsonDocument doc(1024);
-  doc[F("nb")] = myLamp.effects.getEn();
-  JsonArray arr = doc.createNestedArray(F("ctrls"));
-  for (int i = 0; i <myLamp.effects.getControls().size(); i++)
-      {
-          JsonObject var = arr.createNestedObject();
-          var[F("id")]=myLamp.effects.getControls()[i]->getId();
-          var[F("val")]= i ? myLamp.effects.getControls()[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
-      }
-  String cfg_str;
-  serializeJson(doc, cfg_str);
-  doc.clear();
-  //LOG(println,cfg_str);
-  embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00CF), cfg_str, true);
+  embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(myLamp.effects.getCurrent()).toInt(), myLamp.getNormalizedLampBrightness()), true);
 }
 
 void block_effects_param(Interface *interf, JsonObject *data){
@@ -551,7 +537,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
 
     show_effects_param(interf, data);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0082), String(eff->eff_nb), true);
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.getfseffconfig(String(eff->eff_nb).toInt()), true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(eff->eff_nb).toInt(), myLamp.getNormalizedLampBrightness()), true); // publish_ctrls_vals
 }
 
 void set_effects_bright(Interface *interf, JsonObject *data){
@@ -2674,7 +2660,7 @@ String httpCallback(const String &param, const String &value, bool isset){
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=0; i<controls.size();i++){
                 if(value == String(controls[i]->getId())){
-                    result = String(F("[")) + i + String(F(",\"")) + controls[i]->getVal() + String(F("\"]"));
+                    result = String(F("[")) + controls[i]->getId() + String(F(",\"")) + (controls[i]->getId()==0 ? String(myLamp.getNormalizedLampBrightness()) : controls[i]->getVal()) + String(F("\"]"));
                     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
                     return result;
                 }
@@ -2804,7 +2790,37 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00B7)) action = RA_WARNING;
         else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
         else if (param == FPSTR(TCONST_00C7)) action = RA_FILLMATRIX;
-        else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
+        //else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
+        else if (param == FPSTR(TCONST_00D0)) {
+            String str=value;
+            DynamicJsonDocument doc(256);
+            deserializeJson(doc,str);
+            JsonArray arr = doc.as<JsonArray>();
+            uint16_t id=0;
+            String val="";
+
+            if(arr.size()<2){
+                return httpCallback(param, value, false);
+            }
+
+            for (size_t i = 0; i < arr.size(); i++) {
+                switch(i){
+                    case 0: {
+                        id = arr[i].as<uint16_t>();
+                        break;
+                    }
+                    case 1: val = arr[i].as<String>(); break;
+                    default : break;
+                }
+			}
+            switch(id){
+                case 0: {action = RA_BRIGHT; remote_action(action, val.c_str(), NULL); break;}
+                case 1: {action = RA_SPEED; remote_action(action, val.c_str(), NULL); break;}
+                case 2: {action = RA_SCALE; remote_action(action, val.c_str(), NULL); break;}
+                default: {action = RA_EXTRA; String to=String(FPSTR(TCONST_0015))+id; remote_action(action, to.c_str(), val.c_str(), NULL); break;}
+            }
+            return httpCallback(param, String(id), false);
+        }
         else if (param == F("effname"))  {
             String effname((char *)0);
             uint16_t effnum=String(value).toInt();
