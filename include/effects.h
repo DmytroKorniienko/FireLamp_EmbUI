@@ -2218,7 +2218,7 @@ public:
 };
 
 // ---------- Эффект "Бульбулятор"
-// первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
+// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
 #define NUMBER_OF_CIRCLES (WIDTH*2U)
 class EffectCircles : public EffectCalc {

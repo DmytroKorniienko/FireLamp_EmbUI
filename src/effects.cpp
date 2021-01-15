@@ -7868,7 +7868,7 @@ void EffectFairy::setDynCtrl(UIControl*_val){
 }
 
 // ---------- Эффект "Бульбулятор"
-// первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
+// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
 void EffectCircles::load() {
   palettesload();
