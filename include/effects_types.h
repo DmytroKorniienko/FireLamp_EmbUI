@@ -279,8 +279,14 @@ static const char TCONST_00CE[] PROGMEM = "pRSSI";
 static const char TCONST_00CF[] PROGMEM = "";
 static const char TCONST_00D0[] PROGMEM = "control";
 
+/*
+заменено на "0" и "1" глобально с поддержкой в .js фреймворка
+смысла 
+
 static const char TCONST_FFFE[] PROGMEM = "false";
 static const char TCONST_FFFF[] PROGMEM = "true";
+*/
+
 
 typedef enum : uint8_t {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
