@@ -110,8 +110,6 @@ typedef union {
         bool isFavorite:1;
     };
 } EFFFLAGS;
-// все установленные биты для EFFFLAGS
-#define SET_ALL_EFFFLAGS (0x03)
 
 class EffectListElem{
 private:
@@ -676,9 +674,10 @@ private:
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
     bool halo = false;                                  // ореол
+    uint8_t _scale=1;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    // void setscl(const byte _scl) override; // перегрузка для масштаба
     //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
     void load() override;
@@ -732,6 +731,7 @@ public:
 #define _AMOUNT 16U
 class EffectLighterTracers : public EffectCalc {
 private:
+    uint8_t cnt = 1;
     float vector[_AMOUNT][2U];
     float coord[_AMOUNT][2U];
     int16_t ballColors[_AMOUNT];
@@ -741,6 +741,7 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 class EffectRainbow : public EffectCalc {
@@ -780,11 +781,12 @@ public:
 // ---- Эффект "Конфетти"
 class EffectSparcles : public EffectCalc {
 private:
-
+    uint8_t eff = 1;
     bool sparklesRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 // ========== Эффект "Эффектопад"
@@ -816,13 +818,11 @@ private:
      uint8_t sparking = 90U; // 130
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
+    uint8_t _scale = 1;
     const uint8_t fireSmoothing = 60U; // 90
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-
-
-
-  bool fire2012Routine(CRGB *leds, EffectWorker *param);
-
+    bool fire2012Routine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -831,6 +831,7 @@ public:
 // ------------- светлячки -------------
 class EffectLighters : public EffectCalc {
 protected:
+    uint8_t cnt = 1;
     bool subPix = false;
     uint16_t lightersIdx;
     float lightersSpeed[2U][LIGHTERS_AM];
@@ -849,6 +850,7 @@ public:
 class EffectMatrix : public EffectLighters {
 private:
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
+    uint8_t _scale = 1;
     byte gluk = 1;
     uint8_t hue;
     bool randColor = false;
@@ -863,6 +865,7 @@ public:
 // ------------- звездопад/метель -------------
 class EffectStarFall : public EffectLighters {
 private:
+    uint8_t _scale = 1;
     uint8_t effId = 1;
     bool isNew = true;
     float fade;
@@ -932,7 +935,9 @@ public:
 class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
+    uint8_t fadelvl=1;
     bool prismataRoutine(CRGB *leds, EffectWorker *param);
+    void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -977,6 +982,7 @@ private:
     float spiral;
     float spiral2;
     float speedFactor;
+    uint8_t _scale = 1;
     uint8_t effId = 1;      // 2, 1-6
     uint8_t colorId;        // 3, 1-255
     uint8_t smooth = 1;     // 4, 1-12
@@ -1052,8 +1058,9 @@ class EffectWaves : public EffectCalc {
 private:
   float whue;
   float waveTheta;
+  uint8_t _scale=1;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
-
+  void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1106,6 +1113,7 @@ class EffectFire2018 : public EffectCalc {
 private:
   const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t CentreX = WIDTH / 2 + (WIDTH % 2);
+  bool isLinSpeed = true;
 
   uint32_t noise32_x[NUM_LAYERS2];
   uint32_t noise32_y[NUM_LAYERS2];
@@ -1116,6 +1124,7 @@ private:
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
   bool fire2018Routine(CRGB *leds, EffectWorker *param);
+  void setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1136,12 +1145,9 @@ private:
   ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
-  uint8_t csum;   // reload checksum
-
-
   void ringsSet();
   bool ringsRoutine(CRGB *leds, EffectWorker *param);
-
+  void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1431,6 +1437,7 @@ private:
     uint16_t launchcountdown[SPARK];
     byte dim;
     uint8_t valDim;
+    uint8_t cnt;
     bool flashing = false;
     bool fireworksRoutine(CRGB *leds, EffectWorker *param);
     void sparkGen();
@@ -1546,6 +1553,7 @@ private:
     uint8_t hue2;
     byte step = 0;
     byte csum = 0;
+    uint8_t cnt;
     bool wings = false;
     bool isColored = true;
 
@@ -1581,6 +1589,7 @@ private:
     int8_t patternIdx = -1;
     int8_t lineIdx = 0;
     bool _subpixel = false;
+    uint8_t _speed = 1, _scale = 1;
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
@@ -1605,7 +1614,7 @@ private:
         CHSV(HUE_AQUA, 255, 255),
     };
 
-    void setDynCtrl(UIControl*_val);
+    void setDynCtrl(UIControl*_val) override;
     void drawPicture_XY();
     bool patternsRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1619,8 +1628,6 @@ public:
 // взято отсюда https://github.com/vvip-68/GyverPanelWiFi/
 class EffectArrows : public EffectCalc {
 private:
-    bool loadingFlag = true;
-    byte csum = 0;
     float arrow_x[4], arrow_y[4], stop_x[4], stop_y[4];
     byte arrow_direction;             // 0x01 - слева направо; 0x02 - снизу вверх; 0х04 - справа налево; 0х08 - сверху вниз
     byte arrow_mode, arrow_mode_orig; // 0 - по очереди все варианты
@@ -1633,6 +1640,7 @@ private:
     byte arrow_hue[4];
     byte arrow_play_mode_count[6];      // Сколько раз проигрывать полностью каждый режим если вариант 0 - текущий счетчик
     byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
+    uint8_t _scale;
     float speedfactor;
     bool subpixel;
     float prevVal[2];
@@ -1643,9 +1651,9 @@ private:
     void arrowSetup_mode4();
 
     bool arrowsRoutine(CRGB *leds, EffectWorker *param);
-
+    void load() override;
+    void setDynCtrl(UIControl*_val) override;
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1663,7 +1671,7 @@ private:
     void balls_timer();
     void blur(CRGB *leds);
     bool nballsRoutine(CRGB *leds, EffectWorker *param);
-
+    void setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1687,7 +1695,7 @@ private:
     Boid boids[count];
     PVector location;   // Location
     void setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override;
+    //void setscl(const byte _scl) override;
     void setspd(const byte _spd) override;
     void setup();
 
@@ -1840,13 +1848,14 @@ class EffectNexus: public EffectCalc {
     float dotAccel[NEXUS];         // персональное ускорение каждой точки
     bool white = false;
     byte type = 1;
+    uint8_t _scale = 1;
     bool randColor = false;
     float windProgress;
     
 
     void reload();
     void resetDot(uint8_t idx);
-    //void setDynCtrl(UIControl*_val) override;
+    void setDynCtrl(UIControl*_val) override;
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1969,7 +1978,7 @@ private:
     void reload();
     bool popcornRoutine(CRGB *leds, EffectWorker *param);
     void setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setscl(const byte _scl) override; // перегрузка для масштаба
 
 public:
     void load() override;
@@ -1981,6 +1990,7 @@ public:
 #define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
+    uint8_t _scale = 1;
     uint16_t reg[WAVES_AMOUNT];
     uint16_t pos[WAVES_AMOUNT];
     float sSpeed[WAVES_AMOUNT];
@@ -2002,6 +2012,7 @@ class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
     uint8_t Scale = 6;
+    uint8_t _scale = 1;
     int16_t offsetX = 0;
     int16_t offsetY = 0;
     float x[WIDTH];
@@ -2013,6 +2024,7 @@ class EffectCell: public EffectCalc {
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void setDynCtrl(UIControl*_val) override;
 };
 
 // ----------- Эффект "Геометрический Вальс"
@@ -2028,6 +2040,7 @@ class EffectCell: public EffectCalc {
 class EffectF_lying: public EffectCalc {
   private:
     byte hue = 0;
+    uint8_t _scale = 1;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
     void setDynCtrl(UIControl*_val);
 #ifdef BIGMATRIX
@@ -2045,6 +2058,7 @@ class EffectF_lying: public EffectCalc {
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
 class EffectTLand: public EffectCalc {
   private:
+    bool isSeq = false;
     byte animation = 0;
     bool ishue;
     bool ishue2;
@@ -2072,6 +2086,7 @@ class EffectLLand: public EffectCalc {
   private:
     const byte effects = 10; //how many effects
     byte effnumber = 0; //start effect
+    uint8_t _scale = 1;
     float t;
     uint16_t code(byte x, byte y, uint16_t i, float t);
     void setDynCtrl(UIControl*_val) override;
@@ -2131,6 +2146,7 @@ class EffectWrain: public EffectCalc {
     bool clouds = false;
     bool storm = false;
     bool white = false;
+    uint8_t _scale=1;
     byte type = 1;
     bool _flash;
     bool randColor = false;
@@ -2200,7 +2216,6 @@ private:
     uint8_t deltaHue;
     uint8_t deltaHue2;
     float speedFactor;
-    bool loadingFlag = true;
     byte type = false;
     byte blur;
 

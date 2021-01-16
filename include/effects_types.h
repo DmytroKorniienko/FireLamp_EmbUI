@@ -394,11 +394,11 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 4, 2, 2, 3, 1, 1, 5, 3, 3, 4, 3, 7, 3, 6, // 0-15
-  3, 3, 1, 5, 1, 5, 3, 3, 5, 1, 1, 5, 5, 3, 3, 3, // 16-31
-  3, 3, 3, 1, 5, 1, 2, 0, 0, 7, 2, 3, 5, 5, 1, 1, // 32 - 47
-  3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 4, // 48 - 63
-  3, 0, 0, 0, 2, 3, 5, 3, 1, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
+  3, 4, 6, 4, 4, 5, 3, 3, 7, 5, 5, 6, 5, 9, 5, 8, // 0-15
+  5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 5, 5, // 16-31
+  5, 5, 5, 3, 7, 3, 4, 0, 0, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
+  5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 9, 5, 5, 7, 6, // 48 - 63
+  5, 0, 0, 0, 4, 5, 7, 5, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -409,7 +409,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 4, // 240 - 255
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 6, // 240 - 255
 };
 
 
@@ -417,7 +417,102 @@ static const uint8_t T_EFFVER[] PROGMEM = {
 // старшие 4 бита используются как набор управляющих кодов, к примеру - отображать при включенном микрофоне, при выключенном и т.д., тоже 16 вариантов
 typedef enum : uint8_t {ALWAYS=0,ISMICON,ISMICOFF,HIDE} CONTROL_CASE; // старшие 4 бита
 typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4 бита
+/**
+ * типы/определения для палитр
+ */
+typedef const TProgmemRGBPalette16 PGMPalette;
+#define FASTLED_PALETTS_COUNT 22
+// все установленные биты для EFFFLAGS
+#define SET_ALL_EFFFLAGS 3
 
+/**
+ * Набор статических строк, определяющих UI эффекта если он отличается от базового
+ *
+ *  GUI для эффекта по-умолчанию
+ * Полный формат для пользовательского (id=0...7) параметра имеет вид: {"id":0,"type":0,"name":"Параметр","val":"127","min":"1","max":"255","step":"1"}
+ * если какой-то из параметров стандартный из этого списка, то его можно опустить и не указывать
+ * @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта, @ver@ - версия
+ * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48813
+ * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48848
+ */
+
+#define COTNROLS_PREFIX "\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":"
+
+// Дефолтные контролы
+static const char E_DEFUI[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[]}";
+// Добавил ко всем конфигам чекбокс {Микрофон} с индексом 7. Ввиду модифированного поведения функции myLamp.isMicOnOff(), он будет появляться только если глобально
+// микрофон включен, и эффект обладает зависимостью от микрофона в принципе.
+static const char E_DEFMICUI_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+// Общая конфигурация для эффектов с 3-им ползунком для палитр
+static const char E_3PAL_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_3PAL_MIC_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":16},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_3PAL255_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"}]}";
+// Общая конфигурация для эффектов только с 2-мя ползунками "Яркость" и "Скорость", пример - эффект"Тихий Океан"
+static const char E_2_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}]}"; // 3*16+0 для 2 контрола
+static const char E_2_MIC_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}"; // 3*16+0 для 2 контрола
+
+// Общая конфигурация для эффектов с 4-им ползунком для палитр
+static const char E_4PAL_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_LLEND[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_0D2 "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":5,\"val\":16,\"min\":0,\"max\":32,\"name\":\"" DFTINTF_0D3 "\"}]}";
+//static const char E_PILE[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":4,\"max\":8,\"name\":\"Заполнение (не моментально)\"}, {\"id\":1,\"type\":48} ,{\"id\":2,\"type\":48}, {\"id\":4,\"val\":7,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_SPARCLES_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":16,\"max\":10,\"name\":\"" DFTINTF_0D0 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_LIGHTERS_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0D5 "\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_RADAR255_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_WHITE_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0D7 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_LEAPERS_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":50,\"name\":\"" DFTINTF_0D8 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_BUTTERFLY_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":64,\"name\":\"" DFTINTF_0D9 "\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0DF "\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0E0 "\"}]}";
+static const char E_PULS_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D6 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_BBALLS_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":32,\"name\":\"" DFTINTF_088 "\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0E1 "\"}]}";
+static const char E_PRIZMATA_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},{\"id\":4,\"name\":\"" DFTINTF_0DE "\"}]}";
+static const char E_AQUARIUM_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"}, {\"id\":3,\"name\":\"" DFTINTF_0DA "\"}, {\"id\":4,\"min\":0,\"max\":15,\"name\":\"" DFTINTF_0E2 "\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_FREQ_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"val\":2,\"max\":3,\"name\":\"" DFTINTF_0E3 "\"}]}";
+static const char E_OSC_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0DC "\"},{\"id\":2,\"name\":\"" DFTINTF_0DD "\"}, {\"id\":3,\"name\":\"" DFTINTF_0DB "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+// размерность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
+static const char E_PATT_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48},{\"id\":2,\"type\":48},{\"id\":3,\"val\":33,\"max\":65,\"name\":\"" DFTINTF_0EA "\"},{\"id\":4,\"val\":33,\"max\":65,\"name\":\"" DFTINTF_0EB "\"}, {\"id\":5,\"max\":39,\"name\":\"" DFTINTF_0EC "\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_SHAD_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0ED "\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0E4 "\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_ARR_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":6,\"name\":\"" DFTINTF_0E5 "\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_F2018_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D7 "\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0E4 "\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_NBAL_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"max\":25,\"name\":\"" DFTINTF_0E6 "\"}]}";
+static const char E_ATTRACT_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0EE "\"}, {\"id\":3,\"val\":100,\"name\":\"" DFTINTF_0E9 "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_FLOCK_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0E8 "\"}]}";
+static const char E_WAVES_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":4,\"max\":8,\"name\":\"" DFTINTF_0E7 "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_MUNCH_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"val\":4,\"min\":0,\"max\":8,\"name\":\"" DFTINTF_10E "\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+//static const char E_COM_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"Цвет (1-127 случайный)\"}]}";
+static const char E_DRIFT_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"max\":4,\"name\":\"" DFTINTF_0FF "\"}]}";
+static const char E_SMOKE_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F0 "\"},{\"id\":3,\"max\":6,\"name\":\"" DFTINTF_0F6 "\"}]}";
+static const char E_CUBE2D_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"},{\"id\":4,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10D "\"},{\"id\":5,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10F "\"} ,{\"id\":6,\"type\":2,\"val\":\"false\",\"name\":\"" DFTINTF_110 "\"}]}";
+static const char E_FLAMP_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"}]}";
+static const char E_LIGHT2_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
+static const char E_CUBE_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F1 "\"}]}";
+static const char E_STARFAIL_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"} , {\"id\":4,\"max\":3,\"name\":\"" DFTINTF_0FD "\"} ,{\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_108 "\"}]}"; 
+static const char E_SNAKE_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"val\":4,\"max\":16,\"name\":\"" DFTINTF_0FE "\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0D4 "\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_111 "\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_NEXUS[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_FWORK_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0F2 "\"},{\"id\":2,\"type\":48}, {\"id\":3,\"max\":8,\"name\":\"" DFTINTF_10C "\"}, {\"id\":4,\"type\":2,\"val\":\"false\",\"name\":\"" DFTINTF_109 "\"}]}";
+static const char E_MATRIX[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":12,\"max\":32,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"val\":90,\"name\":\"" DFTINTF_0FC "\"}, {\"id\":5,\"val\":20,\"max\":60,\"name\":\"" DFTINTF_10A "\"}]}";
+static const char E_RAIN_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":25,\"max\":45,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_102 "\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_10B "\"}]}";
+//static const char E_FIRE_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":5,\"max\":3,\"name\":\"Вид задержки (текущая/dryrun/delay)\"}]}";
+static const char E_NFIRE_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":50,\"max\":100,\"name\":\"" DFTINTF_088 "\"}, {\"id\":4,\"max\":10,\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_POPCORN_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0DE "\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_112 "\"}]}";
+static const char E_MBL_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0F4 "\"}, {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"}]}";
+static const char E_LIQLAM_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":17,\"name\":\"" DFTINTF_0F4 "\"}, {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"}, {\"id\":5,\"val\":0,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_105 "\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_106 "\"}]}";
+static const char E_F2012_MIC_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":64,\"max\":128,\"name\":\"" DFTINTF_088 "\"},{\"id\":4,\"val\":6,\"max\":10,\"name\":\"" DFTINTF_084 "\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_DNA_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0F3 "\"}]}";
+static const char E_SNOW_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":\"1\",\"max\":3,\"name\":\"" DFTINTF_0F5 "\"}]}";
+static const char E_SMOKEBALLS[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_PALMICUI_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0FB "\"},{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0F5 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_COLORS_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":32,\"val\":\"2\",\"max\":3,\"name\":\"" DFTINTF_0E3 "\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_TLAND[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":25,\"min\":0,\"max\":35,\"name\":\"" DFTINTF_0D2 "\"}, {\"id\":4,\"val\":160,\"min\":0,\"name\":\"" DFTINTF_101 "\"}, {\"id\":5,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_113 "\"}, {\"id\":6,\"max\":4,\"name\":\"" DFTINTF_114 "\"}]}";
+static const char E_FLYING[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"max\":128,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"val\":7,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_107 "\"}]}";
+static const char E_WRAIN[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":25,\"max\":45,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"val\":4,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_102 "\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_10B "\"}, {\"id\":7,\"max\":8,\"name\":\"" DFTINTF_115 "\"}]}";
+static const char E_CLOCK[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":4,\"max\":8,\"name\":\"" DFTINTF_0F7 "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_COMET[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":4,\"max\":6,\"name\":\"" DFTINTF_00A "\"}, {\"id\":4,\"name\":\"" DFTINTF_0FC "\"}, {\"id\":5,\"val\":6,\"max\":12,\"name\":\"" DFTINTF_104 "\"}, {\"id\":6,\"val\":32,\"max\":64,\"name\":\"" DFTINTF_0DE "\"}]}";
+static const char E_CELL[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"min\":0,\"max\":5,\"name\":\"" DFTINTF_0D2 "\"}]}"; 
+static const char E_FAIRY[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0F9 "\"}]}";
+static const char E_FOUNT[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0FA "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_103 "\"}]}";
+
+// Инженерный
+static const char E_TEST_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},{\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
+static const char E_TEST2_CFG[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"name\":\"" DFTINTF_084 "\"}, {\"id\":4}, {\"id\":5}, {\"id\":6}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
 
 /** набор указателей на строки с UI-конфигом для эффектов по-умолчанию
  * индекс элемента массива составляет id из EFF_ENUM
@@ -452,12 +547,6 @@ static const char* const T_EFFUICFG[] PROGMEM = {
 #define MOVE_Y 0
 #define MIN_RANGE 1     // заложим дейфан пока нет динамических ползунков
 #define MAX_RANGE 255   // заложим дейфан пока нет динамических ползунков
-
-/**
- * типы/определения для палитр
- */
-typedef const TProgmemRGBPalette16 PGMPalette;
-#define FASTLED_PALETTS_COUNT 22
 
 /**
  * Набор палитр в дополнение к тем что идут с FastLED
@@ -512,7 +601,7 @@ static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff10
 
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
 #define e_com_TAILSPEED             (500)         // скорость смещения хвоста
-#define e_com_BLUR                  (24U)         // размытие хвоста
+#define e_com_BLUR                  (12U)         // размытие хвоста
 #define e_com_3DCOLORSPEED          (3U)          // скорость случайного изменения цвета (0й - режим)
 
 // ------------- светлячки со шлейфом -------------

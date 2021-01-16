@@ -123,6 +123,79 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 
 
 //-------------------------
+#define DFTINTF_00A "Efecto"
+#define DFTINTF_020 "Micrófono"
+#define DFTINTF_084 "Palitra"
+#define DFTINTF_088 "Escala"
+#define DFTINTF_0D0 "Color"
+#define DFTINTF_0D1 "Палитра/Масштаб"
+#define DFTINTF_0D2 "Эффект (0 = циклично)"
+#define DFTINTF_0D3 "Смещение цвета (0 = циклично)"
+#define DFTINTF_0D4 "Cубпиксель"
+#define DFTINTF_0D5 "Количество"
+#define DFTINTF_0D6 "Генератор цвета"
+#define DFTINTF_0D7 "Оттенок"
+#define DFTINTF_0D8 "Жогово!"
+#define DFTINTF_0D9 "Количество / Цвет(ночнник)"
+#define DFTINTF_0DA "Насыщенность"
+#define DFTINTF_0DB "Усиление"
+#define DFTINTF_0DC "Развертка"
+#define DFTINTF_0DD "Пульсация"
+#define DFTINTF_0DE "Размытие"
+#define DFTINTF_0DF "Порхание"
+#define DFTINTF_0E0 "Ночник"
+#define DFTINTF_0E1 "Кольца"
+#define DFTINTF_0E2 "Блики (0:Откл. 1:Случ.)"
+#define DFTINTF_0E3 "Режим"
+#define DFTINTF_0E4 "Линейная скорость"
+#define DFTINTF_0E5 "Режим (1 = случайный)"
+#define DFTINTF_0E6 "Смещение"
+#define DFTINTF_0E7 "Количество/Направление/Положение"
+#define DFTINTF_0E8 "Хищник"
+#define DFTINTF_0E9 "Масса"
+#define DFTINTF_0EA "Скорость (Верт.)"
+#define DFTINTF_0EB "Скорость (Гориз.)"
+#define DFTINTF_0EC "Узор (1 = случайный)"
+#define DFTINTF_0ED "Затенение"
+#define DFTINTF_0EE "Энергия"
+#define DFTINTF_0EF "Плотность"
+#define DFTINTF_0F0 "Цвет/Вращение"
+#define DFTINTF_0F1 "Размер/Шлейф(1-85-170-255)"
+#define DFTINTF_0F2 "Частота запусков"
+#define DFTINTF_0F3 "Поворот"
+#define DFTINTF_0F4 "Палитра (0 = генератор)"
+#define DFTINTF_0F5 "Сглаживание"
+#define DFTINTF_0F6 "Заполнение"
+#define DFTINTF_0F7 "Толщина"
+#define DFTINTF_0F9 "Поведение: 1/2"
+#define DFTINTF_0FA "Цвет: 1/2"
+#define DFTINTF_0FB "Палитра (0 = без цвета)"
+#define DFTINTF_0FC "Цвет (1 = случайный, 255 = белый)"
+#define DFTINTF_0FD "Снегопад/Звездопад/Метеоры"
+#define DFTINTF_0FE "Кол-во"
+#define DFTINTF_0FF "Тип 1/2, Размытие 3/4"
+#define DFTINTF_100 "Палитра (0 = случайный цвет)"
+#define DFTINTF_101 "Цвет 1 (0 = циклично)"
+#define DFTINTF_102 "Тучка"
+#define DFTINTF_103 "Размытие (0 = нет)"
+#define DFTINTF_104 "Размах"
+#define DFTINTF_105 "Фильтр"
+#define DFTINTF_106 "Физика"
+#define DFTINTF_107 "Круги"
+#define DFTINTF_108 "Вариант 1/2"
+#define DFTINTF_109 "Вспышки"
+#define DFTINTF_10A "Глюк"
+#define DFTINTF_10B "Шторм"
+#define DFTINTF_10C "Количество снарядов"
+#define DFTINTF_10D "Размер (ширина)"
+#define DFTINTF_10E "Сдвиг цвета (0 = случайный)"
+#define DFTINTF_10F "Размер (высота)"
+#define DFTINTF_110 "Классика"
+#define DFTINTF_111 "Один цвет"
+#define DFTINTF_112 "Обратные Цвета"
+#define DFTINTF_113 "Цвет 2 (0 = циклично)"
+#define DFTINTF_114 "Качество/Скорость"
+#define DFTINTF_115 "Размытие (1-4 с ветром)"
 
 /** набор строк с текстовыми константами интерфейса
  */
@@ -136,7 +209,7 @@ static const char TINTF_006[] PROGMEM = "Eliminar";
 static const char TINTF_007[] PROGMEM = "Refrescar lista de Efectos";
 static const char TINTF_008[] PROGMEM = "Guardar";
 static const char TINTF_009[] PROGMEM = "Control de Lista de efectos";
-static const char TINTF_00A[] PROGMEM = "Efecto";
+static const char TINTF_00A[] PROGMEM = DFTINTF_00A;
 static const char TINTF_00B[] PROGMEM = "Salir";
 static const char TINTF_00C[] PROGMEM = "Brillo Global";
 static const char TINTF_00D[] PROGMEM = "Brillo";
@@ -158,7 +231,7 @@ static const char TINTF_01C[] PROGMEM = "Mostrar en Lampara";
 static const char TINTF_01D[] PROGMEM = "Texto";
 static const char TINTF_01E[] PROGMEM = "Color de Texto";
 static const char TINTF_01F[] PROGMEM = "Enviar";
-static const char TINTF_020[] PROGMEM = "Micrófono";
+static const char TINTF_020[] PROGMEM = DFTINTF_020;
 static const char TINTF_021[] PROGMEM = "Micrófono Activado";
 static const char TINTF_022[] PROGMEM = "Correcion del Zero"; 
 static const char TINTF_023[] PROGMEM = "Nivel de Ruido, und";
@@ -258,11 +331,11 @@ static const char TINTF_080[] PROGMEM = "Lampara de Fuego";
 static const char TINTF_081[] PROGMEM = "WiFi & MQTT";
 static const char TINTF_082[] PROGMEM = "Otros";
 static const char TINTF_083[] PROGMEM = "Cambiando, no superponer efectos";
-static const char TINTF_084[] PROGMEM = "Palitra";
+static const char TINTF_084[] PROGMEM = DFTINTF_084;
 static const char TINTF_085[] PROGMEM = "Alfabético (interno)";
 static const char TINTF_086[] PROGMEM = "Eventos Activado ";
 static const char TINTF_087[] PROGMEM = "Velocidad";
-static const char TINTF_088[] PROGMEM = "Escala";
+static const char TINTF_088[] PROGMEM = DFTINTF_088;
 static const char TINTF_089[] PROGMEM = "Nombre de efecto";
 static const char TINTF_08A[] PROGMEM = "Alfabético (Configuracion)";
 static const char TINTF_08B[] PROGMEM = "Restablecer la configuración del efecto";
@@ -334,114 +407,11 @@ static const char TINTF_0CC[] PROGMEM = "minutos";
 static const char TINTF_0CD[] PROGMEM = "minuto";
 static const char TINTF_0CE[] PROGMEM = "Dibujo";
 static const char TINTF_0CF[] PROGMEM = "Llenar";
-static const char TINTF_0D0[] PROGMEM = "Color";
-static const char TINTF_0D1[] PROGMEM = "";
-static const char TINTF_0D2[] PROGMEM = "";
-static const char TINTF_0D3[] PROGMEM = "";
-static const char TINTF_0D4[] PROGMEM = "";
-static const char TINTF_0D5[] PROGMEM = "";
-static const char TINTF_0D6[] PROGMEM = "";
-static const char TINTF_0D7[] PROGMEM = "";
-static const char TINTF_0D8[] PROGMEM = "";
-static const char TINTF_0D9[] PROGMEM = "";
-static const char TINTF_0DA[] PROGMEM = "";
-static const char TINTF_0DB[] PROGMEM = "";
-static const char TINTF_0DC[] PROGMEM = "";
-static const char TINTF_0DD[] PROGMEM = "";
-static const char TINTF_0DE[] PROGMEM = "";
-static const char TINTF_0DF[] PROGMEM = "";
-static const char TINTF_0E0[] PROGMEM = "";
+static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
+
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";
 //-------------------------
-
-/**
- * Набор статических строк, определяющих UI эффекта если он отличается от базового
- *
- *  GUI для эффекта по-умолчанию
- * Полный формат для пользовательского (id=3...7) Parametroа имеет вид: {\"id\":3,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parametro\"}
- * @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта, @ver@ - версия, @pal@ - максимальная Palitra
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48813
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48848
- */
-
-// Дефолтные контролы
-static const char E_DEFUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}]}";
-// Добавил ко всем конфигам чекбокс "Micrófono" с индексом 7. Ввиду модифированного поведения функции myLamp.isMicOnOff(), он будет появляться только если глобально
-// Micrófono включен, и эффект обладает зависимостью от Micrófonoа в принципе.
-static const char E_DEFMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-// Общая конфигурация для эффектов с 3-им ползунком для палитр
-static const char E_3PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_3PAL_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_3PAL255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Palitra/Escala\"}]}";
-// Общая конфигурация для эффектов только с 2-мя ползунками "Яркость" и "Velocidad", пример - эффект"Тихий Океан"
-static const char E_2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}]}"; // 3*16+0 для 2 контрола
-static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}"; // 3*16+0 для 2 контрола
-
-// Общая конфигурация для эффектов с 4-им ползунком для палитр
-static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Efecto (0 = Cíclicamente)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":4,\"type\":0,\"val\":16,\"min\":0,\"max\":32,\"step\":1,\"name\":\"Desplaz.color (0 = Ciclicamente)\"}]}";
-static const char E_PILE[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Llenado (no instantáneamente)\"}, {\"id\":1,\"type\":48,\"val\":\"127\"} ,{\"id\":2,\"type\":48,\"val\":\"127\"}, {\"id\":4,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Color\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Cantidad\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_RADAR255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Palitra/Escala\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_WHITE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Tono\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_LEAPERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":50,\"step\":1,\"name\":\"Tonteria!\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_BUTTERFLY_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Cantidad / Color(luz de noche)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Aleteo\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Luz de Noche\"}]}";
-static const char E_PULS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Generador de Color\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Escala\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Anillos\"}]}";
-static const char E_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Difuminar\"}]}";
-static const char E_AQUARIUM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Saturación\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":0,\"max\":15,\"step\":1,\"name\":\"Destello (0:Apg. 1:Random)\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_FREQ_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Ganancia\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":4,\"type\":0,\"val\":2,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Modo\"}]}";
-static const char E_OSC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Escaneo\"},{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Pulso\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Ganancia\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-// Размерность ползунка "Patrón" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
-static const char E_PATT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Velocidad (Vert.)\"}, {\"id\":2,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Velocidad (Horiz.)\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":39,\"step\":1,\"name\":\"Patrón (1 = aleatorio)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_SHAD_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Velocidad\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Sombreado\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Velocidad lineal\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_ARR_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Modo (1 = aleatorio)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_F2018_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Tono\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Velocidad lineal\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_NBAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":25,\"step\":1,\"name\":\"Parcialidad\"}]}";
-static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Energia\"}, {\"id\":3,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Peso\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_FLOCK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Depredador\"}]}";
-static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Candidad/Direccion/Posicion\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Plitra\"}]}";
-static const char E_MUNCH_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":8,\"step\":1,\"name\":\"Cambio de color (0 = aleatorio)\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-//static const char E_COM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1-127 aleatorio)\"}]}";
-static const char E_DRIFT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Тип 1/2, Difuminar 3/4\"}]}";
-static const char E_SMOKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color/Rotación\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Relleno\"}]}";
-static const char E_CUBE2D_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":22,\"step\":1,\"name\":\"Palitra (0 = Color aleatorio)\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Tamaño (ancho)\"},{\"id\":4,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Tamaño (altura)\"} ,{\"id\":5,\"type\":2,\"val\":\"false\",\"name\":\"Clasico\"}]}";
-static const char E_FLAMP_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color\"}]}";
-static const char E_LIGHT2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Cantidad\"}]}";
-static const char E_CUBE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Tamaño/Ruta(1-85-170-255)\"}]}";
-static const char E_STARFAIL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":5,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Dencidad\"} , {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Nevadas/Lluvia de estrellas/Meteoros\"} ,{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Opción 1/2\"}]}"; 
-static const char E_SNAKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Cantidad\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Un color\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_NEXUS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":5,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Dencidad\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Frecuencia de tiro\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Cantidad de proyectiles\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Flashes\"}]}";
-static const char E_CRAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = aleatorio, 255 = blanco)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Nuve\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Tormenta\"}]}";
-static const char E_MATRIX[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":12,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Dencidad\"}, {\"id\":3,\"type\":0,\"val\":90,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = random, 255 = blanco)\"}, {\"id\":4,\"type\":0,\"val\":20,\"min\":1,\"max\":60,\"step\":1,\"name\":\"Fallo\"}]}";
-static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Tipo de retardo (actual/dryrun/delay)\"}]}";
-static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Escala\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_POPCORN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Dencidad\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Difuminar\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Color inverso\"}]}";
-static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palitra (0 = generador)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Generador de color\"}]}";
-static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":17,\"step\":1,\"name\":\"Palitra (0 = generador)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Generador de color\"}, {\"id\":5,\"type\":0,\"val\":0,\"min\":0,\"max\":4,\"step\":1,\"name\":\"Filtro\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"Fisica\"}]}";
-static const char E_F2012_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Escala\"},{\"id\":3,\"type\":0,\"val\":6,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Palitra\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_DNA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"},{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Girar\"}]}";
-static const char E_SNOW_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"val\":\"1\",\"min\":1,\"max\":3,\"name\":\"Suavizar\"}]}";
-static const char E_SMOKEBALLS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Cantidad\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palitra (0 = blanco)\"},{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Suavizar\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_COLORS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":3,\"type\":32,\"val\":\"2\",\"min\":1,\"max\":3,\"step\":1,\"name\":\"Modo\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":0,\"max\":35,\"step\":1,\"name\":\"Efecto (0 = Cíclicamente)\"}, {\"id\":3,\"type\":0,\"val\":160,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Color 1 (0 = Cíclicamente)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Color 2 (0 = Cíclicamente)\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Calidad/Velocidad\"}]}";
-static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Difuminar\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Círculos\"}]}";
-static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Dencidad\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palitra (0 = color random)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Nube\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Tormenta\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Difuminar (1-4 con viento) \"}]}";
-static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Grosor\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palitra\"}]}";
-static const char E_COMET[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Efecto\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = random, 255 = blanko)\"}, {\"id\":4,\"type\":0,\"val\":6,\"min\":1,\"max\":12,\"step\":1,\"name\":\"Rango\"}, {\"id\":5,\"type\":0,\"val\":32,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Difuminar\"}]}";
-static const char E_CELL[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":5,\"step\":1,\"name\":\"Efecto (0 = Cíclicamente)\"}]}"; 
-static const char E_FAIRY[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Comportamiento: 1/2\"}]}";
-static const char E_FOUNT[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Color: 1/2\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Difuminar (0 = no)\"}]}";
-
-// Инженерный
-static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Cantidad\"}]}";
-static const char E_TEST2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":@flags@,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Palitra\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parametro 1\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parametro 2\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parametro 3\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Micrófono\"}]}";
-
-
 
 #endif

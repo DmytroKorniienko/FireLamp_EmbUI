@@ -42,6 +42,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #  endif
 #endif
 
+#define SF(s) __SFSTR(s)
+#define __SFSTR(s) #s
+//#define SF(...) #__VA_ARGS__
 
 #include <GyverButton.h>
 // переместил в platformio.ini

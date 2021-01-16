@@ -503,25 +503,14 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
               : id == 1 ? String(FPSTR(TINTF_087))
               : id == 2 ? String(FPSTR(TINTF_088))
               : String(F("Доп."))+String(id);
-          String val = item.containsKey(F("val")) ?
-              item[F("val")].as<String>()
-              : id < 3 ? String(127)
-              : String();
-          String min = item.containsKey(F("min")) ?
-              item[F("min")].as<String>()
-              : id < 3 ? String(1)
-              : String();
-          String max = item.containsKey(F("max")) ?
-              item[F("max")].as<String>()
-              : id < 3 ? String(255)
-              : String();
-          String step = item.containsKey(F("step")) ?
-              item[F("step")].as<String>()
-              : id < 3 ? String(1)
-              : String();
+          String val = item.containsKey(F("val")) ? item[F("val")].as<String>() : String(1);
+          String min = item.containsKey(F("min")) && id>2 ? item[F("min")].as<String>() : String(1);
+          String max = item.containsKey(F("max")) && id>2 ? item[F("max")].as<String>() : String(255);
+          String step = item.containsKey(F("step")) && id>2 ?  item[F("step")].as<String>() : String(1);
+          CONTROL_TYPE type = item.containsKey(F("type")) && (id>2 || (id<=2 && (item[F("type")].as<CONTROL_TYPE>() & CONTROL_TYPE::RANGE)==CONTROL_TYPE::RANGE)) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE;
           controls.add(new UIControl(
               id,             // id
-              item.containsKey(F("type")) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE, //((id<3) ? CONTROL_TYPE::RANGE : item[F("type")].as<CONTROL_TYPE>()),     // type
+              type,           // type
               name,           // name
               val,            // value
               min,            // min
@@ -573,8 +562,6 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   cfg.replace(F("@name@"), efname);
   cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
   cfg.replace(F("@nb@"), String(nb));
-  cfg.replace(F("@pal@"), String(FASTLED_PALETTS_COUNT));
-  cfg.replace(F("@flags@"), String(SET_ALL_EFFFLAGS));
   
   File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   if (configFile){
