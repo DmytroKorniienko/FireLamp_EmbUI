@@ -35,12 +35,23 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#include <ESP8266WiFi.h>
-#include <LittleFS.h>
-#define FTP_DEBUG
-#include <FTPServer.h>
-#include <ftpSrv.h>
 #include "misc.h"
+
+#ifdef ESP8266
+ #include <ESP8266WiFi.h>
+ #include <LittleFS.h>
+#endif
+
+#ifdef ESP32
+ #include <WiFi.h>
+ #include <LITTLEFS.h>
+ #define FORMAT_LITTLEFS_IF_FAILED true
+ #define LittleFS LITTLEFS
+#endif
+
+
+#define FTP_DEBUG
+#include <ftpSrv.h>
 
 FTPServer ftpSrv(LittleFS); // construct with LittleFS
 

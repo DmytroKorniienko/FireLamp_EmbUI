@@ -348,7 +348,7 @@ void EffectWorker::removeConfig(const uint16_t nb, const char *folder)
 
 void EffectWorker::effectsReSort(SORT_TYPE _effSort)
 {
-  LOG(printf_P,PSTR("%s: %d\n"),F("*Пересортировка эффектов*"), _effSort);
+  LOG(printf_P,PSTR("*Пересортировка эффектов*: %d\n"), _effSort);
   if(_effSort==255) _effSort=effSort; // Для дефолтного - берем с конфига
 
   switch(_effSort){
@@ -583,7 +583,7 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
     buff.write(cfg.c_str());
     buff.flush();
     */
-    configFile.write(cfg.c_str());
+    configFile.print(cfg.c_str());
     configFile.close();
   }
 }
@@ -716,7 +716,7 @@ EffectWorker::EffectWorker(uint16_t delayeffnb)
 #ifdef ESP8266
   ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер...
 #elif defined ESP32
-  dealy(1);
+  delay(1);
 #endif
 }
 
@@ -780,7 +780,7 @@ void EffectWorker::makeIndexFile(const char *folder)
   indexFile.print("]");
   indexFile.close();
 
-  LOG(printf_P,PSTR("rebuilding took %d ms\n"), millis() - timest);
+  LOG(printf_P,PSTR("rebuilding took %ld ms\n"), millis() - timest);
 
 }
 
@@ -840,7 +840,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
 #ifdef ESP8266
   ESP.wdtFeed();
 #elif defined ESP32
-  dealy(1);
+  delay(1);
 #endif
   }
   indexFile.print("]");

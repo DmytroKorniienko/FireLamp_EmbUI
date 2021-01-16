@@ -100,14 +100,11 @@ ICACHE_FLASH_ATTR void setup() {
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
 #endif
 
-#ifdef ESP32
-  embui.server.addHandler(new SPIFFSEditor(LittleFS, http_username,http_password));
-#elif defined(ESP8266)
-  //server.addHandler(new SPIFFSEditor(http_username,http_password, LittleFS));
+#ifdef ESP8266
   embui.server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
 #endif
 
-    sync_parameters();
+  sync_parameters();
 
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
