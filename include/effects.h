@@ -41,7 +41,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <string.h>
-#include "LittleFS.h"
 #include "config.h"
 #include LANG                //"text_res.h"
 #include "effects_types.h"
@@ -49,6 +48,17 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "LList.h"
 #include "patterns.h"
 #include "color_palette.h"
+
+#ifdef ESP8266
+ #include <LittleFS.h>
+#endif
+
+#ifdef ESP32
+ #include <LITTLEFS.h>
+ #define FORMAT_LITTLEFS_IF_FAILED true
+ #define LittleFS LITTLEFS
+#endif
+
 
 // #define DEFAULT_SLIDER 127
 // #define PARAM_BUFSIZE 128
@@ -2233,7 +2243,7 @@ public:
 };
 
 // ---------- Эффект "Бульбулятор"
-// первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
+// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
 #define NUMBER_OF_CIRCLES (WIDTH*2U)
 class EffectCircles : public EffectCalc {

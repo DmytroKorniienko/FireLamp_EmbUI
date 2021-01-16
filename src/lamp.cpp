@@ -137,7 +137,15 @@ void LAMP::handle()
   EVERY_N_SECONDS(15){
     // fps counter
     LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
+
+#ifdef ESP8266
     LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), embui.timeProcessor.getFormattedShortTime().c_str());
+#endif
+
+#ifdef ESP32
+    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), ESP.getFreeHeap(), embui.timeProcessor.getFormattedShortTime().c_str());
+#endif
+
   }
   avgfps = (avgfps+fps) / 2;
   fps = 0; // сброс FPS раз в секунду
@@ -420,7 +428,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 {
   stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == flags.ONflag) return;  // пропускаем холостые вызовы
-  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? F("On"): F("Off"));
+  LOG(print, F("Lamp powering ")); LOG(println, flag ? F("On"): F("Off"));
   flags.ONflag = flag;
 
   if(mode == LAMPMODE::MODE_OTA)
@@ -873,7 +881,7 @@ void LAMP::periodicTimeHandle()
   if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
     return;
 
-  LOG(printf_P,PSTR("%s: %02d:%02d:%02d\n"),F("periodicTimeHandle"),t->tm_hour,t->tm_min,t->tm_sec);
+  LOG(printf_P, PSTR("periodicTimeHandle: %02d:%02d:%02d\n"), t->tm_hour,t->tm_min,t->tm_sec);
 
   time_t tm = t->tm_hour * 60 + t->tm_min;
   String time = String(F("%TM"));
@@ -1110,16 +1118,13 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     FastLED.show();
   }
 
-  // Не-не-не, я против того чтобы за пользователя решать когда ему включать лампу
-  // поскольку настройки НУЖНО разрешить крутить и при выключенной лампе.
-  // changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
   effects.moveSelected();
 
   bool isShowName = (mode==LAMPMODE::MODE_DEMO && flags.showName);
-  bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
   if(isShowName){
     myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
+    bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
     if(isPlayName && mp3!=nullptr && mp3->isOn()) // воспроизведение 
       mp3->playName(effects.getEn());
 #endif

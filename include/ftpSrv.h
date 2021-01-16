@@ -35,10 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#include <LittleFS.h>
-#include <ESP8266WiFi.h>
+
+//#include <ESP8266WiFi.h>
 #include <FTPServer.h>
-#include "misc.h"
 
 extern void ftp_setup(void);
 extern void ftp_loop(void);

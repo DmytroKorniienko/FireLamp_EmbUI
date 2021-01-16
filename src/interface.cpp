@@ -41,6 +41,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "ui.h"
 #include LANG                  //"text_res.h"
 
+#ifdef ESP32
+    #include "esp_littlefs.h"
+#endif
+
+
 Ticker optionsTicker;          // планировщик заполнения списка
 Ticker sysTicker;              // системный планировщик
 String tmpData;                // временное хранилище для отложенных операций
@@ -53,7 +58,7 @@ bool check_recovery_state(bool isSet){
             LittleFS.remove(F("/recovery.state"));
         } else if(isSet){ // создаем файл-маркер, раз его не было
             File f = LittleFS.open(F("/recovery.state"), "w");
-            f.write(embui.param(F("effList")).c_str());
+            f.print(embui.param(F("effList")).c_str());
             f.flush();
             f.close();
             delay(100);
@@ -112,10 +117,18 @@ void pubCallback(Interface *interf){
     sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,(tm/3600)%24,(tm/60)%60,tm%60);
     interf->value(FPSTR(TCONST_008F), String(fuptime), true);
 
+#ifdef ESP8266
     FSInfo fs_info;
     LittleFS.info(fs_info);
     //LOG(printf_P,PSTR("FS INFO: fs_info.totalBytes=%d,fs_info.usedBytes=%d\n"),fs_info.totalBytes,fs_info.usedBytes);
     interf->value(FPSTR(TCONST_00C2), String(fs_info.totalBytes-fs_info.usedBytes), true);
+#endif
+
+#ifdef ESP32
+    size_t t_bytes=0, u_bytes=0;
+    esp_littlefs_info(nullptr, &t_bytes, &u_bytes);
+    interf->value(FPSTR(TCONST_00C2), String(t_bytes - u_bytes), true);
+#endif
 
     int32_t rssi = WiFi.RSSI();
     interf->value(FPSTR(TCONST_00CE), String(constrain(map(rssi, -85, -40, 0, 100),0,100)) + F("% (") + String(rssi) + F("dBm)"), true);
@@ -309,7 +322,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             #ifdef ESP8266
             ESP.wdtFeed();
             #elif defined ESP32
-            dealy(1);
+            delay(1);
             #endif
         }
         //interf->option(String(0),"");
@@ -330,7 +343,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             #ifdef ESP8266
             ESP.wdtFeed();
             #elif defined ESP32
-            dealy(1);
+            delay(1);
             #endif
         }
     }
@@ -366,7 +379,7 @@ void delayedcall_show_effects_config(){
         #ifdef ESP8266
         ESP.wdtFeed();
         #elif defined ESP32
-        dealy(1);
+        delay(1);
         #endif
     }
     //interf->option(String(0),"");
@@ -686,7 +699,7 @@ void delayedcall_effects_main(){
             #ifdef ESP8266
             ESP.wdtFeed();
             #elif defined ESP32
-            dealy(1);
+            delay(1);
             #endif
         } else if(!eff->eff_nb){
             isEmptyHidden=true;
@@ -746,7 +759,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #ifdef ESP8266
                 ESP.wdtFeed();
                 #elif defined ESP32
-                dealy(1);
+                delay(1);
                 #endif
             } else if(!eff->eff_nb){
                 isEmptyHidden=true;
@@ -771,7 +784,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #ifdef ESP8266
                 ESP.wdtFeed();
                 #elif defined ESP32
-                dealy(1);
+                delay(1);
                 #endif
             } else if(!eff->eff_nb){
                 isEmptyHidden=true;
@@ -781,7 +794,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
             interf->option(String(0),"");
     }
     interf->json_section_end();
-    LOG(printf_P,PSTR("DBG2: generating Names list took %d ms\n"), millis() - timest);
+    LOG(printf_P,PSTR("DBG2: generating Names list took %ld ms\n"), millis() - timest);
 
     block_effects_param(interf, data);
 
@@ -1153,7 +1166,7 @@ void set_text_config(Interface *interf, JsonObject *data){
     tm->tm_sec  = 0;
 
     time_t ny_unixtime = mktime(tm);
-    LOG(printf_P, PSTR("Set New Year at %d %d %d %d %d (%d)\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, ny_unixtime);
+    LOG(printf_P, PSTR("Set New Year at %d %d %d %d %d (%ld)\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, ny_unixtime);
 
     //SETPARAM(FPSTR(TCONST_0055), myLamp.setNYUnixTime(ny_unixtime));
     embui.var(FPSTR(TCONST_0055),String(ny_unixtime)); myLamp.setNYUnixTime(ny_unixtime);
@@ -2579,7 +2592,7 @@ void remote_action(RA action, ...){
                         String tmpStr = arr[i];
                         tmpStr.replace(F("#"), F("0x"));
                         unsigned long val = strtol(tmpStr.c_str(), NULL, 0);
-                        LOG(printf_P, PSTR("%s:%d\n"), tmpStr.c_str(), val);
+                        LOG(printf_P, PSTR("%s:%ld\n"), tmpStr.c_str(), val);
                         col = val;
                         break;
                     }
@@ -2596,7 +2609,7 @@ void remote_action(RA action, ...){
             String tmpStr = value;
             tmpStr.replace(F("#"), F("0x"));
             long val = strtol(tmpStr.c_str(), NULL, 0);
-            LOG(printf_P, PSTR("%s:%d\n"), tmpStr.c_str(), val);
+            LOG(printf_P, PSTR("%s:%ld\n"), tmpStr.c_str(), val);
             CRGB color=CRGB(val);
             myLamp.fillDrawBuf(color);
             break; 

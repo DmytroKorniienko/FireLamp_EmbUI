@@ -255,7 +255,7 @@ void fpsmeter() {
 #ifdef ESP8266
   ESP.wdtFeed();
 #elif defined ESP32
-  dealy(1);
+  delay(1);
 #endif
 
   if (frame++ % 60 == 0) Serial.println(FastLED.getFPS());
@@ -5804,7 +5804,7 @@ void EffectAttract::setup(){
     boids[i].mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * speedFactor; //(1.0/(256-speed));
     boids[i].velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * speedFactor; //(1.0/(256-speed));
   }
-  LOG(printf_P,PSTR("%5.2f %5.2f %d\n"),boids[0].mass,boids[0].velocity.x,1-2*random(0, 2));
+  LOG(printf_P,PSTR("%5.2f %5.2f %ld\n"),boids[0].mass, boids[0].velocity.x, 1-2*random(0, 2));
 }
 
 bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
@@ -8060,7 +8060,7 @@ void EffectFairy::setDynCtrl(UIControl*_val){
 }
 
 // ---------- Эффект "Бульбулятор"
-// первоисточник (не факт что это автор) https://editor.soulmatelights.com/gallery/11
+// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
 void EffectCircles::load() {
   palettesload();
