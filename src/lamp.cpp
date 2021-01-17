@@ -1121,10 +1121,12 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   effects.moveSelected();
 
   bool isShowName = (mode==LAMPMODE::MODE_DEMO && flags.showName);
+#ifdef MP3PLAYER
+  bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
+#endif
   if(isShowName){
     myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
-    bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
     if(isPlayName && mp3!=nullptr && mp3->isOn()) // воспроизведение 
       mp3->playName(effects.getEn());
 #endif

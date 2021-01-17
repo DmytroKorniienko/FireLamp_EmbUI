@@ -507,7 +507,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           String min = item.containsKey(F("min")) && id>2 ? item[F("min")].as<String>() : String(1);
           String max = item.containsKey(F("max")) && id>2 ? item[F("max")].as<String>() : String(255);
           String step = item.containsKey(F("step")) && id>2 ?  item[F("step")].as<String>() : String(1);
-          CONTROL_TYPE type = item.containsKey(F("type")) && (id>2 || (id<=2 && (item[F("type")].as<CONTROL_TYPE>() & CONTROL_TYPE::RANGE)==CONTROL_TYPE::RANGE)) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE;
+          CONTROL_TYPE type = item.containsKey(F("type")) && (id>2 || (id<=2 && (item[F("type")].as<CONTROL_TYPE>() & 0x0F)==CONTROL_TYPE::RANGE)) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE;
           controls.add(new UIControl(
               id,             // id
               type,           // type

@@ -157,7 +157,7 @@ void Buttons::buttonPress(bool state){
 }
 
 void Buttons::buttonTick(){
-	if (!buttonEnabled) return;
+	//if (!buttonEnabled) return;
 	
 	static bool startLampState = myLamp.isLampOn();
 	
@@ -171,12 +171,9 @@ void Buttons::buttonTick(){
 			startLampState = myLamp.isLampOn(); // получить начальный статус
 		}
 		reverse = true;
-	} else
-	if ((holding = touch.isStep())) {
+	} else if ((holding = touch.isStep())) {
 		holdtm.reset();
-	} else 
-	if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
-
+	} else if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
 			LOG(println,F("Сброс состояния кнопки после окончания действий"));
 			resetStates();
@@ -185,10 +182,9 @@ void Buttons::buttonTick(){
 				buttons[i]->flags.onetime&=1;
 			}
 		}
-
 		return;
 	}
-
+	LOG(printf_P, PSTR("buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
 		myLamp.stopAlarm();
