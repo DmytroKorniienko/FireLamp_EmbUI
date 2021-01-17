@@ -6703,7 +6703,7 @@ void EffectSmokeballs::shiftUp(){
 }
 
 // ----------- Эффект "Ёлки-Палки"
-// Cell из примеров программы Soulmate, автор неизвестен
+// "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
 void EffectCell::cell(CRGB *leds) {
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);

@@ -2016,7 +2016,7 @@ class EffectSmokeballs: public EffectCalc {
 };
 
 // ----------- Эффект "Ёлки-Палки"
-// Cell из примеров программы Soulmate, автор неизвестен
+// "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
 class EffectCell: public EffectCalc {
   private:
