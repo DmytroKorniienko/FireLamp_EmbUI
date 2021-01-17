@@ -69,18 +69,6 @@ void LAMP::lamp_init(const uint16_t curlimit)
 #endif
 #endif
 
-// Deprecated
-// // TELNET
-// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-//   telnetServer.begin();
-//   for (uint8_t i = 0; i < 100; i++)                         // пауза 10 секунд в отладочном режиме, чтобы успеть подключиться по протоколу telnet до вывода первых сообщений
-//   {
-//     handleTelnetClient();
-//     delay(100);
-//     delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
-//   }
-// #endif
-
 #ifdef VERTGAUGE
       if(VERTGAUGE){
         xStep = WIDTH / 4;
@@ -308,10 +296,18 @@ void LAMP::effectsTick(){
 
   if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || (effects.worker ? effects.worker->status() : 1) || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
+#ifdef ESP8266
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
+#elif defined ESP32
+    _effectsTicker.once_ms(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
+#endif
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
+#ifdef ESP8266
     _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#elif defined ESP32
+    _effectsTicker.once_ms(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#endif
   }
 }
 
@@ -332,7 +328,13 @@ void LAMP::frameShow(const uint32_t ticktime){
   // на минимальный интервал в следующем loop()
   int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
   if (delay < LED_SHOW_DELAY || !(effects.worker ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
+
+#ifdef ESP8266
   _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
+#elif defined ESP32
+  _effectsTicker.once_ms(delay, std::bind(&LAMP::effectsTick, this));
+#endif
+
   ++fps;
 }
 
@@ -370,7 +372,6 @@ void LAMP::frameShow(const uint32_t ticktime){
 #endif
     }
 #endif
-
 
 LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _reservedTicker()
 #ifdef OTA
@@ -992,7 +993,11 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, 
 
     if (_steps < 3) {
         brightness(_targetbrightness);
+#ifdef ESP8266
         if (callback != nullptr) _fadeTicker.once_ms_scheduled(0, callback);
+#elif defined ESP32
+        if (callback != nullptr) _fadeTicker.once_ms(0, callback);
+#endif
         return;
     }
 
@@ -1052,7 +1057,11 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
   --_steps;
   if (! _steps) {   // on last step
       if (callback != nullptr) {
+#ifdef ESP8266
         _fadeTicker.once_ms_scheduled(0, callback);
+#elif defined ESP32
+        _fadeTicker.once_ms(0, callback);
+#endif
       } else { _fadeTicker.detach(); }
       _brt = _tgtbrt;
   } else {
@@ -1176,7 +1185,11 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
     _demoTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
+#ifdef ESP8266
     _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
+#elif defined ESP32
+    _demoTicker.attach(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
+#endif
     break;
   case SCHEDULER::T_RESET :
     if (isAlarm()) stopAlarm(); // тут же сбросим и будильник
@@ -1199,7 +1212,11 @@ void LAMP::effectsTimer(SCHEDULER action) {
     _effectsTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
+#ifdef ESP8266
     _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#elif defined ESP32
+    _effectsTicker.once_ms(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#endif
     break;
   case SCHEDULER::T_RESET :
     if (_effectsTicker.active() ) effectsTimer(T_ENABLE);
@@ -1308,7 +1325,12 @@ void LAMP::showWarning2(
   if(warn_duration){
     if(_warningTicker.active())
       _warningTicker.detach();
+#ifdef ESP8266
     _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
+#elif defined ESP32
+    _warningTicker.once_ms(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
+#endif
+
   }
   else {
     iflags.isWarning = false;

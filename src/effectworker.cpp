@@ -793,25 +793,43 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
 void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
 {
   File indexFile;
-  String sourcedir;
+  String sourcedir(F("/eff"));
   makeIndexFile(tofolder); // создать дефолтный набор прежде всего
 
   if (fromfolder != nullptr) {
       sourcedir.concat(F("/"));
       sourcedir.concat(fromfolder);
   }
-  sourcedir.concat(F("/eff"));
-  Dir dir = LittleFS.openDir(sourcedir);
 
-  DynamicJsonDocument doc(3072);
+#ifdef ESP8266
+  Dir dir = LittleFS.openDir(sourcedir);
+#endif
+
+#ifdef ESP32
+  File dir = LittleFS.open(sourcedir);
+  if (!dir || !dir.isDirectory()){
+    LOG(print, F("Can't open dir: ")); LOG(println, sourcedir);
+    return;
+  }
+#endif
 
   String fn;
   openIndexFile(indexFile, tofolder);
   bool firstLine = true;
   indexFile.print("[");
 
+  DynamicJsonDocument doc(3072);
+
+#ifdef ESP8266
   while (dir.next()) {
       fn=sourcedir + "/" + dir.fileName();
+#endif
+#ifdef ESP32
+  File _f = dir.openNextFile();
+  while(_f){
+      fn=sourcedir + "/" + _f.name();
+#endif
+
       if (!deserializeFile(doc, fn.c_str())) { //  || doc[F("nb")].as<String>()=="0"
         continue;
       }
@@ -828,6 +846,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   ESP.wdtFeed();
 #elif defined ESP32
   delay(1);
+  _f = dir.openNextFile();
 #endif
   }
   indexFile.print("]");

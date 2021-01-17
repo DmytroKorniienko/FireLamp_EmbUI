@@ -206,9 +206,10 @@ private:
     // async fader and brightness control vars and methods
     uint8_t _brt, _steps;
     int8_t _brtincrement;
+
     Ticker _fadeTicker;             // планировщик асинхронного фейдера
-    Ticker _reservedTicker;         // планировщик вспомогательный
     Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
+    Ticker _reservedTicker;         // планировщик вспомогательный
     Ticker _effectsTicker;          // планировщик обработки эффектов
     Ticker _warningTicker;          // планировщик обработки эффектов
     uint32_t _begin = 0;
@@ -310,7 +311,7 @@ public:
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
-    byte getNormalizedLampBrightness() { return (byte)(((unsigned int)BRIGHTNESS) * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
+    byte getNormalizedLampBrightness() { return (byte)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
     void setLampBrightness(byte brg) { if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val;}
@@ -381,7 +382,7 @@ public:
     void setAlarmMessage(char *value = nullptr) {if(value) alarmMessage = value; else alarmMessage.clear();}
     const char *getAlarmMessage() { return alarmMessage.c_str();}
     void stopAlarm();
-    void startDemoMode(byte tmout = 60); // дефолтное значение, настраивается из UI
+    void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
     void startNormalMode();
     void restoreStored();
     void storeEffect();
@@ -502,7 +503,7 @@ public:
      * включает/выключает "демо"-таймер
      * @param TICKER action - enable/disable/reset
      */
-    void demoTimer(SCHEDULER action, byte tmout = 60); // дефолтное значение, настраивается из UI
+    void demoTimer(SCHEDULER action, byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
 
     /*
      * включает/выключает "эффект"-таймер

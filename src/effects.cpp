@@ -252,12 +252,6 @@ void EffectCalc::scale2pallete(){
 // Быстрый ФПСметр
 void fpsmeter() {
   static uint8_t frame = 0;
-#ifdef ESP8266
-  ESP.wdtFeed();
-#elif defined ESP32
-  delay(1);
-#endif
-
   if (frame++ % 60 == 0) Serial.println(FastLED.getFPS());
 }
 

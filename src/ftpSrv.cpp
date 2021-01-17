@@ -40,15 +40,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef ESP8266
  #include <ESP8266WiFi.h>
  #include <LittleFS.h>
-#endif
-
-#ifdef ESP32
- #include <WiFi.h>
- #include <LITTLEFS.h>
- #define FORMAT_LITTLEFS_IF_FAILED true
- #define LittleFS LITTLEFS
-#endif
-
 
 #define FTP_DEBUG
 #include <ftpSrv.h>
@@ -67,3 +58,5 @@ void ftp_setup(void){
 void ftp_loop(void){
   ftpSrv.handleFTP();        //make sure in loop you call handleFTP()!!  
 }
+
+#endif  // def ESP8266

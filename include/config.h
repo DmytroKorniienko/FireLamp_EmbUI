@@ -209,6 +209,11 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 #define EFFECTS_RUN_TIMER   (uint16_t)(1000 / MAX_FPS)     // период обработки эффектов - при 10 это 10мс, т.е. 1000/10 = 100 раз в секунду, при 20 = 50 раз в секунду, желательно использовать диапазон 10...40
 
+#ifndef DEFAULT_DEMO_TIMER
+  #define DEFAULT_DEMO_TIMER  (60U)                         // интервал смены демо по-умолчанию
+#endif
+
+
 // настройка кнопки, если разрешена
 #ifdef ESP_USE_BUTTON
 #ifndef BUTTON_DEBOUNCE

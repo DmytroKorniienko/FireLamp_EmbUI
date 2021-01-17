@@ -176,7 +176,7 @@ void EVENT_MANAGER::saveConfig(const char *cfg)
             configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%ld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
                 (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                 ((next->message!=nullptr)?next->message : ""));
-            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":ld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%ld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
                 (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                 ((next->message!=nullptr)?next->message:(char*)F("")));
             i++;

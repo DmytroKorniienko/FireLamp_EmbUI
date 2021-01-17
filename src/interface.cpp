@@ -349,7 +349,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     }
     //interf->option(String(0),"");
     interf->json_section_end();
-    LOG(printf_P,PSTR("DBG1: generating Names list took %d ms\n"), millis() - timest);
+    LOG(printf_P,PSTR("DBG1: generating Names list took %ld ms\n"), millis() - timest);
 
     block_effects_config_param(interf, nullptr);
 
@@ -784,7 +784,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 #ifdef ESP8266
                 ESP.wdtFeed();
                 #elif defined ESP32
-                delay(1);
+                yield();
                 #endif
             } else if(!eff->eff_nb){
                 isEmptyHidden=true;

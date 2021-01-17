@@ -90,18 +90,19 @@ private:
     String max;
     String step;
 public:
-    UIControl(const uint8_t id, const CONTROL_TYPE ctype, const String &control_name, const String &val, const String &min, const String &max, const String &step)
-    {
-        this->id=id;
-        this->ctype = ctype;
-        this->control_name = String(control_name);
+    UIControl(
+        uint8_t _id=0,
+        CONTROL_TYPE _ctype=CONTROL_TYPE::RANGE,
+        const String _name="ctrl",
+        const String _val="128",
+        const String _min="1",
+        const String _max="255",
+        const String _step="1"
+        ) : 
+        id(_id), ctype(_ctype),
+        control_name(_name),
+        val(_val), min(_min), max(_max), step(_step) {}
 
-        this->val = val;
-        this->min = min;
-        this->max = max;
-        this->step = step;
-    }
-    UIControl() : id(0), ctype(CONTROL_TYPE::RANGE), control_name(), val(), min(), max(), step() {}
     const uint8_t getId() {return id;}
     const CONTROL_TYPE getType() {return ctype;}
     const String &getName() {return control_name;}
@@ -2319,7 +2320,6 @@ private:
     void clearEffectList(); // очистка списка эффектов, вызываетсяч в initDefault
     void clearControlsList(); // очистка списка контроллов и освобождение памяти
 
-    //void initDefault();
     void effectsReSort(SORT_TYPE st=(SORT_TYPE)(255));
 
     int loadeffconfig(const uint16_t nb, const char *folder=nullptr);
@@ -2371,20 +2371,19 @@ public:
     // дефолтный конструктор
     EffectWorker(LAMPSTATE *_lampstate) : effects(), controls(), selcontrols() {
       lampstate = _lampstate;
+    /*
+      // нельзя вызывать литлфс.бегин из конструктора, т.к. инстанс этого объекта есть в лампе, который декларируется до setup()
       if (!LittleFS.begin()){
           //LOG(println, F("ERROR: Can't mount filesystem!"));
           return;
       }
+    */
 
       for(int8_t id=0;id<3;id++){
         controls.add(new UIControl(
             id,                                     // id
             CONTROL_TYPE::RANGE,                    // type
-            id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088)),           // name
-            String(127),                            // value
-            String(1),                              // min
-            String(255),                            // max
-            String(1)                               // step
+            id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088))           // name
         ));
         // selcontrols.add(new UIControl(
         //     id,                                     // id
