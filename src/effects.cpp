@@ -2685,7 +2685,7 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
 
   // parameters for the heatmap
 #ifndef MIC_EFFECTS
-  uint16_t _speed = isLinSpeed ? map(speed, 1, 255, 1, 255) : isLinSpeed ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
+  uint16_t _speed = isLinSpeed ? map(speed, 1, 255, 1, 255) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255));     // speed пересекается с переменной в родительском классе
 #else
   byte mic_p = myLamp.getMicMapMaxPeak();
   uint16_t _speed = isMicOn() ? (mic_p > map(speed, 1, 255, 225, 20) ? mic_p : 20) : (isLinSpeed ? map(speed, 1, 255, 20, 100) : beatsin88(map(speed, 1, 255, 80, 200), 5, map(speed, 1, 255, 10, 255)));     // speed пересекается с переменной в родительском классе
