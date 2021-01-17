@@ -2696,12 +2696,12 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == F("sys_AUTODISCOVERY"))  {
             DynamicJsonDocument hass_discover(1024);
             String name = embui.param(FPSTR(TCONST_003F));
-            String unique_id = embui.param(FPSTR(TCONST_007B));
+            String unique_id = embui.mc;
 
-            hass_discover[F("~")] = unique_id+F("/embui/"); //String(F("homeassistant/light/"))+name;
+            hass_discover[F("~")] = embui.id("embui/"); // embui.param(FPSTR(TCONST_007B)) + F("/embui/") //String(F("homeassistant/light/"))+name;
             hass_discover[F("name")] = name;                // name
             hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
-            hass_discover[F("avty_t")] = F("~pub/online"); // availability_topic
+            hass_discover[F("avty_t")] = F("~pub/online");  // availability_topic
             hass_discover[F("pl_avail")] = F("true");       // payload_available
             hass_discover[F("pl_not_avail")] = F("false");  // payload_not_available
 
@@ -2723,7 +2723,7 @@ String httpCallback(const String &param, const String &value, bool isset){
 
             hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
             hass_discover[F("fx_stat_t")] = F("~pub/eff_config");                              // effect_state_topic
-            hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");      // effect_template
+            hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");     // effect_template
 
             hass_discover[F("json_attr_t")] = F("~pub/eff_config");                            // json_attributes_topic
 
