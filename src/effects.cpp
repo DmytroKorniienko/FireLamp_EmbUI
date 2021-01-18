@@ -3754,7 +3754,7 @@ bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
       float sum = 0;
       for (unsigned i = 0; i < numParticles; i += 2) {
         Particle *p1 = (Particle *)&particles[i];
-        if (abs(x - p1->position_x) > tr || abs(y - p1->position_y) > tr) continue;
+        if ((unsigned)abs(x - p1->position_x) > tr || (unsigned)abs(y - p1->position_y) > tr) continue;
         float d = EffectMath::distance(x, y, p1->position_x, p1->position_y);
         if (d < 2) {
           // дополнительно подсвечиваем сердцевину
@@ -4033,7 +4033,7 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       float sum = 0;
       for (unsigned i = 0; i < numParticles; i++) {
         Particle *p1 = (Particle *)&particles[i];
-        if (abs(x - p1->position_x) > p1->tr || abs(y - p1->position_y) > p1->tr) continue;
+        if ((unsigned)abs(x - p1->position_x) > p1->tr || (unsigned)abs(y - p1->position_y) > p1->tr) continue;
         float d = EffectMath::distance(x, y, p1->position_x, p1->position_y);
         if (d < p1->rad) {
           sum += EffectMath::mapcurve(d, 0, p1->rad, 255, p1->mx, EffectMath::InQuad);

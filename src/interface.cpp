@@ -1303,9 +1303,15 @@ void show_settings_mic(Interface *interf, JsonObject *data){
 
 void set_settings_mic(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(FPSTR(TCONST_0039), myLamp.setMicScale((*data)[FPSTR(TCONST_0039)].as<float>()));
-    SETPARAM(FPSTR(TCONST_003A), myLamp.setMicNoise((*data)[FPSTR(TCONST_003A)].as<float>()));
-    SETPARAM(FPSTR(TCONST_003B), myLamp.setMicNoiseRdcLevel((MIC_NOISE_REDUCE_LEVEL)(*data)[FPSTR(TCONST_003B)].as<long>()));
+    float scale = (*data)[FPSTR(TCONST_0039)]; //atof((*data)[FPSTR(TCONST_0039)].as<String>().c_str());
+    float noise = (*data)[FPSTR(TCONST_003A)]; //atof((*data)[FPSTR(TCONST_003A)].as<String>().c_str());
+    MIC_NOISE_REDUCE_LEVEL rdl = (*data)[FPSTR(TCONST_003B)];
+
+    //LOG(printf_P, PSTR("scale=%2.3f noise=%2.3f rdl=%d\n"),scale,noise,rdl);
+
+    SETPARAM(FPSTR(TCONST_0039), myLamp.setMicScale(scale));
+    SETPARAM(FPSTR(TCONST_003A), myLamp.setMicNoise(noise));
+    SETPARAM(FPSTR(TCONST_003B), myLamp.setMicNoiseRdcLevel(rdl));
 
     section_settings_frame(interf, data);
 }
@@ -2330,12 +2336,6 @@ void sync_parameters(){
     set_mp3flag(nullptr, &obj);
     obj.clear();
 
-    // sysTicker.once(5,std::bind([]{
-    //     //mp3->setVolume(volume)
-    //     DynamicJsonDocument doc(256);
-    //     JsonObject obj = doc.to<JsonObject>();
-    //     CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
-    // }));
     CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
 
 #endif
@@ -2345,9 +2345,6 @@ void sync_parameters(){
 #endif
 
     myLamp.setClearingFlag(tmp.isEffClearing);
-
-// do{ yield(); } while (1==0);
-// ниже возникает wdt reset при включенной build_type = debug - причина неустановлена
 
 #ifdef ESP_USE_BUTTON
     // в отдельном классе, в список флагов лампы не входит!
@@ -2392,14 +2389,15 @@ void sync_parameters(){
     set_micflag(nullptr, &obj);
     obj.clear();
 
-    obj[FPSTR(TCONST_0039)] = embui.param(FPSTR(TCONST_0039));
-    obj[FPSTR(TCONST_003A)] = embui.param(FPSTR(TCONST_003A));
+    obj[FPSTR(TCONST_0039)] = atof(embui.param(FPSTR(TCONST_0039)).c_str());
+    obj[FPSTR(TCONST_003A)] = atof(embui.param(FPSTR(TCONST_003A)).c_str());
     obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B));
     set_settings_mic(nullptr, &obj);
     obj.clear();
 #endif
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
+    LOG(println, F("sync_parameters() done"));
 }
 
 void remote_action(RA action, ...){

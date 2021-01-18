@@ -793,13 +793,14 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
 void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
 {
   File indexFile;
-  String sourcedir(F("/eff"));
+  String sourcedir("");
   makeIndexFile(tofolder); // создать дефолтный набор прежде всего
 
   if (fromfolder != nullptr) {
       sourcedir.concat(F("/"));
       sourcedir.concat(fromfolder);
   }
+  sourcedir.concat(F("/eff"));
 
 #ifdef ESP8266
   Dir dir = LittleFS.openDir(sourcedir);

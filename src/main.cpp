@@ -112,6 +112,7 @@ void setup() {
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
+    LOG(println, F("setup() done"));
 }   // End setup()
 
 void loop() {
