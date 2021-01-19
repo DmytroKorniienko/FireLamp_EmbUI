@@ -37,9 +37,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "main.h"
 #include "buttons.h"
-// #ifdef USE_FTP
+#ifdef USE_FTP
   #include "ftpSrv.h"
-// #endif
+#endif
 
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
@@ -78,9 +78,9 @@ void setup() {
     myLamp.events.loadConfig();
     myLamp.lamp_init(embui.param(F("CLmt")).toInt());
 
-// #ifdef USE_FTP
+#ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
-// #endif
+#endif
 
 #ifdef ESP_USE_BUTTON
     myLamp.setbPin(embui.param(F("PINB")).toInt());
@@ -117,9 +117,9 @@ void loop() {
     myLamp.handle(); // цикл, обработка лампы
     // эта функция будет слать периодическую информацию, но позже, когда до этого руки дойдут
     sendData(); // цикл отправки данных по MQTT
-// #ifdef USE_FTP
+#ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
-// #endif
+#endif
 }
 
 ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
