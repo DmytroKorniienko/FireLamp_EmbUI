@@ -650,7 +650,7 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #endif
     interf->json_section_end();
 #ifdef MP3PLAYER
-    interf->json_section_line("");
+    interf->json_section_line("line124"); // спец. имя - разбирается внутри html
     if(mp3->isMP3Mode()){
         interf->button(FPSTR(TCONST_00BE), FPSTR(TINTF_0BD), FPSTR(TCONST_0008));
         interf->button(FPSTR(TCONST_00BF), FPSTR(TINTF_0BE), FPSTR(TCONST_0008));
