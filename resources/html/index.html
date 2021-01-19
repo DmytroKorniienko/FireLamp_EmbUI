@@ -89,8 +89,8 @@
 	</script>
 
 	<script type="text/html" id="tmpl_content">
-		{{#if _this.line && _this.name != "line124"}}<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">{{/if}}
-		{{#if _this.line && _this.name == "line124"}}<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-lg-1-4{{/if2}}">{{/if}}
+		{{#if _this.line && _this.section!="line124"}}<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">{{/if}}
+		{{#if _this.line && _this.section=="line124"}}<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-lg-1-4{{/if2}}">{{/if}}
 		{{#if !_this.line}}<div class="pure-u-1" {{#if2 html == "hidden"}}style="display:hidden;"{{/if2}}>{{/if}}
 		{{#if html == "hidden"}}
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
@@ -162,8 +162,8 @@
 		{{#if html == "iframe2"}}
 			<div class="frame"><iframe id="{{id}}" name="{{id}}" src="{{value}}" class="iframe">iframe does not supported</iframe></div>
 		{{/if}}
-		<!-- This is custom drawing control -->
 		{{#if html == "custom" && type == "drawing"}}
+		<!-- This is custom drawing control -->
 			<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">
 				<span>{{label}}</span><span id="{{id}}-val"> ({{value}})</span>
 				<input type="color" id="{{id}}-c" class="pure-u-1" value="{{value}}" style="height: 35px; margin-top: 15px" {{onevent "input", "on_input", id}}>
@@ -175,8 +175,8 @@
 			<div>
 				<table id="{{id}}-tbl" class="draw_ctrl"></table> <img src onerror='init_draw("{{id}}", {{param.width}}, {{param.height}})'">
 			</div>
-		{{/if}}
 		<!-- This is custom drawing control -->
+		{{/if}}
 		</div>
 	</script>
 
