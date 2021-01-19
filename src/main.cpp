@@ -37,11 +37,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "main.h"
 #include "buttons.h"
-#ifdef USE_FTP
-  #ifdef ESP8266
-     #include "ftpSrv.h"
-  #endif
-#endif
+// #ifdef USE_FTP
+  #include "ftpSrv.h"
+// #endif
 
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
@@ -80,11 +78,9 @@ void setup() {
     myLamp.events.loadConfig();
     myLamp.lamp_init(embui.param(F("CLmt")).toInt());
 
-#ifdef USE_FTP
-  #ifdef ESP8266
+// #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
-  #endif
-#endif
+// #endif
 
 #ifdef ESP_USE_BUTTON
     myLamp.setbPin(embui.param(F("PINB")).toInt());
@@ -106,8 +102,8 @@ void setup() {
 
 #ifdef ESP8266
   embui.server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
-  sync_parameters();        // где-то ошибка в порядке инициализации эффектов, есп32 тут падает
 #endif
+  sync_parameters();        // где-то ошибка в порядке инициализации эффектов, есп32 тут падает
 
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
@@ -121,11 +117,9 @@ void loop() {
     myLamp.handle(); // цикл, обработка лампы
     // эта функция будет слать периодическую информацию, но позже, когда до этого руки дойдут
     sendData(); // цикл отправки данных по MQTT
-#ifdef USE_FTP
- #ifdef ESP8266
+// #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
- #endif
-#endif
+// #endif
 }
 
 ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
