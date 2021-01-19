@@ -102,8 +102,10 @@ void setup() {
 
 #ifdef ESP8266
   embui.server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
+#else
+  embui.server.addHandler(new SPIFFSEditor(LittleFS, F("esp32"), F("esp32")));
 #endif
-  sync_parameters();        // где-то ошибка в порядке инициализации эффектов, есп32 тут падает
+  sync_parameters();        // падение есп32 не воспоизводится, kDn
 
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
