@@ -13,8 +13,8 @@ class DRAW_CTRL {
 
     for(var i=0; i<this.width; i++){
       ihtml += "<tr>"
-      for(var j=0; j<this.height; j++){ // ontouchstart=\"startsel(this.id)\" ontouchmove=\"movesel(this.id)\" 
-        ihtml += "<td class=\"dc_cells\" id=\"c"+(this.width-i-1)+"_"+j+"\" onmousedown=\"startsel(this.id)\" onmouseover=\"movesel(this.id)\" onmouseup=\"endsel(this.id)\" ></td>"
+      for(var j=0; j<this.height; j++){
+        ihtml += "<td class=\"dc_cells\" id=\"c"+(this.width-i-1)+"_"+j+"\"></td>"
       }
       ihtml += "</tr>"
     }
@@ -104,6 +104,60 @@ function sendpost(obj_id){
     ws.send_post(data);
 }
 
+function onTouch(evt) {
+  evt.preventDefault();
+  if (evt.touches.length > 1 || (evt.type == "touchend" && evt.touches.length > 0))
+    return;
+
+var touch = evt.changedTouches[0];
+var xpos = Math.trunc(draw_ctrl.height-(touch.pageY-evt.currentTarget.offsetTop)*(draw_ctrl.height/evt.currentTarget.clientHeight));
+var ypos = Math.trunc((touch.pageX-evt.currentTarget.offsetLeft)*(draw_ctrl.width/evt.currentTarget.clientWidth));
+var cell_id="c"+xpos+"_"+ypos;
+
+  switch (evt.type) {
+    case "touchstart":
+      starttouch(cell_id);
+      break;
+    case "touchmove":
+      touchsel(cell_id);
+      break;
+    case "touchend":
+      break;
+  }
+//console.log(evt.target.id, xpos, ypos, cell_id);
+}
+
+function onMouse(evt) {
+  evt.preventDefault();
+  var cell_id=evt.target.id; //"c"+xpos+"_"+ypos;
+  if(draw_ctrl.ctrl+'-tbl'==cell_id)
+	return;
+
+  switch (evt.type) {
+    case "mousedown":
+      startsel(cell_id);
+      break;
+    case "mouseover":
+      movesel(cell_id);
+      break;
+    case "mouseup":
+      endsel(cell_id);
+      break;
+  }
+//console.log(evt.target.id);
+}
+
+
+function starttouch(obj_id) {
+  draw_ctrl.ispressed = true
+  startsel(obj_id);
+}
+
+function touchsel(obj_id) {
+  draw_ctrl.ispressed = true;
+  movesel(obj_id);
+}
+
 function init_draw(obj_id, width, height){
   var tbl = document.getElementById(obj_id+'-tbl');
   draw_ctrl.selcolor = document.getElementById(obj_id+'-c').value;
@@ -112,12 +166,22 @@ function init_draw(obj_id, width, height){
   draw_ctrl.height = height;
 
   tbl.style.height = tbl.parentElement.clientWidth * (draw_ctrl.height/draw_ctrl.width) +"px";
+  tbl.style.width = tbl.parentElement.clientWidth;
   tbl.innerHTML = draw_ctrl.getdrawhtml;
+  tbl.addEventListener("touchstart", onTouch, false);
+  tbl.addEventListener("touchend", onTouch, false);
+  tbl.addEventListener("touchcancel", onTouch, false);
+  tbl.addEventListener("touchmove", onTouch, false);
+
+  tbl.addEventListener("mousedown", onMouse, false);
+  tbl.addEventListener("mouseup", onMouse, false);
+  tbl.addEventListener("mouseover", onMouse, false);
+
 }
 
 function startsel(obj_id) {
   var elem = document.getElementById(obj_id);
-  elem.draggable=false;
+
   var elemColor = draw_ctrl.selcolor;
   if (elemColor.slice(0, 1) === '#') elemColor = hexToRgb(elemColor);
   
@@ -133,6 +197,7 @@ function startsel(obj_id) {
   }
   elem.style.backgroundColor = draw_ctrl.color;
 }
+
 
 function movesel(obj_id) {
   if(!draw_ctrl.ispressed) return;

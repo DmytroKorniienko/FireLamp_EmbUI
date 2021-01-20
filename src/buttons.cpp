@@ -155,7 +155,7 @@ void Buttons::buttonPress(bool state){
 }
 
 void Buttons::buttonTick(){
-	//if (!buttonEnabled) return;
+	if (!buttonEnabled) return;
 	
 	static bool startLampState = myLamp.isLampOn();
 	
