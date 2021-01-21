@@ -1281,12 +1281,15 @@ void block_settings_mic(Interface *interf, JsonObject *data){
         interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
         interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
         interf->range(FPSTR(TCONST_003B), (int)myLamp.getMicNoiseRdcLevel(), 0, 4, (float)1.0, FPSTR(TINTF_024), false);
-    }
-    interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(TCONST_0008));
-    interf->json_section_end();
 
-    interf->spacer();
-    interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), myLamp.isMicCalibration()? FPSTR(TCONST_0008) : FPSTR(TCONST_000C));
+        interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+        interf->json_section_end();
+
+        interf->spacer();
+        interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), FPSTR(TCONST_000C));
+    } else {
+        interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_027), FPSTR(TCONST_000C) );
+    }
 
     interf->spacer();
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
