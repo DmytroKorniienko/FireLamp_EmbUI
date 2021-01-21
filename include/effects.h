@@ -2288,6 +2288,53 @@ public:
 
 }; 
 
+// **************** Эффект "ТЕТРИС"
+#define FAST_SPEED 20     // скорость падения при удержании "вниз" (меньше - быстрее)
+#define STEER_SPEED 40    // скорость перемещения в бок при удержании кнопки (меньше - быстрее)
+#define FULL_SCREEN 1     // 0 - ширина стакана равна его высоте; 1 - тетрис на всю ширину экрана
+#define D_GAME_SPEED 50U
+
+// --------------------- ДЛЯ РАЗРАБОТЧИКОВ ----------------------
+#define ADD_COLOR 0x010101
+class EffectTetris : public EffectCalc {
+private:
+
+    int8_t fig = 0, ang = 0, pos = WIDTH / 2, height = HEIGHT - 1;
+    int8_t prev_ang, prev_pos, prev_height;
+    uint32_t colors[6] {0x0000EE, 0xEE0000, 0x00EE00, 0x00EEEE, 0xEE00EE, 0xEEEE00};
+    uint32_t color = 0x000088;
+    byte color_index;
+    byte linesToClear;
+    boolean down_flag = true;
+    byte lineCleanCounter;
+    byte left_offset, right_offset;
+    bool loadingFlag = true;
+    bool gameOverFlag = false;
+    bool gameDemo = true;
+    bool gamePaused = false;
+    uint8_t buttons;
+
+    timerMinim gameTimer = D_GAME_SPEED;         // Таймер скорости игр
+
+    void checkTetrisButtons(); //
+    void checkAndClear();  //
+    void fixFigure();  //
+    void gameOverTetris(); //
+    void newGameTetris(); //
+    void stepRight();  //
+    void stepLeft();  //
+    bool checkArea(int8_t check_type); //
+    void redrawFigure(int8_t clr_ang, int8_t clr_pos, int8_t clr_height);  //
+    void drawFigure(byte figure, byte angle, byte x, byte y, uint32_t color); //
+
+    //void setDynCtrl(UIControl*_val) override;
+    void setspd(const byte _spd) override; // перегрузка для скорости
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+}; 
+
 // --------- конец секции эффектов
 
 class EffectWorker {
