@@ -27,11 +27,11 @@ echo "Preparing resources for FireLamp FS image into ../data/ dir"
 mkdir -p ../data/css ../data/js ../data/extras ../data/login
 
 # собираем скрипты и стили из репозитория EmbUI (используется dev ветка, при формировании выпусков пути нужно изменить)
-if freshtag https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip ; then
+if [ ! -f embui.zip ] || freshtag https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip ; then
     echo "Updating EmbUI resources"
     curl -sL https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip > embui.zip
     unzip -uo -d ../data/ embui.zip "css/*" "js/*"
-    rm embui.zip
+    #rm embui.zip
 else
     echo "EmbUI is up to date"
 fi
@@ -39,6 +39,14 @@ fi
 # добавляем скрипты/стили лампы
 cat html/css/custom_drawing.css | gzip -9 > ../data/css/lamp.css.gz
 cat html/js/drawing.js | gzip -9 > ../data/js/lamp.js.gz
+
+cp -u html/css/pure-min_*.css ../data/css
+unzip -o -d ../data/ embui.zip "css/style_*.gz"
+gzip -d ../data/css/style_*.gz
+cat ../data/css/*_dark.css | gzip -9 > ../data/css/style_dark.css.gz
+cat ../data/css/*_light.css | gzip -9 > ../data/css/style_light.css.gz
+rm ../data/css/*_dark.css
+rm ../data/css/*_light.css
 
 # update static files if newer
 [ html/index.html -nt ../data/index.html.gz ] && gzip -9k html/index.html && mv -f html/index.html.gz ../data/
