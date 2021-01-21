@@ -86,7 +86,7 @@ do
     if [ ! -f ../data/login/$( basename $f ).gz ] || [ $f -nt ../data/login/$( basename $f ).gz ] ; then
         gzip -f9k $f
         mv -f $f.gz ../data/login/
-    fiEmbUI
+    fi
 done
 
 mv -f newetags.txt $tags
