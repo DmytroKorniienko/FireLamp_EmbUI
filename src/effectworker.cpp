@@ -169,6 +169,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_TETRIS :
     worker = std::unique_ptr<EffectTetris>(new EffectTetris());
     break;
+  case EFF_ENUM::EFF_ARCANOID :
+    worker = std::unique_ptr<EffectArcanoid>(new EffectArcanoid());
+    break;
   case EFF_ENUM::EFF_SMOKE :
     worker = std::unique_ptr<EffectMStreamSmoke>(new EffectMStreamSmoke());
     break;

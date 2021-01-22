@@ -2288,7 +2288,7 @@ public:
 
 }; 
 
-// **************** Эффект "ТЕТРИС"
+// **************** Эффект-игра "ТЕТРИС"
 #define FAST_SPEED 20     // скорость падения при удержании "вниз" (меньше - быстрее)
 #define STEER_SPEED 40    // скорость перемещения в бок при удержании кнопки (меньше - быстрее)
 #define FULL_SCREEN 1     // 0 - ширина стакана равна его высоте; 1 - тетрис на всю ширину экрана
@@ -2335,6 +2335,64 @@ public:
 
 }; 
 
+
+// ---------- Эффект-игра "Арканоид"
+#define SHELF_LENGTH 5    // длина полки
+#define VELOCITY 5        // скорость шара
+#define BALL_SPEED 50     // период интегрирования
+
+#define BLOCKS_H 4        // высота кучи блоков
+#define LINE_NUM 8        // количество "линий" с блоками других уровней
+#define LINE_MAX 4        // макс. длина линии
+
+// цвета блоков по крутости
+#define BLOCK_COLOR_1 CRGB::Aqua
+#define BLOCK_COLOR_2 CRGB::Amethyst
+#define BLOCK_COLOR_3 CRGB::Blue
+class EffectArcanoid : public EffectCalc {
+private:
+    int posX_ark;
+    int posY_ark;
+    int8_t velX_ark = 3;
+    int8_t velY_ark = (long)sqrt(sq(VELOCITY) - sq(velX_ark));
+    int8_t shelf_x = WIDTH / 2 - SHELF_LENGTH / 2;
+    byte shelfMAX = WIDTH - SHELF_LENGTH;
+    int arkScore;
+    int lastSpeed;
+
+
+    bool loadingFlag = true;
+    bool gameOverFlag = false;
+    bool gameDemo = true;
+    bool gamePaused = false;
+    uint8_t buttons;
+
+    timerMinim gameTimer = D_GAME_SPEED;         // Таймер скорости игр
+    timerMinim popTimeout = 500;
+    timerMinim shelfTimer = 150;
+
+
+    void newGameArkan(); 
+    bool checkBlocks();
+    void redrawBlock(byte blockX, byte blockY);
+    void generateBlocks();
+    void gameOverArkan();
+    void shelfRight();
+    void shelfLeft();
+    bool checkButtons()
+    {
+        if (buttons != 4)
+            return true;
+        return false;
+    }
+
+    //void setDynCtrl(UIControl*_val) override;
+    //void setspd(const byte _spd) override; // перегрузка для скорости
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+}; 
 // --------- конец секции эффектов
 
 class EffectWorker {

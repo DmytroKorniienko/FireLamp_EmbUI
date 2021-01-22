@@ -323,7 +323,7 @@ EFF_RADAR,                                    // Радар
 EFF_WAVES,                                    // Волны
 EFF_FIRE2012,                                 // Огонь 2012
 EFF_TETRIS,                                   // ТЕТРИС
-EFF_NONE03,                                   // Пусто
+EFF_ARCANOID,                                 // АРКАНОИД
 EFF_DNA,                                      // ДНК
 EFF_FIRE2018,                                 // Огонь 2018
 EFF_RINGS,                                    // Кодовый замок
@@ -370,7 +370,7 @@ EFF_TIME = (253U)                             // Часы (служебный, �
 static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_005, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
   TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
-  TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_000, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
+  TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
   TEFF_064, TEFF_000, TEFF_000, TEFF_000, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
@@ -396,7 +396,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
 static const uint8_t T_EFFVER[] PROGMEM = {
   3, 4, 6, 4, 4, 5, 3, 3, 7, 5, 5, 6, 5, 9, 5, 8, // 0-15
   5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 5, 5, // 16-31
-  5, 5, 5, 3, 7, 3, 4, 1, 0, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
+  5, 5, 5, 3, 7, 3, 4, 1, 1, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
   5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 9, 5, 5, 7, 6, // 48 - 63
   5, 0, 0, 0, 4, 5, 7, 5, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
@@ -1199,6 +1199,10 @@ const uint8_t CENTER_Y_MINOR = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01); // цент
 const uint8_t CENTER_X_MAJOR =   WIDTH / 2  + (WIDTH % 2);           // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
 const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
 
+
+#define  GLOBAL_COLOR_1 CRGB::Green         // основной цвет №1 для игр
+#define  GLOBAL_COLOR_2 CRGB::Orange        // основной цвет №2 для игр
+// Эффект Тетрис
 // самая важная часть программы! Координаты пикселей фигур
 //  0 - палка
 //  1 - кубик
@@ -1208,7 +1212,6 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 //  5 - Z обратная
 //  6 - Т
 
-// Эффект Тетрис
 const int8_t figures[7][12][2] PROGMEM = {
   {
     { -1, 0}, {1, 0}, {2, 0},
@@ -1254,3 +1257,16 @@ const int8_t figures[7][12][2] PROGMEM = {
   }
 };
 
+// **************** НАСТРОЙКИ ARKAN ****************
+#define SHELF_LENGTH 5    // длина полки
+#define VELOCITY 5        // скорость шара
+#define BALL_SPEED 50     // период интегрирования
+
+#define BLOCKS_H 4        // высота кучи блоков
+#define LINE_NUM 8        // количество "линий" с блоками других уровней
+#define LINE_MAX 4        // макс. длина линии
+
+// цвета блоков по крутости
+#define BLOCK_COLOR_1 CRGB::Aqua
+#define BLOCK_COLOR_2 CRGB::Amethyst
+#define BLOCK_COLOR_3 CRGB::Blue
