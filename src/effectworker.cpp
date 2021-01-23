@@ -244,6 +244,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_NEXUS :
     worker = std::unique_ptr<EffectNexus>(new EffectNexus());
     break;
+  case EFF_ENUM::EFF_MAZE :
+    worker = std::unique_ptr<EffectMaze>(new EffectMaze());
+    break;
   case EFF_ENUM::EFF_FLOWER :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());
     break;

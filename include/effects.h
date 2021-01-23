@@ -2360,14 +2360,13 @@ private:
     int arkScore;
     int lastSpeed;
 
-
     bool loadingFlag = true;
     bool gameOverFlag = false;
     bool gameDemo = true;
     bool gamePaused = false;
     uint8_t buttons;
 
-    timerMinim gameTimer = D_GAME_SPEED;         // Таймер скорости игр
+    timerMinim gameTimer = 127;         // Таймер скорости игр
     timerMinim popTimeout = 500;
     timerMinim shelfTimer = 150;
 
@@ -2389,10 +2388,55 @@ private:
     //void setDynCtrl(UIControl*_val) override;
     //void setspd(const byte _spd) override; // перегрузка для скорости
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 
 }; 
+
+// ---------- Эффект-игра "Лабиринт"
+class EffectMaze : public EffectCalc {
+private:
+    const uint16_t maxSolves = MAZE_WIDTH * MAZE_WIDTH * 5;
+    char *maze = (char*)malloc(MAZE_WIDTH * MAZE_HEIGHT * sizeof(char));
+    int8_t playerPos[2];
+    uint32_t labTimer;
+    bool mazeMode = false;
+    bool mazeStarted = false;
+    uint8_t hue;
+    CRGB color;
+    CRGB playerColor = CRGB::White;
+
+    bool loadingFlag = true;
+    bool gameOverFlag = false;
+    bool gameDemo = true;
+    bool gamePaused = false;
+    bool track = random8(0,2);  // будет ли трек игрока
+    uint8_t buttons;
+
+    timerMinim gameTimer = 200;         // Таймер скорости игр
+
+    void newGameMaze();
+    void buttonsTickMaze();
+    void movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY);
+    void demoMaze();
+    bool checkPath(int8_t x, int8_t y);
+    void CarveMaze(char *maze, int width, int height, int x, int y);
+    void GenerateMaze(char *maze, int width, int height);
+    void SolveMaze(char *maze, int width, int height);
+
+    bool checkButtons()
+    {
+        if (buttons != 4)
+            return true;
+        return false;
+    }
+
+    //void setDynCtrl(UIControl*_val) override;
+    void setspd(const byte _spd) override; // перегрузка для скорости
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+}; 
+
 // --------- конец секции эффектов
 
 class EffectWorker {
