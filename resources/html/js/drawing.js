@@ -11,10 +11,10 @@ class DRAW_CTRL {
   get getdrawhtml() {
     var ihtml = "";
 
-    for(var i=0; i<this.width; i++){
+    for(var i=0; i<this.height; i++){
       ihtml += "<tr>"
-      for(var j=0; j<this.height; j++){
-        ihtml += "<td class=\"dc_cells\" id=\"c"+(this.width-i-1)+"_"+j+"\"></td>"
+      for(var j=0; j<this.width; j++){
+        ihtml += "<td class=\"dc_cells\" id=\"c"+(this.height-i-1)+"_"+j+"\"></td>"
       }
       ihtml += "</tr>"
     }
@@ -74,8 +74,8 @@ function custom_hook(tid, d, id){
 	    if (elemColor === '#000000') elemColor = "";
 	    //if (elemColor.slice(0, 1) === '#') elemColor = hexToRgb(elemColor);
  
-	    for(var i=0; i<draw_ctrl.width; i++){
-	      for(var j=0; j<draw_ctrl.height; j++){
+	    for(var i=0; i<draw_ctrl.height; i++){
+	      for(var j=0; j<draw_ctrl.width; j++){
 		elem = document.getElementById("c"+i+"_"+j);
 		elem.style.backgroundColor = elemColor;
 	      }
