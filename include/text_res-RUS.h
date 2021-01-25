@@ -280,9 +280,9 @@ static const char TINTF_04E[] PROGMEM = "Новогоднее поздравле
 static const char TINTF_04F[] PROGMEM = "Период вывода в минутах (0 - не выводить)";
 static const char TINTF_050[] PROGMEM = "Дата/время нового года в формате YYYY-MM-DDThh:mm";
 static const char TINTF_051[] PROGMEM = "Время";
-static const char TINTF_052[] PROGMEM = "Правила TZSET учета поясного/сезонного времени (напр 'MSK-3' для Europe/Moscow) Нужную строку можно взять тут https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h";
-static const char TINTF_053[] PROGMEM = "правило TZone (рекоммендуется задать!)";
-static const char TINTF_054[] PROGMEM = "резервный NTP-сервер (не обязательно)";
+static const char TINTF_052[] PROGMEM = "Правила TZSET учёта поясного/сезонного времени (напр 'MSK-3' для Europe/Moscow) \r Нужную строку можно взять <a href=\"https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h\">тут</a>"; 
+static const char TINTF_053[] PROGMEM = "Правило TZone (рекоммендуется задать!)";
+static const char TINTF_054[] PROGMEM = "Резервный NTP-сервер (не обязательно)";
 static const char TINTF_055[] PROGMEM = "Дата/время в формате YYYY-MM-DDThh:mm:ss (без интернета, если пусто - время с устройства)";
 static const char TINTF_056[] PROGMEM = "Обновление";
 static const char TINTF_057[] PROGMEM = "Обновление по ОТА-PIO";

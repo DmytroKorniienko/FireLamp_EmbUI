@@ -280,7 +280,7 @@ static const char TINTF_04E[] PROGMEM = "New Year greeting";
 static const char TINTF_04F[] PROGMEM = "Show period, minutes (0 - do not output)";
 static const char TINTF_050[] PROGMEM = "New Year's Date/Time at format YYYY-MM-DDThh:mm";
 static const char TINTF_051[] PROGMEM = "Time";
-static const char TINTF_052[] PROGMEM = "TZset rules for zone/seasonal time accounting (e.g. 'GMT0BST,M3.5.0/1,M10.5.0' for Europe/London). You can get the required line here https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h";
+static const char TINTF_052[] PROGMEM = "TZset rules for zone/seasonal time accounting (e.g. 'GMT0BST,M3.5.0/1,M10.5.0' for Europe/London). You can get the required line <a href=\"https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h\">here</a>";
 static const char TINTF_053[] PROGMEM = "TimeZone rule (it is recommended to set!)";
 static const char TINTF_054[] PROGMEM = "Spare NTP server (optional)";
 static const char TINTF_055[] PROGMEM = "Date/Time, YYYY-MM-DDThh:mm:ss (without internet connection, if empty - from device)";
