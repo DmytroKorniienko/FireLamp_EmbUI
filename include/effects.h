@@ -2580,6 +2580,7 @@ public:
         {
             if(to->eff_nb==curEff){
                 effectName=name;
+                saveeffconfig(curEff);
             }
             else {
                 EffectWorker *tmp=new EffectWorker(to);
