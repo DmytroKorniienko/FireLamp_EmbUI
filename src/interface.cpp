@@ -252,6 +252,15 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
                 delayedcall_effects_main();
             }));
+        } else {
+#ifndef DELAYED_EFFECTS
+            sysTicker.once(5,std::bind([]{
+#else
+            sysTicker.once(1,std::bind([]{
+#endif
+                myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
+                delayedcall_effects_main();
+            }));
         }
         section_main_frame(interf, data);
         return;
