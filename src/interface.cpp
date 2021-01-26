@@ -243,14 +243,16 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         tmpStr+=String(tmpEffnb);
         myLamp.sendString(tmpStr.c_str(), CRGB::Red);
         //confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
+        if(isCfgRemove){
 #ifndef DELAYED_EFFECTS
-        sysTicker.once(5,std::bind([]{
+            sysTicker.once(5,std::bind([]{
 #else
-        sysTicker.once(1,std::bind([]{
+            sysTicker.once(1,std::bind([]{
 #endif
-            myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-            delayedcall_effects_main();
-        }));
+                myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
+                delayedcall_effects_main();
+            }));
+        }
         section_main_frame(interf, data);
         return;
     } else if (act == FPSTR(TCONST_000B)) {
