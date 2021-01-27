@@ -38,29 +38,33 @@ fi
 # проверяем есть ли в лампе обновленные стили для тем embui
 for f in html/css/style_*.css
 do
-    [ $f -nt ../data/css/$( basename $f).gz ] && refresh_styles=1
+    [ ! -f ../data/css/$( basename $f).gz ] || [ $f -nt ../data/css/$( basename $f).gz ] && refresh_styles=1
 done
 
-# if any of the уьигш styles needs updatiing, than we need to repack both embui and local files
+# if any of the styles needs updating, than we need to repack both embui and local files
 if [ $refresh_styles -eq 1 ] ; then
 
     echo "refreshing embui css files..."
 
     curl -sL https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip > embui.zip
+    # т.к. неизвестно что изменилось во фреймворке, скрипты или цсски, обновляем всё
     unzip -o -d ../data/ embui.zip "css/*" "js/*"
 
     # append our styles to the embui
     for f in html/css/style_*.css
     do
-        cat $f | gzip -9 >> ../data/css/$( basename $f).gz
+        gzip -d ../data/css/$( basename $f).gz
+        cat $f >> ../data/css/$( basename $f)
+        gzip -9 ../data/css/$( basename $f)
+        touch -r $f ../data/css/$( basename $f).gz
     done
 
     rm -f embui.zip
 fi
 
 # обновляем скрипты/стили специфичные для лампы
-[ ! -f ../data/css/lamp.css.gz ] || [ html/css/custom_drawing.css -nt ../data/css/lamp.css.gz ] && cat html/css/custom_drawing.css | gzip -9k >> ../data/css/lamp.css.gz
-[ ! -f ../data/js/lamp.js.gz ] || [ html/js/drawing.js -nt ../data/js/lamp.js.gz ] && cat html/js/drawing.js | gzip -9k >> ../data/js/lamp.js.gz
+[ ! -f ../data/css/lamp.css.gz ] || [ html/css/custom_drawing.css -nt ../data/css/lamp.css.gz ] && gzip -9k html/css/custom_drawing.css && mv -f html/css/custom_drawing.css.gz ../data/css/lamp.css.gz
+[ ! -f ../data/js/lamp.js.gz ]   || [ html/js/drawing.js -nt ../data/js/lamp.js.gz ] && gzip -9k html/js/drawing.js mv -f html/js/drawing.js.gz ../data/js/lamp.js.gz
 
 # update static files if newer
 [ ! -f ../data/index.html.gz ]  || [ html/index.html -nt ../data/index.html.gz ] && gzip -9k html/index.html && mv -f html/index.html.gz ../data/
@@ -78,9 +82,11 @@ if [ $(freshtag https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconfl
    [ $(freshtag https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-json.js) ] ; then
 
         echo "Updating AceEditor resources"
-        curl -sL "https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/ace.js" | gzip -9 > ../data/extras/acefull.js.gz
-        curl -sL "https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-html.js" | gzip -9 >> ../data/extras/acefull.js.gz
-        curl -sL "https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-json.js" | gzip -9 >> ../data/extras/acefull.js.gz
+        curl -sL "https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/ace.js" > ../data/extras/acefull.js
+        curl -sL "https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-html.js" >> ../data/extras/acefull.js
+        curl -sL "https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-json.js" >> ../data/extras/acefull.js
+        gzip -9f ../data/extras/acefull.js
+
 else
     echo "AceEditor is up to date"
 fi
