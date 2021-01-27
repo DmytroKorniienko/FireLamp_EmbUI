@@ -64,7 +64,7 @@ fi
 
 # обновляем скрипты/стили специфичные для лампы
 [ ! -f ../data/css/lamp.css.gz ] || [ html/css/custom_drawing.css -nt ../data/css/lamp.css.gz ] && gzip -9k html/css/custom_drawing.css && mv -f html/css/custom_drawing.css.gz ../data/css/lamp.css.gz
-[ ! -f ../data/js/lamp.js.gz ]   || [ html/js/drawing.js -nt ../data/js/lamp.js.gz ] && gzip -9k html/js/drawing.js mv -f html/js/drawing.js.gz ../data/js/lamp.js.gz
+[ ! -f ../data/js/lamp.js.gz ]   || [ html/js/drawing.js -nt ../data/js/lamp.js.gz ] && gzip -9k html/js/drawing.js && mv -f html/js/drawing.js.gz ../data/js/lamp.js.gz
 
 # update static files if newer
 [ ! -f ../data/index.html.gz ]  || [ html/index.html -nt ../data/index.html.gz ] && gzip -9k html/index.html && mv -f html/index.html.gz ../data/
