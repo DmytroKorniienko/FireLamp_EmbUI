@@ -1,3 +1,6 @@
+/*!
+FireLamp_JeeUI overrides for EmbUI Styles
+*/
 .pure-g [class*=pure-u]{
 	font-family:sans-serif;
 	font-weight: bold;
