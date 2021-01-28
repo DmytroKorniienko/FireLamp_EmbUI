@@ -9,7 +9,7 @@ Echo  #**************************************#
 Echo  *               Commands               *
 Echo  *--------------------------------------*
 Echo  *            Install tools             * 
-Echo  * Install Platformio CLI           - 0 *
+Echo  * Install Platformio Core CLI      - 0 *
 Echo  * Install Git for Windows          - 1 *
 Echo  *--------------------------------------*
 Echo  *       Build and upload firmware      * 
@@ -23,7 +23,7 @@ Echo  * Clean                            - 8 *
 Echo  *--------------------------------------*
 Echo  * CMD window                       - 9 *
 Echo  *--------------------------------------*
-Echo  * Clean Platformio installation    - R *
+Echo  * Remove Platformio completely     - R *
 Echo  #**************************************#
 Echo.
 Set /p choice="Your choice: "
@@ -32,21 +32,23 @@ if not defined choice goto m1
 
 if "%choice%"=="0" (start python Get-Platformio.py)
 if "%choice%"=="1" (
-if not exist "%systemdrive%\Program Files (x86)" (
-    %workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-32-bit.exe -O %TMP%\git.exe
-) else (
-    %workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-64-bit.exe -O %TMP%\git.exe
-)
-%TMP%\git.exe
-del %TMP%\git.exe
+	if not exist "%systemdrive%\Program Files (x86)" (
+		%workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-32-bit.exe -O %TMP%\git.exe
+	) else (
+		%workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-64-bit.exe -O %TMP%\git.exe
+	)
+	%TMP%\git.exe
+	del %TMP%\git.exe
 )
 
 if "%choice%"=="2" (start update-DEV-from-Git.cmd)
 if "%choice%"=="3" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266@160)
 if "%choice%"=="4" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266)
-if "%choice%"=="6" (cd %workdir%\resources\
-respack.cmd
-cd %workdir*
+if "%choice%"=="5" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp32)
+if "%choice%"=="6" (
+	cd %workdir%\resources\
+	respack.cmd
+	cd %workdir*
 )
 
 if "%choice%"=="7" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target uploadfs --environment esp8266@160)
