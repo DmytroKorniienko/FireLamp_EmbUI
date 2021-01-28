@@ -8,18 +8,28 @@ cls
 Echo  #*******************************#
 Echo  *            Commands           *
 Echo  *-------------------------------*
-Echo  * Build and upload firmware - 1 *
-Echo  * Build and upload File Sys - 2 *
-Echo  * CMD window                - 3 *
+Echo  * Install Platformio CLI    - 0 *
+Echo  * Update DEV from GitHub    - 1 *
+Echo  *-------------------------------*
+Echo  *   Build and upload firmware   * 
+Echo  * Esp8266@160               - 2 *
+Echo  * Esp8266@80                  3 *
+Echo  *-------------------------------*
+Echo  * Build and upload File Sys - 4 *
+Echo  *-------------------------------*
+Echo  * CMD window                - 5 *
 Echo  #*******************************#
 Echo.
 Set /p choice="Your choice: "
 if not defined choice goto m1
-if "%choice%"=="1" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266@160)
-if "%choice%"=="2" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target uploadfs --environment esp8266@160)
-if "%choice%"=="3" (start cmd)
+if "%choice%"=="0" (start python Get-Platformio.py)
+if "%choice%"=="1" (start update-DEV-from-Git.cmd)
+if "%choice%"=="2" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266@160)
+if "%choice%"=="3" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266)
+if "%choice%"=="4" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target uploadfs --environment esp8266@160)
+if "%choice%"=="5" (start cmd)
 Echo.
-Echo Не правильно сделан выбор задания
+Echo Choice wrong!
 Echo.
 Echo.
 pause
