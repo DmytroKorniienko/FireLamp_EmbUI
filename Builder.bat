@@ -30,7 +30,11 @@ Set /p choice="Your choice: "
 
 if not defined choice goto m1
 
-if "%choice%"=="0" (start python Get-Platformio.py)
+if "%choice%"=="0" (
+	%workdir%\resources\wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O %workdir%\get-platformio.py
+	start python %workdir%\get-platformio.py
+	del %workdir%\get-platformio.py
+)
 if "%choice%"=="1" (
 	if not exist "%systemdrive%\Program Files (x86)" (
 		%workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-32-bit.exe -O %TMP%\git.exe
@@ -52,7 +56,10 @@ if "%choice%"=="6" (
 )
 
 if "%choice%"=="7" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target uploadfs --environment esp8266@160)
-if "%choice%"=="8" (rmdir /S %workdir%\.pio)
+if "%choice%"=="8" (
+	pio system prune -f
+	rmdir /S %workdir%\.pio
+)
 if "%choice%"=="9" (start cmd)
 if "%choice%"=="R" (rmdir /S %USERPROFILE%\.platformio)
 Echo.
