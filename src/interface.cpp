@@ -935,7 +935,8 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_0028), FPSTR(TINTF_018));
 
     interf->json_section_begin(FPSTR(TCONST_0029));
-    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=F("firelamp.json"); cfg+=")";
+    String filename=embui.param(FPSTR(TCONST_002A));
+    String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=filename; cfg+=")";
 
     // проверка на наличие конфигураций
     if(LittleFS.begin()){
@@ -981,12 +982,12 @@ void block_lamp_config(Interface *interf, JsonObject *data){
                 interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
                 interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(TCONST_000C));
             interf->json_section_end(); // json_section_line
-
+            filename.clear();
             interf->spacer();
         }
     }
     interf->json_section_begin(FPSTR(TCONST_0030));
-        interf->text(FPSTR(TCONST_00CF), String(""), FPSTR(TINTF_01A), false);
+        interf->text(FPSTR(TCONST_00CF), filename, FPSTR(TINTF_01A), false);
         interf->button_submit(FPSTR(TCONST_0030), FPSTR(TINTF_01B));
     interf->json_section_end();
 
