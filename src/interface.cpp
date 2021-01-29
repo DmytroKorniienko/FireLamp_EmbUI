@@ -937,50 +937,61 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     interf->json_section_begin(FPSTR(TCONST_0029));
     String cfg(FPSTR(TINTF_018)); cfg+=" ("; cfg+=F("firelamp.json"); cfg+=")";
 
-    interf->select(FPSTR(TCONST_002A), cfg);
+    // проверка на наличие конфигураций
     if(LittleFS.begin()){
 #ifdef ESP32
-        File root = LittleFS.open(FPSTR(TCONST_002B));
-        File file = root.openNextFile();
+        File tst = LittleFS.open(FPSTR(TCONST_002B));
+        if(tst.openNextFile())
 #else
-        Dir dir = LittleFS.openDir(FPSTR(TCONST_002B));
-#endif
-        String fn;
+        Dir tst = LittleFS.openDir(FPSTR(TCONST_002B));
+        if(tst.next())
+#endif    
+        {
+            interf->select(FPSTR(TCONST_002A), cfg);
 #ifdef ESP32
-        while (file) {
-            fn=file.name();
-            if(!file.isDirectory()){
+            File root = LittleFS.open(FPSTR(TCONST_002B));
+            File file = root.openNextFile();
 #else
-        while (dir.next()) {
-            fn=dir.fileName();
+            Dir dir = LittleFS.openDir(FPSTR(TCONST_002B));
+#endif
+            String fn;
+#ifdef ESP32
+            while (file) {
+                fn=file.name();
+                if(!file.isDirectory()){
+#else
+            while (dir.next()) {
+                fn=dir.fileName();
 #endif
 
-            fn.replace(FPSTR(TCONST_002C),F(""));
-            //LOG(println, fn);
-            interf->option(fn, fn);
+                fn.replace(FPSTR(TCONST_002C),F(""));
+                //LOG(println, fn);
+                interf->option(fn, fn);
 #ifdef ESP32
-            file = root.openNextFile();
-        }
+                    file = root.openNextFile();
+                }
+            }
+#else
+            }
 #endif
+            interf->json_section_end(); // select
+
+            interf->json_section_line();
+                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(TCONST_002F));
+                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
+                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+            interf->json_section_end(); // json_section_line
+
+            interf->spacer();
         }
     }
-    interf->json_section_end();
-
-    interf->json_section_line();
-    interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(TCONST_002F));
-    interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
-    interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(TCONST_000C));
-    interf->json_section_end();
-
-    interf->json_section_end();
-
-    interf->spacer();
     interf->json_section_begin(FPSTR(TCONST_0030));
-    interf->text(FPSTR(TCONST_002A),String(""), FPSTR(TINTF_01A), false);
-    interf->button_submit(FPSTR(TCONST_0030), FPSTR(TINTF_01B));
+        interf->text(FPSTR(TCONST_00CF), String(""), FPSTR(TINTF_01A), false);
+        interf->button_submit(FPSTR(TCONST_0030), FPSTR(TINTF_01B));
     interf->json_section_end();
 
-    interf->json_section_end();
+    interf->json_section_end(); // json_section_begin
+    interf->json_section_end(); // json_section_hidden
 }
 
 void show_lamp_config(Interface *interf, JsonObject *data){
@@ -991,13 +1002,18 @@ void show_lamp_config(Interface *interf, JsonObject *data){
 }
 
 void edit_lamp_config(Interface *interf, JsonObject *data){
-    // Удаление конфигурации из ФС
-    if (!data || !data->containsKey(FPSTR(TCONST_002A))) return;
-    String name = (*data)[FPSTR(TCONST_002A)];
+    // Рбоата с конфигурациями в ФС
+    if (!data) return;
+    String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
     String act = (*data)[FPSTR(TCONST_0029)];
+
+    if(name.isEmpty() || act.isEmpty())
+        name = (*data)[FPSTR(TCONST_00CF)].as<String>();
+    LOG(printf_P, PSTR("name=%s, act=%s\n"), name.c_str(), act.c_str());
+
     if(name.isEmpty()) return;
 
-    if (act == FPSTR(TCONST_00B2)) {
+    if (act == FPSTR(TCONST_00B2)) { // удаление
         String filename = String(FPSTR(TCONST_0031)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 
@@ -1010,8 +1026,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         filename = String(FPSTR(TCONST_0033)) + name;
         if (LittleFS.begin()) LittleFS.remove(filename);
 #endif
-    } else
-    if (act == FPSTR(TCONST_002D)) {
+    } else if (act == FPSTR(TCONST_002D)) { // загрузка
         //myLamp.changePower(false);
         resetAutoTimers();
 
@@ -1039,7 +1054,11 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
             sync_parameters();
         }));
         //myLamp.changePower(true);
-    } else {
+    } else { // создание
+        if(!name.endsWith(F(".json"))){
+            name.concat(F(".json"));
+        }
+
         String filename = String(FPSTR(TCONST_0031)) + name;
         embui.save(filename.c_str(), true);
 
