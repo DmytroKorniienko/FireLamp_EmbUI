@@ -564,6 +564,9 @@ void LAMP::startOTAUpdate()
   otaManager.startOtaUpdate();
 }
 #endif
+
+typedef enum {FIRSTSYMB=1,LASTSYMB=2} SYMBPOS;
+
 bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int32_t pos, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
   static int32_t offset = (flags.MIRR_V ? 0 : WIDTH);
@@ -578,9 +581,12 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   }
 
   uint16_t i = 0, j = 0;
+  uint8_t flSymb = SYMBPOS::FIRSTSYMB; // маркер первого символа строки
   while (text[i] != '\0')
   {
-    if ((uint8_t)text[i] > 191)                           // работаем с UTF8 после префикса
+    if(text[i+1] == '\0')
+      flSymb|=SYMBPOS::LASTSYMB; // маркер последнего символа строки
+    if ((uint8_t)text[i] > 191)  // работаем с UTF8 после префикса
     {
       bcount = (uint8_t)text[i]; // кол-во октетов для UTF-8
       i++;
@@ -588,12 +594,13 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
     else
     {
       if(!flags.MIRR_V)
-        drawLetter(bcount, text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+        drawLetter(bcount, text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight, flSymb);
       else
-        drawLetter(bcount, text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+        drawLetter(bcount, text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight, flSymb);
       i++;
       j++;
       bcount = 0;
+      flSymb &= (0xFF^SYMBPOS::FIRSTSYMB); // сбросить маркер первого символа строки
     }
   }
 
@@ -613,7 +620,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   return false;
 }
 
-void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight, uint8_t flSymb)
 {
   uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
@@ -630,18 +637,32 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
     finish_pos = (uint16_t)(WIDTH - offset);
   }
 
+  start_pos++; finish_pos++;
+
+  if(flSymb){
+      if(flSymb&SYMBPOS::FIRSTSYMB){ // битовое &
+        start_pos--; // c 0 для самого первого символа
+        //offset--;
+      }
+      if(flSymb&SYMBPOS::LASTSYMB && !letSpace){ // битовое &
+        finish_pos++; // доп. ряд погашенных символов для последнего символа
+      }
+  }
+
+  //LOG(printf_P, PSTR("%d %d\n"), start_pos, finish_pos);
+
   for (uint16_t i = start_pos; i < finish_pos; i++)
   {
-    uint8_t thisByte;
+    uint8_t thisByte, xpos = (i ? i - 1 : i);
 
-    if((finish_pos - i <= letSpace) || ((letWidth - 1 - i)<0))
+    if((xpos==i) || (finish_pos - xpos <= letSpace) || ((letWidth - 1 - xpos)<0))
       thisByte = 0x00;
     else
     {
-      thisByte = getFont(bcount, letter, i);
+      thisByte = getFont(bcount, letter, xpos);
     }
 
-    for (uint16_t j = 0; j < letHeight; j++)
+    for (uint16_t j = 0; j < letHeight + 1; j++) // +1 доп. пиксель сверху
     {
       bool thisBit = thisByte & (1 << (letHeight - 1 - j));
 
