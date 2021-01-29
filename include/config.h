@@ -110,6 +110,9 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifdef MP3PLAYER
+#ifdef ESP32
+ #error ESP32 with DfPlayer is not (yet) supported due to softwareserial dependency (to be fixed)
+#endif
 #ifndef MP3_TX_PIN
 #define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
 #endif
