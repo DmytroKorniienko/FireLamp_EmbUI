@@ -1321,7 +1321,10 @@ void set_settings_mic(Interface *interf, JsonObject *data){
     float noise = (*data)[FPSTR(TCONST_003A)]; //atof((*data)[FPSTR(TCONST_003A)].as<String>().c_str());
     MIC_NOISE_REDUCE_LEVEL rdl = (*data)[FPSTR(TCONST_003B)];
 
-    //LOG(printf_P, PSTR("scale=%2.3f noise=%2.3f rdl=%d\n"),scale,noise,rdl);
+    // LOG(printf_P, PSTR("scale=%2.3f noise=%2.3f rdl=%d\n"),scale,noise,rdl);
+    // String tmpStr;
+    // serializeJson(*data, tmpStr);
+    // LOG(printf_P, PSTR("*data=%s\n"),tmpStr.c_str());
 
     SETPARAM(FPSTR(TCONST_0039), myLamp.setMicScale(scale));
     SETPARAM(FPSTR(TCONST_003A), myLamp.setMicNoise(noise));
@@ -2115,7 +2118,7 @@ void save_lamp_flags(){
     JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0094)] = myLamp.getLampFlags();
     set_lamp_flags(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 }
 
 /**
@@ -2291,23 +2294,23 @@ void sync_parameters(){
 
     obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_drawflag(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
 #ifdef LAMP_DEBUG
     obj[FPSTR(TCONST_0095)] = tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_debugflag(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 #endif
 
     //LOG(printf_P,PSTR("tmp.isEventsHandled=%d\n"), tmp.isEventsHandled);
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_eventflag(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
     embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
     obj[FPSTR(TCONST_001C)] = tmp.isGlobalBrightness ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_gbrflag(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
     if (myLamp.IsGlobalBrightness()) {
         CALL_SETTER(FPSTR(TCONST_0012), embui.param(FPSTR(TCONST_0018)), set_effects_bright);
@@ -2324,7 +2327,7 @@ void sync_parameters(){
     if(!tmp.ONflag){ // иначе - после
         CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
     }
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
     if(myLamp.isLampOn())
         CALL_SETTER(FPSTR(TCONST_001B), embui.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
 #else
@@ -2343,12 +2346,12 @@ void sync_parameters(){
     obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
 
     set_settings_mp3(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
     mp3->setupplayer(myLamp.effects.getEn(), myLamp.effects.getSoundfile()); // установить начальные значения звука
     obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_mp3flag(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
     CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
 
@@ -2376,7 +2379,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0055)] = datetime;
     
     set_text_config(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
     obj[FPSTR(TCONST_004E)] = tmp.isFaderON ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_008E)] = tmp.isEffClearing ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -2392,22 +2395,27 @@ void sync_parameters(){
     obj[FPSTR(TCONST_00BB)] = alarmPT>>4;
     obj[FPSTR(TCONST_00BC)] = alarmPT&0x0F;
 
-    obj[FPSTR(TCONST_0050)] = embui.param(FPSTR(TCONST_0050));
+    SORT_TYPE type = (SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt();
+    obj[FPSTR(TCONST_0050)] = type;
 
     set_settings_other(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
 #ifdef MIC_EFFECTS
     obj[FPSTR(TCONST_001E)] = tmp.isMicOn ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     myLamp.setMicAnalyseDivider(0);
     set_micflag(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 
-    obj[FPSTR(TCONST_0039)] = atof(embui.param(FPSTR(TCONST_0039)).c_str());
-    obj[FPSTR(TCONST_003A)] = atof(embui.param(FPSTR(TCONST_003A)).c_str());
-    obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B));
+    // float scale = atof(embui.param(FPSTR(TCONST_0039)).c_str());
+    // float noise = atof(embui.param(FPSTR(TCONST_003A)).c_str());
+    // MIC_NOISE_REDUCE_LEVEL lvl=(MIC_NOISE_REDUCE_LEVEL)embui.param(FPSTR(TCONST_003B)).toInt();
+
+    obj[FPSTR(TCONST_0039)] = embui.param(FPSTR(TCONST_0039)); //scale;
+    obj[FPSTR(TCONST_003A)] = embui.param(FPSTR(TCONST_003A)); //noise;
+    obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B)); //lvl;
     set_settings_mic(nullptr, &obj);
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 #endif
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
@@ -2653,7 +2661,7 @@ void remote_action(RA action, ...){
 #endif
         default:;
     }
-    obj.clear();
+    obj.clear(); doc.garbageCollect();
 }
 
 String httpCallback(const String &param, const String &value, bool isset){

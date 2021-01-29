@@ -161,7 +161,7 @@ ICACHE_FLASH_ATTR void sendData(bool force){
     serializeJson(obj, out);
     LOG(println, out);
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
-    obj.clear();
+    obj.clear(); obj.garbageCollect();
 
     // // также отправим конфиг текущего эффекта
     // sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
