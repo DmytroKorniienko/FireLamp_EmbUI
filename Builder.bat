@@ -5,45 +5,45 @@ PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;
 echo off
 set PYTHONHOME=%USERPROFILE%\Python
 set PYTHONPATH=%USERPROFILE%\Python
-
+@chcp 1251>nul
 mode con: cols=88 lines=40
 cls
 
 :m1
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                  Commands                *  (Russian)      РљРѕРјР°РЅРґС‹                 * 
+Echo  *                  Commands                *  (Russian)      Команды                 * 
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *             Install tools                *     РЈСЃС‚Р°РЅРѕРІРєР° РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ Рё СЃСЂРµРґС‹      * 
-Echo  *  Install Python          (step 1) - (0)  *  РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Python             (РЁР°Рі 1)  * 
-Echo  *  Install Platformio Core (step 2) - (1)  *  РЈСЃС‚Р°РЅРѕРІРёС‚СЊ PIO Core           (РЁР°Рі 2)  * 
-Echo  *  Install Git for Windows (step 3) - (2)  *  РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Git                (РЁР°Рі 3)  * 
+Echo  *             Install tools                *     Установка инструментов и среды      * 
+Echo  *  Install Python          (step 1) - (0)  *  Установить Python             (Шаг 1)  * 
+Echo  *  Install Platformio Core (step 2) - (1)  *  Установить PIO Core           (Шаг 2)  * 
+Echo  *  Install Git for Windows (step 3) - (2)  *  Установить Git                (Шаг 3)  * 
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *        Build and upload firmware         *  РЎР±РѕСЂРєР° Рё Р·Р°РіСЂСѓР·РєР° РїСЂРѕС€РёРІРєРё             * 
-Echo  *  Update DEV branch from GitHub    - (3)  *  РћР±РЅРѕРІРёС‚СЊ РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ РїСЂРѕС€РёРІРєРё СЃ Git   * 
+Echo  *        Build and upload firmware         *  Сборка и загрузка прошивки             * 
+Echo  *  Update DEV branch from GitHub    - (3)  *  Обновить исходный код прошивки с Git   * 
 Echo  *                                          *                                         * 
-Echo  *  Build - Esp8266@160              - (4)  *  РЎРѕР±СЂР°С‚СЊ РґР»СЏ Esp8266 РЅР° 160РњР“С†          * 
-Echo  *  Build - Esp8266@80               - (5)  *  РЎРѕР±СЂР°С‚СЊ РґР»СЏ Esp8266 РЅР° 80РњР“С†           * 
-Echo  *  Build - Esp32                    - (6)  *  РЎРѕР±СЂР°С‚СЊ РґР»СЏ Esp32                      * 
+Echo  *  Build - Esp8266@160              - (4)  *  Собрать для Esp8266 на 160МГц          * 
+Echo  *  Build - Esp8266@80               - (5)  *  Собрать для Esp8266 на 80МГц           * 
+Echo  *  Build - Esp32                    - (6)  *  Собрать для Esp32                      * 
 Echo  *                                          *                                         * 
-Echo  *  Build and upload - Esp8266@160   - (7)  *  РЎРѕР±СЂР°С‚СЊ Рё РїСЂРѕС€РёС‚СЊ - Esp8266 РЅР° 160РњР“С†  * 
-Echo  *  Build and upload - Esp8266@80    - (8)  *  РЎРѕР±СЂР°С‚СЊ Рё РїСЂРѕС€РёС‚СЊ - Esp8266 РЅР° 80РњР“С†   * 
-Echo  *  Build and upload - Esp32         - (9)  *  РЎРѕР±СЂР°С‚СЊ Рё РїСЂРѕС€РёС‚СЊ - Esp32              * 
+Echo  *  Build and upload - Esp8266@160   - (7)  *  Собрать и прошить - Esp8266 на 160МГц  * 
+Echo  *  Build and upload - Esp8266@80    - (8)  *  Собрать и прошить - Esp8266 на 80МГц   * 
+Echo  *  Build and upload - Esp32         - (9)  *  Собрать и прошить - Esp32              * 
 Echo  *                                          *                                         * 
-Echo  *  Update FS data from framework    - (u)  *  РћР±РЅРѕРІРёС‚СЊ С„Р°Р№Р»С‹ Р¤РЎ РёР· С„СЂРµР№РјРІРѕСЂРєР°        * 
-Echo  *  Build File System (FS)           - (b)  *  РЎРѕР±СЂР°С‚СЊ Р¤РЎ                             * 
-Echo  *  Build and upload File System (FS)- (f)  *  РЎРѕР±СЂР°С‚СЊ Рё РїСЂРѕС€РёС‚СЊ Р¤РЎ                   * 
+Echo  *  Update FS data from framework    - (u)  *  Обновить файлы ФС из фреймворка        * 
+Echo  *  Build File System (FS)           - (b)  *  Собрать ФС                             * 
+Echo  *  Build and upload File System (FS)- (f)  *  Собрать и прошить ФС                   * 
 Echo  *                                          *                                         * 
-Echo  *  Erase Flash                      - (e)  *  РЎС‚РµСЂРµС‚СЊ С„Р»РµС€ РєРѕРЅС‚СЂРѕР»Р»РµСЂР°               * 
+Echo  *  Erase Flash                      - (e)  *  Стереть флеш контроллера               * 
 Echo  *                                          *                                         * 
-Echo  *  Clean TMP files                  - (c)  *  РћС‡РёСЃС‚РёС‚СЊ РІСЂРµРјРµРЅРЅС‹Рµ С„Р°Р№Р»С‹               * 
-Echo  *  Update libs and PIO Core         - (g)  *  РћР±РЅРѕРІРёС‚СЊ Р±РёР±Р»РёРѕС‚РµРєРё Рё СЃСЂРµРґСѓ PIO Core   * 
+Echo  *  Clean TMP files                  - (c)  *  Очистить временные файлы               * 
+Echo  *  Update libs and PIO Core         - (g)  *  Обновить библиотеки и среду PIO Core   * 
 Echo  *------------------------------------------#-----------------------------------------* 
-Echo  *  CMD window                       - (m)  *  РћС‚РєСЂС‹С‚СЊ РѕРєРЅРѕ РєРѕРјРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРё CMD     * 
+Echo  *  CMD window                       - (m)  *  Открыть окно коммандной строки CMD     * 
 Echo  *------------------------------------------#-----------------------------------------* 
-Echo  *  Remove Platformio installation   - (R)  *  РџРѕР»РЅРѕСЃС‚СЊСЋ СѓРґР°Р»РёС‚СЊ Platformio СЃ РџРљ      * 
+Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      * 
 Echo  #------------------------------------------#-----------------------------------------#
 Echo.
-Set /p choice="Your choice (Р’Р°С€ РІС‹Р±РѕСЂ): "
+Set /p choice="Your choice (Ваш выбор): "
 
 if not defined choice (
 	echo.
