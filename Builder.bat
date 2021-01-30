@@ -5,43 +5,43 @@ PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;
 echo off
 set PYTHONHOME=%USERPROFILE%\Python
 set PYTHONPATH=%USERPROFILE%\Python
-CHCP 65001
+
 mode con: cols=88 lines=40
 cls
 
 :m1
-Echo  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ 
-Echo  ┃                  Commands                ┃  (Russian)      Команды                 ┃ 
-Echo  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ 
-Echo  ┃             Install tools                ┃     Установка инструментов и среды      ┃ 
-Echo  ┃  Install Python          (step 1) - (0)  ┃  Установить Python             (Шаг 1)  ┃ 
-Echo  ┃  Install Platformio Core (step 2) - (1)  ┃  Установить PIO Core           (Шаг 2)  ┃ 
-Echo  ┃  Install Git for Windows (step 3) - (2)  ┃  Установить Git                (Шаг 3)  ┃ 
-Echo  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ 
-Echo  ┃        Build and upload firmware         ┃  Сборка и загрузка прошивки             ┃ 
-Echo  ┃  Update DEV branch from GitHub    - (3)  ┃  Обновить исходный код прошивки с Git   ┃ 
-Echo  ┃                                          ┃                                         ┃ 
-Echo  ┃  Build - Esp8266@160              - (4)  ┃  Собрать для Esp8266 на 160МГц          ┃ 
-Echo  ┃  Build - Esp8266@80               - (5)  ┃  Собрать для Esp8266 на 80МГц           ┃ 
-Echo  ┃  Build - Esp32                    - (6)  ┃  Собрать для Esp32                      ┃ 
-Echo  ┃                                          ┃                                         ┃ 
-Echo  ┃  Build and upload - Esp8266@160   - (7)  ┃  Собрать и прошить - Esp8266 на 160МГц  ┃ 
-Echo  ┃  Build and upload - Esp8266@80    - (8)  ┃  Собрать и прошить - Esp8266 на 80МГц   ┃ 
-Echo  ┃  Build and upload - Esp32         - (9)  ┃  Собрать и прошить - Esp32              ┃ 
-Echo  ┃                                          ┃                                         ┃ 
-Echo  ┃  Update FS data from framework    - (u)  ┃  Обновить файлы ФС из фреймворка        ┃ 
-Echo  ┃  Build File System (FS)           - (b)  ┃  Собрать ФС                             ┃ 
-Echo  ┃  Build and upload File System (FS)- (f)  ┃  Собрать и прошить ФС                   ┃ 
-Echo  ┃                                          ┃                                         ┃ 
-Echo  ┃  Erase Flash                      - (e)  ┃  Стереть флеш контроллера               ┃ 
-Echo  ┃                                          ┃                                         ┃ 
-Echo  ┃  Clean TMP files                  - (c)  ┃  Очистить временные файлы               ┃ 
-Echo  ┃  Update libs and PIO Core         - (g)  ┃  Обновить библиотеки и среду PIO Core   ┃ 
-Echo  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ 
-Echo  ┃  CMD window                       - (m)  ┃  Открыть окно коммандной строки CMD     ┃ 
-Echo  ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫ 
-Echo  ┃  Remove Platformio installation   - (R)  ┃  Полностью удалить Platformio с ПК      ┃ 
-Echo  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Echo  #------------------------------------------#-----------------------------------------# 
+Echo  *                  Commands                *  (Russian)      Команды                 * 
+Echo  #------------------------------------------#-----------------------------------------# 
+Echo  *             Install tools                *     Установка инструментов и среды      * 
+Echo  *  Install Python          (step 1) - (0)  *  Установить Python             (Шаг 1)  * 
+Echo  *  Install Platformio Core (step 2) - (1)  *  Установить PIO Core           (Шаг 2)  * 
+Echo  *  Install Git for Windows (step 3) - (2)  *  Установить Git                (Шаг 3)  * 
+Echo  #------------------------------------------#-----------------------------------------# 
+Echo  *        Build and upload firmware         *  Сборка и загрузка прошивки             * 
+Echo  *  Update DEV branch from GitHub    - (3)  *  Обновить исходный код прошивки с Git   * 
+Echo  *                                          *                                         * 
+Echo  *  Build - Esp8266@160              - (4)  *  Собрать для Esp8266 на 160МГц          * 
+Echo  *  Build - Esp8266@80               - (5)  *  Собрать для Esp8266 на 80МГц           * 
+Echo  *  Build - Esp32                    - (6)  *  Собрать для Esp32                      * 
+Echo  *                                          *                                         * 
+Echo  *  Build and upload - Esp8266@160   - (7)  *  Собрать и прошить - Esp8266 на 160МГц  * 
+Echo  *  Build and upload - Esp8266@80    - (8)  *  Собрать и прошить - Esp8266 на 80МГц   * 
+Echo  *  Build and upload - Esp32         - (9)  *  Собрать и прошить - Esp32              * 
+Echo  *                                          *                                         * 
+Echo  *  Update FS data from framework    - (u)  *  Обновить файлы ФС из фреймворка        * 
+Echo  *  Build File System (FS)           - (b)  *  Собрать ФС                             * 
+Echo  *  Build and upload File System (FS)- (f)  *  Собрать и прошить ФС                   * 
+Echo  *                                          *                                         * 
+Echo  *  Erase Flash                      - (e)  *  Стереть флеш контроллера               * 
+Echo  *                                          *                                         * 
+Echo  *  Clean TMP files                  - (c)  *  Очистить временные файлы               * 
+Echo  *  Update libs and PIO Core         - (g)  *  Обновить библиотеки и среду PIO Core   * 
+Echo  *------------------------------------------#-----------------------------------------* 
+Echo  *  CMD window                       - (m)  *  Открыть окно коммандной строки CMD     * 
+Echo  *------------------------------------------#-----------------------------------------* 
+Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      * 
+Echo  #------------------------------------------#-----------------------------------------#
 Echo.
 Set /p choice="Your choice (Ваш выбор): "
 
