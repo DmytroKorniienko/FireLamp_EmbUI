@@ -622,7 +622,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
 
 void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight, uint8_t flSymb)
 {
-  uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
+  int16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
   if (offset < (int16_t)-letWidth || offset > (int16_t)WIDTH)
   {
@@ -637,12 +637,9 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
     finish_pos = (uint16_t)(WIDTH - offset);
   }
 
-  start_pos++; finish_pos++;
-
   if(flSymb){
       if(flSymb&SYMBPOS::FIRSTSYMB){ // битовое &
         start_pos--; // c 0 для самого первого символа
-        //offset--;
       }
       if(flSymb&SYMBPOS::LASTSYMB && !letSpace){ // битовое &
         finish_pos++; // доп. ряд погашенных символов для последнего символа
@@ -651,15 +648,15 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
 
   //LOG(printf_P, PSTR("%d %d\n"), start_pos, finish_pos);
 
-  for (uint16_t i = start_pos; i < finish_pos; i++)
+  for (int16_t i = start_pos; i < finish_pos; i++)
   {
-    uint8_t thisByte, xpos = (i ? i - 1 : i);
+    uint8_t thisByte;
 
-    if((xpos==i) || (finish_pos - xpos <= letSpace) || ((letWidth - 1 - xpos)<0))
+    if((i<0) || (finish_pos - i <= letSpace) || ((letWidth - 1 - i)<0))
       thisByte = 0x00;
     else
     {
-      thisByte = getFont(bcount, letter, xpos);
+      thisByte = getFont(bcount, letter, i);
     }
 
     for (uint16_t j = 0; j < letHeight + 1; j++) // +1 доп. пиксель сверху
@@ -667,21 +664,18 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
       bool thisBit = thisByte & (1 << (letHeight - 1 - j));
 
       // рисуем столбец (i - горизонтальная позиция, j - вертикальная)
-      if (thisBit)
-      {
-        if(!isInverse)
-          EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
-        else
-          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
-          //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
-      }
-      else
-      {
-        if(isInverse)
-          EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
-        else
-          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
-          //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
+      if(offset + i>=0 && offset + i<WIDTH && txtOffset + j>=0 && txtOffset + j<HEIGHT){
+        if (thisBit) {
+          if(!isInverse)
+            EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
+          else
+            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+        } else {
+          if(isInverse)
+            EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
+          else
+            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+        }
       }
     }
   }
