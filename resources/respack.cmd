@@ -5,4 +5,5 @@ cls
 echo off
 
 "%ProgramFiles%\Git\"git-bash.exe %workdir%\respack.sh
+exit
 
