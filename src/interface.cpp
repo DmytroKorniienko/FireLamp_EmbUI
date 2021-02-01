@@ -2709,6 +2709,11 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = String(myLamp.effects.getCurrent());  }
         else if (param == FPSTR(TCONST_00B7))
             { myLamp.showWarning2(CRGB::Orange,5000,500); }
+        else if (param == FPSTR(TCONST_00AE)) {
+                String result = myLamp.effects.geteffconfig(myLamp.effects.getCurrent(), myLamp.getNormalizedLampBrightness());
+                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), result, true);
+                return result;
+            }
         else if (param == FPSTR(TCONST_00D0)) {
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=0; i<controls.size();i++){
@@ -2844,6 +2849,9 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
         else if (param == FPSTR(TCONST_00C7)) action = RA_FILLMATRIX;
         //else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
+        else if (param == FPSTR(TCONST_00AE)) {
+            return httpCallback(param, "", false); // set пока не реализована
+        }
         else if (param == FPSTR(TCONST_00D0)) {
             String str=value;
             DynamicJsonDocument doc(256);
