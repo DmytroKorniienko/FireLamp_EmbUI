@@ -11,78 +11,45 @@ cls
 
 :m1
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                  Commands                *  (Russian)      Команды                 * 
+Echo  *                [96mCOMMANDS[92m                  *  (Russian)      [96mКОМАНДЫ[92m                 *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *             Install tools                *     Установка инструментов и среды      * 
-Echo  *  Install Python          (step 1) - (0)  *  Установить Python             (Шаг 1)  * 
-Echo  *  Install Platformio Core (step 2) - (1)  *  Установить PIO Core           (Шаг 2)  * 
-Echo  *  Install Git for Windows (step 3) - (2)  *  Установить Git                (Шаг 3)  * 
+Echo  *              [93mGIT commands[92m                *              [93mРабота с GIT[92m               *
+Echo  *  Switch to MASTER branch          - ([97m1[92m)  *  Переключиться на ветку MASTER          *
+Echo  *  Switch to DEV branch             - ([97m2[92m)  *  Переключиться на ветку DEV             *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *        Build and upload firmware         *  Сборка и загрузка прошивки             * 
-Echo  *  Update DEV branch from GitHub    - (3)  *  Обновить исходный код прошивки с Git   * 
-Echo  *                                          *                                         * 
-Echo  *  Build - Esp8266@160              - (4)  *  Собрать для Esp8266 на 160МГц          * 
-Echo  *  Build - Esp8266@80               - (5)  *  Собрать для Esp8266 на 80МГц           * 
-Echo  *  Build - Esp32                    - (6)  *  Собрать для Esp32                      * 
-Echo  *                                          *                                         * 
-Echo  *  Build and upload - Esp8266@160   - (7)  *  Собрать и прошить - Esp8266 на 160МГц  * 
-Echo  *  Build and upload - Esp8266@80    - (8)  *  Собрать и прошить - Esp8266 на 80МГц   * 
-Echo  *  Build and upload - Esp32         - (9)  *  Собрать и прошить - Esp32              * 
-Echo  *                                          *                                         * 
-Echo  *  Update FS data from framework    - (u)  *  Обновить файлы ФС из фреймворка        * 
-Echo  *  Build File System (FS)           - (b)  *  Собрать ФС                             * 
-Echo  *  Build and upload File System (FS)- (f)  *  Собрать и прошить ФС                   * 
-Echo  *                                          *                                         * 
-Echo  *  Erase Flash                      - (e)  *  Стереть флеш контроллера               * 
-Echo  *                                          *                                         * 
-Echo  *  Clean TMP files                  - (c)  *  Очистить временные файлы               * 
-Echo  *  Update libs and PIO Core         - (g)  *  Обновить библиотеки и среду PIO Core   * 
-Echo  *------------------------------------------#-----------------------------------------* 
-Echo  *  CMD window                       - (m)  *  Открыть окно коммандной строки CMD     * 
-Echo  *------------------------------------------#-----------------------------------------* 
-Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      * 
+echo  *  Reset changes in local repo!     - ([97m3[92m)  *  Сбросить изменения в локальном репо!   *
+Echo  *  [91mWARNING![92m This will revert all changes!  *  [91mВНИМАНИЕ![92m Это сбросит все изменения!   *
+Echo  #------------------------------------------#-----------------------------------------# 
+Echo  *             [93mBuild and flash[92m              *            [93mСборка и прошивка[92m            *
+Echo  *  Build - Esp8266 160MHz           - ([97m4[92m)  *  Собрать для Esp8266 на 160МГц          *
+Echo  *  Build - Esp8266 80MHz            - ([97m5[92m)  *  Собрать для Esp8266 на 80МГц           *
+Echo  *  Build - Esp32                    - ([97m6[92m)  *  Собрать для Esp32                      *
+Echo  *                                          *                                         *
+Echo  *  Build and upload - Esp8266@160   - ([97m7[92m)  *  Собрать и прошить - Esp8266 на 160МГц  *
+Echo  *  Build and upload - Esp8266@80    - ([97m8[92m)  *  Собрать и прошить - Esp8266 на 80МГц   *
+Echo  *  Build and upload - Esp32         - ([97m9[92m)  *  Собрать и прошить - Esp32              *
+Echo  *                                          *                                         *
+Echo  *            [93mFile System[92m                   *           [93mФайловая Система[92m              *
+Echo  *  Update FS data from framework    - ([97mu[92m)  *  Обновить файлы ФС из фреймворка        *
+Echo  *  Build File System image          - ([97mb[92m)  *  Собрать образ Файловой Системы         *
+Echo  *  Build and upload File System     - ([97mf[92m)  *  Собрать и прошить Файловую Систему     *
+Echo  *                                          *                                         *
+Echo  *  Erase Flash                      - ([97me[92m)  *  Стереть флеш контроллера               *
+Echo  *                                          *                                         *
+Echo  *  Clean up temp files .pio         - ([97mc[92m)  *  Очистить временные файлы .pio          *
+Echo  *  Update libs and PIO Core         - ([97mg[92m)  *  Обновить библиотеки и среду PIO Core   *
+Echo  *------------------------------------------#-----------------------------------------*
+Echo  *  CMD window                       - ([97mm[92m)  *  Открыть окно коммандной строки CMD     *
+Echo  *------------------------------------------#-----------------------------------------*
+Echo  *  [91mRemove[92m Platformio installation   - [91m([97mR[91m)[92m  *  Полностью [91mудалить[92m Platformio с ПК      *
 Echo  #------------------------------------------#-----------------------------------------#
 Echo.
-Set /p choice="Your choice (Ваш выбор): "
+Set /p choice="[96mYour choice (Ваш выбор): [92m"
 
-if not defined choice (
-	echo.
-	Echo Wrong command!
-	goto m1
-)
 
-if "%choice%"=="0" (
-	if not exist "%systemdrive%\Program Files (x86)" (
-		%workdir%\resources\wget https://www.python.org/ftp/python/3.8.7/python-3.8.7.exe -O "%TMP%\python.exe"
-	) else (
-		%workdir%\resources\wget https://www.python.org/ftp/python/3.8.7/python-3.8.7-amd64.exe -O "%TMP%\python.exe"
-	)
-	%TMP%\python.exe /passive InstallAllUsers=0 PrependPath=1 Include_pip=1 Include_launcher=1 AssociateFiles=1 TargetDir=%USERPROFILE%\Python
-	del %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python.exe
-	del %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python3.exe
-	del %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\pip.exe
-	mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python.exe %USERPROFILE%\Python\python.exe
-	mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python3.exe %USERPROFILE%\Python\python.exe
-	mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\pip.exe %USERPROFILE%\Python\Scripts\pip.exe
-	mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\pip3.exe %USERPROFILE%\Python\Scripts\pip.exe
-)
-
-if "%choice%"=="1" (
-	%workdir%\resources\wget https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -O %workdir%\get-platformio.py
-	python %workdir%\get-platformio.py
-	del %workdir%\get-platformio.py
-)
-if "%choice%"=="2" (
-	if not exist "%systemdrive%\Program Files (x86)" (
-		%workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-32-bit.exe -O %TMP%\git.exe
-	) else (
-		%workdir%\resources\wget https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.2/Git-2.30.0.2-64-bit.exe -O %TMP%\git.exe
-	)
-	%TMP%\git.exe /SILENT
-	del %TMP%\git.exe
-)
-
-if "%choice%"=="3" (start update-DEV-from-Git.cmd)
+if "%choice%"=="1" call update-DEV-from-Git.cmd 1
+if "%choice%"=="2" call update-DEV-from-Git.cmd 2
+if "%choice%"=="3" call update-DEV-from-Git.cmd 3
 if "%choice%"=="4" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --environment esp8266@160)
 if "%choice%"=="5" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --environment esp8266)
 if "%choice%"=="6" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --environment esp32)
@@ -94,7 +61,7 @@ if "%choice%"=="u" (
 	start respack.cmd
 	cd %workdir%
 )
-if "%choice%"=="b" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target buildfs --environment esp8266@160dev)
+if "%choice%"=="b" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target buildfs --environment esp8266@160)
 if "%choice%"=="f" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target uploadfs --environment esp8266@160)
 if "%choice%"=="e" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target erase --environment esp8266@160)
 if "%choice%"=="c" (
