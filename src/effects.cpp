@@ -8966,3 +8966,17 @@ void EffectMaze::setspd(const byte _spd)
   EffectCalc::setspd(_spd);
   gameTimer.setInterval(map(speed, 1, 255, 500, 50));   // установить скорость
 }
+
+// --------- Эффект "Вьющийся Цвет"
+// (c) Stepko https://wokwi.com/arduino/projects/283705656027906572
+// доработка - kostyamat
+bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
+  _speed = EffectMath::fmap(speed, 1, 255, 0.25, 3);
+  if (scale <= 127) _scale = EffectMath::fmap(scale, 1, 255, 1, 8);
+  else _scale = EffectMath::fmap(scale, 1, 255, 8, 1);
+
+  for(float i= (float)8 * _scale; i> 0; i--)
+    leds[myLamp.getPixelNumber(beatsin8(12. * _speed + i * _speed, 0, WIDTH - 1), beatsin8(15. * _speed + i * _speed, 0, HEIGHT - 1))] = CHSV(beatsin8(12. * _speed, 0, 255), scale > 127 ? 255 - i*8 : 255, scale > 127 ? 127 + i*8 : 255);
+  blur2d(leds, WIDTH, HEIGHT, 16);
+  return true;
+}

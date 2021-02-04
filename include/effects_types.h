@@ -349,7 +349,7 @@ EFF_ATTRACT,                                  // Притяжение
 EFF_SNAKE,                                    // Змейки by kDn
 EFF_NEXUS,                                    // Nexus
 EFF_MAZE,                                     // Лабиринт
-EFF_NONE11,                                   // 
+EFF_FRIZZLES,                                 // Вьющийся цвет (с) Stepko
 EFF_NONE12,                                   // 
 EFF_FLOWER,                                   // Цветение
 EFF_TEST,                                     // Змеиный Остров
@@ -372,7 +372,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
   TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
-  TEFF_064, TEFF_065, TEFF_000, TEFF_000, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
+  TEFF_064, TEFF_065, TEFF_066, TEFF_000, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 96 - 111
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 112 - 127
@@ -398,7 +398,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 5, 5, // 16-31
   5, 5, 5, 3, 7, 3, 4, 1, 1, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
   5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 9, 5, 5, 7, 6, // 48 - 63
-  5, 1, 0, 0, 4, 5, 7, 5, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
+  5, 1, 1, 0, 4, 5, 7, 5, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127

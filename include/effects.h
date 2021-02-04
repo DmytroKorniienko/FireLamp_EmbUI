@@ -2437,6 +2437,19 @@ public:
 
 }; 
 
+// --------- Эффект "Вьющийся Цвет"
+// (c) Stepko https://wokwi.com/arduino/projects/283705656027906572
+class EffectFrizzles : public EffectCalc {
+private:
+    float _speed;
+    float _scale;
+    //void setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
