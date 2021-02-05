@@ -664,7 +664,7 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
       bool thisBit = thisByte & (1 << (letHeight - 1 - j));
 
       // рисуем столбец (i - горизонтальная позиция, j - вертикальная)
-      if(offset + i>=0 && offset + i<WIDTH && txtOffset + j>=0 && txtOffset + j<HEIGHT){
+      if (offset + i >= 0 && offset + i < (int)WIDTH && txtOffset + j >= 0 && txtOffset + j < (int)HEIGHT) {
         if (thisBit) {
           if(!isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
