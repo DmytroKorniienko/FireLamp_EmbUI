@@ -250,6 +250,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_FRIZZLES :
     worker = std::unique_ptr<EffectFrizzles>(new EffectFrizzles());
     break;
+  case EFF_ENUM::EFF_POLARL :
+    worker = std::unique_ptr<EffectPolarL>(new EffectPolarL());
+    break;
   case EFF_ENUM::EFF_FLOWER :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());
     break;

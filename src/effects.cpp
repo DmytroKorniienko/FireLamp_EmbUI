@@ -8980,3 +8980,39 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
   blur2d(leds, WIDTH, HEIGHT, 16);
   return true;
 }
+
+// --------- Эффект "Северное Сияние"
+// (c) kostyamat 05.02.2021
+void EffectPolarL::load() {
+  adjastHeight = EffectMath::fmap(HEIGHT, 8, 32, 28, 12);
+  adjScale = map((int)WIDTH, 8, 32, 310, 127);
+}
+
+bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
+  uint16_t _scale = scale <= 127 ? map(scale, 1, 127, 30, adjScale) : map(scale, 255, 128, 30, adjScale);
+  bool flag = scale <= 127;
+  byte _speed = map(speed, 1, 255, 128, 16);
+  for (uint8_t x=0; x < WIDTH; x++) {
+    for (uint8_t y=0; y< HEIGHT; y++) {
+      timer++;
+      int i= x*y;
+      leds[myLamp.getPixelNumber(x, y)]=
+          HeatColor(
+            qsub8(
+              inoise8(millis() % 2 + x * _scale,
+                y * 16 + timer%16,
+                timer / _speed
+              ),
+              fabs((float)HEIGHT/2. - (float)y) * adjastHeight
+            )
+          );
+      if (flag) {
+        leds[myLamp.getPixelNumber(x, y)].b += 48;
+        leds[myLamp.getPixelNumber(x, y)].g += leds[myLamp.getPixelNumber(x, y)].g < 206 ? 48 : 0;
+      }
+    }
+  }
+  //if (!flag) blur2d(leds, WIDTH, HEIGHT, 20);
+
+  return true;
+}

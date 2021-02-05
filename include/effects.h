@@ -2450,6 +2450,20 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// --------- Эффект "Северное Сияние"
+// (c) kostyamat 05.02.2021
+class EffectPolarL : public EffectCalc {
+private:
+    unsigned long timer;
+    float adjastHeight;
+    uint16_t adjScale;
+    //void setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 // --------- конец секции эффектов
 
 class EffectWorker {
