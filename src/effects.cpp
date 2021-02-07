@@ -8770,24 +8770,63 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
 
 // --------- Эффект "Северное Сияние"
 // (c) kostyamat 05.02.2021
+// идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
+// особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 void EffectPolarL::load() {
-  adjastHeight = EffectMath::fmap(HEIGHT, 8, 32, 28, 12);
+  adjastHeight = EffectMath::fmap((float)HEIGHT, 8, 32, 28, 12);
   adjScale = map((int)WIDTH, 8, 32, 310, 127);
+  palettesload();
+}
+
+void EffectPolarL::palettesload(){
+  // собираем свой набор палитр для эффекта
+  palettes.reserve(numpalettes);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&PartyColors_p);
+  palettes.push_back(&RainbowColors_p);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&SodiumFireColors_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&WaterfallColors_p);
+  palettes.push_back(&AcidColors_p);
+
+  usepalettes = true; // включаем флаг палитр
+  scale2pallete();    // выставляем текущую палитру
+}
+
+void EffectPolarL::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
+  std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
+  if (!_pals.size() || idx>=_pals.size()) {
+    LOG(println,F("No palettes loaded or wrong value!"));
+    return;
+  }
+  if (idx == 0) {
+    flag = true;
+  }
+  else flag = false;
+  curPalette = _pals.at(idx);
+}
+
+void EffectPolarL::setscl(const byte _scl)
+{
+  EffectCalc::setscl(_scl); // дернем базовый, где будет пересчет палитры
+  _scale = map(scale, 1, 255, 30, adjScale);
 }
 
 bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
-  uint16_t _scale = scale <= 127 ? map(scale, 1, 127, 30, adjScale) : map(scale, 255, 128, 30, adjScale);
-  bool flag = scale <= 127;
   byte _speed = map(speed, 1, 255, 128, 16);
-  for (uint8_t x=0; x < WIDTH; x++) {
-    for (uint8_t y=0; y< HEIGHT; y++) {
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
       timer++;
-      int i= x*y;
-      leds[myLamp.getPixelNumber(x, y)]=
-          HeatColor(
+      leds[myLamp.getPixelNumber(x, y)]= 
+          ColorFromPalette(*curPalette,
             qsub8(
               inoise8(millis() % 2 + x * _scale,
-                y * 16 + timer%16,
+                y * 16 + timer % 16,
                 timer / _speed
               ),
               fabs((float)HEIGHT/2. - (float)y) * adjastHeight

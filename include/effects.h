@@ -1891,12 +1891,21 @@ public:
 
 // --------- Эффект "Северное Сияние"
 // (c) kostyamat 05.02.2021
+// идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
+// особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 class EffectPolarL : public EffectCalc {
 private:
+    const byte numpalettes = 12;
     unsigned long timer;
     float adjastHeight;
     uint16_t adjScale;
-    //void setDynCtrl(UIControl*_val) override;
+    byte pal;
+    uint16_t _scale;
+    bool flag = false;
+
+    void setscl(const byte _scl) override;
+    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    void palettesload() override;
 
 public:
     void load() override;
