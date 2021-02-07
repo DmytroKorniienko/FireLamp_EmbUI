@@ -34,9 +34,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-#include "misc.h"
+#include "main.h"
 #include "effectworker.h"
 #include "effects.h"
+
 
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
