@@ -34,10 +34,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-
-#include "effects.h"
 #include "misc.h"
-//#include <StreamUtils.h>
+#include "effectworker.h"
+#include "effects.h"
 
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
@@ -1105,4 +1104,215 @@ void EffectWorker::moveSelected(){
 const uint8_t EffectWorker::geteffcodeversion(const uint8_t id){
     uint8_t ver = pgm_read_byte(T_EFFVER + id);
     return ver;
+}
+
+
+
+void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_lampstate){
+  effect=_eff;
+  lampstate = _lampstate;
+
+  if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
+  for(int i=0; i<controls->size(); i++){
+    switch(i){
+      case 0:
+        if(isRandDemo()){
+          brightness = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
+        } else
+          brightness = (*controls)[i]->getVal().toInt();
+        break;
+      case 1:
+        if(isRandDemo()){
+          speed = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
+        } else
+          speed = (*controls)[i]->getVal().toInt();
+        break;
+      case 2:
+        if(isRandDemo()){
+          scale = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
+        } else
+          scale = (*controls)[i]->getVal().toInt();
+        break;
+      default:
+        setDynCtrl((*controls)[i]);
+        break;
+    }
+  }
+
+  active=true;
+  load();
+}
+
+/*
+ *  первоначальная загрузка эффекта, автозапускается из init()
+ */
+void EffectCalc::load(){}
+
+bool EffectCalc::run(CRGB* ledarr, EffectWorker *opt){
+  return false;
+}
+
+/**
+ * проверка на холостой вызов для эффектов с доп. задержкой
+ */
+bool EffectCalc::dryrun(float n, uint8_t delay){
+  //if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)(255-speed)/n){
+  if((millis() - lastrun - delay) < (unsigned)(float(255 - speed) / n)) {
+    active=false;
+  } else {
+    lastrun = millis();
+    active=true;
+  }
+
+  return !active;
+}
+
+/**
+ * status - статус воркера, если работает и загружен эффект, отдает true
+ */
+bool EffectCalc::status(){return active;}
+
+/**
+ * setbrt - установка яркости для воркера
+ */
+void EffectCalc::setbrt(const byte _brt){
+  if(isRandDemo()){
+    brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
+  } else
+    brightness = _brt;
+  //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
+  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+  if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
+    palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
+    paletteIdx = brightness;
+  }
+}
+
+/**
+ * setspd - установка скорости для воркера
+ */
+void EffectCalc::setspd(const byte _spd){
+  if(isRandDemo()){
+    speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
+  } else
+    speed = _spd;
+  //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
+  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+  if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
+    palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
+    paletteIdx = speed;
+  }
+}
+
+/**
+ * setscl - установка шкалы для воркера
+ */
+void EffectCalc::setscl(byte _scl){
+  //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
+  if(isRandDemo()){
+    scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
+  } else
+    scale = _scl;
+  // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
+  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
+    palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
+    paletteIdx = scale;
+  }
+}
+
+/**
+ * setDynCtrl - была смена динамического контрола, idx=3+
+ * вызывается в UI, для реализации особого поведения (палитра и т.д.)...
+ * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
+ */
+void EffectCalc::setDynCtrl(UIControl*_val){
+  if(!_val) return;
+
+  if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
+    if(isRandDemo()){
+      paletteIdx = random(_val->getMin().toInt(),_val->getMax().toInt()+1);
+    } else
+      paletteIdx = _val->getVal().toInt();
+    palettemap(palettes, paletteIdx, _val->getMin().toInt(), _val->getMax().toInt());
+    isCtrlPallete = true;
+  }
+
+  //LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
+
+  //LOG(println,isMicActive?F("isMicActive=true"):F("isMicActive=false"));
+  //if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
+  if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
+    isMicActive = (_val->getVal()==FPSTR(TCONST_FFFF) && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
+#ifdef MIC_EFFECTS
+    myLamp.setMicAnalyseDivider(isMicActive);
+#endif
+  }
+}
+
+// Load palletes into array
+void EffectCalc::palettesload(){
+  palettes.reserve(FASTLED_PALETTS_COUNT);
+  palettes.push_back(&RainbowStripeColors_p);
+  palettes.push_back(&ForestColors_p);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&LavaColors_p);
+  palettes.push_back(&OceanColors_p);
+  palettes.push_back(&PartyColors_p);
+  palettes.push_back(&RainbowColors_p);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&CloudColors_p);
+  palettes.push_back(&EveningColors_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&SodiumFireColors_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&WaterfallColors_p);
+  palettes.push_back(&AutumnColors_p);
+  palettes.push_back(&AcidColors_p);
+  palettes.push_back(&StepkosColors_p);
+  palettes.push_back(&OrangeColors_p/*NeonColors_p*/);
+
+  usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
+  scale2pallete();    // выставляем текущую палитру
+}
+
+/**
+ * palletemap - меняет указатель на текущую палитру из набора в соответствие с "ползунком"
+ * @param _val - байт "ползунка"
+ * @param _pals - набор с палитрами
+ */
+void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min,  const uint8_t _max){
+  if (!_pals.size()) {
+    LOG(println,F("No palettes loaded or wrong value!"));
+    return;
+  }
+  ptPallete = (_max+0.1)/_pals.size();     // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+  palettepos = (uint8_t)(_max ? (float)_val/ptPallete : 0);
+  curPalette = _pals.at(palettepos);
+  palettescale = _val-ptPallete*(palettepos); // разбиваю на поддиапазоны внутри диапазона, будет уходить в 0 на крайней позиции поддиапазона, ну и хрен с ним :), хотя нужно помнить!
+  
+  LOG(printf_P,PSTR("Mapping value to pallete: Psize=%d, POS=%d, ptPallete=%4.2f, palettescale=%d\n"), _pals.size(), palettepos, ptPallete, palettescale);
+}
+
+/**
+ * метод выбирает текущую палитру '*curPalette' из набора дотупных палитр 'palettes'
+ * в соответствии со значением "бегунка" шкалы. В случае если задана паременная rval -
+ * метод использует значение R,  иначе используется значение scale
+ * (палитры меняются автоматом при изменении значения шкалы/R, метод оставлен для совместимости
+ * и для первоначальной загрузки эффекта)
+ */
+void EffectCalc::scale2pallete(){
+  if (!usepalettes)
+    return;
+
+  LOG(println, F("Reset all controls"));
+  setbrt((*ctrls)[0]->getVal().toInt());
+  setspd((*ctrls)[1]->getVal().toInt());
+  setscl((*ctrls)[2]->getVal().toInt());
+  for(int i=3;i<ctrls->size();i++){
+    setDynCtrl((*ctrls)[i]);
+  }
 }

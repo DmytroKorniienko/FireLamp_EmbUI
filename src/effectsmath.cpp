@@ -37,7 +37,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "main.h"
 
-// ============= ЭФФЕКТЫ ===============
+// Общий набор мат. функций и примитивов для обсчета эффектов
+
 
 // для работы FastLed (blur2d)
 uint16_t XY(uint8_t x, uint8_t y)

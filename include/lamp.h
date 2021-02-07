@@ -96,6 +96,16 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
+typedef enum _PERIODICTIME {
+  PT_NOT_SHOW = 1,
+  PT_EVERY_60,
+  PT_EVERY_30,
+  PT_EVERY_15,
+  PT_EVERY_10,
+  PT_EVERY_5,
+  PT_EVERY_1,
+} PERIODICTIME;
+
 //#pragma pack(push,2)
 typedef union {
 struct {
