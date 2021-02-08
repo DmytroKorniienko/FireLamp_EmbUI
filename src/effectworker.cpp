@@ -169,8 +169,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_BENGALL :
     worker = std::unique_ptr<EffectBengalL>(new EffectBengalL());
     break;
-  case EFF_ENUM::EFF_ARCANOID :
-    worker = std::unique_ptr<EffectArcanoid>(new EffectArcanoid());
+  case EFF_ENUM::EFF_BALLS :
+    worker = std::unique_ptr<EffectBalls>(new EffectBalls());
     break;
   case EFF_ENUM::EFF_SMOKE :
     worker = std::unique_ptr<EffectMStreamSmoke>(new EffectMStreamSmoke());

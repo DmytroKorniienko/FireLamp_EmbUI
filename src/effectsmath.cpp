@@ -148,7 +148,7 @@ CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker )
 
 /* kostyamat добавил
  функция возвращает рандомное значение float между min и max 
- с шагом 1/4096 */
+ с шагом 1/4095 */
 float EffectMath::randomf(float min, float max)
 {
   return fmap((float)random16(4095), 0.0, 4095.0, min, max);

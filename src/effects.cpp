@@ -7983,210 +7983,107 @@ bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ---------- Эффект-игра "Арканоид"
-void EffectArcanoid::newGameArkan() {
-  arkScore = 0;
-  generateBlocks();
-  shelf_x = WIDTH / 2 - SHELF_LENGTH / 2;
-  posX_ark = WIDTH / 2 * 10;
-  posY_ark = 15;
-  velX_ark = random(1, 4);
-  velY_ark = (long)sqrt(sq(VELOCITY) - sq(velX_ark));
-  for (byte i = shelf_x; i < shelf_x + SHELF_LENGTH; i++) {
-     EffectMath::drawPixelXY(i, 0, GLOBAL_COLOR_2);
+// ----------- Эффект "Шары"
+// (c) stepko and kostyamat https://wokwi.com/arduino/projects/289839434049782281
+// 07.02.2021
+void EffectBalls::load() {
+  randomSeed(millis());
+  palettesload();
+
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5);
+
+  for (byte i = 0; i < ballsAmount; i++) {
+    radius[i] = EffectMath::randomf(0.5, radiusMax);
+    ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
+    ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
+    ball[i][0] = random(0, WIDTH);
+    ball[i][1] = random(0, HEIGHT);
+    color[i] = random(0, 255);
   }
 }
 
-bool EffectArcanoid::run(CRGB *leds, EffectWorker *opt) {
-  if (loadingFlag) {
-    FastLED.clear();
-    loadingFlag = false;
-    buttons = 4;
-    newGameArkan();    
-    FastLED.show();
-    delay(500);
-  }
+/*void EffectBalls::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==3) centerRun = _val->getVal() == FPSTR(TCONST_FFFF);
+}*/
 
-  if (gameDemo) {
-    if (shelfTimer.isReady()) {
-      if (floor(posX_ark / 10) > shelf_x - SHELF_LENGTH / 2 - 1) buttons = 1;
-      if (floor(posX_ark / 10) < shelf_x + SHELF_LENGTH / 2 + 1) buttons = 3;
+void EffectBalls::setspd(const byte _spd)
+{
+  EffectCalc::setspd(_spd); // дернем базовый, где будет пересчет палитры
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5);
+}
+
+void EffectBalls::fill_circle(float cx, float cy, float radius, CRGB col) {
+  radius -= 0.5;
+  for (int y = -radius; y <= radius; y++) {
+    for (int x = -radius; x <= radius; x++) {
+      if (x * x + y * y <= radius * radius)
+        EffectMath::drawPixelXYF(cx + x, cy + y, col);
     }
   }
+}
 
-  if (checkButtons()) {
-    if (buttons == 3) {   // кнопка нажата
-      shelfLeft();
-    }
-    if (buttons == 1) {   // кнопка нажата
-      shelfRight();
-    }
-    buttons = 4;
-  }
+bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
+  fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 5, 20));
 
-  if (!gamePaused && gameTimer.isReady()) {        // главный таймер игры
-   EffectMath::drawPixelXY(posX_ark / 10, posY_ark / 10, CRGB::Black);
-    posX_ark = posX_ark + velX_ark;
-    posY_ark = posY_ark + velY_ark;
-    int8_t posX_arkm = posX_ark / 10;
-    int8_t posY_arkm = posY_ark / 10;
-    if (abs(velY_ark) <= 2) {
-      velX_ark = 3;
-      velY_ark = (long)sqrt(sq(VELOCITY) - sq(velX_ark));
-    }
-
-    // отскок левый край
-    if (posX_arkm < 0) {
-      posX_ark = 0;
-      velX_ark = -velX_ark;
-    }
-
-    // отскок правый край
-    if (posX_arkm > (int)WIDTH - 1) {
-      posX_ark = (WIDTH - 1) * 10;
-      velX_ark = -velX_ark;
-    }
-
-    // проверка на пробитие дна
-    if (posY_ark < 9) {
-      gameOverArkan();
-      //posY_ark = 0;
-      //velY_ark = -velY_ark;
-    }
-
-    // проверка на ударение с площадкой
-    if (velY_ark < 0 && posY_ark > 10 && posY_ark <= 20 && posX_arkm >= shelf_x && posX_arkm < (shelf_x + SHELF_LENGTH)) {
-      // таймаут, чтобы исключить дрочку у полки
-      if (popTimeout.isReady()) {
-
-        // тут, короче, если длина полки больше двух, то её края "подкручивают"
-        // шарик, т.е. при отскоке меняют скорость по оси Х
-        if (SHELF_LENGTH > 2) {
-          if (posX_arkm == shelf_x) {
-            velX_ark -= 2;  // уменьшаем скорость по Х
-            // расчёт скорости по У с учётом общего заданного вектора скорости
-            velY_ark = (long)sqrt(sq(VELOCITY) - sq(velX_ark));
-          } else if (posX_arkm == (shelf_x + SHELF_LENGTH - 1)) {
-            velX_ark += 2;  // увеличиваем скорость по Х
-            velY_ark = (long)sqrt(sq(VELOCITY) - sq(velX_ark));
-          } else {
-            velY_ark = -velY_ark;
-          }
-        } else {
-          velY_ark = -velY_ark;
-        }
+  for (byte i = 0; i < map(scale, 1, 255, 2, ballsAmount); i++) {
+    if (rrad[i]) {  // тут у нас шарики надуваются\сдуваются по ходу движения
+      radius[i] += (fabs(ball[i][2]) > fabs(ball[i][3])? fabs(ball[i][2]) : fabs(ball[i][3])) * 0.1 * speedFactor;
+      if (radius[i] >= radiusMax) {
+        rrad[i] = false;
+      }
+    } else {
+      radius[i] -= (fabs(ball[i][2]) > fabs(ball[i][3])? fabs(ball[i][2]) : fabs(ball[i][3])) * 0.1 * speedFactor;
+      if (radius[i] < 1.) {
+        rrad[i] = true;
+        color[i] = random(0, 255);
       }
     }
 
-    // пробитие верха
-    if (posY_arkm > (int)HEIGHT - 1) {
-      posY_ark = (HEIGHT - 1) * 10;
-      velY_ark = -velY_ark;
+
+    //EffectMath::drawCircleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]), 0.5);
+    if (radius[i] > 1) 
+      fill_circle(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]));
+    else 
+      EffectMath::drawPixelXYF(ball[i][1], ball[i][0], ColorFromPalette(*curPalette, color[i]));
+
+
+    if (ball[i][0] + radius[i] >= HEIGHT - 1)
+      ball[i][0] += (ball[i][2] * ((HEIGHT - 1 - ball[i][0]) / radius[i] + 0.005));
+    else if (ball[i][0] - radius[i] <= 0)
+      ball[i][0] += (ball[i][2] * (ball[i][0] / radius[i] + 0.005));
+    else
+      ball[i][0] += ball[i][2];
+    //-----------------------
+    if (ball[i][1] + radius[i] >= WIDTH - 1)
+      ball[i][1] += (ball[i][3] * ((WIDTH - 1 - ball[i][1]) / radius[i] + 0.005));
+    else if (ball[i][1] - radius[i] <= 0)
+      ball[i][1] += (ball[i][3] * (ball[i][1] / radius[i] + 0.005));
+    else
+      ball[i][1] += ball[i][3];
+    //------------------------
+    if (ball[i][0] < 0.01) {
+      ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i][0] = 0.01;
     }
-    byte ballX = floor(posX_ark / 10);
-    byte ballY = floor(posY_ark / 10);
-
-    if (ballY > 2) {
-      if (ballX < WIDTH - 1 && velX_ark > 0 && EffectMath::getPixColorXY(ballX + 1, ballY) != 0) {
-        redrawBlock(ballX + 1, ballY);
-        velX_ark = -velX_ark;
-      }
-      if (ballX > 1 && velX_ark < 0 && EffectMath::getPixColorXY(ballX - 1, ballY) != 0) {
-        redrawBlock(ballX - 1, ballY);
-        velX_ark = -velX_ark;
-      }
-      if (ballY < HEIGHT - 1 && velY_ark > 0 && EffectMath::getPixColorXY(ballX, ballY + 1) != 0) {
-        redrawBlock(ballX, ballY + 1);
-        velY_ark = -velY_ark;
-      }
-      if (velY_ark < 0 && EffectMath::getPixColorXY(ballX, ballY - 1) != 0) {
-        redrawBlock(ballX, ballY - 1);
-        velY_ark = -velY_ark;
-      }
+    else if (ball[i][0] > HEIGHT - 1.01) {
+      ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i][2] = -ball[i][2];
+      ball[i][0] = HEIGHT - 1.01;
     }
-
-    if (checkBlocks()) gameOverArkan();    
-
-   EffectMath::drawPixelXY(ballX, ballY, GLOBAL_COLOR_1);
-    for (byte i = shelf_x; i < shelf_x + SHELF_LENGTH; i++) {
-      EffectMath::drawPixelXY(i, 0, GLOBAL_COLOR_2);
+    //----------------------
+    if (ball[i][1] < 0.01) {
+      ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i][1] = 0.01;
+    }
+    else if (ball[i][1] > WIDTH - 1.01) {
+      ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i][3] = -ball[i][3];
+      ball[i][1] = WIDTH - 1.01;
     }
   }
-  //fpsmeter();
+  blur2d(leds, WIDTH, HEIGHT, 48);
   return true;
-}
-
-bool EffectArcanoid::checkBlocks() {   
-  // возвр ДА если блоков нет
-  for (byte j = HEIGHT - 1; j > HEIGHT - 1 - BLOCKS_H; j--) {
-    for (byte i = 0; i < WIDTH; i++) {
-      if (EffectMath::getPixColorXY(i, j) != 0) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-void EffectArcanoid::redrawBlock(byte blockX, byte blockY) {
-  arkScore++;  
-  if (EffectMath::getPixColorXY(blockX, blockY) == BLOCK_COLOR_2) 
-    EffectMath::drawPixelXY(blockX, blockY, BLOCK_COLOR_1);
-  else if (EffectMath::getPixColorXY(blockX, blockY) == BLOCK_COLOR_3) 
-    EffectMath::drawPixelXY(blockX, blockY, BLOCK_COLOR_2);
-  else 
-    EffectMath::drawPixelXY(blockX, blockY, 0);
-}
-
-void EffectArcanoid::generateBlocks() {
-  for (byte j = HEIGHT - 1; j > HEIGHT - 1 - BLOCKS_H; j--) {
-    for (byte i = 0; i < WIDTH; i++) {
-      EffectMath::drawPixelXY(i, j, BLOCK_COLOR_1);
-    }
-  }
-  for (byte k = 0; k < LINE_NUM; k++) {
-    byte newPosX = random(0, WIDTH - 1 - LINE_MAX);
-    byte newPosY = random(HEIGHT - BLOCKS_H, HEIGHT);
-    byte newColor = random(0, 3);
-    for (byte i = newPosX; i < newPosX + LINE_MAX; i++) {
-      switch (newColor) {
-        case 0:EffectMath::drawPixelXY(i, newPosY, 0);
-          break;
-        case 1:EffectMath::drawPixelXY(i, newPosY, BLOCK_COLOR_2);
-          break;
-        case 2:EffectMath::drawPixelXY(i, newPosY, BLOCK_COLOR_3);
-          break;
-      }
-    }
-  }
-}
-
-void EffectArcanoid::gameOverArkan() {
-  /*displayScore(arkScore);
-  FastLED.show();
-  delay(1500);*/
-  FastLED.clear();
-  newGameArkan();
-}
-
-void EffectArcanoid::shelfRight() {
-  shelf_x++;            // прибавить координату полки
-  if (shelf_x > shelfMAX) { // если полка пробила правый край
-    shelf_x = shelfMAX;
-  } else {
-    EffectMath::drawPixelXY(shelf_x - 1, 0, CRGB::Black);   // стереть последнюю точку
-    EffectMath::drawPixelXY(shelf_x + SHELF_LENGTH - 1, 0, GLOBAL_COLOR_2);  // нарисовать первую
-  }
-}
-
-void EffectArcanoid::shelfLeft() {
-  shelf_x--;
-  if (shelf_x < 0) { // если полка пробила левый край
-    shelf_x = 0;
-  } else {
-    EffectMath::drawPixelXY(shelf_x, 0, GLOBAL_COLOR_2);   // стереть последнюю точку
-    EffectMath::drawPixelXY(shelf_x + SHELF_LENGTH, 0, CRGB::Black);  // нарисовать первую
-  }
 }
 
 // ---------- Эффект-игра "Лабиринт"
