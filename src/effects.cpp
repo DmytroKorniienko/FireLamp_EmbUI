@@ -8398,8 +8398,9 @@ void EffectPolarL::load() {
 void EffectPolarL::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(numpalettes);
-  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&RainbowColors_p);
   palettes.push_back(&PartyColors_p);
+  palettes.push_back(&HeatColors_p);
   palettes.push_back(&RainbowColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&LithiumFireColors_p);
@@ -8409,7 +8410,6 @@ void EffectPolarL::palettesload(){
   palettes.push_back(&AlcoholFireColors_p);
   palettes.push_back(&PotassiumFireColors_p);
   palettes.push_back(&WaterfallColors_p);
-  palettes.push_back(&AcidColors_p);
 
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
@@ -8421,10 +8421,9 @@ void EffectPolarL::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _va
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
-  if (idx == 0) {
-    flag = true;
-  }
-  else flag = false;
+
+    flag = idx;
+
   curPalette = _pals.at(idx);
 }
 
@@ -8450,13 +8449,19 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
               fabs((float)HEIGHT/2. - (float)y) * adjastHeight
             )
           );
-      if (flag) {
+      if (flag == 0) {
+        CRGB temColor = leds[myLamp.getPixelNumber(x, y)];
+        leds[myLamp.getPixelNumber(x, y)].g = temColor.r;
+        leds[myLamp.getPixelNumber(x, y)].r = temColor.g;
+        leds[myLamp.getPixelNumber(x, y)].g /= 6;
+        leds[myLamp.getPixelNumber(x, y)].r += leds[myLamp.getPixelNumber(x, y)].r < 206 ? 48 : 0;;
+      } else if (flag == 2) {
         leds[myLamp.getPixelNumber(x, y)].b += 48;
         leds[myLamp.getPixelNumber(x, y)].g += leds[myLamp.getPixelNumber(x, y)].g < 206 ? 48 : 0;
       }
     }
   }
-  //if (!flag) blur2d(leds, WIDTH, HEIGHT, 20);
+  //if (flag) blur2d(leds, WIDTH, HEIGHT, 20);
 
   return true;
 }
