@@ -779,9 +779,9 @@ bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param)
 {
   //float speedfactor = speed/2048.0+0.01;
-  float speedfactor = (float)speed / 4096.0f + 0.001f;
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.01, .1);
 
-  fadeToBlackBy(leds, NUM_LEDS, 255 - (uint8_t)(10 * ((float)speed) /255) + 40); // выводим кубик со шлейфом, длинна которого зависит от скорости.
+  fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 6, 55)); // размер шлейфа должен сохранять размер, не зависимо от скорости
 
   // движение шариков
   uint8_t maxBalls = cnt;
@@ -817,6 +817,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
     }
     EffectMath::drawPixelXYF(coord[j][0U], coord[j][1U], CHSV(ballColors[j], 200U, 255U));
   }
+  blur2d(leds, WIDTH, HEIGHT, 5);
   return true;
 }
 
@@ -1687,39 +1688,38 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
 // ============= ЭФФЕКТ ПРИЗМАТА ===============
 // Prismata Loading Animation
 void EffectPrismata::load(){
-  palettesload();    // подгружаем дефолтные палитры
+  palettesload();
 }
 
-bool EffectPrismata::run(CRGB *ledarr, EffectWorker *opt){
-  return prismataRoutine(*&ledarr, &*opt);
+bool EffectPrismata::run(CRGB *leds, EffectWorker *opt) {
+  EVERY_N_MILLIS(100) {
+    spirohueoffset += 1;
+  }
+
+  fadeToBlackBy(leds, NUM_LEDS, map(fadelvl, 1, 255, 130, 2)); // делаем шлейф
+
+  static byte t;
+  t++;
+  //if (t%60==0) Serial.println(test);
+
+  for (byte x = 0; x < WIDTH; x++) {
+      float y = (float)beatsin16((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 10) / 10.0f;
+      EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(*curPalette, ((uint16_t)x + spirohueoffset) * 4));
+    }
+  return true;
 }
 
 void EffectPrismata::setDynCtrl(UIControl*_val){
-  if(_val->getId()==4){
+  if(_val->getId()==3){
     if(isRandDemo()){
       fadelvl = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
     } else
       fadelvl = _val->getVal().toInt();
   }
-}
-
-bool EffectPrismata::prismataRoutine(CRGB *leds, EffectWorker *param)
-{
-  if (curPalette == nullptr) {
-    return false;
+  if(_val->getId()==4){
+    test = _val->getVal().toInt();
+    palettemap(palettes, test, 1, FASTLED_PALETTS_COUNT);
   }
-
-  EVERY_N_MILLIS(100) {
-    spirohueoffset += 1;
-  }
-
-  fadeToBlackBy(leds, NUM_LEDS, map(fadelvl, 1, 255, 130, 1)); // делаем шлейф
-
-  for (byte x = 0; x < WIDTH; x++) {
-      float y = (float)beatsin16((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 10) / 10.0f;
-      EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(*curPalette, ((uint8_t)x + spirohueoffset) * 4));
-    }
-  return true;
 }
 
 // ============= ЭФФЕКТ СТАЯ ===============
@@ -4562,6 +4562,18 @@ void EffectMunch::load() {
   palettesload();
 }
 
+void EffectMunch::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
+  if(_val->getId()==4) {
+    if (_val->getVal().toInt() > 0) {
+      rand = _val->getVal().toInt();
+      flag = false;
+    } else {
+      flag = true;
+    }
+  }
+}
+
  bool EffectMunch::run(CRGB *ledarr, EffectWorker *opt) {
    if (dryrun(2.0))
     return false;
@@ -4570,8 +4582,7 @@ void EffectMunch::load() {
 
 bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
-  byte rand = getCtrlVal(3).toInt();
-  if (getCtrlVal(3).toInt() == 0) rand = beatsin8(5, 0, 8); // Хрень, конечно, но хоть какое-то разнообразие.
+  if (flag) rand = beatsin8(5, 0, 8); // Хрень, конечно, но хоть какое-то разнообразие.
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
       leds[myLamp.getPixelNumber(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
@@ -5481,7 +5492,7 @@ void EffectNBals::blur(CRGB *leds) {
   // Use two out-of-sync sine waves
   // В общем те же фигуры Лиссажу, вид сбоку :), но выглядят хорошо
   uint8_t  i = beatsin8( beat1, 0, HEIGHT-1);
-  uint8_t  j = beatsin8(abs(beat1-beat2), 0, WIDTH-1);
+  uint8_t  j = beatsin8(fabs(beat1-beat2), 0, WIDTH-1);
   // Also calculate some reflections
   uint8_t ni = (WIDTH-1)-i;
   uint8_t nj = (WIDTH-1)-j;
@@ -5538,39 +5549,36 @@ void EffectAttract::load() {
     int direction = 1-2*random(0, 2); // -1 или 1
     Boid boid = Boid(15, 16 - i);
     boid.mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * speedFactor; //(1.0/speed);
-    boid.velocity.x = (float)random(5, map(_energy, 1, 255, 16, 768)) / 100.0f * speedFactor; //(1.0/speed);
+    boid.velocity.x = (float)random(5, map(_energy, 1, 255, 16, 768)) / 500.0f; // * speedFactor; //(1.0/speed);
     boid.velocity.x *= direction;
     boid.velocity.y = 0;
     boid.colorIndex = i * 32;
-    //boid.location.x = fabs(Boid::randomf()); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
-    //boid.location.y = fabs(Boid::randomf()); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
+    boid.location.x = EffectMath::randomf(0, WIDTH-1); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
+    boid.location.y = EffectMath::randomf(0, HEIGHT-1); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
     //Это вроде решает проблему
     boids[i] = boid;
   }
+
 }
 
 void EffectAttract::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd);
   speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.02, 1.);
+  setup();
+}
 
-  for (int i = 0; i < count; i++) {
-    boids[i].location.x = fabs(Boid::randomf()); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
-    boids[i].location.y = fabs(Boid::randomf()); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
-  // Мда, этот эффекта таки стоит перезапускать о любому чиху. Но фиг с ним.
-  }
+void EffectAttract::setscl(const byte _scl)
+{
+  EffectCalc::setscl(_scl); // дернем базовый, где будет пересчет палитры
+  _energy = scale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
   setup();
 }
 
 void EffectAttract::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val); // сначала дергаем базовый, чтобы была обработка палитр/микрофона (если такая обработка точно не нужна, то можно не вызывать базовый метод)
 
-  if(_val->getId()==3){   // энергия
-    if(isRandDemo()){
-      _energy = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else
-      _energy = _val->getVal().toInt();
-  } else if(_val->getId()==4){   // масса
+ if(_val->getId()==3){   // масса
     if(isRandDemo()){
       _mass = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
     } else
@@ -5582,10 +5590,15 @@ void EffectAttract::setDynCtrl(UIControl*_val) {
 void EffectAttract::setup(){
   for (int i = 0; i < count; i++)
   {
-    boids[i].mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * speedFactor; //(1.0/(256-speed));
-    boids[i].velocity.x = (float)random(5, map(_energy, 1, 255, 16, 512)) / 100.0f * speedFactor; //(1.0/(256-speed));
+    int direction = 1-2*random(0, 2); // -1 или 1
+    Boid boid = Boid(15, 16 - i);
+    boid.mass = (float)random(1, map(_mass, 1, 255, 128, 1024)) / 100.0f * speedFactor; //(1.0/speed);
+    boid.velocity.x = (float)random(5, map(_energy, 1, 255, 16, 768)) / 500.0f; // * speedFactor; //(1.0/speed);
+    boid.velocity.x *= direction;
+    boid.velocity.y = 0;
+    boid.colorIndex = i * 32;
+    boids[i] = boid;
   }
-  LOG(printf_P,PSTR("%5.2f %5.2f %ld\n"),boids[0].mass, boids[0].velocity.x, 1-2*random(0, 2));
 }
 
 bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
@@ -5596,7 +5609,7 @@ bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
   {
 
     Boid boid = boids[i];
-    //boid.acceleration *= EffectMath::fmap((float)speed, 1., 255., 0.1, 1.0);
+    //boid.acceleration *= speedFactor/10;
     PVector force = attract(boid);
     boid.applyForce(force);
 
@@ -5961,15 +5974,15 @@ void EffectFire2020::load() {
 void EffectFire2020::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&HeatColors2_p);
+  palettes.push_back(&NormalFire2_p);
   palettes.push_back(&CopperFireColors_p);
   palettes.push_back(&SodiumFireColors_p);
   palettes.push_back(&PotassiumFireColors_p);
   palettes.push_back(&RubidiumFireColors_p);
   palettes.push_back(&AlcoholFireColors_p);
   palettes.push_back(&LithiumFireColors_p);
-  palettes.push_back(&NormalFire_p);
-  palettes.push_back(&HeatColors2_p);
-  palettes.push_back(&NormalFire2_p);
   palettes.push_back(&WoodFireColors_p);
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
@@ -6061,8 +6074,9 @@ void EffectTest::setDynCtrl(UIControl*_val){
       SnakeNum = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
     } else
       SnakeNum = _val->getVal().toInt();
+    regen();
   }
-  regen();
+  
 }
 
 void EffectTest::setscl(const byte _scl){ // вот тут перегрузим масштаб
@@ -6070,9 +6084,8 @@ void EffectTest::setscl(const byte _scl){ // вот тут перегрузим 
 }
 
 void EffectTest::regen() {
-  if (SnakeNum > MAX_SNAKES)
-    SnakeNum = MAX_SNAKES;
-  for (uint8_t i = 0; i < SnakeNum; i++)
+
+  for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
     snakeLast[i] = 0;
     snakePosX[i] = random8(WIDTH / 2 - WIDTH / 4, WIDTH/2 + WIDTH / 4);
@@ -6080,7 +6093,7 @@ void EffectTest::regen() {
     snakeSpeedX[i] = EffectMath::randomf(0.2, 1.5);//(255. + random8()) / 255.;
     snakeSpeedY[i] = EffectMath::randomf(0.2, 1.5);
     //snakeTurn[i] = 0;
-    snakeColor[i] = random8();
+    snakeColor[i] = random8(map(SnakeNum, 1, 10, 2, MAX_SNAKES) * 255/map(SnakeNum, 1, 10, 2, MAX_SNAKES));
     snakeDirect[i] = random8(4); //     B00           направление головы змейки
                                  // B10     B11
                                  //     B01
@@ -6088,11 +6101,10 @@ void EffectTest::regen() {
 }
 
 bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
-  FastLED.clear(); // кадый вызов очищать матрицу? э... фигня какая-то ну да ладно, это видимо чтобы хвосты подчищать, хотя лучше бы это делать иначе
-  // Дальнейший код даже не читаю, поскольку не уверен в необходимости третьего варианта змеек... Но хз, пусть пока будет.
+  FastLED.clear(); 
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06, 0.5);
   int8_t dx = 0, dy = 0;
-  for (uint8_t i = 0; i < SnakeNum; i++)
+  for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
     snakeSpeedY[i] += snakeSpeedX[i] * speedfactor;
     if (snakeSpeedY[i] >= 1)
@@ -6224,14 +6236,12 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
     long temp = snakeLast[i];
     uint8_t x = snakePosX[i];
     uint8_t y = snakePosY[i];
-    //CHSV color = CHSV(snakeColor[i], 255U, 255U);
-    //drawPixelXY(x, y, color);
-    EffectMath::drawPixelXYF(x, y, CHSV(snakeColor[i], 255U, snakeSpeedY[i] * 255));
+    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i], snakeSpeedY[i] * 255));
     for (uint8_t m = 0; m < SNAKE_LENGTH; m++)
     { // 16 бит распаковываем, 14 ещё остаётся без дела в запасе, 2 на хвостик
       x = (WIDTH + x + dx) % WIDTH;
-      y = (HEIGHT + y + dy) % HEIGHT;
-      EffectMath::drawPixelXYF(x, y, CHSV(snakeColor[i] + m * 4U, 255U, 255U));
+      y = (HEIGHT + y + dy) % HEIGHT;  
+      EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i] + m * 4U, 255U));
 
       if (temp & B01)
       { // младший бит = поворот, старший = направо
@@ -6271,7 +6281,7 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
     }
     x = (WIDTH + x + dx) % WIDTH;
     y = (HEIGHT + y + dy) % HEIGHT;
-    EffectMath::drawPixelXYF(x, y, CHSV(snakeColor[i] + SNAKE_LENGTH * 4U, 255U, (1 - snakeSpeedY[i]) * 255)); // хвостик
+    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i] + SNAKE_LENGTH * 4U, (1 - snakeSpeedY[i]) * 255)); // хвостик
   }
 
   return true;
@@ -6282,7 +6292,7 @@ bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 void EffectTest::load() {
-  SnakeNum = scale;
+  palettesload();
   regen();
 }
 
@@ -6589,10 +6599,11 @@ void EffectF_lying::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
   if(_val->getId()==3){
     if(isRandDemo()){
-      _scale = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+      _blur = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
     } else
-      _scale = _val->getVal().toInt() == 0;
-  } else if(_val->getId()==5){
+      _blur = _val->getVal().toInt();
+  } 
+  if(_val->getId()==5){
     if(isRandDemo()){
       type = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
     } else
@@ -6620,7 +6631,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
   float y3 = (float)beatsin16(15. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
   float y4 = (float)beatsin16(27. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
 
-  fadeToBlackBy (leds, NUM_LEDS, map(_scale, 1, 128, 128, 1));
+  fadeToBlackBy (leds, NUM_LEDS, map(_blur, 1, 128, 128, 2));
 
   mydrawLine(leds, x1, y1,  x2, y2, 0);
   mydrawLine(leds, x2, y2,  x3, y3, 32);
@@ -6631,7 +6642,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
     mydrawLine(leds, x4, y4,  x1, y1, 160);
   }
   
-  blur2d(leds, NUM_COLS, NUM_ROWS, map(_scale, 1, 128, 1, 64));
+  blur2d(leds, NUM_COLS, NUM_ROWS, map(_blur, 1, 128, 2, 64));
 
   return true;
 }

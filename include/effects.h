@@ -386,7 +386,7 @@ class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
     uint8_t fadelvl=1;
-    bool prismataRoutine(CRGB *leds, EffectWorker *param);
+    uint8_t test;
     void setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -947,8 +947,10 @@ private:
     byte flip = 0;
     byte generation = 0;
     byte mic[2];
+    byte rand;
+    bool flag = false;
 
-
+    void setDynCtrl(UIControl*_val) override;
     bool munchRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1116,7 +1118,7 @@ private:
     uint16_t _scale;
 
     byte beat1, beat2 = 0;
-    byte balls = 1;
+    byte balls = 4;
 
     void balls_timer();
     void blur(CRGB *leds);
@@ -1145,7 +1147,7 @@ private:
     Boid boids[count];
     PVector location;   // Location
     void setDynCtrl(UIControl*_val) override;
-    //void setscl(const byte _scl) override;
+    void setscl(const byte _scl) override;
     void setspd(const byte _spd) override;
     void setup();
 
@@ -1375,8 +1377,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эфеект "Змейки"
-// (c) Сотнег (SottNick)
+// ----------- Эфеект "Змеиный Остров"
+// (c) Сотнег
 // База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
 // адаптация и доработки kostyamat
 class EffectTest : public EffectCalc {
@@ -1490,7 +1492,7 @@ class EffectCell: public EffectCalc {
 class EffectF_lying: public EffectCalc {
   private:
     byte hue = 0;
-    uint8_t _scale = 1;
+    uint8_t _blur = 1;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
     void setDynCtrl(UIControl*_val);
 #ifdef BIGMATRIX
