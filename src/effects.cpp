@@ -8088,8 +8088,8 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
 
 // ---------- Эффект-игра "Лабиринт"
 void EffectMaze::newGameMaze() {
-  playerPos[0] = !SHIFT;
-  playerPos[1] = !SHIFT;
+  playerPos[0] = !MAZE_SHIFT;
+  playerPos[1] = !MAZE_SHIFT;
 
   gameOverFlag = false;
   buttons = 4;
@@ -8100,7 +8100,7 @@ void EffectMaze::newGameMaze() {
   if (!(GAMEMODE || mazeMode)) {
     for (byte y = 0; y < MAZE_HEIGHT; y++) {
       for (byte x = 0; x < MAZE_WIDTH; x++) {
-        switch (maze[(y + SHIFT) * MAZE_WIDTH + (x + SHIFT)]) {
+        switch (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)]) {
           case 1:  EffectMath::drawPixelXY(x, y, color); break;
           case 2:
             EffectMath::drawPixelXY(x, y, 0x000000);
@@ -8116,7 +8116,7 @@ void EffectMaze::newGameMaze() {
   } else {
     for (byte y = 0; y < FOV; y++) {
       for (byte x = 0; x < FOV; x++) {
-        switch (maze[(y + SHIFT) * MAZE_WIDTH + (x + SHIFT)]) {
+        switch (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)]) {
           case 1:  EffectMath::drawPixelXY(x, y, color);  break;
           case 2:
             EffectMath::drawPixelXY(x, y, 0x000000);
@@ -8127,7 +8127,7 @@ void EffectMaze::newGameMaze() {
     }
   }
 
-  // Отрисовка - с видимыми границами по периметру (настройки SHIFT выше)
+  // Отрисовка - с видимыми границами по периметру (настройки MAZE_SHIFT выше)
   // Слева от начальной позиции делаем дыру - это вход
   if (playerPos[0]>0) {
     playerPos[0] = playerPos[0] - 1;
@@ -8208,7 +8208,7 @@ void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY
   if (!track) EffectMath::drawPixelXY(prevX, prevY, 0x000000);
   EffectMath::drawPixelXY(nowX, nowY,  playerColor);
 
-  if ((nowX == (MAZE_WIDTH - 2) - SHIFT) && (nowY == (MAZE_HEIGHT - 1) - SHIFT)) {
+  if ((nowX == (MAZE_WIDTH - 2) - MAZE_SHIFT) && (nowY == (MAZE_HEIGHT - 1) - MAZE_SHIFT)) {
     gameOverFlag = true;
 
   /*  FastLED.show();
@@ -8226,7 +8226,7 @@ void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY
     for (int8_t y = nowY - FOV; y < nowY + FOV; y++) {
       for (int8_t x = nowX - FOV; x < nowX + FOV; x++) {
         if (x < 0 || x > (int)WIDTH - 1 || y < 0 || y > (int)HEIGHT - 1) continue;
-        if (maze[(y + SHIFT) * MAZE_WIDTH + (x + SHIFT)] == 1) {
+        if (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)] == 1) {
           EffectMath::drawPixelXY(x, y, GLOBAL_COLOR_1);
         }
       }
@@ -8244,8 +8244,8 @@ void EffectMaze::demoMaze() {
 
 bool EffectMaze::checkPath(int8_t x, int8_t y) {
   // если проверяемая клетка является путью к выходу
-  if ( (maze[(playerPos[1] + y + SHIFT) * MAZE_WIDTH + (playerPos[0] + x + SHIFT)]) == 2) {
-    maze[(playerPos[1] + SHIFT) * MAZE_WIDTH + (playerPos[0] + SHIFT)] = 4;   // убираем текущую клетку из пути (2 - метка пути, ставим любое число, например 4)
+  if ( (maze[(playerPos[1] + y + MAZE_SHIFT) * MAZE_WIDTH + (playerPos[0] + x + MAZE_SHIFT)]) == 2) {
+    maze[(playerPos[1] + MAZE_SHIFT) * MAZE_WIDTH + (playerPos[0] + MAZE_SHIFT)] = 4;   // убираем текущую клетку из пути (2 - метка пути, ставим любое число, например 4)
     return true;
   }
   else return false;
