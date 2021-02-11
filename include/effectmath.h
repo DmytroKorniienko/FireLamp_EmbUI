@@ -35,9 +35,16 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
+#pragma once
+
 // Общий набор мат. функций и примитивов для обсчета эффектов
 
 #define M_PI_2	1.57079632679489661923
+
+#define MAP_SIN 1
+#define MAP_COS 0
+#define MOVE_X 1
+#define MOVE_Y 0
 
 static const PROGMEM float LUT[102] = {
      0,           0.0099996664, 0.019997334, 0.029991005, 0.039978687,

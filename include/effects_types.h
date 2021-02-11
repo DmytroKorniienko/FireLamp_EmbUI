@@ -542,10 +542,6 @@ static const char* const T_EFFUICFG[] PROGMEM = {
 /**
  * константы/определения
  */
-#define MAP_SIN 1
-#define MAP_COS 0
-#define MOVE_X 1
-#define MOVE_Y 0
 #define MIN_RANGE 1     // заложим дейфан пока нет динамических ползунков
 #define MAX_RANGE 255   // заложим дейфан пока нет динамических ползунков
 

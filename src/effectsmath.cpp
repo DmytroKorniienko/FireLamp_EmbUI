@@ -35,7 +35,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#include "main.h"
+#include "lamp.h"
+#include "effectmath.h"
+//#include "main.h"
+extern LAMP myLamp; // Объект лампы
+
 
 // Общий набор мат. функций и примитивов для обсчета эффектов
 

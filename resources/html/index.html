@@ -137,7 +137,7 @@
 		{{/if}}
 		{{#if type == "checkbox"}}
 			<div class="switch-block">
-				<input type="checkbox" id="{{id}}" name="{{id}}" class="checkbox" {{#if2 value == "true"}}checked{{/if2}} {{#if2 directly}}{{onevent "click", "on_change", id}}{{/if2}}>
+				<input type="checkbox" id="{{id}}" name="{{id}}" class="checkbox" {{#if2 value == "1" || value == "true"}}checked{{/if2}} {{#if2 directly}}{{onevent "click", "on_change", id}}{{/if2}}>
 					<label class="switch" for="{{id}}"><span class="checkbox-label">{{label}}</span></label>
 				</input>
 			</div>
