@@ -2138,7 +2138,7 @@ void save_lamp_flags(){
     JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0094)] = myLamp.getLampFlags();
     set_lamp_flags(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 }
 
 /**
@@ -2316,23 +2316,23 @@ void sync_parameters(){
 
     obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_drawflag(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>(); // https://arduinojson.org/v6/how-to/reuse-a-json-document/
 
 #ifdef LAMP_DEBUG
     obj[FPSTR(TCONST_0095)] = tmp.isDebug ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_debugflag(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
     //LOG(printf_P,PSTR("tmp.isEventsHandled=%d\n"), tmp.isEventsHandled);
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_eventflag(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
     embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
     obj[FPSTR(TCONST_001C)] = tmp.isGlobalBrightness ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_gbrflag(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     if (myLamp.IsGlobalBrightness()) {
         CALL_SETTER(FPSTR(TCONST_0012), embui.param(FPSTR(TCONST_0018)), set_effects_bright);
@@ -2349,7 +2349,7 @@ void sync_parameters(){
     if(!tmp.ONflag){ // иначе - после
         CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
     }
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
     if(myLamp.isLampOn())
         CALL_SETTER(FPSTR(TCONST_001B), embui.param(FPSTR(TCONST_001B)), set_demoflag); // Демо через режимы, для него нужнен отдельный флаг :(
 #else
@@ -2368,12 +2368,12 @@ void sync_parameters(){
     obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
 
     set_settings_mp3(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     mp3->setupplayer(myLamp.effects.getEn(), myLamp.effects.getSoundfile()); // установить начальные значения звука
     obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     set_mp3flag(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
 
@@ -2401,7 +2401,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0055)] = datetime;
     
     set_text_config(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     obj[FPSTR(TCONST_004E)] = tmp.isFaderON ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     obj[FPSTR(TCONST_008E)] = tmp.isEffClearing ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
@@ -2421,13 +2421,13 @@ void sync_parameters(){
     obj[FPSTR(TCONST_0050)] = type;
 
     set_settings_other(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
 #ifdef MIC_EFFECTS
     obj[FPSTR(TCONST_001E)] = tmp.isMicOn ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE);
     myLamp.setMicAnalyseDivider(0);
     set_micflag(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     // float scale = atof(embui.param(FPSTR(TCONST_0039)).c_str());
     // float noise = atof(embui.param(FPSTR(TCONST_003A)).c_str());
@@ -2437,7 +2437,7 @@ void sync_parameters(){
     obj[FPSTR(TCONST_003A)] = embui.param(FPSTR(TCONST_003A)); //noise;
     obj[FPSTR(TCONST_003B)] = embui.param(FPSTR(TCONST_003B)); //lvl;
     set_settings_mic(nullptr, &obj);
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
@@ -2683,7 +2683,7 @@ void remote_action(RA action, ...){
 #endif
         default:;
     }
-    obj.clear(); doc.garbageCollect();
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 }
 
 String httpCallback(const String &param, const String &value, bool isset){
