@@ -306,7 +306,7 @@ public:
             }
         } 
         if(!val || !found){
-            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? FPSTR(TCONST_FFFF) : FPSTR(TCONST_FFFE), String(""), String(""), String(""));
+            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", String(""), String(""), String(""));
             effects.worker->setDynCtrl(ctrl);
             delete ctrl;
         }

@@ -593,7 +593,7 @@ void EffectStarFall::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       isNew = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      isNew = _val->getVal() == FPSTR(TCONST_FFFF);
+      isNew = _val->getVal().toInt();
   }    
 }
 
@@ -686,7 +686,7 @@ void EffectLighters::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+      subPix = _val->getVal().toInt();
   }
 }
 
@@ -1039,7 +1039,7 @@ void Effect3DNoise::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       colorLoop = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      colorLoop = _val->getVal() == FPSTR(TCONST_FFFF);
+      colorLoop = _val->getVal().toInt();
   }
   if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
@@ -1110,7 +1110,7 @@ void EffectBBalls::setDynCtrl(UIControl*_val){
     if(isRandDemo()){
       halo = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      halo = _val->getVal() == FPSTR(TCONST_FFFF);
+      halo = _val->getVal().toInt();
   }
 }
 
@@ -1746,7 +1746,7 @@ void EffectFlock::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       predatorPresent = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      predatorPresent = _val->getVal() == FPSTR(TCONST_FFFF);
+      predatorPresent = _val->getVal().toInt();
   }
 }
 
@@ -2225,7 +2225,7 @@ void EffectRadar::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+      subPix = _val->getVal().toInt();
   }  
 }
 
@@ -2453,7 +2453,7 @@ void EffectFire2018::setDynCtrl(UIControl*_val){
     if(isRandDemo()){
       isLinSpeed = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
     } else
-      isLinSpeed = _val->getVal() == FPSTR(TCONST_FFFF);
+      isLinSpeed = _val->getVal().toInt();
   }
 }
 
@@ -2727,7 +2727,7 @@ void EffectCube2d::setDynCtrl(UIControl*_val)
     if(isRandDemo()){
       classic = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      classic = _val->getVal() == FPSTR(TCONST_FFFF);
+      classic = _val->getVal().toInt();
   }
 
   cubesize();
@@ -3802,7 +3802,7 @@ void EffectLiquidLamp::setDynCtrl(UIControl*_val) {
     filter = _val->getVal().toInt();
   } else
   if (idx == 6) {
-    physic_on = (_val->getVal() == FPSTR(TCONST_FFFF));
+    physic_on = (_val->getVal().toInt());
   }
 }
 
@@ -4218,7 +4218,7 @@ void EffectFireworks::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       flashing = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      flashing = _val->getVal() == FPSTR(TCONST_FFFF);
+      flashing = _val->getVal().toInt();
   }
 }
 
@@ -4724,12 +4724,13 @@ void EffectButterfly::setDynCtrl(UIControl*_val)
     if(isRandDemo()){
       wings = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      wings = _val->getVal() == FPSTR(TCONST_FFFF);
+      wings = _val->getVal().toInt();
   } else if(_val->getId()==5){
     if(isRandDemo()){
       isColored = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      isColored = _val->getVal() != FPSTR(TCONST_FFFF);
+      isColored = _val->getVal().toInt();
+      isColored = !isColored;
 
     for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
     {
@@ -4967,7 +4968,7 @@ void EffectPatterns::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       _subpixel = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      _subpixel = _val->getVal()==FPSTR(TCONST_FFFF);
+      _subpixel = _val->getVal().toInt();
   }
 }
 
@@ -5084,7 +5085,7 @@ void EffectArrows::setDynCtrl(UIControl*_val){
     if(isRandDemo()){
       subpixel = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
     } else
-      subpixel = (_val->getVal() == FPSTR(TCONST_FFFF));
+      subpixel = (_val->getVal().toInt());
   }
 }
 
@@ -5646,12 +5647,12 @@ void EffectSnake::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       subPix = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      subPix = _val->getVal() == FPSTR(TCONST_FFFF);
+      subPix = _val->getVal().toInt();
   } else if(_val->getId()==6){
     if(isRandDemo()){
       onecolor = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      onecolor = _val->getVal() == FPSTR(TCONST_FFFF);
+      onecolor = _val->getVal().toInt();
   }
 }
 
@@ -5914,7 +5915,7 @@ void EffectDNA::setDynCtrl(UIControl*_val){
     if(isRandDemo()){
       rotate = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      rotate = _val->getVal() == FPSTR(TCONST_FFFF);
+      rotate = _val->getVal().toInt();
   }
 }
 
@@ -6417,12 +6418,12 @@ void EffectPopcorn::setDynCtrl(UIControl*_val) {
     if(isRandDemo()){
       blurred = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      blurred = _val->getVal() == FPSTR(TCONST_FFFF);
+      blurred = _val->getVal().toInt();
   } else if(_val->getId()==6){ // Реверс цветов
     if(isRandDemo()){
       revCol = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      revCol = _val->getVal() == FPSTR(TCONST_FFFF);
+      revCol = _val->getVal().toInt();
   }  
 }
 
@@ -6607,7 +6608,7 @@ void EffectF_lying::setDynCtrl(UIControl*_val){
     if(isRandDemo()){
       type = random(_val->getMin().toInt(), _val->getMax().toInt()+2);
     } else
-      type = _val->getVal() == FPSTR(TCONST_FFFF);
+      type = _val->getVal().toInt();
   }
 }
 
@@ -7250,12 +7251,12 @@ void EffectWrain::setDynCtrl(UIControl*_val)
     if(isRandDemo()){
       clouds = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      clouds = _val->getVal() == FPSTR(TCONST_FFFF);
+      clouds = _val->getVal().toInt();
   } else if(_val->getId()==6){
     if(isRandDemo()){
       storm = random(_val->getMin().toInt(), _val->getMax().toInt()+2); // для переключателя +2, т.к. true/false
     } else
-      storm = _val->getVal() == FPSTR(TCONST_FFFF);
+      storm = _val->getVal().toInt();
   } else if(_val->getId()==7){
     if(isRandDemo()){
       type = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
@@ -7847,7 +7848,7 @@ void EffectFairy::load(){
 
 void EffectFairy::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-  if(_val->getId()==3) type = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==3) type = _val->getVal().toInt();
   if(_val->getId()==4) blur = _val->getVal().toInt();
 }
 
@@ -7933,7 +7934,7 @@ void EffectBengalL::load() {
 
 void EffectBengalL::setDynCtrl(UIControl*_val){
   EffectCalc::setDynCtrl(_val);
-  if(_val->getId()==3) centerRun = _val->getVal() == FPSTR(TCONST_FFFF);
+  if(_val->getId()==3) centerRun = _val->getVal().toInt();
 }
 
 void EffectBengalL::phisics(byte id) {

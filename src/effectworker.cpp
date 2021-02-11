@@ -1243,7 +1243,7 @@ void EffectCalc::setDynCtrl(UIControl*_val){
   //LOG(println,isMicActive?F("isMicActive=true"):F("isMicActive=false"));
   //if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = (_val->getVal()==FPSTR(TCONST_FFFF) && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
+    isMicActive = (_val->getVal().toInt() && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif
