@@ -58,7 +58,7 @@ bool check_recovery_state(bool isSet){
             LittleFS.remove(F("/recovery.state"));
         } else if(isSet){ // создаем файл-маркер, раз его не было
             File f = LittleFS.open(F("/recovery.state"), "w");
-            f.print(embui.param(F("effList")).c_str());
+            f.print(embui.param(FPSTR(TCONST_0016)).c_str());
             f.flush();
             f.close();
             delay(100);
@@ -2303,8 +2303,8 @@ void sync_parameters(){
     JsonObject obj = doc.to<JsonObject>();
 
     if(check_recovery_state(true)){
-        LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(F("effList"))).c_str());
-        embui.var(F("effList"),String(0)); // что-то пошло не так, был ребут, сбрасываем эффект
+        LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(FPSTR(TCONST_0016))).c_str());
+        embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был ребут, сбрасываем эффект
     }
 
     myLamp.semqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
