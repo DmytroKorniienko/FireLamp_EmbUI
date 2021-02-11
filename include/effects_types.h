@@ -1282,4 +1282,4 @@ const int8_t figures[7][12][2] PROGMEM = {
 #else
 #define MAZE_HEIGHT HEIGHT        // высота лабиринта
 #endif
-#define SHIFT 0                   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
+#define MAZE_SHIFT 0                   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
