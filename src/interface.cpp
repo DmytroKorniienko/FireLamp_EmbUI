@@ -2300,7 +2300,9 @@ void create_parameters(){
 
 void sync_parameters(){
     DynamicJsonDocument doc(1024);
-    JsonObject obj = doc.as<JsonObject>();
+    //https://arduinojson.org/v6/api/jsondocument/
+    //JsonDocument::to<T>() clears the document and converts it to the specified type. Don’t confuse this function with JsonDocument::as<T>() that returns a reference only if the requested type matches the one in the document.
+    JsonObject obj = doc.to<JsonObject>();
 
     if(check_recovery_state(true)){
         LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(FPSTR(TCONST_0016))).c_str());
