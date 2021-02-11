@@ -2300,7 +2300,7 @@ void create_parameters(){
 
 void sync_parameters(){
     DynamicJsonDocument doc(1024);
-    JsonObject obj = doc.to<JsonObject>();
+    JsonObject obj = doc.as<JsonObject>();
 
     if(check_recovery_state(true)){
         LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(FPSTR(TCONST_0016))).c_str());
