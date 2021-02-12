@@ -311,6 +311,25 @@ void EffectWorker::initDefault(const char *folder)
   String filename;
   DynamicJsonDocument doc(4096); // отожрет много памяти, но имена все равно не храним, так что хрен с ним, писать ручной парсер как-то лень
 
+  if(!LittleFS.exists(F("/eff"))){
+    LittleFS.mkdir(F("/eff"));
+  }
+  if(!LittleFS.exists(F("/backup"))){
+    LittleFS.mkdir(F("/backup"));
+  }
+  if(!LittleFS.exists(F("/backup/btn"))){
+    LittleFS.mkdir(F("/backup/btn"));
+  }
+  if(!LittleFS.exists(F("/backup/evn"))){
+    LittleFS.mkdir(F("/backup/evn"));
+  }
+  if(!LittleFS.exists(F("/backup/glb"))){
+    LittleFS.mkdir(F("/backup/glb"));
+  }
+  if(!LittleFS.exists(F("/backup/idx"))){
+    LittleFS.mkdir(F("/backup/idx"));
+  }
+
   if(folder && folder[0])
     filename = folder;
   else
