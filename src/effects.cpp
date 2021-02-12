@@ -38,6 +38,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "patterns.h"
 
+
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
@@ -1697,10 +1698,6 @@ bool EffectPrismata::run(CRGB *leds, EffectWorker *opt) {
 
   fadeToBlackBy(leds, NUM_LEDS, map(fadelvl, 1, 255, 130, 2)); // делаем шлейф
 
-  static byte t;
-  t++;
-  //if (t%60==0) Serial.println(test);
-
   for (byte x = 0; x < WIDTH; x++) {
       float y = (float)beatsin16((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 10) / 10.0f;
       EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(*curPalette, ((uint16_t)x + spirohueoffset) * 4));
@@ -1709,15 +1706,12 @@ bool EffectPrismata::run(CRGB *leds, EffectWorker *opt) {
 }
 
 void EffectPrismata::setDynCtrl(UIControl*_val){
+  EffectCalc::setDynCtrl(_val);
   if(_val->getId()==3){
     if(isRandDemo()){
       fadelvl = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
     } else
       fadelvl = _val->getVal().toInt();
-  }
-  if(_val->getId()==4){
-    test = _val->getVal().toInt();
-    palettemap(palettes, test, 1, FASTLED_PALETTS_COUNT);
   }
 }
 
@@ -8409,19 +8403,21 @@ void EffectPolarL::load() {
 void EffectPolarL::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(numpalettes);
+  palettes.push_back(&AuroraColors_p); 
   palettes.push_back(&RainbowColors_p);
   palettes.push_back(&PartyColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&RainbowColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&GreenAuroraColors_p); 
+  palettes.push_back(&BlueAuroraColors_p);
+  palettes.push_back(&NeonAuroraColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
   palettes.push_back(&WoodFireColors_p);
   palettes.push_back(&SodiumFireColors_p);
-  palettes.push_back(&CopperFireColors_p);
-  palettes.push_back(&AlcoholFireColors_p);
-  palettes.push_back(&PotassiumFireColors_p);
-  palettes.push_back(&WaterfallColors_p);
-
+  palettes.push_back(&WaterfallColors_p); 
+   
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
 }
@@ -8460,13 +8456,13 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
               fabs((float)HEIGHT/2. - (float)y) * adjastHeight
             )
           );
-      if (flag == 0) {
+      if (flag == 1) { // Тут я модифицирую стандартные палитры 
         CRGB temColor = leds[myLamp.getPixelNumber(x, y)];
         leds[myLamp.getPixelNumber(x, y)].g = temColor.r;
         leds[myLamp.getPixelNumber(x, y)].r = temColor.g;
         leds[myLamp.getPixelNumber(x, y)].g /= 6;
         leds[myLamp.getPixelNumber(x, y)].r += leds[myLamp.getPixelNumber(x, y)].r < 206 ? 48 : 0;;
-      } else if (flag == 2) {
+      } else if (flag == 3) {
         leds[myLamp.getPixelNumber(x, y)].b += 48;
         leds[myLamp.getPixelNumber(x, y)].g += leds[myLamp.getPixelNumber(x, y)].g < 206 ? 48 : 0;
       }

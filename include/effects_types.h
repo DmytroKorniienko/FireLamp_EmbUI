@@ -403,7 +403,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 1, 5, // 16-31
   5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
   5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 9, 5, 5, 7, 6, // 48 - 63
-  5, 1, 1, 3, 4, 1, 7, 5, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
+  5, 1, 1, 5, 4, 1, 7, 5, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -510,7 +510,7 @@ static const char E_COMET[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_CELL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":5,\"name\":\"" DFTINTF_0D2 "\"}]}"; 
 static const char E_FAIRY[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0F9 "\"}]}";
 static const char E_FOUNT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0FA "\"},  {\"id\":4,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_103 "\"}]}";
-static const char E_POLAR[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":1,\"max\":12,\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_POLAR[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":1,\"max\":14,\"name\":\"" DFTINTF_084 "\"}]}";
 // Инженерный
 //static const char E_TEST[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
 static const char E_TEST2[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"name\":\"" DFTINTF_084 "\"},  {\"id\":4},  {\"id\":5},  {\"id\":6},  {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"" DFTINTF_020 "\"}]}";
@@ -570,6 +570,8 @@ static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xbc2300, 0xc8441
 static const TProgmemRGBPalette16 NeonColors_p FL_PROGMEM = {0x00b1d0, 0x0f93ec, 0x3572ff, 0x4157ff, 0x6162ff, 0x686cff, 0x7473ff, 0x8689e5, 0x9e9dc6, 0x9694ac, 0x979b9b, 0x888b8c, 0x767680, 0x596160, 0x6c736f, 0x7b7359};
 static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0x1e0443, 0x6d0081, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x7900a1, 0x820055, 0xc80000, 0xe57b00, 0xff9d5a, 0xc58b32, 0xd8d400, 0xffff00};
 static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff100, 0xffe100, 0xffd100, 0xffc100, 0xffb100, 0xffa100, 0xff9100, 0xff8100, 0xff7100, 0xff6100, 0xff5100, 0xff4100, 0xff3100, 0xff2100, 0xff1100};
+
+
 
 #if  576U < (WIDTH * HEIGHT)
   #define BIGMATRIX
