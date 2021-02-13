@@ -396,10 +396,10 @@ private:
 
     void effectsReSort(SORT_TYPE st=(SORT_TYPE)(255));
 
-    int loadeffconfig(const uint16_t nb, const char *folder=nullptr);
+    int loadeffconfig(const uint16_t nb, const char *folder=NULL);
 
     // получение пути и имени файла конфига эффекта
-    const String geteffectpathname(const uint16_t nb, const char *folder=nullptr);
+    const String geteffectpathname(const uint16_t nb, const char *folder=NULL);
 
     /**
      * проверка на существование "дефолтных" конфигов для всех статичных эффектов
@@ -408,8 +408,8 @@ private:
     void chckdefconfigs(const char *folder);
 
     void savedefaulteffconfig(uint16_t nb, String &filename);
-    void saveeffconfig(uint16_t nb, char *folder=nullptr);
-    void makeIndexFile(const char *folder = nullptr);
+    void saveeffconfig(uint16_t nb, char *folder=NULL);
+    void makeIndexFile(const char *folder = NULL);
     // создать или обновить текущий индекс эффекта
     void updateIndexFile();
     // удалить эффект из индексного файла
@@ -437,7 +437,7 @@ private:
 
 public:
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
-    void initDefault(const char *folder = nullptr); // пусть вызывается позже и явно
+    void initDefault(const char *folder = NULL); // пусть вызывается позже и явно
     ~EffectWorker() { clearEffectList(); clearControlsList(); }
 
     LList<UIControl*>&getControls() { return isSelected() ? controls : selcontrols; }
@@ -492,11 +492,11 @@ public:
     // отложенная запись конфига текущего эффекта
     bool autoSaveConfig(bool force=false, bool reset=false);
     // удалить конфиг переданного эффекта
-    void removeConfig(const uint16_t nb, const char *folder=nullptr);
+    void removeConfig(const uint16_t nb, const char *folder=NULL);
     // пересоздает индекс с текущего списка эффектов
-    void makeIndexFileFromList(const char *folder = nullptr);
+    void makeIndexFileFromList(const char *folder = NULL);
     // пересоздает индекс с конфигов в ФС
-    void makeIndexFileFromFS(const char *fromfolder = nullptr, const char *tofolder = nullptr);
+    void makeIndexFileFromFS(const char *fromfolder = NULL, const char *tofolder = NULL);
 
     byte getModeAmount() {return effects.size();}
 
@@ -530,7 +530,7 @@ public:
     * @param nb  - айди эффекта
     * @param folder - какой-то префикс для каталога
     */
-    void loadeffname(String& effectName, const uint16_t nb, const char *folder=nullptr);
+    void loadeffname(String& effectName, const uint16_t nb, const char *folder=NULL);
 
     /**
     * вычитать только имя\путь звука из конфиг-файла и записать в предоставленную строку
@@ -539,7 +539,7 @@ public:
     * @param nb  - айди эффекта
     * @param folder - какой-то префикс для каталога
     */
-    void loadsoundfile(String& effectName, const uint16_t nb, const char *folder=nullptr);
+    void loadsoundfile(String& effectName, const uint16_t nb, const char *folder=NULL);
 
     // текущий эффект или его копия
     const uint16_t getEn() {return curEff;}

@@ -579,7 +579,7 @@ const String EffectWorker::geteffectpathname(const uint16_t nb, const char *fold
   uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
   String filename;
   char buffer[5];
-  if (folder != nullptr) {
+  if (folder) {
       filename.concat(F("/"));
       filename.concat(folder);
   }
@@ -830,10 +830,10 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
 void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
 {
   File indexFile;
-  String sourcedir("");
+  String sourcedir;
   makeIndexFile(tofolder); // создать дефолтный набор прежде всего
 
-  if (fromfolder != nullptr) {
+  if (fromfolder) {
       sourcedir.concat(F("/"));
       sourcedir.concat(fromfolder);
   }
@@ -865,7 +865,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
 #ifdef ESP32
   File _f = dir.openNextFile();
   while(_f){
-      fn=sourcedir + "/" + _f.name();
+      fn = _f.name();
 #endif
 
       if (!deserializeFile(doc, fn.c_str())) { //  || doc[F("nb")].as<String>()=="0"
