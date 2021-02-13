@@ -262,6 +262,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_SMOKEBALLS :
     worker = std::unique_ptr<EffectSmokeballs>(new EffectSmokeballs());
     break;
+   case EFF_ENUM::EFF_RACER :
+    worker = std::unique_ptr<EffectRacer>(new EffectRacer());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());
@@ -1272,7 +1275,7 @@ void EffectCalc::setDynCtrl(UIControl*_val){
 // Load palletes into array
 void EffectCalc::palettesload(){
   palettes.reserve(FASTLED_PALETTS_COUNT);
-  palettes.push_back(&RainbowStripeColors_p);
+  palettes.push_back(&AuroraColors_p/*RainbowStripeColors_p*/);
   palettes.push_back(&ForestColors_p);
   palettes.push_back(&NormalFire_p);
   palettes.push_back(&LavaColors_p);
@@ -1293,7 +1296,7 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&AcidColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&OrangeColors_p/*NeonColors_p*/);
+  palettes.push_back(&HolyLightsColors_p/*OrangeColors_p NeonColors_p*/);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
