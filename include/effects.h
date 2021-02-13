@@ -1889,7 +1889,7 @@ private:
     float addRadius;
 
     const float _speed = (float)NUM_LEDS / 256; // Нормализация скорости для разных размеров матриц
-    const float _addRadius = (float)NUM_LEDS / 4000;   // Нормализация скорости увеличсения радиуса круга для разных матриц
+    const float _addRadius = (float)NUM_LEDS / 4000;   // Нормализация скорости увеличения радиуса круга для разных матриц
 
 
     void aimChange();

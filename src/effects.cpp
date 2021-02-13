@@ -8513,7 +8513,7 @@ void EffectRacer::load() {
 void EffectRacer::aimChange() {
   aimX = random(0, LED_COLS - 1);
   aimY = random(0, LED_ROWS - 1);
-  radius = 0.5;
+  radius = 1;
   hue = random(0, 248);
   color = ColorFromPalette(*curPalette, hue);
 }
