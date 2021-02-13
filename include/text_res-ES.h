@@ -117,6 +117,7 @@ static const char TEFF_069 [] PROGMEM = "Isla de Serpientes";
 static const char TEFF_070 [] PROGMEM = "Sueños de los niños";
 static const char TEFF_071 [] PROGMEM = "Metabolas";
 static const char TEFF_072 [] PROGMEM = "Lámpara de lava";
+static const char TEFF_073 [] PROGMEM = "Corredor";
 static const char TEFF_253 [] PROGMEM = "Reloj";
 static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";

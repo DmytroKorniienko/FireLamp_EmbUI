@@ -1851,7 +1851,6 @@ public:
 // особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 
 // Палитры, специально созданные под этот эффект, огромная благодарность @Stepko
-static const TProgmemRGBPalette16 AuroraColors_p FL_PROGMEM = {0x00ff00, 0x00c040, 0x008080, 0x0040c0, 0x0000ff, 0x4000c0, 0x800080, 0xc00040, 0xff0000, 0xff4000, 0xff8000, 0xd6c000, 0xffff00, 0xc0ff00, 0x80ff00, 0x40ff00};
 static const TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM ={0x000000, 0x003300, 0x006600, 0x009900, 0x00cc00,0x00ff00, 0x33ff00, 0x66ff00, 0x99ff00,0xccff00, 0xffff00, 0xffcc00, 0xff9900, 0xff6600, 0xff3300, 0xff0000};
 static const TProgmemRGBPalette16 BlueAuroraColors_p FL_PROGMEM ={0x000000, 0x000033, 0x000066, 0x000099, 0x0000cc,0x0000ff, 0x3300ff, 0x6600ff, 0x9900ff,0xcc00ff, 0xff00ff, 0xff33ff, 0xff66ff, 0xff99ff, 0xffccff, 0xffffff};
 static const TProgmemRGBPalette16 NeonAuroraColors_p FL_PROGMEM ={0x000000, 0x003333, 0x006666, 0x009999, 0x00cccc,0x00ffff, 0x33ffff, 0x66ffff, 0x99ffff,0xccffff, 0xffffff, 0xffccff, 0xff99ff, 0xff66ff, 0xff33ff, 0xff00ff};
@@ -1875,6 +1874,31 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// --------- Эффект "Гонщик"
+// (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
+class EffectRacer: public EffectCalc {
+private:
+    float posX = random(0,(LED_COLS-1)*4);
+    float posY = random(0,(LED_ROWS-1)*4);
+    uint8_t aimX = random(0,LED_COLS-1);
+    uint8_t aimY = random(0,LED_ROWS-1);
+    float radius = 0;
+    byte hue = random(0, 248);
+    CRGB color;
+    float speedFactor;
+    float addRadius;
+
+    const float _speed = (float)NUM_LEDS / 256; // Нормализация скорости для разных размеров матриц
+    const float _addRadius = (float)NUM_LEDS / 4000;   // Нормализация скорости увеличсения радиуса круга для разных матриц
+
+
+    void aimChange();
+    void setspd(const byte _spd) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 

@@ -8472,3 +8472,48 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
 
   return true;
 }
+
+// --------- Эффект "Гонщик"
+// (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
+void EffectRacer::setspd(const byte _spd) {
+  EffectCalc::setspd(_spd);
+  speedFactor = _speed * EffectMath::fmap(speed, 1, 255, 0.33, 2);
+  addRadius = _addRadius * EffectMath::fmap(speed, 1, 255, 0.33, 2);
+}
+
+bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
+  fadeToBlackBy(leds, NUM_LEDS, 12 * speedFactor);
+
+  if (round(posX / 4) > aimX) {
+    posX -= speedFactor;
+  }
+  if (round(posY / 4) > aimY) {
+    posY -= speedFactor;
+  }
+  if (round(posX / 4) < aimX) {
+    posX += speedFactor;
+  }
+  if (round(posY / 4) < aimY) {
+    posY += speedFactor;
+  }
+  if (round(posX / 4) == aimX && round(posY / 4) == aimY) {
+    aimChange();
+  }
+  radius += _addRadius;
+  EffectMath::drawCircleF(aimX, aimY, radius, color);
+  EffectMath::drawPixelXYF((float)posX / 4, (float)posY / 4, CHSV(0, 0, 255));
+
+  return true;
+}
+
+void EffectRacer::load() {
+  palettesload();
+}
+
+void EffectRacer::aimChange() {
+  aimX = random(0, LED_COLS - 1);
+  aimY = random(0, LED_ROWS - 1);
+  radius = 0.5;
+  hue = random(0, 248);
+  color = ColorFromPalette(*curPalette, hue);
+}
