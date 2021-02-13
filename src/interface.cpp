@@ -1570,7 +1570,7 @@ void block_settings_time(Interface *interf, JsonObject *data){
     interf->text(FPSTR(TCONST_0057), FPSTR(TINTF_053));
     interf->text(FPSTR(TCONST_0058), FPSTR(TINTF_054));
     interf->comment(FPSTR(TINTF_055));
-    interf->text(FPSTR(TCONST_0059), "");
+    interf->text(FPSTR(TCONST_0059), "", "", false);
     interf->hidden(FPSTR(TCONST_00B8),""); // скрытое поле для получения времени с устройства
     interf->button_submit(FPSTR(TCONST_0056), FPSTR(TINTF_008), FPSTR(TCONST_0008));
 
