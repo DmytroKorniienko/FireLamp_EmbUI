@@ -72,7 +72,7 @@ void MP3PLAYERDEVICE::restartSound()
   isplayname = false;
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
-  if(currentState == 512 || currentState == -1){
+  if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение, попытка фикса https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-312#post-75394
     delayedCall.once(0.2,std::bind([this](){
       if(isOn() || (ready && alarm)){
         if(alarm){
