@@ -125,9 +125,10 @@ void pubCallback(Interface *interf){
 #endif
 
 #ifdef ESP32
-    size_t t_bytes=0, u_bytes=0;
-    esp_littlefs_info(nullptr, &t_bytes, &u_bytes);
-    interf->value(FPSTR(TCONST_00C2), String(t_bytes - u_bytes), true);
+    // size_t t_bytes=0, u_bytes=0;
+    // esp_littlefs_info(nullptr, &t_bytes, &u_bytes);
+    // interf->value(FPSTR(TCONST_00C2), String(t_bytes - u_bytes), true);
+    interf->value(FPSTR(TCONST_00C2), String(LittleFS.totalBytes() - LittleFS.usedBytes()), true);
 #endif
 
     int32_t rssi = WiFi.RSSI();
