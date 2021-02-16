@@ -4129,16 +4129,13 @@ bool EffectStar::starRoutine(CRGB *leds, EffectWorker *param) {
 if (setup) { // однократная настройка при старте эффекта
   float _speed = speed;
   counter = 0.0;
-  // driftx = random8(4, WIDTH - 4);//set an initial location for the animation center
-  // drifty = random8(4, HEIGHT - 4);// set an initial location for the animation center
 
-  // стартуем с центра, раз это единственная причина перезапуска по масштабу :)
+  // стартуем с центра
   driftx = (float)WIDTH/2.0;
   drifty = (float)HEIGHT/2.0;
 
-  cangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation gives a float value between -1 and 1
-  sangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f;//angle of movement for the center of animation in the y direction gives a float value between -1 and 1
-  //shifty = random (3, 12);//how often the drifter moves будет CENTER_DRIFT_SPEED = 6
+  cangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f; //angle of movement for the center of animation gives a float value between -1 and 1
+  sangle = (float)(sin8(random8(25, 220)) - 128.0f) / 128.0f; //angle of movement for the center of animation in the y direction gives a float value between -1 and 1
 
   stars_count = WIDTH / 2U;
   if (stars_count > STARS_NUM) stars_count = STARS_NUM;
@@ -4186,7 +4183,7 @@ if (setup) { // однократная настройка при старте э
         color[num]+=_scalefactor; // в зависимости от знака - направление вращения
       }
       else
-        delay[num] = counter + (stars_count << 1) + 1U;//random8(50, 99);//modes[currentMode].Scale;//random8(50, 99); // задержка следующего пуска звезды
+        delay[num] = counter + (stars_count << 1) + 1U; // задержка следующего пуска звезды
     }
   }
 #ifdef MIC_EFFECTS
@@ -8482,7 +8479,7 @@ void EffectRacer::setspd(const byte _spd) {
 }
 
 bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
-  fadeToBlackBy(leds, NUM_LEDS, 12 * speedFactor);
+  fadeToBlackBy(leds, NUM_LEDS, 16 * speedFactor);
 
   if (round(posX / 4) > aimX) {
     posX -= speedFactor;
@@ -8499,9 +8496,23 @@ bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
   if (round(posX / 4) == aimX && round(posY / 4) == aimY) {
     aimChange();
   }
-  radius += _addRadius;
-  EffectMath::drawCircleF(aimX, aimY, radius, color);
-  EffectMath::drawPixelXYF((float)posX / 4, (float)posY / 4, CHSV(0, 0, 255));
+  radius += addRadius;
+  angle += radius;
+  switch (hue%3)
+  {
+  case 0:
+    EffectMath::drawCircleF(aimX, aimY, radius, color); // рисуем круг
+    break;
+  
+  case 1:
+    drawStarF(aimX, aimY, 1.3 * radius, radius, 4, angle, color); // рисуем квадрат
+    break;
+  case 2:
+    drawStarF(aimX, aimY, 2 * radius, radius, starPoints, angle, color); // рисуем звезду
+    break;
+  }
+  
+  EffectMath::drawPixelXYF(posX / 4, posY / 4, CHSV(0, 0, 255)); // отрисовываем бегуна
 
   return true;
 }
@@ -8511,9 +8522,19 @@ void EffectRacer::load() {
 }
 
 void EffectRacer::aimChange() {
-  aimX = random(0, LED_COLS - 1);
-  aimY = random(0, LED_ROWS - 1);
-  radius = 1;
-  hue = random(0, 248);
-  color = ColorFromPalette(*curPalette, hue);
+  aimX = random(0, WIDTH);  // позиция цели 
+  aimY = random(0, HEIGHT);
+  radius = 1; // начальный размер цели = 1 пиксель
+  hue = millis()>>1; //random(0, 255);
+  color = ColorFromPalette(*curPalette, hue, 156);
+  starPoints = random(3, 7); // количество лучей у звезды
+}
+
+void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color) {
+  float radius2 = 255.0 / points;
+  for (int i = 0; i < points; i++) {
+    EffectMath::drawLineF(x + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
+    EffectMath::drawLineF(x + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
+
+  }
 }

@@ -1878,21 +1878,24 @@ public:
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 class EffectRacer: public EffectCalc {
 private:
-    float posX = random(0,(LED_COLS-1)*4);
-    float posY = random(0,(LED_ROWS-1)*4);
-    uint8_t aimX = random(0,LED_COLS-1);
-    uint8_t aimY = random(0,LED_ROWS-1);
+    float posX = random(0, WIDTH);
+    float posY = random(0, HEIGHT);
+    uint8_t aimX = random(0, WIDTH);
+    uint8_t aimY = random(0, HEIGHT);
     float radius = 0;
-    byte hue = random(0, 248);
+    byte hue = millis()>>1; //random(0, 255);
     CRGB color;
     float speedFactor;
     float addRadius;
+    float angle;
+    byte starPoints = random(3, 7);
 
     const float _speed = (float)NUM_LEDS / 256; // Нормализация скорости для разных размеров матриц
     const float _addRadius = (float)NUM_LEDS / 4000;   // Нормализация скорости увеличения радиуса круга для разных матриц
 
 
     void aimChange();
+    void drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color);
     void setspd(const byte _spd) override;
 
 public:
