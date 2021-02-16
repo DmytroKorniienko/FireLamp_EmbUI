@@ -7867,10 +7867,10 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
     for (int16_t y = startY; y < endY; y++) {
       if (y < 0 or y > (int)(HEIGHT - 1)) continue;
       if (x < 0 or y > (int)(WIDTH - 1)) continue;
-      uint16_t index = myLamp.getPixelNumber(x, y);
-      /*if (index < 0 || index > NUM_LEDS)
-        continue;*/
-      double distance = EffectMath::sqrt(sq(x - centerX) + sq(y - centerY));
+      int16_t index = myLamp.getPixelNumber(x, y);
+      if (index < 0 || index > NUM_LEDS - 1)
+        continue;
+      float distance = EffectMath::sqrt(sq(x - centerX) + sq(y - centerY));
       if (distance > radius)
         continue;
 
@@ -7878,23 +7878,13 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
       if (radius < 1) { // last pixel
         brightness = 255.0 * radius;
       } else {
-        double percentage = distance / radius;
-        double fraction = 1.0 - percentage;
+        float percentage = distance / radius;
+        float fraction = 1.0 - percentage;
         brightness = 255.0 * fraction;
       }
-      leds[index] += (color > 1 ? ColorFromPalette(*curPalette, hue, brightness) : CHSV(hue, 255, brightness));
+      leds[index] += ColorFromPalette(*curPalette, hue, brightness);
     }
   }
-}
-
-void EffectCircles::setDynCtrl(UIControl*_val) {
-  EffectCalc::setDynCtrl(_val);
-  if(_val->getId()==3){
-    if(isRandDemo()){
-      color = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else
-      color = _val->getVal().toInt();
-  } 
 }
 
 bool EffectCircles::run(CRGB *leds, EffectWorker *opt) {
@@ -7971,7 +7961,7 @@ bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   }
   for (byte i = 0; i < map(scale, 1, 255, 8, sparksNum); i++) {
     phisics(i);
-    if (sparksPos[1][i] < ((HEIGHT - 1) * 10))
+    if (sparksPos[1][i] < ((HEIGHT - 1) * 10) and sparksPos[1][i] >= 0)
       if (sparksPos[0][i] < ((WIDTH - 1) * 10) and sparksPos[0][i] >= 0)
         EffectMath::drawPixelXYF(sparksPos[0][i] / 10,  sparksPos[1][i] / 10, CHSV(sparksColor[i], constrain(sparksSat[i], 5, 255), constrain(sparksFade[i], 32, 255)));
   }
@@ -8393,7 +8383,7 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
 // особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 void EffectPolarL::load() {
   adjastHeight = EffectMath::fmap((float)HEIGHT, 8, 32, 28, 12);
-  adjScale = map((int)WIDTH, 8, 32, 310, 127);
+  adjScale = map((int)WIDTH, 8, 64, 310, 63);
   palettesload();
 }
 
@@ -8442,21 +8432,21 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
       timer++;
-      uint16_t i = x*y;
+      //uint16_t i = x*y;
       leds[myLamp.getPixelNumber(x, y)]= 
           ColorFromPalette(*curPalette,
             qsub8(
-              inoise8(i % 2 + x * _scale,
+              inoise8(/*i*/timer % 2 + x * _scale,
                 y * 16 + timer % 16,
                 timer / _speed
               ),
-              fabs((float)HEIGHT/2. - (float)y) * adjastHeight
+              fabs((float)HEIGHT/2 - (float)y) * adjastHeight
             )
           );
       if (flag == 1) { // Тут я модифицирую стандартные палитры 
-        CRGB temColor = leds[myLamp.getPixelNumber(x, y)];
-        leds[myLamp.getPixelNumber(x, y)].g = temColor.r;
-        leds[myLamp.getPixelNumber(x, y)].r = temColor.g;
+        CRGB tmpColor = leds[myLamp.getPixelNumber(x, y)];
+        leds[myLamp.getPixelNumber(x, y)].g = tmpColor.r;
+        leds[myLamp.getPixelNumber(x, y)].r = tmpColor.g;
         leds[myLamp.getPixelNumber(x, y)].g /= 6;
         leds[myLamp.getPixelNumber(x, y)].r += leds[myLamp.getPixelNumber(x, y)].r < 206 ? 48 : 0;;
       } else if (flag == 3) {
@@ -8522,11 +8512,11 @@ void EffectRacer::load() {
 }
 
 void EffectRacer::aimChange() {
-  aimX = random(0, WIDTH);  // позиция цели 
-  aimY = random(0, HEIGHT);
+  aimX = random(0, WIDTH-1);  // позиция цели 
+  aimY = random(0, HEIGHT-1);
   radius = 1; // начальный размер цели = 1 пиксель
   hue = millis()>>1; //random(0, 255);
-  color = ColorFromPalette(*curPalette, hue, 156);
+  color = ColorFromPalette(*curPalette, hue, 180);
   starPoints = random(3, 7); // количество лучей у звезды
 }
 

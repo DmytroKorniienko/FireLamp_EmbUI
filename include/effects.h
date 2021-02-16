@@ -1687,7 +1687,7 @@ public:
 // ---------- Эффект "Бульбулятор"
 // "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
-#define NUMBER_OF_CIRCLES (WIDTH*2U)
+#define NUMBER_OF_CIRCLES (NUM_LEDS / 32U)
 class EffectCircles : public EffectCalc {
 private:
     byte color;
@@ -1701,16 +1701,14 @@ private:
         float bpm = random(0, 255);
 
         void move() {
-            centerX = random(0, LED_COLS);
-            centerY = random(0, LED_ROWS);
+            centerX = random(0, LED_COLS-1);
+            centerY = random(0, LED_ROWS-1);
         }
         
         void reset() {
-            //startTime = millis();
-            centerX = random(0, LED_COLS);
-            centerY = random(0, LED_ROWS);
+            centerX = random(0, LED_COLS-1);
+            centerY = random(0, LED_ROWS-1);
             hue = random(0, 255);
-            //offset = random(0, 60000 / bpm);
         }
 
         float radius() {
@@ -1722,7 +1720,7 @@ private:
     Circle circles[NUMBER_OF_CIRCLES] = {};
 
     void drawCircle(CRGB *leds, Circle circle);
-    void setDynCtrl(UIControl*_val) override;
+
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1878,10 +1876,10 @@ public:
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 class EffectRacer: public EffectCalc {
 private:
-    float posX = random(0, WIDTH);
-    float posY = random(0, HEIGHT);
-    uint8_t aimX = random(0, WIDTH);
-    uint8_t aimY = random(0, HEIGHT);
+    float posX = random(0, WIDTH-1);
+    float posY = random(0, HEIGHT-1);
+    uint8_t aimX = random(0, WIDTH)-1;
+    uint8_t aimY = random(0, HEIGHT-1);
     float radius = 0;
     byte hue = millis()>>1; //random(0, 255);
     CRGB color;
