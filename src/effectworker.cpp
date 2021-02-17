@@ -1313,7 +1313,7 @@ void EffectCalc::palettesload(){
  * @param _pals - набор с палитрами
  */
 void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min,  const uint8_t _max){
-  if (!_pals.size()) {
+  if (!_pals.size() || _val>_max) {
     LOG(println,F("No palettes loaded or wrong value!"));
     return;
   }
@@ -1329,7 +1329,7 @@ void EffectCalc::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val,
  * метод выбирает текущую палитру '*curPalette' из набора дотупных палитр 'palettes'
  * в соответствии со значением "бегунка" шкалы. В случае если задана паременная rval -
  * метод использует значение R,  иначе используется значение scale
- * (палитры меняются автоматом при изменении значения шкалы/R, метод оставлен для совместимости
+ * (палитры меняются автоматом при изменении значения шкалы/дин. ползунка, метод оставлен для совместимости
  * и для первоначальной загрузки эффекта)
  */
 void EffectCalc::scale2pallete(){

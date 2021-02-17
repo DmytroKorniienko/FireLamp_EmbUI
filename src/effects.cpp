@@ -5710,15 +5710,16 @@ void EffectFire2020::regenNoise() {
 
 }
 
-void EffectFire2020::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
-  std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
-  if (!_pals.size() || idx>=_pals.size()) {
-    LOG(println,F("No palettes loaded or wrong value!"));
-    return;
-  }
+// нахрена кастомный мапинг тут???
+// void EffectFire2020::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
+//   std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
+//   if (!_pals.size() || idx>=_pals.size()) {
+//     LOG(println,F("No palettes loaded or wrong value!"));
+//     return;
+//   }
 
-  curPalette = _pals.at(idx);
-}
+//   curPalette = _pals.at(idx);
+// }
 
 String EffectFire2020::setDynCtrl(UIControl*_val)
 {
@@ -8001,17 +8002,18 @@ void EffectPolarL::palettesload(){
   scale2pallete();    // выставляем текущую палитру
 }
 
-void EffectPolarL::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
-  std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
-  if (!_pals.size() || idx>=_pals.size()) {
-    LOG(println,F("No palettes loaded or wrong value!"));
-    return;
-  }
+// нахрена кастомный мапинг тут???
+// void EffectPolarL::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
+//   std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
+//   if (!_pals.size() || idx>=_pals.size()) {
+//     LOG(println,F("No palettes loaded or wrong value!"));
+//     return;
+//   }
 
-    flag = idx;
+//     flag = idx;
 
-  curPalette = _pals.at(idx);
-}
+//   curPalette = _pals.at(idx);
+// }
 
 void EffectPolarL::setscl(const byte _scl)
 {

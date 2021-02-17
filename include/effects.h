@@ -1368,7 +1368,7 @@ private:
     byte _scale = 60;
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
-    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
     void regenNoise();
 
@@ -1864,7 +1864,7 @@ private:
     byte flag;
 
     void setscl(const byte _scl) override;
-    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
 
 public:
