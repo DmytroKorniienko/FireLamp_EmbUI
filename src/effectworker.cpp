@@ -1248,8 +1248,9 @@ void EffectCalc::setscl(byte _scl){
  * вызывается в UI, для реализации особого поведения (палитра и т.д.)...
  * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
  */
-void EffectCalc::setDynCtrl(UIControl*_val){
-  if(!_val) return;
+String EffectCalc::setDynCtrl(UIControl*_val){
+  if(!_val) return String();
+  String ret_val = _val->getVal();
 
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     if(isRandDemo()){
@@ -1260,16 +1261,20 @@ void EffectCalc::setDynCtrl(UIControl*_val){
     isCtrlPallete = true;
   }
 
-  //LOG(printf_P,PSTR("_val->getName(): %s, _val->getId(): %d, _val->getVal(): %s\n"),_val->getName().c_str(),_val->getId(),_val->getVal().c_str());
-
-  //LOG(println,isMicActive?F("isMicActive=true"):F("isMicActive=false"));
-  //if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
     isMicActive = (_val->getVal().toInt() && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif
+  } else {
+    if(isRandDemo()){ // для режима рандомного ДЕМО, если это не микрофон - то вернуть рандомное значение в пределах диапазона значений
+      ret_val = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
+    } else {
+      ret_val = _val->getVal().toInt();
+    }
   }
+
+  return ret_val;
 }
 
 // Load palletes into array

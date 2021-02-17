@@ -59,7 +59,7 @@ private:
     void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 #endif
 
@@ -126,7 +126,7 @@ private:
     bool halo = false;                                  // ореол
     uint8_t _scale=1;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     // void setscl(const byte _scl) override; // перегрузка для масштаба
     //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
@@ -191,7 +191,7 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 class EffectRainbow : public EffectCalc {
@@ -213,7 +213,7 @@ private:
 
     bool colorsRoutine(CRGB *leds, EffectWorker *param);
     void setscl(const byte _scl) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -236,7 +236,7 @@ private:
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ========== Эффект "Эффектопад"
@@ -272,7 +272,7 @@ private:
     const uint8_t fireSmoothing = 60U; // 90
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
     bool fire2012Routine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -290,7 +290,7 @@ protected:
     byte light[LIGHTERS_AM];
 private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -306,7 +306,7 @@ private:
     bool randColor = false;
     bool white = false;
     float count;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -320,7 +320,7 @@ private:
     bool isNew = true;
     float fade;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -349,7 +349,7 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 class EffectSpiro : public EffectCalc {
@@ -387,7 +387,7 @@ private:
     byte spirohueoffset = 0;
     uint8_t fadelvl=1;
     
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -406,7 +406,7 @@ private:
   float hueoffset;
 
   bool flockRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
   void setspd(const byte _spd) override;
 public:
     void load() override;
@@ -450,7 +450,7 @@ private:
     bool fractfireRoutine(CRGB *leds, EffectWorker *param);
     bool flsnakeRoutine(CRGB *leds, EffectWorker *param);
     bool smokeRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -480,7 +480,7 @@ private:
   uint8_t _dri_delta;
   byte driftType = 0;
 
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
   bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
   bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
 
@@ -510,7 +510,7 @@ private:
   float waveTheta;
   uint8_t _scale=1;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -528,7 +528,7 @@ private:
   bool subPix = false;
   byte hue;
   bool radarRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -553,7 +553,7 @@ private:
 
   void FillNoise(int8_t layer);     // TODO: join with Comet's
   bool multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -574,7 +574,7 @@ private:
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
   bool fire2018Routine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -597,7 +597,7 @@ private:
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
   void ringsSet();
   bool ringsRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -631,7 +631,7 @@ private:
   bool cube2dClassicRoutine(CRGB *leds, EffectWorker *param);
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
   void cube2dmoveRows(uint8_t moveItem, bool movedirection);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
   void setscl(const byte _scl) override;
 
 public:
@@ -701,7 +701,7 @@ public:
     }
     ~EffectPicasso() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ------ Эффект "Прыгуны" (c) obliterator
@@ -722,7 +722,7 @@ private:
     bool leapersRoutine(CRGB *leds, EffectWorker *param);
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ------ Эффект "Лавовая Лампа"
@@ -793,7 +793,7 @@ public:
     }
     ~EffectLiquidLamp() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ----------- Эффект "Вихри" адаптация SottNick
@@ -845,7 +845,7 @@ private:
 
 public:
     void load() override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -893,7 +893,7 @@ private:
     void sparkGen();
     Dot gDot[SPARK];
     Dot gSparks[NUM_SPARKS];
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
@@ -929,7 +929,7 @@ private:
     float div;
     byte gain;
     double y[2] = {0., 0.};
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     
 
 public:
@@ -950,7 +950,7 @@ private:
     byte rand;
     bool flag = false;
 
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     bool munchRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1013,7 +1013,7 @@ private:
     void load() override;
 public:
     //void load() override;
-    virtual void setDynCtrl(UIControl*_val) override;
+    virtual String setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1066,7 +1066,7 @@ private:
         CHSV(HUE_AQUA, 255, 255),
     };
 
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     void drawPicture_XY();
     bool patternsRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1104,7 +1104,7 @@ private:
 
     bool arrowsRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1123,7 +1123,7 @@ private:
     void balls_timer();
     void blur(CRGB *leds);
     bool nballsRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1146,7 +1146,7 @@ private:
     //Boid boids[AVAILABLE_BOID_COUNT];
     Boid boids[count];
     PVector location;   // Location
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     void setscl(const byte _scl) override;
     void setspd(const byte _spd) override;
     void setup();
@@ -1280,7 +1280,7 @@ struct Snake
 
     Snake snakes[MAX_SNAKES];
     bool snakeRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     //void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1307,7 +1307,7 @@ class EffectNexus: public EffectCalc {
 
     void reload();
     void resetDot(uint8_t idx);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1327,7 +1327,7 @@ private:
     CHSV color;
 
     bool flowerRoutine(CRGB *leds, EffectWorker *param);
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1346,7 +1346,7 @@ private:
     bool rotate = false;
 
     bool DNARoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
@@ -1367,7 +1367,7 @@ private:
     byte _pal = 8;
     byte _scale = 60;
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
     void regenNoise();
@@ -1396,7 +1396,7 @@ private:
     byte csum = 0;
 
     bool testRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     void setscl(const byte _scl) override; // перегрузка для масштаба
     //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
@@ -1429,7 +1429,7 @@ private:
     void restart_rocket(uint8_t r);
     void reload();
     bool popcornRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     //void setscl(const byte _scl) override; // перегрузка для масштаба
 
 public:
@@ -1451,7 +1451,7 @@ class EffectSmokeballs: public EffectCalc {
     uint8_t waveColors[WAVES_AMOUNT];
     void shiftUp();
     void regen();
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
   public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1476,7 +1476,7 @@ class EffectCell: public EffectCalc {
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ----------- Эффект "Геометрический Вальс"
@@ -1494,7 +1494,7 @@ class EffectF_lying: public EffectCalc {
     byte hue = 0;
     uint8_t _blur = 1;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
-    void setDynCtrl(UIControl*_val);
+    String setDynCtrl(UIControl*_val);
 #ifdef BIGMATRIX
     const float deviator = 2.;
 #else
@@ -1521,7 +1521,7 @@ class EffectTLand: public EffectCalc {
     double t;
     void processFrame(CRGB *leds, double t, double x, double y);
     float code(double i, double x, double y);
-    void setDynCtrl(UIControl*_val);
+    String setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
@@ -1541,7 +1541,7 @@ class EffectLLand: public EffectCalc {
     uint8_t _scale = 1;
     float t;
     uint16_t code(byte x, byte y, uint16_t i, float t);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     bool select = false;
     bool randColor = false;
     float hue = 0;
@@ -1575,7 +1575,7 @@ class EffectOscilator: public EffectCalc {
     int blueNeighbours(uint8_t x, uint8_t y);
     int greenNeighbours(uint8_t x, uint8_t y);
     void setCellColors(uint8_t x, uint8_t y);
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
@@ -1609,7 +1609,7 @@ class EffectWrain: public EffectCalc {
     
 
     void reload();
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     bool Lightning(uint16_t chanse);
     void Clouds(bool flash);
 
@@ -1677,7 +1677,7 @@ private:
     bool fairy(CRGB *leds);
     void fount(CRGB *leds);
     void setscl(const byte _scl) override; // перегрузка для масштаба
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1750,7 +1750,7 @@ private:
     void regen(byte id);
     void phisics(byte id);
     void setspd(const byte _spd) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 
 public:
@@ -1777,7 +1777,7 @@ private:
     float speedFactor;
     void fill_circle(float cx, float cy, float radius, CRGB col);
     void setspd(const byte _spd) override;
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
 
 
 public:
@@ -1823,7 +1823,7 @@ private:
         return false;
     }
 
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
     void setspd(const byte _spd) override; // перегрузка для скорости
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1836,7 +1836,7 @@ class EffectFrizzles : public EffectCalc {
 private:
     float _speed;
     float _scale;
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
