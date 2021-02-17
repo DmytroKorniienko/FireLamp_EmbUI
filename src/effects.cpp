@@ -51,6 +51,7 @@ bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
 
 String EffectSparcles::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) eff = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -370,6 +371,7 @@ void EffectColors::setscl(const byte _scl){
 
 String EffectColors::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) mode = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -453,8 +455,9 @@ EVERY_N_SECONDS(1){
 String EffectMatrix::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) hue = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) gluk = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) hue = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) gluk = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
 
   if (hue == 1) {
     randColor = true;
@@ -553,8 +556,9 @@ void EffectStarFall::load(){
 
 String EffectStarFall::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) effId = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) isNew = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) effId = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) isNew = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -638,7 +642,8 @@ bool EffectLighters::run(CRGB *ledarr, EffectWorker *opt){
 
 String EffectLighters::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) subPix = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) subPix = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -698,6 +703,7 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
 // ------------- светлячки со шлейфом -------------
 String EffectLighterTracers::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -982,7 +988,8 @@ void Effect3DNoise::load(){
 String Effect3DNoise::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
-  if(_val->getId()==4) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   fillnoise8();
   return String();
 }
@@ -1042,7 +1049,8 @@ void EffectBBalls::regen(){
 
 String EffectBBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); regen(); }
-  if(_val->getId()==4) halo = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) halo = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -1336,9 +1344,10 @@ void EffectComet::load() {
 
 String EffectComet::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) colorId = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) smooth = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) blur = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) colorId = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) smooth = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) blur = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -1622,6 +1631,7 @@ bool EffectPrismata::run(CRGB *leds, EffectWorker *opt) {
 
 String EffectPrismata::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) fadelvl = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -1645,6 +1655,7 @@ void EffectFlock::load(){
 
 String EffectFlock::setDynCtrl(UIControl*_val) {
   if(_val->getId()==4) predatorPresent = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -1775,6 +1786,7 @@ void EffectDrift::load(){
 
 String EffectDrift::setDynCtrl(UIControl*_val){
   if(_val->getId()==4) driftType = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -1872,6 +1884,7 @@ void EffectFreq::load()
 
 String EffectFreq::setDynCtrl(UIControl*_val){
   if(_val->getId()==4) type = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -2108,6 +2121,7 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
 
 String EffectRadar::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) subPix = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -2170,6 +2184,7 @@ bool EffectWaves::run(CRGB *ledarr, EffectWorker *opt){
 
 String EffectWaves::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -2250,6 +2265,7 @@ void EffectFire2012::load(){
 
 String EffectFire2012::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -2320,6 +2336,7 @@ bool EffectFire2018::run(CRGB *ledarr, EffectWorker *opt){
 
 String EffectFire2018::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) isLinSpeed = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -2455,6 +2472,7 @@ void EffectRingsLock::load(){
 
 String EffectRingsLock::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) { ringWidth = EffectCalc::setDynCtrl(_val).toInt(); ringsSet(); }
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -2565,8 +2583,9 @@ bool EffectCube2d::run(CRGB *ledarr, EffectWorker *opt){
 String EffectCube2d::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==4) sizeX = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) sizeY = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) classic = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) sizeY = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) classic = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   cubesize();
   return String();
 }
@@ -3109,6 +3128,7 @@ void EffectMStreamSmoke::FillNoise(int8_t layer) {
 
 String EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) fillType = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -3316,7 +3336,7 @@ bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
 
 String EffectPicasso::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) pidx = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) {
+  else if(_val->getId()==4) {
     byte hue = EffectCalc::setDynCtrl(_val).toInt();
     TDynamicRGBGradientPalette_byte dynpal[20] = {
         0,  0,  0,  0,
@@ -3341,6 +3361,7 @@ String EffectPicasso::setDynCtrl(UIControl*_val) {
     pal.loadDynamicGradientPalette(dynpal);
     palettes->add(0, pal, 0, 16);
   }
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -3476,6 +3497,7 @@ void EffectLeapers::generate(bool reset){
 
 String EffectLeapers::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _rv = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   _rv = (_rv ? _rv : 13);
   return String();
 }
@@ -3577,7 +3599,7 @@ void EffectLiquidLamp::physic(){
 
 String EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) pidx = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) {
+  else if(_val->getId()==4) {
     byte hue = EffectCalc::setDynCtrl(_val).toInt();
     TDynamicRGBGradientPalette_byte dynpal[20] = {
         0,  0,  0,  0,
@@ -3602,8 +3624,9 @@ String EffectLiquidLamp::setDynCtrl(UIControl*_val) {
     pal.loadDynamicGradientPalette(dynpal);
     palettes->add(0, pal, 0, 16);
   }
-  if(_val->getId()==5) filter = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) physic_on = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) filter = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) physic_on = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -3760,7 +3783,8 @@ void EffectAquarium::load(){
 
 String EffectAquarium::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) satur = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) glare = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) glare = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -3996,7 +4020,8 @@ if (setup) { // однократная настройка при старте э
 //https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
 String EffectFireworks::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) flashing = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) flashing = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -4282,6 +4307,7 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
 //----- Эффект "Осциллограф" (c) kostyamat
 String EffectOsc::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) gain = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -4340,6 +4366,7 @@ void EffectMunch::load() {
 
 String EffectMunch::setDynCtrl(UIControl*_val){
   if(_val->getId()==4) rand = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   flag = rand ? false : true;
   return String();
 }
@@ -4485,8 +4512,8 @@ void EffectButterfly::load()
 String EffectButterfly::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) wings = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) {
+  else if(_val->getId()==4) wings = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) {
     isColored = EffectCalc::setDynCtrl(_val).toInt();
     isColored = !isColored;
 
@@ -4495,6 +4522,7 @@ String EffectButterfly::setDynCtrl(UIControl*_val)
       butterflysColor[i] = (isColored) ? random8() : 0U;
     }
   }
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -4708,9 +4736,10 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
 // идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
 String EffectPatterns::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _speed = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) _sc = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) _subpixel = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) _sc = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) _subpixel = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -4819,7 +4848,8 @@ void EffectArrows::load(){
 
 String EffectArrows::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); load();}
-  if(_val->getId()==4) subpixel = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) subpixel = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -5207,6 +5237,7 @@ bool EffectNBals::run(CRGB *ledarr, EffectWorker *opt) {
 
 String EffectNBals::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) beat2 = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -5307,6 +5338,7 @@ void EffectAttract::setscl(const byte _scl)
 
 String EffectAttract::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _mass = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   setup();
   return String();
 }
@@ -5361,8 +5393,9 @@ void EffectSnake::load() {
 
 String EffectSnake::setDynCtrl(UIControl*_val) {
   if(_val->getId()==4) snakeCount = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) subPix = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) onecolor = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) subPix = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) onecolor = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -5457,6 +5490,7 @@ void EffectNexus::reload() {
 
 String EffectNexus::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -5616,6 +5650,7 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 // адаптация и доработки kostyamat
 String EffectDNA::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) rotate = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -5724,6 +5759,7 @@ void EffectFire2020::regenNoise() {
 String EffectFire2020::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -5766,6 +5802,7 @@ bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
 // адаптация и доработки kostyamat
 String EffectTest::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) SnakeNum = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
   return String();
 }
@@ -6093,8 +6130,9 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
 
 String EffectPopcorn::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) { uint8_t density = EffectCalc::setDynCtrl(_val).toInt(); numRockets = 5 + density; rockets.resize(numRockets); reload(); }
-  if(_val->getId()==5) blurred = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) revCol = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) blurred = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) revCol = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -6111,6 +6149,7 @@ void EffectPopcorn::load() {
 // (c) Stepko https://editor.soulmatelights.com/gallery/505
 String EffectSmokeballs::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
   return String();
 }
@@ -6185,6 +6224,7 @@ void EffectCell::cell(CRGB *leds) {
 String EffectCell::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   effId = _scale ? _scale : random(_val->getMin().toInt(), _val->getMax().toInt()+1)+1;
   return String();
 }
@@ -6259,7 +6299,8 @@ void EffectCell::spider(CRGB *leds) {
 //                  https://wokwi.com/arduino/projects/280607115091902988
 String EffectF_lying::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) _blur = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) type = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) type = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -6315,9 +6356,10 @@ void EffectF_lying::mydrawLine(CRGB *leds, float x, float y, float x1, float y1,
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
 String EffectTLand::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) { animation = EffectCalc::setDynCtrl(_val).toInt(); isSeq = animation ? false : true; if(!animation) animation = random(_val->getMin().toInt()+1, _val->getMax().toInt()+1);}
-  if(_val->getId()==4) { hue = EffectCalc::setDynCtrl(_val).toInt(); ishue = hue; }
-  if(_val->getId()==5) { hue2 = EffectCalc::setDynCtrl(_val).toInt(); ishue2 = hue2; }
-  if(_val->getId()==6) fine = _val->getVal().toInt(); // качество не рандомим, а берем как есть
+  else if(_val->getId()==4) { hue = EffectCalc::setDynCtrl(_val).toInt(); ishue = hue; }
+  else if(_val->getId()==5) { hue2 = EffectCalc::setDynCtrl(_val).toInt(); ishue2 = hue2; }
+  else if(_val->getId()==6) fine = _val->getVal().toInt(); // качество не рандомим, а берем как есть
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -6611,8 +6653,9 @@ float EffectTLand::code(double i, double x, double y) {
 //https://www.reddit.com/user/ldirko/
 String EffectLLand::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) select = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==5) { hue = EffectCalc::setDynCtrl(_val).toInt(); randColor = ((uint8_t)hue == 0); }
+  else if(_val->getId()==4) select = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) { hue = EffectCalc::setDynCtrl(_val).toInt(); randColor = ((uint8_t)hue == 0); }
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -6841,10 +6884,11 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
 String EffectWrain::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) { uint8_t val = EffectCalc::setDynCtrl(_val).toInt(); white = (val == 1); randColor = (val == 0); }
-  if(_val->getId()==5) clouds = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==6) storm = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==7) type = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) { uint8_t val = EffectCalc::setDynCtrl(_val).toInt(); white = (val == 1); randColor = (val == 0); }
+  else if(_val->getId()==5) clouds = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) storm = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==7) type = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -7431,7 +7475,8 @@ void EffectFairy::load(){
 
 String EffectFairy::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) type = EffectCalc::setDynCtrl(_val).toInt();
-  if(_val->getId()==4) blur = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) blur = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -7507,6 +7552,7 @@ void EffectBengalL::load() {
 
 String EffectBengalL::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) centerRun = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
@@ -7589,6 +7635,7 @@ void EffectBalls::load() {
 
 /*String EffectBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) centerRun = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }*/
 
