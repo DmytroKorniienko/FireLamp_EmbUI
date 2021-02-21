@@ -1,0 +1,13 @@
+.draw_ctrl
+{
+    border-collapse: collapse;
+    width: 100%;
+}
+.dc_cells
+{
+    border: 1px solid #ccc;
+}
+.dc_cells:hover
+{
+  cursor: pointer;
+}
