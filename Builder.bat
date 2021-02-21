@@ -50,30 +50,30 @@ Set /p choice="[96mYour choice (Ваш выбор): [92m"
 if "%choice%"=="1" call update-DEV-from-Git.cmd 1
 if "%choice%"=="2" call update-DEV-from-Git.cmd 2
 if "%choice%"=="3" call update-DEV-from-Git.cmd 3
-if "%choice%"=="4" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --environment esp8266@160)
-if "%choice%"=="5" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --environment esp8266)
-if "%choice%"=="6" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --environment esp32)
-if "%choice%"=="7" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266@160)
-if "%choice%"=="8" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp8266)
-if "%choice%"=="9" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target upload --environment esp32)
+if "%choice%"=="4" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160)
+if "%choice%"=="5" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266)
+if "%choice%"=="6" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp32)
+if "%choice%"=="7" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266@160)
+if "%choice%"=="8" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266)
+if "%choice%"=="9" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp32)
 if "%choice%"=="u" (
 	cd %workdir%\resources\
 	start respack.cmd
 	cd %workdir%
 )
-if "%choice%"=="b" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target buildfs --environment esp8266@160)
-if "%choice%"=="f" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target uploadfs --environment esp8266@160)
-if "%choice%"=="e" (%USERPROFILE%\.platformio\penv\Scripts\pio.exe run --target erase --environment esp8266@160)
+if "%choice%"=="b" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266@160)
+if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs --environment esp8266@160)
+if "%choice%"=="e" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266@160)
 if "%choice%"=="c" (
 	pio system prune -f
 	rmdir /S /Q %workdir%\.pio
 )
 if "%choice%"=="g" (
-	%USERPROFILE%\.platformio\penv\Scripts\pio.exe upgrade
-	%USERPROFILE%\.platformio\penv\Scripts\pio.exe update
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" upgrade
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" update
 )
 if "%choice%"=="m" (start cmd)
-if "%choice%"=="R" (rmdir /S %USERPROFILE%\.platformio)
+if "%choice%"=="R" (rmdir /S "%USERPROFILE%\.platformio")
 
 Echo.
 Echo.
