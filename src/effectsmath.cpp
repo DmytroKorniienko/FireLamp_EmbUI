@@ -35,9 +35,14 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#include "main.h"
+#include "lamp.h"
+#include "effectmath.h"
+//#include "main.h"
+extern LAMP myLamp; // Объект лампы
 
-// ============= ЭФФЕКТЫ ===============
+
+// Общий набор мат. функций и примитивов для обсчета эффектов
+
 
 // для работы FastLed (blur2d)
 uint16_t XY(uint8_t x, uint8_t y)
@@ -147,7 +152,7 @@ CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker )
 
 /* kostyamat добавил
  функция возвращает рандомное значение float между min и max 
- с шагом 1/4096 */
+ с шагом 1/4095 */
 float EffectMath::randomf(float min, float max)
 {
   return fmap((float)random16(4095), 0.0, 4095.0, min, max);
@@ -406,14 +411,17 @@ void EffectMath::drawLineF(float x1, float y1, float x2, float y2, const CRGB &c
   float signX = x1 < x2 ? 0.5 : -0.5;
   float signY = y1 < y2 ? 0.5 : -0.5;
 
-  while (x1 != x2 || y1 != y2) { // (true) - а я то думаю - "почему функция часто вызывает вылет по вачдогу?" А оно вон оно чё, Михалычь! 
-      if ((signX > 0. && x1 > x2+signX) || (signX < 0. && x1 < x2+signX)) break;
-      if ((signY > 0. && y1 > y2+signY) || (signY < 0. && y1 < y2+signY)) break;
-      drawPixelXYF(x1, y1, color);
-      float error2 = error;
-      if (error2 > -deltaY) {
-          error -= deltaY;
-          x1 += signX;
+  while (x1 != x2 || y1 != y2) { // (true) - а я то думаю - "почему функция часто вызывает вылет по вачдогу?" А оно вон оно чё, Михалычь!
+    if ((signX > 0. && x1 > x2 + signX) || (signX < 0. && x1 < x2 + signX))
+      break;
+    if ((signY > 0. && y1 > y2 + signY) || (signY < 0. && y1 < y2 + signY))
+      break;
+    drawPixelXYF(x1, y1, color);
+    float error2 = error;
+    if (error2 > -deltaY)
+    {
+      error -= deltaY;
+      x1 += signX;
       }
       if (error2 < deltaX) {
           error += deltaX;

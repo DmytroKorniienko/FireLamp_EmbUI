@@ -131,7 +131,11 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), ho
 	touch.setTimeout(BUTTON_TIMEOUT);
 	touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
 	touch.resetStates();
+#ifdef ESP8266
 	_buttonTicker.attach_scheduled(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
+#elif defined ESP32
+	_buttonTicker.attach(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
+#endif
 }
 
 /*
@@ -150,10 +154,12 @@ void Buttons::buttonPress(bool state){
 	}
 
 	LOG(printf_P, PSTR("Button %s: %lu\n"), state ? PSTR("press") : PSTR("release"), millis());
-
-	_buttonTicker.attach_ms_scheduled(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
-
 	buttonTick();   // обрабатываем текущее нажатие вне очереди
+#ifdef ESP8266
+	_buttonTicker.attach_ms_scheduled(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
+#elif defined ESP32
+	_buttonTicker.attach_ms(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
+#endif
 }
 
 void Buttons::buttonTick(){
@@ -171,12 +177,9 @@ void Buttons::buttonTick(){
 			startLampState = myLamp.isLampOn(); // получить начальный статус
 		}
 		reverse = true;
-	} else
-	if ((holding = touch.isStep())) {
+	} else if ((holding = touch.isStep())) {
 		holdtm.reset();
-	} else 
-	if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
-
+	} else if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
 			LOG(println,F("Сброс состояния кнопки после окончания действий"));
 			resetStates();
@@ -185,10 +188,9 @@ void Buttons::buttonTick(){
 				buttons[i]->flags.onetime&=1;
 			}
 		}
-
 		return;
 	}
-
+	LOG(printf_P, PSTR("buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
 		myLamp.stopAlarm();

@@ -48,6 +48,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
+        bool effectmode:1; // режим проигрывания эффектов
         bool alarm:1; // сейчас будильник
         bool isplayname:1; // проигрывается имя
       };
@@ -70,10 +71,12 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void restartSound();
   public:
     MP3PLAYERDEVICE(const uint8_t rxPin= MP3_RX_PIN, const uint8_t txPin=MP3_TX_PIN); // конструктор
+    uint16_t getCurPlayingNb() {return prev_effnb;} // вернуть предыдущий для смещения
     void setupplayer(uint16_t effnb, const String &_soundfile) {soundfile = _soundfile; cur_effnb=effnb;};
     bool isReady() {return ready;}
     bool isOn() {return on && ready;}
-    void setIsOn(bool val, bool forcePlay=true) {on = val; if(!on) stop(); else if(forcePlay) playEffect(cur_effnb, soundfile);}
+    bool isMP3Mode() {return mp3mode;}
+    void setIsOn(bool val, bool forcePlay=true) {on = val; if(!on) stop(); else if(forcePlay && (effectmode || mp3mode)) playEffect(cur_effnb, soundfile);}
     void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
     void playName(uint16_t effnb);
@@ -84,6 +87,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
+    void setPlayEffect(bool flag) {effectmode = flag;}
     void setAlarm(bool flag) {alarm = flag;}
     void StartAlarmSound(ALARM_SOUND_TYPE val);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);

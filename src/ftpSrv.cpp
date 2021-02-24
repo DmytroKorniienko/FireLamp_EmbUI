@@ -35,12 +35,15 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#include <ESP8266WiFi.h>
-#include <LittleFS.h>
-#define FTP_DEBUG
-#include <FTPServer.h>
-#include <ftpSrv.h>
 #include "misc.h"
+
+#ifdef ESP8266
+ #include <ESP8266WiFi.h>
+#endif  // def ESP8266
+#include "EmbUI.h"
+//#include <LittleFS.h>
+#define FTP_DEBUG
+#include <ftpSrv.h>
 
 FTPServer ftpSrv(LittleFS); // construct with LittleFS
 
@@ -49,7 +52,11 @@ void ftp_setup(void){
   /////FTP Setup, ensure LittleFS is started before ftp;  /////////
   if (LittleFS.begin()) {
       LOG(println, F("LittleFS opened!"));
+#ifdef ESP8266
       ftpSrv.begin(F("esp8266"),F("esp8266"));    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
+#else
+      ftpSrv.begin(F("esp32"),F("esp32"));    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
+#endif
   }    
 }
 

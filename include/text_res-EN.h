@@ -49,7 +49,7 @@ static const char TEFF_001[] PROGMEM = "White lamp";
 static const char TEFF_002[] PROGMEM = "Colors";
 static const char TEFF_003[] PROGMEM = "Rainbow 2D";
 static const char TEFF_004[] PROGMEM = "Confetti";
-static const char TEFF_005[] PROGMEM = "";
+static const char TEFF_005[] PROGMEM = "M&M`s";
 static const char TEFF_006[] PROGMEM = "Blizzard, Meteor Shower, Meteors";
 static const char TEFF_007[] PROGMEM = "New Matrix";
 static const char TEFF_008[] PROGMEM = "Fireflies";
@@ -60,20 +60,20 @@ static const char TEFF_012[] PROGMEM = "Effectfall";
 static const char TEFF_013[] PROGMEM = "Fire Lamp"; 
 static const char TEFF_014[] PROGMEM = "Paintball";
 static const char TEFF_015[] PROGMEM = "Noise 3D effects";
-static const char TEFF_016[] PROGMEM = "Cells";
+static const char TEFF_016[] PROGMEM = "Cells and other";
 static const char TEFF_017[] PROGMEM = "Geometric Waltz";
 static const char TEFF_018[] PROGMEM = "Tixy.Land";
 static const char TEFF_019[] PROGMEM = "LDIRKO.Land";
 static const char TEFF_020[] PROGMEM = "Oscillator";
-static const char TEFF_021[] PROGMEM = "Rain with Wind (test)";
-static const char TEFF_022[] PROGMEM = "";
-static const char TEFF_023[] PROGMEM = "";
+static const char TEFF_021[] PROGMEM = "Storm";
+static const char TEFF_022[] PROGMEM = "Fairy";
+static const char TEFF_023[] PROGMEM = "Fount";
 static const char TEFF_024[] PROGMEM = "Bouncing balls";
 static const char TEFF_025[] PROGMEM = "Sinusoid 3";
 static const char TEFF_026[] PROGMEM = "Metasphere";
 static const char TEFF_027[] PROGMEM = "Spiral";
-static const char TEFF_028[] PROGMEM = "Rainbow comet";
-static const char TEFF_029[] PROGMEM = "Three comets";
+static const char TEFF_028[] PROGMEM = "Comets, Soaring Fires +";
+static const char TEFF_029[] PROGMEM = "Bulbulator";
 static const char TEFF_030[] PROGMEM = "Prismata";
 static const char TEFF_031[] PROGMEM = "Flock and Predator";
 static const char TEFF_032[] PROGMEM = "Whirlpool";
@@ -83,8 +83,8 @@ static const char TEFF_035[] PROGMEM = "Flicker";
 static const char TEFF_036[] PROGMEM = "Radar";
 static const char TEFF_037[] PROGMEM = "Waves";
 static const char TEFF_038[] PROGMEM = "Fire 2012";
-static const char TEFF_039[] PROGMEM = "";
-static const char TEFF_040[] PROGMEM = "";
+static const char TEFF_039[] PROGMEM = "Bengal Lights";
+static const char TEFF_040[] PROGMEM = "Balls";
 static const char TEFF_041[] PROGMEM = "DNA";
 static const char TEFF_042[] PROGMEM = "Fire 2018";
 static const char TEFF_043[] PROGMEM = "Combination lock";
@@ -109,19 +109,93 @@ static const char TEFF_061[] PROGMEM = "Wild balls";
 static const char TEFF_062[] PROGMEM = "Attract";
 static const char TEFF_063[] PROGMEM = "Snakes";
 static const char TEFF_064[] PROGMEM = "Nexus";
-static const char TEFF_065[] PROGMEM = "Soaring Fire";
-static const char TEFF_066[] PROGMEM = "Bloody Skies";
-static const char TEFF_067[] PROGMEM = "Rainbow Serpent";
+static const char TEFF_065[] PROGMEM = "Maze (Test)";
+static const char TEFF_066[] PROGMEM = "Curly Colors";
+static const char TEFF_067[] PROGMEM = "Polar Lights";
 static const char TEFF_068[] PROGMEM = "Flowering";
 static const char TEFF_069[] PROGMEM = "Snakes Island";
 static const char TEFF_070[] PROGMEM = "Children's Dreams";
 static const char TEFF_071[] PROGMEM = "Metasphares";
 static const char TEFF_072[] PROGMEM = "Lava lamp";
+static const char TEFF_073[] PROGMEM = "Racer";
 static const char TEFF_253[] PROGMEM = "Clock";
 static const char TEFF_254[] PROGMEM = "Frequency Analyzer";
 static const char TEFF_255[] PROGMEM = "Oscilloscope";
 
-//-------------------------
+// -------------------------
+#define DFTINTF_00A "Effect"
+#define DFTINTF_020 "Microphone"
+#define DFTINTF_084 "Palette"
+#define DFTINTF_088 "Scale"
+#define DFTINTF_0D0 "Color"
+#define DFTINTF_0D1 "Palette/Scale"
+#define DFTINTF_0D2 "Effect (0: cyclical)"
+#define DFTINTF_0D3 "Color offset (0: cyclical)"
+#define DFTINTF_0D4 "Subpixel"
+#define DFTINTF_0D5 "Quantity"
+#define DFTINTF_0D6 "Color generator"
+#define DFTINTF_0D7 "Tint"
+#define DFTINTF_0D8 "Foolery!"
+#define DFTINTF_0D9 "Quantity/Color (night lamp)"
+#define DFTINTF_0DA "Saturation"
+#define DFTINTF_0DB "Gain"
+#define DFTINTF_0DC "Sweep"
+#define DFTINTF_0DD "Ripple"
+#define DFTINTF_0DE "Blur"
+#define DFTINTF_0DF "Flutter"
+#define DFTINTF_0E0 "Night lamp"
+#define DFTINTF_0E1 "Rings"
+#define DFTINTF_0E2 "Glare (0: Off 1: Random)"
+#define DFTINTF_0E3 "Mode"
+#define DFTINTF_0E4 "Linear Velocity"
+#define DFTINTF_0E5 "Mode (1: random)"
+#define DFTINTF_0E6 "Offset"
+#define DFTINTF_0E7 "Quantity/Direction/Position"
+#define DFTINTF_0E8 "Predator"
+#define DFTINTF_0E9 "Mass"
+#define DFTINTF_0EA "Speed ​​(Vertical)"
+#define DFTINTF_0EB "Speed ​​(Horizontal)"
+#define DFTINTF_0EC "Pattern (1: random)"
+#define DFTINTF_0ED "Shading"
+#define DFTINTF_0EE "Energy"
+#define DFTINTF_0EF "Density"
+#define DFTINTF_0F0 "Color/Rotation"
+#define DFTINTF_0F1 "Size/Track (1-85-170-255)"
+#define DFTINTF_0F2 "Start frequency"
+#define DFTINTF_0F3 "Rotate"
+#define DFTINTF_0F4 "Palette (0: generator)"
+#define DFTINTF_0F5 "Smoothing"
+#define DFTINTF_0F6 "Fill"
+#define DFTINTF_0F7 "Thickness"
+#define DFTINTF_0F9 "Behavior: 1/2"
+#define DFTINTF_0FA "Color: 1/2"
+#define DFTINTF_0FB "Palette (0: no color)"
+#define DFTINTF_0FC "Color (1: random, 255: white)"
+#define DFTINTF_0FD "Snowfall/Starfall/Meteors"
+#define DFTINTF_0FE "Quantity"
+#define DFTINTF_0FF "Type 1/2, Blur 3/4"
+#define DFTINTF_100 "Palette (0: random color)"
+#define DFTINTF_101 "Color 1 (0: cyclical)"
+#define DFTINTF_102 "Cloud"
+#define DFTINTF_103 "Blurring (0: no)"
+#define DFTINTF_104 "Swipe"
+#define DFTINTF_105 "Filter"
+#define DFTINTF_106 "Physics"
+#define DFTINTF_107 "Circles"
+#define DFTINTF_108 "Option 1/2"
+#define DFTINTF_109 "Flashes"
+#define DFTINTF_10A "Glitch"
+#define DFTINTF_10B "Storm"
+#define DFTINTF_10C "Quantity of shells"
+#define DFTINTF_10D "Size (width)"
+#define DFTINTF_10E "Color shift (0: random)"
+#define DFTINTF_10F "Size (height)"
+#define DFTINTF_110 "Classic"
+#define DFTINTF_111 "One color"
+#define DFTINTF_112 "Inverse Colors"
+#define DFTINTF_113 "Color 2 (0: cyclical)"
+#define DFTINTF_114 "Quality/Speed"
+#define DFTINTF_115 "Blur (1-4 with wind)"
 
 /** набор строк с текстовыми константами интерфейса
  */
@@ -135,13 +209,13 @@ static const char TINTF_006[] PROGMEM = "Remove";
 static const char TINTF_007[] PROGMEM = "Refresh effects-list";
 static const char TINTF_008[] PROGMEM = "Save";
 static const char TINTF_009[] PROGMEM = "Managing effects-list";
-static const char TINTF_00A[] PROGMEM = "Effect";
+static const char TINTF_00A[] PROGMEM = DFTINTF_00A;
 static const char TINTF_00B[] PROGMEM = "Exit";
 static const char TINTF_00C[] PROGMEM = "Global Brightness";
 static const char TINTF_00D[] PROGMEM = "Brightness";
 static const char TINTF_00E[] PROGMEM = "OFF/ON";
 static const char TINTF_00F[] PROGMEM = "Demo";
-static const char TINTF_010[] PROGMEM = "Glob.brigh";
+static const char TINTF_010[] PROGMEM = "Gl. Bright";
 static const char TINTF_011[] PROGMEM = "Events";
 static const char TINTF_012[] PROGMEM = "Mic";
 static const char TINTF_013[] PROGMEM = "Button";
@@ -157,7 +231,7 @@ static const char TINTF_01C[] PROGMEM = "Show on lamp";
 static const char TINTF_01D[] PROGMEM = "Text";
 static const char TINTF_01E[] PROGMEM = "Text color";
 static const char TINTF_01F[] PROGMEM = "Send";
-static const char TINTF_020[] PROGMEM = "Microphone";
+static const char TINTF_020[] PROGMEM = DFTINTF_020;
 static const char TINTF_021[] PROGMEM = "Microphone On";
 static const char TINTF_022[] PROGMEM = "Zero correction";
 static const char TINTF_023[] PROGMEM = "Noise level, units";
@@ -207,8 +281,8 @@ static const char TINTF_04E[] PROGMEM = "New Year greeting";
 static const char TINTF_04F[] PROGMEM = "Show period, minutes (0 - do not output)";
 static const char TINTF_050[] PROGMEM = "New Year's Date/Time at format YYYY-MM-DDThh:mm";
 static const char TINTF_051[] PROGMEM = "Time";
-static const char TINTF_052[] PROGMEM = "TZset rules for zone/seasonal time accounting (e.g. 'MSK-3' for Europe/Moscow) You can get the required line here https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h";
-static const char TINTF_053[] PROGMEM = "TZone rule (it is recommended to set!)";
+static const char TINTF_052[] PROGMEM = "TZset rules for zone/seasonal time accounting (e.g. 'GMT0BST,M3.5.0/1,M10.5.0' for Europe/London). You can get the required line <a href=\"https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h\">here</a>";
+static const char TINTF_053[] PROGMEM = "TimeZone rule (it is recommended to set!)";
 static const char TINTF_054[] PROGMEM = "Spare NTP server (optional)";
 static const char TINTF_055[] PROGMEM = "Date/Time, YYYY-MM-DDThh:mm:ss (without internet connection, if empty - from device)";
 static const char TINTF_056[] PROGMEM = "Firmware update";
@@ -257,11 +331,11 @@ static const char TINTF_080[] PROGMEM = "Fire Lamp";
 static const char TINTF_081[] PROGMEM = "WiFi & MQTT";
 static const char TINTF_082[] PROGMEM = "Other";
 static const char TINTF_083[] PROGMEM = "Clean the lamp when switching effects";
-static const char TINTF_084[] PROGMEM = "Palette";
+static const char TINTF_084[] PROGMEM = DFTINTF_084;
 static const char TINTF_085[] PROGMEM = "Sort by Alphabet (internal)";
 static const char TINTF_086[] PROGMEM = "Events activated";
 static const char TINTF_087[] PROGMEM = "Speed";
-static const char TINTF_088[] PROGMEM = "Scale";
+static const char TINTF_088[] PROGMEM = DFTINTF_088;
 static const char TINTF_089[] PROGMEM = "Effect`s name";
 static const char TINTF_08A[] PROGMEM = "Sort by Alphabet (config)";
 static const char TINTF_08B[] PROGMEM = "Reset effect settings";
@@ -305,7 +379,7 @@ static const char TINTF_0B0[] PROGMEM = "Number of files in MP3 folder";
 static const char TINTF_0B1[] PROGMEM = "Voice-over modes";
 static const char TINTF_0B2[] PROGMEM = "Folder\\the number of the sound file (examples: MP3\\17, 5\\19)";
 static const char TINTF_0B3[] PROGMEM = "Limit Alarm volume";
-static const char TINTF_0B4[] PROGMEM = "Delete all";
+static const char TINTF_0B4[] PROGMEM = "Remove from FS";
 static const char TINTF_0B5[] PROGMEM = "Remove from the list";
 static const char TINTF_0B6[] PROGMEM = "Disabled";
 static const char TINTF_0B7[] PROGMEM = "Option 1";
@@ -314,96 +388,29 @@ static const char TINTF_0B9[] PROGMEM = "Parameter";
 static const char TINTF_0BA[] PROGMEM = "Alarm Clock Dawn";
 static const char TINTF_0BB[] PROGMEM = "Dawn period";
 static const char TINTF_0BC[] PROGMEM = "After down period";
-static const char TINTF_0BD[] PROGMEM = "";
-static const char TINTF_0BE[] PROGMEM = "";
-static const char TINTF_0BF[] PROGMEM = "";
-static const char TINTF_0C0[] PROGMEM = "";
+static const char TINTF_0BD[] PROGMEM = "<";
+static const char TINTF_0BE[] PROGMEM = ">";
+static const char TINTF_0BF[] PROGMEM = "<+5";
+static const char TINTF_0C0[] PROGMEM = "+5>";
+static const char TINTF_0C1[] PROGMEM = "seconds";
+static const char TINTF_0C2[] PROGMEM = "minutes";
+static const char TINTF_0C3[] PROGMEM = "hours";
+static const char TINTF_0C4[] PROGMEM = "days";
+static const char TINTF_0C5[] PROGMEM = "days";
+static const char TINTF_0C6[] PROGMEM = "day";
+static const char TINTF_0C7[] PROGMEM = "hours";
+static const char TINTF_0C8[] PROGMEM = "hour";
+static const char TINTF_0C9[] PROGMEM = "Rand.";
+static const char TINTF_0CA[] PROGMEM = "Darkening the background";
+static const char TINTF_0CB[] PROGMEM = "Warning";
+static const char TINTF_0CC[] PROGMEM = "minutes";
+static const char TINTF_0CD[] PROGMEM = "minute";
+static const char TINTF_0CE[] PROGMEM = "Drawing";
+static const char TINTF_0CF[] PROGMEM = "Fill";
+static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
 
-
+static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";
+static const char NY_MDG_STRING2[] PROGMEM = "Happy new %d year!";
 //-------------------------
-
-/**
- * Набор статических строк, определяющих UI Effectа если он отличается от базового
- *
- *  GUI для Effectа по-умолчанию
- * Полный формат для пользовательского (id=3...7) Parameterа имеет вид: {\"id\":3,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parameter\"}
- * @nb@ - будет заменен на реальный номер Effectа, @name@ - на дефолтное имя Effectа, @ver@ - версия, @pal@ - максимальная Palette
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48813
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48848
- */
-
-// Дефолтные контролы
-static const char E_DEFUI[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"}]}";
-// Добавил ко всем конфигам чекбокс "Microphone" с индексом 7. Ввиду модифированного поведения функции myLamp.isMicOnOff(), он будет появляться только если глобально
-// Microphone включен, и Effect обладает зависимостью от Microphoneа в принципе.
-static const char E_DEFMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-// Общая конфигурация для Effectов с 3-им ползунком для палитр
-static const char E_3PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
-static const char E_3PAL_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_3PAL255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Palette/Scale\"}]}";
-// Общая конфигурация для Effectов только с 2-мя ползунками "Яркость" и "Speed", пример - Effect"Тихий Океан"
-static const char E_2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}]}"; // 3*16+0 для 2 контрола
-static const char E_2_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}"; // 3*16+0 для 2 контрола
-
-// Общая конфигурация для Effectов с 4-им ползунком для палитр
-static const char E_4PAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
-static const char E_LLEND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":0,\"min\":0,\"max\":10,\"step\":1,\"name\":\"Effect (0 = cyclically)\"}, {\"id\":3,\"type\":0,\"val\":0,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":0,\"val\":16,\"min\":0,\"max\":32,\"step\":1,\"name\":\"Color offset (0 = cyclical)\"}]}";
-
-static const char E_SPARCLES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":16,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Color\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_LIGHTERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Quantity\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_RADAR255_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Palette/Scale\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_WHITE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Shade\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_LEAPERS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":50,\"step\":1,\"name\":\"Crazy!\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_BUTTERFLY_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":64,\"step\":1,\"name\":\"Quantity / Color(nightlight)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Flutter\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Nightlight\"}]}";
-static const char E_PULS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color Generator\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_BBALLS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Scale\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Rings\"}]}";
-static const char E_PRIZMATA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Degradation\"}]}";
-static const char E_AQUARIUM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Saturation\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":0,\"max\":15,\"step\":1,\"name\":\"Glare (0: Off 1:Case.)\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_FREQ_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":127,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Gain\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":0,\"val\":2,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Mode\"}]}";
-static const char E_OSC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Sweep\"},{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Pulsation\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Gain\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-// Sizeность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
-static const char E_PATT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Speed (Vertical)\"}, {\"id\":2,\"type\":0,\"val\":33,\"min\":1,\"max\":65,\"step\":1,\"name\":\"Speed (Horizontal)\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":39,\"step\":1,\"name\":\"Pattern (1 = random)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_SHAD_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Speed\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Shading\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Linear speed\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_ARR_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Mode (1 = random)\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}]}";
-static const char E_F2018_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Shade\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Linear speed\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_NBAL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":25,\"step\":1,\"name\":\"Offset\"}]}";
-static const char E_ATTRACT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Energy\"}, {\"id\":3,\"type\":0,\"val\":100,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Weight\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
-static const char E_FLOCK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Predator\"}]}";
-static const char E_WAVES_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Quantity/Direction/Position\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
-static const char E_MUNCH_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":8,\"step\":1,\"name\":\"Shift color (0 = random)\"} ,{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_COM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1-127 random)\"}]}";
-static const char E_DRIFT_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Type 1/2, Degradation 3/4\"}]}";
-static const char E_SMOKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color/Rotation\"},{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":6,\"step\":1,\"name\":\"Completion\"}]}";
-static const char E_CUBE2D_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":0,\"max\":22,\"step\":1,\"name\":\"Palette (0 = random Color)\"},{\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Size (width)\"},{\"id\":4,\"type\":0,\"val\":4,\"min\":1,\"max\":7,\"step\":1,\"name\":\"Size (height)\"} ,{\"id\":5,\"type\":2,\"val\":\"false\",\"name\":\"Классика\"}]}";
-static const char E_FLAMP_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color\"}]}";
-static const char E_LIGHT2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Size/Color\"}]}";
-static const char E_CUBE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Size/Train(1-85-170-255)\"}]}";
-static const char E_STARFAIL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"} ,{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Snow / Stars\"} ,{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Meteors\"}]}"; // 3*16+0 для 2 контрола
-static const char E_SNAKE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Number\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Subpixel\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"One color\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_NEXUS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":5,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Density\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Палитра\"}]}";
-static const char E_FWORK_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":1,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"The frequency of launches\"}, {\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Quantity shells'\"}, {\"id\":3,\"type\":2,\"val\":\"false\",\"name\":\"Flashes\"}]}";
-static const char E_MATRIX[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":12,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Density\"}, {\"id\":3,\"type\":0,\"val\":90,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Color (1 = random, 255 = white)\"}, {\"id\":4,\"type\":0,\"val\":20,\"min\":1,\"max\":60,\"step\":1,\"name\":\"Glitch\"}]}";
-static const char E_RAIN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Density\"}, {\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Cloudlet\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Storm\"}]}";
-static const char E_FIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":3,\"step\":1,\"name\":\"Type of delay (current/dryrun/delay)\"}]}";
-static const char E_NFIRE_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":50,\"min\":1,\"max\":100,\"step\":1,\"name\":\"Scale\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Palette\"}]}";
-static const char E_POPCORN_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":16,\"min\":1,\"max\":32,\"step\":1,\"name\":\"Density\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Degradation\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Reverse Colors\"}]}";
-static const char E_MBL_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette (0 = generator)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Color Generator\"}]}";
-static const char E_LIQLAM_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":18,\"step\":1,\"name\":\"Palette (0 = generator)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Color Generator\"}, {\"id\":5,\"type\":0,\"val\":0,\"min\":0,\"max\":4,\"step\":1,\"name\":\"Filter\"}, {\"id\":6,\"type\":2,\"val\":\"true\",\"name\":\"Physics\"}]}";
-static const char E_F2012_MIC_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":64,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Scale\"},{\"id\":3,\"type\":0,\"val\":6,\"min\":1,\"max\":10,\"step\":1,\"name\":\"Palette\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_DNA_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":48,\"val\":\"127\"},{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"Turn\"}]}";
-static const char E_SNOW_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"val\":\"1\",\"min\":1,\"max\":3,\"name\":\"Smoothing\"}]}";
-static const char E_SMOKEBALLS[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Quantity\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
-static const char E_PALMICUI_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette (0 = without Color)\"},{\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Smoothing\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_COLORS_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":0,\"val\":\"127\"},{\"id\":1,\"val\":\"127\"},{\"id\":2,\"val\":\"127\"},{\"id\":3,\"type\":32,\"val\":\"2\",\"min\":1,\"max\":3,\"step\":1,\"name\":\"Mode\"},{\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-static const char E_TLAND[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":0,\"max\":35,\"step\":1,\"name\":\"Effect (0 = cyclically)\"}, {\"id\":3,\"type\":0,\"val\":160,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Color 1 (0 = cyclically)\"}, {\"id\":4,\"type\":0,\"val\":0,\"min\":0,\"max\":255,\"step\":1,\"name\":\"Color 2 (0 = cyclically)\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":4,\"step\":1,\"name\":\"Quality/Speed\"}]}";
-static const char E_FLYING[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":1,\"min\":1,\"max\":128,\"step\":1,\"name\":\"Degradation\"}, {\"id\":3,\"type\":0,\"val\":7,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Circles\"}]}";
-static const char E_WRAIN[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":25,\"min\":1,\"max\":45,\"step\":1,\"name\":\"Scale\"}, {\"id\":3,\"type\":0,\"val\":4,\"min\":0,\"max\":@pal@,\"step\":1,\"name\":\"Palette (0 = random colour)\"}, {\"id\":4,\"type\":2,\"val\":\"true\",\"name\":\"Clouds\"}, {\"id\":5,\"type\":2,\"val\":\"true\",\"name\":\"Storm\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Bluring (1-4 with wind) \"}]}";
-static const char E_CLOCK[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":4,\"min\":1,\"max\":8,\"step\":1,\"name\":\"Size\"}, {\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":@pal@,\"step\":1,\"name\":\"Palette\"}]}";
-
-// Инженерный
-static const char E_TEST_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":2,\"type\":0,\"val\":8,\"min\":1,\"max\":16,\"step\":1,\"name\":\"Quantity\"}]}";
-static const char E_TEST2_CFG[] PROGMEM = "{\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":255,\"ctrls\":[{\"id\":3,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Palette\"}, {\"id\":4,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parameter 1\"}, {\"id\":5,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parameter 2\"}, {\"id\":6,\"type\":0,\"val\":1,\"min\":1,\"max\":255,\"step\":1,\"name\":\"Parameter 3\"}, {\"id\":7,\"type\":18,\"val\":\"true\",\"name\":\"Microphone\"}]}";
-
-
 
 #endif

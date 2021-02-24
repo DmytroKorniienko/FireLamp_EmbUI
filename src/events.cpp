@@ -1,7 +1,16 @@
 
 #include "events.h"
-#include "LittleFS.h"
 #include "ArduinoJson.h"
+
+#ifdef ESP8266
+ #include <LittleFS.h>
+#endif
+
+#ifdef ESP32
+ #include <LITTLEFS.h>
+ #define FORMAT_LITTLEFS_IF_FAILED true
+ #define LittleFS LITTLEFS
+#endif
 
 
 void EVENT_MANAGER::check_event(EVENT *event)
@@ -144,7 +153,7 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             String tmpStr = item[F("msg")].as<String>();
             event.message = (char *)tmpStr.c_str();
             addEvent(event);
-            LOG(printf_P, PSTR("[%u - %u - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
+            LOG(printf_P, PSTR("[%u - %ld - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
         }
 
         LOG(println, F("Events config loaded"));
@@ -164,10 +173,10 @@ void EVENT_MANAGER::saveConfig(const char *cfg)
         EVENT *next=root;
         int i=1;
         while(next!=nullptr){
-            configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+            configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%ld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
                 (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
-                ((next->message!=nullptr)?next->message:(char*)F("")));
-            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%u,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                ((next->message!=nullptr)?next->message : ""));
+            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%ld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
                 (char*)(i>1?F(","):F("")), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat,
                 ((next->message!=nullptr)?next->message:(char*)F("")));
             i++;

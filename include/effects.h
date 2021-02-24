@@ -38,560 +38,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef _EFFECTS_H
 #define _EFFECTS_H
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <string.h>
-#include "LittleFS.h"
-#include "config.h"
-#include LANG                //"text_res.h"
-#include "effects_types.h"
-#include "misc.h"
-#include "LList.h"
-#include "patterns.h"
 #include "color_palette.h"
+#include "effectworker.h"
+#include "effectmath.h"
 
-// #define DEFAULT_SLIDER 127
-// #define PARAM_BUFSIZE 128
-#define IDX_ITEMBUFFSIZE    25      // буфер для джейсон элемента индекса
-//#define FILEIO_BUFFSIZE    256      // буфер IO для работы с файлами (делаем равный странице littlefs)
-
-//-------------------------------------------------
-class EffectWorker;
-
-typedef struct {
-    union {
-        uint16_t flags;
-        struct {
-            bool isMicOn:1;
-            bool isDebug:1;
-            bool isRandDemo:1;
-        };
-    };
-} LAMPSTATE;
-
-
-class UIControl{
-private:
-    uint8_t id;
-    CONTROL_TYPE ctype;
-    String control_name;
-    String val;
-    String min;
-    String max;
-    String step;
-public:
-    UIControl(const uint8_t id, const CONTROL_TYPE ctype, const String &control_name, const String &val, const String &min, const String &max, const String &step)
-    {
-        this->id=id;
-        this->ctype = ctype;
-        this->control_name = String(control_name);
-
-        this->val = val;
-        this->min = min;
-        this->max = max;
-        this->step = step;
-    }
-    UIControl() : id(0), ctype(CONTROL_TYPE::RANGE), control_name(), val(), min(), max(), step() {}
-    const uint8_t getId() {return id;}
-    const CONTROL_TYPE getType() {return ctype;}
-    const String &getName() {return control_name;}
-    const String &getVal() {return val;}
-    const String &getMin() {return min;}
-    const String &getMax() {return max;}
-    const String &getStep() {return step;}
-
-    void setVal(const String &_val) {val=_val;}
-};
-
-typedef union {
-    uint8_t mask;
-    struct {
-        bool canBeSelected:1;
-        bool isFavorite:1;
-    };
-} EFFFLAGS;
-
-class EffectListElem{
-private:
-    uint8_t ms = micros()|0xFF; // момент создания элемента, для сортировки в порядке следования (естественно, что байта мало, но экономим память)
-#ifdef CASHED_EFFECTS_NAMES
-    String name;
-    void initName(uint16_t nb) {
-        uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
-        String filename;
-        char buffer[5];
-        filename.concat(F("/eff/"));
-        sprintf_P(buffer,PSTR("%04x"), swapnb);
-        filename.concat(buffer);
-        filename.concat(F(".json"));
-
-        DynamicJsonDocument doc(2048);
-        bool ok = false;
-
-        File jfile = LittleFS.open(filename.c_str(), "r");
-        DeserializationError error;
-        if (jfile){
-            error = deserializeJson(doc, jfile);
-            jfile.close();
-        } else {
-            ok = false;
-        }
-
-        if (error) {
-            LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filename.c_str());
-            LOG(println, error.code());
-            ok = false;
-        }
-        ok = true;
-
-        if (ok && doc[F("name")]){
-            name = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
-        } else if(!ok) {
-            // LittleFS.remove(filename);
-            // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
-            name = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
-        }
-    }
-#endif
-public:
-    uint16_t eff_nb; // номер эффекта, для копий наращиваем старший байт
-    EFFFLAGS flags; // флаги эффекта
-
-    EffectListElem(uint16_t nb, uint8_t mask){
-        eff_nb = nb;
-        flags.mask = mask;
-#ifdef CASHED_EFFECTS_NAMES
-        initName(nb);
-#endif
-    }
-
-    EffectListElem(const EffectListElem *base){
-        eff_nb = ((((base->eff_nb >> 8) + 1 ) << 8 ) | (base->eff_nb&0xFF)); // в старшем байте увеличиваем значение на 1
-        flags = base->flags;
-#ifdef CASHED_EFFECTS_NAMES
-        initName(base->eff_nb);
-#endif
-    }
-
-    bool canBeSelected(){ return flags.canBeSelected; }
-    void canBeSelected(bool val){ flags.canBeSelected = val; }
-    bool isFavorite(){ return flags.isFavorite; }
-    void isFavorite(bool val){ flags.isFavorite = val; }
-    uint8_t getMS(){ return ms; }
-#ifdef CASHED_EFFECTS_NAMES
-    String& getName() {return name;}
-    void setName(const String& _name) {name = _name;}
-#endif
-};
-
-//! Basic Effect Calc class
-/**
- * Базовый класс эффекта с основными переменными и методами общими для всех эффектов
- * методы переопределяются каждым эффектом по необходимости
-*/
-class EffectCalc {
-private:
-    EffectWorker *pworker = nullptr; // указатель на воркер
-    LAMPSTATE *lampstate = nullptr;
-    LList<UIControl *> *ctrls;
-    String dummy; // дефолтная затычка для отсутствующего контролла, в случае приведения к целому получится "0"
-    bool active = false;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
-    bool isCtrlPallete = false; // признак наличия контрола палитры
-    bool isMicActive = false; // признак включенного микрофона
-protected:
-    EFF_ENUM effect;        /**< энумератор эффекта */
-    bool isDebug() {return lampstate!=nullptr ? lampstate->isDebug : false;}
-    bool isRandDemo() {return lampstate!=nullptr ? lampstate->isRandDemo : false;}
-    bool isActive() {return active;}
-    void setActive(bool flag) {active=flag;}
-    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
-    byte brightness;
-    byte speed;
-    byte scale;
-
-    uint8_t palettescale;       // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
-    float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-    uint8_t palettepos;         // позиция в массиве указателей паллитр
-    uint8_t paletteIdx;         // индекс палитры переданный с UI
-
-    /** флаг, включает использование палитр в эффекте.
-     *  влияет на:
-     *  - подгрузку дефолтовых палитр при init()
-     *  - переключение палитры при изменении ползунка "шкалы"
-     *  -  проверку R?
-     */
-    bool usepalettes=false;
-    std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
-    TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
-
-    const String &getCtrlVal(int idx) {
-        //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
-
-        // Добавлена поддержка вариантов следования индексов контролов вида 0,1,2,5,7 т.е. с пропусками
-        dummy.clear();
-        if(idx<ctrls->size() && idx>=0 && idx<=2 && (*ctrls)[idx]->getId()==idx){
-            return (*ctrls)[idx]->getVal();
-        } else {
-            for(int i = 3; i<ctrls->size(); i++){
-                if((*ctrls)[i]->getId()==idx){
-                    if(isRandDemo()){
-                        dummy = random((*ctrls)[i]->getMin().toInt(),(*ctrls)[i]->getMax().toInt()+1);
-                        return dummy;
-                    }
-                    else
-                        return (*ctrls)[i]->getVal();
-                }
-            }
-        }
-        return dummy;
-    }
-
-public:
-
-    bool isMicOn() {return isMicActive;}
-
-    /** полезные обертки **/
-    uint8_t wrapX(int8_t x){ return (x + WIDTH) % WIDTH; }
-    uint8_t wrapY(int8_t y){ return (y + HEIGHT) % HEIGHT; }
-
-    EffectCalc(){}
-
-    /**
-     * pre_init метод, вызывается отдельно после создания экземпляра эффекта до каких либо иных инициализаций
-     * это нужно чтобы объект понимал кто он и возможно было вычитать конфиг для мультиэфектов, никаких иных действий здесь не предполагается
-    */
-    void pre_init(EFF_ENUM _eff, EffectWorker *_pworker, LList<UIControl *> *_ctrls, LAMPSTATE* _state) {effect = _eff; pworker = _pworker; ctrls = _ctrls; lampstate = _state;}
-
-    /**
-     * intit метод, вызывается отдельно после создания экземпляра эффекта для установки базовых переменных
-     * в конце выполнения вызывает метод load() который может быть переопределен в дочернем классе
-     * @param _eff - энумератор эффекта
-     * @param _controls - контролы эффекта
-     * @param _state - текущее состояние лампы
-     *
-    */
-    void init(EFF_ENUM _eff, LList<UIControl*>* _controls, LAMPSTATE* _state);
-
-    /**
-     * load метод, по умолчанию пустой. Вызывается автоматом из init(), в дочернем классе можно заменять на процедуру первой загрузки эффекта (вместо того что выполняется под флагом load)
-     *
-    */
-    virtual void load();
-
-    /**
-     * run метод, Вызывается для прохода одного цикла эффекта, можно переопределять либо фунцией обсчета смого эффекта,
-     * либо вспомогательной оберткой, вызывающей приватный метод.
-     * Метод должет вернуть true если обсчет эффекта был завершен успешно или false если обсчет был пропущен и кадр не менялся
-     * @param ledarr - указатель на массив, пока не используется
-     * @param opt - опция, пока не используется, вероятно нужно заменить на какую-нибудь расширяемую структуру
-    */
-    virtual bool run(CRGB* ledarr, EffectWorker *opt=nullptr);
-
-    /**
-     * drynrun метод, всеми любимая затычка-проверка на "пустой" вызов
-     * возвращает false если еще не прошло достаточно времени с EFFECTS_RUN_TIMER
-     */
-    bool dryrun(float n=1.0, uint8_t delay = EFFECTS_RUN_TIMER);
-
-    /**
-     * status - статус воркера, если работает и загружен эффект, отдает true
-     */
-    virtual bool status();
-
-    ///
-    /// следующие методы дублируют устранку "яркости", "скорости", "шкалы" для эффекта.
-    /// Сейчас это не используется, но соображения "за" следующие:
-    ///  - эффекты можно программить со своими локальными переменными, не дергая конкретный
-    ///    экземпляр myLamp.effects.getXXX
-    ///  - эффекты могут по необходимости масштабировать параметры из байта в свою размерность, или можно расширить базовый класс
-    ///  - эфекты могут переопределять методы установки параметров и корректировать их с учетом микрофона, например
-    ///
-
-
-    /**
-     * setBrt - установка яркости для воркера
-     */
-    virtual void setbrt(const byte _brt);
-
-    /**
-     * setSpd - установка скорости для воркера
-     */
-    virtual void setspd(const byte _spd);
-
-    /**
-     * setBrt - установка шкалы для воркера
-     */
-    virtual void setscl(const byte _scl);
-
-    /**
-     * setDynCtrl - обработка для динамических контролов idx=3+
-     * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
-     */
-    virtual void setDynCtrl(UIControl*_val);
-
-    /**
-     * загрузка дефолтных палитр в массив и установка текущей палитры
-     * в соответствие в "бегунком" шкала/R
-     */
-    virtual void palettesload();
-
-    /**
-     * palletemap - меняет указатель на текущую палитру из набора в соответствие с "ползунком"
-     * @param _val - байт "ползунка"
-     * @param _pals - набор с палитрами
-     */
-    virtual void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min=1,  const uint8_t _max=255);
-
-    /**
-     * метод выбирает текущую палитру '*curPalette' из набора дотупных палитр 'palettes'
-     * в соответствии со значением "бегунка" шкалы. В случае если задана паременная rval -
-     * метод использует значение R,  иначе используется значение scale
-     * (палитры меняются автоматом при изменении значения шкалы/R, метод оставлен для совместимости
-     * и для первоначальной загрузки эффекта)
-     */
-    void scale2pallete();
-
-    /**
-     * деструктор по-умолчанию пустой, может быть переопределен
-     */
-    virtual ~EffectCalc() = default;
-    //virtual ~EffectCalc(){ LOG(println,PSTR("DEGUG: Effect was destroyed\n")); } // отладка, можно будет затем закомментировать
-};
-
-/**
- * Класс с набором статических мат. функций, которые используются в
- * нескольких разных эффектах. Функции требующие большую статическую память
- * сюда не переносим
- *
- */
-
-
-#define M_PI_2	1.57079632679489661923
-
-static const PROGMEM float LUT[102] = {
-     0,           0.0099996664, 0.019997334, 0.029991005, 0.039978687,
-     0.049958397, 0.059928156,  0.069885999, 0.079829983, 0.089758173,
-     0.099668652, 0.10955953,   0.11942893,  0.12927501,  0.13909595,
-     0.14888994,  0.15865526,   0.16839015,  0.17809294,  0.18776195,
-     0.19739556,  0.20699219,   0.21655031,  0.22606839,  0.23554498,
-     0.24497867,  0.25436807,   0.26371184,  0.27300870,  0.28225741,
-     0.29145679,  0.30060568,   0.30970293,  0.31874755,  0.32773849,
-     0.33667481,  0.34555557,   0.35437992,  0.36314702,  0.37185606,
-     0.38050637,  0.38909724,   0.39762798,  0.40609807,  0.41450688,
-     0.42285392,  0.43113875,   0.43936089,  0.44751999,  0.45561564,
-     0.46364760,  0.47161558,   0.47951928,  0.48735857,  0.49513325,
-     0.50284320,  0.51048833,   0.51806855,  0.52558380,  0.53303409,
-     0.54041952,  0.54774004,   0.55499572,  0.56218672,  0.56931317,
-     0.57637525,  0.58337301,   0.59030676,  0.59717667,  0.60398299,
-     0.61072594,  0.61740589,   0.62402308,  0.63057774,  0.63707036,
-     0.64350110,  0.64987046,   0.65617871,  0.66242629,  0.66861355,
-     0.67474097,  0.68080884,   0.68681765,  0.69276786,  0.69865984,
-     0.70449406,  0.71027100,   0.71599114,  0.72165483,  0.72726268,
-     0.73281509,  0.73831260,   0.74375558,  0.74914461,  0.75448018,
-     0.75976276,  0.76499283,   0.77017093,  0.77529752,  0.78037310,
-     0.78539819,  0.79037325};
-
-class EffectMath {
-public:
-  static CRGB overrun;
-  static uint8_t mapsincos8(bool map, uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255);
-  static void MoveFractionalNoise(bool scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift = 0);
-  static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
-  static void fader(uint8_t step);
-  static uint8_t ceil8(const uint8_t a, const uint8_t b);
-  static CRGB makeBrighter( const CRGB& color, fract8 howMuchBrighter = 5);
-  static CRGB makeDarker( const CRGB& color, fract8 howMuchDarker = 5);
-  static float randomf(float min, float max);
-  static bool isInteger(float val);
-  static void addGlitter(uint8_t chanceOfGlitter = 127);
-  static void nightMode(CRGB *leds);
-
-  /*
-  static CRGB& piXY(CRGB *leds, byte x, byte y);
-  static void screenscale( accum88 a, byte N, byte& screen, byte& screenerr);
-  static void plot88(CRGB *leds, byte x, byte y, CRGB& color);
-  static int16_t scale15by8_local( int16_t i, fract8 scale );
-*/
-
-    static uint32_t getPixColor(uint32_t thisSegm); // функция получения цвета пикселя по его номеру
-    static uint32_t getPixColorXY(uint16_t x, uint16_t y); // функция получения цвета пикселя в матрице по его координатам
-    static void fillAll(const CRGB &color); // залить все
-    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
-    static void wu_pixel(uint32_t x, uint32_t y, CRGB col);
-    static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
-    static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
-    static void drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel=50);
-
-    static CRGB getPixColorXYF_X(float x, uint16_t y);
-    static CRGB getPixColorXYF_Y(uint16_t x, float y);
-    static CRGB getPixColorXYF(float x, float y);
-
-    static void drawLine(int x1, int y1, int x2, int y2, const CRGB &color);
-    static void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
-    static void drawCircle(int x0, int y0, int radius, const CRGB &color);
-    static void drawCircleF(float x0, float y0, float radius, const CRGB &color, float step = 0.25);
-    static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
-    static void setLedsNscale8(uint16_t idx, uint8_t val);
-    static void dimAll(uint8_t value);
-    static CRGB getLed(uint16_t idx);
-    static void blur2d(uint8_t val);
-    static CRGB *setLed(uint16_t idx, CHSV val);
-    static CRGB *setLed(uint16_t idx, CRGB val);
-
-    /** аналог ардуино функции map(), но только для float
-   */
-    static double fmap(const double x, const double in_min, const double in_max, const double out_min, const double out_max){
-        return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
-    }
-
-    static float distance(float x1, float y1, float x2, float y2){
-        float dx = x2 - x1, dy = y2 - y1;
-        return EffectMath::sqrt((dx * dx) + (dy * dy));
-    }
-    // чуть менее точная, зато в 3 раза быстрее
-    static float sqrt(float x){
-        union{
-            int i;
-            float x;
-        } u;
-
-        u.x = x;
-        // u.i = (1<<29) + (u.i >> 1) - (1<<22);
-        // u.i = 0x20000000 + (u.i >> 1) - 0x400000;
-        u.i = (u.i >> 1) + 0x1FC00000;
-        return u.x;
-    }
-
-    static float tan2pi_fast(float x) {
-        float y = (1 - x*x);
-        return x * (((-0.000221184 * y + 0.0024971104) * y - 0.02301937096) * y + 0.3182994604 + 1.2732402998 / y);
-        //float y = (1 - x*x);
-        //return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
-    }
-
-    static float atan2_fast(float y, float x)
-    {
-        //http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
-        //Volkan SALMA
-
-        const float ONEQTR_PI = PI / 4.0;
-        const float THRQTR_PI = 3.0 * PI / 4.0;
-        float r, angle;
-        float abs_y = fabs(y) + 1e-10f;      // kludge to prevent 0/0 condition
-        if ( x < 0.0f )
-        {
-            r = (x + abs_y) / (abs_y - x);
-            angle = THRQTR_PI;
-        }
-        else
-        {
-            r = (x - abs_y) / (x + abs_y);
-            angle = ONEQTR_PI;
-        }
-        angle += (0.1963f * r * r - 0.9817f) * r;
-        if ( y < 0.0f )
-            return( -angle );     // negate if in quad III or IV
-        else
-            return( angle );
-    }
-
-    static float atan_fast(float x){
-        /*
-        A fast look-up method with enough accuracy
-        */
-        if (x > 0) {
-            if (x <= 1) {
-            int index = round(x * 100);
-            return LUT[index];
-            } else {
-            float re_x = 1 / x;
-            int index = round(re_x * 100);
-            return (M_PI_2 - LUT[index]);
-            }
-        } else {
-            if (x >= -1) {
-            float abs_x = -x;
-            int index = round(abs_x * 100);
-            return -(LUT[index]);
-            } else {
-            float re_x = 1 / (-x);
-            int index = round(re_x * 100);
-            return (LUT[index] - M_PI_2);
-            }
-        }
-    }
-
-    // аналог fmap, но не линейная. (linear == fmap)
-    static float mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float)){
-        if (x <= in_min) return out_min;
-        if (x >= in_max) return out_max;
-        return curve((x - in_min), out_min, (out_max - out_min), (in_max - in_min));
-    }
-    static float linear(float t, float b, float c, float d) { return c * t / d + b; }
-    static float InQuad(float t, float b, float c, float d) { t /= d; return c * t * t + b; }
-    static float OutQuad(float t, float b, float c, float d) { t /= d; return -c * t * (t - 2) + b; }
-    static float InOutQuad(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t + b;
-        --t;
-        return -c / 2 * (t * (t - 2) - 1) + b;
-    }
-    static float InCubic(float t, float b, float c, float d) { t /= d; return c * t * t * t + b; }
-    static float OutCubic(float t, float b, float c, float d) { t = t / d - 1; return c * (t * t * t + 1) + b; }
-    static float InOutCubic(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t * t + b;
-        t -= 2;
-        return c / 2 * (t * t * t + 2) + b;
-    }
-    static float InQuart(float t, float b, float c, float d) { t /= d; return c * t * t * t * t + b; }
-    static float OutQuart(float t, float b, float c, float d) { t = t / d - 1; return -c * (t * t * t * t - 1) + b; }
-    static float InOutQuart(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t * t * t + b;
-        t -= 2;
-        return -c / 2 * (t * t * t * t - 2) + b;
-    }
-    static float InQuint(float t, float b, float c, float d) { t /= d; return c * t * t * t * t * t + b; }
-
-    static float fixed_to_float(int input){
-        return ((float)input / (float)(1 << 16));
-    }
-    static int float_to_fixed(float input){
-        return (int)(input * (1 << 16));
-    }
-    static float OutQuint(float t, float b, float c, float d) {
-        t = t / d - 1;
-        return c * (t * t * t * t * t + 1) + b;
-    }
-    static float InOutQuint(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return  c / 2 * t * t * t * t * t + b;
-        t -= 2;
-        return c / 2 * (t * t * t * t * t + 2) + b;
-    }
-    // static float InSine(float t, float b, float c, float d) { return -c * Math.cos(t/d * (Math.PI/2)) + c + b; }
-    // static float OutSine(float t, float b, float c, float d) { return c * Math.sin(t/d * (Math.PI/2)) + b; }
-    // static float InOutSine(float t, float b, float c, float d) { return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b; }
-    static float InExpo(float t, float b, float c, float d) { return (t==0) ? b : c * powf(2, 10 * (t/d - 1)) + b; }
-    static float OutExpo(float t, float b, float c, float d) { return (t==d) ? b+c : c * (-powf(2, -10 * t/d) + 1) + b; }
-    static float InOutExpo(float t, float b, float c, float d) {
-        if (t==0) return b;
-        if (t==d) return b + c;
-        t /= d / 2;
-        if (t < 1) return c/2 * powf(2, 10 * (t - 1)) + b;
-        --t;
-        return c/2 * (-powf(2, -10 * t) + 2) + b;
-    }
-    static float InCirc(float t, float b, float c, float d) { t /= d; return -c * (sqrt(1 - t * t) - 1) + b; }
-    static float OutCirc(float t, float b, float c, float d) { t = t / d - 1; return c * sqrt(1 - t * t) + b; }
-    static float InOutCirc(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return -c/2 * (sqrt(1 - t*t) - 1) + b;
-        t -= 2;
-        return c/2 * (sqrt(1 - t*t) + 1) + b;
-    }
-};
 
 #ifdef MIC_EFFECTS
 class EffectFreq : public EffectCalc {
@@ -609,9 +59,17 @@ private:
     void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 #endif
+
+//-------------- Специально обученный пустой эффект :)
+class EffectNone : public EffectCalc {
+private:
+    void load() override { FastLED.clear(); };
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override {return true;};
+};
 
 //-------------- Эффект "Часы"
 class EffectTime : public EffectCalc {
@@ -666,9 +124,10 @@ private:
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
     bool halo = false;                                  // ореол
+    uint8_t _scale=1;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    String setDynCtrl(UIControl*_val) override;
+    // void setscl(const byte _scl) override; // перегрузка для масштаба
     //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
     void load() override;
@@ -706,7 +165,7 @@ public:
 // ------------- эффект "Блуждающий кубик" -------------
 class EffectBall : public EffectCalc {
 private:
-    int8_t ballSize;
+    uint8_t ballSize;
     CHSV ballColor;
     float vectorB[2U];
     float coordB[2U];
@@ -719,17 +178,20 @@ public:
 };
 
 // -------- Эффект "Светлячки со шлейфом"
+#define _AMOUNT 16U
 class EffectLighterTracers : public EffectCalc {
 private:
-    float vector[BALLS_AMOUNT][2U];
-    float coord[BALLS_AMOUNT][2U];
-    int16_t ballColors[BALLS_AMOUNT];
-    byte light[BALLS_AMOUNT];
+    uint8_t cnt = 1;
+    float vector[_AMOUNT][2U];
+    float coord[_AMOUNT][2U];
+    int16_t ballColors[_AMOUNT];
+    byte light[_AMOUNT];
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 class EffectRainbow : public EffectCalc {
@@ -751,7 +213,7 @@ private:
 
     bool colorsRoutine(CRGB *leds, EffectWorker *param);
     void setscl(const byte _scl) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -769,11 +231,12 @@ public:
 // ---- Эффект "Конфетти"
 class EffectSparcles : public EffectCalc {
 private:
-
+    uint8_t eff = 1;
     bool sparklesRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ========== Эффект "Эффектопад"
@@ -805,13 +268,11 @@ private:
      uint8_t sparking = 90U; // 130
   // SMOOTHING; How much blending should be done between frames
   // Lower = more blending and smoother flames. Higher = less blending and flickery flames
+    uint8_t _scale = 1;
     const uint8_t fireSmoothing = 60U; // 90
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-
-
-
-  bool fire2012Routine(CRGB *leds, EffectWorker *param);
-
+    bool fire2012Routine(CRGB *leds, EffectWorker *param);
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -820,6 +281,7 @@ public:
 // ------------- светлячки -------------
 class EffectLighters : public EffectCalc {
 protected:
+    uint8_t cnt = 1;
     bool subPix = false;
     uint16_t lightersIdx;
     float lightersSpeed[2U][LIGHTERS_AM];
@@ -828,21 +290,23 @@ protected:
     byte light[LIGHTERS_AM];
 private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- матрица -------------
+// ------------- Эффект "New Матрица" ---------------
 class EffectMatrix : public EffectLighters {
 private:
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
+    uint8_t _scale = 1;
     byte gluk = 1;
     uint8_t hue;
     bool randColor = false;
     bool white = false;
-    void setDynCtrl(UIControl*_val) override;
+    float count;
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -851,10 +315,12 @@ public:
 // ------------- звездопад/метель -------------
 class EffectStarFall : public EffectLighters {
 private:
-    bool colored = false;
-    bool isNew = false;
+    uint8_t _scale = 1;
+    uint8_t effId = 1;
+    bool isNew = true;
+    float fade;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -883,7 +349,7 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 class EffectSpiro : public EffectCalc {
@@ -919,7 +385,9 @@ public:
 class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
-    bool prismataRoutine(CRGB *leds, EffectWorker *param);
+    uint8_t fadelvl=1;
+    
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -938,7 +406,7 @@ private:
   float hueoffset;
 
   bool flockRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
   void setspd(const byte _spd) override;
 public:
     void load() override;
@@ -951,6 +419,7 @@ public:
 class EffectComet : public EffectCalc {
 private:
     byte hue;
+    byte hue2;
     uint8_t eNs_noisesmooth;
     uint32_t e_x[NUM_LAYERS];
     uint32_t e_y[NUM_LAYERS];
@@ -958,7 +427,16 @@ private:
     uint32_t e_scaleX[NUM_LAYERS];
     uint32_t e_scaleY[NUM_LAYERS];
     uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-
+    uint8_t count;
+    uint8_t speedy;
+    float spiral;
+    float spiral2;
+    float speedFactor;
+    uint8_t _scale = 1;
+    uint8_t effId = 1;      // 2, 1-6
+    uint8_t colorId;        // 3, 1-255
+    uint8_t smooth = 1;     // 4, 1-12
+    uint8_t blur;           // 5, 1-64
 
     const uint8_t e_centerX =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01);
     const uint8_t e_centerY = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01);
@@ -971,6 +449,8 @@ private:
     bool firelineRoutine(CRGB *leds, EffectWorker *param);
     bool fractfireRoutine(CRGB *leds, EffectWorker *param);
     bool flsnakeRoutine(CRGB *leds, EffectWorker *param);
+    bool smokeRoutine(CRGB *leds, EffectWorker *param);
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1000,7 +480,7 @@ private:
   uint8_t _dri_delta;
   byte driftType = 0;
 
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
   bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
   bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
 
@@ -1028,8 +508,9 @@ class EffectWaves : public EffectCalc {
 private:
   float whue;
   float waveTheta;
+  uint8_t _scale=1;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
-
+  String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1047,7 +528,7 @@ private:
   bool subPix = false;
   byte hue;
   bool radarRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1072,7 +553,7 @@ private:
 
   void FillNoise(int8_t layer);     // TODO: join with Comet's
   bool multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1082,6 +563,7 @@ class EffectFire2018 : public EffectCalc {
 private:
   const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t CentreX = WIDTH / 2 + (WIDTH % 2);
+  bool isLinSpeed = true;
 
   uint32_t noise32_x[NUM_LAYERS2];
   uint32_t noise32_y[NUM_LAYERS2];
@@ -1092,6 +574,7 @@ private:
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
   bool fire2018Routine(CRGB *leds, EffectWorker *param);
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1112,12 +595,9 @@ private:
   ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
-  uint8_t csum;   // reload checksum
-
-
   void ringsSet();
   bool ringsRoutine(CRGB *leds, EffectWorker *param);
-
+  String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1151,7 +631,7 @@ private:
   bool cube2dClassicRoutine(CRGB *leds, EffectWorker *param);
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
   void cube2dmoveRows(uint8_t moveItem, bool movedirection);
-  void setDynCtrl(UIControl*_val) override;
+  String setDynCtrl(UIControl*_val) override;
   void setscl(const byte _scl) override;
 
 public:
@@ -1221,7 +701,7 @@ public:
     }
     ~EffectPicasso() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ------ Эффект "Прыгуны" (c) obliterator
@@ -1242,7 +722,7 @@ private:
     bool leapersRoutine(CRGB *leds, EffectWorker *param);
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ------ Эффект "Лавовая Лампа"
@@ -1313,7 +793,7 @@ public:
     }
     ~EffectLiquidLamp() { delete palettes; }
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ----------- Эффект "Вихри" адаптация SottNick
@@ -1336,34 +816,43 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- цвет + вода в бассейне ------------------
-// (с) SottNick. 03.2020
-// переписал на программные субпиксельные блики - (c) kostyamat
+// ------------- Эффект "Блики на воде Цвета"
+// Идея SottNick
+// переписал на программные блики + паттерны - (c) kostyamat
+// Генератор бликов (c) stepko
 class EffectAquarium : public EffectCalc {
 private:
+#define MAX_DIMENSION max(WIDTH, HEIGHT)
+    CRGBPalette16 currentPalette;
+    const uint8_t _scale = 25;
+    const uint8_t _speed = 3;
+
     float hue = 0.;
-    //uint8_t deltaHue = 0U;
-    //uint8_t deltaHue2 = 0U;
-    //uint8_t step = 0;
+    uint16_t x;
+    uint16_t y;
+    uint16_t z;
     byte ledbuff[WIDTH*2 * HEIGHT*2];
     uint16_t xsin;
     uint16_t ysin;
-    byte satur;
-    byte glare = 0;
-    byte iconIdx = 0;
+    uint8_t satur;
+    uint8_t glare = 0;
+    uint8_t iconIdx = 0;
 
-    void nGlare();
+    void nGlare(CRGB *leds);
     void nPatterns();
     bool aquariumRoutine(CRGB *leds, EffectWorker *param);
+    void fillNoiseLED(CRGB *leds);
 
 public:
-    //void load() override;
+    void load() override;
+    String setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-#define STARS_NUM (16)
+
 // ----------- Эффект "Звезды"
 // (c) SottNick
+#define STARS_NUM (16)
 class EffectStar : public EffectCalc {
 private:
     float driftx;
@@ -1398,12 +887,13 @@ private:
     uint16_t launchcountdown[SPARK];
     byte dim;
     uint8_t valDim;
+    uint8_t cnt;
     bool flashing = false;
     bool fireworksRoutine(CRGB *leds, EffectWorker *param);
     void sparkGen();
     Dot gDot[SPARK];
     Dot gSparks[NUM_SPARKS];
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
@@ -1439,7 +929,7 @@ private:
     float div;
     byte gain;
     double y[2] = {0., 0.};
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     
 
 public:
@@ -1457,8 +947,10 @@ private:
     byte flip = 0;
     byte generation = 0;
     byte mic[2];
+    byte rand;
+    bool flag = false;
 
-
+    String setDynCtrl(UIControl*_val) override;
     bool munchRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -1513,6 +1005,7 @@ private:
     uint8_t hue2;
     byte step = 0;
     byte csum = 0;
+    uint8_t cnt;
     bool wings = false;
     bool isColored = true;
 
@@ -1520,7 +1013,7 @@ private:
     void load() override;
 public:
     //void load() override;
-    virtual void setDynCtrl(UIControl*_val) override;
+    virtual String setDynCtrl(UIControl*_val) override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1548,6 +1041,7 @@ private:
     int8_t patternIdx = -1;
     int8_t lineIdx = 0;
     bool _subpixel = false;
+    uint8_t _speed = 1, _scale = 1;
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
@@ -1572,7 +1066,7 @@ private:
         CHSV(HUE_AQUA, 255, 255),
     };
 
-    void setDynCtrl(UIControl*_val);
+    String setDynCtrl(UIControl*_val) override;
     void drawPicture_XY();
     bool patternsRoutine(CRGB *leds, EffectWorker *param);
 
@@ -1586,8 +1080,6 @@ public:
 // взято отсюда https://github.com/vvip-68/GyverPanelWiFi/
 class EffectArrows : public EffectCalc {
 private:
-    bool loadingFlag = true;
-    byte csum = 0;
     float arrow_x[4], arrow_y[4], stop_x[4], stop_y[4];
     byte arrow_direction;             // 0x01 - слева направо; 0x02 - снизу вверх; 0х04 - справа налево; 0х08 - сверху вниз
     byte arrow_mode, arrow_mode_orig; // 0 - по очереди все варианты
@@ -1600,6 +1092,7 @@ private:
     byte arrow_hue[4];
     byte arrow_play_mode_count[6];      // Сколько раз проигрывать полностью каждый режим если вариант 0 - текущий счетчик
     byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
+    uint8_t _scale;
     float speedfactor;
     bool subpixel;
     float prevVal[2];
@@ -1610,9 +1103,9 @@ private:
     void arrowSetup_mode4();
 
     bool arrowsRoutine(CRGB *leds, EffectWorker *param);
-
+    void load() override;
+    String setDynCtrl(UIControl*_val) override;
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1625,12 +1118,12 @@ private:
     uint16_t _scale;
 
     byte beat1, beat2 = 0;
-    byte balls = 1;
+    byte balls = 4;
 
     void balls_timer();
     void blur(CRGB *leds);
     bool nballsRoutine(CRGB *leds, EffectWorker *param);
-
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1653,7 +1146,7 @@ private:
     //Boid boids[AVAILABLE_BOID_COUNT];
     Boid boids[count];
     PVector location;   // Location
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     void setscl(const byte _scl) override;
     void setspd(const byte _spd) override;
     void setup();
@@ -1787,7 +1280,7 @@ struct Snake
 
     Snake snakes[MAX_SNAKES];
     bool snakeRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 public:
     //void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1807,13 +1300,14 @@ class EffectNexus: public EffectCalc {
     float dotAccel[NEXUS];         // персональное ускорение каждой точки
     bool white = false;
     byte type = 1;
+    uint8_t _scale = 1;
     bool randColor = false;
     float windProgress;
     
 
     void reload();
     void resetDot(uint8_t idx);
-    //void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1833,7 +1327,7 @@ private:
     CHSV color;
 
     bool flowerRoutine(CRGB *leds, EffectWorker *param);
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1852,7 +1346,7 @@ private:
     bool rotate = false;
 
     bool DNARoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
@@ -1873,8 +1367,8 @@ private:
     byte _pal = 8;
     byte _scale = 60;
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
-    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    String setDynCtrl(UIControl*_val) override;
+    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
     void regenNoise();
 
@@ -1883,8 +1377,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эфеект "Змейки"
-// (c) Сотнег (SottNick)
+// ----------- Эфеект "Змеиный Остров"
+// (c) Сотнег
 // База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
 // адаптация и доработки kostyamat
 class EffectTest : public EffectCalc {
@@ -1902,7 +1396,7 @@ private:
     byte csum = 0;
 
     bool testRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     void setscl(const byte _scl) override; // перегрузка для масштаба
     //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
@@ -1935,8 +1429,8 @@ private:
     void restart_rocket(uint8_t r);
     void reload();
     bool popcornRoutine(CRGB *leds, EffectWorker *param);
-    void setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    String setDynCtrl(UIControl*_val) override;
+    //void setscl(const byte _scl) override; // перегрузка для масштаба
 
 public:
     void load() override;
@@ -1948,6 +1442,7 @@ public:
 #define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
+    uint8_t _scale = 1;
     uint16_t reg[WAVES_AMOUNT];
     uint16_t pos[WAVES_AMOUNT];
     float sSpeed[WAVES_AMOUNT];
@@ -1956,20 +1451,32 @@ class EffectSmokeballs: public EffectCalc {
     uint8_t waveColors[WAVES_AMOUNT];
     void shiftUp();
     void regen();
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
   public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Клеточка"
-// из примеров программы Soulmate, автор неизвестен
+// ----------- Эффект "Ёлки-Палки"
+// "Cell" (C) Elliott Kember из примеров программы Soulmate
+// Spaider и Spruce (c) stepko
 class EffectCell: public EffectCalc {
   private:
+    const uint8_t Lines = 5;
+    uint8_t Scale = 6;
+    uint8_t _scale = 1;
     int16_t offsetX = 0;
     int16_t offsetY = 0;
+    float x[WIDTH];
+    uint8_t effId = 1;
+    uint8_t hue;
+    void cell(CRGB *leds);
+    void spider(CRGB *leds);
+    void spruce(CRGB *leds);
+
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 // ----------- Эффект "Геометрический Вальс"
@@ -1985,12 +1492,13 @@ class EffectCell: public EffectCalc {
 class EffectF_lying: public EffectCalc {
   private:
     byte hue = 0;
+    uint8_t _blur = 1;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
-    void setDynCtrl(UIControl*_val);
+    String setDynCtrl(UIControl*_val);
 #ifdef BIGMATRIX
     const float deviator = 2.;
 #else
-    const float deviator = 5.;
+    const float deviator = 4;
 #endif
     bool type = false;
   public:
@@ -2002,6 +1510,7 @@ class EffectF_lying: public EffectCalc {
 // (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
 class EffectTLand: public EffectCalc {
   private:
+    bool isSeq = false;
     byte animation = 0;
     bool ishue;
     bool ishue2;
@@ -2012,10 +1521,10 @@ class EffectTLand: public EffectCalc {
     double t;
     void processFrame(CRGB *leds, double t, double x, double y);
     float code(double i, double x, double y);
-    void setDynCtrl(UIControl*_val);
+    String setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    //void load() override;
+    void load() override;
 };
 
 // -------- "LDIRKO Ленд"
@@ -2029,9 +1538,10 @@ class EffectLLand: public EffectCalc {
   private:
     const byte effects = 10; //how many effects
     byte effnumber = 0; //start effect
+    uint8_t _scale = 1;
     float t;
     uint16_t code(byte x, byte y, uint16_t i, float t);
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     bool select = false;
     bool randColor = false;
     float hue = 0;
@@ -2065,7 +1575,7 @@ class EffectOscilator: public EffectCalc {
     int blueNeighbours(uint8_t x, uint8_t y);
     int greenNeighbours(uint8_t x, uint8_t y);
     void setCellColors(uint8_t x, uint8_t y);
-    //void setDynCtrl(UIControl*_val) override;
+    //String setDynCtrl(UIControl*_val) override;
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
@@ -2088,6 +1598,7 @@ class EffectWrain: public EffectCalc {
     bool clouds = false;
     bool storm = false;
     bool white = false;
+    uint8_t _scale=1;
     byte type = 1;
     bool _flash;
     bool randColor = false;
@@ -2098,7 +1609,7 @@ class EffectWrain: public EffectCalc {
     
 
     void reload();
-    void setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
     bool Lightning(uint16_t chanse);
     void Clouds(bool flash);
 
@@ -2107,238 +1618,289 @@ class EffectWrain: public EffectCalc {
     void load() override;
 };
 
-// --------- конец секции эффектов
-
-class EffectWorker {
+// ------------- Эффект "Цветные драже"
+#define MAXDOTS 16
+class EffectPile : public EffectCalc {
 private:
-    LAMPSTATE *lampstate; // ссылка на состояние лампы
-    SORT_TYPE effSort; // порядок сортировки в UI
-    const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
+  struct dot {float x; float y; uint8_t hue;};
+  struct dot dots[MAXDOTS];
+  float widthPos[WIDTH];
+  bool done = true;
+  float speedfactor = 0.0f;
+  float internal_counter = 0.0f;
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    bool clearrows(bool clear=true);
+};
 
-    EFFFLAGS flags; // подумать нужен ли он здесь...
-    uint16_t curEff = (uint16_t)EFF_NONE;     ///< энумератор текущего эффекта
-    uint16_t selEff = (uint16_t)EFF_NONE;     ///< энумератор выбранного эффекта (для отложенного перехода)
+//-------- по мотивам Эффектов Particle System -------------------------
+// https://github.com/fuse314/arduino-particle-sys
+// https://github.com/giladaya/arduino-particle-sys
+// https://www.youtube.com/watch?v=S6novCRlHV8&t=51s
+//при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
+//ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
 
-    
-    String originalName;    // имя эффекта дефолтное
-    String effectName;      // имя эффекта (предварительно заданное или из конфига)
-    String soundfile;       // имя/путь к звуковому файлу (DF Player Mini)
-    uint8_t version;        // версия эффекта
+// ============= ЭФФЕКТ ФЕЯ ===============
+// (c) SottNick
 
-    LList<EffectListElem*> effects; // список эффектов с флагами из индекса
-    LList<UIControl*> controls; // список контроллов текущего эффекта
-    LList<UIControl*> selcontrols; // список контроллов выбранного эффекта (пока еще идет фейдер)
+#define trackingOBJECT_MAX_COUNT    (WIDTH * 3)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
+#define enlargedOBJECT_MAX_COUNT    (WIDTH * 3) // максимальное количество сложных отслеживаемых объектов (меньше, чем trackingOBJECT_MAX_COUNT)
 
-    /**
-     * создает и инициализирует экземпляр класса выбранного эффекта
-     *
-    */
-    void workerset(uint16_t effect, const bool isCfgProceed = true);
+class EffectFairy : public EffectCalc {
+private:
+    float   trackingObjectPosX[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectPosY[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectSpeedX[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectShift[trackingOBJECT_MAX_COUNT];
+    uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
+    float   trackingObjectState[trackingOBJECT_MAX_COUNT];
+    bool    trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
+    uint8_t enlargedObjectNUM;                                       // используемое в эффекте количество объектов
 
-    EffectWorker(const EffectWorker&);  // noncopyable
-    EffectWorker& operator=(const EffectWorker&);  // noncopyable
+    Boid boids[2];
 
-    void clearEffectList(); // очистка списка эффектов, вызываетсяч в initDefault
-    void clearControlsList(); // очистка списка контроллов и освобождение памяти
+    uint8_t hue;
+    uint8_t hue2;
+    uint8_t step;
+    uint8_t deltaValue;
+    uint8_t deltaHue;
+    uint8_t deltaHue2;
+    float speedFactor;
+    byte type = false;
+    byte blur;
 
-    //void initDefault();
-    void effectsReSort(SORT_TYPE st=(SORT_TYPE)(255));
+    void particlesUpdate2(uint8_t i);
+    void fairyEmit(uint8_t i);
+    void fountEmit(uint8_t i);
+    bool fairy(CRGB *leds);
+    void fount(CRGB *leds);
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+    String setDynCtrl(UIControl*_val) override;
 
-    int loadeffconfig(const uint16_t nb, const char *folder=nullptr);
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 
-    // получение пути и имени файла конфига эффекта
-    const String geteffectpathname(const uint16_t nb, const char *folder=nullptr);
+// ---------- Эффект "Бульбулятор"
+// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
+// адаптация и переделка - kostyamat
+#define NUMBER_OF_CIRCLES (NUM_LEDS / 32U)
+class EffectCircles : public EffectCalc {
+private:
+    byte color;
+    class Circle
+    {
+    public:
+        //uint16_t offset;
+        int16_t centerX;
+        int16_t centerY;
+        byte hue;
+        float bpm = random(0, 255);
 
-    /**
-     * проверка на существование "дефолтных" конфигов для всех статичных эффектов
-     *
-     */
-    void chckdefconfigs(const char *folder);
+        void move() {
+            centerX = random(0, LED_COLS-1);
+            centerY = random(0, LED_ROWS-1);
+        }
+        
+        void reset() {
+            centerX = random(0, LED_COLS-1);
+            centerY = random(0, LED_ROWS-1);
+            hue = random(0, 255);
+        }
 
-    void savedefaulteffconfig(uint16_t nb, String &filename);
-    void saveeffconfig(uint16_t nb, char *folder=nullptr);
-    void makeIndexFile(const char *folder = nullptr);
-    // создать или обновить текущий индекс эффекта
-    void updateIndexFile();
-    // удалить эффект из индексного файла
-    void deleteFromIndexFile(const uint16_t effect);
+        float radius() {
+            float radius = EffectMath::fmap(triwave8(bpm), 0, 254, 0, 5); //beatsin16(bpm, 0, 500, 0, offset) / 100.0;
+            return radius;
+        }
+    };
 
-    /**
-     * получить версию эффекта из "прошивки" по его ENUM
-     */
-    const uint8_t geteffcodeversion(const uint8_t id);
+    Circle circles[NUMBER_OF_CIRCLES] = {};
 
-    /**
-     *  метод загружает и пробует десериализовать джейсон из файла в предоставленный документ,
-     *  возвращает true если загрузка и десериализация прошла успешно
-     *  @param doc - DynamicJsonDocument куда будет загружен джейсон
-     *  @param jsonfile - файл, для загрузки
-     */
-    bool deserializeFile(DynamicJsonDocument& doc, const char* filepath);
+    void drawCircle(CRGB *leds, Circle circle);
 
-    /**
-     * процедура открывает индекс-файл на запись в переданный хендл,
-     * возвращает хендл
-     */
-    File& openIndexFile(File& fhandle, const char *folder);
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+}; 
+
+// ----------- Эффект "Бенгальские Огни"
+// (c) stepko https://wokwi.com/arduino/projects/289797125785520649
+// 06.02.2021
+class EffectBengalL : public EffectCalc {
+private:
+    #define sparksNum  WIDTH*4
+
+    float sparksPos[2][sparksNum];
+    float sparksSpeed[2][sparksNum];
+    byte sparksColor[sparksNum];
+    float sparksSat[sparksNum];
+    float sparksFade[sparksNum];
+    uint8_t gPos[2];
+
+    bool centerRun = false;
+    byte period = 10;
+    byte _x = WIDTH/2;
+    byte _y = HEIGHT/2;
+    float speedFactor;
+
+    void regen(byte id);
+    void phisics(byte id);
+    void setspd(const byte _spd) override;
+    String setDynCtrl(UIControl*_val) override;
 
 
 public:
-    std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
-    void initDefault(const char *folder = nullptr); // пусть вызывается позже и явно
-    ~EffectWorker() { clearEffectList(); clearControlsList(); }
-
-    LList<UIControl*>&getControls() { return isSelected() ? controls : selcontrols; }
-
-    // дефолтный конструктор
-    EffectWorker(LAMPSTATE *_lampstate) : effects(), controls(), selcontrols() {
-      lampstate = _lampstate;
-      if (!LittleFS.begin()){
-          //LOG(println, F("ERROR: Can't mount filesystem!"));
-          return;
-      }
-
-      for(int8_t id=0;id<3;id++){
-        controls.add(new UIControl(
-            id,                                     // id
-            CONTROL_TYPE::RANGE,                    // type
-            id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088)),           // name
-            String(127),                            // value
-            String(1),                              // min
-            String(255),                            // max
-            String(1)                               // step
-        ));
-        // selcontrols.add(new UIControl(
-        //     id,                                     // id
-        //     CONTROL_TYPE::RANGE,                    // type
-        //     id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088)),           // name
-        //     String(127),                            // value
-        //     String(1),                              // min
-        //     String(255),                            // max
-        //     String(1)                               // step
-        // ));
-      }
-      //workerset(EFF_NONE);
-      selcontrols = controls;
-    } // initDefault(); убрал из конструктора, т.к. крайне неудобно становится отлаживать..
-
-    // тип сортировки
-    void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
-
-    // Получить конфиг текущего эффекта
-    String geteffconfig(uint16_t nb);
-
-    // Получить конфиг эффекта из ФС
-    String getfseffconfig(uint16_t nb);
-
-    // конструктор копий эффектов
-    EffectWorker(const EffectListElem* base, const EffectListElem* copy);
-    // Конструктор для отложенного эффекта
-    EffectWorker(uint16_t delayeffnb);
-    // конструктор текущего эффекта, для fast=true вычитываетсяч только имя
-    EffectWorker(const EffectListElem* eff, bool fast=false);
-
-    // отложенная запись конфига текущего эффекта
-    bool autoSaveConfig(bool force=false, bool reset=false);
-    // удалить конфиг переданного эффекта
-    void removeConfig(const uint16_t nb, const char *folder=nullptr);
-    // пересоздает индекс с текущего списка эффектов
-    void makeIndexFileFromList(const char *folder = nullptr);
-    // пересоздает индекс с конфигов в ФС
-    void makeIndexFileFromFS(const char *fromfolder = nullptr, const char *tofolder = nullptr);
-
-    byte getModeAmount() {return effects.size();}
-
-    const String &getEffectName() {return effectName;}
-    void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
-        {
-            if(to->eff_nb==curEff){
-                effectName=name;
-            }
-            else {
-                EffectWorker *tmp=new EffectWorker(to);
-                tmp->curEff=to->eff_nb;
-                tmp->selEff=to->eff_nb;
-                tmp->setEffectName(name,to);
-                tmp->saveeffconfig(to->eff_nb);
-                delete tmp;
-            }
-        }
-
-    const String &getSoundfile() {return soundfile;}
-    void setSoundfile(const String &_soundfile, EffectListElem*to) // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
-        {if(to->eff_nb==curEff) soundfile=_soundfile; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setSoundfile(_soundfile,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
-    const String &getOriginalName() {return originalName;}
-
-    /**
-    * вычитать только имя эффекта из конфиг-файла и записать в предоставленную строку
-    * в случае отсутствия/повреждения взять имя эффекта из флеш-таблицы, если есть
-    * для работы метода не требуется экземпляра класса effectCalc'а
-    * @param effectName - String куда записать результат
-    * @param nb  - айди эффекта
-    * @param folder - какой-то префикс для каталога
-    */
-    void loadeffname(String& effectName, const uint16_t nb, const char *folder=nullptr);
-
-    /**
-    * вычитать только имя\путь звука из конфиг-файла и записать в предоставленную строку
-    * в случае отсутствия/повреждения возвращает пустую строку
-    * @param effectName - String куда записать результат
-    * @param nb  - айди эффекта
-    * @param folder - какой-то префикс для каталога
-    */
-    void loadsoundfile(String& effectName, const uint16_t nb, const char *folder=nullptr);
-
-    // текущий эффект или его копия
-    const uint16_t getEn() {return curEff;}
-    //const uint16_t
-
-    // следующий эффект, кроме canBeSelected==false
-    uint16_t getNext();
-    // предыдущий эффект, кроме canBeSelected==false
-    uint16_t getPrev();
-    // получить указанный
-    uint16_t getBy(uint16_t select){ return select;}
-    // перейти по предворительно выбранному
-
-    void moveSelected();
-    // перейти на количество шагов, к ближйшему большему (для DEMO)
-
-    void moveByCnt(byte cnt){ uint16_t eff = getByCnt(cnt); directMoveBy(eff); }
-    // получить номер эффекта смещенного на количество шагов (для DEMO)
-    uint16_t getByCnt(byte cnt);
-    // перейти на указанный в обход нормального переключения, использовать только понимая что это (нужно для начальной инициализации и переключений выключенной лампы)
-    void directMoveBy(uint16_t select);
-    // вернуть первый элемент списка
-    EffectListElem *getFirstEffect();
-    // вернуть следующий эффект
-    EffectListElem *getNextEffect(EffectListElem *current);
-    // вернуть выбранный элемент списка
-    EffectListElem *getEffect(uint16_t select);
-    // вернуть текущий
-    uint16_t getCurrent() {return curEff;}
-    // вернуть текущий элемент списка
-    EffectListElem *getCurrentListElement();
-    // вернуть выбранный
-    uint16_t getSelected() {return selEff;}
-    // вернуть выбранный элемент списка
-    EffectListElem *getSelectedListElement();
-    void setSelected(const uint16_t effnb);
-    bool isSelected(){ return (curEff == selEff); }
-    // копирование эффекта
-    void copyEffect(const EffectListElem *base);
-    // удалить эффект
-    void deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-typedef enum _PERIODICTIME {
-  PT_NOT_SHOW = 1,
-  PT_EVERY_60,
-  PT_EVERY_30,
-  PT_EVERY_15,
-  PT_EVERY_10,
-  PT_EVERY_5,
-  PT_EVERY_1,
-} PERIODICTIME;
+// ----------- Эффект "Шары"
+// (c) stepko and kostyamat https://wokwi.com/arduino/projects/289839434049782281
+// 07.02.2021
+class EffectBalls : public EffectCalc {
+private:
+#if WIDTH >= HEIGHT
+    #define ballsAmount WIDTH
+#else
+    #define ballsAmount HEIGHT
+#endif
+    float ball[ballsAmount][4]; //0-PosY 1-PosX 2-SpeedY 3-SpeedX
+    float radius[ballsAmount];
+    bool rrad[ballsAmount];
+    byte color[ballsAmount];
+    const float radiusMax = (float)ballsAmount /5;
+
+    float speedFactor;
+    void fill_circle(float cx, float cy, float radius, CRGB col);
+    void setspd(const byte _spd) override;
+    //String setDynCtrl(UIControl*_val) override;
+
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ---------- Эффект-игра "Лабиринт"
+class EffectMaze : public EffectCalc {
+private:
+    const uint16_t maxSolves = MAZE_WIDTH * MAZE_WIDTH * 5;
+    char *maze = (char*)malloc(MAZE_WIDTH * MAZE_HEIGHT * sizeof(char));
+    int8_t playerPos[2];
+    uint32_t labTimer;
+    bool mazeMode = false;
+    bool mazeStarted = false;
+    uint8_t hue;
+    CRGB color;
+    CRGB playerColor = CRGB::White;
+
+    bool loadingFlag = true;
+    bool gameOverFlag = false;
+    bool gameDemo = true;
+    bool gamePaused = false;
+    bool track = random8(0,2);  // будет ли трек игрока
+    uint8_t buttons;
+
+    timerMinim gameTimer = 200;         // Таймер скорости игр
+
+    void newGameMaze();
+    void buttonsTickMaze();
+    void movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY);
+    void demoMaze();
+    bool checkPath(int8_t x, int8_t y);
+    void CarveMaze(char *maze, int width, int height, int x, int y);
+    void GenerateMaze(char *maze, int width, int height);
+    void SolveMaze(char *maze, int width, int height);
+
+    bool checkButtons()
+    {
+        if (buttons != 4)
+            return true;
+        return false;
+    }
+
+    //String setDynCtrl(UIControl*_val) override;
+    void setspd(const byte _spd) override; // перегрузка для скорости
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+}; 
+
+// --------- Эффект "Вьющийся Цвет"
+// (c) Stepko https://wokwi.com/arduino/projects/283705656027906572
+class EffectFrizzles : public EffectCalc {
+private:
+    float _speed;
+    float _scale;
+    //String setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------- Эффект "Северное Сияние"
+// (c) kostyamat 05.02.2021
+// идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
+// особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
+
+// Палитры, специально созданные под этот эффект, огромная благодарность @Stepko
+static const TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM ={0x000000, 0x003300, 0x006600, 0x009900, 0x00cc00,0x00ff00, 0x33ff00, 0x66ff00, 0x99ff00,0xccff00, 0xffff00, 0xffcc00, 0xff9900, 0xff6600, 0xff3300, 0xff0000};
+static const TProgmemRGBPalette16 BlueAuroraColors_p FL_PROGMEM ={0x000000, 0x000033, 0x000066, 0x000099, 0x0000cc,0x0000ff, 0x3300ff, 0x6600ff, 0x9900ff,0xcc00ff, 0xff00ff, 0xff33ff, 0xff66ff, 0xff99ff, 0xffccff, 0xffffff};
+static const TProgmemRGBPalette16 NeonAuroraColors_p FL_PROGMEM ={0x000000, 0x003333, 0x006666, 0x009999, 0x00cccc,0x00ffff, 0x33ffff, 0x66ffff, 0x99ffff,0xccffff, 0xffffff, 0xffccff, 0xff99ff, 0xff66ff, 0xff33ff, 0xff00ff};
+
+class EffectPolarL : public EffectCalc {
+private:
+    const byte numpalettes = 14;
+    unsigned long timer;
+    float adjastHeight;
+    uint16_t adjScale;
+    byte pal;
+    uint16_t _scale;
+    byte flag;
+
+    void setscl(const byte _scl) override;
+    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    void palettesload() override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------- Эффект "Гонщик"
+// (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
+class EffectRacer: public EffectCalc {
+private:
+    float posX = random(0, WIDTH-1);
+    float posY = random(0, HEIGHT-1);
+    uint8_t aimX = random(0, WIDTH)-1;
+    uint8_t aimY = random(0, HEIGHT-1);
+    float radius = 0;
+    byte hue = millis()>>1; //random(0, 255);
+    CRGB color;
+    float speedFactor;
+    float addRadius;
+    float angle;
+    byte starPoints = random(3, 7);
+
+    const float _speed = (float)NUM_LEDS / 256; // Нормализация скорости для разных размеров матриц
+    const float _addRadius = (float)NUM_LEDS / 4000;   // Нормализация скорости увеличения радиуса круга для разных матриц
+
+
+    void aimChange();
+    void drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color);
+    void setspd(const byte _spd) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+// --------- конец секции эффектов
+
 
 #endif

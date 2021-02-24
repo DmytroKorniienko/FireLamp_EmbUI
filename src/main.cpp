@@ -38,7 +38,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "buttons.h"
 #ifdef USE_FTP
- #include "ftpSrv.h"
+  #include "ftpSrv.h"
 #endif
 
 // глобальные переменные для работы с ними в программе
@@ -52,7 +52,7 @@ Buttons *myButtons;
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
-ICACHE_FLASH_ATTR void setup() {
+void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
     
@@ -69,7 +69,7 @@ ICACHE_FLASH_ATTR void setup() {
 
     // EmbUI
     //create_parameters(); // теперь это weak метод EmbUI, вызывается внутри фреймворка на стадии begin чтобы слить конфиг на флеше с дефолтовыми перменными
-    embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
+    //embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
     embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
     embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
     
@@ -100,21 +100,20 @@ ICACHE_FLASH_ATTR void setup() {
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
 #endif
 
-#ifdef ESP32
-  embui.server.addHandler(new SPIFFSEditor(LittleFS, http_username,http_password));
-#elif defined(ESP8266)
-  //server.addHandler(new SPIFFSEditor(http_username,http_password, LittleFS));
+#ifdef ESP8266
   embui.server.addHandler(new SPIFFSEditor(F("esp8266"),F("esp8266"), LittleFS));
+#else
+  embui.server.addHandler(new SPIFFSEditor(LittleFS, F("esp32"), F("esp32")));
 #endif
-
-    sync_parameters();
+  sync_parameters();        // падение есп32 не воспоизводится, kDn
 
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
+    LOG(println, F("setup() done"));
 }   // End setup()
 
-ICACHE_FLASH_ATTR void loop() {
+void loop() {
     embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
@@ -150,23 +149,24 @@ ICACHE_FLASH_ATTR void sendData(bool force){
 
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
     LOG(println, F("sendData :"));
-    DynamicJsonDocument obj(512);
+    DynamicJsonDocument obj(256);
     //JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
     obj[FPSTR(TCONST_0002)] = String(ESP.getFreeHeap());
     obj[FPSTR(TCONST_008F)] = String(millis()/1000);
+    obj[FPSTR(TCONST_00CE)] = String(WiFi.RSSI());
     String sendtopic=FPSTR(TCONST_008B);
     sendtopic+=FPSTR(TCONST_00AD);
     String out;
     serializeJson(obj, out);
     LOG(println, out);
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
-    obj.clear();
+    obj.clear(); obj.garbageCollect();
 
-    // также отправим конфиг текущего эффекта
-    sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
-    String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
-    embui.publish(sendtopic, effcfg, true);
+    // // также отправим конфиг текущего эффекта
+    // sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
+    // String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
+    // embui.publish(sendtopic, effcfg, true);
 }
 
 #ifdef ESP_USE_BUTTON

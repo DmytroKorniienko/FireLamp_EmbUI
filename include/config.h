@@ -42,6 +42,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #  endif
 #endif
 
+#define SF(s) __SFSTR(s)
+#define __SFSTR(s) #s
+//#define SF(...) #__VA_ARGS__
 
 #include <GyverButton.h>
 // переместил в platformio.ini
@@ -107,6 +110,9 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifdef MP3PLAYER
+#ifdef ESP32
+ #error ESP32 with DfPlayer is not (yet) supported due to softwareserial dependency (to be fixed)
+#endif
 #ifndef MP3_TX_PIN
 #define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
 #endif
@@ -200,14 +206,16 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define FADE_MINCHANGEBRT     (30U)                         // Minimal brightness for effects changer
 #endif
 
-#ifndef USELEDBUF
-#define USELEDBUF                                           // буфер под эффекты, можно закомментировать, в случае если нужно сэкономить память, но будут артефакты обработки
-#endif
 #ifndef MAX_FPS
 #define MAX_FPS               (60U)                         // Максимальное число обсчитываемых и выводимых кадров в секунду
 #endif
 
 #define EFFECTS_RUN_TIMER   (uint16_t)(1000 / MAX_FPS)     // период обработки эффектов - при 10 это 10мс, т.е. 1000/10 = 100 раз в секунду, при 20 = 50 раз в секунду, желательно использовать диапазон 10...40
+
+#ifndef DEFAULT_DEMO_TIMER
+  #define DEFAULT_DEMO_TIMER  (60U)                         // интервал смены демо по-умолчанию
+#endif
+
 
 // настройка кнопки, если разрешена
 #ifdef ESP_USE_BUTTON
@@ -270,7 +278,7 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #ifndef DAWN_TIMEOUT
 #define DAWN_TIMEOUT          (1U)                          // сколько рассвет светит после времени будильника, минут
 #endif
-//#define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника
+//#define PRINT_ALARM_TIME                                    // нужен ли вывод времени для будильника, если пустая строка в событии будильника
 
 // ************* НАСТРОЙКА МАТРИЦЫ *****
 #if (CONNECTION_ANGLE == 0 && STRIP_DIRECTION == 0)

@@ -39,6 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define __EFFECTS_TYPES_H
 
 #include "config.h"
+#include LANG                //"text_res.h"
 
 
 /*
@@ -63,9 +64,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-typedef enum : uint8_t {ST_BASE=0,ST_END, ST_IDX, ST_AB, ST_AB2, ST_MIC} SORT_TYPE; // виды сортировки
-
-static const char PGidxtemplate[] PROGMEM  = "%s{\"nb\":%d,\"fl\":%d}";
+static const char PGidxtemplate[] PROGMEM  = "%s{\"n\":%d,\"f\":%d}";
 
 /** набор служебных текстовых констант (не для локализации)
  */
@@ -91,7 +90,7 @@ static const char TCONST_0012[] PROGMEM = "bright";
 static const char TCONST_0013[] PROGMEM = "speed";
 static const char TCONST_0014[] PROGMEM = "scale";
 static const char TCONST_0015[] PROGMEM = "dynCtrl";
-static const char TCONST_0016[] PROGMEM = "effList";
+static const char TCONST_0016[] PROGMEM = "effListMain";
 static const char TCONST_0017[] PROGMEM = "nofade";
 static const char TCONST_0018[] PROGMEM = "GlobBRI";
 static const char TCONST_0019[] PROGMEM = "flags";
@@ -259,12 +258,31 @@ static const char TCONST_00BA[] PROGMEM = "edit_text_config";
 static const char TCONST_00BB[] PROGMEM = "alarmP";
 static const char TCONST_00BC[] PROGMEM = "alarmT";
 static const char TCONST_00BD[] PROGMEM = "alarmPT";
-static const char TCONST_00BE[] PROGMEM = "";
-static const char TCONST_00BF[] PROGMEM = "";
-static const char TCONST_00C0[] PROGMEM = "";
+static const char TCONST_00BE[] PROGMEM = "mp3_prev";
+static const char TCONST_00BF[] PROGMEM = "mp3_next";
+static const char TCONST_00C0[] PROGMEM = "mp3_p5";
+static const char TCONST_00C1[] PROGMEM = "mp3_n5";
+static const char TCONST_00C2[] PROGMEM = "pFS";
+static const char TCONST_00C3[] PROGMEM = "txtBfade";
+static const char TCONST_00C4[] PROGMEM = "drawbuff";
+static const char TCONST_00C5[] PROGMEM = "draw";
+static const char TCONST_00C6[] PROGMEM = "matrix";
+static const char TCONST_00C7[] PROGMEM = "fillmatrix";
+static const char TCONST_00C8[] PROGMEM = "drawing";
+static const char TCONST_00C9[] PROGMEM = "drawing_ctrl";
+static const char TCONST_00CA[] PROGMEM = "drawing_ctrl*";
+static const char TCONST_00CB[] PROGMEM = "blabel";
+static const char TCONST_00CC[] PROGMEM = "height";
+static const char TCONST_00CD[] PROGMEM = "width";
+static const char TCONST_00CE[] PROGMEM = "pRSSI";
+static const char TCONST_00CF[] PROGMEM = "fileName2";
+static const char TCONST_00D0[] PROGMEM = "control";
 
+/*
+заменено на "0" и "1" глобально с поддержкой в .js фреймворка
 static const char TCONST_FFFE[] PROGMEM = "false";
 static const char TCONST_FFFF[] PROGMEM = "true";
+*/
 
 typedef enum : uint8_t {
 EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
@@ -272,11 +290,12 @@ EFF_WHITE_COLOR,                              // Белый свет
 EFF_COLORS,                                   // Смена цвета
 EFF_RAINBOW_2D,                               // Радуга универсальная
 EFF_SPARKLES,                                 // Конфетти
-EFF_NONE01,                                   // Снегопад
+EFF_PILE,                                     // Куча
 EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
 EFF_MATRIX,                                   // Матрица
 EFF_LIGHTERS,                                 // Светлячки
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
+// 10
 EFF_CUBE,                                     // Блуждающий кубик
 EFF_PULSE,                                    // Пульс
 EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
@@ -287,16 +306,18 @@ EFF_CELL,                                     // Клеточки
 EFF_F_LYING,                                  // Геометрический вальс
 EFF_T_LEND,                                   // Тикси Ленд
 EFF_LDIRKO,                                   // LDIRKO Ленд 
+//20
 EFF_OSCIL,                                    // Осцилятор 
-EFF_WRAIN,                                    // Тест алгоритма Дождя с ветром (с) kostyamat
-EFF_NONE07,                                   // пусто
-EFF_NONE08,                                   // пусто
+EFF_WRAIN,                                    // Шторм 
+EFF_FAIRY,                                    // Фея
+EFF_FOUNT,                                    // Источник
 EFF_BBALS,                                    // Прыгающие мячики
 EFF_SINUSOID3,                                // Синусоид 3
 EFF_METABALLS,                                // Метасферы
 EFF_SPIRO,                                    // Спираль
-EFF_RAINBOWCOMET,                             // Радужная комета
-EFF_RAINBOWCOMET3,                            // 3 кометы
+EFF_COMET,                                    // Кометы, Парящие огни +
+EFF_CIRCLES,                                  // Бульбулятор
+//30
 EFF_PRIZMATA,                                 // Призмата
 EFF_FLOCK,                                    // Стая и Хищник
 EFF_SWIRL,                                    // Водоворот
@@ -306,8 +327,9 @@ EFF_TWINKLES,                                 // Мерцание
 EFF_RADAR,                                    // Радар
 EFF_WAVES,                                    // Волны
 EFF_FIRE2012,                                 // Огонь 2012
-EFF_NONE02,                                   // Дождь
-EFF_NONE03,                                   // Дождь за окном...
+EFF_BENGALL,                                  // Бенгальские Огни
+//40
+EFF_BALLS,                                    // Шары
 EFF_DNA,                                      // ДНК
 EFF_FIRE2018,                                 // Огонь 2018
 EFF_RINGS,                                    // Кодовый замок
@@ -317,6 +339,7 @@ EFF_PICASSO,                                  // Пикассо
 EFF_PICASSO2,                                 // Пикассо2
 EFF_PICASSO3,                                 // Пикассо3
 EFF_LEAPERS,                                  // Прыгуны
+//50
 EFF_WHIRL,                                    // Вихри
 EFF_STAR,                                     // Звезды
 EFF_AQUARIUM,                                 // Аквариум
@@ -327,19 +350,22 @@ EFF_NOISE,                                    // Цветной шум
 EFF_BUTTERFLY,                                // Мотыльки
 EFF_SHADOWS,                                  // Тени
 EFF_PATTERNS,                                 // Узоры
+//60
 EFF_ARROWS,                                   // Стрелки
 EFF_NBALLS,                                   // Дикие шарики
 EFF_ATTRACT,                                  // Притяжение
 EFF_SNAKE,                                    // Змейки by kDn
 EFF_NEXUS,                                    // Nexus
-EFF_FLINE,                                    // Парящий огонь
-EFF_FFIRE,                                    // Северное сияние
-EFF_FLSNAKE,                                  // Радужный Змей
+EFF_MAZE,                                     // Лабиринт
+EFF_FRIZZLES,                                 // Вьющийся цвет (с) Stepko
+EFF_POLARL,                                   // Северное Сияние
 EFF_FLOWER,                                   // Цветение
-EFF_TEST,                                     //  (Тест)
-EFF_SMOKEBALLS,                               // Дымовые шашки stepko
+EFF_TEST,                                     // Змеиный Остров
+//70
+EFF_SMOKEBALLS,                               // Детские Сны (stepko)
 EFF_PICASSO4,                                 // Меташары
 EFF_LIQUIDLAMP,                               // Лаваламп 
+EFF_RACER,                                    // Гонщик
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
@@ -352,11 +378,11 @@ EFF_TIME = (253U)                             // Часы (служебный, �
  * вместо несуществующих эффектов ставим указатель на 0-ю пустышку
  */
 static const char* const T_EFFNAMEID[] PROGMEM = {
-  TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_000, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
-  TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_000, TEFF_000, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
-  TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_000, TEFF_000, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
+  TEFF_000, TEFF_001, TEFF_002, TEFF_003, TEFF_004, TEFF_005, TEFF_006, TEFF_007, TEFF_008, TEFF_009, TEFF_010, TEFF_011, TEFF_012, TEFF_013, TEFF_014, TEFF_015, // 0-15
+  TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
+  TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
-  TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
+  TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_073, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 96 - 111
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 112 - 127
@@ -378,11 +404,11 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  1, 2, 4, 2, 2, 0, 5, 1, 5, 5, 3, 4, 3, 7, 3, 6, // 0-15
-  1, 3, 1, 5, 1, 5, 0, 0, 5, 1, 1, 5, 3, 1, 3, 3, // 16-31
-  3, 3, 3, 5, 5, 1, 2, 0, 0, 7, 2, 3, 5, 5, 1, 1, // 32 - 47
-  3, 4, 4, 4, 2, 5, 3, 2, 3, 3, 4, 7, 3, 3, 5, 4, // 48 - 63
-  3, 1, 1, 1, 2, 3, 5, 3, 3, 0, 0, 0, 0, 0, 0, 0, // 64 - 79
+  3, 4, 6, 4, 4, 5, 3, 3, 7, 5, 5, 6, 5, 9, 5, 8, // 0-15
+  5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 1, 5, // 16-31
+  5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
+  5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 9, 5, 5, 7, 6, // 48 - 63
+  5, 1, 1, 5, 4, 1, 7, 5, 3, 1, 0, 0, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -393,7 +419,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 4, // 240 - 255
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 6, // 240 - 255
 };
 
 
@@ -401,7 +427,98 @@ static const uint8_t T_EFFVER[] PROGMEM = {
 // старшие 4 бита используются как набор управляющих кодов, к примеру - отображать при включенном микрофоне, при выключенном и т.д., тоже 16 вариантов
 typedef enum : uint8_t {ALWAYS=0,ISMICON,ISMICOFF,HIDE} CONTROL_CASE; // старшие 4 бита
 typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4 бита
+/**
+ * типы/определения для палитр
+ */
+typedef const TProgmemRGBPalette16 PGMPalette;
+#define FASTLED_PALETTS_COUNT 22
+// все установленные биты для EFFFLAGS
+#define SET_ALL_EFFFLAGS 3
 
+/**
+ * Набор статических строк, определяющих UI эффекта если он отличается от базового
+ *
+ *  GUI для эффекта по-умолчанию
+ * Полный формат для пользовательского (id=0...7) параметра имеет вид: {"id":0,"type":0,"name":"Параметр","val":"127","min":"1","max":"255","step":"1"}
+ * если какой-то из параметров стандартный из этого списка, то его можно опустить и не указывать
+ * @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта, @ver@ - версия
+ * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48813
+ * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48848
+ */
+
+#define COTNROLS_PREFIX "\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":"
+
+// Дефолтные контролы
+static const char E_DEFUI[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[]}";
+// Добавил ко всем конфигам чекбокс {Микрофон} с индексом 7. Ввиду модифированного поведения функции myLamp.isMicOnOff(), он будет появляться только если глобально
+// микрофон включен, и эффект обладает зависимостью от микрофона в принципе.
+static const char E_DEFMICUI[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+// Общая конфигурация для эффектов с 3-им ползунком для палитр
+static const char E_3PAL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_3PAL_MIC[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":16},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+
+// Общая конфигурация для эффектов только с 2-мя ползунками "Яркость" и "Скорость", пример - эффект"Тихий Океан"
+static const char E_2[]         PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}]}"; // 3*16+0 для 2 контрола
+static const char E_2_MIC[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}"; // 3*16+0 для 2 контрола
+
+// Общая конфигурация для эффектов с 4-им ползунком для палитр
+static const char E_4PAL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_LLEND[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_0D2 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"val\":16,\"min\":0,\"max\":32,\"name\":\"" DFTINTF_0D3 "\"}]}";
+static const char E_SPARCLES[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":16,\"max\":10,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_LIGHTERS[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_RADAR255[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_WHITE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0D7 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_LEAPERS[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":50,\"name\":\"" DFTINTF_0D8 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_BUTTERFLY[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":64,\"name\":\"" DFTINTF_0D9 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DF "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E0 "\"}]}";
+static const char E_PULS[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D6 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_BBALLS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":32,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E1 "\"}]}";
+static const char E_PRIZMATA[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_AQUARIUM[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DA "\"},  {\"id\":4,\"min\":0,\"max\":15,\"name\":\"" DFTINTF_0E2 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_FREQ[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":2,\"max\":3,\"name\":\"" DFTINTF_0E3 "\"}]}";
+static const char E_OSC[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0DC "\"},  {\"id\":2,\"name\":\"" DFTINTF_0DD "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+// размерность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
+static const char E_PATT[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48},  {\"id\":2,\"type\":48},  {\"id\":3,\"val\":33,\"max\":65,\"name\":\"" DFTINTF_0EA "\"},  {\"id\":4,\"val\":33,\"max\":65,\"name\":\"" DFTINTF_0EB "\"},  {\"id\":5,\"max\":39,\"name\":\"" DFTINTF_0EC "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_SHAD[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0ED "\"},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E4 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_ARR[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":6,\"name\":\"" DFTINTF_0E5 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_F2018[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D7 "\"},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E4 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_NBAL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":25,\"name\":\"" DFTINTF_0E6 "\"}]}";
+static const char E_ATTRACT[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0EE "\"},  {\"id\":3,\"val\":100,\"name\":\"" DFTINTF_0E9 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_FLOCK[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E8 "\"}]}";
+static const char E_WAVES[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"max\":8,\"name\":\"" DFTINTF_0E7 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_MUNCH[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":4,\"min\":0,\"max\":8,\"name\":\"" DFTINTF_10E "\"} ,{\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_DRIFT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"max\":4,\"name\":\"" DFTINTF_0FF "\"}]}";
+static const char E_SMOKE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F0 "\"},  {\"id\":3,\"max\":6,\"name\":\"" DFTINTF_0F6 "\"}]}";
+static const char E_CUBE2D[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"},  {\"id\":4,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10D "\"},  {\"id\":5,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10F "\"} ,{\"id\":6,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_110 "\"}]}";
+static const char E_FLAMP[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"}]}";
+static const char E_LIGHT2[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
+static const char E_CUBE[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F1 "\"}]}";
+static const char E_STARFAIL[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"} , {\"id\":4,\"max\":3,\"name\":\"" DFTINTF_0FD "\"} ,{\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_108 "\"}]}"; 
+static const char E_SNAKE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":4,\"max\":16,\"name\":\"" DFTINTF_0FE "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_111 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_NEXUS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_FWORK[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0F2 "\"},  {\"id\":2,\"type\":48},  {\"id\":3,\"max\":8,\"name\":\"" DFTINTF_10C "\"},  {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_109 "\"}]}";
+static const char E_MATRIX[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":12,\"max\":32,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"val\":90,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":5,\"val\":20,\"max\":60,\"name\":\"" DFTINTF_10A "\"}]}";
+static const char E_NFIRE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":50,\"max\":100,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"max\":10,\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_POPCORN[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DE "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_112 "\"}]}";
+static const char E_MBL[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0F4 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"}]}";
+static const char E_LIQLAM[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":17,\"name\":\"" DFTINTF_0F4 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"},  {\"id\":5,\"val\":0,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_105 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_106 "\"}]}";
+static const char E_F2012_MIC[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":64,\"max\":128,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"val\":6,\"max\":10,\"name\":\"" DFTINTF_084 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_DNA[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F3 "\"}]}";
+static const char E_SNOW[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":\"1\",\"max\":3,\"name\":\"" DFTINTF_0F5 "\"}]}";
+static const char E_SMOKBALLS[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_PALMICUI[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0FB "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_COLORS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":32,\"val\":\"2\",\"max\":3,\"name\":\"" DFTINTF_0E3 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_TLAND[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":25,\"min\":0,\"max\":35,\"name\":\"" DFTINTF_0D2 "\"},  {\"id\":4,\"val\":160,\"min\":0,\"name\":\"" DFTINTF_101 "\"},  {\"id\":5,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_113 "\"},  {\"id\":6,\"max\":4,\"name\":\"" DFTINTF_114 "\"}]}";
+static const char E_FLYING[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":128,\"name\":\"" DFTINTF_0DE "\"},  {\"id\":4,\"val\":7,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_107 "\"}]}";
+static const char E_WRAIN[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":25,\"max\":45,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"val\":4,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_102 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_10B "\"},  {\"id\":7,\"max\":8,\"name\":\"" DFTINTF_115 "\"}]}";
+static const char E_CLOCK[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"max\":8,\"name\":\"" DFTINTF_0F7 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_COMET[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"max\":6,\"name\":\"" DFTINTF_00A "\"},  {\"id\":4,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":5,\"val\":6,\"max\":12,\"name\":\"" DFTINTF_104 "\"},  {\"id\":6,\"val\":32,\"max\":64,\"name\":\"" DFTINTF_0DE "\"}]}";
+static const char E_CELL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":5,\"name\":\"" DFTINTF_0D2 "\"}]}"; 
+static const char E_FAIRY[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0F9 "\"}]}";
+static const char E_FOUNT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":\"true\",\"name\":\"" DFTINTF_0FA "\"},  {\"id\":4,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_103 "\"}]}";
+static const char E_POLAR[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":1,\"max\":14,\"name\":\"" DFTINTF_084 "\"}]}";
+// Инженерный
+//static const char E_TEST[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
+static const char E_TEST2[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"name\":\"" DFTINTF_084 "\"},  {\"id\":4},  {\"id\":5},  {\"id\":6},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 
 /** набор указателей на строки с UI-конфигом для эффектов по-умолчанию
  * индекс элемента массива составляет id из EFF_ENUM
@@ -409,11 +526,11 @@ typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4
  * не обязательно каждому эффекту лепить свой конфиг, можно ставить указатели на эффекты с похожими контролами
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
-  E_DEFUI, E_WHITE_CFG, E_COLORS_CFG, E_DEFMICUI_CFG, E_SPARCLES_CFG, E_SNOW_CFG, E_STARFAIL_CFG, E_MATRIX, E_LIGHTERS_CFG, E_LIGHT2_CFG, E_CUBE_CFG, E_PULS_CFG, E_4PAL_CFG, E_NFIRE_CFG, E_2_CFG, E_PALMICUI_CFG, // 0-15
-  E_2_CFG, E_FLYING, E_TLAND, E_LLEND, E_3PAL_CFG, E_WRAIN, E_DEFUI, E_DEFUI, E_BBALLS_CFG, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_COM_CFG, E_DEFUI, E_PRIZMATA_CFG, E_FLOCK_CFG, // 16-31
-  E_3PAL_CFG, E_DRIFT_CFG, E_POPCORN_CFG, E_3PAL255_CFG, E_RADAR255_CFG, E_WAVES_CFG, E_F2012_MIC_CFG, E_DEFUI, E_DEFUI, E_DNA_CFG, E_F2018_CFG, E_CLOCK, E_CUBE2D_CFG, E_SMOKE_CFG, E_DEFUI, E_DEFUI, // 32 - 47
-  E_DEFUI, E_LEAPERS_CFG, E_3PAL_MIC_CFG, E_3PAL_MIC_CFG, E_AQUARIUM_CFG, E_FWORK_CFG, E_2_CFG, E_MUNCH_CFG, E_3PAL_CFG, E_BUTTERFLY_CFG, E_SHAD_CFG, E_PATT_CFG, E_ARR_CFG, E_NBAL_CFG, E_ATTRACT_CFG, E_SNAKE_CFG, // 48 - 63
-  E_NEXUS, E_DEFUI, E_DEFUI, E_DEFUI, E_2_MIC_CFG, E_TEST_CFG, E_SMOKEBALLS, E_MBL_CFG, E_LIQLAM_CFG, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 64 - 79
+  E_DEFUI, E_WHITE,   E_COLORS,   E_DEFMICUI, E_SPARCLES, E_DEFUI, E_STARFAIL,   E_MATRIX, E_LIGHTERS,  E_LIGHT2,    E_CUBE,   E_PULS,  E_4PAL,   E_NFIRE,   E_2,        E_PALMICUI, // 0-15
+  E_CELL,  E_FLYING,  E_TLAND,    E_LLEND,    E_3PAL,     E_WRAIN, E_FAIRY,      E_FOUNT,  E_BBALLS,    E_DEFUI,     E_DEFUI,  E_3PAL,  E_COMET,  E_4PAL,    E_PRIZMATA, E_FLOCK, // 16-31
+  E_3PAL,  E_DRIFT,   E_POPCORN,  E_4PAL,     E_RADAR255, E_WAVES, E_F2012_MIC,  E_FAIRY,  E_4PAL,      E_DNA,       E_F2018,  E_CLOCK, E_CUBE2D, E_SMOKE,   E_DEFUI,    E_DEFUI, // 32 - 47
+  E_DEFUI, E_LEAPERS, E_3PAL_MIC, E_3PAL_MIC, E_AQUARIUM, E_FWORK, E_2,          E_MUNCH,  E_3PAL,      E_BUTTERFLY, E_SHAD,   E_PATT,  E_ARR,    E_NBAL,    E_ATTRACT,  E_SNAKE, // 48 - 63
+  E_NEXUS, E_DEFUI,   E_DEFUI,    E_POLAR,    E_2_MIC,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_DEFUI,  E_DEFUI, E_DEFUI,  E_DEFUI,   E_DEFUI,    E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 112 - 127
@@ -424,24 +541,14 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 192 - 207
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 208 - 223
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 224 - 39
-  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL_CFG, E_FREQ_CFG, E_OSC_CFG  // 240 - 255
+  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL, E_FREQ, E_OSC  // 240 - 255
 };
 
 /**
  * константы/определения
  */
-#define MAP_SIN 1
-#define MAP_COS 0
-#define MOVE_X 1
-#define MOVE_Y 0
 #define MIN_RANGE 1     // заложим дейфан пока нет динамических ползунков
 #define MAX_RANGE 255   // заложим дейфан пока нет динамических ползунков
-
-/**
- * типы/определения для палитр
- */
-typedef const TProgmemRGBPalette16 PGMPalette;
-#define FASTLED_PALETTS_COUNT 22
 
 /**
  * Набор палитр в дополнение к тем что идут с FastLED
@@ -468,6 +575,11 @@ static const TProgmemRGBPalette16 AutumnColors_p FL_PROGMEM = {0xbc2300, 0xc8441
 static const TProgmemRGBPalette16 NeonColors_p FL_PROGMEM = {0x00b1d0, 0x0f93ec, 0x3572ff, 0x4157ff, 0x6162ff, 0x686cff, 0x7473ff, 0x8689e5, 0x9e9dc6, 0x9694ac, 0x979b9b, 0x888b8c, 0x767680, 0x596160, 0x6c736f, 0x7b7359};
 static const TProgmemRGBPalette16 EveningColors_p FL_PROGMEM = {0x1e0443, 0x6d0081, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x8200ac, 0x7900a1, 0x820055, 0xc80000, 0xe57b00, 0xff9d5a, 0xc58b32, 0xd8d400, 0xffff00};
 static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff100, 0xffe100, 0xffd100, 0xffc100, 0xffb100, 0xffa100, 0xff9100, 0xff8100, 0xff7100, 0xff6100, 0xff5100, 0xff4100, 0xff3100, 0xff2100, 0xff1100};
+
+// Удачная палитра от Stepko заменю ка я ею RainbowStripeColors_p, которая "рябит" на большинстве эффектов
+static const TProgmemRGBPalette16 AuroraColors_p FL_PROGMEM = {0x00ff00, 0x00c040, 0x008080, 0x0040c0, 0x0000ff, 0x4000c0, 0x800080, 0xc00040, 0xff0000, 0xff4000, 0xff8000, 0xd6c000, 0xffff00, 0xc0ff00, 0x80ff00, 0x40ff00};
+static const TProgmemRGBPalette16 HolyLightsColors_p FL_PROGMEM = {0xff0000, 0xff4000, 0xff8000, 0xd6c000, 0xffff00, 0xc0ff00, 0x80ff00, 0x40ff00, 0x00ff00, 0x00c040, 0x008080, 0x0040c0, 0x0000ff, 0x4000c0, 0x800080, 0xc00040};
+
 
 #if  576U < (WIDTH * HEIGHT)
   #define BIGMATRIX
@@ -496,8 +608,8 @@ static const TProgmemRGBPalette16 OrangeColors_p FL_PROGMEM = {0xffff00, 0xfff10
 
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
 #define e_com_TAILSPEED             (500)         // скорость смещения хвоста
-#define e_com_BLUR                  (24U)         // размытие хвоста
-#define e_com_3DCOLORSPEED          (5U)          // скорость случайного изменения цвета (0й - режим)
+#define e_com_BLUR                  (12U)         // размытие хвоста
+#define e_com_3DCOLORSPEED          (3U)          // скорость случайного изменения цвета (0й - режим)
 
 // ------------- светлячки со шлейфом -------------
 //#define BALLS_AMOUNT          (7U)                          // максимальное количество "шариков"
@@ -982,42 +1094,7 @@ class Boid {
 #endif
 
 // ----------- Эффект "Аквариум" (с) SottNick
-static const byte aquariumGIF[32][32] PROGMEM =
-{
-    {0x00, 0x00, 0x00, 0x00, 0x34, 0x8f, 0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x89, 0xe1, 0x77, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x37, 0x9b, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x7f, 0xdd, 0x77, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x37, 0x94, 0x23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x88, 0x78, 0x7a, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x4a, 0x71, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x17, 0x38, 0x87, 0x62, 0x00, 0x21, 0x67, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x77, 0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x20, 0x1b, 0x19, 0x46, 0x2e, 0x00, 0x00, 0x3e, 0x73, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x02, 0x55, 0xc7, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x1f, 0x07, 0x00, 0x00, 0x02, 0x14, 0x00, 0x00, 0x1a, 0xa6, 0x8f, 0x4c, 0x22, 0x04, 0x00, 0x00, 0x00},
-    {0x0d, 0x20, 0x62, 0xb3, 0xc8, 0x97, 0x47, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x19, 0x00, 0x00, 0x47, 0x74, 0x6a, 0x70, 0x77, 0x6c, 0x4d, 0x29, 0x11},
-    {0x7b, 0x95, 0x9b, 0x60, 0x31, 0x42, 0x61, 0x67, 0x5d, 0x28, 0x00, 0x00, 0x02, 0x23, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2f, 0x59, 0x4a, 0x3e, 0x0e, 0x01, 0x0a, 0x27, 0x4d, 0x6a, 0x79, 0x7c},
-    {0xc5, 0xb1, 0x2e, 0x00, 0x00, 0x00, 0x00, 0x2a, 0x69, 0x82, 0x44, 0x0f, 0x2e, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0xb6, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x25, 0x6c},
-    {0x82, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x39, 0x82, 0x83, 0x79, 0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0xc2, 0x83, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0e},
-    {0x5e, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x28, 0xab, 0xec, 0x8f, 0x31, 0x21, 0x28, 0x39, 0x59, 0xa2, 0xc4, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x5d, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6d, 0xed, 0xb9, 0x7d, 0x6e, 0x6d, 0x65, 0x55, 0x43, 0x66, 0x5e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x5c, 0x4d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6d, 0x99, 0x3d, 0x1d, 0x18, 0x10, 0x02, 0x00, 0x00, 0x13, 0x5a, 0x25, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x56, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x83, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2c, 0x50, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x4d, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x55, 0x98, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4f, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x41, 0x5d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3a, 0xb4, 0x97, 0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1a, 0x54, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x31, 0x61, 0x07, 0x00, 0x00, 0x00, 0x00, 0x12, 0x5b, 0x90, 0x77, 0x60, 0x3b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3a, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x38, 0x78, 0x2d, 0x00, 0x00, 0x0b, 0x43, 0x7e, 0x79, 0x35, 0x06, 0x0d, 0x35, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x54, 0x2f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x70, 0xc3, 0x96, 0x48, 0x4d, 0x79, 0x81, 0x4c, 0x0b, 0x00, 0x00, 0x00, 0x02, 0x2f, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x34, 0x7b, 0x54, 0x2f, 0x27, 0x22, 0x1f, 0x30},
-    {0xbf, 0xc9, 0xa6, 0xad, 0xae, 0x72, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x33, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x35, 0xa3, 0xac, 0x81, 0x7a, 0x78, 0x78, 0x8e},
-    {0x92, 0x5a, 0x22, 0x5b, 0x83, 0x2e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x35, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0x74, 0x71, 0x3a, 0x27, 0x27, 0x2d, 0x37, 0x61},
-    {0x46, 0x18, 0x00, 0x00, 0x4d, 0x2e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x34, 0x07, 0x00, 0x00, 0x00, 0x00, 0x26, 0x62, 0x51, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10},
-    {0x2f, 0x09, 0x00, 0x00, 0x32, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1b, 0x33, 0x03, 0x00, 0x04, 0x30, 0x50, 0x3a, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
-    {0x2f, 0x0d, 0x00, 0x00, 0x1e, 0x48, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x34, 0x3b, 0x22, 0x3d, 0x39, 0x1e, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03},
-    {0x46, 0x1f, 0x00, 0x00, 0x0f, 0x4f, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x65, 0x6c, 0x2f, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
-    {0x74, 0x5f, 0x10, 0x00, 0x16, 0x69, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5f, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x19},
-    {0x4b, 0x42, 0x3a, 0x39, 0x5b, 0x91, 0x6f, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d, 0x5b, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1a, 0x4e},
-    {0x00, 0x00, 0x09, 0x2e, 0x79, 0x81, 0x75, 0x72, 0x53, 0x43, 0x3d, 0x37, 0x2f, 0x29, 0x24, 0x1e, 0x20, 0x4e, 0x7b, 0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x2f, 0x3f, 0x1f},
-    {0x00, 0x00, 0x00, 0x00, 0x37, 0x65, 0x60, 0x81, 0x72, 0x67, 0x69, 0x6b, 0x6d, 0x6f, 0x6f, 0x6c, 0x71, 0x98, 0xb2, 0x55, 0x17, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x3e, 0x30, 0x06, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x11, 0x6c, 0x75, 0x32, 0x0a, 0x08, 0x0a, 0x0d, 0x12, 0x18, 0x1f, 0x24, 0x2d, 0x4a, 0x8e, 0x93, 0x4a, 0x16, 0x00, 0x00, 0x00, 0x16, 0x36, 0x39, 0x16, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x0e, 0x7d, 0x67, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x88, 0x9c, 0x45, 0x11, 0x18, 0x32, 0x3a, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x00, 0x1f, 0x84, 0x4a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x35, 0xb1, 0xa5, 0x60, 0x46, 0x26, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-};
-
+// This is the array that we keep our computed noise values in
 #define CAUSTICS_BR                     (100U)                // яркость бликов в процентах (от чистого белого света)
 
 // ----------- Эффект "Звезды" адаптация SottNick
@@ -1121,3 +1198,100 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
 #define SNAKE2_LENGTH (HEIGHT / 2U + WIDTH / 4U)
 #define MAX_SNAKES    (16U) 
 
+// SottNick константы
+//константы размера матрицы вычисляется только здесь и не меняется в эффектах
+const uint8_t CENTER_X_MINOR =  (WIDTH / 2) -  ((WIDTH - 1) & 0x01); // центр матрицы по ИКСУ, сдвинутый в меньшую сторону, если ширина чётная
+const uint8_t CENTER_Y_MINOR = (HEIGHT / 2) - ((HEIGHT - 1) & 0x01); // центр матрицы по ИГРЕКУ, сдвинутый в меньшую сторону, если высота чётная
+const uint8_t CENTER_X_MAJOR =   WIDTH / 2  + (WIDTH % 2);           // центр матрицы по ИКСУ, сдвинутый в большую сторону, если ширина чётная
+const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // центр матрицы по ИГРЕКУ, сдвинутый в большую сторону, если высота чётная
+
+
+#define  GLOBAL_COLOR_1 CRGB::Green         // основной цвет №1 для игр
+#define  GLOBAL_COLOR_2 CRGB::Orange        // основной цвет №2 для игр
+// Эффект Тетрис
+// самая важная часть программы! Координаты пикселей фигур
+//  0 - палка
+//  1 - кубик
+//  2 - Г
+//  3 - Г обратная
+//  4 - Z
+//  5 - Z обратная
+//  6 - Т
+
+const int8_t figures[7][12][2] PROGMEM = {
+  {
+    { -1, 0}, {1, 0}, {2, 0},
+    {0, 1}, {0, 2}, {0, 3},
+    { -1, 0}, {1, 0}, {2, 0},
+    {0, 1}, {0, 2}, {0, 3},
+  },
+  {
+    {0, 1}, {1, 0}, {1, 1},
+    {0, 1}, {1, 0}, {1, 1},
+    {0, 1}, {1, 0}, {1, 1},
+    {0, 1}, {1, 0}, {1, 1},
+  },
+  {
+    { -1, 0}, { -1, 1}, {1, 0},
+    {0, 1}, {0, 2}, {1, 2},
+    { -2, 1}, { -1, 1}, {0, 1},
+    { -1, 0}, {0, 1}, {0, 2},
+  },
+  {
+    { -1, 0}, {1, 0}, {1, 1},
+    {0, 1}, {0, 2}, {1, 0},
+    {0, 1}, {1, 1}, {2, 1},
+    {0, 1}, {0, 2}, { -1, 2},
+  },
+  {
+    { -1, 0}, {0, 1}, {1, 1},
+    {0, 1}, { -1, 1}, { -1, 2},
+    { -1, 0}, {0, 1}, {1, 1},
+    {0, 1}, { -1, 1}, { -1, 2},
+  },
+  {
+    { -1, 1}, {0, 1}, {1, 0},
+    {0, 1}, {1, 1}, {1, 2},
+    { -1, 1}, {0, 1}, {1, 0},
+    {0, 1}, {1, 1}, {1, 2},
+  },
+  {
+    { -1, 0}, {0, 1}, {1, 0},
+    {0, 1}, {0, 2}, {1, 1},
+    { -1, 1}, {0, 1}, {1, 1},
+    { -1, 1}, {0, 1}, {0, 2},
+  }
+};
+
+// **************** НАСТРОЙКИ ARKAN ****************
+#define SHELF_LENGTH 5    // длина полки
+#define VELOCITY 5        // скорость шара
+#define BALL_SPEED 50     // период интегрирования
+
+#define BLOCKS_H 4        // высота кучи блоков
+#define LINE_NUM 8        // количество "линий" с блоками других уровней
+#define LINE_MAX 4        // макс. длина линии
+
+// цвета блоков по крутости
+#define BLOCK_COLOR_1 CRGB::Aqua
+#define BLOCK_COLOR_2 CRGB::Amethyst
+#define BLOCK_COLOR_3 CRGB::Blue
+
+// ***************** НАСТРОЙКИ ГЕНЕРАЦИИ ЛАБИРИНТА *****************
+#define GAMEMODE 0        // режим игры: 0 - видим весь лабиринт, 1 - видим вокруг себя часть
+#define FOV 3             // область видимости в режиме игры 1
+
+// размеры лабиринта ДОЛЖНЫ БЫТЬ НЕЧЁТНЫЕ независимо от размеров матрицы!
+// при SHIFT 1 размер лабиринта можно ставить на 1 длиннее матрицы (матрица 16х16 лабиринт 17х17)
+#if (WIDTH % 2 == 0)
+#define MAZE_WIDTH (WIDTH-1)      // ширина лабиринта
+#else
+#define MAZE_WIDTH WIDTH          // ширина лабиринта
+#endif
+
+#if (HEIGHT % 2 == 0)
+#define MAZE_HEIGHT (HEIGHT-1)    // высота лабиринта
+#else
+#define MAZE_HEIGHT HEIGHT        // высота лабиринта
+#endif
+#define MAZE_SHIFT 0                   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)

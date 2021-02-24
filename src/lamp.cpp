@@ -69,18 +69,6 @@ void LAMP::lamp_init(const uint16_t curlimit)
 #endif
 #endif
 
-// Deprecated
-// // TELNET
-// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-//   telnetServer.begin();
-//   for (uint8_t i = 0; i < 100; i++)                         // пауза 10 секунд в отладочном режиме, чтобы успеть подключиться по протоколу telnet до вывода первых сообщений
-//   {
-//     handleTelnetClient();
-//     delay(100);
-//     delay(1); // ESP.wdtFeed(); // иной механизм сброса вотчдога
-//   }
-// #endif
-
 #ifdef VERTGAUGE
       if(VERTGAUGE){
         xStep = WIDTH / 4;
@@ -115,8 +103,8 @@ void LAMP::lamp_init(const uint16_t curlimit)
 void LAMP::handle()
 {
 #ifdef MIC_EFFECTS
-  static unsigned long mic_check;
-  if(flags.isMicOn && (flags.ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
+  static unsigned long mic_check = 0; // = 40000; // пропускаю первые 40 секунд
+  if(effects.worker && flags.isMicOn && (flags.ONflag || isMicCalibration()) && !isAlarm() && mic_check + MIC_POLLRATE < millis()){
     if(effects.worker->isMicOn() || isMicCalibration())
       micHandler();
     mic_check = millis();
@@ -137,7 +125,15 @@ void LAMP::handle()
   EVERY_N_SECONDS(15){
     // fps counter
     LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
+
+#ifdef ESP8266
     LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), embui.timeProcessor.getFormattedShortTime().c_str());
+#endif
+
+#ifdef ESP32
+    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), ESP.getFreeHeap(), embui.timeProcessor.getFormattedShortTime().c_str());
+#endif
+
   }
   avgfps = (avgfps+fps) / 2;
   fps = 0; // сброс FPS раз в секунду
@@ -178,7 +174,7 @@ void LAMP::alarmWorker(){
     static CHSV dawnColorMinus[6];                                            // цвет "рассвета"
     static uint8_t dawnCounter = 0;                                           // счётчик первых шагов будильника
     static time_t startmillis;
-
+    
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
       iflags.dawnFlag = false;
       return;
@@ -227,18 +223,19 @@ void LAMP::alarmWorker(){
       }
     }
 
-#ifdef PRINT_ALARM_TIME
     EVERY_N_SECONDS(1){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
         if(getAlarmMessage()!=nullptr && getAlarmMessage()[0])
           sendStringToLamp(getAlarmMessage(), letterColor, true);
-        else
+        else {
+#ifdef PRINT_ALARM_TIME
           sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
+#endif
+        }
       }
     }
-#endif
 
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
         leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
@@ -252,12 +249,11 @@ void LAMP::effectsTick(){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
-  uint32_t _begin = millis();
+  _begin = millis();
 
-  if (_effectsTicker.active() && !isAlarm() && !isWarning()) {
+  if (_effectsTicker.active() && !isAlarm()) { // && !isWarning()
     //if(millis()<5000) return; // затычка до выяснения
     if(!iflags.isEffectsDisabledUntilText){
-#ifdef USELEDBUF
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
         if(!iflags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
@@ -265,18 +261,32 @@ void LAMP::effectsTick(){
           ledsbuff.shrink_to_fit();
         }
       }
-#endif
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
-      if(effects.worker->run(getUnsafeLedsArray(), &effects)) {
-#ifdef USELEDBUF
+      if(effects.worker ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
         ledsbuff.resize(NUM_LEDS);
         std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
-#endif
       }
     }
   }
 
-  if (isAlarm() || iflags.isStringPrinting) {
+  if(!drawbuff.empty()){
+    uint8_t mi;
+    for(uint16_t i=0; i<drawbuff.size() && i<NUM_LEDS; i++){
+      mi = drawbuff[i].r > drawbuff[i].g ? drawbuff[i].r : drawbuff[i].g;
+      mi = mi > drawbuff[i].b ? mi : drawbuff[i].b;
+      if(mi>=5) {
+        leds[i] = drawbuff[i];
+      } else if(mi && mi<5) {
+        EffectMath::setLedsNscale8(i, map(mi,1,4,128,10)); // 5 градаций прозрачности, где 0 - полностью прозрачный
+      }
+    }
+  }
+
+  if(isWarning()) {
+    warning2Helper(); // вывод предупреждения
+  }
+
+  if (isAlarm() || iflags.isStringPrinting) { // isWarning() || 
     doPrintStringToLamp(); // обработчик печати строки
   }
 
@@ -284,14 +294,21 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isAlarm() || iflags.isEffectsDisabledUntilText || effects.worker->status() || iflags.isStringPrinting) {
+  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || (effects.worker ? effects.worker->status() : 1) || iflags.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
+#ifdef ESP8266
     _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
+#elif defined ESP32
+    _effectsTicker.once_ms(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
+#endif
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
+#ifdef ESP8266
     _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#elif defined ESP32
+    _effectsTicker.once_ms(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#endif
   }
-
 }
 
 /*
@@ -304,22 +321,21 @@ void LAMP::frameShow(const uint32_t ticktime){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
-
-  // EVERY_N_SECONDS(1){
-  //   LOG(println, F("FastLED.show()"));
-  // }
-
   FastLED.show();
   if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
-  int32_t delay = EFFECTS_RUN_TIMER + ticktime - millis();
-  if (delay < LED_SHOW_DELAY) delay = LED_SHOW_DELAY;
+  int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
+  if (delay < LED_SHOW_DELAY || !(effects.worker ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
+
+#ifdef ESP8266
   _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
-#ifdef LAMP_DEBUG
-  ++fps;
+#elif defined ESP32
+  _effectsTicker.once_ms(delay, std::bind(&LAMP::effectsTick, this));
 #endif
+
+  ++fps;
 }
 
 #ifdef VERTGAUGE
@@ -357,37 +373,30 @@ void LAMP::frameShow(const uint32_t ticktime){
     }
 #endif
 
-
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _fadeeffectTicker()
+LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _reservedTicker()
 #ifdef OTA
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
     , effects(&lampState)
     {
+      iflags.isStringPrinting = false; // печатается ли прямо сейчас строка?
+      iflags.isEffectsDisabledUntilText = false;
+      iflags.isOffAfterText = false;
+      iflags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
+//#ifdef MIC_EFFECTS
+      iflags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+      iflags.micAnalyseDivider = 1; // анализ каждый раз
+//#endif
+
       flags.MIRR_V = false; // отзрекаливание по V
       flags.MIRR_H = false; // отзрекаливание по H
-      iflags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
       flags.ONflag = false; // флаг включения/выключения
       flags.isDebug = false; // флаг отладки
       flags.isFaderON = true; // признак того, что используется фейдер для смены эффектов
       flags.isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
       flags.isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
-
-      iflags.isStringPrinting = false; // печатается ли прямо сейчас строка?
-      iflags.isEffectsDisabledUntilText = false;
-      iflags.isOffAfterText = false;
       flags.isEventsHandled = true;
-      _brt =0;
-      _steps = 0;
-      _brtincrement = 0;
-#ifdef MIC_EFFECTS
-      iflags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       flags.isMicOn = true; // глобальное испльзование микрофона
-      iflags.micAnalyseDivider = 1; // анализ каждый раз
-#endif
-#ifdef VERTGAUGE
-      gauge_time = millis();
-#endif
       flags.numInList = false;
       flags.effHasMic = false;
       flags.dRand = false;
@@ -401,7 +410,15 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.MP3eq = 0;
       flags.playMP3 = false;
       flags.limitAlarmVolume = false;
+      flags.isDraw = false;
 
+      _brt =0;
+      _steps = 0;
+      _brtincrement = 0;
+
+#ifdef VERTGAUGE
+      gauge_time = millis();
+#endif
       lampState.flags = 0; // сборосить все флаги состояния
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
     }
@@ -412,8 +429,11 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 {
   stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == flags.ONflag) return;  // пропускаем холостые вызовы
-  LOG(printf_P, PSTR("Lamp powering %s\n"), flag ? F("ON"): F("Off"));
+  LOG(print, F("Lamp powering ")); LOG(println, flag ? F("On"): F("Off"));
   flags.ONflag = flag;
+
+  if(mode == LAMPMODE::MODE_OTA)
+    mode = LAMPMODE::MODE_NORMAL;
 
   if (flag){
     effectsTimer(T_ENABLE);
@@ -425,12 +445,12 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
   }
 
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
-      digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
+  digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
 
-      if (curLimit > 0){
-        FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
-      }
+  if (curLimit > 0){
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
+  }
 }
 
 void LAMP::startAlarm(char *value){
@@ -488,6 +508,7 @@ void LAMP::stopAlarm(){
  */
 void LAMP::startDemoMode(byte tmout)
 {
+  LOG(println,F("Demo mode"));
   demoTimer(T_ENABLE, tmout);
   if(mode == LAMPMODE::MODE_DEMO) return;
   
@@ -511,16 +532,20 @@ void LAMP::restoreStored()
   if(storedBright)
     setLampBrightness(storedBright);
   if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    effects.directMoveBy(storedEffect);
-    remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
-  } else
-  if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    remote_action(RA::RA_EFF_RAND, NULL);
+    _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
+      remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
+      //effects.directMoveBy(storedEffect);
+    }));
+  } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
+    _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
+      remote_action(RA::RA_EFF_RAND, NULL);
+    }));
   }
 }
 
 void LAMP::startNormalMode()
 {
+  LOG(println,F("Normal mode"));
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   restoreStored();
@@ -539,9 +564,13 @@ void LAMP::startOTAUpdate()
   otaManager.startOtaUpdate();
 }
 #endif
+
+typedef enum {FIRSTSYMB=1,LASTSYMB=2} SYMBPOS;
+
 bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool stopText, bool isInverse, int32_t pos, int8_t letSpace, int8_t txtOffset, int8_t letWidth, int8_t letHeight)
 {
   static int32_t offset = (flags.MIRR_V ? 0 : WIDTH);
+  uint8_t bcount = 0;
 
   if(pos)
     offset = (flags.MIRR_V ? 0 + pos : WIDTH - pos);
@@ -552,20 +581,26 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   }
 
   uint16_t i = 0, j = 0;
+  uint8_t flSymb = SYMBPOS::FIRSTSYMB; // маркер первого символа строки
   while (text[i] != '\0')
   {
-    if ((uint8_t)text[i] > 191)                           // работаем с русскими буквами
+    if(text[i+1] == '\0')
+      flSymb|=SYMBPOS::LASTSYMB; // маркер последнего символа строки
+    if ((uint8_t)text[i] > 191)  // работаем с UTF8 после префикса
     {
+      bcount = (uint8_t)text[i]; // кол-во октетов для UTF-8
       i++;
     }
     else
     {
       if(!flags.MIRR_V)
-        drawLetter(text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+        drawLetter(bcount, text[i], offset + (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight, flSymb);
       else
-        drawLetter(text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight);
+        drawLetter(bcount, text[i], offset - (int16_t)j * (letWidth + letSpace), letterColor, letSpace, txtOffset, isInverse, letWidth, letHeight, flSymb);
       i++;
       j++;
+      bcount = 0;
+      flSymb &= (0xFF^SYMBPOS::FIRSTSYMB); // сбросить маркер первого символа строки
     }
   }
 
@@ -585,9 +620,9 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
   return false;
 }
 
-void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight)
+void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight, uint8_t flSymb)
 {
-  uint16_t start_pos = 0, finish_pos = letWidth + letSpace;
+  int16_t start_pos = 0, finish_pos = letWidth + letSpace;
 
   if (offset < (int16_t)-letWidth || offset > (int16_t)WIDTH)
   {
@@ -602,57 +637,91 @@ void LAMP::drawLetter(uint16_t letter, int16_t offset,  const CRGB &letterColor,
     finish_pos = (uint16_t)(WIDTH - offset);
   }
 
-  for (uint16_t i = start_pos; i < finish_pos; i++)
+  if(flSymb){
+      if(flSymb&SYMBPOS::FIRSTSYMB){ // битовое &
+        start_pos--; // c 0 для самого первого символа
+      }
+      if(flSymb&SYMBPOS::LASTSYMB && !letSpace){ // битовое &
+        finish_pos++; // доп. ряд погашенных символов для последнего символа
+      }
+  }
+
+  //LOG(printf_P, PSTR("%d %d\n"), start_pos, finish_pos);
+
+  for (int16_t i = start_pos; i < finish_pos; i++)
   {
     uint8_t thisByte;
 
-    if((finish_pos - i <= letSpace) || ((letWidth - 1 - i)<0))
+    if((i<0) || (finish_pos - i <= letSpace) || ((letWidth - 1 - i)<0))
       thisByte = 0x00;
     else
     {
-      thisByte = getFont(letter, i);
+      thisByte = getFont(bcount, letter, i);
     }
 
-    for (uint16_t j = 0; j < letHeight; j++)
+    for (uint16_t j = 0; j < letHeight + 1; j++) // +1 доп. пиксель сверху
     {
       bool thisBit = thisByte & (1 << (letHeight - 1 - j));
 
       // рисуем столбец (i - горизонтальная позиция, j - вертикальная)
-      if (thisBit)
-      {
-        if(!isInverse)
-          EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
-        else
-          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
-          //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? CRGB::Black : letterColor));
-      }
-      else
-      {
-        if(isInverse)
-          EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
-        else
-          EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), FADETOBLACKVALUE);
-          //EffectMath::drawPixelXY(offset + i, txtOffset + j, (isInverse ? letterColor : CRGB::Black));
+      if (offset + i >= 0 && offset + i < (int)WIDTH && txtOffset + j >= 0 && txtOffset + j < (int)HEIGHT) {
+        if (thisBit) {
+          if(!isInverse)
+            EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
+          else
+            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+        } else {
+          if(isInverse)
+            EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
+          else
+            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+        }
       }
     }
   }
 }
 
-uint8_t LAMP::getFont(uint8_t asciiCode, uint8_t row)       // интерпретатор кода символа в массиве fontHEX (для Arduino IDE 1.8.* и выше)
+uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // интерпретатор кода символа в массиве fontHEX (для Arduino IDE 1.8.* и выше)
 {
   asciiCode = asciiCode - '0' + 16;                         // перевод код символа из таблицы ASCII в номер согласно нумерации массива
 
-  if (asciiCode <= 90)                                      // печатаемые символы и английские буквы
-  {
-    return pgm_read_byte(&fontHEX[asciiCode][row]);
-  }
-  else if (asciiCode >= 112 && asciiCode <= 159)
-  {
-    return pgm_read_byte(&fontHEX[asciiCode - 17][row]);
-  }
-  else if (asciiCode >= 96 && asciiCode <= 111)
-  {
-    return pgm_read_byte(&fontHEX[asciiCode + 47][row]);
+  // if (asciiCode <= 90)                                      // печатаемые символы и английские буквы
+  // {
+  //   return pgm_read_byte(&fontHEX[asciiCode][row]);
+  // }
+  // else if (asciiCode >= 112 && asciiCode <= 159)
+  // {
+  //   return pgm_read_byte(&fontHEX[asciiCode - 17][row]);
+  // }
+  // else if (asciiCode >= 96 && asciiCode <= 111)
+  // {
+  //   return pgm_read_byte(&fontHEX[asciiCode + 47][row]);
+  // }
+
+  if (asciiCode <= 94) {
+    return pgm_read_byte(&(fontHEX[asciiCode][row]));     // для английских букв и символов
+  } else if ((bcount == 209) && asciiCode == 116) {         // є
+    return pgm_read_byte(&(fontHEX[162][row])); 
+  } else if ((bcount == 209) && asciiCode == 118) {        // і
+    return pgm_read_byte(&(fontHEX[73][row])); 
+  } else if ((bcount == 209) && asciiCode == 119) {         // ї
+    return pgm_read_byte(&(fontHEX[163][row])); 
+  } else if ((bcount == 208) && asciiCode == 100) {        // Є
+    return pgm_read_byte(&(fontHEX[160][row])); 
+  } else if ((bcount == 208) && asciiCode == 102) {         // І
+    return pgm_read_byte(&(fontHEX[41][row])); 
+  } else if ((bcount == 208) && asciiCode == 103) {        // Ї
+    return pgm_read_byte(&(fontHEX[161][row])); 
+  } else if ((bcount == 208) && asciiCode == 97) {         // Ё
+    return pgm_read_byte(&(fontHEX[100][row])); 
+  } else if ((bcount == 209) && asciiCode == 113) {        // ё
+    return pgm_read_byte(&(fontHEX[132][row])); 
+  } else if ((bcount == 208 || bcount == 209) && asciiCode >= 112 && asciiCode <= 159) {      // русские символы
+    return pgm_read_byte(&(fontHEX[asciiCode - 17][row]));
+  } else if ((bcount == 208 || bcount == 209) && asciiCode >= 96 && asciiCode <= 111) {
+    return pgm_read_byte(&(fontHEX[asciiCode + 47][row]));
+  } else if ((bcount == 194) && asciiCode == 144) {                                          // Знак градуса '°'
+    return pgm_read_byte(&(fontHEX[159][row]));
   }
 
   return 0;
@@ -686,7 +755,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
         String tmpStr = var[F("s")];
-        if(mp3!=nullptr && mp3->isReady() && (isAlarm() || isLampOn()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+        if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
           mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
         arr.remove(0); // удаляем отправленный
@@ -700,7 +769,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
-      if(mp3!=nullptr && mp3->isReady() && (isAlarm() || isLampOn()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+      if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
         mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
     } else { // идет печать, помещаем в очередь
@@ -750,7 +819,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm(), fixedPos, (fixedPos? 0 : LET_SPACE), offs)){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs) && (!isWarning() || (isWarning() && fixedPos))){ // смещаем
       tmStringStepTime.reset();
     }
     else {
@@ -759,7 +828,8 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
-    fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm(), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
+    if((!isWarning() || (isWarning() && fixedPos)))
+      fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
   }
 }
 
@@ -769,27 +839,50 @@ void LAMP::newYearMessageHandle()
     return;
 
   {
-    char strMessage[256]; // буффер
-    time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime(); // тут забит гвоздями 2020 год, не работоспособно
+    char strMessage[256]; // буфер
+    time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime();
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year);
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+1900);
     } else if(calc<300){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, PSTR("секунд"));
+      sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/60), PSTR("минут"));
-    } else if(calc/(60*60)<60){
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60)), PSTR("часов"));
-    } else {
-      byte calcN=(int)(calc/(60*60*24))%10; // остаток от деления на 10
+      byte calcT=calc/(60*60); // минуты
+      byte calcN=calcT%10; // остаток от деления на 10
       String str;
-      if(calcN>=2 && calcN<=4)
-        str = F("дня");
+      if(calcN>=2 && calcN<=4) {
+        str = FPSTR(TINTF_0CC); // минуты
+      } else if(calcN==1) {
+        str = FPSTR(TINTF_0CD); // минута
+      } else {
+        str = FPSTR(TINTF_0C2); // минут
+      }
+      sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
+    } else if(calc/(60*60)<60){
+	    byte calcT=calc/(60*60); // часы
+      byte calcN=calcT%10; // остаток от деления на 10
+      String str;
+      if(calcN>=2 && calcN<=4) {
+        str = FPSTR(TINTF_0C7); // часа
+      } else if(calcN==1) {
+        str = FPSTR(TINTF_0C8); // час
+      } else {
+        str = FPSTR(TINTF_0C3); // часов
+      }
+      sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
+    } else {
+      byte calcT=calc/(60*60*24); // дни
+      byte calcN=calcT%10; // остаток от деления на 10
+      String str;
+      if(calcT>=11 && calcT<=20)
+        str = FPSTR(TINTF_0C4);
+      else if(calcN>=2 && calcN<=4)
+        str = FPSTR(TINTF_0C5);
       else if(calc!=11 && calcN==1)
-        str = F("день");
+        str = FPSTR(TINTF_0C6);
       else
-        str = F("дней");
-      sprintf_P(strMessage, NY_MDG_STRING1, (int)(calc/(60*60*24)), str.c_str());
+        str = FPSTR(TINTF_0C4);
+      sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     }
 
     LOG(printf_P, PSTR("Prepared message: %s\n"), strMessage);
@@ -797,13 +890,14 @@ void LAMP::newYearMessageHandle()
   }
 }
 
+
 void LAMP::periodicTimeHandle()
 {
   const tm* t = localtime(embui.timeProcessor.now());
   if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
     return;
 
-  LOG(printf_P,PSTR("%s: %02d:%02d:%02d\n"),F("periodicTimeHandle"),t->tm_hour,t->tm_min,t->tm_sec);
+  LOG(printf_P, PSTR("periodicTimeHandle: %02d:%02d:%02d\n"), t->tm_hour,t->tm_min,t->tm_sec);
 
   time_t tm = t->tm_hour * 60 + t->tm_min;
   String time = String(F("%TM"));
@@ -849,10 +943,16 @@ void LAMP::periodicTimeHandle()
 void LAMP::micHandler()
 {
   static uint8_t counter=0;
-
+  if(effects.getEn()==EFF_ENUM::EFF_NONE)
+    return;
   if(mw==nullptr && !iflags.isCalibrationRequest){ // обычный режим
-    //if(millis()%1000) return; // отладка
     mw = new MICWORKER(mic_scale,mic_noise);
+    if(!mw) {
+      mw=nullptr;
+      return; // не удалось выделить память, на выход
+    }
+    //delete mw; mw = nullptr; return;
+    
     samp_freq = mw->process(noise_reduce); // возвращаемое значение - частота семплирования
     last_min_peak = mw->getMinPeak();
     last_max_peak = mw->getMaxPeak();
@@ -872,7 +972,7 @@ void LAMP::micHandler()
     //mw->debug();
     delete mw;
     mw = nullptr;
-  } else {
+  } else if(iflags.isCalibrationRequest) {
     if(mw==nullptr){ // калибровка начало
       mw = new MICWORKER();
       mw->calibrate();
@@ -886,7 +986,6 @@ void LAMP::micHandler()
       delete mw;
       mw = nullptr;
 
-      //iGLOBAL.isMicCal = false;
       remote_action(RA::RA_MIC, NULL);
     }
   }
@@ -909,7 +1008,11 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, 
 
     if (_steps < 3) {
         brightness(_targetbrightness);
+#ifdef ESP8266
         if (callback != nullptr) _fadeTicker.once_ms_scheduled(0, callback);
+#elif defined ESP32
+        if (callback != nullptr) _fadeTicker.once_ms(0, callback);
+#endif
         return;
     }
 
@@ -969,7 +1072,11 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
   --_steps;
   if (! _steps) {   // on last step
       if (callback != nullptr) {
+#ifdef ESP8266
         _fadeTicker.once_ms_scheduled(0, callback);
+#elif defined ESP32
+        _fadeTicker.once_ms(0, callback);
+#endif
       } else { _fadeTicker.detach(); }
       _brt = _tgtbrt;
   } else {
@@ -1030,16 +1137,17 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   //LOG(printf_P,PSTR(">>>>>>>>>>>isEffClearing==%d\n"),isEffClearing);
-  if(flags.isEffClearing)
+  if(flags.isEffClearing || !effects.getEn()){ // для EFF_NONE или для случая когда включена опция - чистим матрицу
     FastLED.clear();
+    FastLED.show();
+  }
 
-  // Не-не-не, я против того чтобы за пользователя решать когда ему включать лампу
-  // поскольку настройки НУЖНО разрешить крутить и при выключенной лампе.
-  // changePower(true);  // любой запрос на смену эффекта автоматом включает лампу
   effects.moveSelected();
 
   bool isShowName = (mode==LAMPMODE::MODE_DEMO && flags.showName);
+#ifdef MP3PLAYER
   bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
+#endif
   if(isShowName){
     myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
@@ -1051,7 +1159,8 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
 #ifdef MP3PLAYER
   if(mp3!=nullptr && mp3->isOn() && effects.getEn()>0 && (flags.playEffect || ((isLampOn() || millis()>5000) && flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
     LOG(printf_P, PSTR("playEffect soundfile:%s, effect:%d, delayed:%d\n"), effects.getSoundfile().c_str(), effects.getEn(), (flags.playName && !flags.playMP3));
-    mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
+    if(!flags.playMP3 || (flags.playEffect && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND)) // для mp3-плеера есть отдельное управление
+      mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
   }
 #endif
 
@@ -1071,12 +1180,10 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(flags.ONflag && !iflags.isEffectsDisabledUntilText){
+  if(effects.worker && flags.ONflag && !iflags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
-#ifdef USELEDBUF
       ledsbuff.resize(NUM_LEDS);
       std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
-#endif
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
@@ -1093,7 +1200,11 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
     _demoTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
+#ifdef ESP8266
     _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
+#elif defined ESP32
+    _demoTicker.attach(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
+#endif
     break;
   case SCHEDULER::T_RESET :
     if (isAlarm()) stopAlarm(); // тут же сбросим и будильник
@@ -1116,7 +1227,11 @@ void LAMP::effectsTimer(SCHEDULER action) {
     _effectsTicker.detach();
     break;
   case SCHEDULER::T_ENABLE :
+#ifdef ESP8266
     _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#elif defined ESP32
+    _effectsTicker.once_ms(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
+#endif
     break;
   case SCHEDULER::T_RESET :
     if (_effectsTicker.active() ) effectsTimer(T_ENABLE);
@@ -1168,24 +1283,56 @@ void LAMP::showWarning(
 }
 //-----------------------------
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; неблокирующий код, рисует поверх эффекта!) -------------
+
+void LAMP::warning2Helper(){
+  if(iflags.isWarning) {
+    switch(iflags.warnType){
+      case 0: EffectMath::fillAll(warn_color); break;
+      case 1: {
+        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        EffectMath::fillAll(warn_color);
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        break;
+      }
+      case 2: {
+        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        EffectMath::fillAll(warn_color);
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
+        break;
+      }
+      case 3: {
+        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
+        if (!myLamp.isPrintingNow())
+          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        break;
+      }
+      default: break;
+    }
+  }
+}
+
 void LAMP::showWarning2(
   const CRGB &color,                                        /* цвет вспышки                                                 */
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
   uint16_t blinkHalfPeriod,                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
-  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения */
+  uint8_t warnType,                                         /* тип предупреждения 0...3                                     */
+  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения  */
 {
   if(forcerestart || !_warningTicker.active()){
     warn_color = color;
     warn_duration = duration;
     warn_blinkHalfPeriod = blinkHalfPeriod;
-    flags.isWarning = true;
+    iflags.isWarning = true;
+    iflags.warnType = warnType;
   }
 
-  if(flags.isWarning)
-    EffectMath::fillAll(warn_color);
-
-  if(!forcerestart)
-    flags.isWarning=!flags.isWarning;
+  if(!forcerestart && warnType!=3)
+    iflags.isWarning=!iflags.isWarning;
   if(warn_duration>warn_blinkHalfPeriod)
     warn_duration-=warn_blinkHalfPeriod;
   else
@@ -1193,10 +1340,15 @@ void LAMP::showWarning2(
   if(warn_duration){
     if(_warningTicker.active())
       _warningTicker.detach();
-    _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, !flags.isWarning));
+#ifdef ESP8266
+    _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
+#elif defined ESP32
+    _warningTicker.once_ms(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
+#endif
+
   }
   else {
-    flags.isWarning = false;
+    iflags.isWarning = false;
     _warningTicker.detach();
   }
 }
