@@ -133,7 +133,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
         uint8_t centerY = (HEIGHT-1) / 2U;
         for (int16_t y = centerY; y >= 0; y--)
         {
-          int br = BRIGHTNESS-(map(scale,126,1,1,15)*(centerY-y)*(centerY-y)); if((br-(255-myLamp.getLampBrightness()))<0) br=0;
+          int br = BRIGHTNESS-(map(scale,126,1,1,15)*(centerY-y)*((centerY-y)/2.0)); if((br-(255-myLamp.getLampBrightness()))<0) br=0;
 
           CRGB color = CHSV(
             45U,                                                                              // определяем тон
@@ -149,12 +149,12 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
           }
         }
     } else if(_scale > 127){
-        uint8_t centerX = (HEIGHT-1) / 2U;
+        uint8_t centerX = (WIDTH-1) / 2U;
         for (int16_t y = 0U; y < (int16_t)HEIGHT; y++)
         {
           for (int16_t x = centerX; x >= 0; x--)
           {
-            int br = BRIGHTNESS-(map(scale,128,255,1,15)*(centerX-x)*(centerX-x)); if((br-(255-myLamp.getLampBrightness()))<0) br=0;
+            int br = BRIGHTNESS-(map(scale,128,255,1,15)*(centerX-x)*((centerX-x)/2.0)); if((br-(255-myLamp.getLampBrightness()))<0) br=0;
 
             CRGB color = CHSV(
               45U,                                                        // определяем тон
