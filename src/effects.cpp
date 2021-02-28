@@ -5777,15 +5777,15 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
 
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.20, 1.);
 
-  for (uint8_t i = 0; i < NUM_COLS; i++)
+  for (uint8_t i = 0; i < WIDTH; i++)
   {
 #ifdef BIGMATRIX 
-    for (uint8_t j = 0.; j < NUM_ROWS; j++)
+    for (uint8_t j = 0.; j < HEIGHT; j++)
 #else
-    for (float j = 0.; j < NUM_ROWS; j+= 0.5)
+    for (float j = 0.; j < HEIGHT; j+= 0.5)
 #endif
     {
-      uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*NUM_COLS; //roll index in noise buffer
+      uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*WIDTH; //roll index in noise buffer
       EffectMath::drawPixelXYF_Y(i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
 
     }
@@ -6323,15 +6323,15 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
 
   EVERY_N_MILLISECONDS(30. / speedfactor) { hue++; } //30 - speed of hue change
 
-  float x1 = (float)beatsin16(18. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator;
-  float x2 = (float)beatsin16(23. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator;
-  float x3 = (float)beatsin16(27. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator; 
-  float x4 = (float)beatsin16(31. * speedfactor, 0, (NUM_COLS - 1) *deviator) / deviator; 
+  float x1 = (float)beatsin16(18. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator;
+  float x2 = (float)beatsin16(23. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator;
+  float x3 = (float)beatsin16(27. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator; 
+  float x4 = (float)beatsin16(31. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator; 
 
-  float y1 = (float)beatsin16(20. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
-  float y2 = (float)beatsin16(26. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
-  float y3 = (float)beatsin16(15. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
-  float y4 = (float)beatsin16(27. * speedfactor, 0, (NUM_ROWS - 1) *deviator) / deviator;
+  float y1 = (float)beatsin16(20. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
+  float y2 = (float)beatsin16(26. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
+  float y3 = (float)beatsin16(15. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
+  float y4 = (float)beatsin16(27. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
 
   fadeToBlackBy (leds, NUM_LEDS, map(_blur, 1, 128, 128, 2));
 
@@ -6344,7 +6344,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
     mydrawLine(leds, x4, y4,  x1, y1, 160);
   }
   
-  blur2d(leds, NUM_COLS, NUM_ROWS, map(_blur, 1, 128, 2, 64));
+  blur2d(leds, WIDTH, HEIGHT, map(_blur, 1, 128, 2, 64));
 
   return true;
 }
@@ -8110,7 +8110,7 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// --------- Эффект "Гонщик"
+// --------- Эффект "Космо-Гонщик"
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 void EffectRacer::setspd(const byte _spd) {
   EffectCalc::setspd(_spd);
@@ -8142,8 +8142,7 @@ bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
   {
   case 0:
     EffectMath::drawCircleF(aimX, aimY, radius, color); // рисуем круг
-    break;
-  
+    break;  
   case 1:
     drawStarF(aimX, aimY, 1.3 * radius, radius, 4, angle, color); // рисуем квадрат
     break;
@@ -8176,5 +8175,80 @@ void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t
     EffectMath::drawLineF(x + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
     EffectMath::drawLineF(x + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
 
+  }
+}
+
+
+void EffectSmoker::load() {
+  regen();
+}
+
+
+void EffectSmoker::regen() {
+  for (int i = 0; i < 256; i++)
+		chsv[i] = CHSV(scale, sat, i);
+}
+
+
+void EffectSmoker::setscl(const byte _scl){
+  EffectCalc::setscl(_scl);
+  regen();
+}
+
+
+String EffectSmoker::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3) sat = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  regen();
+  return String();
+}
+
+
+bool EffectSmoker::run(CRGB *leds, EffectWorker *opt) {
+  timer += EffectMath::fmap(speed, 1, 255, 1., 12.);
+  int8_t lightX = 1 - (sin8(timer / 3) - 128) / 4; // beatsin8(20,0,80); //
+  int8_t lightY = 1 - (sin8(timer / 2) - 128) / 4; // beatsin8(25,0,80); //
+
+  generatebump();
+  Bumpmap(leds, lightX, lightY);
+  blur2d(leds, WIDTH, HEIGHT, 64);
+  return true;
+}
+
+void EffectSmoker::generatebump () {
+  uint16_t t = timer;
+  uint16_t index = 0;
+  for (uint8_t j = 0; j < HEIGHT; j++) {
+    for (uint8_t i = 0; i < WIDTH; i++) {
+			byte col;
+			uint16_t u, v; 
+			u = i * 32 + t / 4;
+			v = j * 32 - t / 5;
+			col = 76 + inoise8_raw(u, v, t);
+      bump[index++] = col;
+    }
+  }
+}
+
+void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
+
+  int yindex = WIDTH;
+  int8_t vly = lighty;
+
+  for (uint8_t y = 1; y < HEIGHT - 1; y++) {
+    ++vly;
+    int8_t vlx = lightx;
+    for (uint8_t x = 1; x < WIDTH - 1; x++) {
+      ++vlx;
+      int8_t nx = bump[x + 1 + yindex] - bump[x - 1 + yindex];
+      int8_t ny = bump[x + yindex + WIDTH] - bump[x + yindex - WIDTH];
+
+      uint16_t sumsquare = (vlx - nx) * (vlx - nx) + (vly - ny) * (vly - ny);
+      byte col = 0;
+      if (sumsquare < 7225) // 7225 == (255 / 3)²
+      col = 255 - sqrt16(sumsquare) * 3;
+      leds[myLamp.getPixelNumber(x, y)] = chsv[col];
+    }
+    yindex += WIDTH;
   }
 }
