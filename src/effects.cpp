@@ -8178,7 +8178,9 @@ void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t
   }
 }
 
-
+// ------------  Эффект "Дым" (Тест)
+// https://wokwi.com/arduino/projects/286246948457939464
+// (c) ldir + sutaburosu
 void EffectSmoker::load() {
   regen();
 }

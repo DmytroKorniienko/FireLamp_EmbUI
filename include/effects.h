@@ -1900,6 +1900,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ------------  Эффект "Дым" (Тест)
+// https://wokwi.com/arduino/projects/286246948457939464
+// (c) ldir + sutaburosu
 class EffectSmoker: public EffectCalc {
 private:
     float timer;
