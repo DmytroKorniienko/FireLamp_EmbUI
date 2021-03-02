@@ -1823,7 +1823,6 @@ private:
         return false;
     }
 
-    //String setDynCtrl(UIControl*_val) override;
     void setspd(const byte _spd) override; // перегрузка для скорости
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1872,7 +1871,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// --------- Эффект "Гонщик"
+// --------- Эффект "Космо-Гонщик"
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 class EffectRacer: public EffectCalc {
 private:
@@ -1900,7 +1899,24 @@ public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
-// --------- конец секции эффектов
 
+class EffectSmoker: public EffectCalc {
+private:
+    float timer;
+    byte bump[NUM_LEDS];
+    CRGB chsv[256];
+    byte sat;
+
+    void generatebump ();
+    void regen();
+    void Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty);
+    String setDynCtrl(UIControl*_val) override;
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------- конец секции эффектов
 
 #endif
