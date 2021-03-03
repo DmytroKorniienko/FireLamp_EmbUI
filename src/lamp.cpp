@@ -747,7 +747,10 @@ String &LAMP::prepareText(String &source){
   char buffer[11]; //"xx.xx.xxxx"
   sprintf_P(buffer,PSTR("%02d.%02d.%04d"),localtime(now)->tm_mday,localtime(now)->tm_mon,localtime(now)->tm_year+1900);
   source.replace(F("%DT"), buffer);
-  LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
+#ifdef LAMP_DEBUG  
+  if(!source.isEmpty())
+    LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
+#endif
   return source;  
 }
 
