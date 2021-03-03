@@ -747,7 +747,7 @@ String &LAMP::prepareText(String &source){
   sprintf_P(buffer,PSTR("%02d.%02d.%04d"),localtime(now)->tm_mday,localtime(now)->tm_mon,localtime(now)->tm_year+1900);
   source.replace(F("%DT"), buffer);
 #ifdef LAMP_DEBUG  
-  if(!source.isEmpty())
+  if(!source.isEmpty() && !localtime(now)->tm_sec) // только для 00 секунд, чтобы эффект часы не флудил в лог :)
     LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
 #endif
   return source;  
