@@ -154,7 +154,6 @@ void LAMP::handle()
   }
 
   newYearMessageHandle();
-  periodicTimeHandle();
   ConfigSaveCheck(); // для взведенного таймера автосохранения настроек
 
 #ifdef OTA
@@ -767,15 +766,18 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       else { // есть что печатать
         JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
-        String storage = var[F("s")];
-        prepareText(storage);
-        doPrintStringToLamp(storage.c_str(), (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
+        if(!var.isNull()){
+          String storage = var[F("s")];
+          prepareText(storage);
+          doPrintStringToLamp(storage.c_str(), (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
-        String tmpStr = var[F("s")];
-        if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-          mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
+          String tmpStr = var[F("s")];
+          if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+            mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
-        arr.remove(0); // удаляем отправленный
+        }
+        if(arr.size()>0)
+          arr.remove(0); // удаляем отправленный
       }
     } else {
         // текст на входе пустой, идет печать
@@ -910,7 +912,7 @@ void LAMP::newYearMessageHandle()
 void LAMP::periodicTimeHandle()
 {
   const tm* t = localtime(embui.timeProcessor.now());
-  if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
+  if(t->tm_sec)
     return;
 
   LOG(printf_P, PSTR("periodicTimeHandle: %02d:%02d:%02d\n"), t->tm_hour,t->tm_min,t->tm_sec);
@@ -918,41 +920,15 @@ void LAMP::periodicTimeHandle()
   time_t tm = t->tm_hour * 60 + t->tm_min;
   String time = String(F("%TM"));
 
-  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW && !(tm%60)){
-    sendStringToLamp(time.c_str(), CRGB::Red);
-    return;
+  CRGB color;
+  if(!(tm%60)){
+    color = CRGB::Red;
+  } else if(!(tm%30)){
+    color = CRGB::Green;
+  } else {
+    color =  CRGB::Blue;
   }
-
-  switch (enPeriodicTimePrint)
-  {
-    case PERIODICTIME::PT_EVERY_1:
-      if(tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_5:
-      if(!(tm%5) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_10:
-      if(!(tm%10) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_15:
-      if(!(tm%15) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_30:
-      if(!(tm%30) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_60:
-      if(!(tm%60))
-        sendStringToLamp(time.c_str(), CRGB::Red);
-      break;
-
-    default:
-      break;
-  }
+  sendStringToLamp(time.c_str(), color);
 }
 
 #ifdef MIC_EFFECTS

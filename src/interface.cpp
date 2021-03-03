@@ -1095,16 +1095,6 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
                 interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
                 interf->range(FPSTR(TCONST_00C3), 0, 255, 1, FPSTR(TINTF_0CA));
                 
-                interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
-                    interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));
-                    interf->option(String(PERIODICTIME::PT_EVERY_60), FPSTR(TINTF_048));
-                    interf->option(String(PERIODICTIME::PT_EVERY_30), FPSTR(TINTF_049));
-                    interf->option(String(PERIODICTIME::PT_EVERY_15), FPSTR(TINTF_04A));
-                    interf->option(String(PERIODICTIME::PT_EVERY_10), FPSTR(TINTF_04B));
-                    interf->option(String(PERIODICTIME::PT_EVERY_5), FPSTR(TINTF_04C));
-                    interf->option(String(PERIODICTIME::PT_EVERY_1), FPSTR(TINTF_04D));
-                interf->json_section_end();
-
             interf->spacer(FPSTR(TINTF_04E));
                 interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
                 //interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
@@ -1181,7 +1171,6 @@ void set_text_config(Interface *interf, JsonObject *data){
 
     SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
-    SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
     SETPARAM(FPSTR(TCONST_00C3), myLamp.setBFade((*data)[FPSTR(TCONST_00C3)]));
 
@@ -1788,7 +1777,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->datetime(FPSTR(TCONST_006B), event.getDateTime(), FPSTR(TINTF_06D));
     interf->number(FPSTR(TCONST_0069), event.repeat, FPSTR(TINTF_06E));
     interf->number(FPSTR(TCONST_006A), event.stopat, FPSTR(TINTF_06F));
-    interf->text(FPSTR(TCONST_0035), String(event.message), FPSTR(TINTF_070), false);
+    interf->text(FPSTR(TCONST_0035), String(event.message!=NULL?event.message:""), FPSTR(TINTF_070), false);
 
     interf->json_section_hidden(FPSTR(TCONST_0069), FPSTR(TINTF_071));
     interf->checkbox(FPSTR(TCONST_0061), (event.d1? "1" : "0"), FPSTR(TINTF_072), false);
@@ -2176,7 +2165,6 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_00C3), String(FADETOBLACKVALUE));
     embui.var_create(FPSTR(TCONST_0051), F("100"));
     embui.var_create(FPSTR(TCONST_0052), F("0"));
-    embui.var_create(FPSTR(TCONST_0053), F("0"));
     embui.var_create(FPSTR(TCONST_0050), F("1"));
     embui.var_create(FPSTR(TCONST_0018), F("127"));
 
@@ -2394,7 +2382,6 @@ void sync_parameters(){
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
     obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
-    obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
     obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
     obj[FPSTR(TCONST_00C3)] = embui.param(FPSTR(TCONST_00C3));
 
@@ -2663,7 +2650,8 @@ void remote_action(RA action, ...){
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
         case RA::RA_SEND_TIME:
-            myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
+            myLamp.periodicTimeHandle();
+            //myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
             break;
 #ifdef OTA
         case RA::RA_OTA:

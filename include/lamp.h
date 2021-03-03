@@ -96,16 +96,6 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
-typedef enum _PERIODICTIME {
-  PT_NOT_SHOW = 1,
-  PT_EVERY_60,
-  PT_EVERY_30,
-  PT_EVERY_15,
-  PT_EVERY_10,
-  PT_EVERY_5,
-  PT_EVERY_1,
-} PERIODICTIME;
-
 //#pragma pack(push,2)
 typedef union {
 struct {
@@ -185,8 +175,6 @@ private:
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
     uint8_t storedBright;
-
-    PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
 
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
@@ -377,7 +365,6 @@ public:
     void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
     void setTextOffset(uint8_t val) { txtOffset=val;}
-    void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
 
     void setPlayTime(uint8_t val) {flags.playTime = val;}
     void setPlayName(bool flag) {flags.playName = flag;}
