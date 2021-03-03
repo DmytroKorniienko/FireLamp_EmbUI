@@ -739,6 +739,18 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
   }
 }
 
+String &LAMP::prepareText(String &source){
+  source.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
+  source.replace(F("%IP"), WiFi.localIP().toString());
+  source.replace(F("%EN"), effects.getEffectName());
+  const time_t *now = embui.timeProcessor.now();
+  char buffer[11]; //"xx.xx.xxxx"
+  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),localtime(now)->tm_mday,localtime(now)->tm_mon,localtime(now)->tm_year+1900);
+  source.replace(F("%DT"), buffer);
+  LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
+  return source;  
+}
+
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
 {
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
@@ -752,7 +764,9 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       else { // есть что печатать
         JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
-        doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
+        String storage = var[F("s")];
+        prepareText(storage);
+        doPrintStringToLamp(storage.c_str(), (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
         String tmpStr = var[F("s")];
         if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
@@ -766,7 +780,9 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
     }
   } else { // текст не пустой
     if(!iflags.isStringPrinting){ // ничего сейчас не печатается
-      doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
+      String storage = text;
+      prepareText(storage);
+      doPrintStringToLamp(storage.c_str(), letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
       if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
@@ -805,9 +821,6 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 
   if(text!=nullptr && text[0]!='\0'){
     toPrint.concat(text);
-    toPrint.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
-    toPrint.replace(F("%IP"), WiFi.localIP().toString());
-    toPrint.replace(F("%EN"), effects.getEffectName());
     _letterColor = letterColor;
   }
 
