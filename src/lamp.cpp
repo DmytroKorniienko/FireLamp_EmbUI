@@ -488,7 +488,7 @@ void LAMP::stopAlarm(){
 #ifdef MP3PLAYER
   mp3->StopAndRestoreVolume(); // восстановить уровень громкости
   mp3->setAlarm(false);
-  setAlarmMessage(); // очистить сообщение выводимое на лампу в будильнике
+  curAlarm.clear(); // очистить сообщение выводимое на лампу в будильнике
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
