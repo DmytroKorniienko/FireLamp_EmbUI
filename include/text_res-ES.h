@@ -37,6 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #ifndef __TEXT_RES_H
 #define __TEXT_RES_H
+#include <Arduino.h>
 
 // Здесь строковые константы общего назначения, включая константы из интерфейса, что позволит локализировать при необходимости
 // Ничего иного в данном файле не предполагается

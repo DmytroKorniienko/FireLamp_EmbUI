@@ -176,6 +176,14 @@ private:
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
     uint8_t storedBright;
 
+    typedef struct {
+        uint8_t alarmP;
+        uint8_t alarmT;
+        String msg;
+    } ALARM_DATA;
+    
+    ALARM_DATA curAlarm;
+
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
     float mic_noise = 0.0; // уровень шума в ед.
@@ -191,7 +199,6 @@ private:
     uint8_t BFade; // затенение фона под текстом
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
-    String alarmMessage; // Cообщение будильника рассвет, если задано
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
@@ -377,8 +384,6 @@ public:
     void periodicTimeHandle();
 
     void startAlarm(char *value = nullptr);
-    void setAlarmMessage(char *value = nullptr) {if(value) alarmMessage = value; else alarmMessage.clear();}
-    const char *getAlarmMessage() { return alarmMessage.c_str();}
     void stopAlarm();
     void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
     void startNormalMode();

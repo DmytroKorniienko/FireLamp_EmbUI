@@ -187,7 +187,7 @@ void LAMP::alarmWorker(){
       FastLED.clear();
       brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...getAlarmP()*60 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...curAlarm.alarmP*60 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
@@ -195,7 +195,7 @@ void LAMP::alarmWorker(){
       );
     }
 
-    if (((millis() - startmillis) / 1000 > (((uint32_t)(getAlarmP()) + getAlarmT()) * 60UL+30U))) {
+    if (((millis() - startmillis) / 1000 > (((uint32_t)(curAlarm.alarmP) + curAlarm.alarmT) * 60UL+30U))) {
       // рассвет закончился
       stopAlarm();
       return;
@@ -204,7 +204,7 @@ void LAMP::alarmWorker(){
     // проверка рассвета
     EVERY_N_SECONDS(10){
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
@@ -226,9 +226,9 @@ void LAMP::alarmWorker(){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-        if(getAlarmMessage()!=nullptr && getAlarmMessage()[0])
-          sendStringToLamp(getAlarmMessage(), letterColor, true);
-        else {
+        if(!curAlarm.msg.isEmpty()) {
+          sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
+        } else {
 #ifdef PRINT_ALARM_TIME
           sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
@@ -453,6 +453,14 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 }
 
 void LAMP::startAlarm(char *value){
+  DynamicJsonDocument doc(1024);
+  String buf = value;
+  buf.replace("'","\"");
+  deserializeJson(doc,buf);
+  curAlarm.alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
+  curAlarm.alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
+  curAlarm.msg = doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : String("");
+
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   demoTimer(T_DISABLE);     // гасим Демо-таймер
@@ -460,7 +468,6 @@ void LAMP::startAlarm(char *value){
 #ifdef MP3PLAYER
   mp3->setAlarm(true);
   mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
-  setAlarmMessage(value);
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -744,7 +751,7 @@ String &LAMP::prepareText(String &source){
   source.replace(F("%EN"), effects.getEffectName());
   const time_t *now = embui.timeProcessor.now();
   char buffer[11]; //"xx.xx.xxxx"
-  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),localtime(now)->tm_mday,localtime(now)->tm_mon,localtime(now)->tm_year+1900);
+  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),localtime(now)->tm_mday,localtime(now)->tm_mon,localtime(now)->tm_year+TM_BASE_YEAR);
   source.replace(F("%DT"), buffer);
 #ifdef LAMP_DEBUG  
   if(!source.isEmpty() && !localtime(now)->tm_sec) // только для 00 секунд, чтобы эффект часы не флудил в лог :)
@@ -861,7 +868,7 @@ void LAMP::newYearMessageHandle()
     time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime();
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+1900);
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+TM_BASE_YEAR);
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
