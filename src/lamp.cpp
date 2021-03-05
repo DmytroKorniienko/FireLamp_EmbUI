@@ -872,7 +872,7 @@ void LAMP::newYearMessageHandle()
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
-      byte calcT=calc/(60*60); // минуты
+      uint16_t calcT=calc/(60*60); // минуты
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
@@ -884,7 +884,7 @@ void LAMP::newYearMessageHandle()
       }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else if(calc/(60*60)<60){
-	    byte calcT=calc/(60*60); // часы
+	    uint16_t calcT=calc/(60*60); // часы
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
@@ -896,7 +896,7 @@ void LAMP::newYearMessageHandle()
       }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else {
-      byte calcT=calc/(60*60*24); // дни
+      uint16_t calcT=calc/(60*60*24); // дни
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcT>=11 && calcT<=20)
