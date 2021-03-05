@@ -749,12 +749,12 @@ String &LAMP::prepareText(String &source){
   source.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
   source.replace(F("%IP"), WiFi.localIP().toString());
   source.replace(F("%EN"), effects.getEffectName());
-  const time_t *now = embui.timeProcessor.now();
+  const tm *tm = localtime(embui.timeProcessor.now());
   char buffer[11]; //"xx.xx.xxxx"
-  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),localtime(now)->tm_mday,localtime(now)->tm_mon,localtime(now)->tm_year+TM_BASE_YEAR);
+  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),tm->tm_mday,tm->tm_mon+1,tm->tm_year+TM_BASE_YEAR);
   source.replace(F("%DT"), buffer);
 #ifdef LAMP_DEBUG  
-  if(!source.isEmpty() && !localtime(now)->tm_sec) // только для 00 секунд, чтобы эффект часы не флудил в лог :)
+  if(!source.isEmpty() && effects.getCurrent()!=EFF_ENUM::EFF_TIME) // спам эффекта часы убираем костыльным способом :)
     LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
 #endif
   return source;  
