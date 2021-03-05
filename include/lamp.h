@@ -180,6 +180,7 @@ private:
         uint8_t alarmP;
         uint8_t alarmT;
         String msg;
+        void clear() { alarmP = 5; alarmT = 5; msg=""; }
     } ALARM_DATA;
     
     ALARM_DATA curAlarm;
