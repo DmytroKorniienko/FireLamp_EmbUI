@@ -1504,8 +1504,8 @@ bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
   }
   else hue = colorId;
 
-  for (uint8_t y = 2; y < HEIGHT; y += 5) {
-    for (uint8_t x = 2; x < WIDTH; x += 5) {
+  for (uint8_t y = 2; y < HEIGHT-1; y += 5) {
+    for (uint8_t x = 2; x < WIDTH-1; x += 5) {
       leds[myLamp.getPixelNumber(x, y)]  += CHSV(x * y + hue, colorId == 255 ? 64 : 255, 255);
       leds[myLamp.getPixelNumber(x + 1, y)] += CHSV((x + 4) * y + hue, colorId == 255 ? 64 : 255, 255);
       leds[myLamp.getPixelNumber(x, y + 1)] += CHSV(x * (y + 4) + hue, colorId == 255 ? 64 : 255, 255);
