@@ -1646,14 +1646,23 @@ void block_settings_event(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
+
 void show_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
+
+    if(cur_edit_event && !myLamp.events.isEnumerated(*cur_edit_event)){
+        LOG(println, F("Удалено временное событие!"));
+        delete cur_edit_event;
+        cur_edit_event = NULL;
+    } else {
+        cur_edit_event = NULL;
+    }
+
     interf->json_frame_interface();
     block_settings_event(interf, data);
     interf->json_frame_flush();
 }
-
-static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
 
 void set_eventflag(Interface *interf, JsonObject *data){
     if (!data) return;
@@ -1743,6 +1752,8 @@ void show_event_conf(Interface *interf, JsonObject *data){
     int i = 1, num = 0;
     if (!interf || !data) return;
 
+    LOG(print,F("event_conf=")); LOG(println, (*data)[FPSTR(TCONST_005D)].as<String>()); //  && data->containsKey(FPSTR(TCONST_005D))
+
     if (data->containsKey(FPSTR(TCONST_005E))) {
         EVENT *curr = NULL;
         num = (*data)[FPSTR(TCONST_005E)];
@@ -1754,16 +1765,20 @@ void show_event_conf(Interface *interf, JsonObject *data){
     } else if(cur_edit_event != NULL){
         if(data->containsKey(FPSTR(TCONST_0068)))
             cur_edit_event->event = (*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>(); // меняем тип налету
-        edit = true;
+        if(myLamp.events.isEnumerated(*cur_edit_event))
+            edit = true;
+    } else {
+        LOG(println, "Созданан пустой эвент!");
+        cur_edit_event = new EVENT();
     }
 
     if (act == FPSTR(TCONST_00B6)) {
         myLamp.events.delEvent(*cur_edit_event);
+        cur_edit_event = NULL;
         myLamp.events.saveConfig();
         show_settings_event(interf, data);
         return;
-    } else
-    if (data->containsKey(FPSTR(TCONST_002E))) {
+    } else if (data->containsKey(FPSTR(TCONST_002E))) {
         set_event_conf(interf, data);
         return;
     }
@@ -1809,10 +1824,10 @@ void show_event_conf(Interface *interf, JsonObject *data){
                 DynamicJsonDocument doc(1024);
                 String buf = cur_edit_event->message;
                 buf.replace("'","\"");
-                deserializeJson(doc,buf);
-                int alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
-                int alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
-                String msg = doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : String("");
+                DeserializationError err = deserializeJson(doc,buf);
+                int alarmP = !err && doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
+                int alarmT = !err && doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
+                String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
 
                 interf->spacer(FPSTR(TINTF_0BA));
 
@@ -1841,9 +1856,10 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     if (edit) {
-        interf->hidden(FPSTR(TCONST_002E), "1");
+        interf->hidden(FPSTR(TCONST_002E), "1"); // режим редактирования
         interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_079));
     } else {
+        interf->hidden(FPSTR(TCONST_002E), "0"); // режим добавления
         interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_05D), FPSTR(TCONST_002F));
     }
 
@@ -1853,6 +1869,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_section_end();
     interf->json_frame_flush();
 }
+
 #ifdef ESP_USE_BUTTON
 void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;

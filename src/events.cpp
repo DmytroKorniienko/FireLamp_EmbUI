@@ -104,6 +104,22 @@ void EVENT_MANAGER::delEvent(const EVENT&event) {
     }
 }
 
+bool EVENT_MANAGER::isEnumerated(const EVENT&event) {
+    EVENT *next=root;
+    bool res = false;
+    if(next!=nullptr){
+        while(next){
+            EVENT *tmp_next = next->next;
+            if(*next==event){
+                res = true;
+                break;
+            }
+            next=tmp_next;
+        }
+    }
+    return res;
+}
+
 void EVENT_MANAGER::events_handle()
 {
   // пропускаем все ненулевые секунды

@@ -172,7 +172,7 @@ struct EVENT {
             t_raw_data >>= 1;
         }
 
-        if(message[0]){     // время тут никто и не копирует, а усекается текст
+        if(message && message[0]){     // время тут никто и не копирует, а усекается текст
             uint8_t UTFNsymbols = 0; // кол-во симоволов UTF-8 уже скопированных
             uint8_t i = 0;
             char tmpBuf[EVENT_TSTAMP_LENGTH];
@@ -224,8 +224,8 @@ public:
     ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
 
     void addEvent(const EVENT&event);
-    
     void delEvent(const EVENT&event);
+    bool isEnumerated(const EVENT&event); // проверка того что эвент в списке
 
     void setEventCallback(void(*func)(const EVENT *))
     {
