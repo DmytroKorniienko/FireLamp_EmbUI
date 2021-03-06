@@ -268,6 +268,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_SMOKER :
     worker = std::unique_ptr<EffectSmoker>(new EffectSmoker());
     break;
+   case EFF_ENUM::EFF_MAGMA :
+    worker = std::unique_ptr<EffectMagma>(new EffectMagma());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());

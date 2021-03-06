@@ -8254,3 +8254,125 @@ void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
     yindex += WIDTH;
   }
 }
+
+
+
+void EffectMagma::palettesload(){
+  // собираем свой набор палитр для эффекта
+  palettes.reserve(NUMPALETTES);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&HeatColors2_p);
+  palettes.push_back(&NormalFire2_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&SodiumFireColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&WoodFireColors_p);
+  usepalettes = true; // включаем флаг палитр
+  scale2pallete();    // выставляем текущую палитру
+}
+
+void EffectMagma::load() {
+  palettesload();
+  regen();
+}
+
+void EffectMagma::setscl(const byte _scl){
+  EffectCalc::setscl(_scl);
+  regen();
+}
+
+void EffectMagma::regen() {
+  deltaValue = 12U;
+  deltaHue = 10U;// map(deltaValue, 8U, 168U, 8U, 84U); // высота языков пламени должна уменьшаться не так быстро, как ширина
+  for (uint8_t j = 0; j < HEIGHT; j++) {
+    shiftHue[j] = (HEIGHT - 1 - j) * 255 / (HEIGHT - 1); // init colorfade table
+  }
+  ObjectNUM = map(scale, 1, 255, 1, enlargedOBJECT_MAX_COUNT);
+
+  for (uint8_t i = 0 ; i < ObjectNUM ; i++) {
+    trackingObjectPosX[i] = random(0, WIDTH);
+    trackingObjectPosY[i] = random(0, HEIGHT/4);
+
+    trackingObjectHue[i] = 50U;
+  }
+}
+
+bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
+  EffectMath::dimAll(181);
+  speedfactor = EffectMath::fmap(speed, 1, 255, 0.05, .5);
+
+  for (uint8_t i = 0; i < WIDTH; i++) {
+    for (uint8_t j = 0; j < HEIGHT; j++) {
+      EffectMath::drawPixelXY(i, HEIGHT - 1U - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 255U));
+    }
+  }
+
+  for (uint8_t i = 0; i < ObjectNUM; i++) {
+    LeapersMove_leaper(i);
+    if (trackingObjectPosY[i] >= HEIGHT/4U)
+      EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], ColorFromPalette(*curPalette, trackingObjectHue[i]));
+  }
+
+  //blurScreen(20);
+  ff_y += speedfactor * 2;
+  //if (ff_y & 0x01)
+    ff_z += speedfactor;
+  return true;
+}
+
+void EffectMagma::LeapersMove_leaper(uint8_t l) {
+#define GRAVITY            0.06
+#define SETTLED_THRESHOLD  0.1
+#define WALL_FRICTION      0.95
+#define WIND               0.95    // wind resistance
+
+  trackingObjectPosX[l] += trackingObjectSpeedY[l] * speedfactor;
+  trackingObjectPosY[l] += trackingObjectShift[l] * speedfactor;
+
+  // bounce off the floor and ceiling?
+  if (trackingObjectPosY[l] < 0 || trackingObjectPosY[l] > HEIGHT + HEIGHT/8) {
+    trackingObjectShift[l] = (-trackingObjectShift[l] * WALL_FRICTION);
+    trackingObjectSpeedY[l] = ( trackingObjectSpeedY[l] * WALL_FRICTION);
+    trackingObjectPosY[l] += trackingObjectShift[l] * speedfactor;
+    if (trackingObjectPosY[l] < 0) trackingObjectPosY[l] = 0;
+    // settled on the floor?
+    if (trackingObjectPosY[l] <= SETTLED_THRESHOLD && fabs(trackingObjectShift[l]) <= SETTLED_THRESHOLD) {
+      LeapersRestart_leaper(l);
+    }
+  }
+
+  // bounce off the sides of the screen?
+  if (trackingObjectPosX[l] <= 0 || trackingObjectPosX[l] >= WIDTH - 1) {
+  /*  trackingObjectSpeedY[l] = (-trackingObjectSpeedY[l] * WALL_FRICTION);
+    if (trackingObjectPosX[l] <= 0) {
+      trackingObjectPosX[l] = trackingObjectSpeedY[l];
+    } else {
+      trackingObjectPosX[l] = WIDTH - 1 - trackingObjectSpeedY[l];
+    }*/
+    LeapersRestart_leaper(l);
+  }
+
+  trackingObjectShift[l] -= GRAVITY * speedfactor;
+  //trackingObjectSpeedY[l] *= WIND;
+  //trackingObjectShift[l] *= WIND;
+}
+
+void EffectMagma::LeapersRestart_leaper(uint8_t l) {
+  // leap up and to the side with some random component
+  trackingObjectSpeedY[l] = (1 * (float)random(50, 100) / 100);
+  trackingObjectShift[l] = (2 * (float)random(50, 100) / 100);
+
+  // for variety, sometimes go 50% faster
+  if (random8() < 12) {
+    trackingObjectSpeedY[l] += trackingObjectSpeedY[l] * 0.5;
+    trackingObjectShift[l] += trackingObjectShift[l] * 0.5;
+  }
+
+  // leap towards the centre of the screen
+  if (trackingObjectPosX[l] > (WIDTH / 4)) {
+    trackingObjectSpeedY[l] = -trackingObjectSpeedY[l];
+  }
+}

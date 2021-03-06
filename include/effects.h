@@ -1920,6 +1920,31 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+class EffectMagma: public EffectCalc {
+private:
+    //uint16_t ff_x;
+    float ff_y, ff_z;                         // большие счётчики
+    uint8_t deltaValue;
+    uint8_t deltaHue;
+    uint8_t step, ObjectNUM; 
+    uint8_t shiftHue[HEIGHT];
+    float trackingObjectPosX[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectPosY[enlargedOBJECT_MAX_COUNT];
+    uint8_t trackingObjectHue[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectSpeedY[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectShift[enlargedOBJECT_MAX_COUNT];
+    float speedfactor;
+
+    void palettesload();
+    void regen();
+    void LeapersMove_leaper(uint8_t l);
+    void LeapersRestart_leaper(uint8_t l);
+    //String setDynCtrl(UIControl*_val) override;
+    void setscl(const byte _scl) override; // перегрузка для масштаба
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 #endif
