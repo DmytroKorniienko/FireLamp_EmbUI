@@ -96,16 +96,6 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
-typedef enum _PERIODICTIME {
-  PT_NOT_SHOW = 1,
-  PT_EVERY_60,
-  PT_EVERY_30,
-  PT_EVERY_15,
-  PT_EVERY_10,
-  PT_EVERY_5,
-  PT_EVERY_1,
-} PERIODICTIME;
-
 //#pragma pack(push,2)
 typedef union {
 struct {
@@ -186,7 +176,14 @@ private:
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
     uint8_t storedBright;
 
-    PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
+    typedef struct {
+        uint8_t alarmP;
+        uint8_t alarmT;
+        String msg;
+        void clear() { alarmP = 5; alarmT = 5; msg=""; }
+    } ALARM_DATA;
+    
+    ALARM_DATA curAlarm;
 
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
@@ -203,7 +200,6 @@ private:
     uint8_t BFade; // затенение фона под текстом
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
-    String alarmMessage; // Cообщение будильника рассвет, если задано
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
@@ -247,6 +243,7 @@ private:
     uint32_t warn_duration;
     uint16_t warn_blinkHalfPeriod;
 
+    String &prepareText(String &source);
     void doPrintStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool fillStringManual(const char* text,  const CRGB &letterColor, bool stopText = false, bool isInverse = false, int32_t pos = 0, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT); // -2147483648
     void drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight, uint8_t flSymb=0);
@@ -376,7 +373,6 @@ public:
     void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
     void setTextOffset(uint8_t val) { txtOffset=val;}
-    void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
 
     void setPlayTime(uint8_t val) {flags.playTime = val;}
     void setPlayName(bool flag) {flags.playName = flag;}
@@ -389,8 +385,6 @@ public:
     void periodicTimeHandle();
 
     void startAlarm(char *value = nullptr);
-    void setAlarmMessage(char *value = nullptr) {if(value) alarmMessage = value; else alarmMessage.clear();}
-    const char *getAlarmMessage() { return alarmMessage.c_str();}
     void stopAlarm();
     void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
     void startNormalMode();

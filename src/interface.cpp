@@ -832,8 +832,8 @@ void set_eff_next(Interface *interf, JsonObject *data){
  */
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    //bool newpower = TOGLE_STATE((*data)[FPSTR(TCONST_001A)], myLamp.isLampOn());
-    bool newpower = (*data)[FPSTR(TCONST_001A)].as<unsigned int>();
+
+    bool newpower = TOGLE_STATE((*data)[FPSTR(TCONST_001A)], myLamp.isLampOn());
     if (newpower != myLamp.isLampOn()) {
         if (newpower) {
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
@@ -878,8 +878,7 @@ void set_demoflag(Interface *interf, JsonObject *data){
     if (!data) return;
     resetAutoTimers();
     // Специально не сохраняем, считаю что демо при старте не должно запускаться
-    //bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
-    bool newdemo = (*data)[FPSTR(TCONST_001B)].as<unsigned int>();
+    bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
     switch (myLamp.getMode()) {
         case MODE_OTA:
         case MODE_ALARMCLOCK:
@@ -1096,16 +1095,6 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
                 interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
                 interf->range(FPSTR(TCONST_00C3), 0, 255, 1, FPSTR(TINTF_0CA));
                 
-                interf->select(FPSTR(TCONST_0053), FPSTR(TINTF_046));
-                    interf->option(String(PERIODICTIME::PT_NOT_SHOW), FPSTR(TINTF_047));
-                    interf->option(String(PERIODICTIME::PT_EVERY_60), FPSTR(TINTF_048));
-                    interf->option(String(PERIODICTIME::PT_EVERY_30), FPSTR(TINTF_049));
-                    interf->option(String(PERIODICTIME::PT_EVERY_15), FPSTR(TINTF_04A));
-                    interf->option(String(PERIODICTIME::PT_EVERY_10), FPSTR(TINTF_04B));
-                    interf->option(String(PERIODICTIME::PT_EVERY_5), FPSTR(TINTF_04C));
-                    interf->option(String(PERIODICTIME::PT_EVERY_1), FPSTR(TINTF_04D));
-                interf->json_section_end();
-
             interf->spacer(FPSTR(TINTF_04E));
                 interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
                 //interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
@@ -1182,7 +1171,6 @@ void set_text_config(Interface *interf, JsonObject *data){
 
     SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
-    SETPARAM(FPSTR(TCONST_0053), myLamp.setPeriodicTimePrint((PERIODICTIME)(*data)[FPSTR(TCONST_0053)].as<long>()));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
     SETPARAM(FPSTR(TCONST_00C3), myLamp.setBFade((*data)[FPSTR(TCONST_00C3)]));
 
@@ -1207,7 +1195,8 @@ void set_text_config(Interface *interf, JsonObject *data){
 
     if(!interf){
         interf = embui.ws.count()? new Interface(&embui, &embui.ws, 3000) : nullptr;
-        section_text_frame(interf, data);
+        //section_text_frame(interf, data);
+        section_main_frame(interf, nullptr); // вернемся на главный экран (то же самое при начальном запуске)
         delete interf;
     } else
         section_text_frame(interf, data);
@@ -1657,8 +1646,19 @@ void block_settings_event(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
+
 void show_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
+
+    if(cur_edit_event && !myLamp.events.isEnumerated(*cur_edit_event)){
+        LOG(println, F("Удалено временное событие!"));
+        delete cur_edit_event;
+        cur_edit_event = NULL;
+    } else {
+        cur_edit_event = NULL;
+    }
+
     interf->json_frame_interface();
     block_settings_event(interf, data);
     interf->json_frame_flush();
@@ -1679,7 +1679,9 @@ void set_event_conf(Interface *interf, JsonObject *data){
     //serializeJson((*data), output);
     //LOG(println, output.c_str());
 
-    if (data->containsKey(FPSTR(TCONST_005E))) {
+    if(cur_edit_event){
+        myLamp.events.delEvent(*cur_edit_event);
+    } else if (data->containsKey(FPSTR(TCONST_005E))) {
         EVENT *curr = nullptr;
         int i = 1, num = (*data)[FPSTR(TCONST_005E)];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
@@ -1720,91 +1722,144 @@ void set_event_conf(Interface *interf, JsonObject *data){
     LOG(printf_P, PSTR("Set Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
     event.unixtime = mktime(tm);
-    event.message = (char*)((*data)[FPSTR(TCONST_0035)].as<char*>());
+
+    switch(event.event){
+        case EVENT_TYPE::ALARM: {
+                DynamicJsonDocument doc(1024);
+                String buf;
+                doc[FPSTR(TCONST_00BB)] = (*data)[FPSTR(TCONST_00BB)];
+                doc[FPSTR(TCONST_00BC)] = (*data)[FPSTR(TCONST_00BC)];
+                doc[FPSTR(TCONST_0035)] = (*data)[FPSTR(TCONST_0035)];
+                serializeJson(doc,buf);
+                buf.replace("\"","'");
+                event.message = (char *)buf.c_str(); // менять не будем, так что пойдет такое приведение типов
+            }
+            break;
+        default:
+            event.message = (char*)((*data)[FPSTR(TCONST_0035)].as<char*>());
+            break;
+    }
 
     myLamp.events.addEvent(event);
     myLamp.events.saveConfig();
+    cur_edit_event = NULL;
     show_settings_event(interf, data);
 }
 
 void show_event_conf(Interface *interf, JsonObject *data){
-    EVENT event;
     String act;
     bool edit = false;
     int i = 1, num = 0;
     if (!interf || !data) return;
 
+    LOG(print,F("event_conf=")); LOG(println, (*data)[FPSTR(TCONST_005D)].as<String>()); //  && data->containsKey(FPSTR(TCONST_005D))
+
     if (data->containsKey(FPSTR(TCONST_005E))) {
-        EVENT *curr = nullptr;
+        EVENT *curr = NULL;
         num = (*data)[FPSTR(TCONST_005E)];
         while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
         if (!curr) return;
         act = (*data)[FPSTR(TCONST_005D)].as<String>();
-        event = *curr;
+        cur_edit_event = curr;
         edit = true;
+    } else if(cur_edit_event != NULL){
+        if(data->containsKey(FPSTR(TCONST_0068)))
+            cur_edit_event->event = (*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>(); // меняем тип налету
+        if(myLamp.events.isEnumerated(*cur_edit_event))
+            edit = true;
+    } else {
+        LOG(println, "Созданан пустой эвент!");
+        cur_edit_event = new EVENT();
     }
 
     if (act == FPSTR(TCONST_00B6)) {
-        myLamp.events.delEvent(event);
+        myLamp.events.delEvent(*cur_edit_event);
+        cur_edit_event = NULL;
         myLamp.events.saveConfig();
         show_settings_event(interf, data);
         return;
-    } else
-    if (data->containsKey(FPSTR(TCONST_002E))) {
+    } else if (data->containsKey(FPSTR(TCONST_002E))) {
         set_event_conf(interf, data);
         return;
     }
-
 
     interf->json_frame_interface();
 
     if (edit) {
         interf->json_section_main(FPSTR(TCONST_006C), FPSTR(TINTF_05C));
-        interf->constant(FPSTR(TCONST_005E), String(num), event.getName());
-        interf->checkbox(FPSTR(TCONST_0060), (event.isEnabled? "1" : "0"), FPSTR(TINTF_05E), false);
+        interf->constant(FPSTR(TCONST_005E), String(num), cur_edit_event->getName());
+        interf->checkbox(FPSTR(TCONST_0060), (cur_edit_event->isEnabled? "1" : "0"), FPSTR(TINTF_05E), false);
     } else {
         interf->json_section_main(FPSTR(TCONST_006C), FPSTR(TINTF_05D));
     }
 
-    interf->select(FPSTR(TCONST_0068), String(event.event), String(FPSTR(TINTF_05F)), false);
-    interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
-    interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
-    interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
-    interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
-    interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
-    interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
-    interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
-    interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
-    interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
-    interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
+    interf->json_section_line();
+        interf->select(FPSTR(TCONST_0068), String(cur_edit_event->event), String(FPSTR(TINTF_05F)), true);
+        interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
+        interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
+        interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
+        interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
+        interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
+        interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
+        interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
+        interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
+        interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
+        interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
 #ifdef AUX_PIN
-    interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
-    interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
-    interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
+        interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
+        interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
+        interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
 #endif
-    interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
-    interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
+        interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
+        interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
+        interf->json_section_end();
+        interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), FPSTR(TINTF_06D));
     interf->json_section_end();
+    interf->json_section_line();
+        interf->number(FPSTR(TCONST_0069), cur_edit_event->repeat, FPSTR(TINTF_06E));
+        interf->number(FPSTR(TCONST_006A), cur_edit_event->stopat, FPSTR(TINTF_06F));
+    interf->json_section_end();
+    switch(cur_edit_event->event){
+        case EVENT_TYPE::ALARM: {
+                DynamicJsonDocument doc(1024);
+                String buf = cur_edit_event->message;
+                buf.replace("'","\"");
+                DeserializationError err = deserializeJson(doc,buf);
+                int alarmP = !err && doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
+                int alarmT = !err && doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
+                String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
 
-    interf->datetime(FPSTR(TCONST_006B), event.getDateTime(), FPSTR(TINTF_06D));
-    interf->number(FPSTR(TCONST_0069), event.repeat, FPSTR(TINTF_06E));
-    interf->number(FPSTR(TCONST_006A), event.stopat, FPSTR(TINTF_06F));
-    interf->text(FPSTR(TCONST_0035), String(event.message), FPSTR(TINTF_070), false);
+                interf->spacer(FPSTR(TINTF_0BA));
+
+                interf->json_section_line();
+                    interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
+                    interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                interf->json_section_end();
+                interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
+            }
+            break;
+        default:
+            interf->text(FPSTR(TCONST_0035), String(cur_edit_event->message!=NULL?cur_edit_event->message:""), FPSTR(TINTF_070), false);
+            break;
+    }
 
     interf->json_section_hidden(FPSTR(TCONST_0069), FPSTR(TINTF_071));
-    interf->checkbox(FPSTR(TCONST_0061), (event.d1? "1" : "0"), FPSTR(TINTF_072), false);
-    interf->checkbox(FPSTR(TCONST_0062), (event.d2? "1" : "0"), FPSTR(TINTF_073), false);
-    interf->checkbox(FPSTR(TCONST_0063), (event.d3? "1" : "0"), FPSTR(TINTF_074), false);
-    interf->checkbox(FPSTR(TCONST_0064), (event.d4? "1" : "0"), FPSTR(TINTF_075), false);
-    interf->checkbox(FPSTR(TCONST_0065), (event.d5? "1" : "0"), FPSTR(TINTF_076), false);
-    interf->checkbox(FPSTR(TCONST_0066), (event.d6? "1" : "0"), FPSTR(TINTF_077), false);
-    interf->checkbox(FPSTR(TCONST_0067), (event.d7? "1" : "0"), FPSTR(TINTF_078), false);
+        interf->json_section_line();
+            interf->checkbox(FPSTR(TCONST_0061), (cur_edit_event->d1? "1" : "0"), FPSTR(TINTF_072), false);
+            interf->checkbox(FPSTR(TCONST_0062), (cur_edit_event->d2? "1" : "0"), FPSTR(TINTF_073), false);
+            interf->checkbox(FPSTR(TCONST_0063), (cur_edit_event->d3? "1" : "0"), FPSTR(TINTF_074), false);
+            interf->checkbox(FPSTR(TCONST_0064), (cur_edit_event->d4? "1" : "0"), FPSTR(TINTF_075), false);
+            interf->checkbox(FPSTR(TCONST_0065), (cur_edit_event->d5? "1" : "0"), FPSTR(TINTF_076), false);
+            interf->checkbox(FPSTR(TCONST_0066), (cur_edit_event->d6? "1" : "0"), FPSTR(TINTF_077), false);
+            interf->checkbox(FPSTR(TCONST_0067), (cur_edit_event->d7? "1" : "0"), FPSTR(TINTF_078), false);
+        interf->json_section_end();
     interf->json_section_end();
 
     if (edit) {
-        interf->hidden(FPSTR(TCONST_002E), "1");
+        interf->hidden(FPSTR(TCONST_002E), "1"); // режим редактирования
         interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_079));
     } else {
+        interf->hidden(FPSTR(TCONST_002E), "0"); // режим добавления
         interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_05D), FPSTR(TCONST_002F));
     }
 
@@ -1814,6 +1869,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_section_end();
     interf->json_frame_flush();
 }
+
 #ifdef ESP_USE_BUTTON
 void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -1841,6 +1897,16 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
+}
+
+void set_eventlist(Interface *interf, JsonObject *data){
+    if (!data) return;
+    
+    if(cur_edit_event && cur_edit_event->event!=(*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>()){ // только если реально поменялось, то обновляем интерфейс
+        show_event_conf(interf,data);
+    } else if((*data).containsKey(FPSTR(TCONST_002E))){ // эта часть срабатывает даже если нажата кнопка "обновить, следовательно ловим эту ситуацию"
+        set_event_conf(interf, data); //через какую-то хитрую жопу отработает :)
+    }
 }
 
 void show_settings_butt(Interface *interf, JsonObject *data){
@@ -2177,7 +2243,6 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_00C3), String(FADETOBLACKVALUE));
     embui.var_create(FPSTR(TCONST_0051), F("100"));
     embui.var_create(FPSTR(TCONST_0052), F("0"));
-    embui.var_create(FPSTR(TCONST_0053), F("0"));
     embui.var_create(FPSTR(TCONST_0050), F("1"));
     embui.var_create(FPSTR(TCONST_0018), F("127"));
 
@@ -2275,6 +2340,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_005D), show_event_conf);
     embui.section_handle_add(FPSTR(TCONST_006C), set_event_conf);
     embui.section_handle_add(FPSTR(TCONST_001D), set_eventflag);
+    embui.section_handle_add(FPSTR(TCONST_0068), set_eventlist);
 #ifdef ESP_USE_BUTTON
     embui.section_handle_add(FPSTR(TCONST_0076), show_settings_butt);
     embui.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
@@ -2395,7 +2461,6 @@ void sync_parameters(){
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
     obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
-    obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
     obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
     obj[FPSTR(TCONST_00C3)] = embui.param(FPSTR(TCONST_00C3));
 
@@ -2664,7 +2729,8 @@ void remote_action(RA action, ...){
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
         case RA::RA_SEND_TIME:
-            myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
+            myLamp.periodicTimeHandle();
+            //myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
             break;
 #ifdef OTA
         case RA::RA_OTA:
@@ -2992,7 +3058,7 @@ void default_buttons(){
 #endif
     myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
     myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
-    myButtons->add(new Button(true, false, 7, true, BA::BA_EFFECT, String(F("254")))); // 7 кликов - эффект часы
+    myButtons->add(new Button(true, false, 7, true, BA::BA_EFFECT, String(F("253")))); // 7 кликов - эффект часы
     myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
     myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
     myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб

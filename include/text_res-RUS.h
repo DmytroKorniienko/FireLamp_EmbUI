@@ -37,6 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #ifndef __TEXT_RES_H
 #define __TEXT_RES_H
+#include <Arduino.h>
 
 // Здесь строковые константы общего назначения, включая константы из интерфейса, что позволит локализировать при необходимости
 // Ничего иного в данном файле не предполагается
@@ -271,7 +272,7 @@ static const char TINTF_042[] PROGMEM = "Копии в конце";
 static const char TINTF_043[] PROGMEM = "В порядке индекса";
 static const char TINTF_044[] PROGMEM = "Задержка прокрутки текста";
 static const char TINTF_045[] PROGMEM = "Смещение вывода текста";
-static const char TINTF_046[] PROGMEM = "Периодический вывод времени";
+static const char TINTF_046[] PROGMEM = "";
 static const char TINTF_047[] PROGMEM = "Не выводить";
 static const char TINTF_048[] PROGMEM = "Каждый час";
 static const char TINTF_049[] PROGMEM = "Каждые полчаса";
@@ -312,9 +313,9 @@ static const char TINTF_06B[] PROGMEM = "Выключить AUX";
 static const char TINTF_06C[] PROGMEM = "Переключить AUX";
 static const char TINTF_06D[] PROGMEM = "Дата/время события";
 static const char TINTF_06E[] PROGMEM = "Повтор, мин";
-static const char TINTF_06F[] PROGMEM = "Остановить через, мин";
+static const char TINTF_06F[] PROGMEM = "Останов через, мин";
 static const char TINTF_070[] PROGMEM = "Параметр (текст)";
-static const char TINTF_071[] PROGMEM = "Повтор";
+static const char TINTF_071[] PROGMEM = "Повтор, дни недели";
 static const char TINTF_072[] PROGMEM = "Понедельник";
 static const char TINTF_073[] PROGMEM = "Вторник";
 static const char TINTF_074[] PROGMEM = "Среда";
@@ -388,8 +389,8 @@ static const char TINTF_0B7[] PROGMEM = "Вариант 1";
 static const char TINTF_0B8[] PROGMEM = "Вариант 2";
 static const char TINTF_0B9[] PROGMEM = "Параметр";
 static const char TINTF_0BA[] PROGMEM = "Будильник Рассвет";
-static const char TINTF_0BB[] PROGMEM = "Длительность рассвета";
-static const char TINTF_0BC[] PROGMEM = "Длительность свечения после рассвета";
+static const char TINTF_0BB[] PROGMEM = "Длительность рассвета, мин";
+static const char TINTF_0BC[] PROGMEM = "Светить после рассвета, мин";
 static const char TINTF_0BD[] PROGMEM = "<";
 static const char TINTF_0BE[] PROGMEM = ">";
 static const char TINTF_0BF[] PROGMEM = "<+5";

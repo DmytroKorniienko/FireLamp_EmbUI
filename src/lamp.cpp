@@ -154,7 +154,6 @@ void LAMP::handle()
   }
 
   newYearMessageHandle();
-  periodicTimeHandle();
   ConfigSaveCheck(); // для взведенного таймера автосохранения настроек
 
 #ifdef OTA
@@ -188,7 +187,7 @@ void LAMP::alarmWorker(){
       FastLED.clear();
       brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...getAlarmP()*60 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...curAlarm.alarmP*60 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
@@ -196,7 +195,7 @@ void LAMP::alarmWorker(){
       );
     }
 
-    if (((millis() - startmillis) / 1000 > (((uint32_t)(getAlarmP()) + getAlarmT()) * 60UL+30U))) {
+    if (((millis() - startmillis) / 1000 > (((uint32_t)(curAlarm.alarmP) + curAlarm.alarmT) * 60UL+30U))) {
       // рассвет закончился
       stopAlarm();
       return;
@@ -205,7 +204,7 @@ void LAMP::alarmWorker(){
     // проверка рассвета
     EVERY_N_SECONDS(10){
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
@@ -227,9 +226,9 @@ void LAMP::alarmWorker(){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-        if(getAlarmMessage()!=nullptr && getAlarmMessage()[0])
-          sendStringToLamp(getAlarmMessage(), letterColor, true);
-        else {
+        if(!curAlarm.msg.isEmpty()) {
+          sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
+        } else {
 #ifdef PRINT_ALARM_TIME
           sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
@@ -454,6 +453,14 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 }
 
 void LAMP::startAlarm(char *value){
+  DynamicJsonDocument doc(1024);
+  String buf = value;
+  buf.replace("'","\"");
+  deserializeJson(doc,buf);
+  curAlarm.alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
+  curAlarm.alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
+  curAlarm.msg = doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : String("");
+
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   demoTimer(T_DISABLE);     // гасим Демо-таймер
@@ -461,7 +468,6 @@ void LAMP::startAlarm(char *value){
 #ifdef MP3PLAYER
   mp3->setAlarm(true);
   mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
-  setAlarmMessage(value);
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -482,7 +488,7 @@ void LAMP::stopAlarm(){
 #ifdef MP3PLAYER
   mp3->StopAndRestoreVolume(); // восстановить уровень громкости
   mp3->setAlarm(false);
-  setAlarmMessage(); // очистить сообщение выводимое на лампу в будильнике
+  curAlarm.clear(); // очистить сообщение выводимое на лампу в будильнике
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -739,6 +745,21 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
   }
 }
 
+String &LAMP::prepareText(String &source){
+  source.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
+  source.replace(F("%IP"), WiFi.localIP().toString());
+  source.replace(F("%EN"), effects.getEffectName());
+  const tm *tm = localtime(embui.timeProcessor.now());
+  char buffer[11]; //"xx.xx.xxxx"
+  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),tm->tm_mday,tm->tm_mon+1,tm->tm_year+TM_BASE_YEAR);
+  source.replace(F("%DT"), buffer);
+#ifdef LAMP_DEBUG  
+  if(!source.isEmpty() && effects.getCurrent()!=EFF_ENUM::EFF_TIME) // спам эффекта часы убираем костыльным способом :)
+    LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
+#endif
+  return source;  
+}
+
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
 {
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
@@ -752,13 +773,18 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       else { // есть что печатать
         JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
-        doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
+        if(!var.isNull()){
+          String storage = var[F("s")];
+          prepareText(storage);
+          doPrintStringToLamp(storage.c_str(), (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
-        String tmpStr = var[F("s")];
-        if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-          mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
+          String tmpStr = var[F("s")];
+          if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+            mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
-        arr.remove(0); // удаляем отправленный
+        }
+        if(arr.size()>0)
+          arr.remove(0); // удаляем отправленный
       }
     } else {
         // текст на входе пустой, идет печать
@@ -766,7 +792,9 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
     }
   } else { // текст не пустой
     if(!iflags.isStringPrinting){ // ничего сейчас не печатается
-      doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
+      String storage = text;
+      prepareText(storage);
+      doPrintStringToLamp(storage.c_str(), letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
       if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
@@ -805,9 +833,6 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 
   if(text!=nullptr && text[0]!='\0'){
     toPrint.concat(text);
-    toPrint.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
-    toPrint.replace(F("%IP"), WiFi.localIP().toString());
-    toPrint.replace(F("%EN"), effects.getEffectName());
     _letterColor = letterColor;
   }
 
@@ -843,11 +868,11 @@ void LAMP::newYearMessageHandle()
     time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime();
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+1900);
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+TM_BASE_YEAR);
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
-      byte calcT=calc/(60*60); // минуты
+      uint16_t calcT=calc/(60*60); // минуты
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
@@ -859,7 +884,7 @@ void LAMP::newYearMessageHandle()
       }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else if(calc/(60*60)<60){
-	    byte calcT=calc/(60*60); // часы
+	    uint16_t calcT=calc/(60*60); // часы
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
@@ -871,7 +896,7 @@ void LAMP::newYearMessageHandle()
       }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else {
-      byte calcT=calc/(60*60*24); // дни
+      uint16_t calcT=calc/(60*60*24); // дни
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcT>=11 && calcT<=20)
@@ -894,7 +919,7 @@ void LAMP::newYearMessageHandle()
 void LAMP::periodicTimeHandle()
 {
   const tm* t = localtime(embui.timeProcessor.now());
-  if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
+  if(t->tm_sec)
     return;
 
   LOG(printf_P, PSTR("periodicTimeHandle: %02d:%02d:%02d\n"), t->tm_hour,t->tm_min,t->tm_sec);
@@ -902,41 +927,15 @@ void LAMP::periodicTimeHandle()
   time_t tm = t->tm_hour * 60 + t->tm_min;
   String time = String(F("%TM"));
 
-  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW && !(tm%60)){
-    sendStringToLamp(time.c_str(), CRGB::Red);
-    return;
+  CRGB color;
+  if(!(tm%60)){
+    color = CRGB::Red;
+  } else if(!(tm%30)){
+    color = CRGB::Green;
+  } else {
+    color =  CRGB::Blue;
   }
-
-  switch (enPeriodicTimePrint)
-  {
-    case PERIODICTIME::PT_EVERY_1:
-      if(tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_5:
-      if(!(tm%5) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_10:
-      if(!(tm%10) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_15:
-      if(!(tm%15) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_30:
-      if(!(tm%30) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_60:
-      if(!(tm%60))
-        sendStringToLamp(time.c_str(), CRGB::Red);
-      break;
-
-    default:
-      break;
-  }
+  sendStringToLamp(time.c_str(), color);
 }
 
 #ifdef MIC_EFFECTS

@@ -37,6 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #ifndef __TEXT_RES_H
 #define __TEXT_RES_H
+#include <Arduino.h>
 
 // Здесь строковые константы общего назначения, включая константы из интерфейса, что позволит локализировать при необходимости
 // Ничего иного в данном файле не предполагается
@@ -270,7 +271,7 @@ static const char TINTF_042[] PROGMEM = "Copias al final";
 static const char TINTF_043[] PROGMEM = "Ordenar por índice"; 
 static const char TINTF_044[] PROGMEM = "Ralentizar el texto";
 static const char TINTF_045[] PROGMEM = "Posición del texto";
-static const char TINTF_046[] PROGMEM = "Período de visualización de tiempo"; 
+static const char TINTF_046[] PROGMEM = ""; 
 static const char TINTF_047[] PROGMEM = "Nunca"; 
 static const char TINTF_048[] PROGMEM = "Cada hora";
 static const char TINTF_049[] PROGMEM = "Cada media hora";
