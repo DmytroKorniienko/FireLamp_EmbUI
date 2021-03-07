@@ -1723,10 +1723,10 @@ void set_event_conf(Interface *interf, JsonObject *data){
 
     event.unixtime = mktime(tm);
 
+    String buf; // внешний буффер, т.к. добавление эвента ниже
     switch(event.event){
         case EVENT_TYPE::ALARM: {
                 DynamicJsonDocument doc(1024);
-                String buf;
                 doc[FPSTR(TCONST_00BB)] = (*data)[FPSTR(TCONST_00BB)];
                 doc[FPSTR(TCONST_00BC)] = (*data)[FPSTR(TCONST_00BC)];
                 doc[FPSTR(TCONST_0035)] = (*data)[FPSTR(TCONST_0035)];
@@ -1819,6 +1819,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->number(FPSTR(TCONST_0069), cur_edit_event->repeat, FPSTR(TINTF_06E));
         interf->number(FPSTR(TCONST_006A), cur_edit_event->stopat, FPSTR(TINTF_06F));
     interf->json_section_end();
+
     switch(cur_edit_event->event){
         case EVENT_TYPE::ALARM: {
                 DynamicJsonDocument doc(1024);
@@ -1830,12 +1831,13 @@ void show_event_conf(Interface *interf, JsonObject *data){
                 String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
 
                 interf->spacer(FPSTR(TINTF_0BA));
-
-                interf->json_section_line();
-                    interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
-                    interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                interf->json_section_begin("AS");
+                    interf->json_section_line();
+                        interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
+                        interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                    interf->json_section_end();
+                    interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
                 interf->json_section_end();
-                interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
             }
             break;
         default:
