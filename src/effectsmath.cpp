@@ -164,10 +164,10 @@ float EffectMath::randomf(float min, float max)
 bool EffectMath::isInteger(float val) {
     float val1;
     val1 = val - (int)val;
-    if ((int)(val1 * 10) != 0)
-        return false;
-    else
+    if ((int)(val1 * 10) == 0)
         return true;
+    else
+        return false;
 }
 
 // Функция создает вспышки в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
