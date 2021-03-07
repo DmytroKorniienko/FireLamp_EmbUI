@@ -180,7 +180,11 @@ private:
         uint8_t alarmP;
         uint8_t alarmT;
         String msg;
-        void clear() { alarmP = 5; alarmT = 5; msg=""; }
+        bool isStartSnd;
+        bool isLimitVol;
+        ALARM_SOUND_TYPE type;
+
+        void clear() { alarmP = 5; alarmT = 5; msg=""; isStartSnd = true; isLimitVol = true; type = ALARM_SOUND_TYPE::AT_RANDOM; }
     } ALARM_DATA;
     
     ALARM_DATA curAlarm;

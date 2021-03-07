@@ -277,6 +277,9 @@ static const char TCONST_00CD[] PROGMEM = "width";
 static const char TCONST_00CE[] PROGMEM = "pRSSI";
 static const char TCONST_00CF[] PROGMEM = "fileName2";
 static const char TCONST_00D0[] PROGMEM = "control";
+static const char TCONST_00D1[] PROGMEM = "afS";
+static const char TCONST_00D2[] PROGMEM = "lV";
+static const char TCONST_00D3[] PROGMEM = "sT";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка

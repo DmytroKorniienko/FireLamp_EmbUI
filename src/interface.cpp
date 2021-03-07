@@ -1730,6 +1730,12 @@ void set_event_conf(Interface *interf, JsonObject *data){
                 doc[FPSTR(TCONST_00BB)] = (*data)[FPSTR(TCONST_00BB)];
                 doc[FPSTR(TCONST_00BC)] = (*data)[FPSTR(TCONST_00BC)];
                 doc[FPSTR(TCONST_0035)] = (*data)[FPSTR(TCONST_0035)];
+
+#ifdef MP3PLAYER
+                doc[FPSTR(TCONST_00D1)] = (*data)[FPSTR(TCONST_00D1)];
+                doc[FPSTR(TCONST_00D2)] = (*data)[FPSTR(TCONST_00D2)];
+                doc[FPSTR(TCONST_00D3)] = (*data)[FPSTR(TCONST_00D3)];
+#endif
                 serializeJson(doc,buf);
                 buf.replace("\"","'");
                 event.message = (char *)buf.c_str(); // менять не будем, так что пойдет такое приведение типов
@@ -1836,6 +1842,25 @@ void show_event_conf(Interface *interf, JsonObject *data){
                         interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
                         interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
                     interf->json_section_end();
+#ifdef MP3PLAYER
+                    String limitAlarmVolume = !err && doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)] : String(myLamp.getLampSettings().limitAlarmVolume ? "1" : "0");
+                    String alarmFromStart = !err && doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)] : String("1");
+                    String st = !err && doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)] : String(myLamp.getLampSettings().alarmSound);
+                    interf->json_section_line();
+                        interf->checkbox(FPSTR(TCONST_00D1), alarmFromStart, FPSTR(TINTF_0D1), false);
+                        interf->checkbox(FPSTR(TCONST_00D2), limitAlarmVolume, FPSTR(TINTF_0D2), false);
+                    interf->json_section_end();
+                    interf->select(FPSTR(TCONST_00D3), st, String(FPSTR(TINTF_0A3)), false);
+                    interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_FIRST), FPSTR(TINTF_0A0));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_SECOND), FPSTR(TINTF_0A4));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_THIRD), FPSTR(TINTF_0A5));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_FOURTH), FPSTR(TINTF_0A6));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_FIFTH), FPSTR(TINTF_0A7));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_RANDOM), FPSTR(TINTF_0A1));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
+                    interf->json_section_end();
+#endif
                     interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
                 interf->json_section_end();
             }
