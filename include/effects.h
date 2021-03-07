@@ -1094,8 +1094,6 @@ private:
     byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
     uint8_t _scale;
     float speedfactor;
-    bool subpixel;
-    float prevVal[2];
     void arrowSetupForMode(byte mode, bool change);
     void arrowSetup_mode1();
     void arrowSetup_mode2();

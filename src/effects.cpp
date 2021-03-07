@@ -4857,7 +4857,6 @@ void EffectArrows::load(){
 
 String EffectArrows::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); load();}
-  else if(_val->getId()==4) subpixel = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -4874,32 +4873,19 @@ bool EffectArrows::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 bool EffectArrows::arrowsRoutine(CRGB *leds, EffectWorker *param) {
-    prevVal[0] += speedfactor;
-    if((byte)prevVal[0] == (byte)prevVal[1]) {
-      prevVal[1] = (byte)prevVal[1]+ 1U;
-      EffectMath::fader(65);
-      //fadeToBlackBy(leds, NUM_LEDS, 50);
-    }
+  //fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 15, 65));
+  FastLED.clear();
 
   CHSV color;
-
   // движение стрелки - cлева направо
   if ((arrow_direction & 0x01) > 0) {
     color = CHSV(arrow_hue[0], 255, 255);
-    for (float x = 0.0f; x <= 4; x+= speedfactor) {
-      for (float y = 0.0f; y <= x; y+= speedfactor) {
-        if (subpixel ? arrow_x[0] - x >= 0 && arrow_x[0] - x <= stop_x[0] : (byte)arrow_x[0] - (byte)x >= 0 && (byte)arrow_x[0] - (byte)x <= (byte)stop_x[0]) {
-          CHSV clr = ((byte)x < 4 || ((byte)x == 4 && (byte)y < 2)) ? color : CHSV(0,0,0);
-          if (subpixel)
-          {
-            EffectMath::drawPixelXYF(arrow_x[0] - x, arrow_y[0] - y, clr);
-            EffectMath::drawPixelXYF(arrow_x[0] - x, arrow_y[0] + y, clr);
-          }
-          else
-          {
-            EffectMath::drawPixelXY((byte)(arrow_x[0] - x), (byte)(arrow_y[0] - y), clr);
-            EffectMath::drawPixelXY((byte)(arrow_x[0] - x), (byte)(arrow_y[0] + y), clr);
-          }
+    for (float x = 0; x <= 7; x+=0.33) {
+      for (byte y = 0; y <= x; y++) {
+        if (arrow_x[0] - x >= 0 && arrow_x[0] - x <= stop_x[0]) {
+          CHSV clr = (x < 4 || (x >= 4 && y < 2)) ? color : CHSV(0,0,0);
+          EffectMath::drawPixelXYF_X(arrow_x[0] - x, arrow_y[0] - y, clr);
+          EffectMath::drawPixelXYF_X(arrow_x[0] - x, arrow_y[0] + y, clr);
         }
       }
     }
@@ -4909,20 +4895,12 @@ bool EffectArrows::arrowsRoutine(CRGB *leds, EffectWorker *param) {
   // движение стрелки - cнизу вверх
   if ((arrow_direction & 0x02) > 0) {
     color = CHSV(arrow_hue[1], 255, 255);
-    for (float y = 0.0f; y <= 4; y+= speedfactor) {
-      for (float x = 0.0f; x <= y; x+= speedfactor) {
-        if (subpixel ? arrow_y[1] - y >= 0 && arrow_y[1] - y <= stop_y[1] : (byte)arrow_y[1] - (byte)y >= 0 && (byte)arrow_y[1] - (byte)y <= (byte)stop_y[1]) {
-          CHSV clr = ((byte)y < 4 || ((byte)y == 4 && (byte)x < 2)) ? color : CHSV(0,0,0);
-          if (subpixel)
-          {
-            EffectMath::drawPixelXYF(arrow_x[1] - x, arrow_y[1] - y, clr);
-            EffectMath::drawPixelXYF(arrow_x[1] + x, arrow_y[1] - y, clr);
-          }
-          else
-          {
-            EffectMath::drawPixelXY((byte)(arrow_x[1] - x), (byte)(arrow_y[1] - y), clr);
-            EffectMath::drawPixelXY((byte)(arrow_x[1] + x), (byte)(arrow_y[1] - y), clr);
-          }
+    for (float y = 0; y <= 7; y+=0.33) {
+      for (byte x = 0; x <= y; x++) {
+        if (arrow_y[1] - y >= 0 && arrow_y[1] - y <= stop_y[1]) {
+          CHSV clr = (y < 4 || (y >= 4 && x < 2)) ? color : CHSV(0,0,0);
+          EffectMath::drawPixelXYF_Y(arrow_x[1] - x, arrow_y[1] - y, clr);
+          EffectMath::drawPixelXYF_Y(arrow_x[1] + x, arrow_y[1] - y, clr);
         }
       }
     }
@@ -4932,20 +4910,12 @@ bool EffectArrows::arrowsRoutine(CRGB *leds, EffectWorker *param) {
   // движение стрелки - cправа налево
   if ((arrow_direction & 0x04) > 0) {
     color = CHSV(arrow_hue[2], 255, 255);
-    for (float x = 0.0f; x <= 4; x+= speedfactor) {
-      for (float y = 0.0f; y <= x; y+= speedfactor) {
-        if (subpixel ? arrow_x[2] + x >= stop_x[2] && arrow_x[2] + x < WIDTH : (byte)arrow_x[2] + (byte)x >= (byte)stop_x[2] && (byte)arrow_x[2] + (byte)x < WIDTH) {
-          CHSV clr = ((byte)x < 4 || ((byte)x == 4 && (byte)y < 2)) ? color : CHSV(0,0,0);
-          if (subpixel)
-          {
-            EffectMath::drawPixelXYF(arrow_x[2] + x, arrow_y[2] - y, clr);
-            EffectMath::drawPixelXYF(arrow_x[2] + x, arrow_y[2] + y, clr);
-          }
-          else
-          {
-            EffectMath::drawPixelXY((byte)(arrow_x[2] + x), (byte)(arrow_y[2] - y), clr);
-            EffectMath::drawPixelXY((byte)(arrow_x[2] + x), (byte)(arrow_y[2] + y), clr);
-          }
+    for (float x = 0; x <= 7; x+=0.33) {
+      for (byte y = 0; y <= x; y++) {
+        if (arrow_x[2] + x >= stop_x[2] && arrow_x[2] + x < WIDTH) {
+          CHSV clr = (x < 4 || (x >= 4 && y < 2)) ? color : CHSV(0,0,0);
+          EffectMath::drawPixelXYF_X(arrow_x[2] + x, arrow_y[2] - y, clr);
+          EffectMath::drawPixelXYF_X(arrow_x[2] + x, arrow_y[2] + y, clr);
         }
       }
     }
@@ -4955,20 +4925,12 @@ bool EffectArrows::arrowsRoutine(CRGB *leds, EffectWorker *param) {
   // движение стрелки - cверху вниз
   if ((arrow_direction & 0x08) > 0) {
     color = CHSV(arrow_hue[3], 255, 255);
-    for (float y = 0.0f; y <= 4; y+= speedfactor) {
-      for (float x = 0.0f; x <= y; x+= speedfactor) {
-        if (subpixel ? arrow_y[3] + y >= stop_y[3] && arrow_y[3] + y < HEIGHT : (byte)arrow_y[3] + (byte)y >= (byte)stop_y[3] && (byte)arrow_y[3] + (byte)y < HEIGHT) {
-          CHSV clr = ((byte)y < 4 || ((byte)y == 4 && (byte)x < 2)) ? color : CHSV(0,0,0);
-          if (subpixel)
-          {
-            EffectMath::drawPixelXYF(arrow_x[3] - x, arrow_y[3] + y, clr);
-            EffectMath::drawPixelXYF(arrow_x[3] + x, arrow_y[3] + y, clr);
-          }
-          else
-          {
-            EffectMath::drawPixelXY((byte)(arrow_x[3] - x), (byte)(arrow_y[3] + y), clr);
-            EffectMath::drawPixelXY((byte)(arrow_x[3] + x), (byte)(arrow_y[3] + y), clr);
-          }
+    for (float y = 0; y <= 7; y+=0.33) {
+      for (byte x = 0; x <= y; x++) {
+        if (arrow_y[3] + y >= stop_y[3] && arrow_y[3] + y < HEIGHT) {
+          CHSV clr = (y < 4 || (y >= 4 && x < 2)) ? color : CHSV(0,0,0);
+          EffectMath::drawPixelXYF_Y(arrow_x[3] - x, arrow_y[3] + y, clr);
+          EffectMath::drawPixelXYF_Y(arrow_x[3] + x, arrow_y[3] + y, clr);
         }
       }
     }
@@ -4998,7 +4960,7 @@ bool EffectArrows::arrowsRoutine(CRGB *leds, EffectWorker *param) {
           arrow_play_mode_count[1]--;
           if (arrow_play_mode_count[1] == 0) {
             arrow_play_mode_count[1] = arrow_play_mode_count_orig[1];
-            arrow_mode = random8(1,5);
+            arrow_mode = random8(1, 5);
             arrow_change_mode = true;
           }
         }
