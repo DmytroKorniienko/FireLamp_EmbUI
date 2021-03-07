@@ -1436,9 +1436,8 @@ bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
-  //EffectMath::blur2d(15); // нужно ли размытие?
   if(!isDebug()) 
-    fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); // нужны ли эти фейдеры тут? хз...
+    fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); 
   else FastLED.clear();
 
   count ++;
@@ -1468,7 +1467,7 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
 
 bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
 
-  if(!isDebug()) fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); // нужны ли эти фейдеры тут? хз...
+  if(!isDebug()) fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); 
   else FastLED.clear();
 
   float beat = (float)beatsin88(5 * speedy, 50, 100) / 100 ;
@@ -1698,9 +1697,7 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
   hueoffset += (speedfactor/5.0+0.1);
 
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 220, 10));
-  // субпиксельным эффектам блюр, что мёртвому припарка. Они сами неплохо блюрят, и функция с ними не работает толком
-  //EffectMath::blur2d(15);
-  //EffectMath::dimAll(map(speed, 1, 255, 1, 220));
+
   bool applyWind = random(0, 255) > 240;
   if (applyWind) {
     wind.x = Boid::randomf() * .015 * speedfactor + .015 / 2;
@@ -1800,21 +1797,15 @@ String EffectDrift::setDynCtrl(UIControl*_val){
 }
 
 bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
-  //EffectMath::blur2d(beatsin8(3U, 5, 10 + scale*3));
-  //EffectMath::dimAll(beatsin8(2U, 246, 252));
-
   if (driftType == 1 or driftType == 2)
     FastLED.clear();
   else
     fadeToBlackBy(ledarr, NUM_LEDS, beatsin88(350. * EffectMath::fmap((float)speed, 1., 255., 1., 5.), 256, 4096) / 256);
 
-// есть разница когда коэффициент как переключатель 2-20, и дробный, так скорость можно крутить плавнее
-// Особенно, если коеффициент участвует в умножении
   _dri_speed = EffectMath::fmap(speed, 1., 255., 2., 20.);
   _dri_delta = beatsin8(1U);
-  //EVERY_N_MILLIS(13){
-    dri_phase++;    // 13 ms это примерно каждый кадр и есть
-  //}
+
+  dri_phase++;    // это примерно каждый кадр и есть
 
   switch (driftType)
   {
@@ -2299,7 +2290,7 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt)
 #else
   #define FIRE_BASE HEIGHT / 6 + 1
 #endif
-  //fadeToBlackBy(leds, NUM_LEDS, 5);
+
   // Loop for each column individually
   for (uint8_t x = 0; x < WIDTH; x++)
   {
@@ -3717,6 +3708,7 @@ bool EffectLiquidLamp::run(CRGB *ledarr, EffectWorker *opt){
 // ------- Эффект "Вихри"
 // Based on Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
 // Copyright(c) 2014 Jason Coon
+//адаптация SottNick
 bool EffectWhirl::run(CRGB *ledarr, EffectWorker *opt){
 
   return whirlRoutine(*&ledarr, &*opt);
@@ -3736,12 +3728,11 @@ void EffectWhirl::load(){
 bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
   micPick = isMicOn() ? myLamp.getMicMaxPeak() : 0;
- // EffectMath::dimAll(255U);
-  fadeToBlackBy(leds, NUM_LEDS, 15);
-#else
-  fadeToBlackBy(leds, NUM_LEDS, 15);
 #endif
-  float speedfactor = EffectMath::fmap((float)speed, 1.0f, 255.0f, 0.5f, 1.1f);
+
+  float speedfactor = EffectMath::fmap((float)speed, 1, 255, 0.5, 1.1);
+  fadeToBlackBy(leds, NUM_LEDS, 15. * speedfactor);
+
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
     Boid * boid = &boids[i];
 
@@ -3767,14 +3758,9 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
       boid->location.y = 0;
     }
   }
-#ifdef MIC_EFFECTS
-  EffectMath::blur2d((isMicOn() ? /*constrain(micPick * 2, 10, 100)*/ 30U : 30U));
-#else
   EffectMath::blur2d(30U);
-#endif
-  //EVERY_N_MILLIS(200) {
-    hue += speedfactor;
-  //}
+
+  hue += speedfactor;
   ff_x += speedfactor;
   ff_y += speedfactor;
   ff_z += speedfactor;
@@ -3979,11 +3965,9 @@ if (setup) { // однократная настройка при старте э
 
 #ifdef MIC_EFFECTS
   micPick = myLamp.getMicMaxPeak();
-  //EffectMath::dimAll(isMicOn() ? micPick*2 : 90);
   fadeToBlackBy(leds, NUM_LEDS, 255U - (isMicOn() ? micPick*2 : 90)); // работает быстрее чем dimAll
 #else
   fadeToBlackBy(leds, NUM_LEDS, 165);
-  //EffectMath::dimAll(90);
 #endif
 
   float _scalefactor = ((float)speed/380.0+0.05);
@@ -4341,7 +4325,7 @@ bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
     oscHV = WIDTH;
     oscilLimit = HEIGHT;
   }
-  //memset8( leds, 0, NUM_LEDS * 3);
+  //memset8(leds, 0, NUM_LEDS * 3);
   fadeToBlackBy(leds, NUM_LEDS, 200);
 
   byte micPick = (isMicOn()? myLamp.getMicMaxPeak() : random8(200));
@@ -5574,7 +5558,7 @@ bool EffectFlower::run(CRGB *ledarr, EffectWorker *opt ) {
 }
 
 bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
-  float speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 2.55);
+  float speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 2.5);
 #ifdef MIC_EFFECTS
 #define _Mic isMicOn() ? (float)peak / 50. : 0.1
   byte peak = myLamp.getMicMapMaxPeak();
@@ -5604,11 +5588,11 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 #else
   color = CHSV(millis()>>1, 250, 255/*(uint16_t)counter >> 1*/);
 #endif
-  if ((uint16_t)ceil(x * y) < NUM_LEDS)
+//  if ((uint16_t)ceil(x * y) < NUM_LEDS)
     EffectMath::drawPixelXYF(x, y, color) ;
 
   //EffectMath::blur2d( 20 );
-  fadeToBlackBy(leds, NUM_LEDS, 5);
+  fadeToBlackBy(leds, NUM_LEDS, 10. * speedFactor);
 
   counter += speedFactor;
   return true;
@@ -6035,7 +6019,7 @@ void EffectPopcorn::reload(){
 bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
   speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 0.75);
 
-  if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30);
+  if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30. * speedfactor);
   else FastLED.clear();
   float popcornGravity = 0.1 * speedfactor;
 
@@ -6247,9 +6231,9 @@ void EffectCell::spruce(CRGB *leds) {
 }
 
 void EffectCell::spider(CRGB *leds) {
+  float speedFactor = EffectMath::fmap(speed, 1, 255, 20., 2.);
   fadeToBlackBy(leds, NUM_LEDS, 50);
-  //FastLED.clear();
-  float speedFactor = EffectMath::fmap(speed, 1, 255, 20., 2.); 
+  //FastLED.clear(); 
   for (uint8_t c = 0; c < Lines; c++) {
     float xx = 2. + sin8((float)millis() / speedFactor + 1000 * c * Scale) / 12.;
     float yy = 2. + cos8((float)millis() / speedFactor + 1500 * c * Scale) / 12.;
@@ -8081,7 +8065,7 @@ void EffectRacer::setspd(const byte _spd) {
 }
 
 bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
-  fadeToBlackBy(leds, NUM_LEDS, 16 * speedFactor);
+  fadeToBlackBy(leds, NUM_LEDS, 16. * speedFactor);
 
   if (round(posX / 4) > aimX) {
     posX -= speedFactor;

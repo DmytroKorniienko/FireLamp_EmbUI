@@ -796,7 +796,10 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ----------- Эффект "Вихри" адаптация SottNick
+// ------- Эффект "Вихри"
+// Based on Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
+// Copyright(c) 2014 Jason Coon
+//адаптация SottNick
 class EffectWhirl : public EffectCalc {
 private:
     float ff_x;
