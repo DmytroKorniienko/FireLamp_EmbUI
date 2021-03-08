@@ -481,7 +481,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
                         : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
                     String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
-                    if(isRandDemo && controls[i]->getId()>0)
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
                     if(isinterf) interf->range(
@@ -499,7 +499,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_TYPE::EDIT :
                 {
                     String ctrlName = controls[i]->getName();
-                    if(isRandDemo && controls[i]->getId()>0)
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     
                     if(isinterf) interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -513,7 +513,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_TYPE::CHECKBOX :
                 {
                     String ctrlName = controls[i]->getName();
-                    if(isRandDemo && controls[i]->getId()>0)
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
 
                     if(isinterf) interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
