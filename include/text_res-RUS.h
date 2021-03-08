@@ -411,6 +411,8 @@ static const char TINTF_0CD[] PROGMEM = "минута";
 static const char TINTF_0CE[] PROGMEM = "Рисование";
 static const char TINTF_0CF[] PROGMEM = "Заливка";
 static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
+static const char TINTF_0D1[] PROGMEM = "Звук вначале";
+static const char TINTF_0D2[] PROGMEM = "Ограничить громкость";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";

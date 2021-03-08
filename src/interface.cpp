@@ -481,7 +481,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
                         : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
                     String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
-                    if(isRandDemo && controls[i]->getId()>0)
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
                     if(isinterf) interf->range(
@@ -499,7 +499,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_TYPE::EDIT :
                 {
                     String ctrlName = controls[i]->getName();
-                    if(isRandDemo && controls[i]->getId()>0)
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     
                     if(isinterf) interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -513,7 +513,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_TYPE::CHECKBOX :
                 {
                     String ctrlName = controls[i]->getName();
-                    if(isRandDemo && controls[i]->getId()>0)
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
 
                     if(isinterf) interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -1723,13 +1723,19 @@ void set_event_conf(Interface *interf, JsonObject *data){
 
     event.unixtime = mktime(tm);
 
+    String buf; // внешний буффер, т.к. добавление эвента ниже
     switch(event.event){
         case EVENT_TYPE::ALARM: {
                 DynamicJsonDocument doc(1024);
-                String buf;
                 doc[FPSTR(TCONST_00BB)] = (*data)[FPSTR(TCONST_00BB)];
                 doc[FPSTR(TCONST_00BC)] = (*data)[FPSTR(TCONST_00BC)];
                 doc[FPSTR(TCONST_0035)] = (*data)[FPSTR(TCONST_0035)];
+
+#ifdef MP3PLAYER
+                doc[FPSTR(TCONST_00D1)] = (*data)[FPSTR(TCONST_00D1)];
+                doc[FPSTR(TCONST_00D2)] = (*data)[FPSTR(TCONST_00D2)];
+                doc[FPSTR(TCONST_00D3)] = (*data)[FPSTR(TCONST_00D3)];
+#endif
                 serializeJson(doc,buf);
                 buf.replace("\"","'");
                 event.message = (char *)buf.c_str(); // менять не будем, так что пойдет такое приведение типов
@@ -1819,6 +1825,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->number(FPSTR(TCONST_0069), cur_edit_event->repeat, FPSTR(TINTF_06E));
         interf->number(FPSTR(TCONST_006A), cur_edit_event->stopat, FPSTR(TINTF_06F));
     interf->json_section_end();
+
     switch(cur_edit_event->event){
         case EVENT_TYPE::ALARM: {
                 DynamicJsonDocument doc(1024);
@@ -1830,12 +1837,32 @@ void show_event_conf(Interface *interf, JsonObject *data){
                 String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
 
                 interf->spacer(FPSTR(TINTF_0BA));
-
-                interf->json_section_line();
-                    interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
-                    interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                interf->json_section_begin("AS");
+                    interf->json_section_line();
+                        interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
+                        interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                    interf->json_section_end();
+#ifdef MP3PLAYER
+                    String limitAlarmVolume = !err && doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)] : String(myLamp.getLampSettings().limitAlarmVolume ? "1" : "0");
+                    String alarmFromStart = !err && doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)] : String("1");
+                    String st = !err && doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)] : String(myLamp.getLampSettings().alarmSound);
+                    interf->json_section_line();
+                        interf->checkbox(FPSTR(TCONST_00D1), alarmFromStart, FPSTR(TINTF_0D1), false);
+                        interf->checkbox(FPSTR(TCONST_00D2), limitAlarmVolume, FPSTR(TINTF_0D2), false);
+                    interf->json_section_end();
+                    interf->select(FPSTR(TCONST_00D3), st, String(FPSTR(TINTF_0A3)), false);
+                    interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_FIRST), FPSTR(TINTF_0A0));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_SECOND), FPSTR(TINTF_0A4));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_THIRD), FPSTR(TINTF_0A5));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_FOURTH), FPSTR(TINTF_0A6));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_FIFTH), FPSTR(TINTF_0A7));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_RANDOM), FPSTR(TINTF_0A1));
+                    interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
+                    interf->json_section_end();
+#endif
+                    interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
                 interf->json_section_end();
-                interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
             }
             break;
         default:

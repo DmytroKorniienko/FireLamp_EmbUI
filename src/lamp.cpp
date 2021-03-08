@@ -208,7 +208,11 @@ void LAMP::alarmWorker(){
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
-      mp3->setTempVolume(map(dawnPosition,0,255,1,(flags.limitAlarmVolume ? mp3->getVolume() : 30))); // запуск звука будильника
+      mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // запуск звука будильника
+      if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->alarm){
+        mp3->setAlarm(true);
+        mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
+      }
 #endif
       
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
@@ -227,10 +231,13 @@ void LAMP::alarmWorker(){
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
         if(!curAlarm.msg.isEmpty()) {
-          sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
+            sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
         } else {
 #ifdef PRINT_ALARM_TIME
-          sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
+#ifdef MP3PLAYER
+          if(mp3->alarm) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
+#endif
+            sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
         }
       }
@@ -457,17 +464,22 @@ void LAMP::startAlarm(char *value){
   String buf = value;
   buf.replace("'","\"");
   deserializeJson(doc,buf);
-  curAlarm.alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
-  curAlarm.alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
+  curAlarm.alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : getAlarmP();
+  curAlarm.alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : getAlarmT();
   curAlarm.msg = doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : String("");
+  curAlarm.isLimitVol = doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)].as<String>()=="1" : getLampSettings().limitAlarmVolume;
+  curAlarm.isStartSnd = doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)].as<String>()=="1" : true;
+  curAlarm.type = (ALARM_SOUND_TYPE)(doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)].as<uint8_t>() : getLampSettings().alarmSound);
 
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   demoTimer(T_DISABLE);     // гасим Демо-таймер
   effectsTimer(T_ENABLE);
 #ifdef MP3PLAYER
-  mp3->setAlarm(true);
-  mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
+  if(curAlarm.isStartSnd){
+    mp3->setAlarm(true);
+    mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
+  }
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
