@@ -48,7 +48,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 
 #define LANG                   "text_res-RUS.h"             // для других языков при компиляции менять постфикс файла "text_res-***.h". 
-															// Наличие нужного файла перевода смотреть в папке inclede в основной папке проекта 
+															// Наличие нужного файла перевода смотреть в папке include в основной папке проекта 
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
 
 #define RESTORE_STATE 1                                     // востанавливать состояние вкл/выкл, демо, после перезагрузки.
@@ -74,7 +74,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #define MIC_PIN               (A0)                          // пин для микрофона, ESP8266 Analog Pin ADC0 = A0
 #define LAMP_PIN              (D3)                          // пин ленты (D3)
-#define BTN_PIN               (D2)                          // пин кнопки (D2)
+#define BTN_PIN               (D2)                          // пин кнопки (D2), ВНИМАНИЕ! Не используйте для кнопки пины D0 и D4. На них кнопка не работает!
 
 #define MOSFET_PIN            (D1)                          // пин MOSFET транзистора   (D1) - может быть использован для управления питанием матрицы/ленты
 #define ALARM_PIN             (D0)                          // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
@@ -85,6 +85,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // Для возможности использовать дополнительное AUX-реле, строки ниже должны быть раскомментированы
 //#define AUX_PIN (D7)                                        // пин дополнительного реле общего назначения AUX. Может быть установлен любой из "безопасных"
 //#define AUX_LEVEL (HIGH)                                    // логический уровень AUX_PIN, для активации реле - HIGH или LOW (зависит от типа используемого реле)
+
+//#define XY_EXTERN                                           /* Пользовательский мапинг нестандартных матриц, читать в файле ../include/XY.h и\или тут 
+																https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
+																тут отчет пользователя 
+																https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-72777 */
 
 #define WIDTH                 (16U)                         // ширина матрицы
 #define HEIGHT                (16U)                         // высота матрицы
