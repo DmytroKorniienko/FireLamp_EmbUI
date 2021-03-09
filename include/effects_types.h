@@ -409,7 +409,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  3, 4, 6, 4, 4, 5, 3, 3, 7, 5, 5, 6, 5, 9, 5, 8, // 0-15
+  3, 6, 6, 4, 4, 5, 3, 3, 7, 5, 5, 6, 5, 9, 5, 8, // 0-15
   5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 1, 5, // 16-31
   5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 7, 3, 3, // 32 - 47
   5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 9, 1, 5, 7, 6, // 48 - 63
@@ -470,11 +470,11 @@ static const char E_2_MIC[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_4PAL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_LLEND[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_0D2 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"val\":16,\"min\":0,\"max\":32,\"name\":\"" DFTINTF_0D3 "\"}]}";
 static const char E_SPARCLES[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":16,\"max\":10,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
-static const char E_LIGHTERS[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
-static const char E_RADAR255[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
-static const char E_WHITE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0D7 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_LIGHTERS[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0D5 "\"}, {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_RADAR255[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"}, {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_WHITE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0D7 "\"}, {\"id\":3,\"name\":\"" DFTINTF_0E6 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_LEAPERS[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":50,\"name\":\"" DFTINTF_0D8 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
-static const char E_BUTTERFLY[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":64,\"name\":\"" DFTINTF_0D9 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DF "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E0 "\"}]}";
+static const char E_BUTTERFLY[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":64,\"name\":\"" DFTINTF_0D9 "\"}, {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DF "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E0 "\"}]}";
 static const char E_PULS[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D6 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_BBALLS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":32,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E1 "\"}]}";
 static const char E_PRIZMATA[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";

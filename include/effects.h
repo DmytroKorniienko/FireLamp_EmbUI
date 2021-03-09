@@ -222,8 +222,9 @@ public:
 // ------ Эффект "Белая Лампа"
 class EffectWhiteColorStripe : public EffectCalc {
 private:
+    uint8_t shift=0;
     bool whiteColorStripeRoutine(CRGB *leds, EffectWorker *param);
-
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };

@@ -1897,6 +1897,16 @@ void show_event_conf(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
+void set_eventlist(Interface *interf, JsonObject *data){
+    if (!data) return;
+    
+    if(cur_edit_event && cur_edit_event->event!=(*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>()){ // только если реально поменялось, то обновляем интерфейс
+        show_event_conf(interf,data);
+    } else if((*data).containsKey(FPSTR(TCONST_002E))){ // эта часть срабатывает даже если нажата кнопка "обновить, следовательно ловим эту ситуацию"
+        set_event_conf(interf, data); //через какую-то хитрую жопу отработает :)
+    }
+}
+
 #ifdef ESP_USE_BUTTON
 void block_settings_butt(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -1924,16 +1934,6 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
 
     interf->json_section_end();
-}
-
-void set_eventlist(Interface *interf, JsonObject *data){
-    if (!data) return;
-    
-    if(cur_edit_event && cur_edit_event->event!=(*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>()){ // только если реально поменялось, то обновляем интерфейс
-        show_event_conf(interf,data);
-    } else if((*data).containsKey(FPSTR(TCONST_002E))){ // эта часть срабатывает даже если нажата кнопка "обновить, следовательно ловим эту ситуацию"
-        set_event_conf(interf, data); //через какую-то хитрую жопу отработает :)
-    }
 }
 
 void show_settings_butt(Interface *interf, JsonObject *data){
