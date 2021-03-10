@@ -145,7 +145,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
         for (int16_t y = centerY; y >= 0; y--)
         {
           int br = (bcoef*BRIGHTNESS)-(map(_scale,126,1,1,15)*(centerY-y)*((centerY-y)/(HEIGHT*0.0625))); if(br<0) br=0;
-          int _shift = map(shift,1,255,-centerY,centerY);
+          int _shift = isMicOn() ? 0 : map(shift,1,255,-centerY,centerY);
 
           CRGB color = CHSV(
             45U,                                                                              // определяем тон
@@ -167,7 +167,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
           for (int16_t x = centerX; x >= 0; x--)
           {
             int br = (bcoef*BRIGHTNESS)-(map(_scale,128,255,1,15)*(centerX-x)*((centerX-x)/(WIDTH*0.0625))); if(br<0) br=0;
-            int _shift = map(shift,1,255,-centerX,centerX);
+            int _shift = isMicOn() ? 0 : map(shift,1,255,-centerX,centerX);
 
             CRGB color = CHSV(
               45U,                                                        // определяем тон
