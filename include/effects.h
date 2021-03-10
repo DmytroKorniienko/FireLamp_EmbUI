@@ -303,7 +303,7 @@ private:
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
     uint8_t _scale = 1;
     byte gluk = 1;
-    uint8_t hue;
+    uint8_t hue, _hue;
     bool randColor = false;
     bool white = false;
     float count;

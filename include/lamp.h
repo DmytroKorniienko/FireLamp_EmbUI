@@ -421,8 +421,10 @@ public:
     CRGB *getUnsafeLedsArray(){return leds;}
 
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-        uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
+    uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
     {
+    // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
+    if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return NUM_LEDS;
     #ifndef XY_EXTERN
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
@@ -440,10 +442,6 @@ public:
         #undef MIRR_H
         #undef MIRR_V
     #else
-        // any out of bounds address maps to the first hidden pixel
-        if ( (x >= WIDTH) || (y >= HEIGHT) ) {
-            return (LAST_VISIBLE_LED + 1);
-        }
         uint16_t i = (y * WIDTH) + x;
         uint16_t j = pgm_read_dword(&XYTable[i]);
         return j;
@@ -524,7 +522,7 @@ public:
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
-    CRGB leds[NUM_LEDS]; // основной буфер вывода изображения
+    CRGB leds[NUM_LEDS + 1]; // основной буфер вывода изображения + дополнительный "невидимый" светодиод
     std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
     std::vector<CRGB> drawbuff; // буфер для рисования
 };

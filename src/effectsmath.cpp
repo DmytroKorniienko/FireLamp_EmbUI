@@ -152,15 +152,15 @@ CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker )
 
 /* kostyamat добавил
  функция возвращает рандомное значение float между min и max 
- с шагом 1/4095 */
+ с шагом 1/1024 */
 float EffectMath::randomf(float min, float max)
 {
-  return fmap((float)random16(4095), 0.0, 4095.0, min, max);
+  return fmap(random(1024), 0, 1023, min, max);
 }
 
 /* kostyamat добавил
  функция возвращает true, если float
- ~ целое (первая цифра после запятой == 0) */
+ ~= целое (первая цифра после запятой == 0) */
 bool EffectMath::isInteger(float val) {
     float val1;
     val1 = val - (int)val;
@@ -194,11 +194,15 @@ void EffectMath::fillAll(const CRGB &color)
 void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
 {
   if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
+#if  SEGMENTS > 1
   uint32_t thisPixel = myLamp.getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
   for (uint16_t i = 0; i < SEGMENTS; i++)
   {
     myLamp.getUnsafeLedsArray()[thisPixel + i] = color;
   }
+#else
+  myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = color;
+#endif
 }
 
 void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu

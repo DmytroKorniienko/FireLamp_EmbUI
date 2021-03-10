@@ -477,11 +477,11 @@ EVERY_N_SECONDS(1){
 String EffectMatrix::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) hue = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) _hue = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==5) gluk = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
 
-  if (hue == 1) {
+  if (_hue == 1) {
     randColor = true;
     white = false;
   } else if (hue == 255) {
@@ -495,12 +495,11 @@ String EffectMatrix::setDynCtrl(UIControl*_val)
 }
 
 bool EffectMatrix::run(CRGB *ledarr, EffectWorker *opt){
-  //fpsmeter();
   return matrixRoutine(*&ledarr, &*opt);
 }
 
 void EffectMatrix::load(){
-  randomSeed(analogRead(millis()));
+  randomSeed(millis());
   for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
   {
     lightersPos[0U][i] = random(0, WIDTH);
@@ -521,7 +520,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 0U; i < map(_scale, 1, 32, 1, LIGHTERS_AM); i++)
   {
-    lightersPos[1U][i] -= lightersSpeed[1U][i]*speedfactor;
+    lightersPos[1U][i] -= lightersSpeed[1U][i] * speedfactor;
 
     if (white) {
       color = rgb2hsv_approximate(CRGB::Gray);
@@ -532,7 +531,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
       }
       color = CHSV(hue, 255, light[i]);
     } else {
-      color = CHSV(hue, 255, light[i]);
+      color = CHSV(_hue, 255, light[i]);
     }
 
 
@@ -541,7 +540,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
     count += speedfactor;
 
     if (gluk > 1 and (uint8_t)count%2 == 0) 
-      if (random8() < gluk) {
+      if (random8() < gluk * 2) {
         lightersPos[0U][i] = lightersPos[0U][i] + random(-1, 2);
         light[i] = random(196,255);
       }
@@ -801,7 +800,7 @@ bool EffectLightBalls::run(CRGB *ledarr, EffectWorker *opt){
   return lightBallsRoutine(*&ledarr, &*opt);
 }
 
-#define BORDERTHICKNESS       (1U)                          // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
+#define BORDERTHICKNESS       (1U)   // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
 bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
 {
   const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
@@ -824,10 +823,11 @@ bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
 
   // The color of each point shifts over time, each at a different speed.
   uint16_t ms = millis() / (scale/16 + 1);
-  leds[myLamp.getPixelNumber( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 29, 200U, 255U);
-  leds[myLamp.getPixelNumber( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 41, 200U, 255U);
-  leds[myLamp.getPixelNumber( highByte(k * paintWidth) + BORDERTHICKNESS, highByte(m * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 37, 200U, 255U);
-  leds[myLamp.getPixelNumber( highByte(m * paintWidth) + BORDERTHICKNESS, highByte(i * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 53, 200U, 255U);
+
+  myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 29, 200U, 255U);
+  myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 41, 200U, 255U);
+  myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( highByte(k * paintWidth) + BORDERTHICKNESS, highByte(m * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 37, 200U, 255U);
+  myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( highByte(m * paintWidth) + BORDERTHICKNESS, highByte(i * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 53, 200U, 255U);
 
   return true;
 }
@@ -982,7 +982,7 @@ void Effect3DNoise::fillNoiseLED()
       }
       CRGB color = ColorFromPalette( *curPalette, index, bri);
 
-      EffectMath::drawPixelXY(i, j, color);                             //leds[getPixelNumber(i, j)] = color;
+      EffectMath::drawPixelXY(i, j, color);                             //myLamp.getUnsafeLedsArray()[getPixelNumber(i, j)] = color;
     }
   }
   ihue += 1;
@@ -1460,7 +1460,7 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
   else hue = colorId;
 
   for (uint8_t i = 1; i < WIDTH; i += 2) {
-    leds[myLamp.getPixelNumber( i, e_centerY)] += CHSV(hue + i * 2 , colorId == 255 ? 64 : 255, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( i, e_centerY)] += CHSV(hue + i * 2 , colorId == 255 ? 64 : 255, 255);
   }
   // Noise
   float beat2 = (10.0 -  (float)beatsin88(3 * speedy, 10, 20)) / 10.;
@@ -1491,7 +1491,7 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
   else hue = colorId;
 
   for (uint8_t i = 1; i < WIDTH; i += 2) {
-    leds[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(hue + i * 2, colorId == 255 ? 64 : 255, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(i, HEIGHT - 1)] += CHSV(hue + i * 2, colorId == 255 ? 64 : 255, 255);
   }
   // Noise
   e_y[0] += 12 * speedy; // 3000;
@@ -1518,10 +1518,10 @@ bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
 
   for (uint8_t y = 2; y < HEIGHT-1; y += 5) {
     for (uint8_t x = 2; x < WIDTH-1; x += 5) {
-      leds[myLamp.getPixelNumber(x, y)]  += CHSV(x * y + hue, colorId == 255 ? 64 : 255, 255);
-      leds[myLamp.getPixelNumber(x + 1, y)] += CHSV((x + 4) * y + hue, colorId == 255 ? 64 : 255, 255);
-      leds[myLamp.getPixelNumber(x, y + 1)] += CHSV(x * (y + 4) + hue, colorId == 255 ? 64 : 255, 255);
-      leds[myLamp.getPixelNumber(x + 1, y + 1)] += CHSV((x + 4) * (y + 4) + hue, colorId == 255 ? 64 : 255, 255);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)]  += CHSV(x * y + hue, colorId == 255 ? 64 : 255, 255);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x + 1, y)] += CHSV((x + 4) * y + hue, colorId == 255 ? 64 : 255, 255);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y + 1)] += CHSV(x * (y + 4) + hue, colorId == 255 ? 64 : 255, 255);
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x + 1, y + 1)] += CHSV((x + 4) * (y + 4) + hue, colorId == 255 ? 64 : 255, 255);
     }
   }
   // Noise
@@ -3903,7 +3903,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
       if (isMicOn()) {
         hue = myLamp.getMicMapFreq();
-        leds[i] = CHSV((uint8_t)hue,
+        myLamp.getUnsafeLedsArray()[i] = CHSV((uint8_t)hue,
           satur,
           constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f),
           48,
@@ -3911,9 +3911,9 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
           );
       }
       else
-        leds[i] = CHSV((uint8_t)hue, satur, 255U);
+        myLamp.getUnsafeLedsArray()[i] = CHSV((uint8_t)hue, satur, 255U);
 #else
-      leds[i] = CHSV((uint8_t)hue, satur, 255U);
+      myLamp.getUnsafeLedsArray()[i] = CHSV((uint8_t)hue, satur, 255U);
 #endif
     }
   }
@@ -4035,7 +4035,7 @@ CRGB &Dot::piXY(CRGB *leds, byte x, byte y) {
   x -= PIXEL_X_OFFSET;
   y -= PIXEL_Y_OFFSET;
   if( x < WIDTH && y < HEIGHT) {
-    return leds[myLamp.getPixelNumber(x, y)];
+    return myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)];
   } else
     return empty; // fixed
 }
@@ -4240,7 +4240,7 @@ void pacifica_one_layer(CRGB *leds, const TProgmemRGBPalette16& p, uint16_t cist
     uint16_t sindex16 = sin16( ci) + 32768;
     uint8_t sindex8 = scale16( sindex16, 240);
     CRGB c = ColorFromPalette( p, sindex8, bri, LINEARBLEND);
-    leds[i] += c;
+    myLamp.getUnsafeLedsArray()[i] += c;
   }
 }
 
@@ -4253,11 +4253,11 @@ void pacifica_add_whitecaps(CRGB *leds)
   for( uint16_t i = 0; i < NUM_LEDS; i++) {
     uint8_t threshold = scale8( sin8( wave), 20) + basethreshold;
     wave += 7;
-    uint8_t l = leds[i].getAverageLight();
+    uint8_t l = myLamp.getUnsafeLedsArray()[i].getAverageLight();
     if( l > threshold) {
       uint8_t overage = l - threshold;
       uint8_t overage2 = qadd8( overage, overage);
-      leds[i] += CRGB( overage, overage2, qadd8( overage2, overage2));
+      myLamp.getUnsafeLedsArray()[i] += CRGB( overage, overage2, qadd8( overage2, overage2));
     }
   }
 }
@@ -4266,9 +4266,9 @@ void pacifica_add_whitecaps(CRGB *leds)
 void pacifica_deepen_colors(CRGB *leds)
 {
   for( uint16_t i = 0; i < NUM_LEDS; i++) {
-    leds[i].blue = scale8( leds[i].blue,  145);
-    leds[i].green= scale8( leds[i].green, 200);
-    leds[i] |= CRGB( 2, 5, 7);
+    myLamp.getUnsafeLedsArray()[i].blue = scale8( myLamp.getUnsafeLedsArray()[i].blue,  145);
+    myLamp.getUnsafeLedsArray()[i].green= scale8( myLamp.getUnsafeLedsArray()[i].green, 200);
+    myLamp.getUnsafeLedsArray()[i] |= CRGB( 2, 5, 7);
   }
 }
 
@@ -4388,7 +4388,7 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   if (flag) rand = beatsin8(5, 0, 8); // Хрень, конечно, но хоть какое-то разнообразие.
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
-      leds[myLamp.getPixelNumber(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
     }
   }
 
@@ -4473,7 +4473,7 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
       else overlay = CHSV(noise[layer][y][x], 255, noise[layer][x][y]);
       //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[layer][15][15]
       if (palettepos == 4) EffectMath::drawPixelXYF(x, HEIGHT - y, CHSV(160, 0 , noise[layer][x][y]), 35);
-      else leds[myLamp.getPixelNumber(x, y)] = ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]) + overlay;
+      else myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]) + overlay;
     }
   }
 
@@ -4681,7 +4681,7 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
     if (_scale == 1U)
       if (++deltaHue == 0U) hue++;
     for (uint16_t i = 0U; i < NUM_LEDS; i++)
-      leds[i] = CHSV(hue, hue2, 255U - leds[i].r);
+      myLamp.getUnsafeLedsArray()[i] = CHSV(hue, hue2, 255U - myLamp.getUnsafeLedsArray()[i].r);
   }
   return true;
 }
@@ -4731,7 +4731,7 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
     uint16_t pixelnumber = i;
     pixelnumber = (NUM_LEDS-1) - pixelnumber;
 
-    nblend( leds[pixelnumber], newcolor, 64);
+    nblend( myLamp.getUnsafeLedsArray()[pixelnumber], newcolor, 64);
   }
   return true;
 }
@@ -5230,21 +5230,21 @@ void EffectNBals::blur(CRGB *leds) {
 
   switch(balls){
   case 1:
-    leds[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
     break;
   case 3:
-    leds[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
-    leds[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
     break;
   case 4:
-    leds[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
-    leds[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
-    leds[myLamp.getPixelNumber( i,nj)] += CHSV( ms / 37, 200, 255);
-    leds[myLamp.getPixelNumber( i, j)] += CHSV( ms / 11, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(ni,nj)] += CHSV( ms / 17, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( i,nj)] += CHSV( ms / 37, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( i, j)] += CHSV( ms / 11, 200, 255);
     break;
   case 2:
-    leds[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
-    leds[myLamp.getPixelNumber( j, i)] += CHSV( ms / 13, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(ni, j)] += CHSV( ms / 41, 200, 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber( j, i)] += CHSV( ms / 13, 200, 255);
     break;
   }
 }
@@ -6181,9 +6181,9 @@ void EffectCell::cell(CRGB *leds) {
       if (index < 0) break;
 
       int16_t hue = x * beatsin16(10. * speedfactor, 1, 10) + offsetY;
-      leds[index] = CHSV(hue, 200, sin8(x * 30 + offsetX));
+      myLamp.getUnsafeLedsArray()[index] = CHSV(hue, 200, sin8(x * 30 + offsetX));
       hue = y * 3 + offsetX;
-      leds[index] += CHSV(hue, 200, sin8(y * 30 + offsetY));
+      myLamp.getUnsafeLedsArray()[index] += CHSV(hue, 200, sin8(y * 30 + offsetY));
     }
   }
   EffectMath::nightMode(leds); // пригасим немного, чтобы видить структуру, и убрать пересветы
@@ -7070,7 +7070,7 @@ void EffectPile::load() {
 
   // for(int16_t i=0;i<WIDTH*HEIGHT; i++){
   //     if(!random(map(scale,1,255,5,2))){
-  //       leds[i]=CHSV(random(0,255),255,255);
+  //       myLamp.getUnsafeLedsArray()[i]=CHSV(random(0,255),255,255);
   //     }
   // }
 }
@@ -7139,7 +7139,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt)
 
 bool EffectPile::clearrows(bool clear)
 {
-  CRGB *leds= myLamp.getUnsafeLedsArray();
+  //CRGB *leds= myLamp.getUnsafeLedsArray();
   
   bool state = false;
   if(clear){
@@ -7158,7 +7158,7 @@ bool EffectPile::clearrows(bool clear)
     for(uint8_t y=0; y<ypos; y++){
       for(uint8_t x=0; x<WIDTH; x++){
         if(random(map(ypos,1,HEIGHT,10,3))<2){
-          leds[myLamp.getPixelNumber(x,y)]=CRGB::Black;
+          EffectMath::drawPixelXY(x, y, CRGB::Black);
         }
       }
     }
@@ -7175,23 +7175,23 @@ bool EffectPile::clearrows(bool clear)
       // смещаемся
       for(uint16_t x=0; x<WIDTH; x++){
         for(uint16_t y=1; y<HEIGHT; y++){
-          if(leds[myLamp.getPixelNumber(x,y)] && !leds[myLamp.getPixelNumber(x,y-1)]){
-            leds[myLamp.getPixelNumber(x,y-1)] = leds[myLamp.getPixelNumber(x,y)];
-            leds[myLamp.getPixelNumber(x,y)] = CRGB::Black;
+          if(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] && !myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y-1)]){
+            myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y-1)] = myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)];
+            myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] = CRGB::Black;
             widthPos[x] = y;
             state = false;
-          } else if(leds[myLamp.getPixelNumber(x,y)] && x>0 && y>widthPos[x-1]) {
-            leds[myLamp.getPixelNumber(x-1,y-1)] = leds[myLamp.getPixelNumber(x,y)];
-            leds[myLamp.getPixelNumber(x,y)] = CRGB::Black;
+          } else if(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] && x>0 && y>widthPos[x-1]) {
+            myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x-1,y-1)] = myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)];
+            myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] = CRGB::Black;
             widthPos[x-1] = y;
             state = false;
           }
-          else if(leds[myLamp.getPixelNumber(x,y)] && x<WIDTH-1 && y>widthPos[x+1]) {
-            leds[myLamp.getPixelNumber(x+1,y-1)] = leds[myLamp.getPixelNumber(x,y)];
-            leds[myLamp.getPixelNumber(x,y)] = CRGB::Black;
+          else if(myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] && x<WIDTH-1 && y>widthPos[x+1]) {
+            myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x+1,y-1)] = myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)];
+            myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] = CRGB::Black;
             widthPos[x+1] = y;
             state = false;
-          } else if(!leds[myLamp.getPixelNumber(x,y)] && widthPos[x] > y){
+          } else if(!myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x,y)] && widthPos[x] > y){
             widthPos[x] = y;
           }
         }
@@ -7488,7 +7488,7 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
         float fraction = 1.0 - percentage;
         brightness = 255.0 * fraction;
       }
-      leds[index] += ColorFromPalette(*curPalette, hue, brightness);
+      myLamp.getUnsafeLedsArray()[index] += ColorFromPalette(*curPalette, hue, brightness);
     }
   }
 }
@@ -7980,7 +7980,7 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
   else _scale = EffectMath::fmap(scale, 1, 255, 8, 1);
 
   for(float i= (float)8 * _scale; i> 0; i--)
-    leds[myLamp.getPixelNumber(beatsin8(12. * _speed + i * _speed, 0, WIDTH - 1), beatsin8(15. * _speed + i * _speed, 0, HEIGHT - 1))] = CHSV(beatsin8(12. * _speed, 0, 255), scale > 127 ? 255 - i*8 : 255, scale > 127 ? 127 + i*8 : 255);
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(beatsin8(12. * _speed + i * _speed, 0, WIDTH - 1), beatsin8(15. * _speed + i * _speed, 0, HEIGHT - 1))] = CHSV(beatsin8(12. * _speed, 0, 255), scale > 127 ? 255 - i*8 : 255, scale > 127 ? 127 + i*8 : 255);
   blur2d(leds, WIDTH, HEIGHT, 16);
   return true;
 }
@@ -8042,7 +8042,7 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
     for (byte y = 0; y < HEIGHT; y++) {
       timer++;
       //uint16_t i = x*y;
-      leds[myLamp.getPixelNumber(x, y)]= 
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)]= 
           ColorFromPalette(*curPalette,
             qsub8(
               inoise8(/*i*/timer % 2 + x * _scale,
@@ -8053,14 +8053,14 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
             )
           );
       if (flag == 1) { // Тут я модифицирую стандартные палитры 
-        CRGB tmpColor = leds[myLamp.getPixelNumber(x, y)];
-        leds[myLamp.getPixelNumber(x, y)].g = tmpColor.r;
-        leds[myLamp.getPixelNumber(x, y)].r = tmpColor.g;
-        leds[myLamp.getPixelNumber(x, y)].g /= 6;
-        leds[myLamp.getPixelNumber(x, y)].r += leds[myLamp.getPixelNumber(x, y)].r < 206 ? 48 : 0;;
+        CRGB tmpColor = myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)];
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].g = tmpColor.r;
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].r = tmpColor.g;
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].g /= 6;
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].r += myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].r < 206 ? 48 : 0;;
       } else if (flag == 3) {
-        leds[myLamp.getPixelNumber(x, y)].b += 48;
-        leds[myLamp.getPixelNumber(x, y)].g += leds[myLamp.getPixelNumber(x, y)].g < 206 ? 48 : 0;
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].b += 48;
+        myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].g += myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)].g < 206 ? 48 : 0;
       }
     }
   }
@@ -8208,7 +8208,7 @@ void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
       byte col = 0;
       if (sumsquare < 7225) // 7225 == (255 / 3)²
       col = 255 - sqrt16(sumsquare) * 3;
-      leds[myLamp.getPixelNumber(x, y)] = chsv[col];
+      myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = chsv[col];
     }
     yindex += WIDTH;
   }
