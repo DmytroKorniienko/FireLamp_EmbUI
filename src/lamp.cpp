@@ -1266,10 +1266,7 @@ void LAMP::showWarning(
   delay(2);
   FastLED.show();
 
-  for (uint16_t i = 0U; i < NUM_LEDS; i++)                  // установка цвета всех диодов в WARNING_COLOR
-  {
-    EffectMath::setLed(i, color);
-  }
+  EffectMath::fillAll(color);                               // установка цвета всех диодов в WARNING_COLOR
 
   uint32_t startTime = millis();
   while (millis() - startTime <= (duration + 5))            // блокировка дальнейшего выполнения циклом на время отображения предупреждения

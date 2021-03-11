@@ -94,11 +94,21 @@ public:
   static void plot88(CRGB *leds, byte x, byte y, CRGB& color);
   static int16_t scale15by8_local( int16_t i, fract8 scale );
 */
-
-    static uint32_t getPixColor(uint32_t thisSegm); // функция получения цвета пикселя по его номеру
-    static uint32_t getPixColorXY(uint16_t x, uint16_t y); // функция получения цвета пикселя в матрице по его координатам
-    static void fillAll(const CRGB &color); // залить все
-    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
+    // функция получения цвета пикселя по его номеру
+    static uint32_t getPixColor(uint32_t thisSegm); 
+    // функция получения цвета пикселя в матрице по его координатам
+    static uint32_t getPixColorXY(uint16_t x, uint16_t y); 
+    // залить все
+    static void fillAll(const CRGB &color); 
+    /* 
+    Функция отрисовки точки по координатам X, Y
+    По умолчанию leds[idx] = color
+    opt == 1: leds[idx] += color
+    opt == 2: leds[idx] -= color
+    opt == 3: leds[idx] *= color
+    opt == 4: leds[idx] /= color
+    */
+    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt = 0); 
     static void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);

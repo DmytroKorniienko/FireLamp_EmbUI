@@ -1865,7 +1865,7 @@ private:
     byte flag;
 
     void setscl(const byte _scl) override;
-    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
 
 public:

@@ -116,7 +116,7 @@ void EffectMath::fadePixel(uint8_t i, uint8_t j, uint8_t step)
         EffectMath::setLedsfadeToBlackBy(pixelNum,step);
     }
     else{
-        EffectMath::setLed(pixelNum, 0U);
+        EffectMath::drawPixelXY(i, j, 0U);
     }
 }
 
@@ -191,7 +191,7 @@ void EffectMath::fillAll(const CRGB &color)
   }
 }
 
-void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
+void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt) // функция отрисовки точки по координатам X Y
 {
   if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
 #if  SEGMENTS > 1
@@ -199,9 +199,42 @@ void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // фун�
   for (uint16_t i = 0; i < SEGMENTS; i++)
   {
     myLamp.getUnsafeLedsArray()[thisPixel + i] = color;
+  switch (opt) {
+  case 1:
+    myLamp.getUnsafeLedsArray()[thisPixel + i] += color;
+    break;
+  case 2:
+    myLamp.getUnsafeLedsArray()[thisPixel + i] -= color;
+    break;
+  case 3:
+    myLamp.getUnsafeLedsArray()[thisPixel + i] *= color;
+    break;
+  case 4:
+    myLamp.getUnsafeLedsArray()[thisPixel + i] /= color;
+    break;
+  default:
+    myLamp.getUnsafeLedsArray()[thisPixel + i] = color;
+    break;
+  }
   }
 #else
-  myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = color;
+  switch (opt) {
+  case 1:
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] += color;
+    break;
+  case 2:
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] -= color;
+    break;
+  case 3:
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] *= color;
+    break;
+  case 4:
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] /= color;
+    break;
+  default:
+    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = color;
+    break;
+  }
 #endif
 }
 
@@ -535,5 +568,5 @@ void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { myLamp.getUnsafeLed
 void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { myLamp.getUnsafeLedsArray()[i].nscale8(value); } }
 CRGB EffectMath::getLed(uint16_t idx) { return myLamp.getUnsafeLedsArray()[idx]; }
 void EffectMath::blur2d(uint8_t val) {::blur2d(myLamp.getUnsafeLedsArray(),WIDTH,HEIGHT,val);}
-CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
-CRGB *EffectMath::setLed(uint16_t idx, CRGB val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
+//CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
+//CRGB *EffectMath::setLed(uint16_t idx, CRGB val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
