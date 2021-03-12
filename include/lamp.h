@@ -424,7 +424,9 @@ public:
     uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
     {
     // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-    if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return NUM_LEDS;
+    if (y < 0 || y > (int16_t)(HEIGHT - 1)) return NUM_LEDS;
+    if (x < 0 || x > (int16_t)(WIDTH - 1)) return NUM_LEDS;
+    
     #ifndef XY_EXTERN
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H flags.MIRR_H
@@ -432,11 +434,11 @@ public:
         
         if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
         {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X);
         }
         else                                                      // если нечётная строка
         {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1);
         }
     
         #undef MIRR_H
@@ -451,18 +453,17 @@ public:
     // для работы с буфером
     uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
     {
-        uint16_t NL = W*H;
 
         uint16_t _THIS_Y = y;
         uint16_t _THIS_X = x;
         
         if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
         {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X)%NL;
+            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X);
         }
         else                                                      // если нечётная строка
         {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1)%NL;
+            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
         }
     
     }

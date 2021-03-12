@@ -496,33 +496,6 @@ void EffectMath::drawCircle(int x0, int y0, int radius, const CRGB &color){
   }
 }
 
-/*void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color){
-  float x = 0., y = radius, error = 0.;
-  float delta = .25 - 2. * radius;
-
-  while (y >= 0) {
-    drawPixelXYF(x0 + x, y0 + y, color);
-    drawPixelXYF(x0 + x, y0 - y, color);
-    drawPixelXYF(x0 - x, y0 + y, color);
-    drawPixelXYF(x0 - x, y0 - y, color);
-    error = 2. * (delta + y) - 1.;
-    if (delta < 0. && error <= 0.) {
-      ++x;
-      delta += 2. * x + 1.;
-      continue;
-    }
-    error = 2. * (delta - x) - 1.;
-    if (delta > 0. && error > 0.) {
-      --y;
-      delta += 1. - 2. * y;
-      continue;
-    }
-    ++x;
-    delta += 2. * (x - y);
-    --y;
-  }
-}*/
-
 void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color, float step){
   float a = radius, b = 0.;
   float radiusError = step - a;

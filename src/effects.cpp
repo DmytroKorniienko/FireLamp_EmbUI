@@ -982,7 +982,7 @@ void Effect3DNoise::fillNoiseLED()
       }
       CRGB color = ColorFromPalette( *curPalette, index, bri);
 
-      EffectMath::drawPixelXY(i, j, color);                             //myLamp.getUnsafeLedsArray()[getPixelNumber(i, j)] = color;
+      EffectMath::drawPixelXY(i, j, color);
     }
   }
   ihue += 1;
@@ -1983,9 +1983,9 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
         if(color){
           CRGB tColor;
           if(!(_curVal%(uint8_t)(_ptPallete*(_pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
-            tColor = ColorFromPalette(*_curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+            tColor = ColorFromPalette(*_curPalette,random8(15)); 
           else
-            tColor = ColorFromPalette(*_curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+            tColor = ColorFromPalette(*_curPalette,constrain(ypos,0,15)); 
           color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
         }
       }
@@ -2022,9 +2022,9 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
       if(color){
           CRGB tColor;
           if(!(_curVal%(uint8_t)(_ptPallete*(_pos+1)))) // для крайней точки рандом, иначе возьмем по индексу/2
-            tColor = ColorFromPalette(*_curPalette,random8(15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+            tColor = ColorFromPalette(*_curPalette,random8(15)); 
           else
-            tColor = ColorFromPalette(*_curPalette,constrain(ypos,0,15)); // sizeof(TProgmemRGBPalette16)/sizeof(uint32_t)
+            tColor = ColorFromPalette(*_curPalette,constrain(ypos,0,15)); 
           color=((unsigned long)tColor.r<<16)+((unsigned long)tColor.g<<8)+(unsigned long)tColor.b; // извлекаем и конвертируем цвет :)
       }
     }
@@ -3890,23 +3890,23 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
   }
 
   if (!glare) {// если блики включены
-
-    for (int16_t i = 0U; i < NUM_LEDS; i++)
+    for (byte x = 0; x < WIDTH; x++)
+    for (byte y = 0U; y < HEIGHT; y++)
     {
 #ifdef MIC_EFFECTS
       if (isMicOn()) {
         hue = myLamp.getMicMapFreq();
-        myLamp.getUnsafeLedsArray()[i] = CHSV((uint8_t)hue,
+        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue,
           satur,
           constrain(myLamp.getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f),
           48,
           255)
-          );
+          ));
       }
       else
-        myLamp.getUnsafeLedsArray()[i] = CHSV((uint8_t)hue, satur, 255U);
+        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
 #else
-      myLamp.getUnsafeLedsArray()[i] = CHSV((uint8_t)hue, satur, 255U);
+      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
 #endif
     }
   }
@@ -5706,17 +5706,6 @@ void EffectFire2020::regenNoise() {
 
 }
 
-// нахрена кастомный мапинг тут???
-// void EffectFire2020::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
-//   std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
-//   if (!_pals.size() || idx>=_pals.size()) {
-//     LOG(println,F("No palettes loaded or wrong value!"));
-//     return;
-//   }
-
-//   curPalette = _pals.at(idx);
-// }
-
 String EffectFire2020::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
@@ -6174,9 +6163,9 @@ void EffectCell::cell(CRGB *leds) {
       if (index < 0) break;
 
       int16_t hue = x * beatsin16(10. * speedfactor, 1, 10) + offsetY;
-      myLamp.getUnsafeLedsArray()[index] = CHSV(hue, 200, sin8(x * 30 + offsetX));
+      EffectMath::drawPixelXY(x, y, CHSV(hue, 200, sin8(x * 30 + offsetX)));
       hue = y * 3 + offsetX;
-      myLamp.getUnsafeLedsArray()[index] += CHSV(hue, 200, sin8(y * 30 + offsetY));
+      EffectMath::drawPixelXY(x, y, CHSV(hue, 200, sin8(y * 30 + offsetY)), 1);
     }
   }
   EffectMath::nightMode(leds); // пригасим немного, чтобы видить структуру, и убрать пересветы
@@ -7061,11 +7050,6 @@ void EffectPile::load() {
   }
   memset(widthPos,0,sizeof(widthPos)/sizeof(float));
 
-  // for(int16_t i=0;i<WIDTH*HEIGHT; i++){
-  //     if(!random(map(scale,1,255,5,2))){
-  //       myLamp.getUnsafeLedsArray()[i]=CHSV(random(0,255),255,255);
-  //     }
-  // }
 }
 bool EffectPile::run(CRGB *leds, EffectWorker *opt)
 {
@@ -7481,7 +7465,7 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
         float fraction = 1.0 - percentage;
         brightness = 255.0 * fraction;
       }
-      myLamp.getUnsafeLedsArray()[index] += ColorFromPalette(*curPalette, hue, brightness);
+      EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, hue, brightness), 1);
     }
   }
 }
@@ -7593,12 +7577,6 @@ void EffectBalls::load() {
     color[i] = random(0, 255);
   }
 }
-
-/*String EffectBalls::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) centerRun = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  return String();
-}*/
 
 void EffectBalls::setspd(const byte _spd)
 {
