@@ -3837,7 +3837,7 @@ void EffectAquarium::nGlare(CRGB *leds) {
 
   fillNoiseLED(leds);
   
-  blur2d(leds, LED_COLS, LED_ROWS, 100);
+  blur2d(leds, WIDTH, HEIGHT, 100);
 }
 
 void EffectAquarium::fillNoiseLED(CRGB *leds) {
@@ -5622,11 +5622,11 @@ bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
 
   int maxV, maxH;
   if(!rotate){
-    maxV = LED_ROWS;
-    maxH = LED_COLS;
+    maxV = HEIGHT;
+    maxH = WIDTH;
   } else {
-    maxV = LED_COLS;
-    maxH = LED_ROWS;
+    maxV = WIDTH;
+    maxH = HEIGHT;
   }
 
   for (uint8_t i = 0; i < maxV; i++)
@@ -5688,16 +5688,16 @@ void EffectFire2020::palettesload(){
 
 void EffectFire2020::regenNoise() {
   uint16_t b = millis();
-  for (uint8_t i = 0; i < LED_COLS; i++)
+  for (uint8_t i = 0; i < WIDTH; i++)
   {
     for (uint8_t j = 0; j < (NOISE_HEIGHT); j++)
     {
-      noises[j * LED_COLS + i] = inoise8(i * (_scale+30), j * (_scale+30) + b / (_scale+30)); // init noise buffer
+      noises[j * WIDTH + i] = inoise8(i * (_scale+30), j * (_scale+30) + b / (_scale+30)); // init noise buffer
     }
   }
-  for (uint8_t j = 0; j < LED_ROWS; j++)
+  for (uint8_t j = 0; j < HEIGHT; j++)
   {
-    colorfade[j] = abs8(j - (LED_ROWS - 1)) * 255 / (LED_ROWS - 1); // init colorfade table
+    colorfade[j] = abs8(j - (HEIGHT - 1)) * 255 / (HEIGHT - 1); // init colorfade table
     if (random8() < 100)
     {
       noises[myLamp.getPixelNumber(random8(WIDTH), j)] = qadd8(noises[j], random(156, 255)); // 196, 255
@@ -5727,7 +5727,7 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
 #endif
     {
       uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*WIDTH; //roll index in noise buffer
-      EffectMath::drawPixelXYF_Y(i, (float)(LED_ROWS - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
+      EffectMath::drawPixelXYF_Y(i, (float)(HEIGHT - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
 
     }
   }
@@ -6156,8 +6156,8 @@ void EffectCell::cell(CRGB *leds) {
   float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);
   offsetX = beatsin16(6. * speedfactor, -180, 180);
   offsetY = beatsin16(6. * speedfactor, -180, 180, 12000);
-  for (uint x = 0; x < LED_COLS; x++) {
-    for (uint y = 0; y < LED_ROWS; y++) {
+  for (uint x = 0; x < WIDTH; x++) {
+    for (uint y = 0; y < HEIGHT; y++) {
       int16_t index = myLamp.getPixelNumber(x, y);
 
       if (index < 0) break;
@@ -6622,8 +6622,8 @@ bool EffectLLand::run(CRGB *leds, EffectWorker *opt) {
   uint16_t i = 0;
   t = (float)millis() / EffectMath::fmap(speed, 1., 255., 20., 1.);
   if (randColor) hue += 0.2;
-  for (uint8_t y = 0; y < LED_ROWS; y++) {
-    for (uint16_t x = 0; x < LED_COLS; x++) {
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    for (uint16_t x = 0; x < WIDTH; x++) {
       EffectMath::drawPixelXY(x, y, select ? CHSV(code(x, y, i, t) + (uint8_t)hue, 255, 255) : ColorFromPalette (*curPalette, code(x,y,i,t) + (uint8_t)hue, 255)); 
       i++;
     }
@@ -6654,7 +6654,7 @@ uint16_t EffectLLand::code(byte x, byte y, uint16_t i, float t) {
       break;
     case 8: outputcode = sin8(y * 5 + 30) / 2 + sin8(x * 5 + 30) / 2 + sin8(t / 5);
       break;
-    case 9: outputcode = map(inoise8(x * 50, y * 50 - t * 16, 0) - y * 255 / (LED_ROWS - 1), 0, 255, 205, 255); // CHSV fire
+    case 9: outputcode = map(inoise8(x * 50, y * 50 - t * 16, 0) - y * 255 / (HEIGHT - 1), 0, 255, 205, 255); // CHSV fire
       break;
   }
   return outputcode;

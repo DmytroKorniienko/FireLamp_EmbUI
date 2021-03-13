@@ -591,14 +591,6 @@ static const TProgmemRGBPalette16 HolyLightsColors_p FL_PROGMEM = {0xff0000, 0xf
   #define BIGMATRIX
 #endif
 
-// Еще одно представление высоты и ширины матрицы, часто встречаеться последнее время
-#define LED_ROWS HEIGHT
-#define LED_COLS WIDTH
-
-// И еще одно представление высоты и ширины матрицы, часто встречаеться последнее время
-#define NUM_ROWS HEIGHT
-#define NUM_COLS WIDTH
-
 // ==== Константы для эффектов ====
 
 // Эффекты на базе "3D Noise"

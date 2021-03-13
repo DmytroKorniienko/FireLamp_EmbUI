@@ -1362,9 +1362,9 @@ public:
 // переделака на субпиксель и доработки - kostyamat
 class EffectFire2020 : public EffectCalc {
 private:
-    #define NOISE_HEIGHT  (LED_ROWS * 3U)
-    uint16_t noises[LED_COLS * NOISE_HEIGHT];   //precalculated noise table
-    byte colorfade[LED_ROWS];                   //simple colorfade table for speedup
+    #define NOISE_HEIGHT  (HEIGHT * 3U)
+    uint16_t noises[WIDTH * NOISE_HEIGHT];   //precalculated noise table
+    byte colorfade[HEIGHT];                   //simple colorfade table for speedup
     float a = 0;
     byte _pal = 8;
     byte _scale = 60;
@@ -1703,13 +1703,13 @@ private:
         float bpm = random(0, 255);
 
         void move() {
-            centerX = random(0, LED_COLS-1);
-            centerY = random(0, LED_ROWS-1);
+            centerX = random(0, WIDTH-1);
+            centerY = random(0, HEIGHT-1);
         }
         
         void reset() {
-            centerX = random(0, LED_COLS-1);
-            centerY = random(0, LED_ROWS-1);
+            centerX = random(0, WIDTH-1);
+            centerY = random(0, HEIGHT-1);
             hue = random(0, 255);
         }
 
