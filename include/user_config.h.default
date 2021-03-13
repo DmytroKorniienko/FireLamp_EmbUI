@@ -86,10 +86,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define AUX_PIN (D7)                                        // пин дополнительного реле общего назначения AUX. Может быть установлен любой из "безопасных"
 //#define AUX_LEVEL (HIGH)                                    // логический уровень AUX_PIN, для активации реле - HIGH или LOW (зависит от типа используемого реле)
 
-//#define XY_EXTERN                                           /* Пользовательский мапинг нестандартных матриц, читать в файле ../include/XY.h и\или тут 
-																https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
-																тут отчет пользователя 
-																https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-72777 */
+//#define XY_EXTERN                                           // Пользовательский мапинг нестандартных матриц, читать в файле ../include/XY.h и\или тут 
+																//https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
+																//тут отчет пользователя 
+																//https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-72777 
 
 #define WIDTH                 (16U)                         // ширина матрицы
 #define HEIGHT                (16U)                         // высота матрицы
