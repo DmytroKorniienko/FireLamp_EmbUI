@@ -40,17 +40,51 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#include "main.h"
 extern LAMP myLamp; // Объект лампы
 
-
 // Общий набор мат. функций и примитивов для обсчета эффектов
 
+namespace EffectMath_PRIVATE {
+    MATRIXFLAGS matrixflags;
+    CRGB leds[NUM_LEDS]; // основной буфер вывода изображения
+    CRGB overrun;
+    
+    CRGB *getUnsafeLedsArray(){return leds;}
+
+    // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
+    uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
+    {
+    #ifndef XY_EXTERN
+        // хак с макроподстановкой, пусть живет пока
+        #define MIRR_H matrixflags.MIRR_H
+        #define MIRR_V matrixflags.MIRR_V
+        
+        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X);
+        }
+        else                                                      // если нечётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1);
+        }
+    
+        #undef MIRR_H
+        #undef MIRR_V
+    #else
+        uint16_t i = (y * WIDTH) + x;
+        uint16_t j = pgm_read_dword(&XYTable[i]);
+        return j;
+    #endif
+    }
+}
+
+using namespace EffectMath_PRIVATE;
 
 // для работы FastLed (blur2d)
 uint16_t XY(uint8_t x, uint8_t y)
 {
 #ifdef ROTATED_MATRIX
-  return myLamp.getPixelNumber(y,x); // повернутое на 90 градусов
+  return getPixelNumber(y,x); // повернутое на 90 градусов
 #else
-  return myLamp.getPixelNumber(x,y); // обычное подключение
+  return getPixelNumber(x,y); // обычное подключение
 #endif
 }
 
@@ -64,7 +98,7 @@ uint8_t EffectMath::mapsincos8(bool map, uint8_t theta, uint8_t lowest, uint8_t 
 void EffectMath::MoveFractionalNoise(bool _scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift) {
   uint8_t zD;
   uint8_t zF;
-  CRGB *leds = myLamp.getUnsafeLedsArray(); // unsafe
+  CRGB *leds = getUnsafeLedsArray(); // unsafe
   CRGB ledsbuff[NUM_LEDS];
   uint16_t _side_a = _scale ? HEIGHT : WIDTH;
   uint16_t _side_b = _scale ? WIDTH : HEIGHT;
@@ -83,14 +117,14 @@ void EffectMath::MoveFractionalNoise(bool _scale, const uint8_t noise3d[][WIDTH]
         }
         CRGB PixelA = CRGB::Black  ;
         if ((zD >= 0) && (zD < _side_b))
-          PixelA = _scale ? EffectMath::getLed(myLamp.getPixelNumber(zD%WIDTH, a%HEIGHT)) : EffectMath::getLed(myLamp.getPixelNumber(a%WIDTH, zD%HEIGHT));
+          PixelA = _scale ? EffectMath::getPixel(zD%WIDTH, a%HEIGHT) : EffectMath::getPixel(a%WIDTH, zD%HEIGHT);
 
         CRGB PixelB = CRGB::Black ;
         if ((zF >= 0) && (zF < _side_b))
-          PixelB = _scale ? EffectMath::getLed(myLamp.getPixelNumber(zF%WIDTH, a%HEIGHT)) : EffectMath::getLed(myLamp.getPixelNumber(a%WIDTH, zF%HEIGHT));
+          PixelB = _scale ? EffectMath::getPixel(zF%WIDTH, a%HEIGHT) : EffectMath::getPixel(a%WIDTH, zF%HEIGHT);
         uint16_t x = _scale ? b : a;
         uint16_t y = _scale ? a : b;
-        ledsbuff[myLamp.getPixelNumber(x%WIDTH, y%HEIGHT)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
+        ledsbuff[getPixelNumber(x%WIDTH, y%HEIGHT)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
       }
     }
   memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);
@@ -106,7 +140,7 @@ uint8_t EffectMath::ceil8(const uint8_t a, const uint8_t b){
 // новый фейдер
 void EffectMath::fadePixel(uint8_t i, uint8_t j, uint8_t step)
 {
-    int32_t pixelNum = myLamp.getPixelNumber(i, j);
+    int32_t pixelNum = getPixelNumber(i, j);
     if (EffectMath::getPixColor(pixelNum) == 0U) return;
 
     CRGB led = EffectMath::getLed(pixelNum);
@@ -172,14 +206,14 @@ bool EffectMath::isInteger(float val) {
 
 // Функция создает вспышки в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
 void EffectMath::addGlitter(uint8_t chanceOfGlitter){
-  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::Gray;
+  if ( random8() < chanceOfGlitter) getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::Gray;
 }
 
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;
   if (thisPixel > NUM_LEDS - 1) return 0;
-  return (((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].r << 16) | ((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].g << 8 ) | (uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].b);
+  return (((uint32_t)getUnsafeLedsArray()[thisPixel].r << 16) | ((uint32_t)getUnsafeLedsArray()[thisPixel].g << 8 ) | (uint32_t)getUnsafeLedsArray()[thisPixel].b);
 }
 
 // Заливает матрицу выбраным цветом
@@ -187,7 +221,7 @@ void EffectMath::fillAll(const CRGB &color)
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
-    myLamp.getUnsafeLedsArray()[i] = color;
+    getUnsafeLedsArray()[i] = color;
   }
 }
 
@@ -195,44 +229,44 @@ void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt) 
 {
   if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
 #if  SEGMENTS > 1
-  uint32_t thisPixel = myLamp.getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
+  uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
   for (uint16_t i = 0; i < SEGMENTS; i++)
   {
-    myLamp.getUnsafeLedsArray()[thisPixel + i] = color;
+    getUnsafeLedsArray()[thisPixel + i] = color;
   switch (opt) {
   case 1:
-    myLamp.getUnsafeLedsArray()[thisPixel + i] += color;
+    getUnsafeLedsArray()[thisPixel + i] += color;
     break;
   case 2:
-    myLamp.getUnsafeLedsArray()[thisPixel + i] -= color;
+    getUnsafeLedsArray()[thisPixel + i] -= color;
     break;
   case 3:
-    myLamp.getUnsafeLedsArray()[thisPixel + i] *= color;
+    getUnsafeLedsArray()[thisPixel + i] *= color;
     break;
   case 4:
-    myLamp.getUnsafeLedsArray()[thisPixel + i] /= color;
+    getUnsafeLedsArray()[thisPixel + i] /= color;
     break;
   default:
-    myLamp.getUnsafeLedsArray()[thisPixel + i] = color;
+    getUnsafeLedsArray()[thisPixel + i] = color;
     break;
   }
   }
 #else
   switch (opt) {
   case 1:
-    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] += color;
+    getUnsafeLedsArray()[getPixelNumber(x, y)] += color;
     break;
   case 2:
-    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] -= color;
+    getUnsafeLedsArray()[getPixelNumber(x, y)] -= color;
     break;
   case 3:
-    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] *= color;
+    getUnsafeLedsArray()[getPixelNumber(x, y)] *= color;
     break;
   case 4:
-    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] /= color;
+    getUnsafeLedsArray()[getPixelNumber(x, y)] /= color;
     break;
   default:
-    myLamp.getUnsafeLedsArray()[myLamp.getPixelNumber(x, y)] = color;
+    getUnsafeLedsArray()[getPixelNumber(x, y)] = color;
     break;
   }
 #endif
@@ -530,16 +564,39 @@ void EffectMath::nightMode(CRGB *leds)
 {
     for (uint16_t i = 0; i < NUM_LEDS; i++)
     {
-        myLamp.getUnsafeLedsArray()[i].r = dim8_video(myLamp.getUnsafeLedsArray()[i].r);
-        myLamp.getUnsafeLedsArray()[i].g = dim8_video(myLamp.getUnsafeLedsArray()[i].g);
-        myLamp.getUnsafeLedsArray()[i].b = dim8_video(myLamp.getUnsafeLedsArray()[i].b);
+        getUnsafeLedsArray()[i].r = dim8_video(getUnsafeLedsArray()[i].r);
+        getUnsafeLedsArray()[i].g = dim8_video(getUnsafeLedsArray()[i].g);
+        getUnsafeLedsArray()[i].b = dim8_video(getUnsafeLedsArray()[i].b);
     }
 }
-uint32_t EffectMath::getPixColorXY(uint16_t x, uint16_t y) { return getPixColor( myLamp.getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
-void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { myLamp.getUnsafeLedsArray()[idx].fadeToBlackBy(val); }
-void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { myLamp.getUnsafeLedsArray()[idx].nscale8(val); }
-void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { myLamp.getUnsafeLedsArray()[i].nscale8(value); } }
-CRGB EffectMath::getLed(uint16_t idx) { return myLamp.getUnsafeLedsArray()[idx]; }
-void EffectMath::blur2d(uint8_t val) {::blur2d(myLamp.getUnsafeLedsArray(),WIDTH,HEIGHT,val);}
-//CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
-//CRGB *EffectMath::setLed(uint16_t idx, CRGB val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
+uint32_t EffectMath::getPixColorXY(uint16_t x, uint16_t y) { return getPixColor( getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
+void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { getUnsafeLedsArray()[idx].fadeToBlackBy(val); }
+void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { getUnsafeLedsArray()[idx].nscale8(val); }
+void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) {getUnsafeLedsArray()[i].nscale8(value); } }
+void EffectMath::blur2d(uint8_t val) {::blur2d(getUnsafeLedsArray(),WIDTH,HEIGHT,val);}
+
+CRGB &EffectMath::getLed(uint16_t idx) { 
+  if(idx<NUM_LEDS){
+    return getUnsafeLedsArray()[idx];
+  } else {
+    return overrun;
+  }
+}
+
+CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { 
+  if(idx<NUM_LEDS){
+    getUnsafeLedsArray()[idx] = val;
+    return &getUnsafeLedsArray()[idx];
+  } else {
+    return &overrun;
+  }
+}
+
+CRGB *EffectMath::setLed(uint16_t idx, CRGB val) {
+  if(idx<NUM_LEDS){
+    getUnsafeLedsArray()[idx] = val;
+    return &getUnsafeLedsArray()[idx];
+  } else {
+    return &overrun;
+  }
+}

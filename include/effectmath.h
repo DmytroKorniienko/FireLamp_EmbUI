@@ -35,7 +35,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __EFFECTMATH_H
+#define __EFFECTMATH_H
 
 // Общий набор мат. функций и примитивов для обсчета эффектов
 
@@ -73,9 +74,69 @@ static const PROGMEM float LUT[102] = {
 /**
  * Класс с набором статических мат. функций, которые используются в нескольких разных эффектах
  */
+
+namespace EffectMath_PRIVATE {
+    typedef union {
+    struct {
+        bool MIRR_V:1; // отзрекаливание по V
+        bool MIRR_H:1; // отзрекаливание по H
+    };
+    uint32_t flags; // набор битов для конфига
+    } MATRIXFLAGS;
+
+    extern MATRIXFLAGS matrixflags;
+    extern CRGB leds[NUM_LEDS]; // основной буфер вывода изображения
+    extern CRGB overrun;
+
+    CRGB *getUnsafeLedsArray();
+    uint32_t getPixelNumber(int16_t x, int16_t y);
+}
+
+using namespace EffectMath_PRIVATE;
+
 class EffectMath {
+private:
+    friend class LAMP;
+    friend uint16_t XY(uint8_t x, uint8_t y); // Friend function 
 public:
-  static CRGB overrun;
+  static const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
+  static const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
+  static uint16_t getmaxDim() {return maxDim;}
+  static uint16_t getminDim() {return minDim;}
+  static int16_t getmaxWidthIndex() {return (int16_t)WIDTH-1;}
+  static int16_t getmaxHeightIndex() {return (int16_t)HEIGHT-1;}
+
+    // для работы с буфером
+    static uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
+    {
+
+        uint16_t _THIS_Y = y;
+        uint16_t _THIS_X = x;
+        
+        if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+        {
+            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X);
+        }
+        else                                                      // если нечётная строка
+        {
+            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
+        }
+
+    }
+
+    static void setPixel(int16_t x, int16_t y, const CRGB &pixel){
+        // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
+        if (y < 0 || y > getmaxHeightIndex() || x < 0 || x > getmaxWidthIndex()) return;
+        leds[getPixelNumber(x,y)] = pixel;
+    }
+
+    static CRGB &getPixel(int16_t x, int16_t y){
+        // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
+        if (y < 0 || y > getmaxHeightIndex() || x < 0 || x > getmaxWidthIndex())
+            return overrun;
+        return leds[getPixelNumber(x,y)];
+    }
+
   static uint8_t mapsincos8(bool map, uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255);
   static void MoveFractionalNoise(bool scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift = 0);
   static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
@@ -125,7 +186,7 @@ public:
     static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
     static void setLedsNscale8(uint16_t idx, uint8_t val);
     static void dimAll(uint8_t value);
-    static CRGB getLed(uint16_t idx);
+    static CRGB &getLed(uint16_t idx);
     static void blur2d(uint8_t val);
     static CRGB *setLed(uint16_t idx, CHSV val);
     static CRGB *setLed(uint16_t idx, CRGB val);
@@ -285,3 +346,4 @@ public:
     }
 };
 
+#endif

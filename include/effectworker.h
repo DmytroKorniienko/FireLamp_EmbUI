@@ -35,7 +35,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __EFFECTWORKER_H
+#define __EFFECTWORKER_H
 
 #include <Arduino.h>
 #include "LList.h"
@@ -361,14 +362,10 @@ public:
     //virtual ~EffectCalc(){ LOG(println,PSTR("DEGUG: Effect was destroyed\n")); } // отладка, можно будет затем закомментировать
 };
 
-
-
-
 class EffectWorker {
 private:
     LAMPSTATE *lampstate; // ссылка на состояние лампы
     SORT_TYPE effSort; // порядок сортировки в UI
-    const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     uint16_t curEff = (uint16_t)EFF_NONE;     ///< энумератор текущего эффекта
     uint16_t selEff = (uint16_t)EFF_NONE;     ///< энумератор выбранного эффекта (для отложенного перехода)
@@ -582,3 +579,6 @@ public:
     // удалить эффект
     void deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
 };
+
+#endif
+

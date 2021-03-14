@@ -36,6 +36,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "main.h"
+#include <SPIFFSEditor.h>
 #include "buttons.h"
 #ifdef USE_FTP
   #include "ftpSrv.h"

@@ -36,6 +36,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "main.h"
+#include "effectmath.h"
 
 extern LAMP myLamp; // Объект лампы
 
@@ -45,7 +46,7 @@ void LAMP::lamp_init(const uint16_t curlimit)
   // Такую коррекцию стоит оставить, с ней можно получить хотя бы более менее жёлтый цвет. Иначе он всегда зеленит (коррекцию нашел на просторах, люди рекомендуют)
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalPixelString);
-  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(0xFFE08C)*/; // цветокоррекция нафиг не нужна, проверяется на минимальной яркости в белой лампе
+  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(getUnsafeLedsArray(), NUM_LEDS)/*.setCorrection(0xFFE08C)*/; // цветокоррекция нафиг не нужна, проверяется на минимальной яркости в белой лампе
 
   brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
   if (curlimit > 0){
@@ -244,7 +245,7 @@ void LAMP::alarmWorker(){
     }
 
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
-        leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
+        getUnsafeLedsArray()[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
     }
     iflags.dawnFlag = true;
 }
@@ -261,7 +262,7 @@ void LAMP::effectsTick(){
     //if(millis()<5000) return; // затычка до выяснения
     if(!iflags.isEffectsDisabledUntilText){
       if (!ledsbuff.empty()) {
-        std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
+        std::copy( ledsbuff.begin(), ledsbuff.end(), getUnsafeLedsArray() );
         if(!iflags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
           ledsbuff.resize(0);
           ledsbuff.shrink_to_fit();
@@ -270,7 +271,7 @@ void LAMP::effectsTick(){
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
       if(effects.worker ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
         ledsbuff.resize(NUM_LEDS);
-        std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+        std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
       }
     }
   }
@@ -281,7 +282,7 @@ void LAMP::effectsTick(){
       mi = drawbuff[i].r > drawbuff[i].g ? drawbuff[i].r : drawbuff[i].g;
       mi = mi > drawbuff[i].b ? mi : drawbuff[i].b;
       if(mi>=5) {
-        leds[i] = drawbuff[i];
+        getUnsafeLedsArray()[i] = drawbuff[i];
       } else if(mi && mi<5) {
         EffectMath::setLedsNscale8(i, map(mi,1,4,128,10)); // 5 градаций прозрачности, где 0 - полностью прозрачный
       }
@@ -327,6 +328,7 @@ void LAMP::frameShow(const uint32_t ticktime){
    * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
    * функция все равно будет запущена в loop(), она просто ждет своей очереди
    */
+
   FastLED.show();
   if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
@@ -687,12 +689,12 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
           if(!isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
           else
-            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
         } else {
           if(isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
           else
-            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
         }
       }
     }
@@ -1194,7 +1196,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   if(effects.worker && flags.ONflag && !iflags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
       ledsbuff.resize(NUM_LEDS);
-      std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+      std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }

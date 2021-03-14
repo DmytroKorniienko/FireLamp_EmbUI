@@ -168,9 +168,6 @@ private:
     uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
-    const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
-    const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
-
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
@@ -373,8 +370,8 @@ public:
     void setONMP3(bool flag) {flags.isOnMP3=flag;}
     bool isShowSysMenu() {return flags.isShowSysMenu;}
     void setIsShowSysMenu(bool flag) {flags.isShowSysMenu=flag;}
-    void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; FastLED.clear();}}
-    void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; FastLED.clear();}}
+    void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; matrixflags.MIRR_V = flag; FastLED.clear();}}
+    void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; matrixflags.MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
     void setTextOffset(uint8_t val) { txtOffset=val;}
 
@@ -412,61 +409,9 @@ public:
     uint8_t getAlarmT() { return alarmPT&0x0F; }
 
     // ---------- служебные функции -------------
-    uint16_t getmaxDim() {return maxDim;}
-    uint16_t getminDim() {return minDim;}
 
     void changePower(); // плавное включение/выключение
     void changePower(bool);
-
-    CRGB *getUnsafeLedsArray(){return leds;}
-
-    // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-    uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
-    {
-    // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-    if (y < 0 || y > (int16_t)(HEIGHT - 1)) return NUM_LEDS;
-    if (x < 0 || x > (int16_t)(WIDTH - 1)) return NUM_LEDS;
-    
-    #ifndef XY_EXTERN
-        // хак с макроподстановкой, пусть живет пока
-        #define MIRR_H flags.MIRR_H
-        #define MIRR_V flags.MIRR_V
-        
-        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-        {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X);
-        }
-        else                                                      // если нечётная строка
-        {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1);
-        }
-    
-        #undef MIRR_H
-        #undef MIRR_V
-    #else
-        uint16_t i = (y * WIDTH) + x;
-        uint16_t j = pgm_read_dword(&XYTable[i]);
-        return j;
-    #endif
-    }
-
-    // для работы с буфером
-    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
-    {
-
-        uint16_t _THIS_Y = y;
-        uint16_t _THIS_X = x;
-        
-        if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-        {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X);
-        }
-        else                                                      // если нечётная строка
-        {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
-        }
-    
-    }
 
     /*
      * Change global brightness with or without fade effect
@@ -523,7 +468,6 @@ public:
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
-    CRGB leds[NUM_LEDS + 1]; // основной буфер вывода изображения + дополнительный "невидимый" светодиод
     std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
     std::vector<CRGB> drawbuff; // буфер для рисования
 };

@@ -346,10 +346,10 @@ class timerMinim
 #if defined(LAMP_DEBUG) && 1==0 // DEBUG_TELNET_OUTPUT // Deprecated
 	//#define LOG                   telnet
 	#define LOG(func, ...) telnet.func(__VA_ARGS__)
-#elif defined(LAMP_DEBUG)
+#elif defined(LAMP_DEBUG) && !defined(LOG)
 	//#define LOG                   Serial
 	#define LOG(func, ...) Serial.func(__VA_ARGS__)
-#else
+#elif !defined(LOG)
 	#define LOG(func, ...) ;
 #endif
 
