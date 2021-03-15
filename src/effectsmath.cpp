@@ -227,48 +227,16 @@ void EffectMath::fillAll(const CRGB &color)
 
 void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt) // функция отрисовки точки по координатам X Y
 {
-  if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
+  if (y < 0 || y > (int16_t)(HEIGHT - 1)) return;
+  if (x < 0 || x > (int16_t)(WIDTH - 1)) return;
 #if  SEGMENTS > 1
   uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
   for (uint16_t i = 0; i < SEGMENTS; i++)
   {
-    getUnsafeLedsArray()[thisPixel + i] = color;
-  switch (opt) {
-  case 1:
-    getUnsafeLedsArray()[thisPixel + i] += color;
-    break;
-  case 2:
-    getUnsafeLedsArray()[thisPixel + i] -= color;
-    break;
-  case 3:
-    getUnsafeLedsArray()[thisPixel + i] *= color;
-    break;
-  case 4:
-    getUnsafeLedsArray()[thisPixel + i] /= color;
-    break;
-  default:
-    getUnsafeLedsArray()[thisPixel + i] = color;
-    break;
-  }
+    setLed(thisPixel + i, color, opt);
   }
 #else
-  switch (opt) {
-  case 1:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] += color;
-    break;
-  case 2:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] -= color;
-    break;
-  case 3:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] *= color;
-    break;
-  case 4:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] /= color;
-    break;
-  default:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] = color;
-    break;
-  }
+  setLed(getPixelNumber(x, y), color, opt);
 #endif
 }
 
@@ -294,8 +262,6 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
 
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
-
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
@@ -309,16 +275,6 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-
-    // if(xn<(int)WIDTH-1 && yn<(int)HEIGHT-1 && yn>0 && xn>0){
-    //   clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    //   clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    //   clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    // } else if((yn==0 || yn==HEIGHT-1 || xn==0) && xx<127) {
-    //   clr.r = qadd8(clr.r, (color.r * 64) >> 8);
-    //   clr.g = qadd8(clr.g, (color.g * 64) >> 8);
-    //   clr.b = qadd8(clr.b, (color.b * 64) >> 8);
-    // }
     if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(xn, yn, clr);
   }
@@ -327,8 +283,6 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
 
 void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
-
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
   // calculate the intensities for each affected pixel
@@ -337,15 +291,10 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
   for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
       CRGB clr = EffectMath::getPixColorXY(xn, y);
-//      if(xn>0 && xn<(int)WIDTH-1){
-        clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-        clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-        clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-/*      } else if(xn==0 || xn==(int)WIDTH-1) {
-        clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-        clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-        clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-      }*/
+      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+
     if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(xn, y, clr);
   }
@@ -353,8 +302,6 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
 
 void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
-
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
   // calculate the intensities for each affected pixel
@@ -363,15 +310,10 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
   for (int8_t i = 1; i >= 0; i--) {
       int16_t yn = y + (i & 1);
       CRGB clr = EffectMath::getPixColorXY(x, yn);
-//      if(yn>0 && yn<(int)HEIGHT-1){
         clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
         clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-/*      } else if(yn==0 || yn==(int)HEIGHT-1) {
-        clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-        clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-        clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-      } */
+
     if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(x, yn, clr);
   }
@@ -583,18 +525,57 @@ CRGB &EffectMath::getLed(uint16_t idx) {
   }
 }
 
-CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { 
-  if(idx<NUM_LEDS){
-    getUnsafeLedsArray()[idx] = val;
+CRGB *EffectMath::setLed(uint16_t idx, CHSV val, byte opt) { 
+  if (idx >= 0 and idx < NUM_LEDS) {
+    CRGB tempVal = val;
+    switch (opt) {
+    case 0:
+      getUnsafeLedsArray()[idx] = tempVal;
+      break;
+    case 1:
+      getUnsafeLedsArray()[idx] += tempVal;
+      break;
+    case 2:
+      getUnsafeLedsArray()[idx] -= tempVal;
+      break;
+    case 3:
+      getUnsafeLedsArray()[idx] *= tempVal;
+      break;
+    case 4:
+      getUnsafeLedsArray()[idx] /= tempVal;
+      break;
+    default:
+      getUnsafeLedsArray()[idx] = tempVal;
+      break;
+    }
     return &getUnsafeLedsArray()[idx];
   } else {
     return &overrun;
   }
 }
 
-CRGB *EffectMath::setLed(uint16_t idx, CRGB val) {
-  if(idx<NUM_LEDS){
-    getUnsafeLedsArray()[idx] = val;
+CRGB *EffectMath::setLed(uint16_t idx, CRGB val, byte opt) {
+  if (idx >= 0 and idx < NUM_LEDS) {
+    switch (opt) {
+    case 0:
+      getUnsafeLedsArray()[idx] = val;
+      break;
+    case 1:
+      getUnsafeLedsArray()[idx] += val;
+      break;
+    case 2:
+      getUnsafeLedsArray()[idx] -= val;
+      break;
+    case 3:
+      getUnsafeLedsArray()[idx] *= val;
+      break;
+    case 4:
+      getUnsafeLedsArray()[idx] /= val;
+      break;
+    default:
+      getUnsafeLedsArray()[idx] = val;
+      break;
+    }
     return &getUnsafeLedsArray()[idx];
   } else {
     return &overrun;

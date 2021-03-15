@@ -188,8 +188,20 @@ public:
     static void dimAll(uint8_t value);
     static CRGB &getLed(uint16_t idx);
     static void blur2d(uint8_t val);
-    static CRGB *setLed(uint16_t idx, CHSV val);
-    static CRGB *setLed(uint16_t idx, CRGB val);
+    /** Функция отрисовки точки 
+    По умолчанию leds[idx] = color
+    opt == 1: leds[idx] += color
+    opt == 2: leds[idx] -= color
+    opt == 3: leds[idx] *= color
+    opt == 4: leds[idx] /= color */
+    static CRGB *setLed(uint16_t idx, CHSV val, byte opt = 0);
+    /** Функция отрисовки точки 
+    По умолчанию leds[idx] = color
+    opt == 1: leds[idx] += color
+    opt == 2: leds[idx] -= color
+    opt == 3: leds[idx] *= color
+    opt == 4: leds[idx] /= color */
+    static CRGB *setLed(uint16_t idx, CRGB val, byte opt = 0);
 
     /** аналог ардуино функции map(), но только для float
    */
