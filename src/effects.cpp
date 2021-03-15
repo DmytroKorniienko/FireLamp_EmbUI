@@ -141,7 +141,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
   byte _speed = speed;
 #endif
     if(_scale < 127){
-        uint8_t centerY = (HEIGHT-1) / 2U;
+        uint8_t centerY = EffectMath::getmaxHeightIndex() / 2U;
         for (int16_t y = centerY; y >= 0; y--)
         {
           int br = (bcoef*BRIGHTNESS)-(map(_scale,126,1,1,15)*(centerY-y)*((centerY-y)/(HEIGHT*0.0625))); if(br<0) br=0;
@@ -161,7 +161,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
           }
         }
     } else if(_scale > 127){
-        uint8_t centerX = (WIDTH-1) / 2U;
+        uint8_t centerX = EffectMath::getmaxWidthIndex() / 2U;
         for (int16_t y = 0U; y < (int16_t)HEIGHT; y++)
         {
           for (int16_t x = centerX; x >= 0; x--)
@@ -220,7 +220,7 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
     }
 
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-    for (unsigned int k = HEIGHT - 1; k >= 2; k--) {
+    for (unsigned int k = EffectMath::getmaxHeightIndex(); k >= 2; k--) {
       heat[x][k] = (heat[x][k - 1] + heat[x][k - 2] + heat[x][k - 2]) / 3;
     }
 
@@ -422,7 +422,7 @@ EVERY_N_SECONDS(1){
       for(uint8_t y=pos;y<pos+HEIGHT/8;y++){
         for(uint8_t x=0; x<WIDTH; x++){
           EffectMath::drawPixelXY(x, y, CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
-          EffectMath::drawPixelXY(x, HEIGHT - 1 - y, CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
+          EffectMath::drawPixelXY(x, EffectMath::getmaxHeightIndex() - y, CHSV(mmf / 1.5, 255U, constrain(mmp * (2.0 * (scale >> 1) / 127.0 + 0.33), 1, 255)));
         }
       }
       EffectMath::dimAll(254); // плавно гасим
@@ -566,7 +566,7 @@ void EffectStarFall::load(){
   for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
   {
     lightersPos[0U][i] = random(-(int)WIDTH, WIDTH);
-    lightersPos[1U][i] = random(HEIGHT - 1, HEIGHT + 4);
+    lightersPos[1U][i] = random(EffectMath::getmaxHeightIndex(), HEIGHT + 4);
     lightersSpeed[0U][i] = EffectMath::randomf(-1, 1);  // X
     lightersSpeed[1U][i] = EffectMath::randomf(1, 2);   // Y
     lightersColor[i] = random(0U, 255U);
@@ -624,7 +624,7 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
     if(lightersPos[1U][i] < -1) {
       if (isNew) {
         lightersPos[0U][i] = random(-(int)WIDTH, WIDTH);
-        lightersPos[1U][i] = effId > 1 ? random(HEIGHT / 2, HEIGHT + 4) : random(HEIGHT - 1, HEIGHT + 4);
+        lightersPos[1U][i] = effId > 1 ? random(HEIGHT / 2, HEIGHT + 4) : random(EffectMath::getmaxHeightIndex(), HEIGHT + 4);
         lightersSpeed[0U][i] = EffectMath::randomf(-1, 1);  // X
         lightersSpeed[1U][i] = EffectMath::randomf(1, 2);   // Y
       } else {
@@ -696,7 +696,7 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
     lightersPos[0U][i] += lightersSpeed[0U][i]*speedfactor;
     lightersPos[1U][i] += lightersSpeed[1U][i]*speedfactor;
 
-    if (lightersPos[0U][i] < 0) lightersPos[0U][i] = (float)(WIDTH - 1);
+    if (lightersPos[0U][i] < 0) lightersPos[0U][i] = (float)EffectMath::getmaxWidthIndex();
     if (lightersPos[0U][i] >= (float)WIDTH) lightersPos[0U][i] = 0.0f;
 
     if (lightersPos[1U][i] <= 0.0f)
@@ -705,9 +705,9 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
       lightersSpeed[1U][i] = -lightersSpeed[1U][i];
       lightersSpeed[0U][i] = -lightersSpeed[0U][i];
     }
-    if (lightersPos[1U][i] >= (int32_t)(HEIGHT - 1))
+    if (lightersPos[1U][i] >= (int32_t)(EffectMath::getmaxHeightIndex()))
     {
-      lightersPos[1U][i] = (HEIGHT - 1U);
+      lightersPos[1U][i] = (EffectMath::getmaxHeightIndex());
       lightersSpeed[1U][i] = -lightersSpeed[1U][i];
       lightersSpeed[0U][i] = -lightersSpeed[0U][i];
     }
@@ -773,14 +773,14 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
       }
     }
 
-    if ((uint16_t)coord[j][0U] > (WIDTH - 1))
+    if ((uint16_t)coord[j][0U] > EffectMath::getmaxWidthIndex())
     {
-      coord[j][0U] = (WIDTH - 1);
+      coord[j][0U] = EffectMath::getmaxWidthIndex();
       vector[j][0U] = -vector[j][0U];
     }
-    if ((uint16_t)coord[j][1U] > (HEIGHT - 1))
+    if ((uint16_t)coord[j][1U] > EffectMath::getmaxHeightIndex())
     {
-      coord[j][1U] = (HEIGHT - 1);
+      coord[j][1U] = EffectMath::getmaxHeightIndex();
       vector[j][1U] = -vector[j][1U];
     }
     EVERY_N_MILLIS(random16(256, 1024)) {
@@ -1058,12 +1058,12 @@ void EffectBBalls::regen(){
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
     bballsCOLOR[i] = random(0, 255);
     bballsBri[i] = 156;
-    bballsX[i] = random(0, WIDTH-1);
+    bballsX[i] = ceil((float)WIDTH / (bballsNUM_BALLS + 1) * (i + 1)) - 1; // random(0, WIDTH);
     bballsBri[i] = halo ? 200 : (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
     bballsTLast[i] = millis();
-    bballsPos[i] = 0.0f;                                 // Balls start on the ground
+    bballsPos[i] = 0;                                 // Balls start on the ground
     bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
-    bballsCOR[i] = 0.90f - float(i) / pow(bballsNUM_BALLS, 2);
+    bballsCOR[i] = 0.9 - float(i) / pow(bballsNUM_BALLS, 2);
     bballsShift[i] = false;
   }
 }
@@ -1103,27 +1103,28 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
         bballsVImpact[i] = bballsVImpact0;
       }
     }
-    bballsPos[i] = bballsHi * (float)(HEIGHT - 1) / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)HEIGHT - 1.5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+    bballsPos[i] = bballsHi * (float)EffectMath::getmaxHeightIndex() / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
+    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)EffectMath::getmaxHeightIndex() - .5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
       bballsShift[i] = 0.0f;
       if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
-        if (bballsX[i] <= 0) bballsX[i] = (WIDTH - 1U);
+        if (bballsX[i] <= 0) bballsX[i] = (EffectMath::getmaxWidthIndex());
         else bballsX[i] -= 1;
       } else {
-        if (bballsX[i] >= (int8_t)(WIDTH - 1U)) bballsX[i] = 0;
+        if (bballsX[i] >= EffectMath::getmaxWidthIndex()) bballsX[i] = 0;
         else bballsX[i] += 1;
       }
     }
 
-    //if (bballsPos[i] < HEIGHT - 1)
-      if (halo){ // если ореол включен
-        EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i], 225, bballsBri[i]));
-      } else {
+
+    if (halo){ // если ореол включен
+      EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i], 225, bballsBri[i]));
+    } else {
         // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой,
         // который движится в том же Х. И каждый следующий ярче предыдущего.
-        bballsBri[i] = (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-        EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 5);
-      }
+      bballsBri[i] = (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
+      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 5);
+
+    }
   }
   return true;
 }
@@ -1142,8 +1143,8 @@ bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectWorker *param)
 {
   const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2) ;
-  float e_s3_speed = 0.004 * speed + 0.015; // speed of the movement along the Lissajous curves
-  float e_s3_size = EffectMath::fmap(scale,1,255,3,9); // amplitude of the curves
+  float e_s3_speed = EffectMath::fmap(speed, 1, 255, 0.033, 1); // speed of the movement along the Lissajous curves
+  float e_s3_size = EffectMath::fmap(scale, 1, 255, 3, 9); // amplitude of the curves
 
   float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
 
@@ -1421,8 +1422,8 @@ bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
     float n = (float)quadwave8(i * 4. + spiral) / (256. / (float)WIDTH + 1.0);
     float n2 = (float)quadwave8(i * 5. + beatsin8((smooth*3) * speedFactor)) / (256. / (float)WIDTH + 1.0);
 
-    EffectMath::drawPixelXYF(n, (float)HEIGHT - 1.0 - i, color, 0);
-    EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n2, (float)HEIGHT - 1.0 - i, color, 0);
+    EffectMath::drawPixelXYF(n, (float)EffectMath::getmaxHeightIndex() - i, color, 0);
+    EffectMath::drawPixelXYF((float)EffectMath::getmaxWidthIndex() - n2, (float)EffectMath::getmaxHeightIndex() - i, color, 0);
 
   }
   
@@ -1487,7 +1488,7 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
   else hue = colorId;
 
   for (uint8_t i = 1; i < WIDTH; i += 2) {
-    EffectMath::drawPixelXY(i, HEIGHT - 1, CHSV(hue + i * 2, colorId == 255 ? 64 : 255, 255), 1);
+    EffectMath::drawPixelXY(i, EffectMath::getmaxHeightIndex(), CHSV(hue + i * 2, colorId == 255 ? 64 : 255, 255), 1);
   }
   // Noise
   e_y[0] += 12 * speedy; // 3000;
@@ -1512,8 +1513,8 @@ bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
   }
   else hue = colorId;
 
-  for (uint8_t y = 2; y < HEIGHT-1; y += 5) {
-    for (uint8_t x = 2; x < WIDTH-1; x += 5) {
+  for (uint8_t y = 2; y < EffectMath::getmaxHeightIndex(); y += 5) {
+    for (uint8_t x = 2; x < EffectMath::getmaxWidthIndex(); x += 5) {
       EffectMath::drawPixelXY(x, y, CHSV(x * y + hue, colorId == 255 ? 64 : 255, 255), 1);
       EffectMath::drawPixelXY(x + 1, y, CHSV((x + 4) * y + hue, colorId == 255 ? 64 : 255, 255), 1);
       EffectMath::drawPixelXY(x, y + 1, CHSV(x * (y + 4) + hue, colorId == 255 ? 64 : 255, 255), 1);
@@ -1640,7 +1641,7 @@ bool EffectPrismata::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, map(fadelvl, 1, 255, 130, 2)); // делаем шлейф
 
   for (byte x = 0; x < WIDTH; x++) {
-      float y = (float)beatsin16((uint8_t)x + 1 * (float)speed / 2.0f, 0, (HEIGHT-1)* 10) / 10.0f;
+      float y = (float)beatsin16((uint8_t)x + 1 * (float)speed / 2.0f, 0, EffectMath::getmaxHeightIndex()* 10) / 10.0f;
       EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(*curPalette, ((uint16_t)x + spirohueoffset) * 4));
     }
   return true;
@@ -1775,8 +1776,8 @@ bool EffectSwirl::swirlRoutine(CRGB *leds, EffectWorker *param)
   uint8_t i = beatsin8(27 * ((float)speed / 100.0) + 5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
   uint8_t j = beatsin8(41 * ((float)speed / 100.0) + 5, e_swi_BORDER, WIDTH - e_swi_BORDER);
   // Also calculate some reflections
-  uint8_t ni = (WIDTH - 1U)-i;
-  uint8_t nj = (WIDTH - 1U)-j;
+  uint8_t ni = EffectMath::getmaxWidthIndex() -i;
+  uint8_t nj = EffectMath::getmaxWidthIndex() -j;
 
   // The color of each point shifts over time, each at a different speed.
   uint16_t ms = millis();
@@ -1866,14 +1867,14 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
     CRGB color;
     if (i < WIDTH / 2U)
     {
-      x = beatsin8((i + 1) * _dri_speed, i + 1U, WIDTH - 1 - i, 0, 64U + dri_phase);
-      y = beatsin8((i + 1) * _dri_speed, i + 1U, HEIGHT - 1 - i, 0, dri_phase);
+      x = beatsin8((i + 1) * _dri_speed, i + 1U, EffectMath::getmaxWidthIndex() - i, 0, 64U + dri_phase);
+      y = beatsin8((i + 1) * _dri_speed, i + 1U, EffectMath::getmaxHeightIndex() - i, 0, dri_phase);
       color = ColorFromPalette(*curPalette, i * WIDTH_steps * 2U + _dri_delta);
     }
     else
     {
-      x = beatsin8((WIDTH - i) * _dri_speed, WIDTH - 1 - i, i + 1U, 0, dri_phase);
-      y = beatsin8((HEIGHT - i) * _dri_speed, HEIGHT - 1 - i, i + 1U, 0, 64U + dri_phase);
+      x = beatsin8((WIDTH - i) * _dri_speed, EffectMath::getmaxWidthIndex() - i, i + 1U, 0, dri_phase);
+      y = beatsin8((HEIGHT - i) * _dri_speed, EffectMath::getmaxHeightIndex() - i, i + 1U, 0, 64U + dri_phase);
       color = ColorFromPalette(*curPalette, ~(i * WIDTH_steps + _dri_delta)); //i * WIDTH_steps * 2U + _dri_delta
     }
     EffectMath::drawPixelXYF(x, y, color);
@@ -2142,10 +2143,10 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
   if (subPix)
   {
     fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed / 255);
-    for (float offset = 0.0f; offset < (float)(WIDTH - 1) / 2U; offset += 0.25f)
+    for (float offset = 0.0f; offset < (float)EffectMath::getmaxWidthIndex() / 2U; offset += 0.25f)
     {
-      float x = (float)EffectMath::mapsincos8(MAP_COS, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
-      float y = (float)EffectMath::mapsincos8(MAP_SIN, eff_theta, offset * 10, (WIDTH - 1U) * 10 - offset * 10) / 10.0f;
+      float x = (float)EffectMath::mapsincos8(MAP_COS, eff_theta, offset * 10, EffectMath::getmaxWidthIndex() * 10 - offset * 10) / 10.0f;
+      float y = (float)EffectMath::mapsincos8(MAP_SIN, eff_theta, offset * 10, EffectMath::getmaxWidthIndex() * 10 - offset * 10) / 10.0f;
       CRGB color = ColorFromPalette(*curPalette, hue, 255 / random8(1, 16));
       EffectMath::drawPixelXYF(x, y, color);
       //hue = beatsin8(100);
@@ -2159,9 +2160,9 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
 
     for (uint8_t offset = 0U; offset < WIDTH / 2U - 1U; offset++)
     {
-      EffectMath::drawPixelXY(EffectMath::mapsincos8(MAP_COS, eff_theta, offset, (WIDTH - 1U) - offset),
-                                           EffectMath::mapsincos8(MAP_SIN, eff_theta, offset, (WIDTH - 1U) - offset),
-                                           ColorFromPalette(*curPalette, 255U - (offset * 16U + eff_offset)));
+      EffectMath::drawPixelXY(EffectMath::mapsincos8(MAP_COS, eff_theta, offset, EffectMath::getmaxWidthIndex() - offset),
+                              EffectMath::mapsincos8(MAP_SIN, eff_theta, offset, EffectMath::getmaxWidthIndex() - offset),
+                              ColorFromPalette(*curPalette, 255U - (offset * 16U + eff_offset)));
     }
   }
   EVERY_N_MILLIS(EFFECTS_RUN_TIMER)
@@ -2213,28 +2214,28 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
         break;
       case 2: // две волны горизонтально, справа на лево
         EffectMath::drawPixelXYF(i, n, ColorFromPalette(*curPalette, whue + i));
-        EffectMath::drawPixelXYF(i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF(i, (float)EffectMath::getmaxHeightIndex() - n, ColorFromPalette(*curPalette, whue + i));
         break;
       case 3: // одна волна горизонтально, слева на право 
-        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - i, n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)EffectMath::getmaxWidthIndex() - i, n, ColorFromPalette(*curPalette, whue + i));
         break;
       case 4: // две волны горизонтально, слева на право
-        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - i, n, ColorFromPalette(*curPalette, whue + i));
-        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - i, (float)HEIGHT - 1.0 - n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)EffectMath::getmaxWidthIndex() - i, n, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)EffectMath::getmaxWidthIndex() - i, (float)EffectMath::getmaxHeightIndex() - n, ColorFromPalette(*curPalette, whue + i));
         break;
       case 5: // одна волна вертликально, сверху вниз
         EffectMath::drawPixelXYF(n, i, ColorFromPalette(*curPalette, whue + i));
         break;
       case 6: // две волны вертликально, сверху вниз
         EffectMath::drawPixelXYF(n, i, ColorFromPalette(*curPalette, whue + i));
-        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n, i, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)EffectMath::getmaxWidthIndex() - n, i, ColorFromPalette(*curPalette, whue + i));
       break;
       case 7: // одна волна верликально, снизу вверх
-        EffectMath::drawPixelXYF(n, (float)HEIGHT - 1.0 - i, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF(n, (float)EffectMath::getmaxHeightIndex() - i, ColorFromPalette(*curPalette, whue + i));
         break;
       case 8: // две волны верликально, снизу вверх
-        EffectMath::drawPixelXYF(n, (float)HEIGHT - 1.0 - i, ColorFromPalette(*curPalette, whue + i));
-        EffectMath::drawPixelXYF((float)WIDTH - 1.0 - n, (float)HEIGHT - 1.0 - i, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF(n, (float)EffectMath::getmaxHeightIndex() - i, ColorFromPalette(*curPalette, whue + i));
+        EffectMath::drawPixelXYF((float)EffectMath::getmaxWidthIndex() - n, (float)EffectMath::getmaxHeightIndex() - i, ColorFromPalette(*curPalette, whue + i));
       break;
     }
   }
@@ -2406,16 +2407,16 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
 
   // draw lowest line - seed the fire
   for (uint8_t x = 0; x < WIDTH; x++)
-  { // myLamp.getPixelNumber(x, HEIGHT - 1)
-    fire18heat[EffectMath::getmaxHeightIndex()*HEIGHT+x] = noise3dx[0][WIDTH - 1 - x][CentreY - 1]; // хз, почему взято с середины. вожможно, нужно просто с 7 строки вне зависимости от высоты матрицы
+  {
+    fire18heat[EffectMath::getPixelNumberBuff(x, EffectMath::getmaxHeightIndex(), WIDTH, HEIGHT)] = noise3dx[0][EffectMath::getmaxWidthIndex() - x][CentreY - 1]; // хз, почему взято с середины. вожможно, нужно просто с 7 строки вне зависимости от высоты матрицы
   }
 
   //copy everything one line up
   for (uint8_t y = 0; y < HEIGHT - 1; y++)
   {
     for (uint8_t x = 0; x < WIDTH; x++)
-    { // myLamp.getPixelNumber(x, y) // myLamp.getPixelNumber(x, y + 1)
-      fire18heat[EffectMath::getmaxHeightIndex()*y+x] = fire18heat[EffectMath::getmaxHeightIndex()*(y+1)+x];
+    {
+      fire18heat[EffectMath::getPixelNumberBuff(x, y, WIDTH, HEIGHT)] = fire18heat[EffectMath::getPixelNumberBuff(x, y + 1, WIDTH, HEIGHT)];
     }
   }
 
@@ -2429,7 +2430,7 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
       //dim = dim / 1.7 * constrain(0.05*myLamp.effects.getBrightness()+0.01,0.01,1.0); //точно нужен прямой доступ?
       dim = dim / 1.7 * constrain(0.05*brightness+0.01,0.01,1.0);
       dim = 255 - dim;
-      fire18heat[EffectMath::getmaxHeightIndex()*y+x] = scale8(fire18heat[EffectMath::getmaxHeightIndex()*y+x], dim);
+      fire18heat[EffectMath::getPixelNumberBuff(x, y, WIDTH, HEIGHT)] = scale8(fire18heat[EffectMath::getPixelNumberBuff(x, y, WIDTH, HEIGHT)], dim);
     }
   }
 
@@ -2438,13 +2439,13 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
     for (uint8_t x = 0; x < WIDTH; x++)
     {
       // map the colors based on heatmap
-      CRGB color = CRGB(fire18heat[EffectMath::getmaxHeightIndex()*y+x], (float)fire18heat[EffectMath::getmaxHeightIndex()*y+x] * (scale/5.0) * 0.01, 0); color*=2.5;
+      CRGB color = CRGB(fire18heat[EffectMath::getPixelNumberBuff(x, y, WIDTH, HEIGHT)], (float)fire18heat[EffectMath::getPixelNumberBuff(x, y, WIDTH, HEIGHT)] * (scale/5.0) * 0.01, 0); color*=2.5;
       EffectMath::drawPixelXY(x, HEIGHT - 1 - y, color);
 
       // dim the result based on 2nd noise layer
-      color = EffectMath::getPixColorXY(x, HEIGHT - 1 - y);
+      color = EffectMath::getPixColorXY(x, EffectMath::getmaxHeightIndex() - y);
       color.nscale8(noise3dx[1][x][y]);
-      EffectMath::drawPixelXY(x, HEIGHT - 1 - y, color);
+      EffectMath::drawPixelXY(x, EffectMath::getmaxHeightIndex() - y, color);
     }
   }
   return true;
@@ -2456,7 +2457,7 @@ bool EffectFire2018::fire2018Routine(CRGB *leds, EffectWorker *param)
 // поэтому для понимания придётся сперва заменить названия переменных на человеческие. но всё равно это песец, конечно.
 
 //uint8_t ringColor[HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
-//uint8_t huePos[HEIGHT]; // местоположение начального оттенка кольца 0-WIDTH-1
+//uint8_t huePos[HEIGHT]; // местоположение начального оттенка кольца 0-EffectMath::getmaxWidthIndex()
 //uint8_t shiftHueDir[HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
 ////ringHueShift[ringsCount]; // шаг градиета оттенка внутри кольца -8 - +8 случайное число
 ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
@@ -2547,7 +2548,7 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
         {
           x = (huePos[i] + k) % WIDTH; // первая половина кольца
           EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i]/* + k * h*/));
-          x = (WIDTH - 1 + huePos[i] - k) % WIDTH; // вторая половина кольца (зеркальная первой)
+          x = (EffectMath::getmaxWidthIndex() + huePos[i] - k) % WIDTH; // вторая половина кольца (зеркальная первой)
           EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i] + k * h));
         }
       if (WIDTH & 0x01) //(WIDTH % 2U > 0U) // если число пикселей по ширине матрицы нечётное, тогда не забываем и про среднее значение
@@ -3030,7 +3031,7 @@ bool EffectTime::palleteTest(CRGB *leds, EffectWorker *param)
   float sf = 0.996078431372549+speed/255.; // смещение, для скорости 1 смещения не будет, т.к. суммарный коэф. == 1
   for(uint8_t y=0; y<HEIGHT; y++)
     for(uint8_t x=0; x<WIDTH; x++)
-      EffectMath::drawPixelXY(WIDTH-1-x,HEIGHT-1-y,ColorFromPalette(*curPalette, (y*x*sf), 127));
+      EffectMath::drawPixelXY(EffectMath::getmaxWidthIndex() - x,EffectMath::getmaxHeightIndex()-y,ColorFromPalette(*curPalette, (y*x*sf), 127));
   return true;
 }
 
@@ -3169,7 +3170,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
         v = v+f;
 
         EffectMath::drawPixelXYF_X(v, y, color);
-        EffectMath::drawPixelXYF(WIDTH-1-v, y, color);
+        EffectMath::drawPixelXYF(EffectMath::getmaxWidthIndex() -v, y, color);
       }
       break;
     case 2:
@@ -3185,7 +3186,7 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
         v = v+f;
 
         EffectMath::drawPixelXYF_X(v, y, color);
-        EffectMath::drawPixelXYF(WIDTH-1-v, y, color);
+        EffectMath::drawPixelXYF(EffectMath::getmaxWidthIndex() -v, y, color);
       }
       break;
     case 4:
@@ -3196,14 +3197,14 @@ bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *pa
       break;
     case 5:
       for (uint8_t y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY(((int)xSmokePos - y) % WIDTH * y / (HEIGHT - 1) + WIDTH / 2, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
-        EffectMath::drawPixelXY((WIDTH - ((int)xSmokePos - y) - 1) % WIDTH * y / (HEIGHT - 1) + WIDTH / 2, y, color, 1);
+        EffectMath::drawPixelXY(((int)xSmokePos - y) % WIDTH * y / EffectMath::getmaxHeightIndex() + WIDTH / 2, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
+        EffectMath::drawPixelXY((WIDTH - ((int)xSmokePos - y) - 1) % WIDTH * y / EffectMath::getmaxHeightIndex() + WIDTH / 2, y, color, 1);
       }
       break;
     case 6:
       for (uint8_t y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY((xSmokePos-y)*y/(HEIGHT-1)+WIDTH/2, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
-        EffectMath::drawPixelXY((WIDTH-(xSmokePos-y)-1)*y/(HEIGHT-1)+WIDTH/2, y, color, 1);
+        EffectMath::drawPixelXY((xSmokePos-y)*y/EffectMath::getmaxHeightIndex()+WIDTH/2, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
+        EffectMath::drawPixelXY((WIDTH-(xSmokePos-y)-1)*y/EffectMath::getmaxHeightIndex()+WIDTH/2, y, color, 1);
       }
       break;
     default:
@@ -3457,7 +3458,7 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
   l->y += l->yd*speedfactor2;
 
   // bounce off the floor and ceiling?
-  if (l->y < 0 || l->y > HEIGHT - 1) {
+  if (l->y < 0 || l->y > EffectMath::getmaxHeightIndex()) {
     l->yd = (-l->yd * WALL_FRICTION);
     l->xd = ( l->xd * WALL_FRICTION);
     l->y += l->yd*speedfactor;
@@ -3469,12 +3470,12 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
   }
 
   // bounce off the sides of the screen?
-  if (l->x <= 0 || l->x >= WIDTH - 1) {
+  if (l->x <= 0 || l->x >= EffectMath::getmaxWidthIndex()) {
     l->xd = (-l->xd * WALL_FRICTION);
     if (l->x <= 0) {
       l->x = l->xd*speedfactor;
     } else {
-      l->x = WIDTH - 1 - l->xd;
+      l->x = EffectMath::getmaxWidthIndex() - l->xd;
     }
   }
 
@@ -3572,10 +3573,10 @@ void EffectLiquidLamp::physic(){
   for (unsigned i = 0; i < numParticles; i++) {
     Particle *p1 = (Particle *)&particles[i];
     // отключаем физику на границах, чтобы не слипались шары
-    if (p1->position_y < 3 || p1->position_y > HEIGHT - 1) continue;
+    if (p1->position_y < 3 || p1->position_y > EffectMath::getmaxHeightIndex()) continue;
     for (unsigned j = i + 1; j < numParticles; j++) {
       Particle *p2 = (Particle *)&particles[j];
-      if (p2->position_y < 3 || p2->position_y > HEIGHT - 1) continue;
+      if (p2->position_y < 3 || p2->position_y > EffectMath::getmaxHeightIndex()) continue;
       float radius = 3;//(p1->rad + p2->rad);
       if (p1->position_x + radius > p2->position_x
 					&& p1->position_x < radius + p2->position_x
@@ -3672,8 +3673,8 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
     // Оператор Щарра
     int oper_h[3][3] = {{3, 10, 3}, {0, 0, 0}, {-3, -10, -3}};
     int oper_v[3][3] = {{3, 0, -3}, {10, 0, -10}, {3, 0, -3}};
-    for (unsigned x = 0; x < WIDTH - 1; x++) {
-      for (unsigned y = 0; y < HEIGHT - 1; y++) {
+    for (unsigned x = 0; x < (unsigned)EffectMath::getmaxWidthIndex(); x++) {
+      for (unsigned y = 0; y < (unsigned)EffectMath::getmaxHeightIndex(); y++) {
         int valh = 0, valv = 0;
         for (int j = -1; j <= 1; j++) {
           for (int i = -1; i <= 1; i++) {
@@ -3688,8 +3689,8 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       }
     }
 
-    for (unsigned x = 0; x < WIDTH - 1; x++) {
-      for (unsigned y = 0; y < HEIGHT - 1; y++) {
+    for (unsigned x = 0; x < (unsigned)EffectMath::getmaxWidthIndex(); x++) {
+      for (unsigned y = 0; y < (unsigned)EffectMath::getmaxHeightIndex(); y++) {
         float val = buff2[x][y];
         unsigned step = filter - 1;
         val = 1 - (val - min) / (max - min);
@@ -3811,7 +3812,7 @@ void EffectAquarium::nPatterns() {
     for (byte y = 0; y < HEIGHT; y ++)
     {
       byte val = ledbuff[EffectMath::getPixelNumberBuff((xsin + x) % (WIDTH * 2), (ysin + y) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2)];
-      EffectMath::drawPixelXY(x, HEIGHT-1 - y, CHSV((uint8_t)((uint16_t)hue - val* 31), map((satur + 32 * val), 1, 510, 1, 255), _video));
+      EffectMath::drawPixelXY(x, EffectMath::getmaxHeightIndex() - y, CHSV((uint8_t)((uint16_t)hue - val* 31), map((satur + 32 * val), 1, 510, 1, 255), _video));
 
     }
   }
@@ -4424,15 +4425,15 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
   x[layer] = x[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][0][0]) - 255U;
   //modulate the position so that it increases/decreases y
   //(here based on the top right pixel - it could be any position else)
-  y[layer] = y[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][WIDTH - 1][0]) - 255U;
+  y[layer] = y[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][EffectMath::getmaxWidthIndex()][0]) - 255U;
   //z just in one direction but with the additional "1" to make sure to never get stuck
   //in case the movement is stopped by a crazy parameter (noise data) combination
   //(here based on the down left pixel - it could be any position else)
-  z[layer] += 1 + ((noise[layer][0][HEIGHT - 1]) / 4);
+  z[layer] += 1 + ((noise[layer][0][EffectMath::getmaxHeightIndex()]) / 4);
   //set the scaling based on left and right pixel of the middle line
   //here you can set the range of the zoom in both dimensions
   scale_x[layer] = 8000 + (noise[layer][0][CentreY] * 16);
-  scale_y[layer] = 8000 + (noise[layer][WIDTH - 1][CentreY] * 16);
+  scale_y[layer] = 8000 + (noise[layer][EffectMath::getmaxWidthIndex()][CentreY] * 16);
 
   //calculate the noise data
   for (uint8_t i = 0; i < WIDTH; i++) {
@@ -4458,11 +4459,11 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
       //I will add this overlay CRGB later for more colors
       //it´s basically a rainbow mapping with an inverted brightness mask
       CRGB overlay;
-      if (palettepos == 14) overlay = CHSV(160,255 - noise[layer][x][y], noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]);
+      if (palettepos == 14) overlay = CHSV(160,255 - noise[layer][x][y], noise[layer][EffectMath::getmaxWidthIndex()][EffectMath::getmaxHeightIndex()] + noise[layer][x][y]);
       else overlay = CHSV(noise[layer][y][x], 255, noise[layer][x][y]);
       //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[layer][15][15]
       if (palettepos == 4) EffectMath::drawPixelXYF(x, HEIGHT - y, CHSV(160, 0 , noise[layer][x][y]), 35);
-      else EffectMath::drawPixelXY(x, y, ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][WIDTH - 1][HEIGHT - 1] + noise[layer][x][y]) + overlay);
+      else EffectMath::drawPixelXY(x, y, ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][EffectMath::getmaxWidthIndex()][EffectMath::getmaxHeightIndex()] + noise[layer][x][y]) + overlay);
     }
   }
 
@@ -4552,8 +4553,8 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
     butterflysPosY[i] += butterflysSpeedY[i]*speedfactor;
 
     if (butterflysPosX[i] < 0)
-      butterflysPosX[i] = (float)(WIDTH - 1) + butterflysPosX[i];
-    if (butterflysPosX[i] > WIDTH - 1)
+      butterflysPosX[i] = (float)EffectMath::getmaxWidthIndex() + butterflysPosX[i];
+    if (butterflysPosX[i] > EffectMath::getmaxWidthIndex())
       butterflysPosX[i] = butterflysPosX[i] + 1 - WIDTH;
 
     if (butterflysPosY[i] < 0)
@@ -4562,7 +4563,7 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
       butterflysSpeedY[i] = -butterflysSpeedY[i];
       //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
-    if (butterflysPosY[i] > HEIGHT - 1U)
+    if (butterflysPosY[i] > EffectMath::getmaxHeightIndex())
     {
       butterflysPosY[i] = (HEIGHT << 1U) - 2U - butterflysPosY[i];
       butterflysSpeedY[i] = -butterflysSpeedY[i];
@@ -4759,14 +4760,14 @@ void EffectPatterns::drawPicture_XY() {
 
       if(_subpixel){
         if(_speed==33)
-          EffectMath::drawPixelXYF_X(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+          EffectMath::drawPixelXYF_X(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
         else if(_scale==33)
-          EffectMath::drawPixelXYF_Y(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+          EffectMath::drawPixelXYF_Y(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
         else{
-            EffectMath::drawPixelXYF(((float)x-vx), (float)(HEIGHT-1)-((float)y-vy), color2, 0);
+            EffectMath::drawPixelXYF(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
         }
       } else {
-        EffectMath::drawPixelXY(x, (HEIGHT-1)-y, color2);
+        EffectMath::drawPixelXY(x, EffectMath::getmaxHeightIndex()-y, color2);
       }
     }
   }
@@ -5100,7 +5101,7 @@ void EffectArrows::arrowSetup_mode1() {
   // справа налево
   if ((arrow_direction & 0x04) > 0) {
     arrow_hue[2] = random8();
-    arrow_x[2] = WIDTH - 1;
+    arrow_x[2] = EffectMath::getmaxWidthIndex();
     arrow_y[2] = HEIGHT / 2;
     stop_x [2] = -7;             // скрывается за экраном на 7 пикселей
     stop_y [2] = 0;              // неприменимо
@@ -5108,7 +5109,7 @@ void EffectArrows::arrowSetup_mode1() {
   // сверху вниз
   if ((arrow_direction & 0x08) > 0) {
     arrow_hue[3] = random8();
-    arrow_y[3] = HEIGHT - 1;
+    arrow_y[3] = EffectMath::getmaxHeightIndex();
     arrow_x[3] = WIDTH / 2;
     stop_y [3] = -7;             // скрывается за экраном на 7 пикселей
     stop_x [3] = 0;              // неприменимо
@@ -5135,7 +5136,7 @@ void EffectArrows::arrowSetup_mode2() {
   // справа налево до половины экрана
   if ((arrow_direction & 0x04) > 0) {
     arrow_hue[2] = random8();
-    arrow_x[2] = WIDTH - 1;
+    arrow_x[2] = EffectMath::getmaxWidthIndex();
     arrow_y[2] = HEIGHT / 2;
     stop_x [2] = WIDTH / 2;      // до центра экрана
     stop_y [2] = 0;              // неприменимо
@@ -5143,7 +5144,7 @@ void EffectArrows::arrowSetup_mode2() {
   // сверху вниз до половины экрана
   if ((arrow_direction & 0x08) > 0) {
     arrow_hue[3] = random8();
-    arrow_y[3] = HEIGHT - 1;
+    arrow_y[3] = EffectMath::getmaxHeightIndex();
     arrow_x[3] = WIDTH / 2;
     stop_y [3] = HEIGHT / 2;     // до центра экрана
     stop_x [3] = 0;              // неприменимо
@@ -5170,7 +5171,7 @@ void EffectArrows::arrowSetup_mode4() {
   // справа налево
   if ((arrow_direction & 0x04) > 0) {
     arrow_hue[2] = random8();
-    arrow_x[2] = WIDTH - 1;
+    arrow_x[2] = EffectMath::getmaxWidthIndex();
     arrow_y[2] = HEIGHT / 3;
     stop_x [2] = -7;             // скрывается за экраном на 7 пикселей
     stop_y [2] = 0;              // неприменимо
@@ -5178,7 +5179,7 @@ void EffectArrows::arrowSetup_mode4() {
   // сверху вниз
   if ((arrow_direction & 0x08) > 0) {
     arrow_hue[3] = random8();
-    arrow_y[3] = HEIGHT - 1;
+    arrow_y[3] = EffectMath::getmaxHeightIndex();
     arrow_x[3] = WIDTH / 3;
     stop_y [3] = -7;             // скрывается за экраном на 7 пикселей
     stop_x [3] = 0;              // неприменимо
@@ -5209,11 +5210,11 @@ void EffectNBals::blur(CRGB *leds) {
   EffectMath::blur2d(beatsin8(2,0,60));
   // Use two out-of-sync sine waves
   // В общем те же фигуры Лиссажу, вид сбоку :), но выглядят хорошо
-  uint8_t  i = beatsin8( beat1, 0, HEIGHT-1);
-  uint8_t  j = beatsin8(fabs(beat1-beat2), 0, WIDTH-1);
+  uint8_t  i = beatsin8( beat1, 0, EffectMath::getmaxHeightIndex());
+  uint8_t  j = beatsin8(fabs(beat1-beat2), 0, EffectMath::getmaxWidthIndex());
   // Also calculate some reflections
-  uint8_t ni = (WIDTH-1)-i;
-  uint8_t nj = (WIDTH-1)-j;
+  uint8_t ni = EffectMath::getmaxWidthIndex() -i;
+  uint8_t nj = EffectMath::getmaxWidthIndex() -j;
   // The color of each point shifts over time, each at a different speed.
   uint16_t ms = millis();
 
@@ -5271,8 +5272,8 @@ void EffectAttract::load() {
     boid.velocity.x *= direction;
     boid.velocity.y = 0;
     boid.colorIndex = i * 32;
-    boid.location.x = EffectMath::randomf(0, WIDTH-1); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
-    boid.location.y = EffectMath::randomf(0, HEIGHT-1); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
+    boid.location.x = EffectMath::randomf(0, EffectMath::getmaxWidthIndex()); // на малой скорости и максимальной энергии, почему-то формировалась только одна-две частицы,
+    boid.location.y = EffectMath::randomf(0, EffectMath::getmaxHeightIndex()); // остальные улетели за область экрана. И потом несколько минут добираються в область видимости.
     //Это вроде решает проблему
     boids[i] = boid;
   }
@@ -5483,21 +5484,21 @@ bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
 
     // Обеспечиваем бесшовность по Y. И переносим каплю в начало трека
     if (dotPosY[i] < 0) {
-      dotPosY[i] = (float)HEIGHT - 1.;    
+      dotPosY[i] = (float)EffectMath::getmaxHeightIndex();    
       resetDot(i);
     }
 
-    if (dotPosY[i] > (HEIGHT - 1)) {
+    if (dotPosY[i] > (EffectMath::getmaxHeightIndex())) {
       dotPosY[i] = 0;
       resetDot(i);
     }
 
     // Обеспечиваем бесшовность по X.
     if (dotPosX[i] < 0) {
-      dotPosX[i] = (WIDTH - 1);
+      dotPosX[i] = EffectMath::getmaxWidthIndex();
       resetDot(i);
     }
-    if (dotPosX[i] > (WIDTH - 1)) {
+    if (dotPosX[i] > EffectMath::getmaxWidthIndex()) {
       dotPosX[i] = 0;
       resetDot(i);
     }
@@ -5536,14 +5537,14 @@ void EffectNexus::resetDot(uint8_t idx) {
     break;
   case 1:   //  вниз 
     dotPosX[idx] = random8(0, WIDTH); // Разбрасываем капли по ширине
-    dotPosY[idx] = HEIGHT-1;  // и по высоте
+    dotPosY[idx] = EffectMath::getmaxHeightIndex();  // и по высоте
     break;
   case 2:   // вправо
     dotPosX[idx] = 0; // Разбрасываем капли по ширине
     dotPosY[idx] = random8(0, HEIGHT);  // и по высоте
     break;
   case 3:   // влево
-    dotPosX[idx] = WIDTH-1; // Разбрасываем капли по ширине
+    dotPosX[idx] = EffectMath::getmaxWidthIndex(); // Разбрасываем капли по ширине
     dotPosY[idx] = random8(0, HEIGHT);  // и по высоте
     break;
   default:
@@ -5693,7 +5694,7 @@ void EffectFire2020::regenNoise() {
   }
   for (uint8_t j = 0; j < HEIGHT; j++)
   {
-    colorfade[j] = abs8(j - (HEIGHT - 1)) * 255 / (HEIGHT - 1); // init colorfade table
+    colorfade[j] = abs8(j - (EffectMath::getmaxHeightIndex())) * 255 / (EffectMath::getmaxHeightIndex()); // init colorfade table
     if (random8() < 100)
     {
       noises[random8(EffectMath::getmaxWidthIndex())*WIDTH+j] = qadd8(noises[j], random(156, 255)); // 196, 255
@@ -5723,7 +5724,7 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
 #endif
     {
       uint16_t index = ((uint8_t)(j + a) + random8(2)) % (NOISE_HEIGHT)*WIDTH; //roll index in noise buffer
-      EffectMath::drawPixelXYF_Y(i, (float)(HEIGHT - 1) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
+      EffectMath::drawPixelXYF_Y(i, (float)(EffectMath::getmaxHeightIndex()) - j, ColorFromPalette(*curPalette, qsub8(noises[i + index], colorfade[(uint8_t)j])), 35);
 
     }
   }
@@ -5793,13 +5794,13 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
           case B10:
             snakeDirect[i] = B01;
             if (snakePosY[i] == 0U)
-              snakePosY[i] = HEIGHT - 1U;
+              snakePosY[i] = EffectMath::getmaxHeightIndex();
             else
               snakePosY[i]--;
             break;
           case B11:
             snakeDirect[i] = B00;
-            if (snakePosY[i] >= HEIGHT - 1U)
+            if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
               snakePosY[i] = 0U;
             else
               snakePosY[i]++;
@@ -5807,13 +5808,13 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
           case B00:
             snakeDirect[i] = B10;
             if (snakePosX[i] == 0U)
-              snakePosX[i] = WIDTH - 1U;
+              snakePosX[i] = EffectMath::getmaxWidthIndex();
             else
               snakePosX[i]--;
             break;
           case B01:
             snakeDirect[i] = B11;
-            if (snakePosX[i] >= WIDTH - 1U)
+            if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
               snakePosX[i] = 0U;
             else
               snakePosX[i]++;
@@ -5828,13 +5829,13 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
           case B11:
             snakeDirect[i] = B01;
             if (snakePosY[i] == 0U)
-              snakePosY[i] = HEIGHT - 1U;
+              snakePosY[i] = EffectMath::getmaxHeightIndex();
             else
               snakePosY[i]--;
             break;
           case B10:
             snakeDirect[i] = B00;
-            if (snakePosY[i] >= HEIGHT - 1U)
+            if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
               snakePosY[i] = 0U;
             else
               snakePosY[i]++;
@@ -5842,13 +5843,13 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
           case B01:
             snakeDirect[i] = B10;
             if (snakePosX[i] == 0U)
-              snakePosX[i] = WIDTH - 1U;
+              snakePosX[i] = EffectMath::getmaxWidthIndex();
             else
               snakePosX[i]--;
             break;
           case B00:
             snakeDirect[i] = B11;
-            if (snakePosX[i] >= WIDTH - 1U)
+            if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
               snakePosX[i] = 0U;
             else
               snakePosX[i]++;
@@ -5862,24 +5863,24 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
         {
         case B01:
           if (snakePosY[i] == 0U)
-            snakePosY[i] = HEIGHT - 1U;
+            snakePosY[i] = EffectMath::getmaxHeightIndex();
           else
             snakePosY[i]--;
           break;
         case B00:
-          if (snakePosY[i] >= HEIGHT - 1U)
+          if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
             snakePosY[i] = 0U;
           else
             snakePosY[i]++;
           break;
         case B10:
           if (snakePosX[i] == 0U)
-            snakePosX[i] = WIDTH - 1U;
+            snakePosX[i] = EffectMath::getmaxWidthIndex();
           else
             snakePosX[i]--;
           break;
         case B11:
-          if (snakePosX[i] >= WIDTH - 1U)
+          if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
             snakePosX[i] = 0U;
           else
             snakePosX[i]++;
@@ -5983,7 +5984,7 @@ bool EffectPopcorn::run(CRGB *ledarr, EffectWorker *opt) {
 void EffectPopcorn::restart_rocket(uint8_t r) {
   //tiltDirec = !tiltDirec; // "Мальчик" <> "Девочка"
   rockets[r].xd = (float)(random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH * HEIGHT + (WIDTH*2))) / 256.0; // * tiltDirec; // Наклон. "Мальчики" налево, "девочки" направо. :)
-  if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > (WIDTH-1) && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
+  if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > EffectMath::getmaxWidthIndex() && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
     // leap towards the centre of the screen
     rockets[r].xd = -rockets[r].xd;
   }
@@ -6017,10 +6018,10 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
   for (uint8_t r = 0; r < numRockets; r++) {
     // add the X & Y velocities to the positions
     rockets[r].x += rockets[r].xd ;
-    if (rockets[r].x > WIDTH - 1)
-      rockets[r].x = rockets[r].x - (WIDTH - 1);
+    if (rockets[r].x > EffectMath::getmaxWidthIndex())
+      rockets[r].x = rockets[r].x - EffectMath::getmaxWidthIndex();
     if (rockets[r].x < 0)
-      rockets[r].x = WIDTH - 1 + rockets[r].x;
+      rockets[r].x = EffectMath::getmaxWidthIndex() + rockets[r].x;
     rockets[r].y += rockets[r].yd * speedfactor;
     
     if (rockets[r].y >= (float)HEIGHT){
@@ -6211,8 +6212,8 @@ void EffectCell::spruce(CRGB *leds) {
   uint8_t z;
   if (effId == 3) z = triwave8(hue);
   else z = beatsin8(1, 1, 255);
-  for (uint8_t i = 0; i < WIDTH - 1; i++) {
-    x[i] = beatsin16(i * map(speed, 1, 255, 3, 20), i * 2, ((WIDTH - 1) * 4 - 2) - (i * 2 + 2));
+  for (uint8_t i = 0; i < EffectMath::getmaxWidthIndex(); i++) {
+    x[i] = beatsin16(i * map(speed, 1, 255, 3, 20), i * 2, (EffectMath::getmaxWidthIndex() * 4 - 2) - (i * 2 + 2));
     if (effId == 2) 
       EffectMath::drawPixelXYF_X(x[i] / 4, i, random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255) : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
     else
@@ -6259,15 +6260,15 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
 
   EVERY_N_MILLISECONDS(30. / speedfactor) { hue++; } //30 - speed of hue change
 
-  float x1 = (float)beatsin16(18. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator;
-  float x2 = (float)beatsin16(23. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator;
-  float x3 = (float)beatsin16(27. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator; 
-  float x4 = (float)beatsin16(31. * speedfactor, 0, (WIDTH - 1) *deviator) / deviator; 
+  float x1 = (float)beatsin16(18. * speedfactor, 0, EffectMath::getmaxWidthIndex() *deviator) / deviator;
+  float x2 = (float)beatsin16(23. * speedfactor, 0, EffectMath::getmaxWidthIndex() *deviator) / deviator;
+  float x3 = (float)beatsin16(27. * speedfactor, 0, EffectMath::getmaxWidthIndex() *deviator) / deviator; 
+  float x4 = (float)beatsin16(31. * speedfactor, 0, EffectMath::getmaxWidthIndex() *deviator) / deviator; 
 
-  float y1 = (float)beatsin16(20. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
-  float y2 = (float)beatsin16(26. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
-  float y3 = (float)beatsin16(15. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
-  float y4 = (float)beatsin16(27. * speedfactor, 0, (HEIGHT - 1) *deviator) / deviator;
+  float y1 = (float)beatsin16(20. * speedfactor, 0, EffectMath::getmaxHeightIndex() *deviator) / deviator;
+  float y2 = (float)beatsin16(26. * speedfactor, 0, EffectMath::getmaxHeightIndex() *deviator) / deviator;
+  float y3 = (float)beatsin16(15. * speedfactor, 0, EffectMath::getmaxHeightIndex() *deviator) / deviator;
+  float y4 = (float)beatsin16(27. * speedfactor, 0, EffectMath::getmaxHeightIndex() *deviator) / deviator;
 
   fadeToBlackBy (leds, NUM_LEDS, map(_blur, 1, 128, 128, 2));
 
@@ -6487,7 +6488,7 @@ float EffectTLand::code(double i, double x, double y) {
     case 19:
       // Matrix Rain https://twitter.com/P_Malin/status/1323583013880553472
       //return 1. - fmod((x * x - y + t * (fmod(1 + x * x, 5)) * 6), 16) / 16;
-      return 1. - fmod((x * x - (HEIGHT - 1 - y) + t * (1 + fmod(x * x, 5)) * 3), WIDTH) / HEIGHT;
+      return 1. - fmod((x * x - (EffectMath::getmaxHeightIndex() - y) + t * (1 + fmod(x * x, 5)) * 3), WIDTH) / HEIGHT;
       break;
 
     case 20:
@@ -6506,7 +6507,7 @@ float EffectTLand::code(double i, double x, double y) {
       // Starfield https://twitter.com/P_Malin/status/1323702220320313346 
       //return !((int)(x + (t/2) * 50 / (fmod(y * y, 5.9) + 1)) & 15) / (fmod(y * y, 5.9) + 1);
       {
-        uint16_t _y = (HEIGHT - 1 - y);
+        uint16_t _y = (EffectMath::getmaxHeightIndex() - y);
         float d = (fmod(_y * _y + 4, 4.1) + 0.85) * 0.5; // коэффициенты тут отвечают за яркость (размер), скорость, смещение, подбираются экспериментально :)
         return !((int)(x + t * 7.0 / d) & 15) / d; // 7.0 - множитель скорости
       }
@@ -6650,7 +6651,7 @@ uint16_t EffectLLand::code(byte x, byte y, uint16_t i, float t) {
       break;
     case 8: outputcode = sin8(y * 5 + 30) / 2 + sin8(x * 5 + 30) / 2 + sin8(t / 5);
       break;
-    case 9: outputcode = map(inoise8(x * 50, y * 50 - t * 16, 0) - y * 255 / (HEIGHT - 1), 0, 255, 205, 255); // CHSV fire
+    case 9: outputcode = map(inoise8(x * 50, y * 50 - t * 16, 0) - y * 255 / (EffectMath::getmaxHeightIndex()), 0, 255, 205, 255); // CHSV fire
       break;
   }
   return outputcode;
@@ -6789,34 +6790,34 @@ void EffectOscilator::drawPixelXYFseamless(float x, float y, CRGB color)
 int EffectOscilator::redNeighbours(uint8_t x, uint8_t y) {
   return (oscillatingWorld[(x + 1) % WIDTH][y].red) +
          (oscillatingWorld[x][(y + 1) % HEIGHT].red) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][y].red) +
-         (oscillatingWorld[x][(y + HEIGHT - 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][y].red) +
+         (oscillatingWorld[x][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].red) +
          (oscillatingWorld[(x + 1) % WIDTH][(y + 1) % HEIGHT].red) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + 1) % HEIGHT].red) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].red) +
-         (oscillatingWorld[(x + 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].red);
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][(y + 1) % HEIGHT].red) +
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].red) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].red);
     }
 
 int EffectOscilator::blueNeighbours(uint8_t x, uint8_t y) {
   return (oscillatingWorld[(x + 1) % WIDTH][y].blue) +
          (oscillatingWorld[x][(y + 1) % HEIGHT].blue) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][y].blue) +
-         (oscillatingWorld[x][(y + HEIGHT - 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][y].blue) +
+         (oscillatingWorld[x][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].blue) +
          (oscillatingWorld[(x + 1) % WIDTH][(y + 1) % HEIGHT].blue) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + 1) % HEIGHT].blue) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].blue) +
-         (oscillatingWorld[(x + 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].blue);
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][(y + 1) % HEIGHT].blue) +
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].blue) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].blue);
 }
   
 int EffectOscilator::greenNeighbours(uint8_t x, uint8_t y) {
   return (oscillatingWorld[(x + 1) % WIDTH][y].green) +
          (oscillatingWorld[x][(y + 1) % HEIGHT].green) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][y].green) +
-         (oscillatingWorld[x][(y + HEIGHT - 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][y].green) +
+         (oscillatingWorld[x][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].green) +
          (oscillatingWorld[(x + 1) % WIDTH][(y + 1) % HEIGHT].green) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + 1) % HEIGHT].green) +
-         (oscillatingWorld[(x + WIDTH - 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].green) +
-         (oscillatingWorld[(x + 1) % WIDTH][(y + HEIGHT - 1) % HEIGHT].green);
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][(y + 1) % HEIGHT].green) +
+         (oscillatingWorld[(x + EffectMath::getmaxWidthIndex()) % WIDTH][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].green) +
+         (oscillatingWorld[(x + 1) % WIDTH][(y + EffectMath::getmaxHeightIndex()) % HEIGHT].green);
 }
 
 void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
@@ -6840,7 +6841,7 @@ String EffectWrain::setDynCtrl(UIControl*_val)
 
 void EffectWrain::reload() {
   for (byte i = 0; i < counts; i++) {
-    dotPosX[i] = EffectMath::randomf(0, WIDTH-1); // Разбрасываем капли по ширине
+    dotPosX[i] = EffectMath::randomf(0, WIDTH); // Разбрасываем капли по ширине
     dotPosY[i] = EffectMath::randomf(0, HEIGHT);  // и по высоте
     dotColor[i] = random(0, 9) * 31;              // цвет капли
     dotAccel[i] = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
@@ -6898,13 +6899,13 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
       dotPosX[i] += EffectMath::randomf(-1, 1);                   // сдвигаем каплю туда-сюда по горизонтали
       dotBri[i] = random(170, 200);                               // задаем капле новое значение яркости
     }
-    if (dotPosY[i] > (HEIGHT - 1))
+    if (dotPosY[i] > (EffectMath::getmaxHeightIndex()))
       dotPosY[i] = 0;
 
     // Обеспечиваем бесшовность по X.
     if (dotPosX[i] < 0)
-      dotPosX[i] = (WIDTH - 1);
-    if (dotPosX[i] > (WIDTH - 1))
+      dotPosX[i] = EffectMath::getmaxWidthIndex();
+    if (dotPosX[i] > EffectMath::getmaxWidthIndex())
       dotPosX[i] = 0;
 
     if (randColor) {
@@ -6956,10 +6957,10 @@ if (random16() < chanse)
   {            
     timer = millis();
     //uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);                                                           // Odds of a lightning bolt
-    lightning[scale8(random8(), WIDTH - 1) + (HEIGHT - 1) * WIDTH] = 255; // Random starting location
-    for (uint8_t ly = HEIGHT - 1; ly > 1; ly--)
+    lightning[scale8(random8(), EffectMath::getmaxWidthIndex()) + EffectMath::getmaxHeightIndex() * WIDTH] = 255; // Random starting location
+    for (uint8_t ly = EffectMath::getmaxHeightIndex(); ly > 1; ly--)
     {
-      for (uint8_t lx = 1; lx < WIDTH - 1; lx++)
+      for (uint8_t lx = 1; lx < EffectMath::getmaxWidthIndex(); lx++)
       {
         if (lightning[lx + ly * WIDTH] == 255)
         {
@@ -7066,16 +7067,16 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt)
     ry = ceil(dots[i].y);
 
     EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
-    uint16_t pos = constrain(rx, 0, (int16_t)WIDTH - 1);
+    uint16_t pos = constrain(rx, 0, EffectMath::getmaxWidthIndex());
     if (dots[i].y < 0.1 || dots[i].y <= widthPos[pos])
     {
       int8_t shift = random(2) ? -1 : 1;
-      if (widthPos[constrain(pos + shift, 0, (int16_t)WIDTH - 1)] > widthPos[constrain(pos - shift, 0, (int16_t)WIDTH - 1)])
+      if (widthPos[constrain(pos + shift, 0, EffectMath::getmaxWidthIndex())] > widthPos[constrain(pos - shift, 0, EffectMath::getmaxWidthIndex())])
         shift *= -1;
-      if (pos < WIDTH && pos + shift >= 0 && pos + shift < (int16_t)WIDTH && widthPos[constrain(pos + shift, 0, (int16_t)WIDTH - 1)] < widthPos[pos])
+      if (pos < WIDTH && pos + shift >= 0 && pos + shift < (int16_t)WIDTH && widthPos[constrain(pos + shift, 0, EffectMath::getmaxWidthIndex())] < widthPos[pos])
       {
         EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-        dots[i].x = constrain(dots[i].x + shift, 0, (int16_t)WIDTH - 1);
+        dots[i].x = constrain(dots[i].x + shift, 0, EffectMath::getmaxWidthIndex());
         rx = dots[i].x;
         EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
       }
@@ -7159,7 +7160,7 @@ bool EffectPile::clearrows(bool clear)
             widthPos[x-1] = y;
             state = false;
           }
-          else if(EffectMath::getPixColorXY(x,y) && x<WIDTH-1 && y>widthPos[x+1]) {
+          else if(EffectMath::getPixColorXY(x,y) && x < EffectMath::getmaxWidthIndex() && y > widthPos[x+1]) {
             EffectMath::drawPixelXY(x+1,y-1, EffectMath::getPixColorXY(x,y));
             EffectMath::drawPixelXY(x,y, CRGB::Black);
             widthPos[x+1] = y;
@@ -7286,7 +7287,7 @@ bool EffectFairy::fairy(CRGB *leds) {
     
     boids[0].location.x += boids[1].velocity.x * speedFactor;
     boids[0].location.y += boids[1].velocity.y * speedFactor;
-    deltaHue2 = (boids[0].location.x <= 0 || boids[0].location.x >= WIDTH-1 || boids[0].location.y <= 0 || boids[0].location.y >= HEIGHT-1);
+    deltaHue2 = (boids[0].location.x <= 0 || boids[0].location.x >= EffectMath::getmaxWidthIndex() || boids[0].location.y <= 0 || boids[0].location.y >= EffectMath::getmaxHeightIndex());
   }
   else
 #endif // FAIRY_BEHAVIOR
@@ -7444,8 +7445,8 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
 
   for (int16_t x = startX; x < endX; x++) {
     for (int16_t y = startY; y < endY; y++) {
-      // if (y < 0 or y > (int)(HEIGHT - 1)) continue;
-      // if (x < 0 or y > (int)(WIDTH - 1)) continue;
+      // if (y < 0 or y > EffectMath::getmaxHeightIndex()) continue;
+      // if (x < 0 or y > EffectMath::getmaxWidthIndex()) continue;
       // int16_t index = myLamp.getPixelNumber(x, y);
       // if (index < 0 || index > NUM_LEDS - 1)
       //   continue;
@@ -7533,16 +7534,16 @@ void EffectBengalL::setspd(const byte _spd)
 bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, beatsin8(5, 20, 100));
   if (centerRun) {
-    gPos[0] = beatsin16(_x, 0, (WIDTH - 1) * 10);
-    gPos[1] = beatsin16(_y, 0, (HEIGHT - 1) * 10);
+    gPos[0] = beatsin16(_x, 0, EffectMath::getmaxWidthIndex() * 10);
+    gPos[1] = beatsin16(_y, 0, EffectMath::getmaxHeightIndex() * 10);
   } else {
     gPos[0] = WIDTH / 2 * 10;
     gPos[1] = HEIGHT / 2 * 10;
   }
   for (byte i = 0; i < map(scale, 1, 255, 8, sparksNum); i++) {
     phisics(i);
-    if (sparksPos[1][i] < ((HEIGHT - 1) * 10) and sparksPos[1][i] >= 0)
-      if (sparksPos[0][i] < ((WIDTH - 1) * 10) and sparksPos[0][i] >= 0)
+    if (sparksPos[1][i] < (EffectMath::getmaxHeightIndex() * 10) and sparksPos[1][i] >= 0)
+      if (sparksPos[0][i] < (EffectMath::getmaxWidthIndex() * 10) and sparksPos[0][i] >= 0)
         EffectMath::drawPixelXYF(sparksPos[0][i] / 10,  sparksPos[1][i] / 10, CHSV(sparksColor[i], constrain(sparksSat[i], 5, 255), constrain(sparksFade[i], 32, 255)));
   }
 
@@ -7615,15 +7616,15 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
       EffectMath::drawPixelXYF(ball[i][1], ball[i][0], ColorFromPalette(*curPalette, color[i]));
 
 
-    if (ball[i][0] + radius[i] >= HEIGHT - 1)
-      ball[i][0] += (ball[i][2] * ((HEIGHT - 1 - ball[i][0]) / radius[i] + 0.005));
+    if (ball[i][0] + radius[i] >= EffectMath::getmaxHeightIndex())
+      ball[i][0] += (ball[i][2] * ((EffectMath::getmaxHeightIndex() - ball[i][0]) / radius[i] + 0.005));
     else if (ball[i][0] - radius[i] <= 0)
       ball[i][0] += (ball[i][2] * (ball[i][0] / radius[i] + 0.005));
     else
       ball[i][0] += ball[i][2];
     //-----------------------
-    if (ball[i][1] + radius[i] >= WIDTH - 1)
-      ball[i][1] += (ball[i][3] * ((WIDTH - 1 - ball[i][1]) / radius[i] + 0.005));
+    if (ball[i][1] + radius[i] >= EffectMath::getmaxWidthIndex())
+      ball[i][1] += (ball[i][3] * ((EffectMath::getmaxWidthIndex() - ball[i][1]) / radius[i] + 0.005));
     else if (ball[i][1] - radius[i] <= 0)
       ball[i][1] += (ball[i][3] * (ball[i][1] / radius[i] + 0.005));
     else
@@ -7633,20 +7634,20 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
       ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
       ball[i][0] = 0.01;
     }
-    else if (ball[i][0] > HEIGHT - 1.01) {
+    else if (ball[i][0] > (float)EffectMath::getmaxHeightIndex()) {
       ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
       ball[i][2] = -ball[i][2];
-      ball[i][0] = HEIGHT - 1.01;
+      ball[i][0] = (float)EffectMath::getmaxHeightIndex();
     }
     //----------------------
     if (ball[i][1] < 0.01) {
       ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
       ball[i][1] = 0.01;
     }
-    else if (ball[i][1] > WIDTH - 1.01) {
+    else if (ball[i][1] > EffectMath::getmaxWidthIndex()) {
       ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
       ball[i][3] = -ball[i][3];
-      ball[i][1] = WIDTH - 1.01;
+      ball[i][1] = EffectMath::getmaxWidthIndex();
     }
   }
   blur2d(leds, WIDTH, HEIGHT, 48);
@@ -7730,7 +7731,7 @@ void EffectMaze::buttonsTickMaze() {
     if (buttons == 3) {   // кнопка нажата
       btnPressed = true;
       int8_t newPos = playerPos[0] - 1;
-      if (newPos >= 0 && newPos <= (int)WIDTH - 1)
+      if (newPos >= 0 && newPos <= EffectMath::getmaxWidthIndex())
         if (EffectMath::getPixColorXY(newPos, playerPos[1]) == 0) {
           movePlayer(newPos, playerPos[1], playerPos[0], playerPos[1]);
           playerPos[0] = newPos;
@@ -7739,7 +7740,7 @@ void EffectMaze::buttonsTickMaze() {
     if (buttons == 1) {   // кнопка нажата
       btnPressed = true;
       int8_t newPos = playerPos[0] + 1;
-      if (newPos >= 0 && newPos <= (int)WIDTH - 1)
+      if (newPos >= 0 && newPos <= EffectMath::getmaxWidthIndex())
         if (EffectMath::getPixColorXY(newPos, playerPos[1]) == 0) {
           movePlayer(newPos, playerPos[1], playerPos[0], playerPos[1]);
           playerPos[0] = newPos;
@@ -7748,7 +7749,7 @@ void EffectMaze::buttonsTickMaze() {
     if (buttons == 0) {   // кнопка нажата
       btnPressed = true;
       int8_t newPos = playerPos[1] + 1;
-      if (newPos >= 0 && newPos <= (int)HEIGHT - 1)
+      if (newPos >= 0 && newPos <= EffectMath::getmaxHeightIndex())
         if (EffectMath::getPixColorXY(playerPos[0], newPos) == 0) {
           movePlayer(playerPos[0], newPos, playerPos[0], playerPos[1]);
           playerPos[1] = newPos;
@@ -7757,7 +7758,7 @@ void EffectMaze::buttonsTickMaze() {
     if (buttons == 2) {   // кнопка нажата
       btnPressed = true;
       int8_t newPos = playerPos[1] - 1;
-      if (newPos >= 0 && newPos <= (int)HEIGHT - 1)
+      if (newPos >= 0 && newPos <= EffectMath::getmaxHeightIndex())
         if (EffectMath::getPixColorXY(playerPos[0], newPos) == 0) {
           movePlayer(playerPos[0], newPos, playerPos[0], playerPos[1]);
           playerPos[1] = newPos;
@@ -7792,7 +7793,7 @@ void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY
   if (GAMEMODE || mazeMode) {
     for (int8_t y = nowY - FOV; y < nowY + FOV; y++) {
       for (int8_t x = nowX - FOV; x < nowX + FOV; x++) {
-        if (x < 0 || x > (int)WIDTH - 1 || y < 0 || y > (int)HEIGHT - 1) continue;
+        if (x < 0 || x > EffectMath::getmaxWidthIndex() || y < 0 || y > EffectMath::getmaxHeightIndex()) continue;
         if (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)] == 1) {
           EffectMath::drawPixelXY(x, y, GLOBAL_COLOR_1);
         }
@@ -7947,7 +7948,7 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
   else _scale = EffectMath::fmap(scale, 1, 255, 8, 1);
 
   for(float i= (float)8 * _scale; i> 0; i--)
-    EffectMath::drawPixelXY(beatsin8(12. * _speed + i * _speed, 0, WIDTH - 1), beatsin8(15. * _speed + i * _speed, 0, HEIGHT - 1), CHSV(beatsin8(12. * _speed, 0, 255), scale > 127 ? 255 - i*8 : 255, scale > 127 ? 127 + i*8 : 255));
+    EffectMath::drawPixelXY(beatsin8(12. * _speed + i * _speed, 0, EffectMath::getmaxWidthIndex()), beatsin8(15. * _speed + i * _speed, 0, EffectMath::getmaxHeightIndex()), CHSV(beatsin8(12. * _speed, 0, 255), scale > 127 ? 255 - i*8 : 255, scale > 127 ? 127 + i*8 : 255));
   blur2d(leds, WIDTH, HEIGHT, 16);
   return true;
 }
@@ -8090,8 +8091,8 @@ void EffectRacer::load() {
 }
 
 void EffectRacer::aimChange() {
-  aimX = random(0, WIDTH-1);  // позиция цели 
-  aimY = random(0, HEIGHT-1);
+  aimX = random(0, EffectMath::getmaxWidthIndex());  // позиция цели 
+  aimY = random(0, EffectMath::getmaxHeightIndex());
   radius = 1; // начальный размер цели = 1 пиксель
   hue = millis()>>1; //random(0, 255);
   color = ColorFromPalette(*curPalette, hue, 180);
@@ -8166,10 +8167,10 @@ void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
   int yindex = WIDTH;
   int8_t vly = lighty;
 
-  for (uint8_t y = 1; y < HEIGHT - 1; y++) {
+  for (uint8_t y = 1; y < EffectMath::getmaxHeightIndex(); y++) {
     ++vly;
     int8_t vlx = lightx;
-    for (uint8_t x = 1; x < WIDTH - 1; x++) {
+    for (uint8_t x = 1; x < EffectMath::getmaxWidthIndex(); x++) {
       ++vlx;
       int8_t nx = bump[x + 1 + yindex] - bump[x - 1 + yindex];
       int8_t ny = bump[x + yindex + WIDTH] - bump[x + yindex - WIDTH];
@@ -8217,7 +8218,7 @@ void EffectMagma::regen() {
   deltaValue = 12U;
   deltaHue = 10U;// map(deltaValue, 8U, 168U, 8U, 84U); // высота языков пламени должна уменьшаться не так быстро, как ширина
   for (uint8_t j = 0; j < HEIGHT; j++) {
-    shiftHue[j] = (HEIGHT - 1 - j) * 255 / (HEIGHT - 1); // init colorfade table
+    shiftHue[j] = (EffectMath::getmaxHeightIndex() - j) * 255 / (EffectMath::getmaxHeightIndex()); // init colorfade table
   }
   ObjectNUM = map(scale, 1, 255, 1, enlargedOBJECT_MAX_COUNT);
 
@@ -8235,7 +8236,7 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 
   for (uint8_t i = 0; i < WIDTH; i++) {
     for (uint8_t j = 0; j < HEIGHT; j++) {
-      EffectMath::drawPixelXY(i, HEIGHT - 1U - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 255U));
+      EffectMath::drawPixelXY(i, EffectMath::getmaxHeightIndex() - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 255U));
     }
   }
 
@@ -8274,12 +8275,12 @@ void EffectMagma::LeapersMove_leaper(uint8_t l) {
   }
 
   // bounce off the sides of the screen?
-  if (trackingObjectPosX[l] <= 0 || trackingObjectPosX[l] >= WIDTH - 1) {
+  if (trackingObjectPosX[l] <= 0 || trackingObjectPosX[l] >= EffectMath::getmaxWidthIndex()) {
   /*  trackingObjectSpeedY[l] = (-trackingObjectSpeedY[l] * WALL_FRICTION);
     if (trackingObjectPosX[l] <= 0) {
       trackingObjectPosX[l] = trackingObjectSpeedY[l];
     } else {
-      trackingObjectPosX[l] = WIDTH - 1 - trackingObjectSpeedY[l];
+      trackingObjectPosX[l] = EffectMath::getmaxWidthIndex() - trackingObjectSpeedY[l];
     }*/
     LeapersRestart_leaper(l);
   }

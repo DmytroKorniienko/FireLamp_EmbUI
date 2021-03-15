@@ -618,9 +618,9 @@ static const TProgmemRGBPalette16 HolyLightsColors_p FL_PROGMEM = {0xff0000, 0xf
 #define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
 
 // --------------------------- эффект мячики ----------------------
-#define bballsMaxNUM_BALLS     (WIDTH)                // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
-#define bballsGRAVITY          (-9.7f)              // Downward (negative) acceleration of gravity in m/s^2
-#define bballsH0               (2)                 // Starting height, in meters, of the ball (strip length)
+#define bballsMaxNUM_BALLS     (WIDTH-1)             // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+#define bballsGRAVITY          (-9.7f)               // Downward (negative) acceleration of gravity in m/s^2
+#define bballsH0               (2)                   // Starting height, in meters, of the ball (strip length)
 #define bballsVImpact0         (EffectMath::sqrt(-2 * bballsGRAVITY * bballsH0))
 
 // ------------- метель -------------
