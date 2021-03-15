@@ -536,30 +536,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------------------------ ЭФФЕКТ ДЫМ ----------------------
-class EffectMStreamSmoke : public EffectCalc {
-private:
-  uint8_t smokeHue = 0U;
-  int fillType;
-  float xSmokePos;
-  float xSmokePos2;
-  uint8_t eNs_noisesmooth;
-  uint8_t rhue;
-  uint32_t e_x[NUM_LAYERS];
-  uint32_t e_y[NUM_LAYERS];
-  uint32_t e_z[NUM_LAYERS];
-  uint32_t e_scaleX[NUM_LAYERS];
-  uint32_t e_scaleY[NUM_LAYERS];
-  uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-
-  void FillNoise(int8_t layer);     // TODO: join with Comet's
-  bool multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param);
-  String setDynCtrl(UIControl*_val) override;
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
 class EffectFire2018 : public EffectCalc {
 private:
   const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
@@ -1922,18 +1898,21 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------------- Эффект "Магма"
+// (c) Сотнег (SottNick) 2021
+// адаптация и доводка до ума - kostyamat
 class EffectMagma: public EffectCalc {
 private:
     //uint16_t ff_x;
     float ff_y, ff_z;                         // большие счётчики
     uint8_t deltaValue;
     uint8_t deltaHue;
-    uint8_t step, ObjectNUM; 
+    uint8_t step, ObjectNUM = WIDTH; 
     uint8_t shiftHue[HEIGHT];
     float trackingObjectPosX[enlargedOBJECT_MAX_COUNT];
     float trackingObjectPosY[enlargedOBJECT_MAX_COUNT];
     uint8_t trackingObjectHue[enlargedOBJECT_MAX_COUNT];
-    float trackingObjectSpeedY[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectSpeedX[enlargedOBJECT_MAX_COUNT];
     float trackingObjectShift[enlargedOBJECT_MAX_COUNT];
     float speedfactor;
 

@@ -3037,11 +3037,6 @@ bool EffectTime::palleteTest(CRGB *leds, EffectWorker *param)
 
 bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
 {
-  // #undef HEIGHT
-  // #define HEIGHT 8
-  // #undef WIDTH
-  // #define WIDTH 8
-
   if (speed==254 || speed==1 || speed==255){
     EVERY_N_SECONDS(5){
       FastLED.clear();
@@ -3099,133 +3094,6 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
   }
   return true;
 
-  // #undef HEIGHT
-  // #define HEIGHT 16
-  // #undef WIDTH
-  // #define WIDTH 16
-}
-
-// ------------------------------ ЭФФЕКТ ДЫМ ----------------------
-bool EffectMStreamSmoke::run(CRGB *ledarr, EffectWorker *opt){
-  return multipleStreamSmokeRoutine(*&ledarr, &*opt);
-}
-
-// TODO: объединить функцию вместе с "EffectComet", сейчас лень возиться с указателями на массивы:)
-void EffectMStreamSmoke::FillNoise(int8_t layer) {
-  const uint8_t e_centerX =  (WIDTH / 2) - 1;
-  const uint8_t e_centerY = (HEIGHT / 2) - 1;
-
-  for (uint8_t i = 0; i < WIDTH; i++) {
-    int32_t ioffset = e_scaleX[layer] * (i - e_centerX);
-    for (uint8_t j = 0; j < HEIGHT; j++) {
-      int32_t joffset = e_scaleY[layer] * (j - e_centerY);
-      int8_t data = inoise16(e_x[layer] + ioffset, e_y[layer] + joffset, e_z[layer]) >> 8;
-      int8_t olddata = noise3d[layer][i][j];
-      int8_t newdata = scale8( olddata, eNs_noisesmooth ) + scale8( data, 255 - eNs_noisesmooth );
-      data = newdata;
-      noise3d[layer][i][j] = data;
-    }
-  }
-}
-
-String EffectMStreamSmoke::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==3) fillType = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  return String();
-}
-
-// (c) SottNick
-// Относительно стартовой версии - переписан 20200521
-bool EffectMStreamSmoke::multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param)
-{
-  CRGB color;
-  if(isDebug())
-    //EffectMath::dimAll(254);
-  //else
-    FastLED.clear();
-
-  xSmokePos = xSmokePos + speed / 255.0 + 0.01; // смещение здесь
-  xSmokePos2 = xSmokePos2 + scale / 512.0 + 0.01; // вращение заполнения тут
-
-  bool isColored = scale!=255 && scale!=1; // 255 и 1 - белый цвет
-  if (isColored)
-  {
-    if (smokeHue == scale)
-      {
-        smokeHue = 0U;
-        rhue = random8();
-      }
-    color = CHSV(rhue, 255U, 255U);
-    if ((int)xSmokePos & 0x01)//((smokeDeltaHue >> 2U) == 0U) // какой-то умножитель охота подключить к задержке смены цвета, но хз какой...
-      smokeHue++;
-  }
-  else
-    color = CHSV((scale - 1U) * 2.6, !isColored ? 0U : 255U, 255U);
-
-  switch(fillType){
-    case 1:
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        float v, f = xSmokePos-y;
-        f = modff(f, &v); v = (int)v%WIDTH;
-        v = v+f;
-
-        EffectMath::drawPixelXYF_X(v, y, color);
-        EffectMath::drawPixelXYF(EffectMath::getmaxWidthIndex() -v, y, color);
-      }
-      break;
-    case 2:
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY((int)(xSmokePos-y)%WIDTH+(int)(xSmokePos2)%WIDTH, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
-        EffectMath::drawPixelXY((WIDTH-(int)(xSmokePos-y)-1)%WIDTH+(int)(xSmokePos2)%WIDTH, y, color, 1);
-      }
-      break;
-    case 3:
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        float v, f = xSmokePos-y*1.5;
-        f = modff(f, &v); v = (int)v%WIDTH;
-        v = v+f;
-
-        EffectMath::drawPixelXYF_X(v, y, color);
-        EffectMath::drawPixelXYF(EffectMath::getmaxWidthIndex() -v, y, color);
-      }
-      break;
-    case 4:
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY((int)((xSmokePos-y)*1.5)%WIDTH+(int)(xSmokePos2)%WIDTH, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
-        EffectMath::drawPixelXY((WIDTH-(int)((xSmokePos-y)*1.5)-1)%WIDTH+(int)(xSmokePos2)%WIDTH, y, color, 1); // увеличим частоту в 1.5
-      }
-      break;
-    case 5:
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY(((int)xSmokePos - y) % WIDTH * y / EffectMath::getmaxHeightIndex() + WIDTH / 2, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
-        EffectMath::drawPixelXY((WIDTH - ((int)xSmokePos - y) - 1) % WIDTH * y / EffectMath::getmaxHeightIndex() + WIDTH / 2, y, color, 1);
-      }
-      break;
-    case 6:
-      for (uint8_t y = 0; y < HEIGHT; y++) {
-        EffectMath::drawPixelXY((xSmokePos-y)*y/EffectMath::getmaxHeightIndex()+WIDTH/2, y, color, 1); // на то что Х может оказаться отрицательным - ложим болт :)
-        EffectMath::drawPixelXY((WIDTH-(xSmokePos-y)-1)*y/EffectMath::getmaxHeightIndex()+WIDTH/2, y, color, 1);
-      }
-      break;
-    default:
-      break;
-  }
-  EffectMath::blur2d(35); // возможно размытие требуется до того как через шум пропускать, либо нужно заполнение через сабпиксель пропустить... хз, потом погляжу...
-  if(!isDebug()){
-    // Noise
-    uint16_t sc = (uint16_t)scale * 60 + 4000; //64 + 1000;
-    uint16_t sc2 = EffectMath::fmap(speed, 1, 255, 0.1, 1.); //(float)speed / 100.0 + 0.75; //1.5...3.5;
-    e_x[0] += 1000*sc2; // 3000;
-    e_y[0] += 1000*sc2; // 3000;
-    e_z[0] += 1000*sc2; // 3000;
-    e_scaleX[0] = sc; //8000;
-    e_scaleY[0] = sc; //8000;
-    FillNoise(0); 
-
-    EffectMath::MoveFractionalNoise(MOVE_X, noise3d, 3);//4
-    EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, 3);//4
-  }
-  return true;
 }
 
 // ----------- Эффекты "Пикассо" (c) obliterator
@@ -8185,8 +8053,9 @@ void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
   }
 }
 
-
-
+// ----------------- Эффект "Магма"
+// (c) Сотнег (SottNick) 2021
+// адаптация и доводка до ума - kostyamat
 void EffectMagma::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
@@ -8206,11 +8075,13 @@ void EffectMagma::palettesload(){
 
 void EffectMagma::load() {
   palettesload();
+  ObjectNUM = map(scale, 1, 100, WIDTH, enlargedOBJECT_MAX_COUNT);
   regen();
 }
 
 void EffectMagma::setscl(const byte _scl){
   EffectCalc::setscl(_scl);
+  ObjectNUM = map(scale, 1, 100, WIDTH, enlargedOBJECT_MAX_COUNT);
   regen();
 }
 
@@ -8220,12 +8091,10 @@ void EffectMagma::regen() {
   for (uint8_t j = 0; j < HEIGHT; j++) {
     shiftHue[j] = (EffectMath::getmaxHeightIndex() - j) * 255 / (EffectMath::getmaxHeightIndex()); // init colorfade table
   }
-  ObjectNUM = map(scale, 1, 255, 1, enlargedOBJECT_MAX_COUNT);
+
 
   for (uint8_t i = 0 ; i < ObjectNUM ; i++) {
-    trackingObjectPosX[i] = random(0, WIDTH);
-    trackingObjectPosY[i] = random(0, HEIGHT/4);
-
+    LeapersRestart_leaper(i);  
     trackingObjectHue[i] = 50U;
   }
 }
@@ -8234,75 +8103,60 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
   EffectMath::dimAll(181);
   speedfactor = EffectMath::fmap(speed, 1, 255, 0.05, .5);
 
+  for (uint8_t i = 0; i < ObjectNUM; i++) {
+    LeapersMove_leaper(i);
+    EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], ColorFromPalette(*curPalette, trackingObjectHue[i]), 0);
+  }
+
   for (uint8_t i = 0; i < WIDTH; i++) {
     for (uint8_t j = 0; j < HEIGHT; j++) {
-      EffectMath::drawPixelXY(i, EffectMath::getmaxHeightIndex() - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 255U));
+      EffectMath::drawPixelXY(i, EffectMath::getmaxHeightIndex() - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 255U), 1);
     }
   }
 
-  for (uint8_t i = 0; i < ObjectNUM; i++) {
-    LeapersMove_leaper(i);
-    if (trackingObjectPosY[i] >= HEIGHT/4U)
-      EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], ColorFromPalette(*curPalette, trackingObjectHue[i]));
-  }
 
   //blurScreen(20);
   ff_y += speedfactor * 2;
-  //if (ff_y & 0x01)
-    ff_z += speedfactor;
+  ff_z += speedfactor;
   return true;
 }
 
 void EffectMagma::LeapersMove_leaper(uint8_t l) {
 #define GRAVITY            0.06
 #define SETTLED_THRESHOLD  0.1
-#define WALL_FRICTION      0.95
-#define WIND               0.95    // wind resistance
 
-  trackingObjectPosX[l] += trackingObjectSpeedY[l] * speedfactor;
+  trackingObjectPosX[l] += trackingObjectSpeedX[l] * speedfactor;
   trackingObjectPosY[l] += trackingObjectShift[l] * speedfactor;
 
   // bounce off the floor and ceiling?
-  if (trackingObjectPosY[l] < 0 || trackingObjectPosY[l] > HEIGHT + HEIGHT/8) {
-    trackingObjectShift[l] = (-trackingObjectShift[l] * WALL_FRICTION);
-    trackingObjectSpeedY[l] = ( trackingObjectSpeedY[l] * WALL_FRICTION);
-    trackingObjectPosY[l] += trackingObjectShift[l] * speedfactor;
-    if (trackingObjectPosY[l] < 0) trackingObjectPosY[l] = 0;
-    // settled on the floor?
-    if (trackingObjectPosY[l] <= SETTLED_THRESHOLD && fabs(trackingObjectShift[l]) <= SETTLED_THRESHOLD) {
-      LeapersRestart_leaper(l);
-    }
+  if (trackingObjectPosY[l] > HEIGHT + HEIGHT/4) {
+    trackingObjectShift[l] = -trackingObjectShift[l];
+  }
+  
+  // settled on the floor?
+  if (trackingObjectPosY[l] <= (HEIGHT/4-1)) {
+    LeapersRestart_leaper(l);
   }
 
   // bounce off the sides of the screen?
-  if (trackingObjectPosX[l] <= 0 || trackingObjectPosX[l] >= EffectMath::getmaxWidthIndex()) {
-  /*  trackingObjectSpeedY[l] = (-trackingObjectSpeedY[l] * WALL_FRICTION);
-    if (trackingObjectPosX[l] <= 0) {
-      trackingObjectPosX[l] = trackingObjectSpeedY[l];
-    } else {
-      trackingObjectPosX[l] = EffectMath::getmaxWidthIndex() - trackingObjectSpeedY[l];
-    }*/
+  if (trackingObjectPosX[l] < 0 || trackingObjectPosX[l] > EffectMath::getmaxWidthIndex()) {
     LeapersRestart_leaper(l);
   }
 
   trackingObjectShift[l] -= GRAVITY * speedfactor;
-  //trackingObjectSpeedY[l] *= WIND;
-  //trackingObjectShift[l] *= WIND;
 }
 
 void EffectMagma::LeapersRestart_leaper(uint8_t l) {
+  randomSeed(millis());
   // leap up and to the side with some random component
-  trackingObjectSpeedY[l] = (1 * (float)random(50, 100) / 100);
-  trackingObjectShift[l] = (2 * (float)random(50, 100) / 100);
+  trackingObjectSpeedX[l] = EffectMath::randomf(-0.75, 0.75);
+  trackingObjectShift[l] = EffectMath::randomf(0.50, 0.85);
+  trackingObjectPosX[l] = EffectMath::randomf(0, WIDTH);
+  trackingObjectPosY[l] = EffectMath::randomf(HEIGHT/4 - 1, HEIGHT/4 + 1);
 
   // for variety, sometimes go 50% faster
   if (random8() < 12) {
-    trackingObjectSpeedY[l] += trackingObjectSpeedY[l] * 0.5;
-    trackingObjectShift[l] += trackingObjectShift[l] * 0.5;
+    trackingObjectShift[l] += trackingObjectShift[l] * 2;
   }
 
-  // leap towards the centre of the screen
-  if (trackingObjectPosX[l] > (WIDTH / 4)) {
-    trackingObjectSpeedY[l] = -trackingObjectSpeedY[l];
-  }
 }

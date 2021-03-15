@@ -172,9 +172,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_BALLS :
     worker = std::unique_ptr<EffectBalls>(new EffectBalls());
     break;
-  case EFF_ENUM::EFF_SMOKE :
-    worker = std::unique_ptr<EffectMStreamSmoke>(new EffectMStreamSmoke());
-    break;
   case EFF_ENUM::EFF_FIRE2018 :
     worker = std::unique_ptr<EffectFire2018>(new EffectFire2018());
     break;
