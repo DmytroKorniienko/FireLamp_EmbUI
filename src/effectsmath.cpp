@@ -605,3 +605,60 @@ CRGB *EffectMath::setLed(uint16_t idx, CRGB val) {
     return &overrun;
   }
 }
+
+CRGB *EffectMath::setLed(uint16_t idx, CHSV val, byte opt) { 
+  if (idx < NUM_LEDS) {
+    CRGB tempVal = val;
+    switch (opt) {
+    case 0:
+      leds[idx] = tempVal;
+      break;
+    case 1:
+      leds[idx] += tempVal;
+      break;
+    case 2:
+      leds[idx] -= tempVal;
+      break;
+    case 3:
+      leds[idx] *= tempVal;
+      break;
+    case 4:
+      leds[idx] /= tempVal;
+      break;
+    default:
+      leds[idx] = tempVal;
+      break;
+    }
+    return &leds[idx];
+  } else {
+    return &overrun;
+  }
+}
+
+CRGB *EffectMath::setLed(uint16_t idx, CRGB val, byte opt) {
+  if (idx < NUM_LEDS) {
+    switch (opt) {
+    case 0:
+      leds[idx] = val;
+      break;
+    case 1:
+      leds[idx] += val;
+      break;
+    case 2:
+      leds[idx] -= val;
+      break;
+    case 3:
+      leds[idx] *= val;
+      break;
+    case 4:
+      leds[idx] /= val;
+      break;
+    default:
+      leds[idx] = val;
+      break;
+    }
+    return &leds[idx];
+  } else {
+    return &overrun;
+  }
+}

@@ -4773,8 +4773,8 @@ void EffectPatterns::drawPicture_XY() {
   }
   for (uint16_t x = 0; x < WIDTH; x++){
     for (uint16_t y = 0; y < HEIGHT; y++){ // лучше вывод рамки фоном, чем мерцание по краю картинки, доп. цикл из-за особенностей сабпикселя
-      if(_subpixel && !(_speed==33 && _scale==33) && (x==WIDTH-1 || x==0 || y==0 || y==HEIGHT-1)){
-        EffectMath::drawPixelXY(x, (float)(HEIGHT-1)-y, colorMR[6]);
+      if(_subpixel && !(_speed==33 && _scale==33) && (x==EffectMath::getmaxWidthIndex() || x==0 || y==0 || y==EffectMath::getmaxHeightIndex())){
+        EffectMath::drawPixelXY(x, (float)(EffectMath::getmaxHeightIndex())-y, colorMR[6]);
       }
     }
   }

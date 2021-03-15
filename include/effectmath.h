@@ -196,15 +196,16 @@ public:
     opt == 2: leds[idx] -= color
     opt == 3: leds[idx] *= color
     opt == 4: leds[idx] /= color */
-    static CRGB *setLed(uint16_t idx, CHSV val, byte opt = 0);
+    static CRGB *setLed(uint16_t idx, CHSV val, byte opt);
     /** Функция отрисовки точки 
     По умолчанию leds[idx] = color
     opt == 1: leds[idx] += color
     opt == 2: leds[idx] -= color
     opt == 3: leds[idx] *= color
     opt == 4: leds[idx] /= color */
-    static CRGB *setLed(uint16_t idx, CRGB val, byte opt = 0);
-
+    static CRGB *setLed(uint16_t idx, CRGB val, byte opt);
+    static CRGB *setLed(uint16_t idx, CHSV val);
+    static CRGB *setLed(uint16_t idx, CRGB val);
     /** аналог ардуино функции map(), но только для float
    */
     static double fmap(const double x, const double in_min, const double in_max, const double out_min, const double out_max){
