@@ -689,12 +689,14 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
           if(!isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
           else
-            EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            //EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            EffectMath::getPixel(offset + i, txtOffset + j).fadeToBlackBy((isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
         } else {
           if(isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
           else
-            EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            //EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            EffectMath::getPixel(offset + i, txtOffset + j).fadeToBlackBy((isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
         }
       }
     }

@@ -161,6 +161,8 @@ public:
     static uint32_t getPixColorXY(uint16_t x, uint16_t y); 
     // залить все
     static void fillAll(const CRGB &color); 
+    
+    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
     /* 
     Функция отрисовки точки по координатам X, Y
     По умолчанию leds[idx] = color
@@ -169,7 +171,7 @@ public:
     opt == 3: leds[idx] *= color
     opt == 4: leds[idx] /= color
     */
-    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt = 0); 
+    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt); 
     static void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);
@@ -183,7 +185,7 @@ public:
     static void drawLineF(float x1, float y1, float x2, float y2, const CRGB &color);
     static void drawCircle(int x0, int y0, int radius, const CRGB &color);
     static void drawCircleF(float x0, float y0, float radius, const CRGB &color, float step = 0.25);
-    static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
+    //static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
     static void setLedsNscale8(uint16_t idx, uint8_t val);
     static void dimAll(uint8_t value);
     static CRGB &getLed(uint16_t idx);

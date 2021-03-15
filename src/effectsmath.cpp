@@ -140,14 +140,11 @@ uint8_t EffectMath::ceil8(const uint8_t a, const uint8_t b){
 // новый фейдер
 void EffectMath::fadePixel(uint8_t i, uint8_t j, uint8_t step)
 {
-    int32_t pixelNum = getPixelNumber(i, j);
-    if (EffectMath::getPixColor(pixelNum) == 0U) return;
-
-    CRGB led = EffectMath::getLed(pixelNum);
-    if (led.r >= 30U ||
-        led.g >= 30U ||
-        led.b >= 30U){
-        EffectMath::setLedsfadeToBlackBy(pixelNum,step);
+    CRGB &led = EffectMath::getPixel(i,j);
+    if (!led) return; // см. приведение к bool для CRGB, это как раз тест на 0
+    
+    if (led.r >= 30U || led.g >= 30U || led.b >= 30U){
+        led.fadeToBlackBy(step);
     }
     else{
         EffectMath::drawPixelXY(i, j, 0U);
@@ -206,14 +203,14 @@ bool EffectMath::isInteger(float val) {
 
 // Функция создает вспышки в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
 void EffectMath::addGlitter(uint8_t chanceOfGlitter){
-  if ( random8() < chanceOfGlitter) getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::Gray;
+  if ( random8() < chanceOfGlitter) leds[random16(NUM_LEDS)] += CRGB::Gray;
 }
 
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;
   if (thisPixel > NUM_LEDS - 1) return 0;
-  return (((uint32_t)getUnsafeLedsArray()[thisPixel].r << 16) | ((uint32_t)getUnsafeLedsArray()[thisPixel].g << 8 ) | (uint32_t)getUnsafeLedsArray()[thisPixel].b);
+  return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
 }
 
 // Заливает матрицу выбраным цветом
@@ -221,52 +218,60 @@ void EffectMath::fillAll(const CRGB &color)
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
-    getUnsafeLedsArray()[i] = color;
+    leds[i] = color;
   }
+}
+
+void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
+{
+  getPixel(x,y) = color;
 }
 
 void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt) // функция отрисовки точки по координатам X Y
 {
-  if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
+  //if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
 #if  SEGMENTS > 1
-  uint32_t thisPixel = getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
+  uint32_t thisPixel = getPixelNumber(x, y) * SEGMENTS;
   for (uint16_t i = 0; i < SEGMENTS; i++)
   {
-    getUnsafeLedsArray()[thisPixel + i] = color;
+    getLed[thisPixel + i] = color;
   switch (opt) {
   case 1:
-    getUnsafeLedsArray()[thisPixel + i] += color;
+    getLed[thisPixel + i] += color;
     break;
   case 2:
-    getUnsafeLedsArray()[thisPixel + i] -= color;
+    getLed[thisPixel + i] -= color;
     break;
   case 3:
-    getUnsafeLedsArray()[thisPixel + i] *= color;
+    getLed[thisPixel + i] *= color;
     break;
   case 4:
-    getUnsafeLedsArray()[thisPixel + i] /= color;
+    getLed[thisPixel + i] /= color;
     break;
   default:
-    getUnsafeLedsArray()[thisPixel + i] = color;
+    getLed[thisPixel + i] = color;
     break;
   }
   }
 #else
   switch (opt) {
+  case 0:
+    getPixel(x,y) = color;
+    break;
   case 1:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] += color;
+    getPixel(x,y) += color;
     break;
   case 2:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] -= color;
+    getPixel(x,y) -= color;
     break;
   case 3:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] *= color;
+    getPixel(x,y) *= color;
     break;
   case 4:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] /= color;
+    getPixel(x,y) /= color;
     break;
   default:
-    getUnsafeLedsArray()[getPixelNumber(x, y)] = color;
+    getPixel(x,y) = color;
     break;
   }
 #endif
@@ -564,20 +569,20 @@ void EffectMath::nightMode(CRGB *leds)
 {
     for (uint16_t i = 0; i < NUM_LEDS; i++)
     {
-        getUnsafeLedsArray()[i].r = dim8_video(getUnsafeLedsArray()[i].r);
-        getUnsafeLedsArray()[i].g = dim8_video(getUnsafeLedsArray()[i].g);
-        getUnsafeLedsArray()[i].b = dim8_video(getUnsafeLedsArray()[i].b);
+        leds[i].r = dim8_video(leds[i].r);
+        leds[i].g = dim8_video(leds[i].g);
+        leds[i].b = dim8_video(leds[i].b);
     }
 }
 uint32_t EffectMath::getPixColorXY(uint16_t x, uint16_t y) { return getPixColor( getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
-void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { getUnsafeLedsArray()[idx].fadeToBlackBy(val); }
-void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { getUnsafeLedsArray()[idx].nscale8(val); }
-void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) {getUnsafeLedsArray()[i].nscale8(value); } }
-void EffectMath::blur2d(uint8_t val) {::blur2d(getUnsafeLedsArray(),WIDTH,HEIGHT,val);}
+//void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { leds[idx].fadeToBlackBy(val); }
+void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { leds[idx].nscale8(val); }
+void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) {leds[i].nscale8(value); } }
+void EffectMath::blur2d(uint8_t val) {::blur2d(leds,WIDTH,HEIGHT,val);}
 
 CRGB &EffectMath::getLed(uint16_t idx) { 
   if(idx<NUM_LEDS){
-    return getUnsafeLedsArray()[idx];
+    return leds[idx];
   } else {
     return overrun;
   }
@@ -585,8 +590,8 @@ CRGB &EffectMath::getLed(uint16_t idx) {
 
 CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { 
   if(idx<NUM_LEDS){
-    getUnsafeLedsArray()[idx] = val;
-    return &getUnsafeLedsArray()[idx];
+    leds[idx] = val;
+    return &leds[idx];
   } else {
     return &overrun;
   }
@@ -594,8 +599,8 @@ CRGB *EffectMath::setLed(uint16_t idx, CHSV val) {
 
 CRGB *EffectMath::setLed(uint16_t idx, CRGB val) {
   if(idx<NUM_LEDS){
-    getUnsafeLedsArray()[idx] = val;
-    return &getUnsafeLedsArray()[idx];
+    leds[idx] = val;
+    return &leds[idx];
   } else {
     return &overrun;
   }
