@@ -4619,33 +4619,26 @@ void EffectPatterns::drawPicture_XY() {
   //FastLED.clear();
   EffectMath::dimAll(127);
 
-  for (uint16_t x = 0; x < WIDTH + 1; x++)
+  for (int16_t x = -1; x < (int)WIDTH+1; x++)
   {
-    for (uint16_t y = 0; y < HEIGHT + 1; y++)
+    for (int16_t y = -1; y < (int)HEIGHT+1; y++)
     {
       byte in = buff[EffectMath::getPixelNumberBuff((int)(xsin + x) % 20U, (int)(ysin + y) % 20U, 20U, 20U)];
-      CHSV color2 = colorMR[in];
+      CHSV color2 = colorMR[in]; // CHSV(HUE_BLUE, 255, 255);
 
       if(_subpixel){
         if(!_speed)
-          EffectMath::drawPixelXYF_X(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
+          EffectMath::drawPixelXYF_X(((float)x-vx), (float)((float)y-vy), color2, 0);
         else if(!_scale)
-          EffectMath::drawPixelXYF_Y(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
+          EffectMath::drawPixelXYF_Y(((float)x-vx), (float)((float)y-vy), color2, 0);
         else{
-            EffectMath::drawPixelXYF(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
+            EffectMath::drawPixelXYF(((float)x-vx), (float)((float)y-vy), color2, 0);
         }
       } else {
-        EffectMath::drawPixelXY(x, EffectMath::getmaxHeightIndex()-y, color2);
+        EffectMath::drawPixelXY(x, y, color2);
       }
     }
   }
-  // for (uint16_t x = 0; x < WIDTH; x++){
-  //   for (uint16_t y = 0; y < HEIGHT; y++){ // лучше вывод рамки фоном, чем мерцание по краю картинки, доп. цикл из-за особенностей сабпикселя
-  //     if(_subpixel && !(_speed==33 && _scale==33) && (x==EffectMath::getmaxWidthIndex() || x==0 || y==0 || y==EffectMath::getmaxHeightIndex())){
-  //       EffectMath::drawPixelXY(x, (float)(EffectMath::getmaxHeightIndex())-y, colorMR[6]);
-  //     }
-  //   }
-  // }
 }
 
 void EffectPatterns::load() {
@@ -4678,7 +4671,7 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
     {
       for (byte y = 0; y < 20U; y++)
       {
-        buff[EffectMath::getPixelNumberBuff(x, y, 20U, 20U)] = (pgm_read_byte(&patterns[patternIdx][y % 10U][x % 10U]));
+        buff[EffectMath::getPixelNumberBuff(x, 19-y, 20U, 20U)] = (pgm_read_byte(&patterns[patternIdx][y % 10U][x % 10U]));
       }
     }
   }

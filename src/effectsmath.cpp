@@ -222,7 +222,7 @@ void EffectMath::fillAll(const CRGB &color)
   }
 }
 
-void EffectMath::drawPixelXY(uint16_t x, uint16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
+void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
 {
   getPixel(x,y) = color;
 }
@@ -319,9 +319,9 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
   #undef WU_WEIGHT
 }
 
-void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
+void EffectMath::drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<-1.0 || y<-1 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  if (x<-1.0 || y<-1 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -339,9 +339,9 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
   }
 }
 
-void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel)
+void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
@@ -386,9 +386,9 @@ CRGB EffectMath::getPixColorXYF(float x, float y)
   #undef WU_WEIGHT
 }
 
-CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
+CRGB EffectMath::getPixColorXYF_X(float x, int16_t y)
 {
-  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
+  if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -410,9 +410,9 @@ CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
   return clr;
 }
 
-CRGB EffectMath::getPixColorXYF_Y(uint16_t x, float y)
+CRGB EffectMath::getPixColorXYF_Y(int16_t x, float y)
 {
-  //if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
+  if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
@@ -551,7 +551,7 @@ void EffectMath::nightMode(CRGB *leds)
         leds[i].b = dim8_video(leds[i].b);
     }
 }
-uint32_t EffectMath::getPixColorXY(uint16_t x, uint16_t y) { return getPixColor( getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
+uint32_t EffectMath::getPixColorXY(int16_t x, int16_t y) { return getPixColor( getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
 //void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { leds[idx].fadeToBlackBy(val); }
 void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { leds[idx].nscale8(val); }
 void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) {leds[i].nscale8(value); } }
