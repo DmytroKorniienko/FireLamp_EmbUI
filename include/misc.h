@@ -343,19 +343,17 @@ class timerMinim
 };
 
 //----------------------------------------------------
-#if defined(LAMP_DEBUG) && 1==0 // DEBUG_TELNET_OUTPUT // Deprecated
-	//#define LOG                   telnet
-	#define LOG(func, ...) telnet.func(__VA_ARGS__)
-#elif defined(LAMP_DEBUG) && !defined(LOG)
+#if defined(LOG)
+#undef LOG
+#endif
+
+#if defined(LAMP_DEBUG)
 	//#define LOG                   Serial
 	#define LOG(func, ...) Serial.func(__VA_ARGS__)
-#elif !defined(LOG)
+#else
 	#define LOG(func, ...) ;
 #endif
 
-// Deprecated
-// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-// #define TELNET_PORT           (23U)                         // номер telnet порта
 // extern WiFiServer telnetServer;
 // extern WiFiClient telnet;
 // extern bool telnetGreetingShown;
