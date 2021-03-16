@@ -222,14 +222,13 @@ void EffectMath::fillAll(const CRGB &color)
   }
 }
 
-void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
+void EffectMath::drawPixelXY(uint16_t x, uint16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
 {
   getPixel(x,y) = color;
 }
 
-void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt) // функция отрисовки точки по координатам X Y
+void EffectMath::drawPixelXY(uint16_t x, uint16_t y, const CRGB &color, byte opt) // функция отрисовки точки по координатам X Y
 {
-  //if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
 #if  SEGMENTS > 1
   uint32_t thisPixel = getPixelNumber(x, y) * SEGMENTS;
   for (uint16_t i = 0; i < SEGMENTS; i++)
@@ -299,7 +298,7 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
 
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -314,16 +313,6 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-
-    // if(xn<(int)WIDTH-1 && yn<(int)HEIGHT-1 && yn>0 && xn>0){
-    //   clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    //   clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    //   clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    // } else if((yn==0 || yn==HEIGHT-1 || xn==0) && xx<127) {
-    //   clr.r = qadd8(clr.r, (color.r * 64) >> 8);
-    //   clr.g = qadd8(clr.g, (color.g * 64) >> 8);
-    //   clr.b = qadd8(clr.b, (color.b * 64) >> 8);
-    // }
     if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(xn, yn, clr);
   }
@@ -332,7 +321,7 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
 
 void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  //if (x<-1.0 || y<-1 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -340,17 +329,11 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
   uint8_t wu[2] = {ix, xx};
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
-      int16_t xn = x + (i & 1);
-      CRGB clr = EffectMath::getPixColorXY(xn, y);
-//      if(xn>0 && xn<(int)WIDTH-1){
-        clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-        clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-        clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-/*      } else if(xn==0 || xn==(int)WIDTH-1) {
-        clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-        clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-        clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-      }*/
+    int16_t xn = x + (i & 1);
+    CRGB clr = EffectMath::getPixColorXY(xn, y);
+    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
     if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(xn, y, clr);
   }
@@ -358,7 +341,7 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
 
 void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  //if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
@@ -366,17 +349,11 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
   uint8_t wu[2] = {iy, yy};
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
-      int16_t yn = y + (i & 1);
-      CRGB clr = EffectMath::getPixColorXY(x, yn);
-//      if(yn>0 && yn<(int)HEIGHT-1){
-        clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-        clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-        clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-/*      } else if(yn==0 || yn==(int)HEIGHT-1) {
-        clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-        clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-        clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-      } */
+    int16_t yn = y + (i & 1);
+    CRGB clr = EffectMath::getPixColorXY(x, yn);
+    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
     if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(x, yn, clr);
   }
@@ -384,7 +361,7 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
 
 CRGB EffectMath::getPixColorXYF(float x, float y)
 {
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return CRGB::Black;
+  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -411,7 +388,7 @@ CRGB EffectMath::getPixColorXYF(float x, float y)
 
 CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
 {
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return CRGB::Black;
+  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -435,7 +412,7 @@ CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
 
 CRGB EffectMath::getPixColorXYF_Y(uint16_t x, float y)
 {
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return CRGB::Black;
+  //if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
