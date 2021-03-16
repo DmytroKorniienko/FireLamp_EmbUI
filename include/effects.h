@@ -1920,8 +1920,8 @@ private:
     void regen();
     void LeapersMove_leaper(uint8_t l);
     void LeapersRestart_leaper(uint8_t l);
-    //String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    String setDynCtrl(UIControl*_val) override;
+
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

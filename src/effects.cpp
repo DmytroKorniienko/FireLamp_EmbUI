@@ -8075,14 +8075,14 @@ void EffectMagma::palettesload(){
 
 void EffectMagma::load() {
   palettesload();
-  ObjectNUM = map(scale, 1, 100, WIDTH, enlargedOBJECT_MAX_COUNT);
   regen();
 }
 
-void EffectMagma::setscl(const byte _scl){
-  EffectCalc::setscl(_scl);
-  ObjectNUM = map(scale, 1, 100, WIDTH, enlargedOBJECT_MAX_COUNT);
+String EffectMagma::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3) ObjectNUM = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, WIDTH/2, enlargedOBJECT_MAX_COUNT);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
+  return String();
 }
 
 void EffectMagma::regen() {
@@ -8093,7 +8093,7 @@ void EffectMagma::regen() {
   }
 
 
-  for (uint8_t i = 0 ; i < ObjectNUM ; i++) {
+  for (uint8_t i = 0 ; i < enlargedOBJECT_MAX_COUNT ; i++) {
     LeapersRestart_leaper(i);  
     trackingObjectHue[i] = 50U;
   }
