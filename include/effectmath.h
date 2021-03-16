@@ -124,15 +124,15 @@ public:
 
     }
 
-    static void setPixel(int16_t x, int16_t y, const CRGB &pixel){
+    static void setPixel(uint16_t x, uint16_t y, const CRGB &pixel){
         // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-        if (y < 0 || y > getmaxHeightIndex() || x < 0 || x > getmaxWidthIndex()) return;
+        if (y > getmaxHeightIndex() || x > getmaxWidthIndex()) return;
         leds[getPixelNumber(x,y)] = pixel;
     }
 
-    static CRGB &getPixel(int16_t x, int16_t y){
+    static CRGB &getPixel(uint16_t x, uint16_t y){
         // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-        if (y < 0 || y > getmaxHeightIndex() || x < 0 || x > getmaxWidthIndex())
+        if (y > getmaxHeightIndex() || x > getmaxWidthIndex())
             return overrun;
         return leds[getPixelNumber(x,y)];
     }
@@ -162,7 +162,7 @@ public:
     // залить все
     static void fillAll(const CRGB &color); 
     
-    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
+    static void drawPixelXY(uint16_t x, uint16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
     /* 
     Функция отрисовки точки по координатам X, Y
     По умолчанию leds[idx] = color
@@ -171,7 +171,7 @@ public:
     opt == 3: leds[idx] *= color
     opt == 4: leds[idx] /= color
     */
-    static void drawPixelXY(int16_t x, int16_t y, const CRGB &color, byte opt); 
+    static void drawPixelXY(uint16_t x, uint16_t y, const CRGB &color, byte opt); 
     static void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel=50);

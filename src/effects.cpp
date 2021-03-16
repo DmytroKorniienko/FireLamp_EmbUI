@@ -4619,17 +4619,17 @@ void EffectPatterns::drawPicture_XY() {
   //FastLED.clear();
   EffectMath::dimAll(127);
 
-  for (uint16_t x = 0; x < WIDTH; x++)
+  for (uint16_t x = 0; x < WIDTH + 1; x++)
   {
-    for (uint16_t y = 0; y < HEIGHT; y++)
+    for (uint16_t y = 0; y < HEIGHT + 1; y++)
     {
       byte in = buff[EffectMath::getPixelNumberBuff((int)(xsin + x) % 20U, (int)(ysin + y) % 20U, 20U, 20U)];
       CHSV color2 = colorMR[in];
 
       if(_subpixel){
-        if(_speed==33)
+        if(!_speed)
           EffectMath::drawPixelXYF_X(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
-        else if(_scale==33)
+        else if(!_scale)
           EffectMath::drawPixelXYF_Y(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
         else{
             EffectMath::drawPixelXYF(((float)x-vx), (float)EffectMath::getmaxHeightIndex()-((float)y-vy), color2, 0);
@@ -4639,13 +4639,13 @@ void EffectPatterns::drawPicture_XY() {
       }
     }
   }
-  for (uint16_t x = 0; x < WIDTH; x++){
-    for (uint16_t y = 0; y < HEIGHT; y++){ // лучше вывод рамки фоном, чем мерцание по краю картинки, доп. цикл из-за особенностей сабпикселя
-      if(_subpixel && !(_speed==33 && _scale==33) && (x==EffectMath::getmaxWidthIndex() || x==0 || y==0 || y==EffectMath::getmaxHeightIndex())){
-        EffectMath::drawPixelXY(x, (float)(EffectMath::getmaxHeightIndex())-y, colorMR[6]);
-      }
-    }
-  }
+  // for (uint16_t x = 0; x < WIDTH; x++){
+  //   for (uint16_t y = 0; y < HEIGHT; y++){ // лучше вывод рамки фоном, чем мерцание по краю картинки, доп. цикл из-за особенностей сабпикселя
+  //     if(_subpixel && !(_speed==33 && _scale==33) && (x==EffectMath::getmaxWidthIndex() || x==0 || y==0 || y==EffectMath::getmaxHeightIndex())){
+  //       EffectMath::drawPixelXY(x, (float)(EffectMath::getmaxHeightIndex())-y, colorMR[6]);
+  //     }
+  //   }
+  // }
 }
 
 void EffectPatterns::load() {
@@ -4659,8 +4659,8 @@ void EffectPatterns::load() {
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  _speedX = EffectMath::fmap(_scale, 1, 65, -0.75, 0.75);
-  _speedY = EffectMath::fmap(_speed, 1, 65, -0.75, 0.75);
+  _speedX = EffectMath::fmap(_scale, -32, 32, -0.75, 0.75);
+  _speedY = EffectMath::fmap(_speed, -32, 32, -0.75, 0.75);
 
   xsin += _speedX;
   ysin += _speedY;
@@ -4683,10 +4683,12 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
     }
   }
 
-  colorMR[6] = CHSV(beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 350., 1200.), 0, 255), 255, 255);
+  double corr = fabs(_speedX) + fabs(_speedY);
+
+  colorMR[6] = CHSV(beatsin88(EffectMath::fmap(corr, 0.1, 1.5, 350., 1200.), 0, 255), 255, 255);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
-  colorMR[7].sat = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 150, 900), 0, 255);
-  colorMR[7].val = beatsin88(EffectMath::fmap((fabs(_speedX) + fabs(_speedY)), 0.1, 1.5, 450, 1300), 0, 255);
+  colorMR[7].sat = beatsin88(EffectMath::fmap(corr, 0.1, 1.5, 150, 900), 0, 255);
+  colorMR[7].val = beatsin88(EffectMath::fmap(corr, 0.1, 1.5, 450, 1300), 0, 255);
   drawPicture_XY();
 
   return true;
@@ -8075,14 +8077,14 @@ void EffectMagma::palettesload(){
 
 void EffectMagma::load() {
   palettesload();
-  ObjectNUM = map(scale, 1, 100, WIDTH, enlargedOBJECT_MAX_COUNT);
   regen();
 }
 
-void EffectMagma::setscl(const byte _scl){
-  EffectCalc::setscl(_scl);
-  ObjectNUM = map(scale, 1, 100, WIDTH, enlargedOBJECT_MAX_COUNT);
+String EffectMagma::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3) ObjectNUM = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, WIDTH/2, enlargedOBJECT_MAX_COUNT);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
+  return String();
 }
 
 void EffectMagma::regen() {
@@ -8093,7 +8095,7 @@ void EffectMagma::regen() {
   }
 
 
-  for (uint8_t i = 0 ; i < ObjectNUM ; i++) {
+  for (uint8_t i = 0 ; i < enlargedOBJECT_MAX_COUNT ; i++) {
     LeapersRestart_leaper(i);  
     trackingObjectHue[i] = 50U;
   }

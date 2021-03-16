@@ -1021,7 +1021,7 @@ private:
     int8_t patternIdx = -1;
     int8_t lineIdx = 0;
     bool _subpixel = false;
-    uint8_t _speed = 1, _scale = 1;
+    int8_t _speed = 1, _scale = 1;
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
@@ -1920,8 +1920,8 @@ private:
     void regen();
     void LeapersMove_leaper(uint8_t l);
     void LeapersRestart_leaper(uint8_t l);
-    //String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    String setDynCtrl(UIControl*_val) override;
+
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
