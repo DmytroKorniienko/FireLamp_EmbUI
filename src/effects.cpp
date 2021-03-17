@@ -4648,8 +4648,14 @@ void EffectPatterns::load() {
    // Цвета с индексом 6 и 7 - случайные, определяются в момент настройки эффекта
   colorMR[6] = CHSV(random8(), 255U, 255U);
   colorMR[7].hue = colorMR[6].hue + 96; //(beatsin8(1, 0, 255, 0, 127), 255U, 255U);
+  for (byte x = 0; x < 20U; x++)
+  {
+    for (byte y = 0; y < 20U; y++)
+    {
+      buff[EffectMath::getPixelNumberBuff(x, 19-y, 20U, 20U)] = (pgm_read_byte(&patterns[patternIdx][y % 10U][x % 10U]));
+    }
+  }
 }
-
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {

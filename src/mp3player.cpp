@@ -211,7 +211,7 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool 
 {
   isplayname = false;
   soundfile = _soundfile;
-  int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();
+  int folder = _soundfile.substring(0,_soundfile.lastIndexOf('\\')).toInt();
   int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
   LOG(printf_P, PSTR("soundfile:%s, folder:%d, filenb:%d, effnb:%d\n"), soundfile.c_str(), folder, filenb, effnb%256);
   if(!mp3mode){

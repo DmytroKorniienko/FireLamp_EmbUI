@@ -92,6 +92,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void StartAlarmSound(ALARM_SOUND_TYPE val);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);
     void StopAndRestoreVolume() { stop(); delay(200); volume(cur_volume); }
+    void setCurEffect(uint16_t effnb) { prev_effnb=cur_effnb; cur_effnb = effnb%256; }
     void handle();
 };
 #endif
