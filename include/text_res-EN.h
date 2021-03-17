@@ -157,7 +157,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_0E9 "Mass"
 #define DFTINTF_0EA "Speed ​​(Vertical)"
 #define DFTINTF_0EB "Speed ​​(Horizontal)"
-#define DFTINTF_0EC "Pattern (1: random)"
+#define DFTINTF_0EC "Pattern (0: random)"
 #define DFTINTF_0ED "Shading"
 #define DFTINTF_0EE "Energy"
 #define DFTINTF_0EF "Density"

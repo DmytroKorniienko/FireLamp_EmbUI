@@ -156,7 +156,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0E9 "Маса"
 #define DFTINTF_0EA "Швидкість (Верт.)"
 #define DFTINTF_0EB "Швидкість (Гориз.)"
-#define DFTINTF_0EC "Узор (1: випадковий)"
+#define DFTINTF_0EC "Візерунок (0: випадковий)"
 #define DFTINTF_0ED "Затемнення"
 #define DFTINTF_0EE "Енергія"
 #define DFTINTF_0EF "Щільність"

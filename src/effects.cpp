@@ -4652,15 +4652,15 @@ void EffectPatterns::load() {
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  _speedX = EffectMath::fmap(_scale, -32, 32, -0.75, 0.75);
-  _speedY = EffectMath::fmap(_speed, -32, 32, -0.75, 0.75);
+  _speedX = EffectMath::fmap(_scale, -32, 32, 0.75, -0.75);
+  _speedY = EffectMath::fmap(_speed, -32, 32, 0.75, -0.75);
 
   xsin += _speedX;
   ysin += _speedY;
 
   int8_t chkIdx = patternIdx;
   if (_sc == 0) {
-    EVERY_N_SECONDS(5) {
+    EVERY_N_SECONDS(10) {
       patternIdx ++;
       if (patternIdx >= MAX_PATTERN) patternIdx = 0;
     }
