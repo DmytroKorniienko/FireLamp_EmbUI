@@ -1021,6 +1021,7 @@ private:
     int8_t patternIdx = -1;
     int8_t lineIdx = 0;
     bool _subpixel = false;
+    bool _sinMove = false;
     int8_t _speed = 1, _scale = 1;
     bool dir = false;
     byte csum = 0;

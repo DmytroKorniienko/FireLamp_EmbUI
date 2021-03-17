@@ -4603,6 +4603,7 @@ String EffectPatterns::setDynCtrl(UIControl*_val) {
   else if(_val->getId()==4) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==5) _sc = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==6) _subpixel = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==7) _sinMove = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -4655,9 +4656,13 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   _speedX = EffectMath::fmap(_scale, -32, 32, 0.75, -0.75);
   _speedY = EffectMath::fmap(_speed, -32, 32, 0.75, -0.75);
 
-  xsin += _speedX;
-  ysin += _speedY;
-
+  if(!_sinMove){
+    xsin += _speedX;
+    ysin += _speedY;
+  } else {
+    xsin = beatsin8(5, 0, abs(_scale)*3); // for X and Y texture move
+    ysin = beatsin8(6, 0, abs(_speed)*3); // for X and Y texture move
+  }
   int8_t chkIdx = patternIdx;
   if (_sc == 0) {
     EVERY_N_SECONDS(10) {
