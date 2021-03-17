@@ -209,8 +209,9 @@ void EffectMath::addGlitter(uint8_t chanceOfGlitter){
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;
-  if (thisPixel > NUM_LEDS - 1) return 0;
-  return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
+  if (thisPixel < NUM_LEDS ) 
+    return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
+  else return (((uint32_t)overrun.r << 16) | ((uint32_t)overrun.g << 8 ) | (uint32_t)overrun.b);
 }
 
 // Заливает матрицу выбраным цветом
@@ -286,7 +287,7 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     uint16_t xn = (x >> 8) + (i & 1); uint16_t yn = (y >> 8) + ((i >> 1) & 1);
-    CRGB clr = EffectMath::getPixColorXY(xn, yn);
+    CRGB clr = getLed(getPixelNumber(xn, yn));
     clr.r = qadd8(clr.r, (col.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (col.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (col.b * wu[i]) >> 8);
@@ -309,7 +310,9 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-    CRGB clr = EffectMath::getPixColorXY(xn, yn);
+    // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается, 
+    // что все ЛЕД в одном сегменте одинакового цвета, и достаточно получить цвет любого из них.
+    CRGB clr = getLed(getPixelNumber(xn, yn)); //EffectMath::getPixColorXY(xn, yn);
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
@@ -330,7 +333,7 @@ void EffectMath::drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t d
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
     int16_t xn = x + (i & 1);
-    CRGB clr = EffectMath::getPixColorXY(xn, y);
+    CRGB clr = getLed(getPixelNumber(xn, y));
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
@@ -350,7 +353,7 @@ void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t d
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
     int16_t yn = y + (i & 1);
-    CRGB clr = EffectMath::getPixColorXY(x, yn);
+    CRGB clr = getLed(getPixelNumber(x, yn));
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
@@ -361,8 +364,6 @@ void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t d
 
 CRGB EffectMath::getPixColorXYF(float x, float y)
 {
-  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
-
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
