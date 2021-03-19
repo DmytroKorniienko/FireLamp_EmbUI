@@ -210,6 +210,12 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define MAX_FPS               (60U)                         // Максимальное число обсчитываемых и выводимых кадров в секунду
 #endif
 
+#ifndef SPEED_ADJ
+#define SPEED_ADJ (float)NUM_LEDS/256                         // Поправка скорости риал-тайм эффектов относительно размеров метрицы.
+#endif
+
+const float speed_adj = SPEED_ADJ;
+
 #define EFFECTS_RUN_TIMER   (uint16_t)(1000 / MAX_FPS)     // период обработки эффектов - при 10 это 10мс, т.е. 1000/10 = 100 раз в секунду, при 20 = 50 раз в секунду, желательно использовать диапазон 10...40
 
 #ifndef DEFAULT_DEMO_TIMER

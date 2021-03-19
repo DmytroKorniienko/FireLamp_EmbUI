@@ -512,7 +512,7 @@ void EffectMatrix::load(){
 
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06, 0.4);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06*speed_adj, 0.4*speed_adj);
   EffectMath::dimAll(map(speed, 1, 255, 252, 240));
   
   CHSV color;
@@ -525,7 +525,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
       color = rgb2hsv_approximate(CRGB::Gray);
       color.val = light[i];
     } else if (randColor) {
-      EVERY_N_MILLIS(600 / speedfactor) {
+      EVERY_N_MILLIS(600*speed_adj / speedfactor) {
         hue = random(1, 250);
       }
       color = CHSV(hue, 255, light[i]);
@@ -584,7 +584,7 @@ String EffectStarFall::setDynCtrl(UIControl*_val) {
 
 bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
 {
-  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.25, .5);
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.25*speed_adj, .5*speed_adj);
   EffectMath::dimAll(255 - (effId == 2 ? 70 : 60) * speedfactor);
   CHSV color;
   for (uint8_t i = 0U; i < map(_scale, 1, 10, LIGHTERS_AM/8, LIGHTERS_AM); i++) // LIGHTERS_AM
@@ -669,10 +669,8 @@ String EffectLighters::setDynCtrl(UIControl*_val) {
 
 bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
 {
-  float speedfactor = (float)speed / 4096.0f + 0.001f;
+  float speedfactor = ((float)speed / 4096.0f + 0.001f)*speed_adj;
 
- // EffectMath::blur2d(speed/10);
-  //EffectMath::dimAll(50 + speed/10);
   memset8( leds, 0, NUM_LEDS * 3);
 
   EVERY_N_MILLIS(333)
@@ -752,7 +750,7 @@ bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param)
 {
   //float speedfactor = speed/2048.0+0.01;
-  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.01, .1);
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.01*speed_adj, .1*speed_adj);
 
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 6, 55)); // размер шлейфа должен сохранять размер, не зависимо от скорости
 
@@ -1082,7 +1080,7 @@ void EffectBBalls::load(){
 bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 {
   fadeToBlackBy(leds, NUM_LEDS, _scale <= 16 ? 255 : 50);
-
+  hue += (float)speed/ 1024;
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
     bballsTCycle =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
 
@@ -1117,12 +1115,12 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 
 
     if (halo){ // если ореол включен
-      EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i], 225, bballsBri[i]));
+      EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i] + (byte)hue, 225, bballsBri[i]));
     } else {
         // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой,
         // который движится в том же Х. И каждый следующий ярче предыдущего.
       bballsBri[i] = (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i], 255, bballsBri[i]), 5);
+      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i] + (byte)hue, 255, bballsBri[i]), 5);
 
     }
   }
@@ -1372,7 +1370,7 @@ String EffectComet::setDynCtrl(UIControl*_val) {
 
 bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
   speedy = map(speed, 1, 255, 20, 255);
-  speedFactor = EffectMath::fmap(speed, 1., 255., 0.1, 1.0);
+  speedFactor = EffectMath::fmap(speed, 1., 255., 0.1*speed_adj, 1.0*speed_adj);
   effId = _scale;
   switch (effId)
   {
@@ -1400,7 +1398,7 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
-  speedFactor = EffectMath::fmap(speed, 1., 255., 0.1, .5);
+  speedFactor = EffectMath::fmap(speed, 1., 255., 0.1*speed_adj, .5*speed_adj);
   if(isDebug()){
     FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
   }
@@ -1657,7 +1655,7 @@ String EffectPrismata::setDynCtrl(UIControl*_val){
 // Адаптация от (c) SottNick
 void EffectFlock::load(){
   palettesload();    // подгружаем дефолтные палитры
-  speedfactor = (float)speed / 196.0;
+  speedfactor = ((float)speed / 196.0)*speed_adj;
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
   {
     boids[i] = Boid(random8(0,WIDTH), random(0, HEIGHT));
@@ -1680,7 +1678,7 @@ String EffectFlock::setDynCtrl(UIControl*_val) {
 void EffectFlock::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd);
-  speedfactor = (float)speed / 196.0;
+  speedfactor = ((float)speed / 196.0)*speed_adj;
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
     {
       //boids[i] = Boid(15, 15);
@@ -2077,7 +2075,7 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  byte speedfactor = (float)TWINKLES_MULTIPLIER * (float)speed / 380.0;
+  float speedfactor = ((float)TWINKLES_MULTIPLIER * (float)speed / 380.0)*speed_adj;
   for (uint16_t idx = 0; idx < NUM_LEDS; idx++)
   {
     if (ledsbuff[idx].b == 0)
@@ -2201,7 +2199,7 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
   if (curPalette == nullptr) {
     return false;
   }
-  float speedFactor = EffectMath::fmap(speed, 1, 255, 0.25, 1);
+  float speedFactor = EffectMath::fmap(speed, 1, 255, 0.25*speed_adj, 1*speed_adj);
   EffectMath::dimAll(255 - 10 * speedFactor); // димирование зависит от скорости, чем быстрее - тем больше димировать
   EffectMath::blur2d(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает... (есть сабпиксель, он сам размывает)
   
@@ -3129,7 +3127,7 @@ void EffectPicasso::generate(bool reset){
 }
 
 void EffectPicasso::position(){
-  float speedfactor = speed/255.0+0.1;
+  float speedfactor = (speed/255.0+0.1)*speed_adj;
   for (unsigned i = 0; i < numParticles; i++) {
     Particle *curr = (Particle *)&particles[i];
     if (curr->position_x + curr->speed_x > WIDTH || curr->position_x + curr->speed_x < 0) {
@@ -3319,7 +3317,7 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
 #define WALL_FRICTION      0.95
 #define WIND               0.95    // wind resistance
 
-  float speedfactor = (speed/512.0);
+  float speedfactor = (speed/512.0)*speed_adj;
   float speedfactor2 = speedfactor + 0.33;
 
   l->x += l->xd*speedfactor2;
@@ -3409,7 +3407,7 @@ void EffectLiquidLamp::generate(bool reset){
 }
 
 void EffectLiquidLamp::position(){
-  float speedfactor = speed / 127.0 + 0.1;
+  float speedfactor = (speed / 127.0 + 0.1)*speed_adj;
   for (unsigned i = 0; i < numParticles; i++) {
     Particle *curr = (Particle *)&particles[i];
     curr->hot += EffectMath::mapcurve(curr->position_y, 0, HEIGHT, 5, -5, EffectMath::InOutQuad) * speedfactor;
@@ -3600,7 +3598,7 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
   micPick = isMicOn() ? myLamp.getMicMaxPeak() : 0;
 #endif
 
-  float speedfactor = EffectMath::fmap((float)speed, 1, 255, 0.5, 1.1);
+  float speedfactor = EffectMath::fmap((float)speed, 1, 255, 0.5*speed_adj, 1.1*speed_adj);
   fadeToBlackBy(leds, NUM_LEDS, 15. * speedfactor);
 
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
@@ -3737,7 +3735,7 @@ void EffectAquarium::fillNoiseLED(CRGB *leds) {
 }
 
 bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1, 1.);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.1*speed_adj, 1.*speed_adj);
 
   xsin = beatsin88(175 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, WIDTH * WIDTH);
   ysin = beatsin88(225 * EffectMath::fmap((float)speed, 1., 255., 1, 4.), 0, HEIGHT * HEIGHT);
@@ -4098,7 +4096,6 @@ void pacifica_one_layer(CRGB *leds, const TProgmemRGBPalette16& p, uint16_t cist
     uint8_t sindex8 = scale16( sindex16, 240);
     CRGB c = ColorFromPalette( p, sindex8, bri, LINEARBLEND);
     EffectMath::getLed(i) += c;
-    //myLamp.getUnsafeLedsArray()[i] += c;
   }
 }
 
@@ -4136,13 +4133,13 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
   // Each is incremented at a different speed, and the speeds vary over time.
   static uint16_t sCIStart1, sCIStart2, sCIStart3, sCIStart4;
   static uint32_t sLastms = 0;
-  uint32_t ms = GET_MILLIS();
+  uint32_t ms = millis();
   uint32_t deltams = ms - sLastms;
   sLastms = ms;
   uint16_t speedfactor1 = beatsin16(3, 179, 269);
   uint16_t speedfactor2 = beatsin16(4, 179, 269);
-  uint32_t deltams1 = (deltams * speedfactor1) / map(speed, 1, 255, 620, 60);
-  uint32_t deltams2 = (deltams * speedfactor2) / map(speed, 1, 255, 620, 60);
+  uint32_t deltams1 = (deltams * speedfactor1) / map(speed, 1, 255, 620*speed_adj, 60*speed_adj);
+  uint32_t deltams2 = (deltams * speedfactor2) / map(speed, 1, 255, 620*speed_adj, 60*speed_adj);
   uint32_t deltams21 = (deltams1 + deltams2) / 2;
   sCIStart1 += (deltams1 * beatsin88(1011,10,13));
   sCIStart2 -= (deltams21 * beatsin88(777,8,11));
@@ -4412,7 +4409,7 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
 
   float maxspeed;
   uint8_t tmp;
-  float speedfactor = (float)_speed / 2048.0f + 0.001f;
+  float speedfactor = ((float)_speed / 2048.0 + 0.001)*speed_adj;
   if (++step >= deltaValue)
     step = 0U;
   for (uint8_t i = 0U; i < deltaValue; i++)
@@ -4729,7 +4726,7 @@ bool EffectArrows::run(CRGB *ledarr, EffectWorker *opt) {
       load();
     }
   }
-  speedfactor = (float)speed / 768.0 + 0.15;
+  speedfactor = ((float)speed / 768.0 + 0.15)*speed_adj;
   return arrowsRoutine(*&ledarr, &*opt);
 }
 
@@ -5136,7 +5133,7 @@ bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
 
 void EffectAttract::load() {
   palettesload();
-  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.02, 1.);
+  speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.02*speed_adj, 1.*speed_adj);
   for (int i = 0; i < count; i++)
   {
     int direction = 1-2*random(0, 2); // -1 или 1
@@ -5157,7 +5154,7 @@ void EffectAttract::load() {
 void EffectAttract::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd);
-  speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.02, 1.);
+  speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.02*speed_adj, 1.*speed_adj);
   setup();
 }
 
@@ -5232,7 +5229,7 @@ String EffectSnake::setDynCtrl(UIControl*_val) {
 }
 
 bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
-  speedFactor = (float)speed / 512.0 + 0.025;
+  speedFactor = ((float)speed / 512.0 + 0.025)*speed_adj;
   fadeToBlackBy(leds, NUM_LEDS, speed<25 ? 5 : speed/2 ); // длина хвоста будет зависеть от скорости
 #ifdef MIC_EFFECTS
   hue+=(speedFactor/snakeCount+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
@@ -5333,7 +5330,7 @@ void EffectNexus::load() {
 }
 
 bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
-  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, .33);
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1*speed_adj, .33*speed_adj);
 
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 11, 33));
 
@@ -5435,7 +5432,7 @@ bool EffectFlower::run(CRGB *ledarr, EffectWorker *opt ) {
 }
 
 bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
-  float speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 2.5);
+  float speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.25*speed_adj, 2.5*speed_adj);
 #ifdef MIC_EFFECTS
 #define _Mic isMicOn() ? (float)peak / 50. : 0.1
   byte peak = myLamp.getMicMapMaxPeak();
@@ -5587,7 +5584,7 @@ String EffectFire2020::setDynCtrl(UIControl*_val)
 bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   if(!curPalette) return false;
 
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.20, 1.);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.20*speed_adj, 1.*speed_adj);
 
   for (uint8_t i = 0; i < WIDTH; i++)
   {
@@ -5651,7 +5648,7 @@ void EffectTest::regen() {
 
 bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
   FastLED.clear(); 
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06, 0.5);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.06*speed_adj, 0.5*speed_adj);
   int8_t dx = 0, dy = 0;
   for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
@@ -5871,7 +5868,7 @@ void EffectPopcorn::restart_rocket(uint8_t r) {
 void EffectPopcorn::reload(){
   //numRockets = map(scale, 1, 32, 6, WIDTH * 3);
   //rockets.resize(numRockets);
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 0.75);
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25*speed_adj, 0.75*speed_adj);
 
   for (uint8_t r = 0; r < numRockets; r++) {
     rockets[r].x = random8(WIDTH);
@@ -5883,7 +5880,7 @@ void EffectPopcorn::reload(){
 }
 
 bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 0.75);
+  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25*speed_adj, 0.75*speed_adj);
 
   if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30. * speedfactor);
   else FastLED.clear();
@@ -5992,7 +5989,7 @@ void EffectSmokeballs::regen() {
 }
 
 bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
-  speedfactor = EffectMath::fmap(speed, 1., 255., .02, .1); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
+  speedfactor = EffectMath::fmap(speed, 1., 255., .02*speed_adj, .1*speed_adj); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
   uint8_t _amount = map(_scale, 1, 16, 2, WAVES_AMOUNT);
   shiftUp();
   EffectMath::dimAll(240);
@@ -6024,7 +6021,7 @@ void EffectSmokeballs::shiftUp(){
 // "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
 void EffectCell::cell(CRGB *leds) {
-  float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33, 3.);
+  float speedfactor = EffectMath::fmap((float)speed, 1., 255., .33*speed_adj, 3.*speed_adj);
   offsetX = beatsin16(6. * speedfactor, -180, 180);
   offsetY = beatsin16(6. * speedfactor, -180, 180, 12000);
   for (uint x = 0; x < WIDTH; x++) {
@@ -6096,7 +6093,7 @@ void EffectCell::spruce(CRGB *leds) {
 }
 
 void EffectCell::spider(CRGB *leds) {
-  float speedFactor = EffectMath::fmap(speed, 1, 255, 20., 2.);
+  float speedFactor = EffectMath::fmap(speed, 1, 255, 20.*speed_adj, 2.*speed_adj);
   fadeToBlackBy(leds, NUM_LEDS, 50);
   //FastLED.clear(); 
   for (uint8_t c = 0; c < Lines; c++) {
@@ -6130,7 +6127,7 @@ void EffectF_lying::load() {
 
 bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
   
-  float speedfactor = EffectMath::fmap(speed, 1., 255., 0.2, 1.);
+  float speedfactor = EffectMath::fmap(speed, 1., 255., 0.2*speed_adj, 1.*speed_adj);
 
   EVERY_N_MILLISECONDS(30. / speedfactor) { hue++; } //30 - speed of hue change
 
@@ -6730,7 +6727,7 @@ void EffectWrain::load() {
 }
 
 bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
-  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, .75);
+  float speedfactor = EffectMath::fmap(speed, 1, 255, 0.1*speed_adj, .75*speed_adj);
 
   if (_flash and (millis() - timer < 500)) 
     _flash = true;
@@ -6924,7 +6921,7 @@ void EffectPile::load() {
 }
 bool EffectPile::run(CRGB *leds, EffectWorker *opt)
 {
-  speedfactor = EffectMath::fmap(speed, 1, 255, 0.1, 0.5);
+  speedfactor = EffectMath::fmap(speed, 1, 255, 0.1*speed_adj, 0.5*speed_adj);
 
   if (!done)
   {
@@ -7096,7 +7093,7 @@ void EffectFairy::fountEmit(uint8_t i) {
 }
 
 void EffectFairy::fount(CRGB *leds){
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.2, 1.);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.2*speed_adj, 1.*speed_adj);
   step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
 
   EffectMath::dimAll(EffectMath::fmap(speed, 1, 255, 180, 127)); //ахах-ха. очередной эффект, к которому нужно будет "подобрать коэффициенты"
@@ -7144,7 +7141,7 @@ void EffectFairy::fairyEmit(uint8_t i) {
 }
 
 bool EffectFairy::fairy(CRGB *leds) {
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.05, .25);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.05*speed_adj, .25*speed_adj);
   step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
   
 #ifdef FAIRY_BEHAVIOR
@@ -7363,7 +7360,7 @@ void EffectBengalL::load() {
   for (byte i = 0; i < sparksNum; i++) {
     regen(i);
   }
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1, 1);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*speed_adj, 1*speed_adj);
 }
 
 String EffectBengalL::setDynCtrl(UIControl*_val){
@@ -7401,7 +7398,7 @@ void EffectBengalL::regen(byte id) {
 void EffectBengalL::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd); // дернем базовый, где будет пересчет палитры
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1, 1);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*speed_adj, 1*speed_adj);
 }
 
 
@@ -7437,7 +7434,7 @@ void EffectBalls::load() {
   randomSeed(millis());
   palettesload();
 
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15*speed_adj, 0.5*speed_adj);
 
   for (byte i = 0; i < ballsAmount; i++) {
     radius[i] = EffectMath::randomf(0.5, radiusMax);
@@ -7452,7 +7449,7 @@ void EffectBalls::load() {
 void EffectBalls::setspd(const byte _spd)
 {
   EffectCalc::setspd(_spd); // дернем базовый, где будет пересчет палитры
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15*speed_adj, 0.5*speed_adj);
 }
 
 void EffectBalls::fill_circle(float cx, float cy, float radius, CRGB col) {
@@ -8065,7 +8062,7 @@ void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
 void EffectMagma::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
-  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&MagmaColor_p);
   palettes.push_back(&HeatColors2_p);
   palettes.push_back(&NormalFire2_p);
   palettes.push_back(&CopperFireColors_p);
@@ -8106,8 +8103,8 @@ void EffectMagma::regen() {
 }
 
 bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
-  EffectMath::dimAll(181);
-  speedfactor = EffectMath::fmap(speed, 1, 255, 0.05, .5);
+  fadeToBlackBy(leds, NUM_LEDS, 50);
+  speedfactor = EffectMath::fmap(speed, 1, 255, 0.05*speed_adj, .5*speed_adj);
 
   for (uint8_t i = 0; i < ObjectNUM; i++) {
     LeapersMove_leaper(i);
@@ -8116,14 +8113,13 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 
   for (uint8_t i = 0; i < WIDTH; i++) {
     for (uint8_t j = 0; j < HEIGHT; j++) {
-      EffectMath::drawPixelXY(i, EffectMath::getmaxHeightIndex() - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 255U), 1);
+     EffectMath::drawPixelXY(i, EffectMath::getmaxHeightIndex() - j, ColorFromPalette(*curPalette, qsub8(inoise8(i * deltaValue, (j + ff_y + random8(2)) * deltaHue, ff_z), shiftHue[j]), 127U), 1);
     }
   }
 
-
-  //blurScreen(20);
   ff_y += speedfactor * 2;
   ff_z += speedfactor;
+  blur2d(leds, WIDTH, HEIGHT, 32);
   return true;
 }
 
@@ -8140,7 +8136,7 @@ void EffectMagma::LeapersMove_leaper(uint8_t l) {
   }
   
   // settled on the floor?
-  if (trackingObjectPosY[l] <= (HEIGHT/4-1)) {
+  if (trackingObjectPosY[l] <= (HEIGHT/5)) {
     LeapersRestart_leaper(l);
   }
 
@@ -8158,7 +8154,7 @@ void EffectMagma::LeapersRestart_leaper(uint8_t l) {
   trackingObjectSpeedX[l] = EffectMath::randomf(-0.75, 0.75);
   trackingObjectShift[l] = EffectMath::randomf(0.50, 0.85);
   trackingObjectPosX[l] = EffectMath::randomf(0, WIDTH);
-  trackingObjectPosY[l] = EffectMath::randomf(HEIGHT/4 - 1, HEIGHT/4 + 1);
+  trackingObjectPosY[l] = EffectMath::randomf(HEIGHT/5, HEIGHT/3);
 
   // for variety, sometimes go 50% faster
   if (random8() < 12) {

@@ -123,6 +123,7 @@ private:
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
+    float hue;
     bool halo = false;                                  // ореол
     uint8_t _scale=1;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
