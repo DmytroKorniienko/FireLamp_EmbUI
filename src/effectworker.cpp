@@ -1142,22 +1142,13 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   for(int i=0; i<controls->size(); i++){
     switch(i){
       case 0:
-        if(isRandDemo()){
-          brightness = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
-        } else
-          brightness = (*controls)[i]->getVal().toInt();
+        setbrt((*controls)[i]->getVal().toInt());
         break;
       case 1:
-        if(isRandDemo()){
-          speed = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
-        } else
-          speed = (*controls)[i]->getVal().toInt();
+        setspd((*controls)[i]->getVal().toInt());
         break;
       case 2:
-        if(isRandDemo()){
-          scale = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
-        } else
-          scale = (*controls)[i]->getVal().toInt();
+        setscl((*controls)[i]->getVal().toInt());
         break;
       default:
         setDynCtrl((*controls)[i]);
@@ -1228,6 +1219,7 @@ void EffectCalc::setspd(const byte _spd){
     palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
     paletteIdx = speed;
   }
+  speedfactor = lampstate->speedfactor*speed_adj;
 }
 
 /**

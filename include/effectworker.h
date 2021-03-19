@@ -63,6 +63,7 @@ typedef struct {
             bool isRandDemo:1;
         };
     };
+    float speedfactor;
 } LAMPSTATE;
 
 typedef union {
@@ -212,6 +213,7 @@ protected:
     byte brightness;
     byte speed;
     byte scale;
+    float speedfactor=1.0;      // коэффициент скорости эффекта
 
     uint8_t palettescale;       // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
     float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)

@@ -1477,6 +1477,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_004F), myLamp.getLampSettings().dRand ? "1" : "0", FPSTR(TINTF_03E), false);
     interf->checkbox(FPSTR(TCONST_009E), myLamp.getLampSettings().showName ? "1" : "0", FPSTR(TINTF_09A), false);
     interf->range(FPSTR(TCONST_0026), 30, 250, 5, FPSTR(TINTF_03F));
+    interf->range(FPSTR(TCONST_0053), 0.25, 4.0, 0.25, FPSTR(TINTF_0D3));
     interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? "1" : "0", FPSTR(TINTF_090), false); // нумерация в списке эффектов
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_0091), myLamp.getLampSettings().effHasMic ? "1" : "0", FPSTR(TINTF_091), false); // значек микрофона в списке эффектов
@@ -1534,6 +1535,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
         SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
+        SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor((*data)[FPSTR(TCONST_0050)].as<float>()));
     #ifdef MIC_EFFECTS
         myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == "1");
     #endif
@@ -2291,6 +2293,8 @@ void create_parameters(){
 
     embui.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
     embui.var_create(FPSTR(TCONST_00BD), String(F("85"))); // 5<<4+5, старшие и младшие 4 байта содержат 5
+
+    embui.var_create(FPSTR(TCONST_0053), String(F("1.0")));
 
     // пины и системные настройки
 #ifdef ESP_USE_BUTTON

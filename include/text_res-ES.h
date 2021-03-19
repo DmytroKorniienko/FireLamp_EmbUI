@@ -414,6 +414,7 @@ static const char TINTF_0CF[] PROGMEM = "Llenar";
 static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
 static const char TINTF_0D1[] PROGMEM = "Sonido primero";
 static const char TINTF_0D2[] PROGMEM = "Limita el volumen";
+static const char TINTF_0D3[] PROGMEM = "Coef. velocidad (1.0 por defecto)";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";

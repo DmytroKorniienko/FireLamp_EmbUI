@@ -413,6 +413,8 @@ static const char TINTF_0CF[] PROGMEM = "Fill";
 static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
 static const char TINTF_0D1[] PROGMEM = "Sound from begin";
 static const char TINTF_0D2[] PROGMEM = "Limit volume";
+static const char TINTF_0D3[] PROGMEM = "Speed factor (1.0 as default)";
+
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Happy new %d year!";

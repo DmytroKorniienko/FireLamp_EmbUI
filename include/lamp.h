@@ -317,6 +317,10 @@ public:
     void GaugeShow(unsigned val, unsigned max, byte hue = 10);
 #endif
 
+    void setSpeedFactor(float val) {
+        lampState.speedfactor = val;
+    }
+
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
     byte getNormalizedLampBrightness() { return (byte)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
