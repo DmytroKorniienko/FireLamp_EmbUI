@@ -5541,14 +5541,16 @@ void EffectFire2020::palettesload(){
   palettes.reserve(NUMPALETTES);
   palettes.push_back(&NormalFire_p);
   palettes.push_back(&HeatColors2_p);
+  palettes.push_back(&MagmaColor_p);
   palettes.push_back(&NormalFire2_p);
-  palettes.push_back(&CopperFireColors_p);
-  palettes.push_back(&SodiumFireColors_p);
-  palettes.push_back(&PotassiumFireColors_p);
-  palettes.push_back(&RubidiumFireColors_p);
-  palettes.push_back(&AlcoholFireColors_p);
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p); 
+  palettes.push_back(&WaterfallColors_p);
+
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
 }
@@ -8072,6 +8074,8 @@ void EffectMagma::palettesload(){
   palettes.push_back(&AlcoholFireColors_p);
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&WaterfallColors_p);
+  
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
 }
