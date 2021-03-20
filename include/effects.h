@@ -402,7 +402,7 @@ private:
   Boid boids[AVAILABLE_BOID_COUNT];
   Boid predator;
   PVector wind;
-  float speedfactor;
+  float speedFactor;
 
   bool predatorPresent;
   float hueoffset;
@@ -1075,7 +1075,7 @@ private:
     byte arrow_play_mode_count[6];      // Сколько раз проигрывать полностью каждый режим если вариант 0 - текущий счетчик
     byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
     uint8_t _scale;
-    float speedfactor;
+    float speedFactor;
     void arrowSetupForMode(byte mode, bool change);
     void arrowSetup_mode1();
     void arrowSetup_mode2();
@@ -1234,9 +1234,9 @@ struct Snake
     }
   }
 
-  void move(float speedfactor)
+  void move(float speedFactor)
   {
-    float inc = speedfactor*internal_speedf;
+    float inc = speedFactor*internal_speedf;
 
     switch (direction)
     {
@@ -1255,7 +1255,7 @@ struct Snake
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix, bool isDebug=false);
+  void draw(CRGB colors[SNAKE_LENGTH], float speedFactor, int snakenb, bool subpix, bool isDebug=false);
 };
 
     Snake snakes[MAX_SNAKES];
@@ -1395,7 +1395,7 @@ private:
     bool blurred = false;
     bool revCol = false;
     //bool tiltDirec;
-    float speedfactor;
+    float speedFactor;
     float center = (float)WIDTH / 2.;
 
     typedef struct
@@ -1427,7 +1427,7 @@ class EffectSmokeballs: public EffectCalc {
     uint16_t pos[WAVES_AMOUNT];
     float sSpeed[WAVES_AMOUNT];
     uint8_t maxMin[WAVES_AMOUNT];
-    float speedfactor;
+    float speedFactor;
     uint8_t waveColors[WAVES_AMOUNT];
     void shiftUp();
     void regen();
@@ -1606,7 +1606,7 @@ private:
   struct dot dots[MAXDOTS];
   float widthPos[WIDTH];
   bool done = true;
-  float speedfactor = 0.0f;
+  float speedFactor = 0.0f;
   float internal_counter = 0.0f;
 public:
     void load() override;
@@ -1916,7 +1916,7 @@ private:
     uint8_t trackingObjectHue[enlargedOBJECT_MAX_COUNT];
     float trackingObjectSpeedX[enlargedOBJECT_MAX_COUNT];
     float trackingObjectShift[enlargedOBJECT_MAX_COUNT];
-    float speedfactor;
+    float speedFactor;
 
     void palettesload();
     void regen();
