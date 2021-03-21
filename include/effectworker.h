@@ -314,20 +314,20 @@ public:
     ///
 
 
-    /**
-     * setBrt - установка яркости для воркера
-     */
-    virtual void setbrt(const byte _brt);
+    // /**
+    //  * setBrt - установка яркости для воркера
+    //  */
+    // virtual void setbrt(const byte _brt);
 
-    /**
-     * setSpd - установка скорости для воркера
-     */
-    virtual void setspd(const byte _spd);
+    // /**
+    //  * setSpd - установка скорости для воркера
+    //  */
+    // virtual void setspd(const byte _spd);
 
-    /**
-     * setBrt - установка шкалы для воркера
-     */
-    virtual void setscl(const byte _scl);
+    // /**
+    //  * setBrt - установка шкалы для воркера
+    //  */
+    // virtual void setscl(const byte _scl);
 
     /**
      * setDynCtrl - обработка для динамических контролов idx=3+

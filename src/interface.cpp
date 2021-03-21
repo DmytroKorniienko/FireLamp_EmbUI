@@ -476,10 +476,11 @@ void block_effects_param(Interface *interf, JsonObject *data){
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
                 {
-                    String ctrlId = controls[i]->getId()==0 ? String(FPSTR(TCONST_0012))
-                        : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013))
-                        : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
-                        : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
+                    // String ctrlId = controls[i]->getId()==0 ? String(FPSTR(TCONST_0012))
+                    //     : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013))
+                    //     : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
+                    //     : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
+                    String ctrlId = String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
                     String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
                     if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
@@ -565,51 +566,51 @@ void set_effects_list(Interface *interf, JsonObject *data){
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(eff->eff_nb).toInt(), myLamp.getNormalizedLampBrightness()), true); // publish_ctrls_vals
 }
 
-void set_effects_bright(Interface *interf, JsonObject *data){
-    if (!data) return;
+// void set_effects_bright(Interface *interf, JsonObject *data){
+//     if (!data) return;
 
-    byte bright = (*data)[FPSTR(TCONST_0012)];
-    if (myLamp.getNormalizedLampBrightness() != bright) {
-        myLamp.setLampBrightness(bright);
-        if(myLamp.isLampOn())
-            myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
-        if (myLamp.IsGlobalBrightness()) {
-            embui.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
-        }
-        if(myLamp.effects.worker && myLamp.effects.getEn())
-            myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
-        LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
-    }
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
-    publish_ctrls_vals();
-    resetAutoTimers();
-}
+//     byte bright = (*data)[FPSTR(TCONST_0012)];
+//     if (myLamp.getNormalizedLampBrightness() != bright) {
+//         myLamp.setLampBrightness(bright);
+//         if(myLamp.isLampOn())
+//             myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
+//         if (myLamp.IsGlobalBrightness()) {
+//             embui.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
+//         }
+//         if(myLamp.effects.worker && myLamp.effects.getEn())
+//             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
+//         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
+//     }
+//     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
+//     publish_ctrls_vals();
+//     resetAutoTimers();
+// }
 
-void set_effects_speed(Interface *interf, JsonObject *data){
-    if (!data) return;
+// void set_effects_speed(Interface *interf, JsonObject *data){
+//     if (!data) return;
 
-    if(!myLamp.effects.getEn()) return;
-    myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
-    if(myLamp.effects.worker && myLamp.effects.getEn())
-        myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
-    LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
-    publish_ctrls_vals();
-    resetAutoTimers();
-}
+//     if(!myLamp.effects.getEn()) return;
+//     myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
+//     if(myLamp.effects.worker && myLamp.effects.getEn())
+//         myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
+//     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
+//     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
+//     publish_ctrls_vals();
+//     resetAutoTimers();
+// }
 
-void set_effects_scale(Interface *interf, JsonObject *data){
-    if (!data) return;
+// void set_effects_scale(Interface *interf, JsonObject *data){
+//     if (!data) return;
 
-    if(!myLamp.effects.getEn()) return;
-    myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
-    if(myLamp.effects.worker && myLamp.effects.getEn())
-        myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
-    LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
-    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
-    publish_ctrls_vals();
-    resetAutoTimers();
-}
+//     if(!myLamp.effects.getEn()) return;
+//     myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
+//     if(myLamp.effects.worker && myLamp.effects.getEn())
+//         myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
+//     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
+//     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
+//     publish_ctrls_vals();
+//     resetAutoTimers();
+// }
 
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
@@ -617,9 +618,20 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if(!myLamp.effects.getEn()) return;
     String ctrlName;
     LList<UIControl*>&controls = myLamp.effects.getControls();
-    for(int i=3; i<controls.size();i++){
+    for(int i=0; i<controls.size();i++){
         ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
         if((*data).containsKey(ctrlName)){
+            if(!i){
+                byte bright = (*data)[ctrlName];
+                if (myLamp.getNormalizedLampBrightness() != bright) {
+                    myLamp.setLampBrightness(bright);
+                    if(myLamp.isLampOn())
+                        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
+                    if (myLamp.IsGlobalBrightness()) {
+                        embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
+                    }
+                }                
+            }
             controls[i]->setVal((*data)[ctrlName]);
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
             if(myLamp.effects.worker && myLamp.effects.getEn())
@@ -1477,7 +1489,8 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_004F), myLamp.getLampSettings().dRand ? "1" : "0", FPSTR(TINTF_03E), false);
     interf->checkbox(FPSTR(TCONST_009E), myLamp.getLampSettings().showName ? "1" : "0", FPSTR(TINTF_09A), false);
     interf->range(FPSTR(TCONST_0026), 30, 250, 5, FPSTR(TINTF_03F));
-    interf->range(FPSTR(TCONST_0053), 0.25, 4.0, 0.25, FPSTR(TINTF_0D3));
+    float sf = embui.param(FPSTR(TCONST_0053)).toFloat();
+    interf->range(FPSTR(TCONST_0053), sf, 0.25, 4.0, 0.25, FPSTR(TINTF_0D3));
     interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? "1" : "0", FPSTR(TINTF_090), false); // нумерация в списке эффектов
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_0091), myLamp.getLampSettings().effHasMic ? "1" : "0", FPSTR(TINTF_091), false); // значек микрофона в списке эффектов
@@ -1535,7 +1548,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
         SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
-        SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor((*data)[FPSTR(TCONST_0050)].as<float>()));
+        float sf = (*data)[FPSTR(TCONST_0053)];
+        SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor(sf));
     #ifdef MIC_EFFECTS
         myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == "1");
     #endif
@@ -2319,9 +2333,9 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_0000), section_effects_frame);
     embui.section_handle_add(FPSTR(TCONST_0011), show_effects_param);
     embui.section_handle_add(FPSTR(TCONST_0016), set_effects_list);
-    embui.section_handle_add(FPSTR(TCONST_0012), set_effects_bright);
-    embui.section_handle_add(FPSTR(TCONST_0013), set_effects_speed);
-    embui.section_handle_add(FPSTR(TCONST_0014), set_effects_scale);
+    // embui.section_handle_add(FPSTR(TCONST_0012), set_effects_bright);
+    // embui.section_handle_add(FPSTR(TCONST_0013), set_effects_speed);
+    // embui.section_handle_add(FPSTR(TCONST_0014), set_effects_scale);
     embui.section_handle_add(FPSTR(TCONST_007F), set_effects_dynCtrl);
 
     embui.section_handle_add(FPSTR(TCONST_0022), set_eff_prev);
@@ -2435,7 +2449,8 @@ void sync_parameters(){
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     if (myLamp.IsGlobalBrightness()) {
-        CALL_SETTER(FPSTR(TCONST_0012), embui.param(FPSTR(TCONST_0018)), set_effects_bright);
+        //CALL_SETTER(FPSTR(TCONST_0012), embui.param(FPSTR(TCONST_0018)), set_effects_bright);
+        CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", embui.param(FPSTR(TCONST_0018)), set_effects_dynCtrl);
     } else {
         myLamp.setGlobalBrightness(embui.param(FPSTR(TCONST_0018)).toInt()); // починить бросок яркости в 255 при первом включении
     }
@@ -2518,6 +2533,8 @@ void sync_parameters(){
 
     SORT_TYPE type = (SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt();
     obj[FPSTR(TCONST_0050)] = type;
+
+    obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
 
     set_settings_other(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
@@ -2611,13 +2628,16 @@ void remote_action(RA action, ...){
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
         case RA::RA_BRIGHT:
-            CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
+            //CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
+            CALL_INTF(String(FPSTR(TCONST_0015)) + "0", value, set_effects_dynCtrl);
             break;
         case RA::RA_SPEED:
-            CALL_INTF(FPSTR(TCONST_0013), value, set_effects_speed);
+            //CALL_INTF(FPSTR(TCONST_0013), value, set_effects_speed);
+            CALL_INTF(String(FPSTR(TCONST_0015)) + "1", value, set_effects_dynCtrl);
             break;
         case RA::RA_SCALE:
-            CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
+            //CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
+            CALL_INTF(String(FPSTR(TCONST_0015)) + "2", value, set_effects_dynCtrl);
             break;
         case RA::RA_EXTRA:
             //CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
