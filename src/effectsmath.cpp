@@ -78,17 +78,102 @@ namespace EffectMath_PRIVATE {
 
 using namespace EffectMath_PRIVATE;
 
-// для работы FastLed (blur2d)
-uint16_t XY(uint8_t x, uint8_t y)
-{
-#ifdef ROTATED_MATRIX
-  return getPixelNumber(y,x); // повернутое на 90 градусов
-#else
-  return getPixelNumber(x,y); // обычное подключение
-#endif
-}
+// используется встроенный блер, так что необходимости в данной функции более нет, отключено
+uint16_t XY(uint8_t x, uint8_t y) {return 0;}
+// // для работы FastLed (blur2d)
+// uint16_t XY(uint8_t x, uint8_t y)
+// {
+// #ifdef ROTATED_MATRIX
+//   return getPixelNumber(y,x); // повернутое на 90 градусов
+// #else
+//   return getPixelNumber(x,y); // обычное подключение
+// #endif
+// }
 
 //--------------------------------------
+// blur1d: one-dimensional blur filter. Spreads light to 2 line neighbors.
+// blur2d: two-dimensional blur filter. Spreads light to 8 XY neighbors.
+//
+//           0 = no spread at all
+//          64 = moderate spreading
+//         172 = maximum smooth, even spreading
+//
+//         173..255 = wider spreading, but increasing flicker
+//
+//         Total light is NOT entirely conserved, so many repeated
+//         calls to 'blur' will also result in the light fading,
+//         eventually all the way to black; this is by design so that
+//         it can be used to (slowly) clear the LEDs to black.
+void EffectMath::blur1d( CRGB* leds, uint16_t numLeds, fract8 blur_amount)
+{
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    CRGB carryover = CRGB::Black;
+    for( uint16_t i = 0; i < numLeds; ++i) {
+        CRGB cur = leds[i];
+        CRGB part = cur;
+        part.nscale8( seep);
+        cur.nscale8( keep);
+        cur += carryover;
+        if( i) leds[i-1] += part;
+        leds[i] = cur;
+        carryover = part;
+    }
+}
+
+void EffectMath::blur2d( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount)
+{
+    blurRows(leds, width, height, blur_amount);
+    blurColumns(leds, width, height, blur_amount);
+}
+
+// blurRows: perform a blur1d on every row of a rectangular matrix
+void EffectMath::blurRows( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount)
+{
+/*    for( uint8_t row = 0; row < height; ++row) {
+        CRGB* rowbase = leds + (row * width);
+        blur1d( rowbase, width, blur_amount);
+    }
+*/
+    // blur rows same as columns, for irregular matrix
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    for( uint8_t row = 0; row < height; row++) {
+        CRGB carryover = CRGB::Black;
+        for( uint8_t i = 0; i < width; i++) {
+            CRGB cur = leds[getPixelNumber(i,row)];
+            CRGB part = cur;
+            part.nscale8( seep);
+            cur.nscale8( keep);
+            cur += carryover;
+            if( i) leds[getPixelNumber(i-1,row)] += part;
+            leds[getPixelNumber(i,row)] = cur;
+            carryover = part;
+        }
+    }
+}
+
+// blurColumns: perform a blur1d on each column of a rectangular matrix
+void EffectMath::blurColumns(CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount)
+{
+    // blur columns
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    for( uint8_t col = 0; col < width; ++col) {
+        CRGB carryover = CRGB::Black;
+        for( uint8_t i = 0; i < height; ++i) {
+            CRGB cur = leds[getPixelNumber(col,i)];
+            CRGB part = cur;
+            part.nscale8( seep);
+            cur.nscale8( keep);
+            cur += carryover;
+            if( i) leds[getPixelNumber(col,i-1)] += part;
+            leds[getPixelNumber(col,i)] = cur;
+            carryover = part;
+        }
+    }
+} 
+
 // ******** общие мат. функции переиспользуются в другом эффекте
 uint8_t EffectMath::mapsincos8(bool map, uint8_t theta, uint8_t lowest, uint8_t highest) {
   uint8_t beat = map ? sin8(theta) : cos8(theta);
@@ -639,4 +724,161 @@ CRGB *EffectMath::setLed(uint16_t idx, CRGB val, byte opt) {
   } else {
     return &overrun;
   }
+}
+
+uint32_t EffectMath::getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
+{
+
+  uint16_t _THIS_Y = y;
+  uint16_t _THIS_X = x;
+  
+  if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+  {
+      return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X);
+  }
+  else                                                      // если нечётная строка
+  {
+      return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
+  }
+
+}
+
+void EffectMath::setPixel(uint16_t x, uint16_t y, const CRGB &pixel){
+  // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
+  if (y > getmaxHeightIndex() || x > getmaxWidthIndex()) return;
+  leds[getPixelNumber(x,y)] = pixel;
+}
+
+CRGB &EffectMath::getPixel(uint16_t x, uint16_t y){
+  // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
+  if (y > getmaxHeightIndex() || x > getmaxWidthIndex())
+      return overrun;
+  return leds[getPixelNumber(x,y)];
+}
+
+float EffectMath::sqrt(float x){
+  union{
+      int i;
+      float x;
+  } u;
+
+  u.x = x;
+  // u.i = (1<<29) + (u.i >> 1) - (1<<22);
+  // u.i = 0x20000000 + (u.i >> 1) - 0x400000;
+  u.i = (u.i >> 1) + 0x1FC00000;
+  return u.x;
+}
+
+float EffectMath::tan2pi_fast(float x) {
+  float y = (1 - x*x);
+  return x * (((-0.000221184 * y + 0.0024971104) * y - 0.02301937096) * y + 0.3182994604 + 1.2732402998 / y);
+  //float y = (1 - x*x);
+  //return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
+}
+
+float EffectMath::atan2_fast(float y, float x)
+{
+  //http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
+  //Volkan SALMA
+
+  const float ONEQTR_PI = PI / 4.0;
+  const float THRQTR_PI = 3.0 * PI / 4.0;
+  float r, angle;
+  float abs_y = fabs(y) + 1e-10f;      // kludge to prevent 0/0 condition
+  if ( x < 0.0f )
+  {
+      r = (x + abs_y) / (abs_y - x);
+      angle = THRQTR_PI;
+  }
+  else
+  {
+      r = (x - abs_y) / (x + abs_y);
+      angle = ONEQTR_PI;
+  }
+  angle += (0.1963f * r * r - 0.9817f) * r;
+  if ( y < 0.0f )
+      return( -angle );     // negate if in quad III or IV
+  else
+      return( angle );
+}
+
+float EffectMath::atan_fast(float x){
+  /*
+  A fast look-up method with enough accuracy
+  */
+  if (x > 0) {
+      if (x <= 1) {
+      int index = round(x * 100);
+      return LUT[index];
+      } else {
+      float re_x = 1 / x;
+      int index = round(re_x * 100);
+      return (M_PI_2 - LUT[index]);
+      }
+  } else {
+      if (x >= -1) {
+      float abs_x = -x;
+      int index = round(abs_x * 100);
+      return -(LUT[index]);
+      } else {
+      float re_x = 1 / (-x);
+      int index = round(re_x * 100);
+      return (LUT[index] - M_PI_2);
+      }
+  }
+}
+
+float EffectMath::mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float)){
+  if (x <= in_min) return out_min;
+  if (x >= in_max) return out_max;
+  return curve((x - in_min), out_min, (out_max - out_min), (in_max - in_min));
+}
+
+float EffectMath::InOutQuad(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t + b;
+  --t;
+  return -c / 2 * (t * (t - 2) - 1) + b;
+}
+
+float EffectMath::InOutCubic(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t * t + b;
+  t -= 2;
+  return c / 2 * (t * t * t + 2) + b;
+}
+
+float EffectMath::InOutQuart(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t * t * t + b;
+  t -= 2;
+  return -c / 2 * (t * t * t * t - 2) + b;
+}
+
+float EffectMath::OutQuint(float t, float b, float c, float d) {
+  t = t / d - 1;
+  return c * (t * t * t * t * t + 1) + b;
+}
+
+float EffectMath::InOutQuint(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return  c / 2 * t * t * t * t * t + b;
+  t -= 2;
+  return c / 2 * (t * t * t * t * t + 2) + b;
+}
+
+float EffectMath::InOutExpo(float t, float b, float c, float d) {
+  if (t==0) return b;
+  if (t==d) return b + c;
+  t /= d / 2;
+  if (t < 1) return c/2 * powf(2, 10 * (t - 1)) + b;
+  --t;
+  return c/2 * (-powf(2, -10 * t) + 2) + b;
+}
+
+float EffectMath::InOutCirc(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return -c/2 * (sqrt(1 - t*t) - 1) + b;
+  t -= 2;
+  return c/2 * (sqrt(1 - t*t) + 1) + b;
 }
