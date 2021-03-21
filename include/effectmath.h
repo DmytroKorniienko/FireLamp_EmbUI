@@ -106,36 +106,17 @@ public:
   static int16_t getmaxWidthIndex() {return (int16_t)WIDTH-1;}
   static int16_t getmaxHeightIndex() {return (int16_t)HEIGHT-1;}
 
-    // для работы с буфером
-    static uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
-    {
+  static void blur1d( CRGB* leds, uint16_t numLeds, fract8 blur_amount);
+  static void blur2d( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount);
+  // blurRows: perform a blur1d on every row of a rectangular matrix
+  static void blurRows( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount);
+  // blurColumns: perform a blur1d on each column of a rectangular matrix
+  static void blurColumns(CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount);
 
-        uint16_t _THIS_Y = y;
-        uint16_t _THIS_X = x;
-        
-        if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-        {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X);
-        }
-        else                                                      // если нечётная строка
-        {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
-        }
-
-    }
-
-    static void setPixel(uint16_t x, uint16_t y, const CRGB &pixel){
-        // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-        if (y > getmaxHeightIndex() || x > getmaxWidthIndex()) return;
-        leds[getPixelNumber(x,y)] = pixel;
-    }
-
-    static CRGB &getPixel(uint16_t x, uint16_t y){
-        // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-        if (y > getmaxHeightIndex() || x > getmaxWidthIndex())
-            return overrun;
-        return leds[getPixelNumber(x,y)];
-    }
+  // для работы с буфером
+  static uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H); // получить номер пикселя в буфере по координатам
+  static void setPixel(uint16_t x, uint16_t y, const CRGB &pixel);
+  static CRGB &getPixel(uint16_t x, uint16_t y);
 
   static uint8_t mapsincos8(bool map, uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255);
   static void MoveFractionalNoise(bool scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift = 0);
@@ -217,148 +198,37 @@ public:
         return EffectMath::sqrt((dx * dx) + (dy * dy));
     }
     // чуть менее точная, зато в 3 раза быстрее
-    static float sqrt(float x){
-        union{
-            int i;
-            float x;
-        } u;
-
-        u.x = x;
-        // u.i = (1<<29) + (u.i >> 1) - (1<<22);
-        // u.i = 0x20000000 + (u.i >> 1) - 0x400000;
-        u.i = (u.i >> 1) + 0x1FC00000;
-        return u.x;
-    }
-
-    static float tan2pi_fast(float x) {
-        float y = (1 - x*x);
-        return x * (((-0.000221184 * y + 0.0024971104) * y - 0.02301937096) * y + 0.3182994604 + 1.2732402998 / y);
-        //float y = (1 - x*x);
-        //return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
-    }
-
-    static float atan2_fast(float y, float x)
-    {
-        //http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
-        //Volkan SALMA
-
-        const float ONEQTR_PI = PI / 4.0;
-        const float THRQTR_PI = 3.0 * PI / 4.0;
-        float r, angle;
-        float abs_y = fabs(y) + 1e-10f;      // kludge to prevent 0/0 condition
-        if ( x < 0.0f )
-        {
-            r = (x + abs_y) / (abs_y - x);
-            angle = THRQTR_PI;
-        }
-        else
-        {
-            r = (x - abs_y) / (x + abs_y);
-            angle = ONEQTR_PI;
-        }
-        angle += (0.1963f * r * r - 0.9817f) * r;
-        if ( y < 0.0f )
-            return( -angle );     // negate if in quad III or IV
-        else
-            return( angle );
-    }
-
-    static float atan_fast(float x){
-        /*
-        A fast look-up method with enough accuracy
-        */
-        if (x > 0) {
-            if (x <= 1) {
-            int index = round(x * 100);
-            return LUT[index];
-            } else {
-            float re_x = 1 / x;
-            int index = round(re_x * 100);
-            return (M_PI_2 - LUT[index]);
-            }
-        } else {
-            if (x >= -1) {
-            float abs_x = -x;
-            int index = round(abs_x * 100);
-            return -(LUT[index]);
-            } else {
-            float re_x = 1 / (-x);
-            int index = round(re_x * 100);
-            return (LUT[index] - M_PI_2);
-            }
-        }
-    }
+    static float sqrt(float x);
+    static float tan2pi_fast(float x);
+    static float atan2_fast(float y, float x);
+    static float atan_fast(float x);
 
     // аналог fmap, но не линейная. (linear == fmap)
-    static float mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float)){
-        if (x <= in_min) return out_min;
-        if (x >= in_max) return out_max;
-        return curve((x - in_min), out_min, (out_max - out_min), (in_max - in_min));
-    }
+    static float mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float));
     static float linear(float t, float b, float c, float d) { return c * t / d + b; }
     static float InQuad(float t, float b, float c, float d) { t /= d; return c * t * t + b; }
     static float OutQuad(float t, float b, float c, float d) { t /= d; return -c * t * (t - 2) + b; }
-    static float InOutQuad(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t + b;
-        --t;
-        return -c / 2 * (t * (t - 2) - 1) + b;
-    }
+    static float InOutQuad(float t, float b, float c, float d);
     static float InCubic(float t, float b, float c, float d) { t /= d; return c * t * t * t + b; }
     static float OutCubic(float t, float b, float c, float d) { t = t / d - 1; return c * (t * t * t + 1) + b; }
-    static float InOutCubic(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t * t + b;
-        t -= 2;
-        return c / 2 * (t * t * t + 2) + b;
-    }
+    static float InOutCubic(float t, float b, float c, float d);
     static float InQuart(float t, float b, float c, float d) { t /= d; return c * t * t * t * t + b; }
     static float OutQuart(float t, float b, float c, float d) { t = t / d - 1; return -c * (t * t * t * t - 1) + b; }
-    static float InOutQuart(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t * t * t + b;
-        t -= 2;
-        return -c / 2 * (t * t * t * t - 2) + b;
-    }
+    static float InOutQuart(float t, float b, float c, float d);
     static float InQuint(float t, float b, float c, float d) { t /= d; return c * t * t * t * t * t + b; }
-
-    static float fixed_to_float(int input){
-        return ((float)input / (float)(1 << 16));
-    }
-    static int float_to_fixed(float input){
-        return (int)(input * (1 << 16));
-    }
-    static float OutQuint(float t, float b, float c, float d) {
-        t = t / d - 1;
-        return c * (t * t * t * t * t + 1) + b;
-    }
-    static float InOutQuint(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return  c / 2 * t * t * t * t * t + b;
-        t -= 2;
-        return c / 2 * (t * t * t * t * t + 2) + b;
-    }
+    static float fixed_to_float(int input){ return ((float)input / (float)(1 << 16)); }
+    static int float_to_fixed(float input){ return (int)(input * (1 << 16)); }
+    static float OutQuint(float t, float b, float c, float d);
+    static float InOutQuint(float t, float b, float c, float d);
     // static float InSine(float t, float b, float c, float d) { return -c * Math.cos(t/d * (Math.PI/2)) + c + b; }
     // static float OutSine(float t, float b, float c, float d) { return c * Math.sin(t/d * (Math.PI/2)) + b; }
     // static float InOutSine(float t, float b, float c, float d) { return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b; }
     static float InExpo(float t, float b, float c, float d) { return (t==0) ? b : c * powf(2, 10 * (t/d - 1)) + b; }
     static float OutExpo(float t, float b, float c, float d) { return (t==d) ? b+c : c * (-powf(2, -10 * t/d) + 1) + b; }
-    static float InOutExpo(float t, float b, float c, float d) {
-        if (t==0) return b;
-        if (t==d) return b + c;
-        t /= d / 2;
-        if (t < 1) return c/2 * powf(2, 10 * (t - 1)) + b;
-        --t;
-        return c/2 * (-powf(2, -10 * t) + 2) + b;
-    }
+    static float InOutExpo(float t, float b, float c, float d);
     static float InCirc(float t, float b, float c, float d) { t /= d; return -c * (sqrt(1 - t * t) - 1) + b; }
     static float OutCirc(float t, float b, float c, float d) { t = t / d - 1; return c * sqrt(1 - t * t) + b; }
-    static float InOutCirc(float t, float b, float c, float d) {
-        t /= d / 2;
-        if (t < 1) return -c/2 * (sqrt(1 - t*t) - 1) + b;
-        t -= 2;
-        return c/2 * (sqrt(1 - t*t) + 1) + b;
-    }
+    static float InOutCirc(float t, float b, float c, float d);
 };
 
 #endif

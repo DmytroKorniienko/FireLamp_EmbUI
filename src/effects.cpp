@@ -788,7 +788,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
     }
     EffectMath::drawPixelXYF(coord[j][0U], coord[j][1U], CHSV(ballColors[j], 200U, 255U));
   }
-  blur2d(leds, WIDTH, HEIGHT, 5);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 5);
   return true;
 }
 
@@ -808,7 +808,7 @@ bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
   // blur it repeatedly.  Since the blurring is 'lossy', there's
   // an automatic trend toward black -- by design.
   uint8_t blurAmount = dim8_raw(beatsin8(3,64,100));
-  blur2d(leds, WIDTH, HEIGHT, blurAmount);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, blurAmount);
 
   float speedScale = (((float)speed)/255.0)+0.1;
 
@@ -3699,7 +3699,7 @@ void EffectAquarium::nGlare(CRGB *leds) {
 
   fillNoiseLED(leds);
   
-  blur2d(leds, WIDTH, HEIGHT, 100);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 100);
 }
 
 void EffectAquarium::fillNoiseLED(CRGB *leds) {
@@ -6154,7 +6154,7 @@ bool EffectF_lying::run(CRGB *leds, EffectWorker *opt) {
     mydrawLine(leds, x4, y4,  x1, y1, 160);
   }
   
-  blur2d(leds, WIDTH, HEIGHT, map(_blur, 1, 128, 2, 64));
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, map(_blur, 1, 128, 2, 64));
 
   return true;
 }
@@ -7523,7 +7523,7 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
       ball[i][1] = EffectMath::getmaxWidthIndex();
     }
   }
-  blur2d(leds, WIDTH, HEIGHT, 48);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 48);
   return true;
 }
 
@@ -7822,7 +7822,7 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
 
   for(float i= (float)8 * _scale; i> 0; i--)
     EffectMath::drawPixelXY(beatsin8(12. * _speed + i * _speed, 0, EffectMath::getmaxWidthIndex()), beatsin8(15. * _speed + i * _speed, 0, EffectMath::getmaxHeightIndex()), CHSV(beatsin8(12. * _speed, 0, 255), scale > 127 ? 255 - i*8 : 255, scale > 127 ? 127 + i*8 : 255));
-  blur2d(leds, WIDTH, HEIGHT, 16);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 16);
   return true;
 }
 
@@ -8016,7 +8016,7 @@ bool EffectSmoker::run(CRGB *leds, EffectWorker *opt) {
 
   generatebump();
   Bumpmap(leds, lightX, lightY);
-  blur2d(leds, WIDTH, HEIGHT, 64);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 64);
   return true;
 }
 
@@ -8123,7 +8123,7 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 
   ff_y += speedfactor * 2;
   ff_z += speedfactor;
-  blur2d(leds, WIDTH, HEIGHT, 32);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   return true;
 }
 

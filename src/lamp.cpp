@@ -1200,8 +1200,8 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
   if(effects.worker && flags.ONflag && !iflags.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
-      ledsbuff.resize(NUM_LEDS);
-      std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
+    ledsbuff.resize(NUM_LEDS);
+    std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
