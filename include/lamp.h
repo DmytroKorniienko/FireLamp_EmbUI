@@ -319,6 +319,7 @@ public:
 
     void setSpeedFactor(float val) {
         lampState.speedfactor = val;
+        effects.worker->setDynCtrl(effects.getControls()[1]);
     }
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)

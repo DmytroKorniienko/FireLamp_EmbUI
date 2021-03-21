@@ -1140,20 +1140,21 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
 
   if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
   for(int i=0; i<controls->size(); i++){
-    switch(i){
-      case 0:
-        setbrt((*controls)[i]->getVal().toInt());
-        break;
-      case 1:
-        setspd((*controls)[i]->getVal().toInt());
-        break;
-      case 2:
-        setscl((*controls)[i]->getVal().toInt());
-        break;
-      default:
-        setDynCtrl((*controls)[i]);
-        break;
-    }
+    setDynCtrl((*controls)[i]);
+    // switch(i){
+    //   case 0:
+    //     setbrt((*controls)[i]->getVal().toInt());
+    //     break;
+    //   case 1:
+    //     setspd((*controls)[i]->getVal().toInt());
+    //     break;
+    //   case 2:
+    //     setscl((*controls)[i]->getVal().toInt());
+    //     break;
+    //   default:
+    //     setDynCtrl((*controls)[i]);
+    //     break;
+    // }
   }
 
   active=true;
@@ -1189,54 +1190,54 @@ bool EffectCalc::dryrun(float n, uint8_t delay){
  */
 bool EffectCalc::status(){return active;}
 
-/**
- * setbrt - установка яркости для воркера
- */
-void EffectCalc::setbrt(const byte _brt){
-  if(isRandDemo()){
-    brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
-  } else
-    brightness = _brt;
-  //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
-  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-  if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
-    paletteIdx = brightness;
-  }
-}
+// /**
+//  * setbrt - установка яркости для воркера
+//  */
+// void EffectCalc::setbrt(const byte _brt){
+//   if(isRandDemo()){
+//     brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
+//   } else
+//     brightness = _brt;
+//   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
+//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+//   if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
+//     palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
+//     paletteIdx = brightness;
+//   }
+// }
 
-/**
- * setspd - установка скорости для воркера
- */
-void EffectCalc::setspd(const byte _spd){
-  if(isRandDemo()){
-    speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
-  } else
-    speed = _spd;
-  //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
-  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-  if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
-    paletteIdx = speed;
-  }
-  speedfactor = lampstate->speedfactor*speed_adj;
-}
+// /**
+//  * setspd - установка скорости для воркера
+//  */
+// void EffectCalc::setspd(const byte _spd){
+//   if(isRandDemo()){
+//     speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
+//   } else
+//     speed = _spd;
+//   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
+//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+//   if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
+//     palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
+//     paletteIdx = speed;
+//   }
+//   speedfactor = lampstate->speedfactor*SPEED_ADJ;
+// }
 
-/**
- * setscl - установка шкалы для воркера
- */
-void EffectCalc::setscl(byte _scl){
-  //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
-  if(isRandDemo()){
-    scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
-  } else
-    scale = _scl;
-  // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
-  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
-    palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
-    paletteIdx = scale;
-  }
-}
+// /**
+//  * setscl - установка шкалы для воркера
+//  */
+// void EffectCalc::setscl(byte _scl){
+//   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
+//   if(isRandDemo()){
+//     scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
+//   } else
+//     scale = _scl;
+//   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
+//   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
+//     palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
+//     paletteIdx = scale;
+//   }
+// }
 
 /**
  * setDynCtrl - была смена динамического контрола, idx=3+
@@ -1246,6 +1247,13 @@ void EffectCalc::setscl(byte _scl){
 String EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return String();
   String ret_val = _val->getVal();
+
+  switch(_val->getId()){
+    case 0: brightness = ret_val.toInt(); break;
+    case 1: speed = ret_val.toInt(); speedfactor = lampstate->speedfactor*SPEED_ADJ; break; // LOG(printf_P,PSTR("speedfactor=%2.2f\n"),speedfactor);
+    case 2: scale = ret_val.toInt(); break;
+    default: break;
+  }
 
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     if(isRandDemo()){
@@ -1332,10 +1340,10 @@ void EffectCalc::scale2pallete(){
     return;
 
   LOG(println, F("Reset all controls"));
-  setbrt((*ctrls)[0]->getVal().toInt());
-  setspd((*ctrls)[1]->getVal().toInt());
-  setscl((*ctrls)[2]->getVal().toInt());
-  for(int i=3;i<ctrls->size();i++){
+  // setbrt((*ctrls)[0]->getVal().toInt());
+  // setspd((*ctrls)[1]->getVal().toInt());
+  // setscl((*ctrls)[2]->getVal().toInt());
+  for(int i=0;i<ctrls->size();i++){
     setDynCtrl((*ctrls)[i]);
   }
 }

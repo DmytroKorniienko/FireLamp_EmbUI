@@ -187,6 +187,7 @@ private:
     float coord[_AMOUNT][2U];
     int16_t ballColors[_AMOUNT];
     byte light[_AMOUNT];
+    float speedfactor;
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -213,7 +214,7 @@ private:
     uint8_t modeColor;
 
     bool colorsRoutine(CRGB *leds, EffectWorker *param);
-    void setscl(const byte _scl) override;
+    //void setscl(const byte _scl) override;
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -290,6 +291,7 @@ protected:
     uint8_t lightersColor[LIGHTERS_AM];
     float lightersPos[2U][LIGHTERS_AM];
     byte light[LIGHTERS_AM];
+    float speedfactor;
 private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
@@ -308,6 +310,7 @@ private:
     bool randColor = false;
     bool white = false;
     float count;
+    float speedfactor;
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -321,6 +324,7 @@ private:
     uint8_t effId = 1;
     bool isNew = true;
     float fade;
+    float speedfactor;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 
@@ -409,7 +413,7 @@ private:
 
   bool flockRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
-  void setspd(const byte _spd) override;
+  //void setspd(const byte _spd) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -499,7 +503,8 @@ private:
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
-  void setscl(const byte _scl) override;
+  String setDynCtrl(UIControl*_val) override;
+  //void setscl(const byte _scl) override;
 public:
     void load() override;
     void setup();
@@ -610,7 +615,7 @@ private:
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
   void cube2dmoveRows(uint8_t moveItem, bool movedirection);
   String setDynCtrl(UIControl*_val) override;
-  void setscl(const byte _scl) override;
+  //void setscl(const byte _scl) override;
 
 public:
     void load() override;
@@ -1127,8 +1132,8 @@ private:
     Boid boids[count];
     PVector location;   // Location
     String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override;
-    void setspd(const byte _spd) override;
+    // void setscl(const byte _scl) override;
+    // void setspd(const byte _spd) override;
     void setup();
 
 
@@ -1377,7 +1382,7 @@ private:
 
     bool testRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setscl(const byte _scl) override; // перегрузка для масштаба
     //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
 
@@ -1656,7 +1661,7 @@ private:
     void fountEmit(uint8_t i);
     bool fairy(CRGB *leds);
     void fount(CRGB *leds);
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setscl(const byte _scl) override; // перегрузка для масштаба
     String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -1729,7 +1734,7 @@ private:
 
     void regen(byte id);
     void phisics(byte id);
-    void setspd(const byte _spd) override;
+    //void setspd(const byte _spd) override;
     String setDynCtrl(UIControl*_val) override;
 
 
@@ -1756,8 +1761,8 @@ private:
 
     float speedFactor;
     void fill_circle(float cx, float cy, float radius, CRGB col);
-    void setspd(const byte _spd) override;
-    //String setDynCtrl(UIControl*_val) override;
+    //void setspd(const byte _spd) override;
+    String setDynCtrl(UIControl*_val) override;
 
 
 public:
@@ -1803,7 +1808,8 @@ private:
         return false;
     }
 
-    void setspd(const byte _spd) override; // перегрузка для скорости
+    String setDynCtrl(UIControl*_val) override;
+    //void setspd(const byte _spd) override; // перегрузка для скорости
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 
@@ -1842,7 +1848,8 @@ private:
     uint16_t _scale;
     byte flag;
 
-    void setscl(const byte _scl) override;
+    //void setscl(const byte _scl) override;
+    String setDynCtrl(UIControl*_val) override;
     void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
 
@@ -1873,7 +1880,8 @@ private:
 
     void aimChange();
     void drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color);
-    void setspd(const byte _spd) override;
+    //void setspd(const byte _spd) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1894,7 +1902,7 @@ private:
     void regen();
     void Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty);
     String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setscl(const byte _scl) override; // перегрузка для масштаба
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
