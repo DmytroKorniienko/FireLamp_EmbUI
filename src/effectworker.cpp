@@ -1248,13 +1248,6 @@ String EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val) return String();
   String ret_val = _val->getVal();
 
-  switch(_val->getId()){
-    case 0: brightness = ret_val.toInt(); break;
-    case 1: speed = ret_val.toInt(); speedfactor = lampstate->speedfactor*SPEED_ADJ; break; // LOG(printf_P,PSTR("speedfactor=%2.2f\n"),speedfactor);
-    case 2: scale = ret_val.toInt(); break;
-    default: break;
-  }
-
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     if(isRandDemo()){
       paletteIdx = random(_val->getMin().toInt(),_val->getMax().toInt()+1);
@@ -1275,6 +1268,13 @@ String EffectCalc::setDynCtrl(UIControl*_val){
     } else {
       ret_val = _val->getVal().toInt();
     }
+  }
+
+  switch(_val->getId()){
+    case 0: brightness = ret_val.toInt(); break;
+    case 1: speed = ret_val.toInt(); speedfactor = lampstate->speedfactor*SPEED_ADJ; break; // LOG(printf_P,PSTR("speedfactor=%2.2f\n"),speedfactor);
+    case 2: scale = ret_val.toInt(); break;
+    default: break;
   }
 
   return ret_val;

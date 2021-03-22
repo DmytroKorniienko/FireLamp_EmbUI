@@ -6004,7 +6004,7 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 String EffectPopcorn::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) { speedfactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.25*EffectCalc::speedfactor, 0.75*EffectCalc::speedfactor); }
+  if(_val->getId()==1) { speedfactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.25, 0.75)*EffectCalc::speedfactor; }
   else if(_val->getId()==3) { uint8_t density = EffectCalc::setDynCtrl(_val).toInt(); numRockets = 5 + density; rockets.resize(numRockets); reload(); }
   else if(_val->getId()==5) blurred = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==6) revCol = EffectCalc::setDynCtrl(_val).toInt();
@@ -6024,7 +6024,10 @@ void EffectPopcorn::load() {
 //-------- Эффект "Детские сны"
 // (c) Stepko https://editor.soulmatelights.com/gallery/505
 String EffectSmokeballs::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) { 
+    speedfactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., .02, .1)*EffectCalc::speedfactor; // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
+  }
+  else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
   return String();
@@ -6047,7 +6050,6 @@ void EffectSmokeballs::regen() {
 }
 
 bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
-  speedfactor = EffectMath::fmap(speed, 1., 255., .02*EffectCalc::speedfactor, .1*EffectCalc::speedfactor); // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
   uint8_t _amount = map(_scale, 1, 16, 2, WAVES_AMOUNT);
   shiftUp();
   EffectMath::dimAll(240);
