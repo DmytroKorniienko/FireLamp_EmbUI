@@ -64,6 +64,7 @@ typedef struct {
         };
     };
     float speedfactor;
+    uint8_t brightness;
 } LAMPSTATE;
 
 typedef union {
@@ -207,6 +208,8 @@ protected:
     EFF_ENUM effect;        /**< энумератор эффекта */
     bool isDebug() {return lampstate!=nullptr ? lampstate->isDebug : false;}
     bool isRandDemo() {return lampstate!=nullptr ? lampstate->isRandDemo : false;}
+    float getSpeedFactor() {return lampstate!=nullptr ? lampstate->speedfactor : 1.0;}
+    float getBrightness() {return lampstate!=nullptr ? lampstate->brightness : 127;}
     bool isActive() {return active;}
     void setActive(bool flag) {active=flag;}
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */

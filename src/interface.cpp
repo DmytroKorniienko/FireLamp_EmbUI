@@ -621,7 +621,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     for(int i=0; i<controls.size();i++){
         ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
         if((*data).containsKey(ctrlName)){
-            if(!i){
+            if(!i){ // яркость???
                 byte bright = (*data)[ctrlName];
                 if (myLamp.getNormalizedLampBrightness() != bright) {
                     myLamp.setLampBrightness(bright);
@@ -631,10 +631,10 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                         embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
                     }
                 }                
-            }
-            controls[i]->setVal((*data)[ctrlName]);
+            } else
+                controls[i]->setVal((*data)[ctrlName]); // для всех остальных
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
-            if(myLamp.effects.worker && myLamp.effects.getEn())
+            if(myLamp.effects.worker) // && myLamp.effects.getEn()
                 myLamp.effects.worker->setDynCtrl(controls[i]);
             //embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, (*data)[ctrlName], true);
             publish_ctrls_vals();

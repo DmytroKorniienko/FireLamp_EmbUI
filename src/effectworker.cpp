@@ -1138,7 +1138,7 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   effect=_eff;
   lampstate = _lampstate;
 
-  if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
+  isMicActive = isMicOn();
   for(int i=0; i<controls->size(); i++){
     setDynCtrl((*controls)[i]);
     // switch(i){
@@ -1258,7 +1258,7 @@ String EffectCalc::setDynCtrl(UIControl*_val){
   }
 
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = (_val->getVal().toInt() && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
+    isMicActive = (_val->getVal().toInt() && isMicOn()) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif
@@ -1271,8 +1271,8 @@ String EffectCalc::setDynCtrl(UIControl*_val){
   }
 
   switch(_val->getId()){
-    case 0: brightness = ret_val.toInt(); break;
-    case 1: speed = ret_val.toInt(); speedfactor = lampstate->speedfactor*SPEED_ADJ; break; // LOG(printf_P,PSTR("speed=%d, speedfactor=%2.2f\n"), speed, speedfactor);
+    case 0: brightness = getBrightness(); LOG(printf_P,PSTR("brightness=%d\n"), brightness); break; // яркость всегда как есть, без рандома :)
+    case 1: speed = ret_val.toInt(); speedfactor = getSpeedFactor()*SPEED_ADJ; break; // LOG(printf_P,PSTR("speed=%d, speedfactor=%2.2f\n"), speed, speedfactor);
     case 2: scale = ret_val.toInt(); break;
     default: break;
   }

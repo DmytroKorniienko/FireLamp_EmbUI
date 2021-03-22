@@ -151,9 +151,9 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
 
           CRGB color = CHSV(
             45U,                                                                              // определяем тон
-            map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
-            y == centerY                                                                                                    // определяем яркость
-              ? (bcoef*BRIGHTNESS)                                                                                                  // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
+            (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                           // определяем насыщенность
+            y == centerY                                                                      // определяем яркость
+              ? (bcoef*BRIGHTNESS)                                                            // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
               : br);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
 
           for (int16_t x = 0U; x < (int16_t)WIDTH; x++)
@@ -172,10 +172,10 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
             int _shift = isMicOn() ? 0 : map(shift,1,255,-centerX,centerX);
 
             CRGB color = CHSV(
-              45U,                                                        // определяем тон
-              map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
-              x == centerX                                                                                                    // определяем яркость
-                ? (bcoef*BRIGHTNESS)                                                                                                  // для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
+              45U,                                                                              // определяем тон
+              (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                           // определяем насыщенность
+              x == centerX                                                                      // определяем яркость
+                ? (bcoef*BRIGHTNESS)                                                            // для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
                 : br);  // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
 
             EffectMath::drawPixelXY(x + _shift, y, color);                                                      // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
@@ -190,7 +190,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
           {
             CRGB color = CHSV(
               45U,                                                       // определяем тон
-              map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
+              (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),    // определяем насыщенность
               (bcoef*BRIGHTNESS));
             EffectMath::drawPixelXY(x, y, color);                        // 127 - заливка полная
           }

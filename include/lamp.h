@@ -298,14 +298,14 @@ public:
         if(val){
             for(int i=3; i<controls.size(); i++) {
                 if(controls[i]->getId()==7){
-                    effects.worker->setDynCtrl(controls[i]);
+                    if(effects.worker) effects.worker->setDynCtrl(controls[i]);
                     found=true;
                 }
             }
         } 
         if(!val || !found){
             UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", String(""), String(""), String(""));
-            effects.worker->setDynCtrl(ctrl);
+            if(effects.worker) effects.worker->setDynCtrl(ctrl);
             delete ctrl;
         }
     }
@@ -319,15 +319,15 @@ public:
 
     void setSpeedFactor(float val) {
         lampState.speedfactor = val;
-        effects.worker->setDynCtrl(effects.getControls()[1]);
+        if(effects.worker) effects.worker->setDynCtrl(effects.getControls()[1]);
     }
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
     byte getNormalizedLampBrightness() { return (byte)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
-    void setLampBrightness(byte brg) { if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
+    void setLampBrightness(byte brg) { lampState.brightness=brg; if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
-    void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val;}
+    void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val; if(effects.worker) { lampState.brightness=getLampBrightness(); effects.worker->setDynCtrl(effects.getControls()[0]);} }
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     bool isWarning() {return iflags.isWarning;}
