@@ -1272,7 +1272,7 @@ String EffectCalc::setDynCtrl(UIControl*_val){
 
   switch(_val->getId()){
     case 0: brightness = ret_val.toInt(); break;
-    case 1: speed = ret_val.toInt(); speedfactor = lampstate->speedfactor*SPEED_ADJ; break; // LOG(printf_P,PSTR("speedfactor=%2.2f\n"),speedfactor);
+    case 1: speed = ret_val.toInt(); speedfactor = lampstate->speedfactor*SPEED_ADJ; break; // LOG(printf_P,PSTR("speed=%d, speedfactor=%2.2f\n"), speed, speedfactor);
     case 2: scale = ret_val.toInt(); break;
     default: break;
   }

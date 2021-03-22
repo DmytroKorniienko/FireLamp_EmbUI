@@ -791,6 +791,7 @@ private:
     float ff_y;
     float ff_z;
     float hue;
+    float speedfactor=1.0;
     Boid boids[AVAILABLE_BOID_COUNT];
     uint8_t micPick = 0;
 
@@ -798,7 +799,7 @@ private:
     const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
 
     bool whirlRoutine(CRGB *leds, EffectWorker *param);
-
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

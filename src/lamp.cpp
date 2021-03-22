@@ -1109,8 +1109,6 @@ void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
  * @param fade - переключаться через фейдер или сразу
  */
 void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) {
-  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
-
 #ifdef MIC_EFFECTS
     setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
 #endif
@@ -1145,11 +1143,14 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     default:
         return;
     }
+    LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
     if (fade && flags.ONflag) {
       fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
+  } else {
+    LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb ? effnb : effects.getSelected());
   }
 
   //LOG(printf_P,PSTR(">>>>>>>>>>>isEffClearing==%d\n"),isEffClearing);

@@ -1365,7 +1365,14 @@ void EffectComet::load() {
 
 //!++
 String EffectComet::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) speedfactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.1, 1.0)*EffectCalc::speedfactor;
+  else if(_val->getId()==3) {
+    _scale = EffectCalc::setDynCtrl(_val).toInt();
+    if(_scale==6)
+      speedfactor = EffectMath::fmap(speed, 1., 255., 0.1, .5)*EffectCalc::speedfactor;
+    else
+      speedfactor = EffectMath::fmap(speed, 1., 255., 0.1, 1.0)*EffectCalc::speedfactor;  
+  }
   else if(_val->getId()==4) colorId = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==5) smooth = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==6) blur = EffectCalc::setDynCtrl(_val).toInt();
@@ -1375,7 +1382,7 @@ String EffectComet::setDynCtrl(UIControl*_val) {
 
 bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
   speedy = map(speed, 1, 255, 20, 255);
-  speedfactor = EffectMath::fmap(speed, 1., 255., 0.1*EffectCalc::speedfactor, 1.0*EffectCalc::speedfactor);
+  
   effId = _scale;
   switch (effId)
   {
@@ -1403,7 +1410,6 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
-  speedfactor = EffectMath::fmap(speed, 1., 255., 0.1*EffectCalc::speedfactor, .5*EffectCalc::speedfactor);
   if(isDebug()){
     FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
   }
@@ -3648,12 +3654,16 @@ void EffectWhirl::load(){
 
 }
 
+String EffectWhirl::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) speedfactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 1.1)*EffectCalc::speedfactor;
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
 bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
   micPick = isMicOn() ? myLamp.getMicMaxPeak() : 0;
 #endif
-
-  float speedfactor = EffectMath::fmap((float)speed, 1, 255, 0.5*EffectCalc::speedfactor, 1.1*EffectCalc::speedfactor);
   fadeToBlackBy(leds, NUM_LEDS, 15. * speedfactor);
 
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
@@ -4773,7 +4783,8 @@ void EffectArrows::load(){
 }
 
 String EffectArrows::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); load();}
+  if(_val->getId()==1) { speedfactor = ((float)EffectCalc::setDynCtrl(_val).toInt() / 768.0 + 0.15)*EffectCalc::speedfactor; }
+  else if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); load();}
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -4785,7 +4796,7 @@ bool EffectArrows::run(CRGB *ledarr, EffectWorker *opt) {
       load();
     }
   }
-  speedfactor = ((float)speed / 768.0 + 0.15)*EffectCalc::speedfactor;
+  
   return arrowsRoutine(*&ledarr, &*opt);
 }
 
@@ -7201,7 +7212,6 @@ void EffectFairy::fairyEmit(uint8_t i) {
 }
 
 bool EffectFairy::fairy(CRGB *leds) {
-  speedfactor = EffectMath::fmap(speed, 1, 255, 0.05*EffectCalc::speedfactor, .25*EffectCalc::speedfactor);
   step = deltaValue; //счётчик количества частиц в очереди на зарождение в этом цикле
   
 #ifdef FAIRY_BEHAVIOR
@@ -7347,7 +7357,9 @@ void EffectFairy::load(){
 }
 
 String EffectFairy::setDynCtrl(UIControl*_val){
-  if(_val->getId()==2) {
+  if(_val->getId()==1) {
+    speedfactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, .25)*EffectCalc::speedfactor;
+  } else if(_val->getId()==2) {
     enlargedObjectNUM = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 4, trackingOBJECT_MAX_COUNT);
     if (enlargedObjectNUM > trackingOBJECT_MAX_COUNT)
       enlargedObjectNUM = trackingOBJECT_MAX_COUNT;
