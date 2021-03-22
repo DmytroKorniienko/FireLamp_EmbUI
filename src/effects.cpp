@@ -5928,7 +5928,6 @@ void EffectPopcorn::restart_rocket(uint8_t r) {
 void EffectPopcorn::reload(){
   //numRockets = map(scale, 1, 32, 6, WIDTH * 3);
   //rockets.resize(numRockets);
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25*EffectCalc::speedfactor, 0.75*EffectCalc::speedfactor);
 
   for (uint8_t r = 0; r < numRockets; r++) {
     rockets[r].x = random8(WIDTH);
@@ -5940,8 +5939,6 @@ void EffectPopcorn::reload(){
 }
 
 bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
-  speedfactor = EffectMath::fmap((float)speed, 1., 255., 0.25*EffectCalc::speedfactor, 0.75*EffectCalc::speedfactor);
-
   if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30. * speedfactor);
   else FastLED.clear();
   float popcornGravity = 0.1 * speedfactor;
@@ -6007,7 +6004,8 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 String EffectPopcorn::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==3) { uint8_t density = EffectCalc::setDynCtrl(_val).toInt(); numRockets = 5 + density; rockets.resize(numRockets); reload(); }
+  if(_val->getId()==1) { speedfactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.25*EffectCalc::speedfactor, 0.75*EffectCalc::speedfactor); }
+  else if(_val->getId()==3) { uint8_t density = EffectCalc::setDynCtrl(_val).toInt(); numRockets = 5 + density; rockets.resize(numRockets); reload(); }
   else if(_val->getId()==5) blurred = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==6) revCol = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)

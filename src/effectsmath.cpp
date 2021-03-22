@@ -641,7 +641,7 @@ uint32_t EffectMath::getPixColorXY(int16_t x, int16_t y) { return getPixColor( g
 //void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { leds[idx].fadeToBlackBy(val); }
 void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { leds[idx].nscale8(val); }
 void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) {leds[i].nscale8(value); } }
-void EffectMath::blur2d(uint8_t val) {::blur2d(leds,WIDTH,HEIGHT,val);}
+void EffectMath::blur2d(uint8_t val) {EffectMath::blur2d(leds,WIDTH,HEIGHT,val);}
 
 CRGB &EffectMath::getLed(uint16_t idx) { 
   if(idx<NUM_LEDS){
