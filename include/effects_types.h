@@ -594,8 +594,8 @@ static const TProgmemRGBPalette16 HolyLightsColors_p FL_PROGMEM = {0xff0000, 0xf
 // ==== Константы для эффектов ====
 
 // Эффекты на базе "3D Noise"
-#define NOISE_SCALE_AMP  (58UL)    // амплификатор шкалы (влияет на машстаб "пятен" эффекта, большие пятна выглядят красивее чем куча мелких)
-#define NOISE_SCALE_ADD  (8UL)     // корректор шкалы
+#define NOISE_SCALE_AMP  (58.)    // амплификатор шкалы (влияет на машстаб "пятен" эффекта, большие пятна выглядят красивее чем куча мелких)
+#define NOISE_SCALE_ADD  (8.)     // корректор шкалы
 
 
 #define BALLS_AMOUNT           (7U)                 // максимальное количество "шариков"
