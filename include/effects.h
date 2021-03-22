@@ -119,13 +119,14 @@ private:
     float bballsPos[bballsMaxNUM_BALLS] ;               // The integer position of the dot on the strip (LED index)
     float bballsHi = 0.0;                               // An array of heights
     float bballsVImpact[bballsMaxNUM_BALLS] ;           // As time goes on the impact velocity will change, so make an array to store those values
-    float bballsTCycle = 0.0;                           // The time since the last time the ball struck the ground
+    uint32_t bballsTCycle = 0;                        // The time since the last time the ball struck the ground
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
     float hue;
     bool halo = false;                                  // ореол
     uint8_t _scale=1;
+    uint16_t _speed;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
     // void setscl(const byte _scl) override; // перегрузка для масштаба
@@ -692,20 +693,21 @@ class EffectLeapers : public EffectCalc {
     typedef struct Leaper{
         float x, y;
         float xd, yd;
-        CHSV color;
+        byte color;
     } Leaper;
 private:
     Leaper leapers[20];
     unsigned numParticles = 0;
     uint8_t _rv;
+	uint8_t num;
     void generate(bool reset = false);
     void restart_leaper(Leaper * l);
     void move_leaper(Leaper * l);
-    //void wu_pixel(uint32_t x, uint32_t y, CRGB col);
-    bool leapersRoutine(CRGB *leds, EffectWorker *param);
+	String setDynCtrl(UIControl*_val) override;
 public:
+	void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    String setDynCtrl(UIControl*_val) override;
+
 };
 
 // ------ Эффект "Лавовая Лампа"
@@ -1915,8 +1917,10 @@ class EffectMagma: public EffectCalc {
 private:
     //uint16_t ff_x;
     float ff_y, ff_z;                         // большие счётчики
-    uint8_t deltaValue;
-    uint8_t deltaHue;
+    //control magma bursts
+    const byte deltaValue = 6U; // 2-12 
+    const byte deltaHue = 8U; // высота языков пламени должна уменьшаться не так быстро, как ширина
+    const float Gravity = 0.1;
     uint8_t step, ObjectNUM = WIDTH; 
     uint8_t shiftHue[HEIGHT];
     float trackingObjectPosX[enlargedOBJECT_MAX_COUNT];
