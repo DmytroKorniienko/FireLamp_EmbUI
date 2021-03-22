@@ -188,7 +188,7 @@ private:
     float coord[_AMOUNT][2U];
     int16_t ballColors[_AMOUNT];
     byte light[_AMOUNT];
-    float speedfactor;
+    float speedFactor;
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -292,7 +292,7 @@ protected:
     uint8_t lightersColor[LIGHTERS_AM];
     float lightersPos[2U][LIGHTERS_AM];
     byte light[LIGHTERS_AM];
-    float speedfactor;
+    float speedFactor;
 private:
     bool lightersRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
@@ -311,7 +311,7 @@ private:
     bool randColor = false;
     bool white = false;
     float count;
-    float speedfactor;
+    float speedFactor;
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -325,7 +325,7 @@ private:
     uint8_t effId = 1;
     bool isNew = true;
     float fade;
-    float speedfactor;
+    float speedFactor;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 
@@ -393,6 +393,7 @@ class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
     uint8_t fadelvl=1;
+	float speedFactor;
     
     String setDynCtrl(UIControl*_val) override;
 public:
@@ -503,6 +504,7 @@ private:
   uint8_t thue = 0U;
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
+  float speedFactor;
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
   //void setscl(const byte _scl) override;
@@ -517,6 +519,7 @@ private:
   float whue;
   float waveTheta;
   uint8_t _scale=1;
+  float speedFactor;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
 public:
@@ -639,6 +642,7 @@ private:
     uint8_t pidx = 0;
     Particle particles[20];
     unsigned numParticles = 0;
+	float speedFactor;
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
@@ -700,6 +704,7 @@ private:
     unsigned numParticles = 0;
     uint8_t _rv;
 	uint8_t num;
+	float speedFactor;
     void generate(bool reset = false);
     void restart_leaper(Leaper * l);
     void move_leaper(Leaper * l);
@@ -736,6 +741,7 @@ private:
     unsigned numParticles = 0;
     unsigned physic_on = 1;
     unsigned filter = 0;
+	float speedFactor;
     void generate(bool reset = false);
     void position();
     void physic();
@@ -791,9 +797,9 @@ private:
     float ff_y;
     float ff_z;
     float hue;
-    float speedfactor=1.0;
     Boid boids[AVAILABLE_BOID_COUNT];
     uint8_t micPick = 0;
+	float speedFactor;
 
     const uint8_t ff_speed = 1; // чем выше этот параметр, тем короче переходы (градиенты) между цветами. 1 - это самое красивое
     const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
@@ -826,6 +832,7 @@ private:
     uint8_t satur;
     uint8_t glare = 0;
     uint8_t iconIdx = 0;
+	float speedFactor;
 
     void nGlare(CRGB *leds);
     void nPatterns();
@@ -997,6 +1004,7 @@ private:
     uint8_t cnt;
     bool wings = false;
     bool isColored = true;
+	float speedFactor;
 
     bool butterflyRoutine(CRGB *leds, EffectWorker *param);
     void load() override;
@@ -1614,7 +1622,7 @@ private:
   struct dot dots[MAXDOTS];
   float widthPos[WIDTH];
   bool done = true;
-  float speedFactor = 0.0f;
+  float speedFactor;
   float internal_counter = 0.0f;
 public:
     void load() override;
