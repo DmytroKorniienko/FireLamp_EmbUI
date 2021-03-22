@@ -125,7 +125,10 @@ bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectWorker *opt){
 
 // !--
 String EffectWhiteColorStripe::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) shift = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==2) {
+    EffectCalc::setDynCtrl(_val).toInt();
+    bcoef = (brightness > 127 ? 1.1-map((scale<127 ? 127 - scale : scale - 127),0,128,1,5)/10.0 : 1.0); // коэф. понижения яркости 5 степеней в зависимости от масштаба (0.5...1.0)
+  } else if(_val->getId()==3) shift = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -133,7 +136,6 @@ String EffectWhiteColorStripe::setDynCtrl(UIControl*_val){
 bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *param)
 {
   FastLED.clear();
-  float bcoef = 1.1-map((scale<127 ? 127 - scale : scale - 127),0,128,1,5)/10.0; // коэф. понижения яркости 5 степеней в зависимости от масштаба (0.5...1.0)
 
 #ifdef MIC_EFFECTS
   byte _scale = isMicOn() ? (256.0/myLamp.getMicMapMaxPeak()+0.3)*scale : scale;
@@ -151,7 +153,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
 
           CRGB color = CHSV(
             45U,                                                                              // определяем тон
-            (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                           // определяем насыщенность
+            (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                            // определяем насыщенность
             y == centerY                                                                      // определяем яркость
               ? (bcoef*BRIGHTNESS)                                                            // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
               : br);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br

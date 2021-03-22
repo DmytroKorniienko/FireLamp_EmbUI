@@ -226,6 +226,7 @@ public:
 class EffectWhiteColorStripe : public EffectCalc {
 private:
     uint8_t shift=0;
+    float bcoef;
     bool whiteColorStripeRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 public:

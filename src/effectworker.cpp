@@ -1271,7 +1271,7 @@ String EffectCalc::setDynCtrl(UIControl*_val){
   }
 
   switch(_val->getId()){
-    case 0: brightness = getBrightness(); LOG(printf_P,PSTR("brightness=%d\n"), brightness); break; // яркость всегда как есть, без рандома :)
+    case 0: brightness = getBrightness(); break; // яркость всегда как есть, без рандома, но с учетом глобальности :) //LOG(printf_P,PSTR("brightness=%d\n"), brightness);
     case 1: speed = ret_val.toInt(); speedfactor = getSpeedFactor()*SPEED_ADJ; break; // LOG(printf_P,PSTR("speed=%d, speedfactor=%2.2f\n"), speed, speedfactor);
     case 2: scale = ret_val.toInt(); break;
     default: break;

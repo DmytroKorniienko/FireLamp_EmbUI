@@ -615,7 +615,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    if(!myLamp.effects.getEn()) return;
+    //if(!myLamp.effects.getEn()) return;
     String ctrlName;
     LList<UIControl*>&controls = myLamp.effects.getControls();
     for(int i=0; i<controls.size();i++){
