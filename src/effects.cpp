@@ -119,15 +119,17 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 // ------ Эффект "Белая Лампа"
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
 bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectWorker *opt){
+
   return whiteColorStripeRoutine(*&ledarr, &*opt);
 }
 
 // !--
 String EffectWhiteColorStripe::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) shift = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==2) {
+    EffectCalc::setDynCtrl(_val).toInt();
+    bcoef = (brightness > 127 ? 1.1-map((scale<127 ? 127 - scale : scale - 127),0,128,1,5)/10.0 : 1.0); // коэф. понижения яркости 5 степеней в зависимости от масштаба (0.5...1.0)
+  } else if(_val->getId()==3) shift = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  //bcoef = (1.1-map((scale<128 ? 127 - scale : scale - 128),0,127,1,6)/10.0); // коэф. понижения яркости 5 степеней в зависимости от масштаба (0.5...1.0)
-  bcoef = 1;
   return String();
 }
 
@@ -142,46 +144,52 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
   byte _scale = scale;
   byte _speed = speed;
 #endif
-    if(_scale < 126){
+    if(_scale < 127){
         uint8_t centerY = EffectMath::getmaxHeightIndex() / 2U;
         for (int16_t y = centerY; y >= 0; y--)
         {
-          int br = (bcoef*BRIGHTNESS)-constrain(map(_scale,126,1,1,15)*(centerY-y)*((centerY-y)/(HEIGHT*(0.0005*brightness))),1,BRIGHTNESS); if(br<0) br=0;
+          int br = (bcoef*BRIGHTNESS)-(map(_scale,126,1,1,15)*(centerY-y)*((centerY-y)/(HEIGHT*0.0625))); if(br<0) br=0;
           int _shift = isMicOn() ? 0 : map(shift,1,255,-centerY,centerY);
 
-            CRGB color = CHSV(
-              45U,                                                        // определяем тон
-              map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
-              (y == centerY ? (bcoef*BRIGHTNESS) : br));                  // определяем яркость для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
-                                                                          // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
+          CRGB color = CHSV(
+            45U,                                                                              // определяем тон
+            (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                            // определяем насыщенность
+            y == centerY                                                                      // определяем яркость
+              ? (bcoef*BRIGHTNESS)                                                            // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
+              : br);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
 
           for (int16_t x = 0U; x < (int16_t)WIDTH; x++)
           {
-            EffectMath::drawPixelXY(x, y + _shift, color);                // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
-            EffectMath::drawPixelXY(x, (HEIGHT - y + _shift) - 1, color); // при нечётной - одна, но дважды
+            EffectMath::drawPixelXY(x, y + _shift, color);                                                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
+            EffectMath::drawPixelXY(x, (HEIGHT - y +  + _shift) - 1, color); // при нечётной - одна, но дважды
           }
         }
-    } else if(_scale > 128){
+    } else if(_scale > 127){
         uint8_t centerX = EffectMath::getmaxWidthIndex() / 2U;
-        for (int16_t y = 0U; y < (int16_t)HEIGHT; y++){
-          for (int16_t x = centerX; x >= 0; x--){
-            int br = (bcoef*BRIGHTNESS)-constrain(map(_scale,128,255,1,15)*(centerX-x)*((centerX-x)/(WIDTH*(0.0005*brightness))),1,BRIGHTNESS); if(br<0) br=0;
+        for (int16_t y = 0U; y < (int16_t)HEIGHT; y++)
+        {
+          for (int16_t x = centerX; x >= 0; x--)
+          {
+            int br = (bcoef*BRIGHTNESS)-(map(_scale,128,255,1,15)*(centerX-x)*((centerX-x)/(WIDTH*0.0625))); if(br<0) br=0;
             int _shift = isMicOn() ? 0 : map(shift,1,255,-centerX,centerX);
 
             CRGB color = CHSV(
-              45U,                                                        // определяем тон
-              map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
-              (x == centerX ? (bcoef*BRIGHTNESS) : br));                  // определяем яркость для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
-                                                                          // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
+              45U,                                                                              // определяем тон
+              (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                           // определяем насыщенность
+              x == centerX                                                                      // определяем яркость
+                ? (bcoef*BRIGHTNESS)                                                            // для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
+                : br);  // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
 
-            EffectMath::drawPixelXY(x + _shift, y, color);                // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
-            EffectMath::drawPixelXY((WIDTH - x + _shift) - 1, y, color);  // при нечётной - одна, но дважды
+            EffectMath::drawPixelXY(x + _shift, y, color);                                                      // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
+            EffectMath::drawPixelXY((WIDTH - x + _shift) - 1, y, color); // при нечётной - одна, но дважды
           }
         }
     }
     else {
-        for (int16_t y = 0; y < (int16_t)HEIGHT; y++){
-          for (int16_t x = 0; x < (int16_t)WIDTH; x++){
+        for (int16_t y = 0; y < (int16_t)HEIGHT; y++)
+        {
+          for (int16_t x = 0; x < (int16_t)WIDTH; x++)
+          {
             CRGB color = CHSV(
               45U,                                                       // определяем тон
               (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),    // определяем насыщенность
@@ -789,33 +797,29 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
 }
 
 // ------------- пейнтбол -------------
-bool EffectLightBalls::run(CRGB *ledarr, EffectWorker *opt){
-  return lightBallsRoutine(*&ledarr, &*opt);
+String EffectLightBalls::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt() /255.0 +0.1;
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
 }
 
-#define BORDERTHICKNESS       (1U)   // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
-bool EffectLightBalls::lightBallsRoutine(CRGB *leds, EffectWorker *param)
+bool EffectLightBalls::run(CRGB *leds, EffectWorker *param)
 {
-  const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
-  const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
 
   // Apply some blurring to whatever's already on the matrix
   // Note that we never actually clear the matrix, we just constantly
   // blur it repeatedly.  Since the blurring is 'lossy', there's
   // an automatic trend toward black -- by design.
-  uint8_t blurAmount = dim8_raw(beatsin8(3,64,100));
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, blurAmount);
-
-  float speedScale = (((float)speed)/255.0)+0.1;
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, dim8_raw(beatsin8(3,64,100)));
 
   // Use two out-of-sync sine waves
-  uint16_t  i = beatsin16( 79*speedScale, 0, 255); //91
-  uint16_t  j = beatsin16( 67*speedScale, 0, 255); //109
-  uint16_t  k = beatsin16( 53*speedScale, 0, 255); //73
-  uint16_t  m = beatsin16( 97*speedScale, 0, 255); //123
+  uint16_t  i = beatsin16( 79 * speedFactor, 0, 255); //91
+  uint16_t  j = beatsin16( 67 * speedFactor, 0, 255); //109
+  uint16_t  k = beatsin16( 53 * speedFactor, 0, 255); //73
+  uint16_t  m = beatsin16( 97 * speedFactor, 0, 255); //123
 
   // The color of each point shifts over time, each at a different speed.
-  uint16_t ms = millis() / (scale/16 + 1);
+  uint16_t ms = millis() / (scale /16 + 1);
 
   EffectMath::drawPixelXY( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS, CHSV( ms / 29, 200U, 255U), 1);
   EffectMath::drawPixelXY( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS, CHSV( ms / 41, 200U, 255U), 1);
@@ -871,6 +875,7 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
         vectorB[i] += EffectMath::randomf(1, 6);
       if(!(uint8_t)vectorB[i])
         vectorB[i] += vectorB[i] > 0 ? 0.25 : -0.25;
+        
 
     }
   }
@@ -912,7 +917,6 @@ bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
       EffectMath::drawPixelXYF(coordB[0U] + (float)i, coordB[1U] + (float)j, ballColor, 0);
     }
   }
-  //fpsmeter();
   return true;
 }
 
@@ -2487,6 +2491,7 @@ bool EffectRingsLock::run(CRGB *ledarr, EffectWorker *opt){
 
 void EffectRingsLock::load(){
   palettesload();
+  ringsSet();
 }
 
 // !++
@@ -4118,14 +4123,9 @@ bool EffectFireworks::fireworksRoutine(CRGB *leds, EffectWorker *param)
 //  December 2019, Mark Kriegsman and Mary Corey March.
 //  For Dan.
 // https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
- bool EffectPacific::run(CRGB *ledarr, EffectWorker *opt)
-{
-    return pacificRoutine(*&ledarr, &*opt);
-  return false;
-}
 
 // Add one layer of waves into the led array
-void pacifica_one_layer(CRGB *leds, const TProgmemRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff)
+void EffectPacific::pacifica_one_layer(const TProgmemRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff)
 {
   uint16_t ci = cistart;
   uint16_t waveangle = ioff;
@@ -4143,7 +4143,7 @@ void pacifica_one_layer(CRGB *leds, const TProgmemRGBPalette16& p, uint16_t cist
 }
 
 // Add extra 'white' to areas where the four layers of light have lined up brightly
-void pacifica_add_whitecaps(CRGB *leds)
+void EffectPacific::pacifica_add_whitecaps()
 {
   uint8_t basethreshold = beatsin8( 9, 55, 65);
   uint8_t wave = beat8( 7 );
@@ -4161,7 +4161,7 @@ void pacifica_add_whitecaps(CRGB *leds)
 }
 
 // Deepen the blues and greens
-void pacifica_deepen_colors(CRGB *leds)
+void EffectPacific::pacifica_deepen_colors()
 {
   for( uint16_t i = 0; i < NUM_LEDS; i++) {
     EffectMath::getLed(i).blue = scale8( EffectMath::getLed(i).blue,  145);
@@ -4170,7 +4170,13 @@ void pacifica_deepen_colors(CRGB *leds)
   }
 }
 
-bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
+String EffectPacific::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1)  speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 620, 60)*EffectCalc::speedfactor;
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectPacific::run(CRGB *leds, EffectWorker *param)
 {
   // Increment the four "color index start" counters, one for each wave layer.
   // Each is incremented at a different speed, and the speeds vary over time.
@@ -4181,8 +4187,8 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
   sLastms = ms;
   uint16_t speedFactor1 = beatsin16(3, 179, 269);
   uint16_t speedFactor2 = beatsin16(4, 179, 269);
-  uint32_t deltams1 = (deltams * speedFactor1) / map(speed, 1, 255, 620*EffectCalc::speedfactor, 60*EffectCalc::speedfactor);
-  uint32_t deltams2 = (deltams * speedFactor2) / map(speed, 1, 255, 620*EffectCalc::speedfactor, 60*EffectCalc::speedfactor);
+  uint32_t deltams1 = (deltams * speedFactor1) / speedFactor;
+  uint32_t deltams2 = (deltams * speedFactor2) / speedFactor;
   uint32_t deltams21 = (deltams1 + deltams2) / 2;
   sCIStart1 += (deltams1 * beatsin88(1011,10,13));
   sCIStart2 -= (deltams21 * beatsin88(777,8,11));
@@ -4193,16 +4199,17 @@ bool EffectPacific::pacificRoutine(CRGB *leds, EffectWorker *param)
   fill_solid( leds, NUM_LEDS, CRGB( 2, 6, 10));
 
   // Render each of four layers, with different scales and speeds, that vary over time
-  pacifica_one_layer(&*leds, pacifica_palette_1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
-  pacifica_one_layer(&*leds, pacifica_palette_2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
-  pacifica_one_layer(&*leds, pacifica_palette_3, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
-  pacifica_one_layer(&*leds, pacifica_palette_3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
+  pacifica_one_layer(pacifica_palette_1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
+  pacifica_one_layer(pacifica_palette_2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
+  pacifica_one_layer(pacifica_palette_3, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
+  pacifica_one_layer(pacifica_palette_3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
 
   // Add brighter 'whitecaps' where the waves lines up more
-  pacifica_add_whitecaps(&*leds);
+  pacifica_add_whitecaps();
 
   // Deepen the blues and greens a bit
-  pacifica_deepen_colors(&*leds);
+  pacifica_deepen_colors();
+
   EffectMath::blur2d(20);
   return true;
 }
@@ -4324,7 +4331,15 @@ DEFINE_GRADIENT_PALETTE( pit ) {
   192, 255, 130,   3 ,  //orange
   255,   3,   3,   3
 };
-bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
+
+// !++
+String EffectNoise::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 2, 16 );
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectNoise::run(CRGB *leds, EffectWorker *param) {
   EffectMath::dimAll(200U);
     uint8_t layer = 0;
 
@@ -4334,10 +4349,10 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
   //(here based on the top left pixel - it could be any position else)
   //the factor "2" defines the max speed of the x movement
   //the "-255" defines the median moving direction
-  x[layer] = x[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][0][0]) - 255U;
+  x[layer] = x[layer] + (noise[layer][0][0] * speedFactor) - 255U;
   //modulate the position so that it increases/decreases y
   //(here based on the top right pixel - it could be any position else)
-  y[layer] = y[layer] + (map(speed, 1U, 255U, 2U, 16U ) * noise[layer][EffectMath::getmaxWidthIndex()][0]) - 255U;
+  y[layer] = y[layer] + (noise[layer][EffectMath::getmaxWidthIndex()][0] * speedFactor) - 255U;
   //z just in one direction but with the additional "1" to make sure to never get stuck
   //in case the movement is stopped by a crazy parameter (noise data) combination
   //(here based on the down left pixel - it could be any position else)
@@ -4374,23 +4389,18 @@ bool EffectNoise::noiseRoutine(CRGB *leds, EffectWorker *param) {
       if (palettepos == 14) overlay = CHSV(160,255 - noise[layer][x][y], noise[layer][EffectMath::getmaxWidthIndex()][EffectMath::getmaxHeightIndex()] + noise[layer][x][y]);
       else overlay = CHSV(noise[layer][y][x], 255, noise[layer][x][y]);
       //here the actual colormapping happens - note the additional colorshift caused by the down right pixel noise[layer][15][15]
-      if (palettepos == 4) EffectMath::drawPixelXYF(x, HEIGHT - y, CHSV(160, 0 , noise[layer][x][y]), 35);
+      if (palettepos == 4) EffectMath::drawPixelXYF(x, EffectMath::getmaxHeightIndex() - y, CHSV(160, 0 , noise[layer][x][y]), 35);
       else EffectMath::drawPixelXY(x, y, ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][EffectMath::getmaxWidthIndex()][EffectMath::getmaxHeightIndex()] + noise[layer][x][y]) + overlay);
     }
   }
 
   //make it looking nice
   if (palettepos != 4) {
-    adjust_gamma(*&leds);
+    EffectMath::nightMode(*&leds);
     EffectMath::blur2d(32);
   } else EffectMath::blur2d(48);
   //and show it!
  return true;
-}
-
-bool EffectNoise::run(CRGB *ledarr, EffectWorker *opt) {
-
-  return noiseRoutine(*&ledarr, &*opt);
 }
 
 void EffectNoise::load() {
@@ -4399,10 +4409,6 @@ void EffectNoise::load() {
 
 // ---- Эффект "Мотыльки"
 // (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
-bool EffectButterfly::run(CRGB *ledarr, EffectWorker *opt) {
-  return butterflyRoutine(*&ledarr, &*opt);
-}
-
 void EffectButterfly::load()
 {
   for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
@@ -4435,7 +4441,7 @@ String EffectButterfly::setDynCtrl(UIControl*_val) {
   return String();
 }
 
-bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
+bool EffectButterfly::run(CRGB *leds, EffectWorker *param)
 {
   byte _scale = cnt;
 
@@ -4588,11 +4594,7 @@ bool EffectButterfly::butterflyRoutine(CRGB *leds, EffectWorker *param)
 
 // ---- Эффект "Тени"
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
-bool EffectShadows::run(CRGB *ledarr, EffectWorker *opt) {
-  return shadowsRoutine(*&ledarr, &*opt);
-}
-
-bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectShadows::run(CRGB *leds, EffectWorker *param) {
 
   uint8_t sat8 = beatsin88( 87, 220, 250);
   uint8_t brightdepth = beatsin88( 341, 96, 224);
@@ -4640,6 +4642,7 @@ bool EffectShadows::shadowsRoutine(CRGB *leds, EffectWorker *param) {
 // (c) kostyamat (Kostyantyn Matviyevskyy) 2020
 // переделано kDn
 // идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
+// !++
 String EffectPatterns::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _speed = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) _scale = EffectCalc::setDynCtrl(_val).toInt();
@@ -4758,6 +4761,7 @@ void EffectArrows::load(){
     arrowSetupForMode(arrow_mode, true);
 }
 
+// !++
 String EffectArrows::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) { speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt() / 768.0 + 0.15)*EffectCalc::speedfactor; }
   else if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); load();}
@@ -4765,18 +4769,14 @@ String EffectArrows::setDynCtrl(UIControl*_val){
   return String();
 }
 
-bool EffectArrows::run(CRGB *ledarr, EffectWorker *opt) {
+bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
   if (_scale == 1) {
     EVERY_N_SECONDS((3000U / speed))
     {
       load();
     }
   }
-  
-  return arrowsRoutine(*&ledarr, &*opt);
-}
 
-bool EffectArrows::arrowsRoutine(CRGB *leds, EffectWorker *param) {
   FastLED.clear();
 
   CHSV color;
@@ -5104,18 +5104,15 @@ void EffectArrows::arrowSetup_mode4() {
 
 // ------ Эффект "Дикие шарики"
 // (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
-bool EffectNBals::run(CRGB *ledarr, EffectWorker *opt) {
-  return nballsRoutine(*&ledarr, &*opt);
-}
-
+// !++
 String EffectNBals::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) beat2 = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) beat1 = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 8, 128);
+  else if(_val->getId()==3) beat2 = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectNBals::nballsRoutine(CRGB *leds, EffectWorker *param) {
-  beat1 = map(speed, 1, 255, 8, 128);
+bool EffectNBals::run(CRGB *leds, EffectWorker *param) {
   balls_timer();
   blur(*&leds);
   return true;
@@ -5171,10 +5168,6 @@ void EffectNBals::balls_timer() {
 
 // ------ Эффект "Притяжение"
 // Базовый Attract проект Аврора
-bool EffectAttract::run(CRGB *ledarr, EffectWorker *opt) {
-  return attractRoutine(*&ledarr, &*opt);
-}
-
 void EffectAttract::load() {
   palettesload();
   //speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.02*EffectCalc::speedfactor, 1.*EffectCalc::speedfactor);
@@ -5194,24 +5187,11 @@ void EffectAttract::load() {
 
 }
 
-// void EffectAttract::setspd(const byte _spd)
-// {
-//   EffectCalc::setspd(_spd);
-//   speedFactor = EffectMath::fmap((float)_spd, 1., 255., 0.02*EffectCalc::speedfactor, 1.*EffectCalc::speedfactor);
-//   setup();
-// }
-
-// void EffectAttract::setscl(const byte _scl)
-// {
-//   EffectCalc::setscl(_scl); // дернем базовый, где будет пересчет палитры
-//   _energy = scale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
-//   setup();
-// }
-
+// !++
 String EffectAttract::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02*EffectCalc::speedfactor, 1.*EffectCalc::speedfactor);
-  if(_val->getId()==2) _energy = EffectCalc::setDynCtrl(_val).toInt(); setup();
-  if(_val->getId()==3) _mass = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) speedFactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 1.) * EffectCalc::speedfactor;
+  else if(_val->getId()==2) _energy = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==3) _mass = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   setup();
   return String();
@@ -5231,7 +5211,7 @@ void EffectAttract::setup(){
   }
 }
 
-bool EffectAttract::attractRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectAttract::run(CRGB *leds, EffectWorker *param) {
   uint8_t dim = beatsin8(3, 170, 250);
   fadeToBlackBy(leds, NUM_LEDS, 255U - dim);
 
@@ -5267,9 +5247,7 @@ void EffectSnake::load() {
 
 // !++
 String EffectSnake::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) {
-    speedFactor = ((float)speed / 512.0 + 0.025) * EffectCalc::speedfactor;
-  }
+  if(_val->getId()==1) speedFactor = ((float)speed / 512.0 + 0.025) * EffectCalc::speedfactor;
   else if(_val->getId()==4) snakeCount = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==5) subPix = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==6) onecolor = EffectCalc::setDynCtrl(_val).toInt();
@@ -5277,7 +5255,7 @@ String EffectSnake::setDynCtrl(UIControl*_val) {
   return String();
 }
 
-bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectSnake::run(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, speed<25 ? 5 : speed/2 ); // длина хвоста будет зависеть от скорости
 #ifdef MIC_EFFECTS
   hue+=(speedFactor/snakeCount+(isMicOn() ? myLamp.getMicMapFreq()/127.0 : 0));
@@ -5315,10 +5293,6 @@ bool EffectSnake::snakeRoutine(CRGB *leds, EffectWorker *param) {
     snake.draw(colors, i, subPix, isDebug());
   }
   return true;
-}
-
-bool EffectSnake::run(CRGB *ledarr, EffectWorker *opt ) {
-  return snakeRoutine(ledarr, &*opt);
 }
 
 void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], int snakenb, bool subpix, bool isDebug)
@@ -5380,8 +5354,6 @@ void EffectNexus::load() {
 }
 
 bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
-
-
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 11, 33));
 
   for (byte i = 0; i < map(_scale, 1, 10, 4, NEXUS); i++) {
@@ -5440,8 +5412,6 @@ bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
 
 
   }
-
-  //fpsmeter();
   return true;
 }
 
@@ -5477,16 +5447,14 @@ void EffectNexus::resetDot(uint8_t idx) {
 //Yaroslaw Turbin
 //https://vk.com/ldirko
 //https://www.reddit.com/user/ldirko/
+// !++
 String EffectFlower::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.25, 2.5) * EffectCalc::speedfactor;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
-bool EffectFlower::run(CRGB *ledarr, EffectWorker *opt ) {
-  return flowerRoutine(*&ledarr, &*opt);
-}
 
-bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
 #ifdef MIC_EFFECTS
 #define _Mic isMicOn() ? (float)peak / 50. : 0.1
   byte peak = myLamp.getMicMapMaxPeak();
@@ -5516,10 +5484,8 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 #else
   color = CHSV(millis()>>1, 250, 255/*(uint16_t)counter >> 1*/);
 #endif
-//  if ((uint16_t)ceil(x * y) < NUM_LEDS)
-    EffectMath::drawPixelXYF(x, y, color) ;
 
-  //EffectMath::blur2d( 20 );
+  EffectMath::drawPixelXYF(x, y, color) ;
   fadeToBlackBy(leds, NUM_LEDS, 10. * speedFactor);
 
   counter += speedFactor;
@@ -5531,15 +5497,16 @@ bool EffectFlower::flowerRoutine(CRGB *leds, EffectWorker *param) {
 // https://vk.com/ldirko
 // https://pastebin.com/jwvC1sNF
 // адаптация и доработки kostyamat
+// !++
 String EffectDNA::setDynCtrl(UIControl*_val){
-  if(_val->getId()==3) rotate = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) speeds = map(speed, 1, 255, 10, 60) * EffectCalc::speedfactor;
+  else if(_val->getId()==3) rotate = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
+bool EffectDNA::run(CRGB *leds, EffectWorker *param)
 {
-  speeds = map(speed, 1, 255, 10, 60);
   fadeToBlackBy(leds, NUM_LEDS, speeds);
 
   int maxV, maxH;
@@ -5573,11 +5540,6 @@ bool EffectDNA::DNARoutine(CRGB *leds, EffectWorker *param)
 
   EffectMath::blur2d(16);
   return true;
-}
-
-bool EffectDNA::run(CRGB *ledarr, EffectWorker *opt) {
-
-  return DNARoutine(*&ledarr, &*opt);
 }
 
 // ----------- Эффект "Огненная Лампа"
@@ -5638,7 +5600,11 @@ String EffectFire2020::setDynCtrl(UIControl*_val) {
   return String();
 }
 
-bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
+bool EffectFire2020::run(CRGB *leds, EffectWorker *param) {
+  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * NOISE_HEIGHT + NOISE_HEIGHT) {
+    regenNoise();
+  }
+
   if(!curPalette) return false;
 
   for (uint8_t i = 0; i < WIDTH; i++)
@@ -5657,16 +5623,6 @@ bool EffectFire2020::fire2020Routine(CRGB *leds, EffectWorker *param) {
   blurRows(leds, WIDTH, HEIGHT, 15);
   a+= speedFactor; // как-то раньше не догадался так сделать. Мда...
   return true;
-}
-
-
-bool EffectFire2020::run(CRGB *ledarr, EffectWorker *opt) {
-  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * NOISE_HEIGHT + NOISE_HEIGHT) {
-    regenNoise();
-  }
-
-  //fpsmeter();
-  return fire2020Routine(*&ledarr, &*opt);
 }
 
 // ----------- Эфеект "Змеиный Остров"
@@ -5699,7 +5655,7 @@ void EffectTest::regen() {
   }
 }
 
-bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectTest::run(CRGB *leds, EffectWorker *param) {
   FastLED.clear(); 
   int8_t dx = 0, dy = 0;
   for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
@@ -5885,10 +5841,6 @@ bool EffectTest::testRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-bool EffectTest::run(CRGB *ledarr, EffectWorker *opt) {
-  return testRoutine(*&ledarr, &*opt);
-}
-
 void EffectTest::load() {
   palettesload();
   regen();
@@ -5897,16 +5849,8 @@ void EffectTest::load() {
 // ----------- Эфеект "Попкорн"
 // (C) Aaron Gotwalt (Soulmate)
 // адаптация и доработки kostyamat
-
-bool EffectPopcorn::run(CRGB *ledarr, EffectWorker *opt) {
-  //random16_add_entropy(micros());
-  randomSeed(micros());
-  return popcornRoutine(*&ledarr, &*opt);
-}
-
 void EffectPopcorn::restart_rocket(uint8_t r) {
-  //tiltDirec = !tiltDirec; // "Мальчик" <> "Девочка"
-  rockets[r].xd = (float)(random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH * HEIGHT + (WIDTH*2))) / 256.0; // * tiltDirec; // Наклон. "Мальчики" налево, "девочки" направо. :)
+  rockets[r].xd = (float)(random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH * HEIGHT + (WIDTH*2))) / 256.0; 
   if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > EffectMath::getmaxWidthIndex() && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
     // leap towards the centre of the screen
     rockets[r].xd = -rockets[r].xd;
@@ -5930,7 +5874,8 @@ void EffectPopcorn::reload(){
   }
 }
 
-bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectPopcorn::run(CRGB *leds, EffectWorker *param) {
+  randomSeed(micros());
   if (blurred) fadeToBlackBy(leds, NUM_LEDS, 30. * speedFactor);
   else FastLED.clear();
   float popcornGravity = 0.1 * speedFactor;
@@ -5995,6 +5940,7 @@ bool EffectPopcorn::popcornRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
+// !++
 String EffectPopcorn::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) { speedFactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.25, 0.75)*EffectCalc::speedfactor; }
   else if(_val->getId()==3) { uint8_t density = EffectCalc::setDynCtrl(_val).toInt(); numRockets = 5 + density; rockets.resize(numRockets); reload(); }
@@ -6003,10 +5949,6 @@ String EffectPopcorn::setDynCtrl(UIControl*_val) {
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
-
-// void EffectPopcorn::setscl(const byte _scl){ // вот тут перегрузим масштаб
-//   EffectCalc::setscl(_scl); // вызываем функцию базового класса (т.е. заполнение scale и что еще она там умеет)
-// }
 
 void EffectPopcorn::load() {
   palettesload();
@@ -6231,11 +6173,6 @@ String EffectTLand::setDynCtrl(UIControl*_val){
   else if(_val->getId()==6) fine = _val->getVal().toInt(); // качество не рандомим, а берем как есть
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
-}
-
-void EffectTLand::load() {
-  // if (scale == 0)
-  //   animation=random(1,35);
 }
 
 bool EffectTLand::run(CRGB *leds, EffectWorker *opt) {
@@ -6522,6 +6459,7 @@ float EffectTLand::code(double i, double x, double y) {
 //...ldir... Yaroslaw Turbin, 18.11.2020 
 //https://vk.com/ldirko
 //https://www.reddit.com/user/ldirko/
+// !++
 String EffectLLand::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) select = EffectCalc::setDynCtrl(_val).toInt();
@@ -6549,7 +6487,6 @@ bool EffectLLand::run(CRGB *leds, EffectWorker *opt) {
       i++;
     }
   }
-  //fpsmeter();
   return true;
 }
 
@@ -6868,8 +6805,6 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
   } else if (storm) {
     _flash = Lightning(200);
   }
-
-  //fpsmeter();
   return true;
 }
 
@@ -6961,9 +6896,17 @@ void EffectWrain::Clouds(bool flash)
 }
 
 // ------------- Эффект "Цветные драже"
+// !++
+String EffectPile::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 0.5)*EffectCalc::speedfactor;
+  else if(_val->getId()==2) sc = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, MAXDOTS);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
 void EffectPile::load() {
   FastLED.clear();
-  //palettesload();
+  palettesload();
 
   for (uint8_t i = 0; i < MAXDOTS; i++) {
     dots[i].x = EffectMath::randomf((float)WIDTH /2 - 1.5, (float)WIDTH /2 + 1.5); //random(2)/2.0 + WIDTH/2 - 1;
@@ -6975,15 +6918,13 @@ void EffectPile::load() {
 }
 bool EffectPile::run(CRGB *leds, EffectWorker *opt)
 {
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*EffectCalc::speedfactor, 0.5*EffectCalc::speedfactor);
-
   if (!done)
   {
     if (!clearrows(false))
       return true;
   }
 
-  for (uint8_t i = 0; i < map(scale, 1, 255, 1, MAXDOTS); i++) {
+  for (uint8_t i = 0; i < sc; i++) {
     uint8_t rx = dots[i].x;
     uint8_t ry = ceil(dots[i].y);
     if (ry < HEIGHT)
@@ -6991,7 +6932,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt)
     dots[i].y -= speedFactor;
     ry = ceil(dots[i].y);
 
-    EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
+    EffectMath::drawPixelXY(rx, ry, ColorFromPalette(*curPalette, dots[i].hue, 255));
     uint16_t pos = constrain(rx, 0, EffectMath::getmaxWidthIndex());
     if (dots[i].y < 0.1 || dots[i].y <= widthPos[pos])
     {
@@ -7003,7 +6944,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt)
         EffectMath::drawPixelXY(rx, ry, CRGB::Black);
         dots[i].x = constrain(dots[i].x + shift, 0, EffectMath::getmaxWidthIndex());
         rx = dots[i].x;
-        EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
+        EffectMath::drawPixelXY(rx, ry, ColorFromPalette(*curPalette, dots[i].hue, 255));
       }
       else
       {
@@ -7015,7 +6956,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *opt)
           EffectMath::drawPixelXY(rx, ry, CRGB::Black);
           dots[i].y = widthPos[pos] - 1;
           ry = ceil(dots[i].y);
-          EffectMath::drawPixelXY(rx, ry, CHSV(dots[i].hue, 255, 255));
+          EffectMath::drawPixelXY(rx, ry, ColorFromPalette(*curPalette, dots[i].hue, 255));
         }
         // EVERY_N_SECONDS(1){
         //   Serial.print("widthPos["); Serial.print(pos); Serial.print("]="); Serial.print(widthPos[pos]); Serial.println();

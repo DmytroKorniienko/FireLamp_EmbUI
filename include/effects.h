@@ -140,7 +140,12 @@ public:
 // ------------- Эффект "Пейнтбол" -------------
 class EffectLightBalls : public EffectCalc {
 private:
-    bool lightBallsRoutine(CRGB *leds, EffectWorker *param);
+	#define BORDERTHICKNESS       (1U)   // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
+	const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
+	const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
+	float speedFactor;
+	
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -906,7 +911,11 @@ public:
 // https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
 class EffectPacific : public EffectCalc {
 private:
-    bool pacificRoutine(CRGB *leds, EffectWorker *param);
+	uint32_t speedFactor;
+	void pacifica_one_layer(const TProgmemRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff);
+	void pacifica_deepen_colors();
+	void pacifica_add_whitecaps();
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
@@ -969,17 +978,9 @@ private:
     uint32_t scale_x[NUM_LAYERS];
     uint32_t scale_y[NUM_LAYERS];
     uint8_t  noise[NUM_LAYERS][WIDTH][HEIGHT];
+	uint8_t speedFactor;
 
-    bool noiseRoutine(CRGB *leds, EffectWorker *param);
-    void adjust_gamma(CRGB *leds)
-    {
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-            leds[i].r = dim8_video(leds[i].r);
-            leds[i].g = dim8_video(leds[i].g);
-            leds[i].b = dim8_video(leds[i].b);
-        }
-    }
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1007,12 +1008,10 @@ private:
     bool wings = false;
     bool isColored = true;
 	float speedFactor;
+	String setDynCtrl(UIControl*_val) override;
 
-    bool butterflyRoutine(CRGB *leds, EffectWorker *param);
-    void load() override;
 public:
-    //void load() override;
-    virtual String setDynCtrl(UIControl*_val) override;
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1024,10 +1023,7 @@ private:
     uint16_t sLastMillis = 0;
     uint16_t sHue16 = 0;
 
-    bool shadowsRoutine(CRGB *leds, EffectWorker *param);
-
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1100,10 +1096,9 @@ private:
     //void arrowSetup_mode3(;)
     void arrowSetup_mode4();
 
-    bool arrowsRoutine(CRGB *leds, EffectWorker *param);
-    void load() override;
     String setDynCtrl(UIControl*_val) override;
 public:
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1114,14 +1109,14 @@ private:
     uint8_t lastSecond = 99;
     uint16_t speedy;// speed is set dynamically once we've started up
     uint16_t _scale;
-
     byte beat1, beat2 = 0;
     byte balls = 4;
-
     void balls_timer();
     void blur(CRGB *leds);
     bool nballsRoutine(CRGB *leds, EffectWorker *param);
+
     String setDynCtrl(UIControl*_val) override;
+
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1145,8 +1140,6 @@ private:
     Boid boids[count];
     PVector location;   // Location
     String setDynCtrl(UIControl*_val) override;
-    // void setscl(const byte _scl) override;
-    // void setspd(const byte _spd) override;
     void setup();
 
 
@@ -1159,7 +1152,6 @@ private:
         force *= strength;                                  // Get force vector --> magnitude * direction
         return force;
     }
-    bool attractRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     EffectAttract() {
@@ -1180,8 +1172,6 @@ private:
     int snakeCount;
     bool subPix = false;
     bool onecolor = false;
-
-    void load() override;
     enum Direction
 {
   UP,
@@ -1277,10 +1267,9 @@ struct Snake
 };
 
     Snake snakes[MAX_SNAKES];
-    bool snakeRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 public:
-    //void load();
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1326,7 +1315,6 @@ private:
     CHSV color;
 	float speedFactor;
 
-    bool flowerRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -1345,11 +1333,9 @@ private:
     uint8_t speeds = 30;
     bool rotate = false;
 
-    bool DNARoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1367,7 +1353,7 @@ private:
     byte _pal = 8;
     byte _scale = 60;
 	float speedFactor;
-    bool fire2020Routine(CRGB *leds, EffectWorker *param);
+
     String setDynCtrl(UIControl*_val) override;
     //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
@@ -1396,7 +1382,6 @@ private:
     uint8_t snakeDirect[MAX_SNAKES];         //тут будет направление червяка
 	float speedFactor;
 
-    bool testRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
     void regen();
 
@@ -1427,7 +1412,7 @@ private:
 
     void restart_rocket(uint8_t r);
     void reload();
-    bool popcornRoutine(CRGB *leds, EffectWorker *param);
+
     String setDynCtrl(UIControl*_val) override;
     //void setscl(const byte _scl) override; // перегрузка для масштаба
 
@@ -1525,7 +1510,6 @@ class EffectTLand: public EffectCalc {
     String setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void load() override;
 };
 
 // -------- "LDIRKO Ленд"
@@ -1629,7 +1613,10 @@ private:
   float widthPos[WIDTH];
   bool done = true;
   float speedFactor;
-  float internal_counter = 0.0f;
+  float internal_counter = 0.0;
+  uint8_t sc;
+  String setDynCtrl(UIControl*_val) override;
+  
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
