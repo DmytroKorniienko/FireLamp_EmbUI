@@ -630,7 +630,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                     if (myLamp.IsGlobalBrightness()) {
                         embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
                     }
-                }                
+                } else
+                    myLamp.setLampBrightness(bright);
             } else
                 controls[i]->setVal((*data)[ctrlName]); // для всех остальных
             LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
@@ -2444,16 +2445,10 @@ void sync_parameters(){
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
     embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
+    myLamp.setGlobalBrightness(embui.param(FPSTR(TCONST_0018)).toInt()); // починить бросок яркости в 255 при первом включении
     obj[FPSTR(TCONST_001C)] = tmp.isGlobalBrightness ? "1" : "0";
     set_gbrflag(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
-
-    if (myLamp.IsGlobalBrightness()) {
-        //CALL_SETTER(FPSTR(TCONST_0012), embui.param(FPSTR(TCONST_0018)), set_effects_bright);
-        CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", embui.param(FPSTR(TCONST_0018)), set_effects_dynCtrl);
-    } else {
-        myLamp.setGlobalBrightness(embui.param(FPSTR(TCONST_0018)).toInt()); // починить бросок яркости в 255 при первом включении
-    }
 
 #ifdef RESTORE_STATE
     obj[FPSTR(TCONST_001A)] = tmp.ONflag ? "1" : "0";
@@ -2470,6 +2465,8 @@ void sync_parameters(){
 #else
     CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
 #endif
+
+    CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
 
 #ifdef MP3PLAYER
     //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!

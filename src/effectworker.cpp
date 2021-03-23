@@ -1245,28 +1245,27 @@ bool EffectCalc::status(){return active;}
  * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
  */
 String EffectCalc::setDynCtrl(UIControl*_val){
-  if(!_val) return String();
+  if(!_val)
+    return String();
   String ret_val = _val->getVal();
-
+  //LOG(printf_P, PSTR("ctrlVal=%s\n"), ret_val.c_str());
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     if(isRandDemo()){
       paletteIdx = random(_val->getMin().toInt(),_val->getMax().toInt()+1);
     } else
-      paletteIdx = _val->getVal().toInt();
+      paletteIdx = ret_val.toInt();
     palettemap(palettes, paletteIdx, _val->getMin().toInt(), _val->getMax().toInt());
     isCtrlPallete = true;
   }
 
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = (_val->getVal().toInt() && isMicOnState()) ? true : false;
+    isMicActive = (ret_val.toInt() && isMicOnState()) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif
   } else {
     if(isRandDemo()){ // для режима рандомного ДЕМО, если это не микрофон - то вернуть рандомное значение в пределах диапазона значений
-      ret_val = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else {
-      ret_val = _val->getVal().toInt();
+      ret_val = String(random(_val->getMin().toInt(), _val->getMax().toInt()+1));
     }
   }
 
