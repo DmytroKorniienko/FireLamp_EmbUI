@@ -862,13 +862,14 @@ private:
     uint8_t points[STARS_NUM] ;                       // количество углов в звезде
     unsigned int delay[STARS_NUM] ;                   // задержка пуска звезды относительно счётчика
     float counter = 0;                                // счетчик для реализации смещений, наростания и т.д.
-    uint8_t csum = 0;
+	float speedFactor;
+	float _speed;
     bool setup = true;
     uint8_t micPick = 0;
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
-    bool starRoutine(CRGB *leds, EffectWorker *param);
     void drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler);
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1222,9 +1223,9 @@ struct Snake
     }
   };
 
-  void shuffleDown(float speedFactor, bool subpix)
+  void shuffleDown(float speedy, bool subpix)
   {
-    internal_counter+=speedFactor*internal_speedf;
+    internal_counter+=speedy*internal_speedf;
 
     if(internal_counter>1.0){
         for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
@@ -1251,9 +1252,9 @@ struct Snake
     }
   }
 
-  void move(float speedFactor)
+  void move(float speedy)
   {
-    float inc = speedFactor*internal_speedf;
+    float inc = speedy*internal_speedf;
 
     switch (direction)
     {
@@ -1272,7 +1273,7 @@ struct Snake
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH], float speedFactor, int snakenb, bool subpix, bool isDebug=false);
+  void draw(CRGB colors[SNAKE_LENGTH], int snakenb, bool subpix, bool isDebug=false);
 };
 
     Snake snakes[MAX_SNAKES];
@@ -1300,6 +1301,7 @@ class EffectNexus: public EffectCalc {
     uint8_t _scale = 1;
     bool randColor = false;
     float windProgress;
+	float speedFactor;
     
 
     void reload();
@@ -1322,9 +1324,10 @@ private:
     float angle = 1.;
     float  counter = 0.;
     CHSV color;
+	float speedFactor;
 
     bool flowerRoutine(CRGB *leds, EffectWorker *param);
-    //String setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1363,6 +1366,7 @@ private:
     float a = 0;
     byte _pal = 8;
     byte _scale = 60;
+	float speedFactor;
     bool fire2020Routine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
     //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
@@ -1390,12 +1394,10 @@ private:
     //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
     uint8_t snakeColor[MAX_SNAKES];          // тут будет начальный цвет червяка
     uint8_t snakeDirect[MAX_SNAKES];         //тут будет направление червяка
-    byte csum = 0;
+	float speedFactor;
 
     bool testRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
-    //void setscl(const byte _scl) override; // перегрузка для масштаба
-    //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
 
 public:
@@ -1467,6 +1469,7 @@ class EffectCell: public EffectCalc {
     float x[WIDTH];
     uint8_t effId = 1;
     uint8_t hue;
+	float speedFactor;
     void cell(CRGB *leds);
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
@@ -1491,6 +1494,7 @@ class EffectF_lying: public EffectCalc {
     byte hue = 0;
     uint8_t _blur = 1;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
+	float speedFactor;
     String setDynCtrl(UIControl*_val);
 #ifdef BIGMATRIX
     const float deviator = 2.;
@@ -1600,6 +1604,7 @@ class EffectWrain: public EffectCalc {
     bool _flash;
     bool randColor = false;
     float windProgress;
+	float speedFactor;
     uint8_t *_noise = (uint8_t *)malloc(WIDTH * cloudHeight);
     uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);  
     uint32_t timer = 0;
