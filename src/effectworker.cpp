@@ -1138,7 +1138,7 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   effect=_eff;
   lampstate = _lampstate;
 
-  isMicActive = isMicOn();
+  isMicActive = isMicOnState();
   for(int i=0; i<controls->size(); i++){
     setDynCtrl((*controls)[i]);
     // switch(i){
@@ -1258,7 +1258,7 @@ String EffectCalc::setDynCtrl(UIControl*_val){
   }
 
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = (_val->getVal().toInt() && isMicOn()) ? true : false;
+    isMicActive = (_val->getVal().toInt() && isMicOnState()) ? true : false;
 #ifdef MIC_EFFECTS
     myLamp.setMicAnalyseDivider(isMicActive);
 #endif
