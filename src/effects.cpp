@@ -5556,13 +5556,14 @@ void EffectFire2020::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
   palettes.push_back(&NormalFire_p);
-  palettes.push_back(&HeatColors2_p);
-  palettes.push_back(&MagmaColor_p);
-  palettes.push_back(&NormalFire2_p);
   palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&NormalFire2_p);
   palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&NormalFire3_p);
   palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&HeatColors2_p);
   palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&MagmaColor_p);
   palettes.push_back(&RubidiumFireColors_p);
   palettes.push_back(&AlcoholFireColors_p); 
   palettes.push_back(&WaterfallColors_p);
@@ -8092,13 +8093,14 @@ void EffectMagma::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
   palettes.push_back(&MagmaColor_p);
-  palettes.push_back(&HeatColors2_p);
-  palettes.push_back(&NormalFire2_p);
   palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&NormalFire_p);
   palettes.push_back(&SodiumFireColors_p);
+  palettes.push_back(&HeatColors2_p);
   palettes.push_back(&PotassiumFireColors_p);
-  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&NormalFire3_p);
   palettes.push_back(&AlcoholFireColors_p);
+  palettes.push_back(&NormalFire2_p);
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&WoodFireColors_p);
   palettes.push_back(&WaterfallColors_p);
@@ -8113,7 +8115,7 @@ void EffectMagma::load() {
 }
 
 String EffectMagma::setDynCtrl(UIControl*_val){
-  if (_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, .5)*EffectCalc::speedfactor;
+  if (_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.075, .5)*EffectCalc::speedfactor;
   else if(_val->getId()==3) ObjectNUM = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, WIDTH/2, enlargedOBJECT_MAX_COUNT);
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
@@ -8154,7 +8156,6 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 }
 
 void EffectMagma::LeapersMove_leaper(uint8_t l) {
-  trackingObjectShift[l] -= Gravity * speedFactor;
 
   trackingObjectPosX[l] += trackingObjectSpeedX[l] * speedFactor;
   trackingObjectPosY[l] += trackingObjectShift[l] * speedFactor;
@@ -8173,6 +8174,8 @@ void EffectMagma::LeapersMove_leaper(uint8_t l) {
   if (trackingObjectPosX[l] < 0 || trackingObjectPosX[l] > EffectMath::getmaxWidthIndex()) {
     LeapersRestart_leaper(l);
   }
+  
+  trackingObjectShift[l] -= Gravity * speedFactor;
 }
 
 void EffectMagma::LeapersRestart_leaper(uint8_t l) {
@@ -8185,7 +8188,7 @@ void EffectMagma::LeapersRestart_leaper(uint8_t l) {
 
   // for variety, sometimes go 100% faster
   if (random8() < 12) {
-    trackingObjectShift[l] += trackingObjectShift[l] * 2;
+    trackingObjectShift[l] += trackingObjectShift[l] * EffectMath::randomf(1.5, 2.5);
   }
 
 }
