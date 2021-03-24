@@ -536,16 +536,17 @@ public:
 // ============= RADAR / РАДАР ===============
 // Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternRadar.h
 // Copyright(c) 2014 Jason Coon
-// v1.0 - Updating for GuverLamp v1.7 by Palpalych 14.04.2020
-// v1.1 - +dither, +smoothing
 class EffectRadar : public EffectCalc {
 private:
-  float eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
-  float eff_theta;         // глобальная переменная угла для работы эффектов
-  bool subPix = false;
-  byte hue;
-  bool radarRoutine(CRGB *leds, EffectWorker *param);
-  String setDynCtrl(UIControl*_val) override;
+    float eff_offset; 
+    float eff_theta;  // глобальная переменная угла для работы эффектов
+    bool subPix = false;
+    byte hue;
+    const byte maxDim = max(WIDTH, HEIGHT);
+    const float width_adj = (float)(WIDTH < HEIGHT ? (HEIGHT - WIDTH) / 2. : 0);
+    const float height_adj = (float)(HEIGHT < WIDTH ? (WIDTH - HEIGHT) / 2. : 0);
+    bool radarRoutine(CRGB *leds, EffectWorker *param);
+    String setDynCtrl(UIControl *_val) override;
 
 public:
     void load() override;
