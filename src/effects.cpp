@@ -119,16 +119,12 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
 // ------ Эффект "Белая Лампа"
 // ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
 bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectWorker *opt){
-
   return whiteColorStripeRoutine(*&ledarr, &*opt);
 }
 
 // !--
 String EffectWhiteColorStripe::setDynCtrl(UIControl*_val){
-  if(_val->getId()==2) {
-    EffectCalc::setDynCtrl(_val).toInt();
-    bcoef = (brightness > 127 ? 1.1-map((scale<127 ? 127 - scale : scale - 127),0,128,1,5)/10.0 : 1.0); // коэф. понижения яркости 5 степеней в зависимости от масштаба (0.5...1.0)
-  } else if(_val->getId()==3) shift = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==3) shift = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -144,56 +140,50 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
   byte _scale = scale;
   byte _speed = speed;
 #endif
-    if(_scale < 127){
+    if(_scale < 126){
         uint8_t centerY = EffectMath::getmaxHeightIndex() / 2U;
         for (int16_t y = centerY; y >= 0; y--)
         {
-          int br = (bcoef*BRIGHTNESS)-(map(_scale,126,1,1,15)*(centerY-y)*((centerY-y)/(HEIGHT*0.0625))); if(br<0) br=0;
+          int br = (BRIGHTNESS)-constrain(map(_scale,126,1,1,15)*(centerY-y)*((centerY-y)/(HEIGHT*(0.0005*brightness))),1,BRIGHTNESS); if(br<0) br=0;
           int _shift = isMicOn() ? 0 : map(shift,1,255,-centerY,centerY);
 
-          CRGB color = CHSV(
-            45U,                                                                              // определяем тон
-            (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                            // определяем насыщенность
-            y == centerY                                                                      // определяем яркость
-              ? (bcoef*BRIGHTNESS)                                                            // для центральной горизонтальной полосы (или двух) яркость всегда равна BRIGHTNESS
-              : br);  // для остальных горизонтальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
+            CRGB color = CHSV(
+              45U,                                                        // определяем тон
+              map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
+              (y == centerY ? (BRIGHTNESS) : br));                        // определяем яркость для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
+                                                                          // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
 
           for (int16_t x = 0U; x < (int16_t)WIDTH; x++)
           {
-            EffectMath::drawPixelXY(x, y + _shift, color);                                                         // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
-            EffectMath::drawPixelXY(x, (HEIGHT - y +  + _shift) - 1, color); // при нечётной - одна, но дважды
+            EffectMath::drawPixelXY(x, y + _shift, color);                // при чётной высоте матрицы максимально яркими отрисуются 2 центральных горизонтальных полосы
+            EffectMath::drawPixelXY(x, (HEIGHT - y + _shift) - 1, color); // при нечётной - одна, но дважды
           }
         }
-    } else if(_scale > 127){
+    } else if(_scale > 128){
         uint8_t centerX = EffectMath::getmaxWidthIndex() / 2U;
-        for (int16_t y = 0U; y < (int16_t)HEIGHT; y++)
-        {
-          for (int16_t x = centerX; x >= 0; x--)
-          {
-            int br = (bcoef*BRIGHTNESS)-(map(_scale,128,255,1,15)*(centerX-x)*((centerX-x)/(WIDTH*0.0625))); if(br<0) br=0;
+        for (int16_t y = 0U; y < (int16_t)HEIGHT; y++){
+          for (int16_t x = centerX; x >= 0; x--){
+            int br = (BRIGHTNESS)-constrain(map(_scale,128,255,1,15)*(centerX-x)*((centerX-x)/(WIDTH*(0.0005*brightness))),1,BRIGHTNESS); if(br<0) br=0;
             int _shift = isMicOn() ? 0 : map(shift,1,255,-centerX,centerX);
 
             CRGB color = CHSV(
-              45U,                                                                              // определяем тон
-              (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),                           // определяем насыщенность
-              x == centerX                                                                      // определяем яркость
-                ? (bcoef*BRIGHTNESS)                                                            // для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
-                : br);  // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
+              45U,                                                        // определяем тон
+              map(_speed, 0U, 255U, 0U, 170U),                            // определяем насыщенность
+              (x == centerX ? (BRIGHTNESS) : br));                        // определяем яркость для центральной вертикальной полосы (или двух) яркость всегда равна BRIGHTNESS
+                                                                          // для остальных вертикальных полос яркость равна либо BRIGHTNESS, либо вычисляется по br
 
-            EffectMath::drawPixelXY(x + _shift, y, color);                                                      // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
-            EffectMath::drawPixelXY((WIDTH - x + _shift) - 1, y, color); // при нечётной - одна, но дважды
+            EffectMath::drawPixelXY(x + _shift, y, color);                // при чётной ширине матрицы максимально яркими отрисуются 2 центральных вертикальных полосы
+            EffectMath::drawPixelXY((WIDTH - x + _shift) - 1, y, color);  // при нечётной - одна, но дважды
           }
         }
     }
     else {
-        for (int16_t y = 0; y < (int16_t)HEIGHT; y++)
-        {
-          for (int16_t x = 0; x < (int16_t)WIDTH; x++)
-          {
+        for (int16_t y = 0; y < (int16_t)HEIGHT; y++){
+          for (int16_t x = 0; x < (int16_t)WIDTH; x++){
             CRGB color = CHSV(
               45U,                                                       // определяем тон
-              (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),    // определяем насыщенность
-              (bcoef*BRIGHTNESS));
+              (brightness>=0 ? map(_speed, 0U, 255U, 0U, 170U) : 0),     // определяем насыщенность
+              (BRIGHTNESS));
             EffectMath::drawPixelXY(x, y, color);                        // 127 - заливка полная
           }
         }
