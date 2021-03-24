@@ -566,7 +566,6 @@ private:
   uint8_t fire18heat[NUM_LEDS];
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
-  bool fire2018Routine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -1851,6 +1850,7 @@ private:
     byte pal;
     uint16_t _scale;
     byte flag;
+	byte _speed;
 
     //void setscl(const byte _scl) override;
     String setDynCtrl(UIControl*_val) override;
@@ -1892,23 +1892,21 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------  Эффект "Дым" (Тест)
+// ------------  Эффект "Дым"
 // https://wokwi.com/arduino/projects/286246948457939464
 // (c) ldir + sutaburosu
 class EffectSmoker: public EffectCalc {
 private:
     float timer;
     byte bump[NUM_LEDS];
-    CRGB chsv[256];
     byte sat;
+	float speedFactor;
 
     void generatebump ();
-    void regen();
     void Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty);
     String setDynCtrl(UIControl*_val) override;
-    //void setscl(const byte _scl) override; // перегрузка для масштаба
+
 public:
-    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
