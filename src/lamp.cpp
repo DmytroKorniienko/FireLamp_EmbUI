@@ -934,10 +934,10 @@ void LAMP::newYearMessageHandle()
 }
 
 
-void LAMP::periodicTimeHandle()
+void LAMP::periodicTimeHandle(bool force)
 {
   const tm* t = localtime(embui.timeProcessor.now());
-  if(t->tm_sec)
+  if(t->tm_sec && !force)
     return;
 
   LOG(printf_P, PSTR("periodicTimeHandle: %02d:%02d:%02d\n"), t->tm_hour,t->tm_min,t->tm_sec);

@@ -350,7 +350,7 @@ public:
     void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 
-    void periodicTimeHandle();
+    void periodicTimeHandle(bool force=false);
 
     void startAlarm(char *value = nullptr);
     void stopAlarm();

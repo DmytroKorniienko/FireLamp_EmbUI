@@ -2740,7 +2740,7 @@ void remote_action(RA action, ...){
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
             break;
         case RA::RA_SEND_TIME:
-            myLamp.periodicTimeHandle();
+            myLamp.periodicTimeHandle(true);
             //myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
             break;
 #ifdef OTA
