@@ -566,82 +566,45 @@ void set_effects_list(Interface *interf, JsonObject *data){
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(eff->eff_nb).toInt(), myLamp.getNormalizedLampBrightness()), true); // publish_ctrls_vals
 }
 
-// void set_effects_bright(Interface *interf, JsonObject *data){
-//     if (!data) return;
-
-//     byte bright = (*data)[FPSTR(TCONST_0012)];
-//     if (myLamp.getNormalizedLampBrightness() != bright) {
-//         myLamp.setLampBrightness(bright);
-//         if(myLamp.isLampOn())
-//             myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
-//         if (myLamp.IsGlobalBrightness()) {
-//             embui.var(FPSTR(TCONST_0018), (*data)[FPSTR(TCONST_0012)]);
-//         }
-//         if(myLamp.effects.worker && myLamp.effects.getEn())
-//             myLamp.effects.worker->setbrt((*data)[FPSTR(TCONST_0012)].as<byte>()); // передача значения в эффект
-//         LOG(printf_P, PSTR("Новое значение яркости: %d\n"), myLamp.getNormalizedLampBrightness());
-//     }
-//     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0012), String(bright), true);
-//     publish_ctrls_vals();
-//     resetAutoTimers();
-// }
-
-// void set_effects_speed(Interface *interf, JsonObject *data){
-//     if (!data) return;
-
-//     if(!myLamp.effects.getEn()) return;
-//     myLamp.effects.getControls()[1]->setVal((*data)[FPSTR(TCONST_0013)]);
-//     if(myLamp.effects.worker && myLamp.effects.getEn())
-//         myLamp.effects.worker->setspd((*data)[FPSTR(TCONST_0013)].as<byte>()); // передача значения в эффект
-//     LOG(printf_P, PSTR("Новое значение скорости: %d\n"), (*data)[FPSTR(TCONST_0013)].as<byte>());
-//     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0013), (*data)[FPSTR(TCONST_0013)], true);
-//     publish_ctrls_vals();
-//     resetAutoTimers();
-// }
-
-// void set_effects_scale(Interface *interf, JsonObject *data){
-//     if (!data) return;
-
-//     if(!myLamp.effects.getEn()) return;
-//     myLamp.effects.getControls()[2]->setVal((*data)[FPSTR(TCONST_0014)]);
-//     if(myLamp.effects.worker && myLamp.effects.getEn())
-//         myLamp.effects.worker->setscl((*data)[FPSTR(TCONST_0014)].as<byte>()); // передача значения в эффект
-//     LOG(printf_P, PSTR("Новое значение масштаба: %d\n"), (*data)[FPSTR(TCONST_0014)].as<byte>());
-//     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0014), (*data)[FPSTR(TCONST_0014)], true);
-//     publish_ctrls_vals();
-//     resetAutoTimers();
-// }
-
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    //if(!myLamp.effects.getEn()) return;
-    String ctrlName;
-    LList<UIControl*>&controls = myLamp.effects.getControls();
-    for(int i=0; i<controls.size();i++){
-        ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
-        if((*data).containsKey(ctrlName)){
-            if(!i){ // яркость???
-                byte bright = (*data)[ctrlName];
-                if (myLamp.getNormalizedLampBrightness() != bright) {
-                    myLamp.setLampBrightness(bright);
-                    if(myLamp.isLampOn())
-                        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
-                    if (myLamp.IsGlobalBrightness()) {
-                        embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
-                    }
-                } else
-                    myLamp.setLampBrightness(bright);
-            } else
-                controls[i]->setVal((*data)[ctrlName]); // для всех остальных
-            LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
-            if(myLamp.effects.worker) // && myLamp.effects.getEn()
-                myLamp.effects.worker->setDynCtrl(controls[i]);
-            //embui.publish(String(FPSTR(TCONST_008B)) + ctrlName, (*data)[ctrlName], true);
-            publish_ctrls_vals();
-        }
-    }
+    // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
+    serializeJson(*data,tmpData);
     resetAutoTimers();
+    sysTicker.once(0.1,std::bind([]{
+        DynamicJsonDocument docum(1024);
+        deserializeJson(docum, tmpData);
+        JsonObject dataStore = docum.as<JsonObject>();
+        JsonObject *data = &dataStore;
+
+        String ctrlName;
+        LList<UIControl*>&controls = myLamp.effects.getControls();
+        for(int i=0; i<controls.size();i++){
+            ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
+            if((*data).containsKey(ctrlName)){
+                if(!i){ // яркость???
+                    byte bright = (*data)[ctrlName];
+                    if (myLamp.getNormalizedLampBrightness() != bright) {
+                        myLamp.setLampBrightness(bright);
+                        if(myLamp.isLampOn())
+                            myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
+                        if (myLamp.IsGlobalBrightness()) {
+                            embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
+                        }
+                    } else
+                        myLamp.setLampBrightness(bright);
+                } else
+                    controls[i]->setVal((*data)[ctrlName]); // для всех остальных
+                LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
+                if(myLamp.effects.worker) // && myLamp.effects.getEn()
+                    myLamp.effects.worker->setDynCtrl(controls[i]);
+                publish_ctrls_vals();
+            }
+        }
+
+        tmpData.clear();
+    }));
 }
 
 /**
