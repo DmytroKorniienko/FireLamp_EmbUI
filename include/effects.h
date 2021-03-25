@@ -89,17 +89,36 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+/*
+  Metaballs proof of concept by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  ...very rough 8bit math here...
+  read more about the concept of isosurfaces and metaballs:
+  https://www.gamedev.net/articles/programming/graphics/exploring-metaballs-and-isosurfaces-in-2d-r2556
+*/
+// ***** METABALLS / МЕТАСФЕРЫ *****
+// v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
 class EffectMetaBalls : public EffectCalc {
 private:
-    bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
+	float speedFactor;
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ***** SINUSOID3 / СИНУСОИД3 *****
+/*
+  Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
+*/
 class EffectSinusoid3 : public EffectCalc {
 private:
-    bool sinusoid3Routine(CRGB *leds, EffectWorker *param);
+	const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
+	const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2);
+	float e_s3_speed;
+	float e_s3_size;
+	
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -128,11 +147,9 @@ private:
     uint8_t _scale=1;
     uint16_t _speed;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
-    String setDynCtrl(UIControl*_val) override;
-    // void setscl(const byte _scl) override; // перегрузка для масштаба
-    //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
     void load() override;
+	String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -162,9 +179,6 @@ private:
     uint8_t _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
 
-
-    bool pulseRoutine(CRGB *leds, EffectWorker *param);
-
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -173,12 +187,14 @@ public:
 class EffectBall : public EffectCalc {
 private:
     uint8_t ballSize;
-    CHSV ballColor;
+    CRGB ballColor;
     float vectorB[2U];
     float coordB[2U];
+	bool flag[2] = {true, true};
+	float speedFactor;
 
-    bool ballRoutine(CRGB *leds, EffectWorker *param);
-
+	String setDynCtrl(UIControl*_val);
+	
 public:
     void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

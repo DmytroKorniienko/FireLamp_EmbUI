@@ -1299,11 +1299,11 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AlcoholFireColors_p);
   palettes.push_back(&RubidiumFireColors_p);
   palettes.push_back(&PotassiumFireColors_p);
-  palettes.push_back(&WaterfallColors_p);
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&AcidColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&HolyLightsColors_p/*OrangeColors_p NeonColors_p*/);
+  palettes.push_back(&HolyLightsColors_p);
+  palettes.push_back(&WaterfallColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру

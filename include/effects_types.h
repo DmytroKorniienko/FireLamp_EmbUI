@@ -408,7 +408,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  3, 6, 6, 4, 4, 1, 3, 3, 7, 5, 5, 6, 5, 3, 5, 8, // 0-15
+  3, 6, 6, 4, 4, 1, 3, 3, 7, 5, 3, 6, 5, 3, 5, 8, // 0-15
   5, 5, 3, 7, 3, 7, 5, 5, 7, 3, 3, 7, 7, 5, 1, 5, // 16-31
   5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 1, 3, 3, // 32 - 47
   5, 6, 6, 6, 4, 7, 5, 4, 5, 5, 6, 3, 1, 5, 7, 6, // 48 - 63
@@ -494,7 +494,7 @@ static const char E_DRIFT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_CUBE2D[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"},  {\"id\":4,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10D "\"},  {\"id\":5,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10F "\"} ,{\"id\":6,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_110 "\"}]}";
 static const char E_FLAMP[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"}]}";
 static const char E_LIGHT2[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
-static const char E_CUBE[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F1 "\"}]}";
+static const char E_CUBE[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F1 "\"},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_STARFAIL[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"} , {\"id\":4,\"max\":3,\"name\":\"" DFTINTF_0FD "\"} ,{\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_108 "\"}]}"; 
 static const char E_SNAKE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":4,\"max\":16,\"name\":\"" DFTINTF_0FE "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_111 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_NEXUS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
@@ -613,9 +613,6 @@ static const TProgmemRGBPalette16 HolyLightsColors_p FL_PROGMEM = {0xff0000, 0xf
 //#define BALLS_AMOUNT          (7U)                          // максимальное количество "шариков"
 #define CLEAR_PATH            (1U)                          // очищать путь
 #define TRACK_STEP            (70U)                         // длина хвоста шарика (чем больше цифра, тем хвост короче)
-
-// ------------- блуждающий кубик -------------
-#define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
 
 // --------------------------- эффект мячики ----------------------
 #define bballsMaxNUM_BALLS     (WIDTH-1)             // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб

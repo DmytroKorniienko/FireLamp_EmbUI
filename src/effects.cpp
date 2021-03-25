@@ -237,13 +237,11 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
 
 // --------------------------- эффект пульс ----------------------
 // Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp
-bool EffectPulse::run(CRGB *ledarr, EffectWorker *opt){
+
+// !++ тут использование setDynCtrl() безсмысленно 
+bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
   if (dryrun(3.0))
     return false;
-  return pulseRoutine(*&ledarr, &*opt);
-}
-
-bool EffectPulse::pulseRoutine(CRGB *leds, EffectWorker *param) {
 
   CRGBPalette16 palette;
   CRGB _pulse_color;
@@ -259,7 +257,6 @@ bool EffectPulse::pulseRoutine(CRGB *leds, EffectWorker *param) {
   #define BLUR 10U
 #endif
 
-  //EffectMath::dimAll(248U); // если эффект устанавливается с другими эффектами от Stefan Petrick, тогда  процедура должна называться dimAll (без двоечки)
   fadeToBlackBy(leds, NUM_LEDS, FADE);
   if (pulse_step <= currentRadius) {
     for (uint8_t i = 0; i < pulse_step; i++ ) {
@@ -821,77 +818,78 @@ bool EffectLightBalls::run(CRGB *leds, EffectWorker *param)
 }
 
 // ------------- эффект "блуждающий кубик" -------------
-void EffectBall::load(){
-  //LOG(printf_P, PSTR("getCtrlVal(5)=%s, %d\n"), getCtrlVal(5).c_str(), getCtrlVal(5).toInt()); /// провека чтения отсутствующего контрола
+// !++
+String EffectBall::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) {
+    speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 0.15) * EffectCalc::speedfactor;
+    speed = getCtrlVal(1).toInt();
+  }
+  else if(_val->getId()==2) {
+    scale = EffectCalc::setDynCtrl(_val).toInt();
+    if (scale <= 85)
+      ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+    else if (scale > 85 and scale <= 170)
+      ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+    else
+      ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  }
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
 
-  if (scale <= 85)
-    ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-  else if (scale > 85 and scale <= 170)
-    ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-  else
-    ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-
+void EffectBall::load() {
+  palettesload();
   for (uint8_t i = 0U; i < 2U; i++)
   {
     coordB[i] = i? float(WIDTH - ballSize) / 2 : float(HEIGHT - ballSize) / 2;
-    vectorB[i] = EffectMath::randomf(0, 24.) - 12.0;
-    ballColor = CHSV(random(1, 250), random(200, 255), 255);
+    vectorB[i] = 7.;
+    if (random(0, 2)) vectorB[i] = -vectorB[i];
+    ballColor = ColorFromPalette(*curPalette, random(1, 250), random(200, 255));
   }
 }
 
-bool EffectBall::run(CRGB *ledarr, EffectWorker *opt){
-  return ballRoutine(*&ledarr, &*opt);
-}
-
-bool EffectBall::ballRoutine(CRGB *leds, EffectWorker *param)
-{
-  if (scale <= 85)
-    ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-  else if (scale > 85 and scale <= 170)
-    ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-  else
-    ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-
-
+bool EffectBall::run(CRGB *leds, EffectWorker *param) {
 // каждые 5 секунд коррекция направления
-  EVERY_N_SECONDS(5){
+  EVERY_N_MILLISECONDS(map(speed, 1, 255, 6000, 3000)) {
     //LOG(println,ballSize);
-    for (uint8_t i = 0U; i < 2U; i++)
-    {
-      if(fabs(vectorB[i]) < 12)
-        vectorB[i] += EffectMath::randomf(0, 8.) - 4.0;
-      else if (vectorB[i] > 12)
-        vectorB[i] -= EffectMath::randomf(1, 6);
-      else
-        vectorB[i] += EffectMath::randomf(1, 6);
-      if(!(uint8_t)vectorB[i])
-        vectorB[i] += vectorB[i] > 0 ? 0.25 : -0.25;
-        
+    for (uint8_t i = 0U; i < 2U; i++) {
+      float correct = EffectMath::randomf(0, 2);
+      
+      if (fabs(vectorB[i]) <= 4)      // слишком разогнались, будем тормозить
+        flag[i] = true;
+      if (fabs(vectorB[i]) >= 10)     // оттормозились, будем разгоняться
+        flag[i] = false;
 
+      if (flag[i])
+        vectorB[i] += vectorB[i] > 0 ? correct : -correct;    // постепенно разганяем
+      else 
+        vectorB[i] += vectorB[i] > 0 ? -correct : correct;    // постепенно тормозим
+
+      if (random8() < 85)  vectorB[i] = -vectorB[i];          // резко меняем направление
     }
   }
 
   for (uint8_t i = 0U; i < 2U; i++)
   {
-    coordB[i] += vectorB[i] * EffectMath::fmap((float)speed, 1., 255., 0.02, 0.15);
+    coordB[i] += vectorB[i] * speedFactor;
     if ((int8_t)coordB[i] < 0)
     {
       coordB[i] = 0;
       vectorB[i] = -vectorB[i];
-      if (RANDOM_COLOR) ballColor = CHSV(random(1, 250), random(200, 255), 255);
+      ballColor = ColorFromPalette(*curPalette, random(1, 250), random(200, 255)); //CHSV(random(1, 250), random(200, 255), 255);
     }
   }
   if ((int8_t)coordB[0U] > (int8_t)(WIDTH - ballSize))
   {
     coordB[0U] = (WIDTH - ballSize);
     vectorB[0U] = -vectorB[0U];
-    if (RANDOM_COLOR) ballColor = CHSV(random(1, 250), random(200, 255), 255);
+    ballColor = ColorFromPalette(*curPalette, random(1, 250), random(200, 255));
   }
   if ((int8_t)coordB[1U] > (int8_t)(HEIGHT - ballSize))
   {
     coordB[1U] = (HEIGHT - ballSize);
     vectorB[1U] = -vectorB[1U];
-    if (RANDOM_COLOR) ballColor = CHSV(random(1, 250), random(200, 255), 255);
+    ballColor = ColorFromPalette(*curPalette, random(1, 250), random(200, 255));
   }
 
   if (scale <= 85)  // при масштабе до 85 выводим кубик без шлейфа
@@ -1032,11 +1030,6 @@ bool EffectBBalls::run(CRGB *ledarr, EffectWorker *opt){
   return bBallsRoutine(ledarr, opt);
 }
 
-// void EffectBBalls::setscl(const byte _scl){
-//   EffectCalc::setscl(_scl); // перегрузка для масштаба
-//   regen();
-// }
-
 void EffectBBalls::regen(){
   FastLED.clear();
   randomSeed(millis());
@@ -1122,21 +1115,19 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 }
 
 // ***** SINUSOID3 / СИНУСОИД3 *****
-// v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
 /*
   Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
-bool EffectSinusoid3::run(CRGB *ledarr, EffectWorker *opt){
-  return sinusoid3Routine(*&ledarr, &*opt);
+// !++
+String EffectSinusoid3::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) e_s3_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.033, 1) * EffectCalc::speedfactor;
+  else if(_val->getId()==3) e_s3_size = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, 9);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
 }
 
-bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectWorker *param)
-{
-  const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
-  const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2) ;
-  float e_s3_speed = EffectMath::fmap(speed, 1, 255, 0.033, 1); // speed of the movement along the Lissajous curves
-  float e_s3_size = EffectMath::fmap(scale, 1, 255, 3, 9); // amplitude of the curves
+bool EffectSinusoid3::run(CRGB *leds, EffectWorker *param) {
 
   float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
 
@@ -1173,26 +1164,27 @@ bool EffectSinusoid3::sinusoid3Routine(CRGB *leds, EffectWorker *param)
   https://www.gamedev.net/articles/programming/graphics/exploring-metaballs-and-isosurfaces-in-2d-r2556
 */
 
-// ***** METABALLS / МЕТАШАРИКИ *****
+// ***** METABALLS / МЕТАСФЕРЫ *****
 // v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
-bool EffectMetaBalls::run(CRGB *ledarr, EffectWorker *opt){
-  return metaBallsRoutine(*&ledarr, &*opt);
+// !++
+String EffectMetaBalls::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 2);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
 }
 
-bool EffectMetaBalls::metaBallsRoutine(CRGB *leds, EffectWorker *param)
+bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
 {
-  float _speed = speed/127.0;
-
   // get some 2 random moving points
-  uint8_t x2 = inoise8(millis() * _speed, 25355, 685 ) / WIDTH;
-  uint8_t y2 = inoise8(millis() * _speed, 355, 11685 ) / HEIGHT;
+  uint8_t x2 = inoise8(millis() * speedFactor, 25355, 685 ) / WIDTH;
+  uint8_t y2 = inoise8(millis() * speedFactor, 355, 11685 ) / HEIGHT;
 
-  uint8_t x3 = inoise8(millis() * _speed, 55355, 6685 ) / WIDTH;
-  uint8_t y3 = inoise8(millis() * _speed, 25355, 22685 ) / HEIGHT;
+  uint8_t x3 = inoise8(millis() * speedFactor, 55355, 6685 ) / WIDTH;
+  uint8_t y3 = inoise8(millis() * speedFactor, 25355, 22685 ) / HEIGHT;
 
   // and one Lissajou function
-  uint8_t x1 = beatsin8(23 * _speed, 0, 15);
-  uint8_t y1 = beatsin8(28 * _speed, 0, 15);
+  uint8_t x1 = beatsin8(23 * speedFactor, 0, 15);
+  uint8_t y1 = beatsin8(28 * speedFactor, 0, 15);
 
   for (uint8_t y = 0; y < HEIGHT; y++) {
     for (uint8_t x = 0; x < WIDTH; x++) {
