@@ -42,6 +42,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectworker.h"
 #include "effectmath.h"
 
+const byte maxDim = max(WIDTH, HEIGHT);
+const byte minDim = min(WIDTH, HEIGHT);
+const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
+const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
+
 
 #ifdef MIC_EFFECTS
 class EffectFreq : public EffectCalc {
@@ -558,9 +563,8 @@ private:
     float eff_theta;  // глобальная переменная угла для работы эффектов
     bool subPix = false;
     byte hue;
-    const byte maxDim = max(WIDTH, HEIGHT);
-    const float width_adj = (float)(WIDTH < HEIGHT ? (HEIGHT - WIDTH) / 2. : 0);
-    const float height_adj = (float)(HEIGHT < WIDTH ? (WIDTH - HEIGHT) / 2. : 0);
+    const float width_adj_f = (float)(WIDTH < HEIGHT ? (HEIGHT - WIDTH) / 2. : 0);
+    const float height_adj_f= (float)(HEIGHT < WIDTH ? (WIDTH - HEIGHT) / 2. : 0);
     bool radarRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl *_val) override;
 
@@ -1463,11 +1467,13 @@ class EffectSmokeballs: public EffectCalc {
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
+	const bool glitch = abs(WIDTH-HEIGHT) >= minDim/4;
+	const byte density = 50;
     uint8_t Scale = 6;
     uint8_t _scale = 1;
     int16_t offsetX = 0;
     int16_t offsetY = 0;
-    float x[WIDTH];
+    float x;
     uint8_t effId = 1;
     uint8_t hue;
 	float speedFactor;

@@ -127,6 +127,9 @@ public:
   static CRGB makeDarker( const CRGB& color, fract8 howMuchDarker = 5);
   static float randomf(float min, float max);
   static bool isInteger(float val);
+  // Функция возврашает "вес" яркости пикселя от 0 (черный) до 765 (белый). Может использоваться для проверки не "пустое ли место"
+  static uint16_t RGBweight (CRGB *leds, uint16_t idx) {return (leds[idx].r + leds[idx].g + leds[idx].b);}
+  static void confetti(byte density);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
   static void nightMode(CRGB *leds);
 

@@ -240,7 +240,7 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
 
 // !++
 String EffectPulse::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(),1,255,0.1,1.0)*EffectCalc::speedfactor;
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, 1.0) * EffectCalc::speedfactor;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -2153,11 +2153,10 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
     fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed / 255);
     for (float offset = 0.0f; offset < (float)maxDim /2; offset +=0.25)
     {
-      float x = (float)EffectMath::mapsincos8(false, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - width_adj;
-      float y = (float)EffectMath::mapsincos8(true, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - height_adj;
+      float x = (float)EffectMath::mapsincos8(false, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - width_adj_f;
+      float y = (float)EffectMath::mapsincos8(true, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - height_adj_f;
       CRGB color = ColorFromPalette(*curPalette, hue, 255 / random8(1, 12));
       EffectMath::drawPixelXYF(x, y, color);
-      //hue = beatsin8(100);
     }
   }
   else
@@ -6066,13 +6065,21 @@ void EffectCell::spruce(CRGB *leds) {
   uint8_t z;
   if (effId == 3) z = triwave8(hue);
   else z = beatsin8(1, 1, 255);
-  for (uint8_t i = 0; i < EffectMath::getmaxWidthIndex(); i++) {
-    x[i] = beatsin16(i * map(speed, 1, 255, 3, 20), i * 2, (EffectMath::getmaxWidthIndex() * 4 - 2) - (i * 2 + 2));
+  for (uint8_t i = 0; i < minDim; i++) {
+    x = beatsin16(i * (map(speed, 1, 255, 3, 20)/*(NUM_LEDS/256)*/), 
+                     i * 2, 
+                     (minDim * 4 - 2) - (i * 2 + 2));
     if (effId == 2) 
-      EffectMath::drawPixelXYF_X(x[i] / 4, i, random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255) : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
+      EffectMath::drawPixelXYF_X(x/4 + height_adj, i, random8(10) == 0 ? CHSV(random8(), random8(32, 255), 255) : CHSV(100, 255, map(speed, 1, 255, 128, 100)));
     else
-      EffectMath::drawPixelXYF_X(x[i] / 4, i, CHSV(hue + i * z, 255, 255));
+      EffectMath::drawPixelXYF_X(x/4 + height_adj, i, CHSV(hue + i * z, 255, 255));
   }
+  if (!(WIDTH& 0x01))
+    EffectMath::getPixel(WIDTH/2 - ((millis()>>9) & 0x01 ? 1:0), minDim - 1 - ((millis()>>8) & 0x01 ? 1:0)) = CHSV(0, 255, 255);
+  else
+    EffectMath::getPixel(WIDTH/2, minDim - 1) = CHSV(0, (millis()>>9) & 0x01 ? 0 : 255, 255);
+
+  if (glitch) EffectMath::confetti(density);
 }
 
 void EffectCell::spider(CRGB *leds) {
@@ -7640,15 +7647,6 @@ void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY
 
   if ((nowX == (MAZE_WIDTH - 2) - MAZE_SHIFT) && (nowY == (MAZE_HEIGHT - 1) - MAZE_SHIFT)) {
     gameOverFlag = true;
-
-  /*  FastLED.show();
-    delay(250);
-    FastLED.clear();
-    //if (!gameDemo) {
-      displayScore((millis() - labTimer) / 1000);
-      FastLED.show();
-    //}
-    delay(1500);*/
     return;
   }
 
@@ -7657,7 +7655,7 @@ void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY
       for (int8_t x = nowX - FOV; x < nowX + FOV; x++) {
         if (x < 0 || x > EffectMath::getmaxWidthIndex() || y < 0 || y > EffectMath::getmaxHeightIndex()) continue;
         if (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)] == 1) {
-          EffectMath::drawPixelXY(x, y, GLOBAL_COLOR_1);
+          EffectMath::drawPixelXY(x, y, CRGB::Aqua);
         }
       }
       FastLED.show();

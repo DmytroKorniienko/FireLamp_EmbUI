@@ -291,6 +291,14 @@ void EffectMath::addGlitter(uint8_t chanceOfGlitter){
   if ( random8() < chanceOfGlitter) leds[random16(NUM_LEDS)] += CRGB::Gray;
 }
 
+// Функция создает разноцветные конфетти в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
+void EffectMath::confetti(byte density) {
+    uint16_t idx = random16(NUM_LEDS);
+    for (byte i=0; i < NUM_LEDS/256; i++)
+      if ( random8() < density)
+        if (RGBweight(leds, idx) < 32) leds[idx] = random(32, 16777216);
+}
+
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;
@@ -745,7 +753,8 @@ uint32_t EffectMath::getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint
 
 void EffectMath::setPixel(uint16_t x, uint16_t y, const CRGB &pixel){
   // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-  if (y > getmaxHeightIndex() || x > getmaxWidthIndex()) return;
+  if (y > getmaxHeightIndex() || x > getmaxWidthIndex()) overrun = pixel;
+  else
   leds[getPixelNumber(x,y)] = pixel;
 }
 
