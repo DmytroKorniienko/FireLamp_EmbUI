@@ -1261,7 +1261,8 @@ String EffectCalc::setDynCtrl(UIControl*_val){
   if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
     isMicActive = (ret_val.toInt() && isMicOnState()) ? true : false;
 #ifdef MIC_EFFECTS
-    myLamp.setMicAnalyseDivider(isMicActive);
+    if(lampstate!=nullptr)
+      lampstate->setMicAnalyseDivider(isMicActive);
 #endif
   } else {
     if(isRandDemo()){ // для режима рандомного ДЕМО, если это не микрофон - то вернуть рандомное значение в пределах диапазона значений

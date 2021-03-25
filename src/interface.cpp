@@ -1314,9 +1314,9 @@ void block_settings_mic(Interface *interf, JsonObject *data){
 
     interf->json_section_begin(FPSTR(TCONST_0038));
     if (!myLamp.isMicCalibration()) {
-        interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
-        interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
-        interf->range(FPSTR(TCONST_003B), (int)myLamp.getMicNoiseRdcLevel(), 0, 4, (float)1.0, FPSTR(TINTF_024), false);
+        interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getLampState().getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
+        interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getLampState().getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
+        interf->range(FPSTR(TCONST_003B), (int)myLamp.getLampState().getMicNoiseRdcLevel(), 0, 4, (float)1.0, FPSTR(TINTF_024), false);
 
         interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(TCONST_0008));
         interf->json_section_end();
@@ -1351,9 +1351,9 @@ void set_settings_mic(Interface *interf, JsonObject *data){
     // serializeJson(*data, tmpStr);
     // LOG(printf_P, PSTR("*data=%s\n"),tmpStr.c_str());
 
-    SETPARAM(FPSTR(TCONST_0039), myLamp.setMicScale(scale));
-    SETPARAM(FPSTR(TCONST_003A), myLamp.setMicNoise(noise));
-    SETPARAM(FPSTR(TCONST_003B), myLamp.setMicNoiseRdcLevel(rdl));
+    SETPARAM(FPSTR(TCONST_0039), myLamp.getLampState().setMicScale(scale));
+    SETPARAM(FPSTR(TCONST_003A), myLamp.getLampState().setMicNoise(noise));
+    SETPARAM(FPSTR(TCONST_003B), myLamp.getLampState().setMicNoiseRdcLevel(rdl));
 
     section_settings_frame(interf, data);
 }
@@ -2538,7 +2538,7 @@ void sync_parameters(){
 
 #ifdef MIC_EFFECTS
     obj[FPSTR(TCONST_001E)] = tmp.isMicOn ? "1" : "0";
-    myLamp.setMicAnalyseDivider(0);
+    myLamp.getLampState().setMicAnalyseDivider(0);
     set_micflag(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 

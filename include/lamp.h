@@ -134,28 +134,9 @@ uint32_t lampflags; // набор битов для конфига
 } LAMPFLAGS;
 //#pragma pack(pop)
 
-// тут флаги, которые не нужно сохранять в конфиг
-//#pragma pack(push,2)
-typedef union {
-struct {
-    bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
-    bool isStringPrinting:1; // печатается ли прямо сейчас строка?
-    bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
-    bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
-    uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
-    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
-    bool isWarning:1; // выводится ли индикация предупреждения
-    uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
-};
-uint32_t lampflags; // набор битов для конфига
-} INTERNALFLAGS;
-//#pragma pack(pop)
-
-
 class LAMP {
 private:
     LAMPFLAGS flags;
-    INTERNALFLAGS iflags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
     byte txtOffset = 0; // смещение текста относительно края матрицы
@@ -188,13 +169,6 @@ private:
 
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
-    float mic_noise = 0.0; // уровень шума в ед.
-    float mic_scale = 1.0; // коэф. смещения
-    float last_freq = 0.0; // последняя измеренная часота
-    float samp_freq = 0.0; // часота семплирования
-    uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
-    uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
-    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
     void micHandler();
 #endif
 
@@ -273,22 +247,11 @@ public:
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
 #ifdef MIC_EFFECTS
-    void setMicCalibration() {iflags.isCalibrationRequest = true;}
-    bool isMicCalibration() {return iflags.isCalibrationRequest;}
-    float getMicScale() {return mic_scale;}
-    void setMicScale(float scale) {mic_scale = scale;}
-    float getMicNoise() {return mic_noise;}
-    void setMicNoise(float noise) {mic_noise = noise;}
-    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
-    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return noise_reduce;}
-    uint8_t getMicMaxPeak() {return flags.isMicOn?last_max_peak:0;}
-    uint8_t getMicMapMaxPeak() {return flags.isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
-    float getMicFreq() {return flags.isMicOn?last_freq:0;}
-    uint8_t getMicMapFreq() {
-        float minFreq=(log((float)(SAMPLING_FREQ>>1)/MICWORKER::samples));
-        float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
-        return (uint8_t)(flags.isMicOn?(log(last_freq)-minFreq)*scale:0);
-    }
+    void setMicCalibration() {lampState.isCalibrationRequest = true;}
+    bool isMicCalibration() {return lampState.isCalibrationRequest;}
+
+    LAMPSTATE &getLampState() {return lampState;}
+
     void setMicOnOff(bool val) {
         bool found=false;
         flags.isMicOn = val;
@@ -310,7 +273,6 @@ public:
         }
     }
     bool isMicOnOff() {return flags.isMicOn;}
-    void setMicAnalyseDivider(uint8_t val) {iflags.micAnalyseDivider = val&3;}
 #endif
 
 #ifdef VERTGAUGE
@@ -330,7 +292,7 @@ public:
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val; if(effects.worker) { lampState.brightness=getLampBrightness(); effects.worker->setDynCtrl(effects.getControls()[0]);} }
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
-    bool isWarning() {return iflags.isWarning;}
+    bool isWarning() {return lampState.isWarning;}
     int getmqtt_int() {return mqtt_int;}
     void semqtt_int(int val) {mqtt_int = val;}
 
@@ -339,7 +301,7 @@ public:
 
     void sendString(const char* text, const CRGB &letterColor);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
-    bool isPrintingNow() { return iflags.isStringPrinting; }
+    bool isPrintingNow() { return lampState.isStringPrinting; }
     LAMP();
 
     void handle();          // главная функция обработки эффектов
@@ -349,8 +311,8 @@ public:
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
     bool getClearingFlag() {return flags.isEffClearing;}
-    void disableEffectsUntilText() {iflags.isEffectsDisabledUntilText = true; FastLED.clear();}
-    void setOffAfterText() {iflags.isOffAfterText = true;}
+    void disableEffectsUntilText() {lampState.isEffectsDisabledUntilText = true; FastLED.clear();}
+    void setOffAfterText() {lampState.isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
     bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);
     bool isLampOn() {return flags.ONflag;}

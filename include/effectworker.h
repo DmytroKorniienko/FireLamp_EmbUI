@@ -54,17 +54,57 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "effects_types.h"
 
+#ifdef MIC_EFFECTS
+#include "micFFT.h"
+#endif
+
 typedef struct {
     union {
-        uint16_t flags;
+        uint32_t flags;
         struct {
             bool isMicOn:1;
             bool isDebug:1;
             bool isRandDemo:1;
+
+            bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
+            bool isStringPrinting:1; // печатается ли прямо сейчас строка?
+            bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
+            bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
+            uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
+            bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+            bool isWarning:1; // выводится ли индикация предупреждения
+            uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
         };
     };
     float speedfactor;
     uint8_t brightness;
+
+#ifdef MIC_EFFECTS
+    float mic_noise = 0.0; // уровень шума в ед.
+    float mic_scale = 1.0; // коэф. смещения
+    float last_freq = 0.0; // последняя измеренная часота
+    float samp_freq = 0.0; // часота семплирования
+    uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
+    uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
+    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
+
+    void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
+    float getMicScale() {return mic_scale;}
+    void setMicScale(float scale) {mic_scale = scale;}
+    float getMicNoise() {return mic_noise;}
+    void setMicNoise(float noise) {mic_noise = noise;}
+    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
+    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return noise_reduce;}
+    uint8_t getMicMaxPeak() {return isMicOn?last_max_peak:0;}
+    uint8_t getMicMapMaxPeak() {return isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
+    float getMicFreq() {return isMicOn?last_freq:0;}
+    uint8_t getMicMapFreq() {
+        float minFreq=(log((float)(SAMPLING_FREQ>>1)/MICWORKER::samples));
+        float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
+        return (uint8_t)(isMicOn?(log(last_freq)-minFreq)*scale:0);
+    }
+#endif
+
 } LAMPSTATE;
 
 typedef union {
@@ -212,6 +252,18 @@ protected:
     float getSpeedFactor() {return lampstate!=nullptr ? lampstate->speedfactor : 1.0;}
     float getBrightness() {return lampstate!=nullptr ? lampstate->brightness : 127;}
 
+#ifdef MIC_EFFECTS
+    void setMicAnalyseDivider(uint8_t val) {if(lampstate!=nullptr) lampstate->micAnalyseDivider = val&3;}
+    uint8_t getMicMapMaxPeak() {return lampstate!=nullptr ? lampstate->getMicMapMaxPeak() : 0;}
+    uint8_t getMicMapFreq() {return lampstate!=nullptr ? lampstate->getMicMapFreq() : 0;}
+    uint8_t getMicMaxPeak() {return lampstate!=nullptr ? lampstate->getMicMaxPeak() : 0;}
+    
+    float getMicFreq() {return lampstate!=nullptr ? lampstate->getMicFreq() : 0;}
+    float getMicScale() {return lampstate!=nullptr ? lampstate->getMicScale() : 0;}
+    float getMicNoise() {return lampstate!=nullptr ? lampstate->getMicNoise() : 0;}
+    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return lampstate!=nullptr ? lampstate->getMicNoiseRdcLevel() : MIC_NOISE_REDUCE_LEVEL::NR_NONE;}
+    
+#endif
     bool isActive() {return active;}
     void setActive(bool flag) {active=flag;}
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
