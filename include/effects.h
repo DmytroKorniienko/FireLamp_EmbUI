@@ -172,13 +172,14 @@ public:
 class EffectPulse : public EffectCalc {
 private:
     uint8_t pulse_hue;
-    uint8_t pulse_step = 0;
+    float pulse_step = 0;
     uint8_t centerX = random8(WIDTH - 5U) + 3U;
     uint8_t centerY = random8(HEIGHT - 5U) + 3U;
     uint8_t currentRadius = 4;
-    uint8_t _pulse_hue = 0;
+    float _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
-
+    float speedFactor;
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };

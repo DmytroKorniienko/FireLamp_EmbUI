@@ -238,10 +238,20 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
 // --------------------------- эффект пульс ----------------------
 // Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp
 
-// !++ тут использование setDynCtrl() безсмысленно 
+// !++
+String EffectPulse::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(),1,255,0.1,1.0)*EffectCalc::speedfactor;
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
 bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
-  if (dryrun(3.0))
-    return false;
+  // if (dryrun(3.0))
+  //   return false;
+
+  // EVERY_N_SECONDS(3){
+  //   LOG(printf_P,PSTR("speed: %d, speedFactor: %5.2f, pulse_step: %5.2f\n"), speed, speedFactor, pulse_step);
+  // }
 
   CRGBPalette16 palette;
   CRGB _pulse_color;
@@ -253,11 +263,11 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
   #define FADE 255U - (isMicOn() ? myLamp.getMicMapMaxPeak()*2 : 248U) // (isMicOn() ? 300U - myLamp.getMicMapMaxPeak() : 5U)
   #define BLUR (isMicOn() ? myLamp.getMicMapMaxPeak()/3 : 10U) //(isMicOn() ? map(myLamp.getMicMapMaxPeak(), 1, 255, 1, 30) : 10U)
 #else
-  #define FADE 7U
+  #define FADE 1U
   #define BLUR 10U
 #endif
 
-  fadeToBlackBy(leds, NUM_LEDS, FADE);
+  //fadeToBlackBy(leds, NUM_LEDS, FADE);
   if (pulse_step <= currentRadius) {
     for (uint8_t i = 0; i < pulse_step; i++ ) {
       uint8_t _dark = qmul8( 2U, cos8 (128U / (pulse_step + 1U) * (i + 1U))) ;
@@ -274,7 +284,7 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
         _pulse_color = CHSV(_pulse_hue, 255U, _dark);
 
       } else if (_scale <= 50) {    // 34...50 - дискоцветы
-        _pulse_hue += (_scale - 33U) * 5U ;
+        _pulse_hue += (_scale - 33U) * 0.5 ;
         _pulse_color = CHSV(_pulse_hue, 255U, _dark);
 
       } else if (_scale <= 67) {    // 51...67 - пузыри цветы
@@ -300,6 +310,7 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
       EffectMath::drawCircle(centerX, centerY, i, _pulse_color);
     }
   } else {
+    fadeToBlackBy(leds, NUM_LEDS, FADE);
     centerX = random8(WIDTH - 5U) + 3U;
     centerY = random8(HEIGHT - 5U) + 3U;
     _pulse_hueall += _pulse_delta;
@@ -307,7 +318,7 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
     currentRadius = random8(3U, 9U);
     pulse_step = 0;
   }
-  pulse_step++;
+  pulse_step+=speedFactor;
   EffectMath::blur2d(BLUR);
   return true;
 }
@@ -822,10 +833,9 @@ bool EffectLightBalls::run(CRGB *leds, EffectWorker *param)
 String EffectBall::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) {
     speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 0.15) * EffectCalc::speedfactor;
-    speed = getCtrlVal(1).toInt();
   }
   else if(_val->getId()==2) {
-    scale = EffectCalc::setDynCtrl(_val).toInt();
+    EffectCalc::setDynCtrl(_val).toInt();
     if (scale <= 85)
       ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
     else if (scale > 85 and scale <= 170)
@@ -1122,13 +1132,12 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 // !++
 String EffectSinusoid3::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) e_s3_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.033, 1) * EffectCalc::speedfactor;
-  else if(_val->getId()==3) e_s3_size = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, 9);
+  else if(_val->getId()==2) e_s3_size = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, 9);
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 bool EffectSinusoid3::run(CRGB *leds, EffectWorker *param) {
-
   float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
 
   for (uint8_t y = 0; y < HEIGHT; y++) {
