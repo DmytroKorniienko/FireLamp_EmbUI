@@ -1838,13 +1838,10 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  for (uint8_t i = 1; i < WIDTH / 2U; i++) // возможно, стоит здесь использовать const MINLENGTH
-  {
-    int8_t x = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
-    int8_t y = beatsin8((float)(CENTER_max - i) * _dri_speed, WIDTH / 2U - 1 - i, WIDTH / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
-    //EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta) ); // используем массив палитр из других эффектов выше
-    EffectMath::wu_pixel(x*256, y*256, ColorFromPalette(*curPalette, (i - 1U) * WIDTH_steps + _dri_delta));
-
+  for (uint8_t i = 1; i < maxDim / 2U; i++) { // возможно, стоит здесь использовать const MINLENGTH
+    int8_t x = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
+    int8_t y = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
+    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, ColorFromPalette(RainbowColors_p, (i - 1U) * maxDim_steps + _dri_delta));
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
@@ -1860,24 +1857,24 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  for (uint8_t i = 0; i < WIDTH; i++)
+  for (uint8_t i = 0; i < maxDim; i++)
   {
     int8_t x = 0;
     int8_t y = 0;
     CRGB color;
-    if (i < WIDTH / 2U)
+    if (i < maxDim / 2U)
     {
-      x = beatsin8((i + 1) * _dri_speed, i + 1U, EffectMath::getmaxWidthIndex() - i, 0, 64U + dri_phase);
-      y = beatsin8((i + 1) * _dri_speed, i + 1U, EffectMath::getmaxHeightIndex() - i, 0, dri_phase);
-      color = ColorFromPalette(*curPalette, i * WIDTH_steps * 2U + _dri_delta);
+      x = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim- 1 - i, 0, 64U + dri_phase);
+      y = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim - 1 - i, 0, dri_phase);
+      color = ColorFromPalette(RainbowColors_p, i * maxDim_steps * 2U + _dri_delta);
     }
     else
     {
-      x = beatsin8((WIDTH - i) * _dri_speed, EffectMath::getmaxWidthIndex() - i, i + 1U, 0, dri_phase);
-      y = beatsin8((HEIGHT - i) * _dri_speed, EffectMath::getmaxHeightIndex() - i, i + 1U, 0, 64U + dri_phase);
-      color = ColorFromPalette(*curPalette, ~(i * WIDTH_steps + _dri_delta)); //i * WIDTH_steps * 2U + _dri_delta
+      x = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, dri_phase);
+      y = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, 64U + dri_phase);
+      color = ColorFromPalette(RainbowColors_p, ~(i * maxDim_steps + _dri_delta)); 
     }
-    EffectMath::drawPixelXYF(x, y, color);
+    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, color);
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;

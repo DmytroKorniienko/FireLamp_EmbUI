@@ -510,14 +510,15 @@ public:
 // https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
 class EffectDrift : public EffectCalc {
 private:
-  uint8_t dri_phase;
-  float _dri_speed;
-  uint8_t _dri_delta;
-  byte driftType = 0;
+	const byte maxDim_steps = 256 / max(WIDTH, HEIGHT);
+	uint8_t dri_phase;
+	float _dri_speed;
+	uint8_t _dri_delta;
+	byte driftType = 0;
 
-  String setDynCtrl(UIControl*_val) override;
-  bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
-  bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
+	String setDynCtrl(UIControl*_val) override;
+	bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
+	bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
 
 public:
     void load() override;
