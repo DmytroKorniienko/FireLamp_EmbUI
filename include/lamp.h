@@ -45,6 +45,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "events.h"
 #include "../../include/LList.h"
 #include "interface.h"
+#include <Ticker.h>
 
 #ifdef XY_EXTERN
 #include "XY.h"

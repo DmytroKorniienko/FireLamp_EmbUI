@@ -44,6 +44,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "EmbUI.h"
 #include "lamp.h"
 #include "buttons.h"
+#include <Ticker.h>
 
 // глобальные переменные для работы с ними в программе
 extern LAMP myLamp; // Объект лампы
