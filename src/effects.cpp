@@ -4279,9 +4279,12 @@ String EffectMunch::setDynCtrl(UIControl*_val){
 bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
   if (flag) rand = beatsin8(5, 0, 8); // Хрень, конечно, но хоть какое-то разнообразие.
-  for (byte x = 0; x < WIDTH; x++) {
-    for (byte y = 0; y < HEIGHT; y++) {
-      EffectMath::drawPixelXY(x, y, (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black);
+  for (byte x = 0; x < minDim; x++) {
+    for (byte y = 0; y < minDim; y++) {
+      CRGB color = (x ^ y ^ flip) < count ? ColorFromPalette(RainbowColors_p, ((x ^ y) << rand) + generation) : CRGB::Black;
+      EffectMath::drawPixelXY(x, y, color);
+      if (WIDTH != HEIGHT) // замостим картинку
+        EffectMath::drawPixelXY(x + (HEIGHT<WIDTH ? HEIGHT:0), y+ (WIDTH<HEIGHT ? WIDTH:0), color);
     }
   }
 
@@ -4300,9 +4303,9 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
 
   generation++;
 #ifdef MIC_EFFECTS
-  mic[1] = isMicOn() ? map(getMicMapMaxPeak(), 0, 255, 0, WIDTH) : WIDTH;
+  mic[1] = isMicOn() ? map(getMicMapMaxPeak(), 0, 255, 0, minDim) : minDim;
 #else
-  mic[1] = WIDTH;
+  mic[1] = minDim;
 #endif
   return true;
 }
