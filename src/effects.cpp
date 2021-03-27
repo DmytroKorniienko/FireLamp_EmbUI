@@ -4279,15 +4279,15 @@ String EffectMunch::setDynCtrl(UIControl*_val){
 bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, 200);
   if (flag) rand = beatsin8(5, 0, 8); // Хрень, конечно, но хоть какое-то разнообразие.
-  for (byte x = 0; x < minDim; x++) {
-    for (byte y = 0; y < minDim; y++) {
-      CRGB color = (x ^ y ^ flip) < count ? ColorFromPalette(RainbowColors_p, ((x ^ y) << rand) + generation) : CRGB::Black;
-      EffectMath::drawPixelXY(x, y, color);
-      if (WIDTH != HEIGHT) // замостим картинку
-        EffectMath::drawPixelXY(x + (HEIGHT<WIDTH ? HEIGHT:0), y+ (WIDTH<HEIGHT ? WIDTH:0), color);
+  for (byte i = 1; i < (maxDim > minDimLocal ? 3: 2); i++) {
+    for (byte x = (minDimLocal * (i-1)); x < (minDimLocal * i); x++) {
+      for (byte y = (minDimLocal * (i-1)); y < (minDimLocal * i); y++) {
+        CRGB color = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
+        EffectMath::setPixel(x, y, color);
+      }
     }
+    minDimLocal *= i;
   }
-
   count += dir;
 
   if (count <= 0 || count >= mic[0]) {
@@ -4303,9 +4303,9 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
 
   generation++;
 #ifdef MIC_EFFECTS
-  mic[1] = isMicOn() ? map(getMicMapMaxPeak(), 0, 255, 0, minDim) : minDim;
+  mic[1] = isMicOn() ? map(getMicMapMaxPeak(), 0, 255, 0, minDimLocal) : minDimLocal;
 #else
-  mic[1] = minDim;
+  mic[1] = minDimLocal;
 #endif
   return true;
 }

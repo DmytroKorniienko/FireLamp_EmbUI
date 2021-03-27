@@ -977,6 +977,7 @@ private:
     byte mic[2];
     byte rand;
     bool flag = false;
+    byte minDimLocal = 16;
 
     String setDynCtrl(UIControl*_val) override;
     bool munchRoutine(CRGB *leds, EffectWorker *param);
