@@ -971,7 +971,7 @@ public:
 class EffectMunch : public EffectCalc {
 private:
     byte count = 0;
-    byte dir = 1;
+    int8_t dir = 1;
     byte flip = 0;
     byte generation = 0;
     byte mic[2];
@@ -1478,10 +1478,14 @@ class EffectCell: public EffectCalc {
     float x;
     uint8_t effId = 1;
     uint8_t hue;
+    int16_t a;
+
 	float speedFactor;
     void cell(CRGB *leds);
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
+
+    void RGBPattern(CRGB *leds);
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
