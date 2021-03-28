@@ -1466,6 +1466,7 @@ class EffectSmokeballs: public EffectCalc {
 // ----------- Эффект "Ёлки-Палки"
 // "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
+// RGBPattern (c) ldir https://editor.soulmatelights.com/gallery/810-rgb-pattern1
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;

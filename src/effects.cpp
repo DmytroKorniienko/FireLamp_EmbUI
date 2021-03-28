@@ -6004,6 +6004,7 @@ void EffectSmokeballs::shiftUp(){
 // ----------- Эффект "Ёлки-Палки"
 // "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
+// RGBPattern (c) ldir, https://editor.soulmatelights.com/gallery/810-rgb-pattern1
 void EffectCell::cell(CRGB *leds) {
   speedFactor = EffectMath::fmap((float)speed, 1., 255., .33*EffectCalc::speedfactor, 3.*EffectCalc::speedfactor);
   offsetX = beatsin16(6. * speedFactor, -180, 180);
