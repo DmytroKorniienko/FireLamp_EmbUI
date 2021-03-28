@@ -4277,19 +4277,20 @@ String EffectMunch::setDynCtrl(UIControl*_val){
 }
 
 bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
-  //fadeToBlackBy(leds, NUM_LEDS, 200);
+  //fadeToBlackBy(leds, NUM_LEDS, 200); EffectMath::setPixel(
   if (flag) rand = beat8(5)/32; // Хрень, конечно, но хоть какое-то разнообразие.
-  for (byte i = 1; i < (maxDim > minDimLocal ? 3: 2); i++) {
-    for (byte x = (minDimLocal * (i-1)); x < (minDimLocal * i); x++) {
-      for (byte y = (minDimLocal * (i-1)); y < (minDimLocal * i); y++) {
-        if (x < WIDTH and y < HEIGHT) {
-          CRGB color = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
-          EffectMath::setPixel(x, y, color);
-        }
-      }
+  CRGB color;
+  for (uint8_t x = 0; x < minDimLocal; x++) {
+    for (uint8_t y = 0; y < minDimLocal; y++) {
+      color = (x ^ y ^ flip) < count ? ColorFromPalette(RainbowColors_p, ((x ^ y) << rand) + generation) : CRGB::Black;
+      if (x < WIDTH and y < HEIGHT) EffectMath::setPixel(x, y, color);
+      if (x + minDimLocal < WIDTH and y < HEIGHT) EffectMath::setPixel(x + minDimLocal, y, color);
+      if (y + minDimLocal < HEIGHT and x < WIDTH) EffectMath::setPixel(x, y + minDimLocal, color);
+      if (x + minDimLocal < WIDTH and y + minDimLocal < HEIGHT) EffectMath::setPixel(x + minDimLocal, y + minDimLocal, color);
+      
     }
-    minDimLocal *= i;
   }
+
   count += dir;
 
   if (count <= 0 || count >= mic[0]) {
