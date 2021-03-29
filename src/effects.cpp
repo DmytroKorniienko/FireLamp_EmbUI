@@ -6929,10 +6929,15 @@ void EffectWrain::Clouds(bool flash)
 }
 
 // ------------- Эффект "Цветные драже"
+//Simple sand automata
+//fastled 16x16 matrix demo https://editor.soulmatelights.com/gallery/560-sand-automata-16x16
+//Yaroslaw Turbin 14.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
 // !++
 String EffectPile::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 0.5) * EffectCalc::speedfactor;
-  else if(_val->getId()==2) sc = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, MAXDOTS);
+  if(_val->getId()==3) density = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) sc = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 10, HEIGHT - 2, 1);
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -6940,139 +6945,81 @@ String EffectPile::setDynCtrl(UIControl*_val) {
 void EffectPile::load() {
   FastLED.clear();
   palettesload();
-
-  for (uint8_t i = 0; i < MAXDOTS; i++) {
-    dots[i].x = EffectMath::randomf((float)WIDTH /2 - 1.5, (float)WIDTH /2 + 1.5); //random(2)/2.0 + WIDTH/2 - 1;
-    dots[i].y = (float)HEIGHT + 1. + (i + 2);
-    dots[i].hue = random(0, 255);
-  }
-  memset(widthPos,0,sizeof(widthPos)/sizeof(float));
-
 }
-bool EffectPile::run(CRGB *leds, EffectWorker *opt)
-{
-  if (!done)
-  {
-    if (!clearrows(false))
-      return true;
-  }
 
-  for (uint8_t i = 0; i < sc; i++) {
-    uint8_t rx = dots[i].x;
-    uint8_t ry = ceil(dots[i].y);
-    if (ry < HEIGHT)
-      EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-    dots[i].y -= speedFactor;
-    ry = ceil(dots[i].y);
+void EffectPile::randomdot() {
+  byte a = WIDTH / 2; //random8(WIDTH / 4) + WIDTH * 3 / 8; //
+  if (random8() < (density*10))
+    EffectMath::getLed(getPixelNumber(a, HEIGHT - 1)) = ColorFromPalette(*curPalette, random(5, 245), random(200, 255)); // 0 or 1
+}
 
-    EffectMath::drawPixelXY(rx, ry, ColorFromPalette(*curPalette, dots[i].hue, 255));
-    uint16_t pos = constrain(rx, 0, EffectMath::getmaxWidthIndex());
-    if (dots[i].y < 0.1 || dots[i].y <= widthPos[pos])
-    {
-      int8_t shift = random(2) ? -1 : 1;
-      if (widthPos[constrain(pos + shift, 0, EffectMath::getmaxWidthIndex())] > widthPos[constrain(pos - shift, 0, EffectMath::getmaxWidthIndex())])
-        shift *= -1;
-      if (pos < WIDTH && pos + shift >= 0 && pos + shift < (int16_t)WIDTH && widthPos[constrain(pos + shift, 0, EffectMath::getmaxWidthIndex())] < widthPos[pos])
-      {
-        EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-        dots[i].x = constrain(dots[i].x + shift, 0, EffectMath::getmaxWidthIndex());
-        rx = dots[i].x;
-        EffectMath::drawPixelXY(rx, ry, ColorFromPalette(*curPalette, dots[i].hue, 255));
+void EffectPile::updatesand() {
+  int index, indexXadd1Y, indexXsub1Y, indexXYadd1;
+  for (uint y = 0; y < HEIGHT - 1; y++) {
+    for (uint x = 1; x < WIDTH - 1; x++) {
+      index = getPixelNumber(x, y);
+      indexXadd1Y = getPixelNumber(x + 1, y);
+      indexXsub1Y = getPixelNumber(x - 1, y);
+      indexXYadd1 = getPixelNumber(x, y + 1);
+      if (!EffectMath::getLed(index) && !EffectMath::getLed(indexXYadd1)) continue;
+      if (!EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1)) {
+        EffectMath::getLed(index) = EffectMath::getLed(indexXYadd1);
+        EffectMath::getLed(indexXYadd1) = 0;
       }
-      else
-      {
-        if (EffectMath::getPixColorXY(pos, widthPos[pos] - 1 > 0 ? widthPos[pos] - 1 : widthPos[pos]))
-          widthPos[pos] += 1;
-        else
-        {
-          // костыльное заполнение отверстий для случаев когда две точки падают подряд с минимальным смещением
-          EffectMath::drawPixelXY(rx, ry, CRGB::Black);
-          dots[i].y = widthPos[pos] - 1;
-          ry = ceil(dots[i].y);
-          EffectMath::drawPixelXY(rx, ry, ColorFromPalette(*curPalette, dots[i].hue, 255));
+      if (EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1) && !EffectMath::getLed(indexXsub1Y) && !EffectMath::getLed(indexXadd1Y))
+        if (random8(2)) {
+          EffectMath::getLed(indexXsub1Y) = EffectMath::getLed(indexXYadd1);
+          EffectMath::getLed(indexXYadd1) = 0;
+        } 
+        else {
+          EffectMath::getLed(indexXadd1Y) = EffectMath::getLed(indexXYadd1);
+          EffectMath::getLed(indexXYadd1) = 0;
         }
-        // EVERY_N_SECONDS(1){
-        //   Serial.print("widthPos["); Serial.print(pos); Serial.print("]="); Serial.print(widthPos[pos]); Serial.println();
-        // }
-        dots[i].y = (float)HEIGHT + 1 + (i + 2);
-        dots[i].x = EffectMath::randomf((float)WIDTH /2 - 1.5, (float)WIDTH /2 + 1.5); //random(2)/2.0 + WIDTH/2 - 1;
-        dots[i].hue = random(0, 255);
-        //done = false;
-        //clearrows(false);
+      
+      if (EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1) && !EffectMath::getLed(indexXsub1Y) && EffectMath::getLed(indexXadd1Y)) {
+        EffectMath::getLed(indexXsub1Y) = EffectMath::getLed(indexXYadd1);
+        EffectMath::getLed(indexXYadd1) = 0;
+      }
+      if (EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1) && EffectMath::getLed(indexXsub1Y) && !EffectMath::getLed(indexXadd1Y)) {
+        EffectMath::getLed(indexXadd1Y) = EffectMath::getLed(indexXYadd1);
+        EffectMath::getLed(indexXYadd1) = 0;
       }
     }
   }
+}
 
-  EVERY_N_SECONDS(5){
-    clearrows(true);
+void EffectPile::randomdel() {
+ for (uint i=0; i<NUM_LEDS; i++) {
+   if (!random8(3)) EffectMath::getLed(i) = 0; 
   }
+}
 
+void EffectPile::falldown() {
+  for (uint y = 0; y < HEIGHT - 1; y++) {
+    for (uint x = 0; x < WIDTH; x++) {
+      if (!EffectMath::getLed(getPixelNumber(x, y)) && EffectMath::getLed(getPixelNumber(x, y + 1))) {
+        EffectMath::getLed(getPixelNumber(x, y)) = EffectMath::getLed(getPixelNumber(x, y + 1));
+        EffectMath::getLed(getPixelNumber(x, y + 1)) = 0;
+      }
+    }
+  }
+}
+
+bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
+  EVERY_N_MILLIS(50) {
+    updatesand(); 
+    randomdot(); 
+  } 
+  // Level controled by HEIGHT-x   
+  if ((uint32_t)EffectMath::getLed(getPixelNumber(WIDTH/2-1, HEIGHT-sc)) > 0) {
+    EVERY_N_MILLISECONDS(10000/density) {
+      randomdel(); 
+      falldown(); 
+      falldown(); 
+      falldown();
+    } 
+  }
   return true;
-}
-
-bool EffectPile::clearrows(bool clear)
-{
-  //CRGB *leds= myLamp.getUnsafeLedsArray();
-  
-  bool state = false;
-  if(clear){
-    uint8_t ypos = 0;
-    for(uint16_t i=0;i<MAXDOTS;i++){
-      if(dots[i].y<HEIGHT){
-        dots[i].y+=HEIGHT;
-        dots[i].x = random(2)/2.0 + WIDTH/2 - 1;
-        dots[i].hue = random(0,255);
-      }
-    }
-
-    for(uint8_t x=0; x<WIDTH; x++)
-      if(ypos<widthPos[x]) ypos=widthPos[x];
-
-    for(uint8_t y=0; y<ypos; y++){
-      for(uint8_t x=0; x<WIDTH; x++){
-        if(random(map(ypos,1,HEIGHT,10,3))<2){
-          EffectMath::drawPixelXY(x, y, CRGB::Black);
-        }
-      }
-    }
-
-    done = false;
-  } else {
-    // проверяем все ли осыпались
-    //state = true;
-    internal_counter += speedFactor;
-    float v;
-    internal_counter = modff(internal_counter, &v);
-    if(v) {
-      state = true;
-      // смещаемся
-      for(uint16_t x=0; x<WIDTH; x++){
-        for(uint16_t y=1; y<HEIGHT; y++){
-          if(EffectMath::getPixColorXY(x,y) && !EffectMath::getPixColorXY(x,y-1)){
-            EffectMath::drawPixelXY(x,y-1, EffectMath::getPixColorXY(x,y));
-            EffectMath::drawPixelXY(x,y, CRGB::Black);
-            widthPos[x] = y;
-            state = false;
-          } else if(EffectMath::getPixColorXY(x,y) && x>0 && y>widthPos[x-1]) {
-            EffectMath::drawPixelXY(x-1,y-1, EffectMath::getPixColorXY(x,y));
-            EffectMath::drawPixelXY(x,y, CRGB::Black);
-            widthPos[x-1] = y;
-            state = false;
-          }
-          else if(EffectMath::getPixColorXY(x,y) && x < EffectMath::getmaxWidthIndex() && y > widthPos[x+1]) {
-            EffectMath::drawPixelXY(x+1,y-1, EffectMath::getPixColorXY(x,y));
-            EffectMath::drawPixelXY(x,y, CRGB::Black);
-            widthPos[x+1] = y;
-            state = false;
-          } else if(!EffectMath::getPixColorXY(x,y) && widthPos[x] > y){
-            widthPos[x] = y;
-          }
-        }
-      }
-    }
-    if(state) done = true;
-  }
-  return state;
 }
 
 

@@ -1634,22 +1634,25 @@ class EffectWrain: public EffectCalc {
 };
 
 // ------------- Эффект "Цветные драже"
-#define MAXDOTS 16
+//Simple sand automata
+//fastled 16x16 matrix demo https://editor.soulmatelights.com/gallery/560-sand-automata-16x16
+//Yaroslaw Turbin 14.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
 class EffectPile : public EffectCalc {
 private:
-  struct dot {float x; float y; uint8_t hue;};
-  struct dot dots[MAXDOTS];
-  float widthPos[WIDTH];
-  bool done = true;
-  float speedFactor;
-  float internal_counter = 0.0;
-  uint8_t sc;
+    byte density;
+    byte sc;
+    void randomdot();
+    void updatesand();
+    void randomdel();
+    void falldown();
   String setDynCtrl(UIControl*_val) override;
   
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    bool clearrows(bool clear=true);
+    
 };
 
 //-------- по мотивам Эффектов Particle System -------------------------
