@@ -6933,8 +6933,10 @@ void EffectWrain::Clouds(bool flash)
 //https://www.reddit.com/user/ldirko/
 // !++
 String EffectPile::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==3) density = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) sc = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 10, HEIGHT - 2, 1);
+  /*if(_val->getId()==1) speedFactor = 256-EffectCalc::setDynCtrl(_val).toInt();
+  else*/ if(_val->getId()==3) density = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) sc = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 8, 0, HEIGHT/2);
+  else if(_val->getId()==6) behavior = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -6945,7 +6947,9 @@ void EffectPile::load() {
 }
 
 void EffectPile::randomdot() {
-  byte a = WIDTH / 2; //random8(WIDTH / 4) + WIDTH * 3 / 8; //
+  byte a;
+  if (behavior) a = WIDTH / 2; 
+  else a = random8(WIDTH / 4) + WIDTH * 3 / 8; 
   if (random8() < (density*10))
     EffectMath::getLed(getPixelNumber(a, HEIGHT - 1)) = ColorFromPalette(*curPalette, random(5, 245), random(200, 255)); // 0 or 1
 }
@@ -6958,7 +6962,7 @@ void EffectPile::updatesand() {
       indexXadd1Y = getPixelNumber(x + 1, y);
       indexXsub1Y = getPixelNumber(x - 1, y);
       indexXYadd1 = getPixelNumber(x, y + 1);
-      if (!EffectMath::getLed(index) && !EffectMath::getLed(indexXYadd1)) continue;
+      if (!EffectMath::getLed(index) && !EffectMath::getLed(indexXYadd1)) {continue;}
       if (!EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1)) {
         EffectMath::getLed(index) = EffectMath::getLed(indexXYadd1);
         EffectMath::getLed(indexXYadd1) = 0;
@@ -7003,13 +7007,14 @@ void EffectPile::falldown() {
 }
 
 bool EffectPile::run(CRGB *leds, EffectWorker *opt) {
-  EVERY_N_MILLIS(50) {
+  if (dryrun(2.)) return false;
+
     updatesand(); 
     randomdot(); 
-  } 
-  // Level controled by HEIGHT-x   
-  if ((uint32_t)EffectMath::getLed(getPixelNumber(WIDTH/2-1, HEIGHT-sc)) > 0) {
-    EVERY_N_MILLISECONDS(10000/density) {
+  
+  // Level controll  
+  if ((uint32_t)EffectMath::getLed(getPixelNumber(2, sc)) > 0) {
+    EVERY_N_MILLISECONDS(8000/density) {
       randomdel(); 
       falldown(); 
       falldown(); 
