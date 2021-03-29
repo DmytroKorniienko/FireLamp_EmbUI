@@ -386,18 +386,25 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
+// ***** Эффект "Спираль"     ****
+/*
+ * Aurora: https://github.com/pixelmatix/aurora
+ * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
+ * Copyright (c) 2014 Jason Coon
+ * Неполная адаптация SottNick
+ */
 class EffectSpiro : public EffectCalc {
 private:
-  const uint8_t spiroradiusx = WIDTH / 4;
-  const uint8_t spiroradiusy = HEIGHT / 4;
+  const uint8_t spiroradiusx = WIDTH /4; //((!WIDTH & 1) ? (WIDTH -1) : WIDTH) / 4;
+  const uint8_t spiroradiusy = HEIGHT /4;//(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 4;
 
-  const uint8_t spirocenterX = WIDTH / 2;
-  const uint8_t spirocenterY = HEIGHT / 2;
+  const uint8_t spirocenterX = WIDTH /2; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
+  const uint8_t spirocenterY = HEIGHT /2; //(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 2;
 
   const uint8_t spirominx = spirocenterX - spiroradiusx;
-  const uint8_t spiromaxx = spirocenterX + spiroradiusx;// + 1;
+  const uint8_t spiromaxx = spirocenterX + spiroradiusx - (WIDTH%2 == 0 ? 1:0);// + 1;
   const uint8_t spirominy = spirocenterY - spiroradiusy;
-  const uint8_t spiromaxy = spirocenterY + spiroradiusy; // + 1;
+  const uint8_t spiromaxy = spirocenterY + spiroradiusy - (HEIGHT%2 == 0 ? 1:0); // + 1;
 
   bool spiroincrement = false;
   bool spirohandledChange = false;
@@ -406,8 +413,9 @@ private:
   float spirotheta1 = 0;
   float spirotheta2 = 0;
   uint8_t internalCnt = 0;
+  float speedFactor;
 
-  bool spiroRoutine(CRGB *leds, EffectWorker *param);
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;

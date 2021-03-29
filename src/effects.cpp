@@ -1237,30 +1237,29 @@ bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
  * Copyright (c) 2014 Jason Coon
  * Неполная адаптация SottNick
  */
-
 void EffectSpiro::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
 
-bool EffectSpiro::run(CRGB *ledarr, EffectWorker *opt){
-  return spiroRoutine(*&ledarr, &*opt);
+//!++
+String EffectSpiro::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.75, 3);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
 }
 
-bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
-{
-
+bool EffectSpiro::run(CRGB *leds, EffectWorker *param) {
   // страхуемся от креша
   if (curPalette == nullptr) {
     return false;
   }
 
   bool change = false;
-  float speed_factor = (float)speed/127.0 + 1;
   uint8_t spirooffset = 256 / spirocount;
 
   //EffectMath::dimAll(254U - palettescale);
   //EffectMath::dimAll(250-speed_factor*7);
-  uint8_t dim = beatsin8(16 / speed_factor, 5, 10);
+  uint8_t dim = beatsin8(16. / speedFactor, 5, 10);
   EffectMath::dimAll(254 - dim);
 
   for (int i = 0; i < spirocount; i++) {
@@ -1269,16 +1268,14 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
     uint8_t x2 = EffectMath::mapsincos8(MAP_SIN, spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
     uint8_t y2 = EffectMath::mapsincos8(MAP_COS, spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
     CRGB color = ColorFromPalette(*curPalette, (spirohueoffset + i * spirooffset), 128U);
-    CRGB tmpColor = EffectMath::getPixel(x2, y2);
-    tmpColor += color;
-    EffectMath::drawPixelXY(x2, y2, tmpColor);
+    EffectMath::getLed(getPixelNumber(x2, y2)) += color;
 
     if(x2 == spirocenterX && y2 == spirocenterY) change = true; // в центре могут находится некоторое время
   }
 
-  spirotheta2 += 2.*speed_factor;
-  spirotheta1 += 1.*speed_factor;
-  spirohueoffset += 1.*speed_factor;
+  spirotheta2 += speedFactor * 2;
+  spirotheta1 += speedFactor;
+  spirohueoffset += speedFactor;
 
   if (change && !spirohandledChange) { // меняем кол-во спиралей
     spirohandledChange = true;
@@ -1311,7 +1308,7 @@ bool EffectSpiro::spiroRoutine(CRGB *leds, EffectWorker *param)
     }
   }
 
-  EffectMath::blur2d(25);
+  EffectMath::blur2d(32);
   return true;
 }
 
@@ -3612,7 +3609,7 @@ void EffectWhirl::load(){
   ff_y = random16();
   ff_z = random16();
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
-      boids[i] = Boid(random(WIDTH), 0);
+      boids[i] = Boid(EffectMath::randomf(0, WIDTH), 0);
   }
 
 }
@@ -3633,10 +3630,10 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++) {
     Boid * boid = &boids[i];
 
-    int ioffset = ff_scale * boid->location.x;
-    int joffset = ff_scale * boid->location.y;
+    float ioffset = (float)ff_scale * boid->location.x;
+    float joffset = (float)ff_scale * boid->location.y;
 
-    byte angle = inoise8(ff_x + ioffset, ff_y + joffset, (uint16_t)ff_z);
+    byte angle = inoise8(ff_x + ioffset, ff_y + joffset, ff_z);
 
     boid->velocity.x = ((float)sin8(angle) * 0.0078125 - speedFactor);
     boid->velocity.y = -((float)cos8(angle) * 0.0078125 - speedFactor);
@@ -3651,7 +3648,7 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
     EffectMath::drawPixelXYF(boid->location.x, boid->location.y, ColorFromPalette(*curPalette, angle + (uint8_t)hue)); // + hue постепенно сдвигает палитру по кругу
 #endif
     if (boid->location.x < 0 || boid->location.x >= WIDTH || boid->location.y < 0 || boid->location.y >= HEIGHT) {
-      boid->location.x = random(WIDTH);
+      boid->location.x = EffectMath::randomf(0, WIDTH);
       boid->location.y = 0;
     }
   }
