@@ -6119,13 +6119,12 @@ static const uint8_t exp_gamma[256] PROGMEM = {
 
 void EffectCell::RGBPattern(CRGB *leds) {
    a +=  map(speed, 1, 255, 1, 16); //3-63
-  for (int x = 0; x < WIDTH; x++) {
-    for (int y = 0; y < HEIGHT; y++) {
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
       uint16_t index = getPixelNumber(x, y);
-      EffectMath::getLed(index).b = pgm_read_byte(&exp_gamma [sin8((x-8)*cos8((y+20)*4)/4 + a)]);
-      EffectMath::getLed(index).g = pgm_read_byte(&exp_gamma [(sin8(x*16 + a/3) + cos8(y*8 +a/2)) /2]);
-      EffectMath::getLed(index).r = pgm_read_byte(&exp_gamma [sin8(cos8(x*8 + a/3) + sin8(y*8 +a/4) +a)]);
-      
+      EffectMath::getLed(index).b = pgm_read_byte(&exp_gamma[sin8((x - 8) * cos8((y + 20) * 4) / 4 + a)]);
+      EffectMath::getLed(index).g = pgm_read_byte(&exp_gamma[(sin8(x * 16 + a / 3) + cos8(y * 8 + a / 2)) / 2]);
+      EffectMath::getLed(index).r = pgm_read_byte(&exp_gamma[sin8(cos8(x * 8 + a / 3) + sin8(y * 8 + a / 4) + a)]);
     }
   }
 }
@@ -6956,8 +6955,8 @@ void EffectPile::randomdot() {
 
 void EffectPile::updatesand() {
   int index, indexXadd1Y, indexXsub1Y, indexXYadd1;
-  for (uint y = 0; y < HEIGHT - 1; y++) {
-    for (uint x = 1; x < WIDTH - 1; x++) {
+  for (uint8_t y = 0; y < HEIGHT - 1; y++) {
+    for (uint8_t x = 1; x < WIDTH - 1; x++) {
       index = getPixelNumber(x, y);
       indexXadd1Y = getPixelNumber(x + 1, y);
       indexXsub1Y = getPixelNumber(x - 1, y);
@@ -6967,16 +6966,16 @@ void EffectPile::updatesand() {
         EffectMath::getLed(index) = EffectMath::getLed(indexXYadd1);
         EffectMath::getLed(indexXYadd1) = 0;
       }
-      if (EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1) && !EffectMath::getLed(indexXsub1Y) && !EffectMath::getLed(indexXadd1Y))
-        if (random8(2)) {
-          EffectMath::getLed(indexXsub1Y) = EffectMath::getLed(indexXYadd1);
-          EffectMath::getLed(indexXYadd1) = 0;
-        } 
-        else {
-          EffectMath::getLed(indexXadd1Y) = EffectMath::getLed(indexXYadd1);
-          EffectMath::getLed(indexXYadd1) = 0;
-        }
-      
+      if (EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1) && !EffectMath::getLed(indexXsub1Y) && !EffectMath::getLed(indexXadd1Y)){
+          if (random8(2)) {
+            EffectMath::getLed(indexXsub1Y) = EffectMath::getLed(indexXYadd1);
+            EffectMath::getLed(indexXYadd1) = 0;
+          } 
+          else {
+            EffectMath::getLed(indexXadd1Y) = EffectMath::getLed(indexXYadd1);
+            EffectMath::getLed(indexXYadd1) = 0;
+          }
+      }
       if (EffectMath::getLed(index) && EffectMath::getLed(indexXYadd1) && !EffectMath::getLed(indexXsub1Y) && EffectMath::getLed(indexXadd1Y)) {
         EffectMath::getLed(indexXsub1Y) = EffectMath::getLed(indexXYadd1);
         EffectMath::getLed(indexXYadd1) = 0;
@@ -6990,14 +6989,14 @@ void EffectPile::updatesand() {
 }
 
 void EffectPile::randomdel() {
- for (uint i=0; i<NUM_LEDS; i++) {
+ for (uint16_t i=0; i < NUM_LEDS; i++) {
    if (!random8(3)) EffectMath::getLed(i) = 0; 
   }
 }
 
 void EffectPile::falldown() {
-  for (uint y = 0; y < HEIGHT - 1; y++) {
-    for (uint x = 0; x < WIDTH; x++) {
+  for (uint8_t y = 0; y < HEIGHT - 1; y++) {
+    for (uint8_t x = 0; x < WIDTH; x++) {
       if (!EffectMath::getLed(getPixelNumber(x, y)) && EffectMath::getLed(getPixelNumber(x, y + 1))) {
         EffectMath::getLed(getPixelNumber(x, y)) = EffectMath::getLed(getPixelNumber(x, y + 1));
         EffectMath::getLed(getPixelNumber(x, y + 1)) = 0;
