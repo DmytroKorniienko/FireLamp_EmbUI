@@ -1649,7 +1649,6 @@ class EffectWrain: public EffectCalc {
 //https://www.reddit.com/user/ldirko/
 class EffectPile : public EffectCalc {
 private:
-    byte speedFactor;
     bool behavior;
     byte density;
     byte sc;

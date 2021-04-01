@@ -41,6 +41,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef USE_FTP
   #include "ftpSrv.h"
 #endif
+#ifdef TM1637
+  #include "tm.h"
+#endif
 
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
@@ -52,6 +55,7 @@ Buttons *myButtons;
 #ifdef MP3PLAYER
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
+
 
 void setup() {
     //Serial.begin(115200);
@@ -109,6 +113,10 @@ void setup() {
 #endif
   sync_parameters();        // падение есп32 не воспоизводится, kDn
 
+#ifdef TM1637
+  tm_setup();
+#endif 
+
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
@@ -123,6 +131,12 @@ void loop() {
     sendData(); // цикл отправки данных по MQTT
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
+#endif
+
+#ifdef TM1637
+    EVERY_N_SECONDS(1) {
+        tm_loop();
+    }
 #endif
 }
 

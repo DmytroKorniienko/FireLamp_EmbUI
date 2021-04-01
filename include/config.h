@@ -337,4 +337,19 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 #endif
 
+#ifdef TM1637
+#ifndef TM_CLK_PIN
+  #define TM_CLK_PIN D0 
+#endif
+#ifndef TM_DIO_PIN
+  #define TM_DIO_PIN D7
+#endif
+#ifndef TM_BRIGHTNESS
+  #define TM_BRIGHTNESS 7U //яркость дисплея, 0..7
+#endif
+#ifndef TM_SHOW_BANNER
+  #define TM_SHOW_BANNER 0
+#endif
+#endif
+
 #endif

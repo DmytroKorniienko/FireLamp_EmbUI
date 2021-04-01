@@ -163,4 +163,12 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define SAMPLING_FREQ         (12000U*2U)
 #endif
 
+#define TM1637                                              // Использовать 7-ми сегментный LED-индикатор TM1637
+#ifdef TM1637
+  #define TM_CLK_PIN D0                                     // Работает не на всех пинах. Лучше использовать рекомендованый
+  #define TM_DIO_PIN D7                                     // Работает не на всех пинах. Лучше использовать рекомендованый
+  #define TM_BRIGHTNESS 7U                                  // Яркость дисплея, 0..7
+  #define TM_SHOW_BANNER 0                                  // 1 - показывать приветствие при загрузке, 0 - нет 
+#endif
+
 #endif
