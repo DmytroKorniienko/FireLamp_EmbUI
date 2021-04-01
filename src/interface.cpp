@@ -71,11 +71,12 @@ bool check_recovery_state(bool isSet){
     return state;
 }
 
-void resetAutoTimers() // сброс таймера демо и настройка автосохранений
+void resetAutoTimers(bool isEffects=false) // сброс таймера демо и настройка автосохранений
 {
     embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     myLamp.demoTimer(T_RESET);
-    myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи
+    if(isEffects)
+        myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи эффектов
 }
 
 #ifdef AUX_PIN
@@ -561,6 +562,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
         if(myLamp.getMode()==LAMPMODE::MODE_NORMAL)
             embui.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
         resetAutoTimers();
+        myLamp.DelayedAutoEffectConfigSave(0);
     }
 
     show_effects_param(interf, data);
@@ -573,7 +575,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
     serializeJson(*data,tmpData2);
-    resetAutoTimers();
+    resetAutoTimers(true);
     ctrlsTicker.once(0.1,std::bind([]{
         DynamicJsonDocument docum(1024);
         deserializeJson(docum, tmpData2);
@@ -831,7 +833,7 @@ void set_onflag(Interface *interf, JsonObject *data){
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
         } else {
-            resetAutoTimers();; // автосохранение конфига будет отсчитываться от этого момента
+            resetAutoTimers(); // автосохранение конфига будет отсчитываться от этого момента
             //myLamp.changePower(newpower);
             sysTicker.once(0.3,std::bind([]{ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
                 myLamp.changePower(false);
@@ -2438,6 +2440,7 @@ void sync_parameters(){
 #endif
 
     CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
+    myLamp.DelayedAutoEffectConfigSave(0);
 
 #ifdef MP3PLAYER
     //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
@@ -2619,10 +2622,12 @@ void remote_action(RA action, ...){
 #endif
         case RA::RA_EFF_NEXT:
             resetAutoTimers(); // сборс таймера демо, если есть перемещение
+            myLamp.DelayedAutoEffectConfigSave(0);
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFF_PREV:
             resetAutoTimers(); // сборс таймера демо, если есть перемещение
+            myLamp.DelayedAutoEffectConfigSave(0);
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFF_RAND:
