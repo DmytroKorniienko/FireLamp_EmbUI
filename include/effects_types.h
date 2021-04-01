@@ -283,8 +283,8 @@ static const char TCONST_00D3[] PROGMEM = "sT";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка
-static const char TCONST_FFFE[] PROGMEM = "false";
-static const char TCONST_FFFF[] PROGMEM = "true";
+static const char TCONST_FFFE[] PROGMEM = "0";
+static const char TCONST_FFFF[] PROGMEM = "1";
 */
 
 typedef enum : uint8_t {

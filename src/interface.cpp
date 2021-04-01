@@ -48,7 +48,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 Ticker optionsTicker;          // планировщик заполнения списка
 Ticker sysTicker;              // системный планировщик
-String tmpData;                // временное хранилище для отложенных операций
+String tmpData;                // временное хранилище для отложенных операций (sysTicker)
+Ticker ctrlsTicker;            // планировщик контролов
+String tmpData2;               // временное хранилище для отложенных операций (ctrlsTicker)
 
 bool check_recovery_state(bool isSet){
     bool state = false; //return state;
@@ -570,11 +572,11 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
-    serializeJson(*data,tmpData);
+    serializeJson(*data,tmpData2);
     resetAutoTimers();
-    sysTicker.once(0.1,std::bind([]{
+    ctrlsTicker.once(0.1,std::bind([]{
         DynamicJsonDocument docum(1024);
-        deserializeJson(docum, tmpData);
+        deserializeJson(docum, tmpData2);
         JsonObject dataStore = docum.as<JsonObject>();
         JsonObject *data = &dataStore;
 
@@ -603,7 +605,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             }
         }
 
-        tmpData.clear();
+        tmpData2.clear();
     }));
 }
 
@@ -1068,7 +1070,7 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
         interf->json_section_begin(FPSTR(TCONST_00BA));
             interf->spacer(FPSTR(TINTF_001));
                 interf->range(FPSTR(TCONST_0051), 10, 100, 5, FPSTR(TINTF_044));
-                interf->range(FPSTR(TCONST_0052), -1, (HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
+                interf->range(FPSTR(TCONST_0052), -1, (int)(HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
                 interf->range(FPSTR(TCONST_00C3), 0, 255, 1, FPSTR(TINTF_0CA));
                 
             interf->spacer(FPSTR(TINTF_04E));
@@ -1501,7 +1503,11 @@ void set_settings_other(Interface *interf, JsonObject *data){
         deserializeJson(docum, tmpData);
         JsonObject dataStore = docum.as<JsonObject>();
         JsonObject *data = &dataStore;
-
+        // if(!(*data).containsKey(FPSTR(TCONST_004C))) {
+        //     LOG(printf_P,PSTR("Error: %s\n"),tmpData.c_str());
+        //     return;
+        // }
+        // LOG(printf_P,PSTR("Settings: %s\n"),tmpData.c_str());
         myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == "1");
         myLamp.setMIRR_V((*data)[FPSTR(TCONST_004D)] == "1");
         myLamp.setFaderFlag((*data)[FPSTR(TCONST_004E)] == "1");
@@ -2153,7 +2159,7 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->spacer(FPSTR(TINTF_092)); // заголовок
         interf->json_section_line(FPSTR(TINTF_092)); // расположить в одной линии
 #ifdef ESP_USE_BUTTON
-            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),0,16);
+            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),1,0,16);
 #endif
 #ifdef MP3PLAYER
             interf->number(FPSTR(TCONST_009B),FPSTR(TINTF_097),0,16);
@@ -2161,7 +2167,7 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
 #endif
         interf->json_section_end(); // конец контейнера
         interf->spacer();
-        interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),0,16000);
+        interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),100,0,16000);
 
         //interf->json_section_main(FPSTR(TCONST_005F), "");
         interf->frame2(FPSTR(TCONST_005F), FPSTR(TCONST_005F));
@@ -2212,7 +2218,7 @@ void set_lamp_flags(Interface *interf, JsonObject *data){
 void save_lamp_flags(){
     DynamicJsonDocument doc(128);
     JsonObject obj = doc.to<JsonObject>();
-    obj[FPSTR(TCONST_0094)] = myLamp.getLampFlags();
+    obj[FPSTR(TCONST_0094)] = String(myLamp.getLampFlags());
     set_lamp_flags(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 }
@@ -2389,8 +2395,10 @@ void sync_parameters(){
 
     myLamp.semqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
 
+    String syslampFlags = embui.param(FPSTR(TCONST_0094));
     LAMPFLAGS tmp;
-    tmp.lampflags = embui.param(FPSTR(TCONST_0094)).toInt();
+    tmp.lampflags = syslampFlags.toInt(); //atol(embui.param(FPSTR(TCONST_0094)).c_str());
+    LOG(printf_P, PSTR("tmp.lampflags=%d (%s)\n"),tmp.lampflags, syslampFlags.c_str());
 
     obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? "1" : "0";
     set_drawflag(nullptr, &obj);
@@ -2517,6 +2525,7 @@ void sync_parameters(){
 #endif
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
+    //save_lamp_flags(); // обновить состояние флагов (закомментированно, окончательно состояние установится через 0.3 секунды, после set_settings_other)
     LOG(println, F("sync_parameters() done"));
 }
 
