@@ -104,7 +104,7 @@ uint8_t digToHEX(uint8_t digit);		// вернёт код цифры для displ
 
 /************** БУКВЫ И СИМВОЛЫ *****************/
 
-#if defined(ESP8266)
+#if defined(ESP8266) || defined(ESP32)
 	#define TM_A 0x77
 	#define TM_B 0x7f
 	#define TM_C 0x39
