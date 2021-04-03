@@ -674,6 +674,7 @@ class EffectPicasso : public EffectCalc {
         int8_t hue_step = 0;
     } Particle;
 private:
+    uint8_t effId=0;
     uint8_t pidx = 0;
     Particle particles[20];
     unsigned numParticles = 0;
@@ -681,9 +682,11 @@ private:
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
+    /*
     bool picassoRoutine2(CRGB *leds, EffectWorker *param);
     bool picassoRoutine3(CRGB *leds, EffectWorker *param);
-    bool picassoRoutine4(CRGB *leds, EffectWorker *param);
+    */
+    bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
     GradientPaletteList *palettes;
 public:
     EffectPicasso() {
@@ -1981,6 +1984,41 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------  Эффект "Дым"
+// https://wokwi.com/arduino/projects/286246948457939464
+// (c) ldir + sutaburosu
+class EffectFlags: public EffectCalc {
+private:
+
+	float speedFactor;
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------------------- Эффект "Звездный Десант"
+// Space Ships https://editor.soulmatelights.com/gallery/639-space-ships
+//(c)stepko
+//05.02.21
+// adopted/updatet by kostyamat
+class EffectStarShips: public EffectCalc {
+private:
+    const byte _scale = 8;
+    byte dir = 3;
+    byte count = 0;
+
+	float speedFactor;
+
+    void draw(float x, float y, CRGB color);
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
 };
 // --------- конец секции эффектов
 

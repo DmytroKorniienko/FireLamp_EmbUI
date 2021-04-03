@@ -489,7 +489,7 @@ String EffectMatrix::setDynCtrl(UIControl*_val)
   if (_hue == 1) {
     randColor = true;
     white = false;
-  } else if (hue == 255) {
+  } else if (_hue == 255) {
     white = true;
     randColor = false;
   } else {
@@ -3150,11 +3150,23 @@ void EffectPicasso::position(){
 bool EffectPicasso::picassoRoutine(CRGB *leds, EffectWorker *param){
   generate();
   position();
+  if (effId > 1) EffectMath::dimAll(180);
 
   for (unsigned i = 0; i < numParticles - 2; i+=2) {
     Particle *p1 = (Particle *)&particles[i];
     Particle *p2 = (Particle *)&particles[i + 1];
-    EffectMath::drawLine(p1->position_x, p1->position_y, p2->position_x, p2->position_y, p1->color);
+    switch (effId)
+    {
+    case 1:
+      EffectMath::drawLine(p1->position_x, p1->position_y, p2->position_x, p2->position_y, p1->color);
+      break;
+    case 2:
+      EffectMath::drawLineF(p1->position_x, p1->position_y, p2->position_x, p2->position_y, p1->color);
+      break;
+    case 3:
+      EffectMath::drawCircleF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
+      break;
+    }
   }
 
   EVERY_N_MILLIS(20000){
@@ -3162,46 +3174,6 @@ bool EffectPicasso::picassoRoutine(CRGB *leds, EffectWorker *param){
   }
 
   EffectMath::blur2d(80);
-  return true;
-}
-
-bool EffectPicasso::picassoRoutine2(CRGB *leds, EffectWorker *param){
-  generate();
-  position();
-  EffectMath::dimAll(180);
-
-  for (unsigned i = 0; i < numParticles - 1; i++) {
-    Particle *p1 = (Particle *)&particles[i];
-    Particle *p2 = (Particle *)&particles[i + 1];
-    EffectMath::drawLineF(p1->position_x, p1->position_y, p2->position_x, p2->position_y, p1->color);
-  }
-
-  EVERY_N_MILLIS(20000){
-    generate(true);
-  }
-
-  EffectMath::blur2d(80);
-
-  return true;
-}
-
-bool EffectPicasso::picassoRoutine3(CRGB *leds, EffectWorker *param){
-  generate();
-  position();
-  EffectMath::dimAll(180);
-
-  for (unsigned i = 0; i < numParticles - 2; i+=2) {
-    Particle *p1 = (Particle *)&particles[i];
-    Particle *p2 = (Particle *)&particles[i + 1];
-    EffectMath::drawCircleF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
-  }
-
-  EVERY_N_MILLIS(20000){
-    generate(true);
-  }
-
-  EffectMath::blur2d(80);
-
   return true;
 }
 
@@ -3234,11 +3206,12 @@ String EffectPicasso::setDynCtrl(UIControl*_val) {
     pal.loadDynamicGradientPalette(dynpal);
     palettes->add(0, pal, 0, 16);
   }
+  else if(_val->getId()==5) effId = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectPicasso::picassoRoutine4(CRGB *leds, EffectWorker *param){
+bool EffectPicasso::metaBallsRoutine(CRGB *leds, EffectWorker *param){
   generate();
   position();
 
@@ -3282,14 +3255,8 @@ bool EffectPicasso::run(CRGB *ledarr, EffectWorker *opt){
   case EFF_PICASSO:
     picassoRoutine(*&ledarr, &*opt);
     break;
-  case EFF_PICASSO2:
-    picassoRoutine2(*&ledarr, &*opt);
-    break;
-  case EFF_PICASSO3:
-    picassoRoutine3(*&ledarr, &*opt);
-    break;
   case EFF_PICASSO4:
-    picassoRoutine4(*&ledarr, &*opt);
+    metaBallsRoutine(*&ledarr, &*opt);
     break;
   default:
     break;
@@ -8135,5 +8102,92 @@ void EffectMagma::LeapersRestart_leaper(uint8_t l) {
   if (random8() < 12) {
     trackingObjectShift[l] += trackingObjectShift[l] * EffectMath::randomf(1.5, 2.5);
   }
+}
 
+
+// --------------------- Эффект "Звездный Десант"
+// Space Ships https://editor.soulmatelights.com/gallery/639-space-ships
+//(c)stepko
+//05.02.21
+// adopted/updatet by kostyamat
+// !++
+String EffectStarShips::setDynCtrl(UIControl*_val){
+  if (_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.25, .5);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectStarShips::load() {
+  palettesload();
+  FastLED.clear();
+}
+
+bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
+fadeToBlackBy(leds, NUM_LEDS, 50);
+  switch (dir) {
+    case 0:
+      for (byte x = 0; x < WIDTH; x++) {
+        for (byte y = 0; y < HEIGHT; y++) {
+           EffectMath::getPixel(x, y) = ((y == HEIGHT-1) ? CRGB::Black : EffectMath::getPixel(x, y + 1));
+        }
+      }
+      for (byte i = 0; i < _scale; i++) {
+        float x = (float)beatsin88(256*12*speedFactor + i*256, 0, (WIDTH - 1)*4, 0, _scale*i) /4;
+        float y = (float)beatsin88(256*15*speedFactor + i*256, (HEIGHT / 2)*4, (HEIGHT - 1)*4) /4;
+        draw(x, y, ColorFromPalette(*curPalette, beatsin8(12 + i, 0, 255), 255));
+      }
+      break;
+    case 2:
+      for (byte x = 0; x < WIDTH; x++) {
+        for (byte y = HEIGHT - 1; y > 0; y--) {
+          EffectMath::getPixel(x, y) = ((y == 0) ? CRGB::Black : EffectMath::getPixel(x, y - 1));
+        }
+      }
+      for (byte i = 0; i < _scale; i++) {
+        float x = (float)beatsin88(256*12*speedFactor + i*256, 0, (WIDTH - 1)*4, 0, _scale*i) /4;
+        float y = (float)beatsin88(256*15*speedFactor + i*256, 0, (HEIGHT / 2)*4) /4;
+        draw(x, y, ColorFromPalette(*curPalette, beatsin8(12 + i, 0, 255), 255));
+      }
+      break;
+    case 1:
+      for (byte x = 0; x < WIDTH; x++) {
+        for (byte y = HEIGHT - 1; y > 0; y--) {
+          EffectMath::getPixel(x, y) = ((x == WIDTH-1) ? CRGB::Black : EffectMath::getPixel(x + 1, y));
+        }
+      }
+      for (byte i = 0; i < _scale; i++) {
+        float x = (float)beatsin88(256*15*speedFactor + i*256, (WIDTH / 2)*4, (WIDTH - 1)*4, 0, _scale*i) /4;
+        float y = (float)beatsin88(256*12*speedFactor + i*256, 0, (HEIGHT - 1)*4) /4;
+        draw(x, y, ColorFromPalette(*curPalette, beatsin8(12 + i, 0, 255), 255));
+      }
+      break;
+    case 3:
+      for (byte x = WIDTH; x > 0; x--) {
+        for (byte y = HEIGHT; y > 0; y--) {
+          EffectMath::getPixel(x, y) = ((x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y));
+        }
+      }
+      for (byte i = 0; i < _scale; i++) {
+        float x = (float)beatsin88(256*15*speedFactor + i*256, 0, (WIDTH / 2)*4, 0, _scale*i) /4;
+        float y = (float)beatsin88(256*12*speedFactor + i*256, 0, (HEIGHT - 1)*4) / 4;
+        draw(x, y, ColorFromPalette(*curPalette, beatsin8(12 + i, 0, 255), 255));
+      }
+      break;
+  }
+  //EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
+  EVERY_N_SECONDS(random8(10,30)) {
+    count++;
+    dir = count%4;
+  }
+  return true;
+}
+
+void EffectStarShips::draw(float x, float y, CRGB color) {
+  EffectMath::drawPixelXYF(x, y, color);
+  if (WIDTH > 24 || HEIGHT > 24) {
+    if (x < WIDTH - 2) EffectMath::drawPixelXYF(x + 1, y, color);
+    if (x > 1) EffectMath::drawPixelXYF(x - 1, y, color);
+    if (y < HEIGHT - 2) EffectMath::drawPixelXYF(x, y + 1, color);
+    if (y > 1) EffectMath::drawPixelXYF(x, y - 1, color);
+  }
 }
