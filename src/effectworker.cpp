@@ -191,6 +191,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_STARSHIPS :
     worker = std::unique_ptr<EffectStarShips>(new EffectStarShips());
     break;
+  case EFF_ENUM::EFF_FLAGS :
+    worker = std::unique_ptr<EffectFlags>(new EffectFlags());
+    break;
   case EFF_ENUM::EFF_LEAPERS :
     worker = std::unique_ptr<EffectLeapers>(new EffectLeapers());
     break;

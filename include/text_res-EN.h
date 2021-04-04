@@ -92,8 +92,8 @@ static const char TEFF_043[] PROGMEM = "Combination lock";
 static const char TEFF_044[] PROGMEM = "Cube 2D";
 static const char TEFF_045[] PROGMEM = "Magma (Test)";
 static const char TEFF_046[] PROGMEM = "Picasso";
-static const char TEFF_047[] PROGMEM = "Picasso 2";
-static const char TEFF_048[] PROGMEM = "Picasso 3";
+static const char TEFF_047[] PROGMEM = "Starship Troopers";
+static const char TEFF_048[] PROGMEM = "Flags";
 static const char TEFF_049[] PROGMEM = "Jumpers";
 static const char TEFF_050[] PROGMEM = "Vortexes";
 static const char TEFF_051[] PROGMEM = "Stars";
@@ -199,6 +199,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_114 "Quality/Speed"
 #define DFTINTF_115 "Blur (1-4 with wind)"
 #define DFTINTF_116 "Sin function moving"
+#define DFTINTF_117 "Direction (0: cyclical)"
 
 /** набор строк с текстовыми константами интерфейса
  */

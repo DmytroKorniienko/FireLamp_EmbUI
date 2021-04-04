@@ -92,8 +92,8 @@ static const char TEFF_043[] PROGMEM = "Кодовий замок";
 static const char TEFF_044[] PROGMEM = "Куб 2D";
 static const char TEFF_045[] PROGMEM = "Магма";
 static const char TEFF_046[] PROGMEM = "Пікассо";
-static const char TEFF_047[] PROGMEM = "Пікассо2";
-static const char TEFF_048[] PROGMEM = "Пікассо3";
+static const char TEFF_047[] PROGMEM = "Зоряний Десант";
+static const char TEFF_048[] PROGMEM = "Прапори";
 static const char TEFF_049[] PROGMEM = "Стрибуни";
 static const char TEFF_050[] PROGMEM = "Вихори";
 static const char TEFF_051[] PROGMEM = "Зірки";
@@ -198,6 +198,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_114 "Якість / Швидкість"
 #define DFTINTF_115 "Розмиття (1-4 з вітром)"
 #define DFTINTF_116 "Переміщення по синусу"
+#define DFTINTF_117 "Напрямок (0: циклічно)"
 
 
 /** набор строк с текстовыми константами интерфейса
