@@ -674,6 +674,7 @@ class EffectPicasso : public EffectCalc {
         int8_t hue_step = 0;
     } Particle;
 private:
+    uint8_t effId=0;
     uint8_t pidx = 0;
     Particle particles[20];
     unsigned numParticles = 0;
@@ -681,9 +682,11 @@ private:
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
+    /*
     bool picassoRoutine2(CRGB *leds, EffectWorker *param);
     bool picassoRoutine3(CRGB *leds, EffectWorker *param);
-    bool picassoRoutine4(CRGB *leds, EffectWorker *param);
+    */
+    bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
     GradientPaletteList *palettes;
 public:
     EffectPicasso() {
@@ -1981,6 +1984,159 @@ private:
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------- Эффект "Флаги"
+// (c) Stepko + kostyamat
+// 17.03.21
+// https://editor.soulmatelights.com/gallery/739-flags
+class EffectFlags: public EffectCalc {
+private:
+    const float DEVIATOR = 512. / WIDTH;
+    float counter;
+    uint8_t flag = 0;
+    uint8_t _flag;
+    uint8_t count;
+    uint8_t _speed; // 1 - 16
+    const uint8_t CHANGE_FLAG = 30; // >= 10 Autochange
+
+    uint8_t thisVal;
+    uint8_t thisMax;
+
+    //Germany
+    void germany(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (j < thisMax - HEIGHT / 4) ? CHSV(68, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 255, thisVal)
+                                                                                                               : CHSV(0, 0, thisVal / 2.5);
+        }
+    }
+
+    //Ukraine
+    void ukraine(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (j < thisMax) ? CHSV(50, 255, thisVal) : CHSV(150, 255, thisVal);
+        }
+    }
+
+    //Belarus
+    void belarus(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (j < thisMax - HEIGHT / 4) ? CHSV(0, 224, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 0, thisVal)
+                                                                                                              : CHSV(0, 224, thisVal);
+        }
+    }
+
+    //Russia
+    void russia(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (j < thisMax - HEIGHT / 4) ? CHSV(0, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(150, 255, thisVal)
+                                                                                                              : CHSV(0, 0, thisVal);
+        }
+    }
+
+    //Poland
+    void poland(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (j < thisMax + 1) ? CHSV(248, 214, (float)thisVal * 0.83) : CHSV(25, 3, (float)thisVal * 0.91);
+        }
+    }
+
+    //The USA
+    void usa(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) =
+                ((i <= WIDTH / 2) && (j + thisMax > HEIGHT - 1 + HEIGHT / 16)) ? ((i % 2 && ((int)j - HEIGHT / 16 + thisMax) % 2) ? CHSV(160, 0, thisVal) : CHSV(160, 255, thisVal)) : ((j + 1 + thisMax) % 6 < 3 ? CHSV(0, 0, thisVal) : CHSV(0, 255, thisVal));
+        }
+    }
+
+    //Italy
+    void italy(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (i < WIDTH / 3) ? CHSV(90, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
+                                                                                                     : CHSV(0, 255, thisVal);
+        }
+    }
+
+    //France
+    void france(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (i < WIDTH / 3) ? CHSV(160, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
+                                                                                                      : CHSV(0, 255, thisVal);
+        }
+    }
+
+    //UK
+    void uk(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = ((i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && (i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -2 && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) || (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ((int)WIDTH - 1 - i - ((int)j + thisMax - (int)(HEIGHT * 2 - WIDTH) / 2) > -2 && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) || (WIDTH / 2 - i == 0) || (WIDTH / 2 - 1 - i == 0) || ((HEIGHT - (j + thisMax)) == 0) || ((HEIGHT - 1 - (j + thisMax)) == 0)) ? CHSV(0, 255, thisVal) : ((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -4 && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) || ((int)WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -4 && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) || (WIDTH / 2 + 1 - i == 0) || (WIDTH / 2 - 2 - i == 0) || (HEIGHT + 1 - (j + thisMax) == 0) || (HEIGHT - 2 - (int)(j + thisMax) == 0)) ? CHSV(0, 0, thisVal)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  : CHSV(150, 255, thisVal);
+        }
+    }
+
+    //Spain
+    void spain(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) = (j < thisMax - HEIGHT / 3) ? CHSV(250, 224, (float)thisVal * 0.68) : (j < thisMax + HEIGHT / 3) ? CHSV(64, 255, (float)thisVal * 0.98)
+                                                                                                                              : CHSV(250, 224, (float)thisVal * 0.68);
+        }
+    }
+
+
+    void changeFlags();
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load () override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------------------- Эффект "Звездный Десант"
+// Space Ships https://editor.soulmatelights.com/gallery/639-space-ships
+//(c)stepko
+//05.02.21
+// adopted/updatet by kostyamat
+class EffectStarShips: public EffectCalc {
+private:
+    byte _scale = 8;
+#ifdef BIGMATRIX
+    const byte deviator = 2;
+#else
+    const byte deviator = 4;
+#endif
+    byte dir = 3;
+    byte _dir;
+    byte count = 0;
+    uint8_t _fade;
+    float x, y;
+
+	float speedFactor;
+
+    void draw(float x, float y, CRGB color);
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
 };
 // --------- конец секции эффектов
 

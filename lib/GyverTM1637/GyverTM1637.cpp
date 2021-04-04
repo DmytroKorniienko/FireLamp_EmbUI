@@ -459,7 +459,7 @@ void GyverTM1637::twistByte(uint8_t DispData[], int delayms) {
 	//for (byte r = 0; r < 1; r++) {
 	for (byte i = 0; i < 6; i++) {
 		step = 0b11000000;
-		step = ~(step | (1 << i) | (1 << (i + 1)));	// бегает дырка
+		step = ~(step | (1 << i) | ((1 << i) + 1));	// бегает дырка
 		for (byte k = 0; k < 4; k++) {	
 			if (changeByte[k]) stepArray[k] = step;
 		}
@@ -510,7 +510,7 @@ void GyverTM1637::twistByte(uint8_t BitAddr, uint8_t DispData, int delayms) {
 	//for (byte r = 0; r < 1; r++) {
 	for (byte i = 0; i < 6; i++) {
 		step = 0b1000000;
-		step = ~(step | (1 << i) | (1 << (i + 1)));	// бегает дырка
+		step = ~(step | (1 << i) | ((1 << i) + 1));	// бегает дырка
 
 		displayByte(BitAddr, step);			
 		delay(delayms);

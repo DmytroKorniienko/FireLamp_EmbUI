@@ -185,10 +185,14 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
   case EFF_ENUM::EFF_PICASSO :
-  case EFF_ENUM::EFF_PICASSO2 :
-  case EFF_ENUM::EFF_PICASSO3 :
   case EFF_ENUM::EFF_PICASSO4 :
     worker = std::unique_ptr<EffectPicasso>(new EffectPicasso());
+    break;
+  case EFF_ENUM::EFF_STARSHIPS :
+    worker = std::unique_ptr<EffectStarShips>(new EffectStarShips());
+    break;
+  case EFF_ENUM::EFF_FLAGS :
+    worker = std::unique_ptr<EffectFlags>(new EffectFlags());
     break;
   case EFF_ENUM::EFF_LEAPERS :
     worker = std::unique_ptr<EffectLeapers>(new EffectLeapers());

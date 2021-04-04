@@ -128,23 +128,20 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifndef LAMP_PIN
-//#define LAMP_PIN              (2U)                          // пин ленты                (D4)
-#ifdef ESP8266
 #define LAMP_PIN              (D3)                          // пин ленты                (D3)
-#endif
 #endif
 
 #ifndef BTN_PIN
-#define BTN_PIN               (4U)                          // пин кнопки               (D2)
+#define BTN_PIN               (D1)                          // пин кнопки               (D1)
 //#define BTN_PIN               (0U)                          // пин кнопки "FLASH" NodeMCU (ОТЛАДКА!!!) , подтяжка должна быть PULL_MODE=HIGH_PULL
 #endif
-
+/*
 #ifndef MOSFET_PIN
-#define MOSFET_PIN            (5U)                          // пин MOSFET транзистора   (D1) - может быть использован для управления питанием матрицы/ленты
-#endif
-#ifndef ALARM_PIN
-#define ALARM_PIN             (16U)                         // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
-#endif
+#define MOSFET_PIN            (D2)                          // пин MOSFET транзистора   (D2) - может быть использован для управления питанием матрицы/ленты
+#endif*/
+/*#ifndef ALARM_PIN                                        
+#define ALARM_PIN             (D8)                         // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
+#endif*/
 #ifndef MOSFET_LEVEL
 #define MOSFET_LEVEL          (HIGH)                        // логический уровень, в который будет установлен пин MOSFET_PIN, когда матрица включена - HIGH или LOW
 #endif

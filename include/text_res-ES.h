@@ -92,8 +92,8 @@ static const char TEFF_043 [] PROGMEM = "Cerradura de código";
 static const char TEFF_044 [] PROGMEM = "Cubo 2D";
 static const char TEFF_045 [] PROGMEM = "Magma";
 static const char TEFF_046 [] PROGMEM = "Picasso";
-static const char TEFF_047 [] PROGMEM = "Picasso2";
-static const char TEFF_048 [] PROGMEM = "Picasso3";
+static const char TEFF_047 [] PROGMEM = "Flota Estelar";
+static const char TEFF_048 [] PROGMEM = "Banderas";
 static const char TEFF_049 [] PROGMEM = "Saltadores";
 static const char TEFF_050 [] PROGMEM = "Torbellinos";
 static const char TEFF_051 [] PROGMEM = "Estrellas";
@@ -200,6 +200,7 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 #define DFTINTF_114 "Calidad / Velocidad"
 #define DFTINTF_115 "Desenfocar (1-4 con viento)"
 #define DFTINTF_116 "Desplazamiento sinusoidal"
+#define DFTINTF_117 "Direccion (0: cíclico)"
 
 /** набор строк с текстовыми константами интерфейса
  */
