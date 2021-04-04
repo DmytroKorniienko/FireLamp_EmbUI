@@ -696,6 +696,18 @@ bool EffectWorker::autoSaveConfig(bool force, bool reset) {
   }
   LOG(printf_P,PSTR("Сохраняется конфигурация эффекта: %d\n"),curEff);
   saveeffconfig(curEff);
+
+#ifdef ESP8266
+    FSInfo fs_info;
+    LittleFS.info(fs_info);
+    if(lampstate)
+      lampstate->fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
+#endif
+#ifdef ESP32
+    if(lampstate)
+      lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
+#endif
+
   //saveConfig();
   i = millis();
   return true; // сохранились

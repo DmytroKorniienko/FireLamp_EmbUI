@@ -122,23 +122,31 @@ void LAMP::handle()
   if (wait_handlers + 999U > millis())
       return;
   wait_handlers = millis();
-#ifdef LAMP_DEBUG
+
   EVERY_N_SECONDS(15){
+    lampState.freeHeap = ESP.getFreeHeap();
+#ifdef ESP8266
+    lampState.HeapFragmentation = ESP.getHeapFragmentation();
+#else
+    lampState.HeapFragmentation = 0;
+#endif
+    lampState.rssi = WiFi.RSSI();
+
+#ifdef LAMP_DEBUG
     // fps counter
     LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
-
 #ifdef ESP8266
-    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), embui.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), lampState.freeHeap, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
+#else
+    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), lampState.freeHeap, embui.timeProcessor.getFormattedShortTime().c_str());
 #endif
-
-#ifdef ESP32
-    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), ESP.getFreeHeap(), embui.timeProcessor.getFormattedShortTime().c_str());
 #endif
-
   }
+#ifdef LAMP_DEBUG
   avgfps = (avgfps+fps) / 2;
-  fps = 0; // сброс FPS раз в секунду
 #endif
+  fps = 0; // сброс FPS раз в секунду
+
 
   // будильник обрабатываем раз в секунду
   alarmWorker();
@@ -932,7 +940,6 @@ void LAMP::newYearMessageHandle()
     sendStringToLamp(strMessage, LETTER_COLOR);
   }
 }
-
 
 void LAMP::periodicTimeHandle(bool force)
 {

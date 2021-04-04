@@ -105,6 +105,11 @@ typedef struct {
     }
 #endif
 
+    uint32_t freeHeap;
+    uint8_t HeapFragmentation;
+    int32_t rssi;
+    uint32_t fsfreespace;
+
 } LAMPSTATE;
 
 typedef union {
