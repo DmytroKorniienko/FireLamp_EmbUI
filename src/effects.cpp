@@ -8219,7 +8219,7 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
   changeFlags();
   fadeToBlackBy(leds, NUM_LEDS, 32);
   for (uint8_t i = 0; i < WIDTH; i++) {
-    thisVal = inoise8((float) i * DEVIATOR, counter, (float)i * SPEED_ADJ/2);
+    thisVal = inoise8((float) i * DEVIATOR, counter, (int)count/*(float)i * SPEED_ADJ/2*/);
     thisMax = map(thisVal, 0, 255, 0, HEIGHT - 1);
     switch (flag)
     {
@@ -8259,8 +8259,9 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
     }
 
   }
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, 64);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   counter += (float)_speed * SPEED_ADJ;
+  EffectMath::nightMode(leds);
   return true;
 }
 

@@ -640,9 +640,9 @@ void EffectMath::nightMode(CRGB *leds)
 {
     for (uint16_t i = 0; i < NUM_LEDS; i++)
     {
-        leds[i].r = dim8_video(leds[i].r);
-        leds[i].g = dim8_video(leds[i].g);
-        leds[i].b = dim8_video(leds[i].b);
+        leds[i].r = dim8_lin(leds[i].r); //dim8_video
+        leds[i].g = dim8_lin(leds[i].g);
+        leds[i].b = dim8_lin(leds[i].b);
     }
 }
 uint32_t EffectMath::getPixColorXY(int16_t x, int16_t y) { return getPixColor( getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
