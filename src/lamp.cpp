@@ -553,6 +553,7 @@ void LAMP::storeEffect()
 {
   storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   storedBright = getLampBrightness();
+  lampState.isMicOn = false;
   LOG(printf_P, PSTR("Store: %d,%d\n"),storedEffect,storedBright);
 }
 
@@ -561,6 +562,7 @@ void LAMP::restoreStored()
   LOG(printf_P, PSTR("Restore: %d,%d\n"),storedEffect,storedBright);
   if(storedBright)
     setLampBrightness(storedBright);
+  lampState.isMicOn = flags.isMicOn;
   if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
     _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
       remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);

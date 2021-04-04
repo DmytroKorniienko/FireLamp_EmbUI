@@ -2574,8 +2574,11 @@ void remote_action(RA action, ...){
             }));
             break;
         case RA::RA_EFFECT: {
-            if(myLamp.getMode()==LAMPMODE::MODE_NORMAL)
+            LAMPMODE mode=myLamp.getMode();
+            if(mode==LAMPMODE::MODE_NORMAL)
                 embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
+            else if(mode==LAMPMODE::MODE_WHITELAMP && myLamp.effects.getSelected()!=1)
+                myLamp.startNormalMode();
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list); // публикация будет здесь
             break;
         }
