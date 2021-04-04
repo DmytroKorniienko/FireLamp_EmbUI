@@ -1268,7 +1268,7 @@ void block_settings_mic(Interface *interf, JsonObject *data){
     if (!myLamp.isMicCalibration()) {
         interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getLampState().getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
         interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getLampState().getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
-        interf->range(FPSTR(TCONST_003B), (int)myLamp.getLampState().getMicNoiseRdcLevel(), 0, 4, (float)1.0, FPSTR(TINTF_024), false);
+        interf->range(FPSTR(TCONST_003B), (int)myLamp.getLampState().getMicNoiseRdcLevel(), 0, 4, 1, FPSTR(TINTF_024), false);
 
         interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(TCONST_0008));
         interf->json_section_end();
@@ -2149,8 +2149,8 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
             interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),1,0,16);
 #endif
 #ifdef MP3PLAYER
-            interf->number(FPSTR(TCONST_009B),FPSTR(TINTF_097),0,16);
-            interf->number(FPSTR(TCONST_009C),FPSTR(TINTF_098),0,16);
+            interf->number(FPSTR(TCONST_009B),FPSTR(TINTF_097),1,0,16);
+            interf->number(FPSTR(TCONST_009C),FPSTR(TINTF_098),1,0,16);
 #endif
         interf->json_section_end(); // конец контейнера
         interf->spacer();
