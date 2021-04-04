@@ -356,7 +356,7 @@ public:
     void startAlarm(char *value = nullptr);
     void stopAlarm();
     void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
-    void startNormalMode();
+    void startNormalMode(bool forceOff=false);
     void restoreStored();
     void storeEffect();
 #ifdef OTA

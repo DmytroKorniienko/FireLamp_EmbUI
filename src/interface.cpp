@@ -536,6 +536,14 @@ void set_effects_list(Interface *interf, JsonObject *data){
     EffectListElem *eff = myLamp.effects.getEffect(num);
     if (!eff) return;
 
+    if(myLamp.getMode()==LAMPMODE::MODE_WHITELAMP && num!=1){
+        myLamp.startNormalMode(true);
+        DynamicJsonDocument doc(512);
+        JsonObject obj = doc.to<JsonObject>();
+        CALL_INTF(FPSTR(TCONST_001A), myLamp.isLampOn(), set_onflag);
+        return;
+    }
+
     myLamp.setDRand(myLamp.getLampSettings().dRand); // сборосить флаг рандомного демо
     LOG(printf_P, PSTR("EFF LIST n:%d, o:%d, on:%d, md:%d\n"), eff->eff_nb, curr, myLamp.isLampOn(), myLamp.getMode());
     if (eff->eff_nb != curr) {
@@ -578,7 +586,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                         myLamp.setLampBrightness(bright);
                         if(myLamp.isLampOn())
                             myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
-                        if (myLamp.IsGlobalBrightness()) {
+                        if (myLamp.IsGlobalBrightness() && myLamp.getMode()!=LAMPMODE::MODE_WHITELAMP) {
                             embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
                         }
                     } else
@@ -2514,6 +2522,16 @@ void sync_parameters(){
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
     //save_lamp_flags(); // обновить состояние флагов (закомментированно, окончательно состояние установится через 0.3 секунды, после set_settings_other)
+
+#ifdef ESP8266
+    FSInfo fs_info;
+    LittleFS.info(fs_info);
+    myLamp.getLampState().fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
+#endif
+#ifdef ESP32
+    myLamp.getLampState().fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
+#endif
+
     LOG(println, F("sync_parameters() done"));
 }
 
@@ -2575,10 +2593,15 @@ void remote_action(RA action, ...){
             break;
         case RA::RA_EFFECT: {
             LAMPMODE mode=myLamp.getMode();
-            if(mode==LAMPMODE::MODE_NORMAL)
+            if(mode==LAMPMODE::MODE_WHITELAMP && myLamp.effects.getSelected()!=1){
+                myLamp.startNormalMode(true);
+                DynamicJsonDocument doc(512);
+                JsonObject obj = doc.to<JsonObject>();
+                CALL_INTF(FPSTR(TCONST_001A), myLamp.isLampOn(), set_onflag);
+                break;
+            } else if(mode==LAMPMODE::MODE_NORMAL){
                 embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
-            else if(mode==LAMPMODE::MODE_WHITELAMP && myLamp.effects.getSelected()!=1)
-                myLamp.startNormalMode();
+            }
             CALL_INTF(FPSTR(TCONST_0016), value, set_effects_list); // публикация будет здесь
             break;
         }
