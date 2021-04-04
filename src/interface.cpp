@@ -540,7 +540,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
         myLamp.startNormalMode(true);
         DynamicJsonDocument doc(512);
         JsonObject obj = doc.to<JsonObject>();
-        CALL_INTF(FPSTR(TCONST_001A), myLamp.isLampOn(), set_onflag);
+        CALL_INTF(FPSTR(TCONST_001A), myLamp.isLampOn() ? "1" : "0", set_onflag);
         return;
     }
 
@@ -2597,7 +2597,7 @@ void remote_action(RA action, ...){
                 myLamp.startNormalMode(true);
                 DynamicJsonDocument doc(512);
                 JsonObject obj = doc.to<JsonObject>();
-                CALL_INTF(FPSTR(TCONST_001A), myLamp.isLampOn(), set_onflag);
+                CALL_INTF(FPSTR(TCONST_001A), myLamp.isLampOn() ? "1" : "0", set_onflag);
                 break;
             } else if(mode==LAMPMODE::MODE_NORMAL){
                 embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
