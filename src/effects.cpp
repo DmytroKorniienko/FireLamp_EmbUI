@@ -8140,8 +8140,8 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       }
     }
     for (byte i = 0; i < _scale; i++) {
-      float x = (float)beatsin88(3072 * speedFactor + i * 256, 0, (WIDTH - 1) * deviator) / deviator;
-      float y = (float)beatsin88(3840 * speedFactor + i * 256, (HEIGHT / 2) * deviator, (HEIGHT - 1) * deviator, 0, _scale * i * 256) / deviator;
+      x = (float)beatsin88(3072 * speedFactor + i * 256, 0, (WIDTH - 1) * deviator) / deviator;
+      y = (float)beatsin88(3840 * speedFactor + i * 256, (HEIGHT / 2) * deviator, (HEIGHT - 1) * deviator, 0, _scale * i * 256) / deviator;
       draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072 * speedFactor + i * 256, 0, 255), 255));
     }
     break;
@@ -8152,8 +8152,8 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       }
     }
     for (byte i = 0; i < _scale; i++) {
-      float x = (float)beatsin88(3072 * speedFactor + i * 256, 0, (WIDTH - 1) * deviator) / deviator;
-      float y = (float)beatsin88(3840 * speedFactor + i * 256, 0, (HEIGHT / 2) * deviator, 0, _scale * i * 256) / deviator;
+      x = (float)beatsin88(3072 * speedFactor + i * 256, 0, (WIDTH - 1) * deviator) / deviator;
+      y = (float)beatsin88(3840 * speedFactor + i * 256, 0, (HEIGHT / 2) * deviator, 0, _scale * i * 256) / deviator;
       draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072 * speedFactor + i * 256, 0, 255), 255));
     }
     break;
@@ -8164,8 +8164,8 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       }
     }
     for (byte i = 0; i < _scale; i++) {
-      float x = (float)beatsin88(3840 * speedFactor + i * 256, (WIDTH / 2) * deviator, (WIDTH - 1) * deviator, 0, _scale * i * 256) / deviator;
-      float y = (float)beatsin88(3072 * speedFactor + i * 256, 0, (HEIGHT - 1) * deviator) / deviator;
+      x = (float)beatsin88(3840 * speedFactor + i * 256, (WIDTH / 2) * deviator, (WIDTH - 1) * deviator, 0, _scale * i * 256) / deviator;
+      y = (float)beatsin88(3072 * speedFactor + i * 256, 0, (HEIGHT - 1) * deviator) / deviator;
       draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072 * speedFactor + i * 256, 0, 255), 255));
     }
     break;
@@ -8176,8 +8176,8 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       }
     }
     for (byte i = 0; i < _scale; i++) {
-      float x = (float)beatsin88(3840 * speedFactor + i * 256, 0, (WIDTH / 2) * deviator, 0, _scale * i * 256) / deviator;
-      float y = (float)beatsin88(3072 * speedFactor + i * 256, 0, (HEIGHT - 1) * deviator) / deviator;
+      x = (float)beatsin88(3840 * speedFactor + i * 256, 0, (WIDTH / 2) * deviator, 0, _scale * i * 256) / deviator;
+      y = (float)beatsin88(3072 * speedFactor + i * 256, 0, (HEIGHT - 1) * deviator) / deviator;
       draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072. * speedFactor + i * 256, 0, 255), 255));
     }
     break;
