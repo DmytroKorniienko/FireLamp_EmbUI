@@ -2118,7 +2118,7 @@ public:
 class EffectStarShips: public EffectCalc {
 private:
     byte _scale = 8;
-#if BIGMATRIX
+#ifdef BIGMATRIX
     const byte deviator = 2;
 #else
     const byte deviator = 4;
@@ -2127,6 +2127,7 @@ private:
     byte _dir;
     byte count = 0;
     uint8_t _fade;
+    float x, y;
 
 	float speedFactor;
 
