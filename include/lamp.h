@@ -45,7 +45,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "events.h"
 #include "../../include/LList.h"
 #include "interface.h"
-#include <Ticker.h>
 
 #ifdef XY_EXTERN
 #include "XY.h"
@@ -135,6 +134,27 @@ uint32_t lampflags; // набор битов для конфига
 } LAMPFLAGS;
 //#pragma pack(pop)
 
+class LAMP;
+class LEDFader {
+    Task tFader;
+    LAMP *lmp;
+    uint8_t _brt, _brtincrement;
+    std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
+    void onDisable(uint8_t _b);
+
+public:
+    LEDFader(LAMP *_l){
+        this->lmp = _l;
+        ts.addTask(tFader);
+    }
+    ~LEDFader(){ts.deleteTask(tFader);}
+    bool inprogress(){return tFader.isEnabled();};
+
+    void run(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback);
+
+};
+
+
 class LAMP {
 private:
     LAMPFLAGS flags;
@@ -179,24 +199,15 @@ private:
 
     DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
 
-    timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
 
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
 
-    // async fader and brightness control vars and methods
-    uint8_t _brt, _steps;
-    int8_t _brtincrement;
-
-    Ticker _fadeTicker;             // планировщик асинхронного фейдера
-    Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
-    Ticker _reservedTicker;         // планировщик вспомогательный
-    Ticker _effectsTicker;          // планировщик обработки эффектов
-    Ticker _warningTicker;          // планировщик обработки эффектов
-    uint32_t _begin = 0;
+    Task demoTask;             // планировщик Смены эффектов в ДЕМО
+    Task effectsTask;          // планировщик обработки эффектов
+    Task* warningTask = nullptr;          // указатель на динамический планировщик переключалки флага lampState.isWarning
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
-    void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 
     void effectsTick(); // обработчик эффектов
 
@@ -208,7 +219,6 @@ private:
     byte gauge_hue = 0;
     void GaugeMix();
 #endif
-    void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) { if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
 
 #ifdef OTA
     OtaManager otaManager;
@@ -232,6 +242,10 @@ private:
      * и перезапуск эффект-процессора
      */
     void frameShow(const uint32_t ticktime);
+
+    // Fader object
+    LEDFader *fader = nullptr;
+    friend class LEDFader;
 
 public:
     void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
@@ -307,7 +321,7 @@ public:
 
     void handle();          // главная функция обработки эффектов
 
-    void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
+//    void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
     void setFaderFlag(bool flag) {flags.isFaderON = flag;}
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
@@ -381,8 +395,8 @@ public:
     void changePower(); // плавное включение/выключение
     void changePower(bool);
 
-    /*
-     * Change global brightness with or without fade effect
+    /**
+     * @brief - Change global brightness with or without fade effect
      * fade applied in non-blocking way
      * FastLED dim8 function applied internaly for natural brightness controll
      * @param uint8_t _tgtbrt - target brigtness level 0-255
@@ -391,26 +405,27 @@ public:
      */
     void setBrightness(const uint8_t _tgtbrt, const bool fade=false, const bool natural=true);
 
-    /*
-     * Get current brightness
+    /**
+     * @brief - Get current brightness
      * FastLED brighten8 function applied internaly for natural brightness compensation
      * @param bool natural - return compensated or absolute brightness
      */
     uint8_t getBrightness(const bool natural=true);
 
-    /*
-     * Non-blocking light fader, uses system ticker to globaly fade FastLED brighness
-     * within specified duration
+    /**
+     * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
      * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
      *                                   function applied internaly for natiral dimming
      * @param uint32_t _duration - fade effect duraion, ms
-     * @param callback  -  callback-функция, которая будет выполнена после окончания затухания (без блокировки)
+     * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
      */
-    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
+    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr){
+        fader->run(_targetbrightness, _duration, callback);
+    };
 
 
-    /*
-     * переключатель эффектов для других методов,
+    /**
+     * @brief - переключатель эффектов для других методов,
      * может использовать фейдер, выбирать случайный эффект для демо
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
      * @param fade - переключаться через фейдер или сразу
@@ -432,12 +447,14 @@ public:
     void effectsTimer(SCHEDULER action);
 
 
-    ~LAMP() {}
+    ~LAMP() { delete fader; fader = nullptr; }
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
     std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
     std::vector<CRGB> drawbuff; // буфер для рисования
 };
+
+
 
 #endif

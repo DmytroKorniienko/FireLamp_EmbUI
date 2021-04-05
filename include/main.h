@@ -39,12 +39,13 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define __MAIN_H_
 
 #include <Arduino.h>
-//#include <SPIFFSEditor.h>
 #include "config.h"
 #include "EmbUI.h"
 #include "lamp.h"
 #include "buttons.h"
-#include <Ticker.h>
+
+// TaskScheduler
+extern Scheduler ts;
 
 // глобальные переменные для работы с ними в программе
 extern LAMP myLamp; // Объект лампы

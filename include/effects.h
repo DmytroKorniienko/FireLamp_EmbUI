@@ -1838,7 +1838,7 @@ private:
     bool track = random8(0,2);  // будет ли трек игрока
     uint8_t buttons;
 
-    timerMinim gameTimer = 200;         // Таймер скорости игр
+    unsigned long timer = millis(), gameTimer = 200;         // Таймер скорости игр
 
     void newGameMaze();
     void buttonsTickMaze();

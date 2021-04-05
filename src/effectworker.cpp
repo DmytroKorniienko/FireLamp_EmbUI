@@ -443,8 +443,6 @@ void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const cha
   if (ok && doc[F("name")]){
     _effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
   } else if(!ok) {
-    // LittleFS.remove(filename);
-    // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
     _effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
   }
 #endif
@@ -609,11 +607,6 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   
   File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   if (configFile){
-    /*
-    WriteBufferingStream buff(configFile, FILEIO_BUFFSIZE);
-    buff.write(cfg.c_str());
-    buff.flush();
-    */
     configFile.print(cfg.c_str());
     configFile.close();
   }
@@ -687,20 +680,17 @@ void EffectWorker::chckdefconfigs(const char *folder){
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
       savedefaulteffconfig(i, cfgfilename);
-      //yield();
     }
   }
 }
 
-bool EffectWorker::autoSaveConfig(bool force, bool reset) {
-  static unsigned long i; // getConfigSaveTimeout()
-  if((i + (CFG_AUTOSAVE_TIMEOUT - 1000) > millis() || reset) && !force){  // если не пришло время - выходим из функции и сбрасываем счетчик (ожидаем бездействия в 30 секунд относительно последней записи)
-      i = millis();
-      return false;
-  }
-  LOG(printf_P,PSTR("Сохраняется конфигурация эффекта: %d\n"),curEff);
-  saveeffconfig(curEff);
-
+void EffectWorker::autoSaveConfig(bool force) {
+    if (force){
+        tConfigSave.disable();
+        saveeffconfig(curEff);
+    } else {
+        tConfigSave.restartDelayed();
+    }
 #ifdef ESP8266
     FSInfo fs_info;
     LittleFS.info(fs_info);
@@ -711,10 +701,6 @@ bool EffectWorker::autoSaveConfig(bool force, bool reset) {
     if(lampstate)
       lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
 #endif
-
-  //saveConfig();
-  i = millis();
-  return true; // сохранились
 }
 
 // конструктор копий эффектов

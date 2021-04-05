@@ -1,11 +1,35 @@
 #!/bin/sh
 
+USAGE="Usage: `basename $0` [-h] [-t embuitag] args"
+
 # etag file
 tags=etags.txt
 # embui branch/tag name to fetch
 embuitag="dev"
 
 refresh_styles=0
+
+
+# parse cmd options
+while getopts ht: OPT; do
+    case "$OPT" in
+        h)
+            echo $USAGE
+            exit 0
+            ;;
+        t)
+            echo "EmbUI tag is set to: $OPTARG"
+            embuitag=$OPTARG
+            ;;
+        \?)
+            # getopts issues an error message
+            echo $USAGE >&2
+            exit 1
+            ;;
+    esac
+done
+
+
 
 [ -f $tags ] || touch $tags
 

@@ -58,6 +58,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "micFFT.h"
 #endif
 
+#include "ts.h"
+// TaskScheduler - Let the runner object be a global, single instance shared between object files.
+extern Scheduler ts;
+
 typedef struct {
     union {
         uint32_t flags;
@@ -442,6 +446,9 @@ private:
     LList<UIControl*> controls; // список контроллов текущего эффекта
     LList<UIControl*> selcontrols; // список контроллов выбранного эффекта (пока еще идет фейдер)
 
+    Task tConfigSave;       // таска, задержки при сохранении текущего конфига эффекта в файл
+
+
     /**
      * создает и инициализирует экземпляр класса выбранного эффекта
      *
@@ -505,13 +512,7 @@ public:
     // дефолтный конструктор
     EffectWorker(LAMPSTATE *_lampstate) : effects(), controls(), selcontrols() {
       lampstate = _lampstate;
-    /*
       // нельзя вызывать литлфс.бегин из конструктора, т.к. инстанс этого объекта есть в лампе, который декларируется до setup()
-      if (!LittleFS.begin()){
-          //LOG(println, F("ERROR: Can't mount filesystem!"));
-          return;
-      }
-    */
 
       for(int8_t id=0;id<3;id++){
         controls.add(new UIControl(
@@ -529,9 +530,12 @@ public:
         //     String(1)                               // step
         // ));
       }
-      //workerset(EFF_NONE);
       selcontrols = controls;
-    } // initDefault(); убрал из конструктора, т.к. крайне неудобно становится отлаживать..
+
+      // task for delayed config autosave
+      tConfigSave.set(CFG_AUTOSAVE_TIMEOUT, TASK_ONCE, [this](){saveeffconfig(curEff);});
+      ts.addTask(tConfigSave);
+    }
 
     // тип сортировки
     void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
@@ -549,8 +553,11 @@ public:
     // конструктор текущего эффекта, для fast=true вычитываетсяч только имя
     EffectWorker(const EffectListElem* eff, bool fast=false);
 
-    // отложенная запись конфига текущего эффекта
-    bool autoSaveConfig(bool force=false, bool reset=false);
+    /**
+     *  отложенная запись конфига текущего эффекта, каждый вызов перезапускает счетчик
+     *  force - сохраняет без задержки, таймер отключается
+     */
+    void autoSaveConfig(bool force=false);
     // удалить конфиг переданного эффекта
     void removeConfig(const uint16_t nb, const char *folder=NULL);
     // пересоздает индекс с текущего списка эффектов
@@ -561,6 +568,7 @@ public:
     byte getModeAmount() {return effects.size();}
 
     const String &getEffectName() {return effectName;}
+
     void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
         {
             if(to->eff_nb==curEff){
@@ -578,8 +586,18 @@ public:
         }
 
     const String &getSoundfile() {return soundfile;}
-    void setSoundfile(const String &_soundfile, EffectListElem*to) // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
-        {if(to->eff_nb==curEff) soundfile=_soundfile; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setSoundfile(_soundfile,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
+
+    // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
+    void setSoundfile(const String &_soundfile, EffectListElem*to){
+        if(to->eff_nb==curEff) soundfile=_soundfile;
+        else {EffectWorker *tmp=new EffectWorker(to);
+        tmp->curEff=to->eff_nb;
+        tmp->selEff=to->eff_nb;
+        tmp->setSoundfile(_soundfile,to);
+        tmp->saveeffconfig(to->eff_nb);
+        delete tmp;}
+    }
+
     const String &getOriginalName() {return originalName;}
 
     /**

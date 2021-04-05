@@ -57,3 +57,5 @@ void default_buttons();
 #endif
 
 uint8_t uploadProgress(size_t len, size_t total);
+
+void delayedcall_show_effects();

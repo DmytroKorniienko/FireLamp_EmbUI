@@ -7532,7 +7532,7 @@ void EffectMaze::newGameMaze() {
 bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
   if (loadingFlag || gameOverFlag) {  
     if (loadingFlag) FastLED.clear();
-    gameTimer.setInterval(map(speed, 1, 255, 500, 50));   // установить начальную скорость
+    gameTimer = map(speed, 1, 255, 500, 50);   // установить начальную скорость
     loadingFlag = false;
     newGameMaze();
     // modeCode = MC_MAZE;
@@ -7544,9 +7544,11 @@ bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
 }
 
 void EffectMaze::buttonsTickMaze() {
-  if (gameDemo && !gameTimer.isReady()) { // тут крутим скорость в демо-режиме
+
+  if (gameDemo && (millis() - timer < gameTimer)) { // тут крутим скорость в демо-режиме
     return;
   }
+  timer = millis();
 
   if (checkButtons()) {
     bool btnPressed = false;
@@ -7748,7 +7750,8 @@ void EffectMaze::SolveMaze(char *maze, int width, int height) {
 
 // !++
 String EffectMaze::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) gameTimer.setInterval(map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 500, 50));   // установить скорость
+  if(_val->getId()==1)
+    gameTimer = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 500, 50);   // установить скорость
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
