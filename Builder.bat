@@ -1,10 +1,12 @@
 color 0A
 setlocal
 set workdir=%~dp0
-PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;
 echo off
-set PYTHONHOME=%USERPROFILE%\Python
-set PYTHONPATH=%USERPROFILE%\Python
+if exist "%USERPROFILE%\Python\python.exe" (
+	set PYTHONHOME=%USERPROFILE%\Python
+	set PYTHONPATH=%USERPROFILE%\Python
+)
+PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;%PYTHONPATH%;
 @chcp 1251>nul
 mode con: cols=88 lines=40
 cls 

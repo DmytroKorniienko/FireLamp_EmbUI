@@ -3,8 +3,6 @@ SETLOCAL EnableDelayedExpansion
 set workdir=%~dp0
 PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;
 echo off
-set PYTHONHOME=%USERPROFILE%\Python
-set PYTHONPATH=%USERPROFILE%\Python
 @chcp 1251>nul
 mode con: cols=88 lines=40
 cls
@@ -40,6 +38,12 @@ if "%choice%"=="0" (
 		mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\python3.exe %USERPROFILE%\Python\python.exe
 		mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\pip.exe %USERPROFILE%\Python\Scripts\pip.exe
 		mklink %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\pip3.exe %USERPROFILE%\Python\Scripts\pip.exe
+	)
+	if exist "%USERPROFILE%\Python\python.exe" (
+		mklink %USERPROFILE%\Python\python3.exe %USERPROFILE%\Python\python.exe
+		mklink %USERPROFILE%\Python\Scripts\pip3.exe %USERPROFILE%\Python\Scripts\pip.exe
+		set PYTHONHOME=%USERPROFILE%\Python
+		set PYTHONPATH=%USERPROFILE%\Python
 	)
 )
 
