@@ -5073,14 +5073,13 @@ bool EffectNBals::run(CRGB *leds, EffectWorker *param) {
 }
 
 void EffectNBals::blur(CRGB *leds) {
-  EffectMath::blur2d(beatsin8(2,0,60));
+  EffectMath::blur2d(beatsin8(2, 0, 60));
   // Use two out-of-sync sine waves
-  // В общем те же фигуры Лиссажу, вид сбоку :), но выглядят хорошо
-  uint8_t  i = beatsin8( beat1, 0, EffectMath::getmaxHeightIndex());
-  uint8_t  j = beatsin8(fabs(beat1-beat2), 0, EffectMath::getmaxWidthIndex());
+  uint8_t  i = beatsin8( beat1, 0, EffectMath::getmaxWidthIndex());
+  uint8_t  j = beatsin8(fabs(beat1 - beat2), 0, EffectMath::getmaxHeightIndex());
   // Also calculate some reflections
-  uint8_t ni = EffectMath::getmaxWidthIndex() -i;
-  uint8_t nj = EffectMath::getmaxWidthIndex() -j;
+  uint8_t ni = EffectMath::getmaxWidthIndex() - i;
+  uint8_t nj = EffectMath::getmaxHeightIndex() - j;
   // The color of each point shifts over time, each at a different speed.
   uint16_t ms = millis();
 
@@ -5100,7 +5099,7 @@ void EffectNBals::blur(CRGB *leds) {
     break;
   case 2:
     EffectMath::drawPixelXY(ni, j, CHSV( ms / 41, 200, 255), 1);
-    EffectMath::drawPixelXY( j, i, CHSV( ms / 13, 200, 255), 1);
+    EffectMath::drawPixelXY( i, j, CHSV( ms / 13, 200, 255), 1);
     break;
   }
 }
