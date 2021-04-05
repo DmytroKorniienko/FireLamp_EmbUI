@@ -7,44 +7,44 @@ set PYTHONHOME=%USERPROFILE%\Python
 set PYTHONPATH=%USERPROFILE%\Python
 @chcp 1251>nul
 mode con: cols=88 lines=40
-cls
+cls 
 
 :m1
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                [96mCOMMANDS[92m                  *  (Russian)      [96mКОМАНДЫ[92m                 *
+Echo  *                COMMANDS                  *  (Russian)      КОМАНДЫ                 *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *              [93mGIT commands[92m                *              [93mРабота с GIT[92m               *
-Echo  *  Switch to MASTER branch          - ([97m1[92m)  *  Переключиться на ветку MASTER          *
-Echo  *  Switch to DEV branch             - ([97m2[92m)  *  Переключиться на ветку DEV             *
+Echo  *              GIT commands                *              Работа с GIT               *
+Echo  *  Switch to MASTER branch          - (1)  *  Переключиться на ветку MASTER          *
+Echo  *  Switch to DEV branch             - (2)  *  Переключиться на ветку DEV             *
 Echo  #------------------------------------------#-----------------------------------------# 
-echo  *  Reset changes in local repo!     - ([97m3[92m)  *  Сбросить изменения в локальном репо!   *
-Echo  *  [91mWARNING![92m This will revert all changes!  *  [91mВНИМАНИЕ![92m Это сбросит все изменения!   *
+echo  *  Reset changes in local repo!     - (3)  *  Сбросить изменения в локальном репо!   *
+Echo  *  WARNING! This will revert all changes!  *  ВНИМАНИЕ! Это сбросит все изменения!   *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *             [93mBuild and flash[92m              *            [93mСборка и прошивка[92m            *
-Echo  *  Build - Esp8266 160MHz           - ([97m4[92m)  *  Собрать для Esp8266 на 160МГц          *
-Echo  *  Build - Esp8266 80MHz            - ([97m5[92m)  *  Собрать для Esp8266 на 80МГц           *
-Echo  *  Build - Esp32                    - ([97m6[92m)  *  Собрать для Esp32                      *
+Echo  *             Build and flash              *            Сборка и прошивка            *
+Echo  *  Build - Esp8266 160MHz           - (4)  *  Собрать для Esp8266 на 160МГц          *
+Echo  *  Build - Esp8266 80MHz            - (5)  *  Собрать для Esp8266 на 80МГц           *
+Echo  *  Build - Esp32                    - (6)  *  Собрать для Esp32                      *
 Echo  *                                          *                                         *
-Echo  *  Build and upload - Esp8266@160   - ([97m7[92m)  *  Собрать и прошить - Esp8266 на 160МГц  *
-Echo  *  Build and upload - Esp8266@80    - ([97m8[92m)  *  Собрать и прошить - Esp8266 на 80МГц   *
-Echo  *  Build and upload - Esp32         - ([97m9[92m)  *  Собрать и прошить - Esp32              *
+Echo  *  Build and upload - Esp8266@160   - (7)  *  Собрать и прошить - Esp8266 на 160МГц  *
+Echo  *  Build and upload - Esp8266@80    - (8)  *  Собрать и прошить - Esp8266 на 80МГц   *
+Echo  *  Build and upload - Esp32         - (9)  *  Собрать и прошить - Esp32              *
 Echo  *                                          *                                         *
-Echo  *            [93mFile System[92m                   *           [93mФайловая Система[92m              *
-Echo  *  Update FS data from framework    - ([97mu[92m)  *  Обновить файлы ФС из фреймворка        *
-Echo  *  Build File System image          - ([97mb[92m)  *  Собрать образ Файловой Системы         *
-Echo  *  Build and upload File System     - ([97mf[92m)  *  Собрать и прошить Файловую Систему     *
+Echo  *            File System                   *           Файловая Система              *
+Echo  *  Update FS data from framework    - (u)  *  Обновить файлы ФС из фреймворка        *
+Echo  *  Build File System image          - (b)  *  Собрать образ Файловой Системы         *
+Echo  *  Build and upload File System     - (f)  *  Собрать и прошить Файловую Систему     *
 Echo  *                                          *                                         *
-Echo  *  Erase Flash                      - ([97me[92m)  *  Стереть флеш контроллера               *
+Echo  *  Erase Flash                      - (e)  *  Стереть флеш контроллера               *
 Echo  *                                          *                                         *
-Echo  *  Clean up temp files .pio         - ([97mc[92m)  *  Очистить временные файлы .pio          *
-Echo  *  Update libs and PIO Core         - ([97mg[92m)  *  Обновить библиотеки и среду PIO Core   *
+Echo  *  Clean up temp files .pio         - (c)  *  Очистить временные файлы .pio          *
+Echo  *  Update libs and PIO Core         - (g)  *  Обновить библиотеки и среду PIO Core   *
 Echo  *------------------------------------------#-----------------------------------------*
-Echo  *  CMD window                       - ([97mm[92m)  *  Открыть окно коммандной строки CMD     *
+Echo  *  CMD window                       - (m)  *  Открыть окно коммандной строки CMD     *
 Echo  *------------------------------------------#-----------------------------------------*
-Echo  *  [91mRemove[92m Platformio installation   - [91m([97mR[91m)[92m  *  Полностью [91mудалить[92m Platformio с ПК      *
+Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      *
 Echo  #------------------------------------------#-----------------------------------------#
 Echo.
-Set /p choice="[96mYour choice (Ваш выбор): [92m"
+Set /p choice="Your choice (Ваш выбор): "
 
 
 if "%choice%"=="1" call update-DEV-from-Git.cmd 1

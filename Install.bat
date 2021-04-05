@@ -11,18 +11,18 @@ cls
 
 :m1
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                  [96mCommands[92m                *  (Russian)      [96mКоманды[92m                 * 
+Echo  *                  Commands                *  (Russian)      Команды                 * 
 Echo  #------------------------------------------#-----------------------------------------# 
 Echo  *             Install tools                *     Установка инструментов и среды      * 
-Echo  *  Install Python          ([93mstep 1[92m) - ([97m0[92m)  *  Установить Python             ([93mШаг 1[92m)  * 
-Echo  *  Install Platformio Core ([93mstep 2[92m) - ([97m1[92m)  *  Установить PIO Core           ([93mШаг 2[92m)  * 
-Echo  *  Install Git for Windows ([93mstep 3[92m) - ([97m2[92m)  *  Установить Git                ([93mШаг 3[92m)  * 
-Echo  *  Get firmware repository ([93mstep 4[92m) - ([97m3[92m)  *  Получить репозиторий прошивки ([93mШаг 4[92m)  *
+Echo  *  Install Python          (step 1) - (0)  *  Установить Python             (Шаг 1)  * 
+Echo  *  Install Platformio Core (step 2) - (1)  *  Установить PIO Core           (Шаг 2)  * 
+Echo  *  Install Git for Windows (step 3) - (2)  *  Установить Git                (Шаг 3)  * 
+Echo  *  Get firmware repository (step 4) - (3)  *  Получить репозиторий прошивки (Шаг 4)  *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *  Remove Platformio installation   - [91m([97mR[91m)[92m  *  Полностью удалить Platformio с ПК      * 
+Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      * 
 Echo  #------------------------------------------#-----------------------------------------#
 Echo.
-Set /p choice="[96mYour choice (Ваш выбор): [92m"
+Set /p choice="Your choice (Ваш выбор): "
 
 if "%choice%"=="0" (
 	if not exist "%systemdrive%\Program Files (x86)" (
