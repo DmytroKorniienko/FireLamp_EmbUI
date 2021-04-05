@@ -192,7 +192,6 @@ ICACHE_FLASH_ATTR void sendData(bool force){
  * 2) Тикер не может дернуть нестатический метод класса
  */
 ICACHE_FLASH_ATTR void buttonhelper(bool state){
-  embui.autoSaveReset();
   myButtons->buttonPress(state);
 }
 

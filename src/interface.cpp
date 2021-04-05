@@ -73,7 +73,6 @@ bool check_recovery_state(bool isSet){
 
 void resetAutoTimers(bool isEffects=false) // сброс таймера демо и настройка автосохранений
 {
-    embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     myLamp.demoTimer(T_RESET);
     if(isEffects)
         myLamp.DelayedAutoEffectConfigSave(CFG_AUTOSAVE_TIMEOUT); // настройка отложенной записи эффектов
@@ -128,7 +127,6 @@ void pubCallback(Interface *interf){
 void block_menu(Interface *interf, JsonObject *data){
     if (!interf) return;
     // создаем меню
-    embui.autoSaveReset(); // автосохранение конфига будет отсчитываться от этого момента
     interf->json_section_menu();
 
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));   //  Эффекты
@@ -2523,14 +2521,19 @@ void sync_parameters(){
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
     //save_lamp_flags(); // обновить состояние флагов (закомментированно, окончательно состояние установится через 0.3 секунды, после set_settings_other)
 
+    //--------------- начальная инициализация состояния
+    myLamp.getLampState().freeHeap = ESP.getFreeHeap();
 #ifdef ESP8266
     FSInfo fs_info;
     LittleFS.info(fs_info);
     myLamp.getLampState().fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
+    myLamp.getLampState().HeapFragmentation = ESP.getHeapFragmentation();
 #endif
 #ifdef ESP32
     myLamp.getLampState().fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
+    myLamp.getLampState().HeapFragmentation = 0;
 #endif
+    //--------------- начальная инициализация состояния
 
     LOG(println, F("sync_parameters() done"));
 }
