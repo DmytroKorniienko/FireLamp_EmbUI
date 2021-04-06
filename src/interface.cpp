@@ -372,37 +372,46 @@ void delayedcall_show_effects(){
     LOG(println, F("=== GENERATE EffLIst for GUI===="));
     uint16_t effnb = confEff?(int)confEff->eff_nb:myLamp.effects.getSelected(); // если confEff не NULL, то мы в конфирурировании, иначе в основном режиме
     
-    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 3000) : nullptr;
+    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 2048) : nullptr;
     if (!interf) return;
     interf->json_frame_interface();
     interf->json_section_content();
-
-
     interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
-    EffectListElem *eff = nullptr;
-    String effname((char *)0);
-    MIC_SYMB;
-    //bool numList = myLamp.getLampSettings().numInList;
-    while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
 
-        myLamp.effects.loadeffname(effname, eff->eff_nb);
-        interf->option(String(eff->eff_nb),
-            //EFF_NUMBER + 
-            String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
-            String(effname) + 
-            MIC_SYMBOL                
-        );
-        #ifdef ESP8266
-        ESP.wdtFeed();
-        #elif defined ESP32
-        delay(1);
-        #endif
-    }
-    //interf->option(String(0),"");
-    interf->json_section_end();
-    interf->json_section_end();
-    interf->json_frame_flush();
-    delete interf;
+    new Task(300, TASK_FOREVER,
+        // loop
+        [interf](){
+            String effname((char *)0);
+            MIC_SYMB;
+            size_t cnt = 5; // генерим по 5 элементов
+            static EffectListElem *eff = nullptr;
+
+            while (--cnt) {
+                eff = myLamp.effects.getNextEffect(eff);
+                if (eff != nullptr){
+                    myLamp.effects.loadeffname(effname, eff->eff_nb);
+                    LOG(print, effname);
+                    interf->option(String(eff->eff_nb),
+                        //EFF_NUMBER + 
+                        String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
+                        effname +
+                        MIC_SYMBOL
+                    );
+                } else { Task *_t = &ts.currentTask(); _t->disable(); delete eff; return; }
+            }
+        },
+        &ts, true,
+        nullptr,
+        //onDisable
+        [interf](){
+            //interf->option(String(0),"");
+            interf->json_section_end();
+            interf->json_section_end();
+            interf->json_frame_flush();
+            delete interf;
+            TASK_RECYCLE;
+        }
+    );
 }
 
 void show_effects_config(Interface *interf, JsonObject *data){
@@ -581,7 +590,6 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
     DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
     (*_str)=(*data);
-    LOG(println, "Delaying dynctrl");
     new Task(100, TASK_ONCE,
         nullptr,
         &ts, true,
@@ -589,13 +597,11 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
         [_str](){
             JsonObject dataStore = (*_str).as<JsonObject>();
             JsonObject *data = &dataStore;
-            LOG(println, "processing dynctrl...");
 
             String ctrlName;
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=0; i<controls.size();i++){
                 ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
-                //LOG(println, ctrlName);
                 if((*data).containsKey(ctrlName)){
                     if(!i){ // яркость???
                         byte bright = (*data)[ctrlName];
@@ -716,7 +722,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
                 effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
-                interf->option(String(eff->eff_nb), 
+                interf->option(String(eff->eff_nb),
                     EFF_NUMBER + 
                     String(effname) + 
                     MIC_SYMBOL                    
