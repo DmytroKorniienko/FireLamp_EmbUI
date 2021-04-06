@@ -157,7 +157,7 @@ public:
     const String &getMax() {return max;}
     const String &getStep() {return step;}
 
-    void setVal(const String &_val) {val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt());}
+    void setVal(const String &_val) {if(getType()==CONTROL_TYPE::RANGE) val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt()); else val=_val;}
 };
 
 

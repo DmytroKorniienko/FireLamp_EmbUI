@@ -588,16 +588,22 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
     resetAutoTimers(true);
 
-    DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
-    (*_str)=(*data);
-    new Task(100, TASK_ONCE,
-        nullptr,
-        &ts, true,
-        nullptr,
-        [_str](){
-            JsonObject dataStore = (*_str).as<JsonObject>();
-            JsonObject *data = &dataStore;
-
+    // DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
+    // (*_str)=(*data);
+    // LOG(println, "Delaying dynctrl");
+    // new Task(100, TASK_ONCE,
+    //     nullptr,
+    //     &ts, true,
+    //     nullptr,
+    //     [_str]()
+        
+        {
+            // JsonObject dataStore = (*_str).as<JsonObject>();
+            // JsonObject *data = &dataStore;
+            
+            // LOG(println, "processing dynctrl...");
+            // String tmp; serializeJson(*data,tmp); LOG(println, tmp);
+///*
             String ctrlName;
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=0; i<controls.size();i++){
@@ -622,9 +628,11 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                     publish_ctrls_vals();
                 }
             }
-            delete _str;
-            TASK_RECYCLE; }
-    );
+//*/
+            // delete _str;
+            // TASK_RECYCLE;
+        }
+    // );
 }
 
 /**
@@ -2611,15 +2619,23 @@ void remote_action(RA action, ...){
             CALL_INTF(FPSTR(TCONST_001C), value, set_gbrflag);
             break;
         case RA::RA_BRIGHT_NF:
+            obj[String(FPSTR(TCONST_0015)) + "0"] = value;
             obj[FPSTR(TCONST_0017)] = true;
+            CALL_INTF_OBJ(set_effects_dynCtrl);
+            break;
         case RA::RA_BRIGHT:
+            obj[String(FPSTR(TCONST_0015)) + "0"] = value;
+            CALL_INTF_OBJ(set_effects_dynCtrl);
+            break;
         case RA::RA_SPEED:
+            obj[String(FPSTR(TCONST_0015)) + "1"] = value;
+            CALL_INTF_OBJ(set_effects_dynCtrl);
+            break;
         case RA::RA_SCALE:
+            obj[String(FPSTR(TCONST_0015)) + "2"] = value;
+            CALL_INTF_OBJ(set_effects_dynCtrl);
+            break;
         case RA::RA_EXTRA:
-            //CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
-            //CALL_INTF(String(FPSTR(TCONST_0015)) + "0", value, set_effects_dynCtrl);
-
-            //CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
             CALL_INTF_OBJ(set_effects_dynCtrl);
             break;
 #ifdef MIC_EFFECTS
