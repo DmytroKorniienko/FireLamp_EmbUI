@@ -261,11 +261,11 @@ public:
     uint8_t getbPin() {return bPin;}
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
+    LAMPSTATE &getLampState() {return lampState;}
+
 #ifdef MIC_EFFECTS
     void setMicCalibration() {lampState.isCalibrationRequest = true;}
     bool isMicCalibration() {return lampState.isCalibrationRequest;}
-
-    LAMPSTATE &getLampState() {return lampState;}
 
     void setMicOnOff(bool val) {
         bool found=false;
