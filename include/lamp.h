@@ -282,7 +282,7 @@ public:
             }
         } 
         if(!val || !found){
-            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", String(""), String(""), String(""));
+            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", "0", "1", "1");
             if(effects.worker) effects.worker->setDynCtrl(ctrl);
             delete ctrl;
         }
