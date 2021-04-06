@@ -582,20 +582,20 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
     (*_str)=(*data);
     LOG(println, "Delaying dynctrl");
-    new Task(300, TASK_ONCE,
+    new Task(100, TASK_ONCE,
         nullptr,
         &ts, true,
         nullptr,
         [_str](){
             JsonObject dataStore = (*_str).as<JsonObject>();
             JsonObject *data = &dataStore;
-            LOG(print, "processing dynctrl...");
+            LOG(println, "processing dynctrl...");
 
             String ctrlName;
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=0; i<controls.size();i++){
                 ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
-                LOG(print, ctrlName);
+                //LOG(println, ctrlName);
                 if((*data).containsKey(ctrlName)){
                     if(!i){ // яркость???
                         byte bright = (*data)[ctrlName];
@@ -2607,18 +2607,12 @@ void remote_action(RA action, ...){
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
         case RA::RA_BRIGHT:
-            //CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
-            CALL_INTF(String(FPSTR(TCONST_0015)) + "0", value, set_effects_dynCtrl);
-            break;
         case RA::RA_SPEED:
-            //CALL_INTF(FPSTR(TCONST_0013), value, set_effects_speed);
-            CALL_INTF(String(FPSTR(TCONST_0015)) + "1", value, set_effects_dynCtrl);
-            break;
         case RA::RA_SCALE:
-            //CALL_INTF(FPSTR(TCONST_0014), value, set_effects_scale);
-            CALL_INTF(String(FPSTR(TCONST_0015)) + "2", value, set_effects_dynCtrl);
-            break;
         case RA::RA_EXTRA:
+            //CALL_INTF(FPSTR(TCONST_0012), value, set_effects_bright);
+            //CALL_INTF(String(FPSTR(TCONST_0015)) + "0", value, set_effects_dynCtrl);
+
             //CALL_INTF(FPSTR(TCONST_0015), value, set_effects_dynCtrl);
             CALL_INTF_OBJ(set_effects_dynCtrl);
             break;
@@ -2883,6 +2877,17 @@ String httpCallback(const String &param, const String &value, bool isset){
             embui.publishto(String(F("homeassistant/light/")) + name + F("/config"), hass_discover_str, true);
             return hass_discover_str;
         }
+        else if (param == F("list"))  {
+            result = F("[");
+            bool first=true;
+            EffectListElem *eff = nullptr;
+            String effname((char *)0);
+            while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
+                result = result + String(first ? F("") : F(",")) + eff->eff_nb;
+                first=false;
+            }
+            result = result + F("]");
+        }
         else if (param == F("showlist"))  {
             result = F("[");
             bool first=true;
@@ -2953,7 +2958,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00AE)) {
             return httpCallback(param, "", false); // set пока не реализована
         }
-        else if (param == FPSTR(TCONST_00D0)) {
+        else if (param == FPSTR(TCONST_00D0) || param == FPSTR(TCONST_00D4)) {
             String str=value;
             DynamicJsonDocument doc(256);
             deserializeJson(doc,str);
@@ -2961,8 +2966,17 @@ String httpCallback(const String &param, const String &value, bool isset){
             uint16_t id=0;
             String val="";
 
-            if(arr.size()<2){
-                return httpCallback(param, value, false);
+            if(arr.size()<2){ // мало параметров, т.е. это GET команда, возвращаем состояние контрола
+                return httpCallback(FPSTR(TCONST_00D0), value, false);
+            }
+
+            if(param == FPSTR(TCONST_00D4)){ // это команда увеличения контрола на значение, соотвественно получаем текущее
+                val = arr[1].as<String>().toInt();
+                str = httpCallback(FPSTR(TCONST_00D0), arr[0], false);
+                doc.clear(); doc.garbageCollect();
+                deserializeJson(doc,str);
+                arr = doc.as<JsonArray>();
+                arr[1] = arr[1].as<String>().toInt()+val.toInt();
             }
 
             for (size_t i = 0; i < arr.size(); i++) {
@@ -2975,13 +2989,11 @@ String httpCallback(const String &param, const String &value, bool isset){
                     default : break;
                 }
 			}
-            switch(id){
-                case 0: {action = RA_BRIGHT; remote_action(action, val.c_str(), NULL); break;}
-                case 1: {action = RA_SPEED; remote_action(action, val.c_str(), NULL); break;}
-                case 2: {action = RA_SCALE; remote_action(action, val.c_str(), NULL); break;}
-                default: {action = RA_EXTRA; String to=String(FPSTR(TCONST_0015))+id; remote_action(action, to.c_str(), val.c_str(), NULL); break;}
-            }
-            return httpCallback(param, String(id), false);
+            remote_action(RA_EXTRA, (String(FPSTR(TCONST_0015))+id).c_str(), val.c_str(), NULL);
+            result = String(F("[")) + String(id) + String(F(",\"")) + val + String(F("\"]"));
+            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
+
+            //return httpCallback(FPSTR(TCONST_00D0), String(id), false); // т.к. отложенный вызов, то иначе обрабатыаем
         }
         else if (param == F("effname"))  {
             String effname((char *)0);
