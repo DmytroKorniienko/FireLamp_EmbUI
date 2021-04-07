@@ -41,7 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef USE_FTP
   #include "ftpSrv.h"
 #endif
-#ifdef TM1637
+#ifdef TM1637_TIME
   #include "tm.h"
 #endif
 
@@ -118,7 +118,7 @@ void setup() {
   Task *t = new Task(myLamp.getmqtt_int() * TASK_SECOND, TASK_FOREVER, [](){ sendData(); }, &ts, false);
   t->enableDelayed();
 
-#ifdef TM1637
+#ifdef TM1637_TIME
   tm_setup();
 #endif 
 
@@ -137,7 +137,7 @@ void loop() {
     ftp_loop(); // цикл обработки событий фтп-сервера
 #endif
 
-#ifdef TM1637
+#ifdef TM1637_TIME
     EVERY_N_SECONDS(1) {
         tm_loop();
     }
