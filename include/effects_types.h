@@ -39,7 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define __EFFECTS_TYPES_H
 
 #include "config.h"
-#include LANG                //"text_res.h"
+#include LANG_FILE                //"text_res.h"
 
 
 /*

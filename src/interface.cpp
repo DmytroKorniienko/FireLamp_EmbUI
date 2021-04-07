@@ -39,7 +39,15 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
-#include LANG                  //"text_res.h"
+#include LANG_FILE                  //"text_res.h"
+
+/**
+ * можно нарисовать свой собственный интефейс/обработчики с нуля, либо
+ * подключить статический класс с готовыми формами для базовых системных натсроек и дополнить интерфейс.
+ * необходимо помнить что существуют системные переменные конфигурации с зарезервированными именами.
+ * Список имен системных переменных можно найти в файле "constants.h"
+ */
+#include "basicui.h"
 
 #ifdef ESP32
     #include "esp_littlefs.h"
@@ -1534,6 +1542,19 @@ void set_settings_other(Interface *interf, JsonObject *data){
     section_settings_frame(interf, data);
 }
 
+// страницу-форму настроек времени строим методом фреймворка
+void show_settings_time(Interface *interf, JsonObject *data){
+    BasicUI::block_settings_time(interf, data);
+}
+
+// обработка значений со страницы настроек времени, передаем в обрабочик фреймворка
+/*
+void set_settings_time(Interface *interf, JsonObject *data){
+    BasicUI::set_settings_time(interf, data);
+}
+*/
+
+/*
 void block_settings_time(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_0056), FPSTR(TINTF_051));
@@ -1551,13 +1572,8 @@ void block_settings_time(Interface *interf, JsonObject *data){
 
     interf->json_section_end();
 }
+*/
 
-void show_settings_time(Interface *interf, JsonObject *data){
-    if (!interf) return;
-    interf->json_frame_interface();
-    block_settings_time(interf, data);
-    interf->json_frame_flush();
-}
 
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
@@ -1573,8 +1589,14 @@ void set_settings_time(Interface *interf, JsonObject *data){
             embui.timeProcessor.setTime(datetime);
     }
 
-    SETPARAM(FPSTR(TCONST_0057), embui.timeProcessor.tzsetup((*data)[FPSTR(TCONST_0057)]));
-    SETPARAM(FPSTR(TCONST_0058), embui.timeProcessor.setcustomntp((*data)[FPSTR(TCONST_0058)]));
+    // Save and apply timezone rules
+    String tzrule = embui.param(FPSTR(P_TZSET));
+    if (!tzrule.isEmpty()){
+        SETPARAM(FPSTR(P_TZSET));
+        embui.timeProcessor.tzsetup(tzrule.substring(4).c_str());   // cutoff '000_' prefix key
+    }
+
+    SETPARAM(FPSTR(P_userntp), embui.timeProcessor.setcustomntp((*data)[FPSTR(P_userntp)]));
 
     myLamp.sendStringToLamp(String(F("%TM")).c_str(), CRGB::Green);
 

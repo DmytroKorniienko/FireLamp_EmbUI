@@ -51,7 +51,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 
 //------------------------------ Основные Настройки
-#define LANG                   "text_res-RUS.h"             // для других языков при компиляции менять постфикс файла "text_res-***.h". 
+#define LANG_FILE                   "text_res-RUS.h"             // для других языков при компиляции менять постфикс файла "text_res-***.h". 
 															// Наличие нужного файла перевода смотреть в папке include в основной папке проекта 
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
 
