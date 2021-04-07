@@ -1590,7 +1590,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
     }
 
     // Save and apply timezone rules
-    String tzrule = (*data)(FPSTR(P_TZSET));
+    String tzrule = (*data)[FPSTR(P_TZSET)];
     if (!tzrule.isEmpty()){
         SETPARAM(FPSTR(P_TZSET));
         embui.timeProcessor.tzsetup(tzrule.substring(4).c_str());   // cutoff '000_' prefix key
