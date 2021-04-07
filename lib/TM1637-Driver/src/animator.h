@@ -271,7 +271,7 @@ private:
 	const uint8_t		totalDigits_;
     Tasker              tasker;
     Animation           currentAnimation = Animation::NONE;
-    const uint8_t ascii[128] =
+    const uint8_t ascii[128] =				// Массив изменен, добавлены все буквы латиницы
     {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
