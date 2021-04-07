@@ -63,7 +63,8 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
 
   LOG(println, F("DFPlayer Mini online."));
   outputDevice(DFPLAYER_DEVICE_SD);
-  periodicCall.attach_scheduled(1.21, std::bind(&MP3PLAYERDEVICE::handle, this)); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
+  Task *t = new Task(1.21 * TASK_SECOND, TASK_FOREVER, [this](){ handle(); }, &ts, false); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
+  //periodicCall.attach_scheduled(1.21, std::bind(&MP3PLAYERDEVICE::handle, this)); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
   volume(5);  // start volume
 }
 
@@ -73,21 +74,41 @@ void MP3PLAYERDEVICE::restartSound()
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
   if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение, попытка фикса https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-312#post-75394
-    delayedCall.once(0.2,std::bind([this](){
-      if(isOn() || (ready && alarm)){
-        if(alarm){
-          ReStartAlarmSound(tAlarm);
-        } else if(!mp3mode && effectmode){
-          if(cur_effnb>0)
-            playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
-        } else if(mp3mode) {
-          cur_effnb++;
-          if(cur_effnb>mp3filescount)
-            cur_effnb=1;
-          playMp3Folder(cur_effnb);
-        }
-      }
-    }));
+    Task *_t = new Task(
+        200,
+        TASK_ONCE, [this](){
+          if(isOn() || (ready && alarm)){
+            if(alarm){
+              ReStartAlarmSound(tAlarm);
+            } else if(!mp3mode && effectmode){
+              if(cur_effnb>0)
+                playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
+            } else if(mp3mode) {
+              cur_effnb++;
+              if(cur_effnb>mp3filescount)
+                cur_effnb=1;
+              playMp3Folder(cur_effnb);
+            }
+          }
+        TASK_RECYCLE; },
+        &ts, false);
+    _t->enableDelayed();
+    
+    // delayedCall.once(0.2,std::bind([this](){
+    //   if(isOn() || (ready && alarm)){
+    //     if(alarm){
+    //       ReStartAlarmSound(tAlarm);
+    //     } else if(!mp3mode && effectmode){
+    //       if(cur_effnb>0)
+    //         playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
+    //     } else if(mp3mode) {
+    //       cur_effnb++;
+    //       if(cur_effnb>mp3filescount)
+    //         cur_effnb=1;
+    //       playMp3Folder(cur_effnb);
+    //     }
+    //   }
+    // }));
   }
 }
 
@@ -151,7 +172,14 @@ void MP3PLAYERDEVICE::printSatusDetail(){
             restartTimeout=millis();
             restartSound(); // тут будет отложенный запуск через 0.2 секунды
             delay(300);
-            delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
+            Task *_t = new Task(
+                2.5 * TASK_SECOND,
+                TASK_ONCE, [this](){
+                  playAdvertise(nextAdv);
+                TASK_RECYCLE; },
+                &ts, false);
+            _t->enableDelayed();
+            //delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
           }
           break;
         default:
@@ -181,11 +209,25 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
     {
       playAdvertise(3000+hours);
       nextAdv = minutes+3100;
-      delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
+      Task *_t = new Task(
+          2.25 * TASK_SECOND,
+          TASK_ONCE, [this](){
+            playAdvertise(nextAdv);
+          TASK_RECYCLE; },
+          &ts, false);
+      _t->enableDelayed();
+      //delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
     } else {
       playLargeFolder(0x00, 3000+hours);
       nextAdv = minutes+3100;
-      delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
+      Task *_t = new Task(
+          2.25 * TASK_SECOND,
+          TASK_ONCE, [this](){
+            playAdvertise(nextAdv);
+          TASK_RECYCLE; },
+          &ts, false);
+      _t->enableDelayed();
+      //delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
       restartTimeout = millis();
     }
   } else if(tst==TIME_SOUND_TYPE::TS_VER2){
