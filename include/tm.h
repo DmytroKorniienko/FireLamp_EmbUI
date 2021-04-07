@@ -38,15 +38,23 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef _TM_H
 #define _TM_H
 
-
+#ifndef GYVERTM1637
+#include "TM1637.h"
+#endif
+#ifdef GYVERTM1637
 #include "GyverTM1637.h"
+#endif
 #include "misc.h"
 #include "main.h"
 #include "config.h"
 
-static GyverTM1637 disp(TM_CLK_PIN, TM_DIO_PIN);
-
+#ifndef GYVERTM1637
+static TM1637 tm1637(TM_CLK_PIN, TM_DIO_PIN);
+#endif
+#ifdef GYVERTM1637
+static GyverTM1637 disp(TM_CLK_PIN, TM_DIO_PIN); 
+#endif
 extern void tm_setup();
 extern void tm_loop();
-
+ 
 #endif

@@ -1,0 +1,49 @@
+DataCommand_e	KEYWORD1
+AddressCommand_e	KEYWORD1
+DisplayControl_e	KEYWORD1
+
+TM1637	KEYWORD1
+tm1637	KEYWORD1
+DisplayDigit    KEYWORD1
+Animator    KEYWORD1
+
+init	KEYWORD2
+begin   KEYWORD2
+refresh KEYWORD2
+display	KEYWORD2
+displayRawBytes KEYWORD2
+offMode	KEYWORD2
+onMode	KEYWORD2
+colonOff    KEYWORD2
+colonOn KEYWORD2
+switchColon KEYWORD2
+clearScreen KEYWORD2
+setDp   KEYWORD2
+getBrightness   KEYWORD2
+changeBrightness	KEYWORD2
+setBrightness   KEYWORD2
+blink   KEYWORD2
+fadeIn  KEYWORD2
+fadeOut KEYWORD2
+scrollLeft  KEYWORD2
+off KEYWORD2
+on  KEYWORD2
+reset   KEYWORD2
+clear   KEYWORD2
+
+
+
+setA    KEYWORD2
+setB    KEYWORD2
+setC    KEYWORD2
+setD    KEYWORD2
+setE    KEYWORD2
+setF    KEYWORD2
+setG    KEYWORD2
+setG    KEYWORD2
+setDot  KEYWORD2
+
+
+MI2C	KEYWORD3
+
+TOTAL_DIGITS LITERAL1
