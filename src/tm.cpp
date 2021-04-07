@@ -43,28 +43,28 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #if TM_SHOW_BANNER
 String welcome_banner = "FIRE_START"; // Список букв для вывода A Bb Cc Dd Ee F G Hh Ii J K Ll m Nn Oo P q r S t U v w x Y Z
 /* Указывать можно в любом регистре, разделять лучше нижним подчеркиванием "_", если поставить пробел, то слова разделятся и будут отображаться по очереди, например сначала заскроллится "FIRE",
-дойдет до конца, потухнет и только тогда появится "START"
+дойдет до конца, потухнет и только тогда появится "START"*/
+uint8_t l = 0;           // Переменная для баннера
 
-*/
 #endif
-uint l = 0;           // Переменная для баннера
+
 
 void tm_setup() {
     tm1637.init();
     tm1637.begin();
     tm1637.setBrightness(TM_BRIGHTNESS);
+    LOG(printf_P, PSTR("TM1637 was initialized \n"));
 }
 
 void tm_loop() {
 
   #if TM_SHOW_BANNER
-  l++;                                 // Добавляем счетчик
+  if( l < 250) l++;                                 // Добавляем счетчик
   if (l <= welcome_banner.length()+2)   // Прокручиваем баннер на всю длину
   tm1637.display(welcome_banner)->scrollLeft(500); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек)
-
+  if (l >= welcome_banner.length()+3) {          // Запускаем отображение времени после прокрутки баннера
   #endif
 
-  if (l >= welcome_banner.length()+3) {          // Запускаем отображение времени после прокрутки баннера
   const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени
   static bool showPoints = false;      
   char dispTime[5];            // Массив для сбора времени
@@ -126,9 +126,11 @@ void tm_loop() {
   #endif
 
   showPoints=!showPoints;
+  #if TM_SHOW_BANNER
   }
-
+  #endif
 }
+
 
 #endif
 #ifdef GYVERTM1637
@@ -154,7 +156,14 @@ void tm_loop() {
 
   disp.point(showPoints);
   showPoints = !showPoints;
+
+  #ifdef TM_24
   disp.displayClock(t->tm_hour, t->tm_min);
+  #endif
+
+  #ifndef TM_24
+  disp.displayClock((t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);
+  #endif
   //if (showPoints) LOG(printf_P, PSTR("TM1637 updated \n"));
 }
 #endif
