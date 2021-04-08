@@ -398,7 +398,7 @@ void delayedcall_show_effects(){
                 eff = myLamp.effects.getNextEffect(eff);
                 if (eff != nullptr){
                     myLamp.effects.loadeffname(effname, eff->eff_nb);
-                    LOG(print, effname);
+                    LOG(println, effname);
                     interf->option(String(eff->eff_nb),
                         //EFF_NUMBER + 
                         String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
