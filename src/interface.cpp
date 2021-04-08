@@ -1578,9 +1578,10 @@ void block_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(TCONST_00B8)].as<String>().c_str());
+    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(P_DTIME)].as<String>().c_str());
     
     String datetime=(*data)[FPSTR(P_DTIME)];
+	datetime = (String) datetime + (String) ":00";
     if (datetime.length())
         embui.timeProcessor.setTime(datetime);
     else if(!embui.sysData.wifi_sta) {
