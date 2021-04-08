@@ -1545,6 +1545,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
 // страницу-форму настроек времени строим методом фреймворка
 void show_settings_time(Interface *interf, JsonObject *data){
     BasicUI::block_settings_time(interf, data);
+    interf->datetime(FPSTR(P_DTIME), FPSTR(T_DICT[lang][TD::D_MSG_DATETIME]));  \\ Возможность выбрать Дату\Время
 }
 
 // обработка значений со страницы настроек времени, передаем в обрабочик фреймворка
