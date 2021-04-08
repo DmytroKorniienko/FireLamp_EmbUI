@@ -1580,7 +1580,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
 
     LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(TCONST_00B8)].as<String>().c_str());
     
-    String datetime=(*data)[FPSTR(TCONST_0059)];
+    String datetime=(*data)[FPSTR(P_DTIME)];
     if (datetime.length())
         embui.timeProcessor.setTime(datetime);
     else if(!embui.sysData.wifi_sta) {
@@ -1590,7 +1590,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
     }
 
     // Save and apply timezone rules
-    String tzrule = embui.param(FPSTR(P_TZSET));
+    String tzrule = (*data)[FPSTR(P_TZSET)];
     if (!tzrule.isEmpty()){
         SETPARAM(FPSTR(P_TZSET));
         embui.timeProcessor.tzsetup(tzrule.substring(4).c_str());   // cutoff '000_' prefix key
