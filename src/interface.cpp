@@ -1581,7 +1581,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
     LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(P_DTIME)].as<String>().c_str());
     
     String datetime=(*data)[FPSTR(P_DTIME)];
-	datetime = (String) datetime + (String) ":00";
+	datetime = (String) datetime + (String) ":00";  // Добавляем :00 для нужного форма времени
     if (datetime.length())
         embui.timeProcessor.setTime(datetime);
     else if(!embui.sysData.wifi_sta) {
