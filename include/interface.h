@@ -45,7 +45,8 @@ typedef enum _remote_action {
 void section_main_frame(Interface *interf, JsonObject *data);
 void section_effects_frame(Interface *interf, JsonObject *data);
 void section_text_frame(Interface *interf, JsonObject *data);
-void section_settings_frame(Interface *interf, JsonObject *data);
+// функция перенакрывает таковую из фреймворка и добавляет свои кнопки в меню "Настройки"
+//void user_settings_frame(Interface *interf, JsonObject *data);
 void pubCallback(Interface *interf);
 void set_onflag(Interface *interf, JsonObject *data);
 void save_lamp_flags();

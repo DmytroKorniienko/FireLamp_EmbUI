@@ -54,6 +54,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "micFFT.h"
 #endif
 
+#ifndef DEFAULT_MQTTPUB_INTERVAL
+    #define DEFAULT_MQTTPUB_INTERVAL 30
+#endif
+
 typedef enum _LAMPMODE {
   MODE_NORMAL = 0,
   MODE_DEMO,
@@ -166,7 +170,7 @@ private:
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
-    int mqtt_int;
+    int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
     uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
@@ -309,7 +313,7 @@ public:
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
     int getmqtt_int() {return mqtt_int;}
-    void semqtt_int(int val) {mqtt_int = val;}
+    void semqtt_int(int val) { if (val < DEFAULT_MQTTPUB_INTERVAL) {mqtt_int = DEFAULT_MQTTPUB_INTERVAL;} else mqtt_int = val;}
 
     LAMPMODE getMode() {return mode;}
     void setMode(LAMPMODE _mode) {mode=_mode;}
