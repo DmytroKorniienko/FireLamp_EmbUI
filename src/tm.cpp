@@ -39,15 +39,17 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef TM1637_CLOCK
 #include "tm.h"
 
+static bool showPoints = false;
+static bool timeSetted = false;
+
+
 #ifndef GYVERTM1637
 #if TM_SHOW_BANNER
 String welcome_banner = "FIRE_START"; // Список букв для вывода A Bb Cc Dd Ee F G Hh Ii J K Ll m Nn Oo P q r S t U v w x Y Z
 /* Указывать можно в любом регистре, разделять лучше нижним подчеркиванием "_", если поставить пробел, то слова разделятся и будут отображаться по очереди, например сначала заскроллится "FIRE",
 дойдет до конца, потухнет и только тогда появится "START"*/
 uint8_t l = 0;           // Переменная для баннера
-
 #endif
-
 
 void tm_setup() {
     tm1637.init();
@@ -65,8 +67,14 @@ void tm_loop() {
   if (l >= welcome_banner.length()+3) {          // Запускаем отображение времени после прокрутки баннера
   #endif
 
-  const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени
-  static bool showPoints = false;      
+  if(!embui.sysData.wifi_sta && !timeSetted) {      // Светим --:--, если не подтянулось время с инета или не было настроено вручную
+    auto d =  (showPoints) ? DisplayDigit().setG().setDot() : DisplayDigit().setG();
+    const uint8_t rawBuffer[4] = {d, d, d, d};
+    tm1637.displayRawBytes(rawBuffer, 4);
+  }
+        //if (datetime.length())
+else {
+  const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени 
   char dispTime[5];            // Массив для сбора времени
 
   #ifdef TM_24
@@ -125,10 +133,12 @@ void tm_loop() {
     #endif
   #endif
 
-  showPoints=!showPoints;
+
   #if TM_SHOW_BANNER
   }
   #endif
+  }
+  showPoints=!showPoints;
 }
 
 
@@ -150,12 +160,10 @@ void tm_setup() {
 }
 
 void tm_loop() {
-  static bool showPoints = false;
 
+if(!embui.sysData.wifi_sta && !timeSetted) disp.displayByte(0x40, 0x40, 0x40, 0x40);  // Светим --:--, если не подтянулось время с инета или не было настроено вручную
+else {
   const tm* t = localtime(embui.timeProcessor.now());
-
-  disp.point(showPoints);
-  showPoints = !showPoints;
 
   #ifdef TM_24
   disp.displayClock(t->tm_hour, t->tm_min);
@@ -164,7 +172,14 @@ void tm_loop() {
   #ifndef TM_24
   disp.displayClock((t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);
   #endif
+  }
   //if (showPoints) LOG(printf_P, PSTR("TM1637 updated \n"));
+   disp.point(showPoints);
+   showPoints = !showPoints;
 }
 #endif
 #endif
+
+void tm_setted() {        // Проверяем, было ли установлено время
+  timeSetted++;
+}
