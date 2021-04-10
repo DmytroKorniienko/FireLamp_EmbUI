@@ -326,11 +326,9 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         String effname((char *)0);
         EffectListElem *eff = nullptr;
         MIC_SYMB;
-        //bool numList = myLamp.getLampSettings().numInList;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
             interf->option(String(eff->eff_nb),
-                //EFF_NUMBER + 
                 String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
                 String(effname) + 
                 MIC_SYMBOL
@@ -347,11 +345,9 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         LOG(println,F("DBG1: using slow Names generation"));
         String effname((char *)0);
         MIC_SYMB;
-        //bool numList = myLamp.getLampSettings().numInList;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
             interf->option(String(eff->eff_nb),
-                //EFF_NUMBER + 
                 String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
                 String(effname) + 
                 MIC_SYMBOL
@@ -393,18 +389,19 @@ void delayedcall_show_effects(){
             MIC_SYMB;
             size_t cnt = 5; // генерим по 5 элементов
             static EffectListElem *eff = nullptr;
-
+            bool numList = myLamp.getLampSettings().numInList;
             while (--cnt) {
                 eff = myLamp.effects.getNextEffect(eff);
                 if (eff != nullptr){
                     myLamp.effects.loadeffname(effname, eff->eff_nb);
                     LOG(println, effname);
-                    interf->option(String(eff->eff_nb),
-                        //EFF_NUMBER + 
-                        String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
-                        effname +
-                        MIC_SYMBOL
-                    );
+                    if(confEff || eff->eff_nb || (!eff->eff_nb && eff->canBeSelected())){ // если в конфигурировании или не 0 или 0 эффект и он может быть выбран
+                        interf->option(String(eff->eff_nb),
+                            (!confEff ? EFF_NUMBER : String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". "))) +
+                            effname +
+                            MIC_SYMBOL
+                        );
+                    }
                 } else { Task *_t = &ts.currentTask(); _t->disable(); delete eff; return; }
             }
         },
@@ -412,7 +409,9 @@ void delayedcall_show_effects(){
         nullptr,
         //onDisable
         [interf](){
-            //interf->option(String(0),"");
+            EffectListElem * first_eff=myLamp.effects.getFirstEffect();
+            if(!confEff && first_eff && !first_eff->canBeSelected()) // если мы не в конфигурировании эффектов и первый не может быть выбран, то пустой будет добавлен в конец
+                interf->option(String(0),"");
             interf->json_section_end();
             interf->json_section_end();
             interf->json_frame_flush();
