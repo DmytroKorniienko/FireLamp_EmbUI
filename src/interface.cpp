@@ -39,6 +39,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
+#ifdef TM1637_CLOCK
+#include "tm.h"
+#endif
 #include LANG_FILE                  //"text_res.h"
 
 /**
@@ -1545,7 +1548,6 @@ void set_settings_other(Interface *interf, JsonObject *data){
 // страницу-форму настроек времени строим методом фреймворка
 void show_settings_time(Interface *interf, JsonObject *data){
     BasicUI::block_settings_time(interf, data);
-    interf->datetime(FPSTR(P_DTIME), FPSTR(T_DICT[lang][TD::D_MSG_DATETIME]));  \\ Возможность выбрать Дату\Время
 }
 
 // обработка значений со страницы настроек времени, передаем в обрабочик фреймворка
@@ -1579,16 +1581,22 @@ void block_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(P_DTIME)].as<String>().c_str());
+    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(TCONST_00B8)].as<String>().c_str());
     
     String datetime=(*data)[FPSTR(P_DTIME)];
-	datetime = (String) datetime + (String) ":00";  // Добавляем :00 для нужного форма времени
-    if (datetime.length())
+    if (datetime.length()){
         embui.timeProcessor.setTime(datetime);
+        #ifdef TM1637_CLOCK
+        tm_setted();
+        #endif
+        }
     else if(!embui.sysData.wifi_sta) {
         datetime=(*data)[FPSTR(TCONST_00B8)].as<String>();
         if (datetime.length())
             embui.timeProcessor.setTime(datetime);
+            #ifdef TM1637_CLOCK
+            tm_setted();
+            #endif
     }
 
     // Save and apply timezone rules
