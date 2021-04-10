@@ -39,7 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
-#ifdef TM1637_CLOCK
+#ifdef TM1637_CLOCK			// Подключаю, чтобы получить статус настройки времени
 #include "tm.h"
 #endif
 #include LANG_FILE                  //"text_res.h"
@@ -1587,7 +1587,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
     if (datetime.length()){
         embui.timeProcessor.setTime(datetime);
         #ifdef TM1637_CLOCK
-        tm_setted();
+        tm_setted();					// Функция проверки настройки времени для TM1637
         #endif
         }
     else if(!embui.sysData.wifi_sta) {
@@ -1595,7 +1595,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
         if (datetime.length())
             embui.timeProcessor.setTime(datetime);
             #ifdef TM1637_CLOCK
-            tm_setted();
+            tm_setted();				// Функция проверки настройки времени для TM1637
             #endif
     }
 
