@@ -2331,6 +2331,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
 //    embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
+    embui.section_handle_remove(FPSTR(T_SET_TIME)); // меняю обработчик :)
     embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
 
     embui.section_handle_add(FPSTR(TCONST_00CA), set_drawing);
