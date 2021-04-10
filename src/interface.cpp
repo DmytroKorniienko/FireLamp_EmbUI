@@ -1549,35 +1549,11 @@ void show_settings_time(Interface *interf, JsonObject *data){
     BasicUI::block_settings_time(interf, data);
 }
 */
-/*
+
 void set_settings_time(Interface *interf, JsonObject *data){
-    if (!data) return;
-
-    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(P_DEVDTTIME)].as<String>().c_str());
-    
-    String datetime=(*data)[FPSTR(P_DTIME)];
-    if (datetime.length())
-        embui.timeProcessor.setTime(datetime);
-    else if(!embui.sysData.wifi_sta) {
-        datetime=(*data)[FPSTR(P_DEVDTTIME)].as<String>();
-        if (datetime.length())
-            embui.timeProcessor.setTime(datetime);
-    }
-
-    // Save and apply timezone rules
-    String tzrule = (*data)[FPSTR(P_TZSET)];
-    if (!tzrule.isEmpty()){
-        SETPARAM(FPSTR(P_TZSET));
-        embui.timeProcessor.tzsetup(tzrule.substring(4).c_str());   // cutoff '000_' prefix key
-    }
-
-    SETPARAM(FPSTR(P_userntp), embui.timeProcessor.setcustomntp((*data)[FPSTR(P_userntp)]));
-
+    BasicUI::set_settings_time(interf, data);
     myLamp.sendStringToLamp(String(F("%TM")).c_str(), CRGB::Green);
-
-    section_settings_frame(interf, data);
 }
-*/
 
 void block_settings_update(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -2355,7 +2331,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
 //    embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
-//    embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
+    embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
 
     embui.section_handle_add(FPSTR(TCONST_00CA), set_drawing);
 
