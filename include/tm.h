@@ -56,5 +56,6 @@ static GyverTM1637 disp(TM_CLK_PIN, TM_DIO_PIN);
 #endif
 extern void tm_setup();
 extern void tm_loop();
+extern void tm_setted();  // Проверка, установлено ли время
  
 #endif
