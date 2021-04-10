@@ -325,18 +325,33 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
 
 // радуги 2D
 // ------------- радуга вертикальная/горизонтальная ----------------
+bool EffectRainbow::run(CRGB *ledarr, EffectWorker *opt){
+  // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
+  hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
+#ifdef MIC_EFFECTS
+    micCoef = (getMicMapMaxPeak() > map(speed, 1, 255, 100, 10) and isMicOn() ? getMicMapMaxPeak() : 100.0)/100.0;
+    twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
+    twirlFactor *= getMicMapMaxPeak() > map(speed, 1, 255, 80, 10) and isMicOn() ? 1.5f * ((float)getMicMapFreq() / 255.0f) : 1.0f;
+#else
+    twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
+    micCoef = 1.0;
+#endif
+  if(scale<85){
+    return rainbowHorVertRoutine(false);
+  } else if (scale>170){
+    return rainbowHorVertRoutine(true);
+  } else {
+    return rainbowDiagonalRoutine();
+  }
+}
+
 bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 {
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
-#ifdef MIC_EFFECTS
-    uint8_t micPeak = getMicMapMaxPeak();
-    CHSV thisColor = CHSV((hue + ((uint32_t)i * (micPeak > map(speed, 1, 255, 100, 10) and isMicOn() ? (scale - micPeak) : scale))), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
-#else
-    CHSV thisColor = CHSV((hue + i * scale), 255, 255);
-#endif
     for (uint8_t j = 0U; j < (isVertical?HEIGHT:WIDTH); j++)
     {
+      CHSV thisColor = CHSV(((hue + i * scale) * micCoef), 255, 255);
       EffectMath::drawPixelXY((isVertical?i:j), (isVertical?j:i), thisColor);
     }
   }
@@ -344,35 +359,18 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 }
 
 // ------------- радуга диагональная -------------
-bool EffectRainbow::run(CRGB *ledarr, EffectWorker *opt){
-  // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
-  hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
-  if(scale<85){
-    return rainbowHorVertRoutine(false);
-  } else if (scale>170){
-    return rainbowHorVertRoutine(true);
-  } else {
-    return rainbowDiagonalRoutine(*&ledarr, &*opt);
-  }
-}
-
-bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param)
+bool EffectRainbow::rainbowDiagonalRoutine()
 {
   for (uint8_t i = 0U; i < WIDTH; i++)
   {
     for (uint8_t j = 0U; j < HEIGHT; j++)
     {
-      float twirlFactor = EffectMath::fmap((float)scale, 85, 170, 8.3, 24);      // на сколько оборотов будет закручена матрица, [0..3]
-#ifdef MIC_EFFECTS
-      twirlFactor *= getMicMapMaxPeak() > map(speed, 1, 255, 80, 10) and isMicOn() ? 1.5f * ((float)getMicMapFreq() / 255.0f) : 1.0f;
-#endif
       CRGB thisColor = CHSV((uint8_t)(hue + ((float)WIDTH / (float)HEIGHT * i + j * twirlFactor) * ((float)255 / (float)EffectMath::getmaxDim())), 255, 255);
       EffectMath::drawPixelXY(i, j, thisColor);
     }
   }
   return true;
 }
-
 
 // ------------- цвета -----------------
 void EffectColors::load(){

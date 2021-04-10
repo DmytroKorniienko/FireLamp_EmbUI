@@ -227,9 +227,11 @@ public:
 class EffectRainbow : public EffectCalc {
 private:
     float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
+    float twirlFactor;
+    float micCoef;
 
     bool rainbowHorVertRoutine(bool isVertical);
-    bool rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param);
+    bool rainbowDiagonalRoutine();
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
