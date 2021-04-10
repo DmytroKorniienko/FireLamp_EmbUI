@@ -2099,13 +2099,14 @@ private:
         for (uint8_t j = 0; j < HEIGHT; j++)
         {
             EffectMath::getPixel(i, j) += 
-            ((i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) 
-            && ((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -2) 
-            && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) 
-            || 
-            (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) 
-            && (((int)WIDTH - 1 - i - ((int)j + thisMax - (int)(HEIGHT * 2 - WIDTH) / 2) > -2) 
-            && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) 
+            (
+                (
+                    (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -2) && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2))
+                )
+                    ||
+                (
+                    (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ( (((int)WIDTH - 1 - i - ((int)j + thisMax - (int)(HEIGHT * 2 - WIDTH) / 2) > -2) && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) )
+                )
             || 
             (WIDTH / 2 - i == 0) || (WIDTH / 2 - 1 - i == 0) 
             || 

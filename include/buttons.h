@@ -2,7 +2,9 @@
 #include "config.h" // подключаем эффекты, там же их настройки
 #ifdef ESP_USE_BUTTON
 #include "misc.h"
-#include <Ticker.h>
+#include <FunctionalInterrupt.h>
+#include "ts.h"
+//#include <Ticker.h>
 #include "../../include/LList.h"
 
 typedef enum _button_action {
@@ -27,6 +29,9 @@ typedef enum _button_action {
 } BA;
 
 const char *btn_get_desc(BA action);
+
+// TaskScheduler
+extern Scheduler ts;
 
 class Button{
 	typedef union _bflags {
@@ -59,7 +64,7 @@ class Button{
 };
 
 class Buttons {
-	private:
+  private:
 //#pragma pack(push,2)
 	union {
 		struct {
@@ -76,18 +81,26 @@ class Buttons {
 	uint8_t state; // тип (нормально открытый/закрытый)
 
 	byte clicks = 0;
-	Ticker _buttonTicker; // планировщик кнопки
+	Task tButton; // планировщик кнопки
+	Task tIsr;
+	Task tLazy;	// таймер переводящий кнопку на прерывание и ленивый опрос 
 	LList<Button*> buttons;
 	timerMinim holdtm; // таймаут удержания кнопки в мс
 
 	void resetStates() { clicks=0; holding=false; holded=false; touch.resetStates();}
 
-	public:
+	void isrPress();
+	void isrEnable();	// enable "press" interrupt
+	void IRAM_ATTR isrRelease();
+
+  public:
 	bool getpinTransition() { return pinTransition; }
 	void setpinTransition(bool val) { pinTransition = val; }
 	int getPressTransitionType() {return pullmode==LOW_PULL ? RISING : FALLING;}
 	int getReleaseTransitionType() {return pullmode!=LOW_PULL ? RISING : FALLING;}
-	void setButtonOn(bool flag) { buttonEnabled = flag; }
+
+	// Enable/Disable button handling
+	void setButtonOn(bool flag);
 	bool isButtonOn() { return buttonEnabled; }
 
 	inline Button* operator[](int i) { return buttons[i]; }
@@ -97,19 +110,15 @@ class Buttons {
 	void remove(int i) { buttons.remove(i); }
 	void clear();
 
-	/*
-	 * крючёк для обработки нажатия кнопки по прерываниям
-	 * вызов метода, готоврит о том что состояние пина изменилось, нужно его перечитать
-	 * @param bool state - true, кнопку "нажали", false - "отпустили"
-	 */
-	void buttonPress(bool state);
+
 	Buttons(uint8_t _pin=BTN_PIN, uint8_t _pullmode=PULL_MODE, uint8_t _state=NORM_OPEN);
+
+	~Buttons(){ setButtonOn(false); ts.deleteTask(tButton);	}
 
 	int loadConfig(const char *cfg = nullptr);
 	void saveConfig(const char *cfg = nullptr);
 
 	GButton touch;
-	void buttonTick(); // обработчик кнопки
-	timerMinim tmChangeDirectionTimer;     // таймаут смены направления увеличение-уменьшение при удержании кнопки
+	void buttonTick(); // "дергатель" проверки гайвер-кнопки
 };
 #endif

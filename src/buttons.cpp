@@ -131,40 +131,27 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), ho
 	touch.setTimeout(BUTTON_TIMEOUT);
 	touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
 	touch.resetStates();
-#ifdef ESP8266
-	_buttonTicker.attach_scheduled(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
-#elif defined ESP32
-	_buttonTicker.attach(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
-#endif
-}
 
-/*
- * buttonPress - управление планировщиком опроса кнопки
- * оберка нужна т.к. touch.tick() нельзя положить в ICACHE_RAM
- * по наступлению прерывания "нажато" врубаем опрос событий кнопки не реже чем BUTTON_STEP_TIMEOUT/2 чтобы отловить "удержание"
- *
- * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
- * чтобы не он забыл зачем живет :)
- */
-void Buttons::buttonPress(bool state){
-	if (!buttonEnabled) {
-		// события кнопки не обрабатываются, если она заблокирована
-		_buttonTicker.detach();
-		return;
-	}
+	tButton.set(TASK_SECOND, TASK_FOREVER, std::bind(&Buttons::buttonTick, this));	// "ленивый" опрос 1 раз в сек
+	ts.addTask(tButton);
+	tButton.enableDelayed();
 
-	LOG(printf_P, PSTR("Button %s: %lu\n"), state ? PSTR("press") : PSTR("release"), millis());
-	buttonTick();   // обрабатываем текущее нажатие вне очереди
-#ifdef ESP8266
-	_buttonTicker.attach_ms_scheduled(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
-#elif defined ESP32
-	_buttonTicker.attach_ms(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
-#endif
+	/* так и не разобрался как получить статус "кнопка сейчас не нажата" или событие "кнопку отпустили" или вообще "событие произошло",
+	 * поэтому включаю таймер на 20 сек на обратный преход на прерывание от "нажатия" и ленивый опрос
+	 * если кто-то "держит" кнопку более 20 секунд - придется отпустить и нажать заново:)
+	 */ 
+	tLazy.set(20 * TASK_SECOND, TASK_ONCE, [this](){ isrEnable(); LOG(println,F("Button switch to lazy"));} );
+	ts.addTask(tLazy);
+
+	tIsr.set(TASK_SECOND, TASK_ONCE, [this](){tLazy.restartDelayed(); }, nullptr, [this](){attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );}  );
+	ts.addTask(tIsr);
+
+	isrEnable();
 }
 
 void Buttons::buttonTick(){
 	if (!buttonEnabled) return;
-	
+
 	static bool startLampState = myLamp.isLampOn();
 	
 	touch.tick();
@@ -187,7 +174,13 @@ void Buttons::buttonTick(){
 			for (int i = 0; i < buttons.size(); i++) {
 				buttons[i]->flags.onetime&=1;
 			}
+			// это покрывает только часть завершенных событий кнопки
+			if(tLazy.isEnabled()){
+				tLazy.disable();
+				isrEnable();
+			}
 		}
+		// здесь баг, этот выход часто перехватывает "одиночные" нажатия и превращает их в "клик"
 		return;
 	}
 	LOG(printf_P, PSTR("buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
@@ -291,6 +284,45 @@ void Buttons::saveConfig(const char *cfg){
 		configFile.print("]");
 		configFile.flush();
 		configFile.close();
+	}
+}
+
+void IRAM_ATTR Buttons::isrPress() {
+    detachInterrupt(pin);
+	LOG(print,"i");
+
+	tLazy.restartDelayed();
+	tButton.setInterval(BUTTON_STEP_TIMEOUT/2);
+
+	//isrEnable();
+//	tLazy = new Task(10 * TASK_SECOND, TASK_ONCE, [this](){ tButton.setInterval(TASK_SECOND); LOG(println,F("Button released")); TASK_RECYCLE; tLazy = nullptr; }, &ts, false);
+//	tLazy->enableDelayed();
+}
+
+/*
+void IRAM_ATTR Buttons::isrRelease(){
+    detachInterrupt(pin);
+		tButton.setInterval(TASK_SECOND);
+	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
+}
+*/
+
+void Buttons::isrEnable(){
+	tButton.setInterval(TASK_SECOND);
+	tButton.enableIfNot();
+	LOG(println,F("Button switch to isr+Lazy"));
+	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode==LOW_PULL ? RISING : FALLING );
+}
+
+void Buttons::setButtonOn(bool flag) {
+	buttonEnabled = flag;
+	if (flag){
+		LOG(println,F("Button watch enabled"));
+		isrEnable();
+	} else {
+	    detachInterrupt(pin);
+		tButton.disable();
+		LOG(println,F("Button watch disabled"));
 	}
 }
 

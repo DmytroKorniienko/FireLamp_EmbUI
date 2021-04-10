@@ -189,15 +189,15 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
 #endif
     interf->json_section_end();
 
-    interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(P_GRAY));
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0009), FPSTR(TINTF_005));
     //if (confEff->eff_nb&0xFF00) { // пока удаление только для копий, но в теории можно удалять что угодно
-        // interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+        // interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(P_RED));
     //}
 
     interf->json_section_line();
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B0), FPSTR(TINTF_0B5), FPSTR(TCONST_00B3));
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B1), FPSTR(TINTF_0B4), FPSTR(TCONST_000C));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B1), FPSTR(TINTF_0B4), FPSTR(P_RED));
     interf->json_section_end();
 
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(TCONST_000D));
@@ -676,10 +676,10 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #ifdef MP3PLAYER
     interf->json_section_line(F("line124")); // спец. имя - разбирается внутри html
     if(mp3->isMP3Mode()){
-        interf->button(FPSTR(TCONST_00BE), FPSTR(TINTF_0BD), FPSTR(TCONST_0008));
-        interf->button(FPSTR(TCONST_00BF), FPSTR(TINTF_0BE), FPSTR(TCONST_0008));
-        interf->button(FPSTR(TCONST_00C0), FPSTR(TINTF_0BF), FPSTR(TCONST_0008));
-        interf->button(FPSTR(TCONST_00C1), FPSTR(TINTF_0C0), FPSTR(TCONST_0008));
+        interf->button(FPSTR(TCONST_00BE), FPSTR(TINTF_0BD), FPSTR(P_GRAY));
+        interf->button(FPSTR(TCONST_00BF), FPSTR(TINTF_0BE), FPSTR(P_GRAY));
+        interf->button(FPSTR(TCONST_00C0), FPSTR(TINTF_0BF), FPSTR(P_GRAY));
+        interf->button(FPSTR(TCONST_00C1), FPSTR(TINTF_0C0), FPSTR(P_GRAY));
     }
     //interf->button("time", FPSTR(TINTF_016), FPSTR(TCONST_0025));    
     interf->json_section_end();
@@ -886,7 +886,7 @@ void set_otaflag(Interface *interf, JsonObject *data){
 
     interf->json_frame_interface();
     interf->json_section_content();
-    interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(TCONST_0008));
+    interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(P_GRAY));
     interf->json_section_end();
     interf->json_frame_flush();
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
@@ -961,9 +961,9 @@ void block_lamp_config(Interface *interf, JsonObject *data){
             interf->json_section_end(); // select
 
             interf->json_section_line();
-                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(TCONST_002F));
+                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(P_GREEN));
                 interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
-                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(P_RED));
             interf->json_section_end(); // json_section_line
             filename.clear();
             interf->spacer();
@@ -1066,7 +1066,7 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
     interf->spacer(FPSTR(TINTF_01C));
     interf->text(FPSTR(TCONST_0035), FPSTR(TINTF_01D));
     interf->color(FPSTR(TCONST_0036), FPSTR(TINTF_01E));
-    interf->button_submit(FPSTR(TCONST_0034), FPSTR(TINTF_01F), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(TCONST_0034), FPSTR(TINTF_01F), FPSTR(P_GRAY));
 
     interf->json_section_hidden(FPSTR(TCONST_00B9), FPSTR(TINTF_002));
         interf->json_section_begin(FPSTR(TCONST_00BA));
@@ -1081,7 +1081,7 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
                 String datetime;
                 TimeProcessor::getDateTimeString(datetime, embui.param(FPSTR(TCONST_0055)).toInt());
                 interf->text(FPSTR(TCONST_0055), datetime, FPSTR(TINTF_050), false);
-                interf->button_submit(FPSTR(TCONST_00BA), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+                interf->button_submit(FPSTR(TCONST_00BA), FPSTR(TINTF_008), FPSTR(P_GRAY));
             interf->spacer();
                 //interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
                 interf->button(FPSTR(TCONST_0003), FPSTR(TINTF_00B));
@@ -1231,7 +1231,7 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->number(FPSTR(TCONST_00A9), mp3->getMP3count(), FPSTR(TINTF_0B0), false);
     //SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
 
-    interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(P_GRAY));
     interf->json_section_end();
 
     interf->spacer();
@@ -1268,7 +1268,7 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     // }));
 
     save_lamp_flags();
-    section_settings_frame(interf, data);
+    BasicUI::section_settings_frame(interf, data);
 }
 #endif
 
@@ -1285,13 +1285,13 @@ void block_settings_mic(Interface *interf, JsonObject *data){
         interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getLampState().getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
         interf->range(FPSTR(TCONST_003B), (int)myLamp.getLampState().getMicNoiseRdcLevel(), 0, 4, 1, FPSTR(TINTF_024), false);
 
-        interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+        interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(P_GRAY));
         interf->json_section_end();
 
         interf->spacer();
-        interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), FPSTR(TCONST_000C));
+        interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_025), FPSTR(P_RED));
     } else {
-        interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_027), FPSTR(TCONST_000C) );
+        interf->button(FPSTR(TCONST_003C), FPSTR(TINTF_027), FPSTR(P_RED) );
     }
 
     interf->spacer();
@@ -1322,7 +1322,7 @@ void set_settings_mic(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_003A), myLamp.getLampState().setMicNoise(noise));
     SETPARAM(FPSTR(TCONST_003B), myLamp.getLampState().setMicNoiseRdcLevel(rdl));
 
-    section_settings_frame(interf, data);
+    BasicUI::section_settings_frame(interf, data);
 }
 
 void set_micflag(Interface *interf, JsonObject *data){
@@ -1347,6 +1347,7 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
 }
 #endif
 
+/*
 // формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -1355,30 +1356,30 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
-    interf->text(FPSTR(TCONST_003F), FPSTR(TINTF_02B));
+    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
     interf->text(FPSTR(TCONST_0040), WiFi.SSID(), FPSTR(TINTF_02C), false);
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
-    interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
     interf->json_section_end();
 
-    interf->json_section_hidden(FPSTR(TCONST_0042), FPSTR(TINTF_02F));
-    interf->text(FPSTR(TCONST_003F), FPSTR(TINTF_02B));
+    interf->json_section_hidden(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_02F));
+    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
     interf->spacer(FPSTR(TINTF_031));
     interf->comment(FPSTR(TINTF_032));
-    interf->checkbox(FPSTR(TCONST_0043), FPSTR(TINTF_033));
+    interf->checkbox(FPSTR(P_APonly), FPSTR(TINTF_033));
     interf->password(FPSTR(TCONST_0044), FPSTR(TINTF_034));
-    interf->button_submit(FPSTR(TCONST_0042), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_008), FPSTR(P_GRAY));
     interf->json_section_end();
 
     // форма настроек MQTT
     interf->json_section_hidden(FPSTR(TCONST_0045), FPSTR(TINTF_035));
-    interf->text(FPSTR(TCONST_0046), FPSTR(TINTF_036));
-    interf->number(FPSTR(TCONST_0047), FPSTR(TINTF_037));
-    interf->text(FPSTR(TCONST_0048), FPSTR(TINTF_038));
-    interf->text(FPSTR(TCONST_0049), FPSTR(TINTF_02D));
+    interf->text(FPSTR(P_m_host), FPSTR(TINTF_036));
+    interf->number(FPSTR(P_m_port), FPSTR(TINTF_037));
+    interf->text(FPSTR(P_m_user), FPSTR(TINTF_038));
+    interf->text(FPSTR(P_m_pass), FPSTR(TINTF_02D));
     interf->text(FPSTR(TCONST_007B), FPSTR(TINTF_08C));
     interf->number(FPSTR(TCONST_004A), FPSTR(TINTF_039));
-    interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(P_GRAY));
     interf->json_section_end();
 
     interf->spacer();
@@ -1393,15 +1394,15 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     block_settings_wifi(interf, data);
     interf->json_frame_flush();
 }
+*/
 
 /**
  * настройка подключения WiFi в режиме AP
- */
 void set_settings_wifiAP(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    SETPARAM(FPSTR(TCONST_003F));
-    SETPARAM(FPSTR(TCONST_0043));
+    SETPARAM(FPSTR(P_hostname));
+    SETPARAM(FPSTR(P_APonly));
     SETPARAM(FPSTR(TCONST_0044));
 
     embui.save();
@@ -1409,14 +1410,14 @@ void set_settings_wifiAP(Interface *interf, JsonObject *data){
 
     section_settings_frame(interf, data);
 }
+ */
 
 /**
  * настройка подключения WiFi в режиме клиента
- */
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    SETPARAM(FPSTR(TCONST_003F));
+    SETPARAM(FPSTR(P_hostname));
 
     const char *ssid = (*data)[FPSTR(TCONST_0040)];
     const char *pwd = (*data)[FPSTR(TCONST_0041)];
@@ -1432,11 +1433,11 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(FPSTR(TCONST_0046));
-    SETPARAM(FPSTR(TCONST_0048));
-    SETPARAM(FPSTR(TCONST_0049));
+    SETPARAM(FPSTR(P_m_host));
+    SETPARAM(FPSTR(P_m_user));
+    SETPARAM(FPSTR(P_m_pass));
     SETPARAM(FPSTR(TCONST_007B));
-    SETPARAM(FPSTR(TCONST_0047));
+    SETPARAM(FPSTR(P_m_port));
     SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
 
     embui.save();
@@ -1444,6 +1445,7 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
 
     section_settings_frame(interf, data);
 }
+ */
 
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -1458,7 +1460,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_009E), myLamp.getLampSettings().showName ? "1" : "0", FPSTR(TINTF_09A), false);
     interf->range(FPSTR(TCONST_0026), 30, 250, 5, FPSTR(TINTF_03F));
     float sf = embui.param(FPSTR(TCONST_0053)).toFloat();
-    interf->range(FPSTR(TCONST_0053), sf, 0.25, 4.0, 0.25, FPSTR(TINTF_0D3));
+    interf->range(FPSTR(TCONST_0053), sf, 0.25, 4.0, 0.25, FPSTR(TINTF_0D3), false);
     interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? "1" : "0", FPSTR(TINTF_090), false); // нумерация в списке эффектов
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_0091), myLamp.getLampSettings().effHasMic ? "1" : "0", FPSTR(TINTF_091), false); // значек микрофона в списке эффектов
@@ -1480,7 +1482,7 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->range(FPSTR(TCONST_00BB), myLamp.getAlarmP(), 1, 15, 1, FPSTR(TINTF_0BB), false);
     interf->range(FPSTR(TCONST_00BC), myLamp.getAlarmT(), 1, 15, 1, FPSTR(TINTF_0BC), false);
 
-    interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+    interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(P_GRAY));
 
     interf->spacer();
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
@@ -1539,52 +1541,26 @@ void set_settings_other(Interface *interf, JsonObject *data){
     _t->enableDelayed();
 
 
-    section_settings_frame(interf, data);
+    BasicUI::section_settings_frame(interf, data);
 }
 
+/*
 // страницу-форму настроек времени строим методом фреймворка
 void show_settings_time(Interface *interf, JsonObject *data){
     BasicUI::block_settings_time(interf, data);
 }
-
-// обработка значений со страницы настроек времени, передаем в обрабочик фреймворка
-/*
-void set_settings_time(Interface *interf, JsonObject *data){
-    BasicUI::set_settings_time(interf, data);
-}
 */
-
 /*
-void block_settings_time(Interface *interf, JsonObject *data){
-    if (!interf) return;
-    interf->json_section_main(FPSTR(TCONST_0056), FPSTR(TINTF_051));
-
-    interf->comment(FPSTR(TINTF_052));
-    interf->text(FPSTR(TCONST_0057), FPSTR(TINTF_053));
-    interf->text(FPSTR(TCONST_0058), FPSTR(TINTF_054));
-    interf->comment(FPSTR(TINTF_055));
-    interf->text(FPSTR(TCONST_0059), "", "", false);
-    interf->hidden(FPSTR(TCONST_00B8),""); // скрытое поле для получения времени с устройства
-    interf->button_submit(FPSTR(TCONST_0056), FPSTR(TINTF_008), FPSTR(TCONST_0008));
-
-    interf->spacer();
-    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
-
-    interf->json_section_end();
-}
-*/
-
-
 void set_settings_time(Interface *interf, JsonObject *data){
     if (!data) return;
 
-    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(TCONST_00B8)].as<String>().c_str());
+    LOG(printf_P,PSTR("devicedatetime=%s\n"),(*data)[FPSTR(P_DEVDTTIME)].as<String>().c_str());
     
     String datetime=(*data)[FPSTR(P_DTIME)];
     if (datetime.length())
         embui.timeProcessor.setTime(datetime);
     else if(!embui.sysData.wifi_sta) {
-        datetime=(*data)[FPSTR(TCONST_00B8)].as<String>();
+        datetime=(*data)[FPSTR(P_DEVDTTIME)].as<String>();
         if (datetime.length())
             embui.timeProcessor.setTime(datetime);
     }
@@ -1602,6 +1578,7 @@ void set_settings_time(Interface *interf, JsonObject *data){
 
     section_settings_frame(interf, data);
 }
+*/
 
 void block_settings_update(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -1611,7 +1588,7 @@ void block_settings_update(Interface *interf, JsonObject *data){
     if (myLamp.getMode() != MODE_OTA) {
         interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_058), FPSTR(TCONST_005B));
     } else {
-        interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(TCONST_0008));
+        interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(P_GRAY));
     }
 #endif
     interf->spacer(FPSTR(TINTF_059));
@@ -1636,8 +1613,8 @@ void block_settings_event(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     interf->json_section_line();
-    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(TCONST_002F));
-    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_00B6), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(P_GREEN));
+    interf->button_submit_value(FPSTR(TCONST_005D), FPSTR(TCONST_00B6), FPSTR(TINTF_006), FPSTR(P_RED));
     interf->json_section_end();
 
     interf->json_section_end();
@@ -1891,7 +1868,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_079));
     } else {
         interf->hidden(FPSTR(TCONST_002E), "0"); // режим добавления
-        interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_05D), FPSTR(TCONST_002F));
+        interf->button_submit(FPSTR(TCONST_006C), FPSTR(TINTF_05D), FPSTR(P_GREEN));
     }
 
     interf->spacer();
@@ -1926,8 +1903,8 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     interf->json_section_line();
-    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(TCONST_002F));
-    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_00B6), FPSTR(TINTF_006), FPSTR(TCONST_000C));
+    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_005F), FPSTR(TINTF_05C), FPSTR(P_GREEN));
+    interf->button_submit_value(FPSTR(TCONST_006E), FPSTR(TCONST_00B6), FPSTR(TINTF_006), FPSTR(P_RED));
     interf->json_section_end();
 
     interf->json_section_end();
@@ -2032,7 +2009,7 @@ void show_butt_conf(Interface *interf, JsonObject *data){
         interf->hidden(FPSTR(TCONST_002E), "1");
         interf->button_submit(FPSTR(TCONST_0075), FPSTR(TINTF_079));
     } else {
-        interf->button_submit(FPSTR(TCONST_0075), FPSTR(TINTF_05D), FPSTR(TCONST_002F));
+        interf->button_submit(FPSTR(TCONST_0075), FPSTR(TINTF_05D), FPSTR(P_GREEN));
     }
 
     interf->spacer();
@@ -2119,15 +2096,16 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
-void section_settings_frame(Interface *interf, JsonObject *data){
+void user_settings_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
+/*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
     interf->json_section_main(FPSTR(TCONST_0004), FPSTR(TINTF_002));
 
     interf->button(FPSTR(TCONST_0077), FPSTR(TINTF_051));
-
     interf->button(FPSTR(TCONST_0078), FPSTR(TINTF_081));
+*/
 #ifdef MIC_EFFECTS
     interf->button(FPSTR(TCONST_0079), FPSTR(TINTF_020));
 #endif
@@ -2143,11 +2121,14 @@ void section_settings_frame(Interface *interf, JsonObject *data){
 
     block_lamp_config(interf, data);
 
+    // закрытие и отправка кадра выполняется методом из фреймворка
+/*
     interf->spacer();
     block_settings_update(interf, data);
 
     interf->json_section_end();
     interf->json_frame_flush();
+*/
 }
 
 void section_main_frame(Interface *interf, JsonObject *data){
@@ -2160,9 +2141,9 @@ void section_main_frame(Interface *interf, JsonObject *data){
 
     interf->json_frame_flush();
 
-    if(!embui.sysData.wifi_sta && embui.param(FPSTR(TCONST_0043))=="0"){
+    if(!embui.sysData.wifi_sta && embui.param(FPSTR(P_APonly))=="0"){
         // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
-        show_settings_wifi(interf, data);
+        BasicUI::block_settings_netw(interf, data);
     }
 }
 
@@ -2190,7 +2171,7 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->frame2(FPSTR(TCONST_005F), FPSTR(TCONST_005F));
         //interf->json_section_end();
 
-        interf->button_submit(FPSTR(TCONST_0099), FPSTR(TINTF_008), FPSTR(TCONST_0008));
+        interf->button_submit(FPSTR(TCONST_0099), FPSTR(TINTF_008), FPSTR(P_GRAY));
 
         interf->spacer();
         interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
@@ -2224,12 +2205,7 @@ void set_sys_settings(Interface *interf, JsonObject *data){
     new Task(TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr, [](){ embui.autosave(true); });
 
     new Task(5 * TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr,  [](){ LOG(println, F("Rebooting...")); delay(100); ESP.restart(); });
-/*
-    sysTicker.once(10,std::bind([]{
-        embui.autosave(true);
-        ESP.restart();
-    }));
-*/
+
     section_effects_frame(interf,data);
 }
 
@@ -2252,22 +2228,24 @@ void save_lamp_flags(){
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
-    embui.var_create(FPSTR(TCONST_0094), "0"); // Дефолтный набор флагов // myLamp.getLampFlags()
+    embui.var_create(FPSTR(TCONST_0094), 0); // Дефолтный набор флагов // myLamp.getLampFlags()
+    embui.var_create(FPSTR(TCONST_0016), F("1"));   // "effListMain"
+    embui.var_create(FPSTR(TCONST_004A), F("30")); // "mqtt_int" интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 
+/*
     //WiFi
-    embui.var_create(FPSTR(TCONST_003F), F(""));
-    embui.var_create(FPSTR(TCONST_0043),  "0");     // режим AP-only (только точка доступа), не трогать
+    embui.var_create(FPSTR(P_hostname), F(""));
+    embui.var_create(FPSTR(P_APonly),  "0");     // режим AP-only (только точка доступа), не трогать
     embui.var_create(FPSTR(TCONST_0044), F(""));      // пароль внутренней точки доступа
 
     // параметры подключения к MQTT
-    embui.var_create(FPSTR(TCONST_0046), F("")); // Дефолтные настройки для MQTT
-    embui.var_create(FPSTR(TCONST_0047), F("1883"));
-    embui.var_create(FPSTR(TCONST_0048), F(""));
-    embui.var_create(FPSTR(TCONST_0049), F(""));
+    embui.var_create(FPSTR(P_m_host), F("")); // Дефолтные настройки для MQTT
+    embui.var_create(FPSTR(P_m_port), F("1883"));
+    embui.var_create(FPSTR(P_m_user), F(""));
+    embui.var_create(FPSTR(P_m_pass), F(""));
     embui.var_create(FPSTR(TCONST_007B), embui.mc);  // m_pref == MAC по дефолту
-    embui.var_create(FPSTR(TCONST_004A), F("30")); // интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
-    embui.var_create(FPSTR(TCONST_0016), F("1"));
-    //embui.var_create(FPSTR(TCONST_002A), F("cfg1.json"));
+    //embui.var_create(FPSTR(TCONST_002A), F("cfg1.json")); "fileName"
+*/
 #ifdef ESP_USE_BUTTON
     embui.var_create(FPSTR(TCONST_001F), "1"); // не трогать пока...
 #endif
@@ -2283,8 +2261,10 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_0018), F("127"));
 
     // date/time related vars
+/*
     embui.var_create(FPSTR(TCONST_0057), "");
     embui.var_create(FPSTR(TCONST_0058), "");
+*/
     embui.var_create(FPSTR(TCONST_0054), F("0"));
     embui.var_create(FPSTR(TCONST_0055), FPSTR(TCONST_007D));
 
@@ -2298,7 +2278,7 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_001B), "0");
 #endif
 
-    embui.var_create(FPSTR(TCONST_0026), String(F("60"))); // Дефолтное значение, настраивается из UI
+    embui.var_create(FPSTR(TCONST_0026), 60); // Дефолтное значение, настраивается из UI
     embui.var_create(FPSTR(TCONST_00BD), String(F("85"))); // 5<<4+5, старшие и младшие 4 байта содержат 5
 
     embui.var_create(FPSTR(TCONST_0053), String(F("1.0")));
@@ -2316,6 +2296,18 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
     // далее идут обработчики параметров
+
+   /**
+    * регистрируем статические секции для web-интерфейса с системными настройками,
+    * сюда входит:
+    *  - WiFi-manager
+    *  - установка часового пояса/правил перехода сезонного времени
+    *  - установка текущей даты/времени вручную
+    *  - базовые настройки MQTT
+    *  - OTA обновление прошивки и образа файловой системы
+    */
+    BasicUI::add_sections();
+
     embui.section_handle_add(FPSTR(TCONST_0099), set_sys_settings);
 
     embui.section_handle_add(FPSTR(TCONST_0094), set_lamp_flags);
@@ -2356,15 +2348,15 @@ void create_parameters(){
 
     embui.section_handle_add(FPSTR(TCONST_00BA), set_text_config);
 
-    embui.section_handle_add(FPSTR(TCONST_0004), section_settings_frame);
-    embui.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
-    embui.section_handle_add(FPSTR(TCONST_003E), set_settings_wifi);
-    embui.section_handle_add(FPSTR(TCONST_0042), set_settings_wifiAP);
-    embui.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
+//    embui.section_handle_add(FPSTR(TCONST_0004), section_settings_frame);
+//    embui.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
+//    embui.section_handle_add(FPSTR(TCONST_003E), set_settings_wifi);
+//    embui.section_handle_add(FPSTR(T_SET_WIFIAP), set_settings_wifiAP);
+//    embui.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
-    embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
-    embui.section_handle_add(FPSTR(TCONST_0056), set_settings_time);
+//    embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
+//    embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
 
     embui.section_handle_add(FPSTR(TCONST_00CA), set_drawing);
 
@@ -2418,10 +2410,14 @@ void sync_parameters(){
 
     myLamp.semqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
 
-    String syslampFlags = embui.param(FPSTR(TCONST_0094));
+    String syslampFlags(embui.param(FPSTR(TCONST_0094)));
     LAMPFLAGS tmp;
     tmp.lampflags = syslampFlags.toInt(); //atol(embui.param(FPSTR(TCONST_0094)).c_str());
-    LOG(printf_P, PSTR("tmp.lampflags=%d (%s)\n"),tmp.lampflags, syslampFlags.c_str());
+//#ifndef ESP32
+//    LOG(printf_P, PSTR("tmp.lampflags=%u (%s)\n"), tmp.lampflags, syslampFlags.c_str());
+//#endif
+    LOG(printf_P, PSTR("tmp.lampflags=%u\n"), tmp.lampflags);
+
 
     obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? "1" : "0";
     set_drawflag(nullptr, &obj);
@@ -2695,7 +2691,7 @@ void remote_action(RA action, ...){
             new Task(3 * TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr,  [](){ ESP.restart(); });
             break;
         case RA::RA_WIFI_REC:
-            CALL_INTF(FPSTR(TINTF_028), FPSTR(TCONST_0080), set_settings_wifi);
+            CALL_INTF(FPSTR(TINTF_028), FPSTR(TCONST_0080), BasicUI::set_settings_wifi);
             break;
         case RA::RA_LAMP_CONFIG:
             if (value && *value) {
@@ -2879,7 +2875,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         // реализация AUTODISCOVERY
         else if (param == F("sys_AUTODISCOVERY"))  {
             DynamicJsonDocument hass_discover(1024);
-            String name = embui.param(FPSTR(TCONST_003F));
+            String name = embui.param(FPSTR(P_hostname));
             String unique_id = embui.mc;
 
             hass_discover[F("~")] = embui.id("embui/"); // embui.param(FPSTR(TCONST_007B)) + F("/embui/") //String(F("homeassistant/light/"))+name;

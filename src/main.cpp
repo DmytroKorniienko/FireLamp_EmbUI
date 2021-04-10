@@ -94,7 +94,7 @@ void setup() {
       default_buttons();
       myButtons->saveConfig();
     }
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
+//    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
 #endif
 
     myLamp.events.setEventCallback(event_worker);
@@ -187,13 +187,18 @@ void sendData(bool force){
 /*
  *  Button pin interrupt handler
  */
+/*
+
 ICACHE_RAM_ATTR void buttonpinisr(){
     detachInterrupt(myLamp.getbPin());
     //_isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
     bool _t = myButtons->getpinTransition();
-    new Task(1, TASK_ONCE, nullptr, &ts, true, nullptr,  [_t](){ myButtons->buttonPress(_t); TASK_RECYCLE; });
-
-    myButtons->setpinTransition(!myButtons->getpinTransition());
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? myButtons->getPressTransitionType() : myButtons->getReleaseTransitionType());  // меням прерывание
+    new Task(BUTTON_DEBOUNCE, TASK_ONCE, nullptr, &ts, true, nullptr,
+      [_t](){ myButtons->buttonPress(_t);
+                myButtons->setpinTransition(!myButtons->getpinTransition());
+                attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? myButtons->getPressTransitionType() : myButtons->getReleaseTransitionType());  // меням прерывание
+                TASK_RECYCLE; }
+    );
 }
+*/
 #endif
