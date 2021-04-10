@@ -325,16 +325,15 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
 
 // радуги 2D
 // ------------- радуга вертикальная/горизонтальная ----------------
-//uint8_t hue;
 bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 {
   for (uint8_t i = 0U; i < (isVertical?WIDTH:HEIGHT); i++)
   {
 #ifdef MIC_EFFECTS
     uint8_t micPeak = getMicMapMaxPeak();
-    CHSV thisColor = CHSV((uint8_t)(hue + i * (micPeak > map(speed, 1, 255, 100, 10) and isMicOn() ? (scale - micPeak) : scale) % 170), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
+    CHSV thisColor = CHSV((hue + ((uint32_t)i * (micPeak > map(speed, 1, 255, 100, 10) and isMicOn() ? (scale - micPeak) : scale))), 255, 255); // 1/3 без центральной между 1...255, т.е.: 1...84, 170...255
 #else
-    CHSV thisColor = CHSV((uint8_t)(hue + i * scale%170), 255, 255);
+    CHSV thisColor = CHSV((hue + i * scale), 255, 255);
 #endif
     for (uint8_t j = 0U; j < (isVertical?HEIGHT:WIDTH); j++)
     {
@@ -346,22 +345,19 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
 
 // ------------- радуга диагональная -------------
 bool EffectRainbow::run(CRGB *ledarr, EffectWorker *opt){
-  return rainbowDiagonalRoutine(*&ledarr, &*opt);
+  // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
+  hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
+  if(scale<85){
+    return rainbowHorVertRoutine(false);
+  } else if (scale>170){
+    return rainbowHorVertRoutine(true);
+  } else {
+    return rainbowDiagonalRoutine(*&ledarr, &*opt);
+  }
 }
 
 bool EffectRainbow::rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param)
 {
-  // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
-  hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
-
-  if(scale<85){
-    rainbowHorVertRoutine(false);
-    return true;
-  } else if (scale>170){
-    rainbowHorVertRoutine(true);
-    return true;
-  }
-
   for (uint8_t i = 0U; i < WIDTH; i++)
   {
     for (uint8_t j = 0U; j < HEIGHT; j++)
