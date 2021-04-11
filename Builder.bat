@@ -16,8 +16,8 @@ Echo  #------------------------------------------#------------------------------
 Echo  *                COMMANDS                  *  (Russian)      КОМАНДЫ                 *
 Echo  #------------------------------------------#-----------------------------------------# 
 Echo  *              GIT commands                *              Работа с GIT               *
-Echo  *  Switch to MASTER branch          - (1)  *  Переключиться на ветку MASTER          *
-Echo  *  Switch to DEV branch             - (2)  *  Переключиться на ветку DEV             *
+Echo  *  Switch/update - MASTER branch    - (1)  *  Переключить\обновить- ветка MASTER     *
+Echo  *  Switch/update - DEV branch       - (2)  *  Переключить\обновить- ветка DEV        *
 Echo  #------------------------------------------#-----------------------------------------# 
 echo  *  Reset changes in local repo!     - (3)  *  Сбросить изменения в локальном репо!   *
 Echo  *  WARNING! This will revert all changes!  *  ВНИМАНИЕ! Это сбросит все изменения!   *
@@ -38,8 +38,8 @@ Echo  *  Build and upload File System     - (f)  *  Собрать и прошить Файловую С
 Echo  *                                          *                                         *
 Echo  *  Erase Flash                      - (e)  *  Стереть флеш контроллера               *
 Echo  *                                          *                                         *
-Echo  *  Clean up temp files .pio         - (c)  *  Очистить временные файлы .pio          *
 Echo  *  Update libs and PIO Core         - (g)  *  Обновить библиотеки и среду PIO Core   *
+Echo  *  Clean up temp files .pio         - (c)  *  Очистить временные файлы .pio          *
 Echo  *------------------------------------------#-----------------------------------------*
 Echo  *  CMD window                       - (m)  *  Открыть окно коммандной строки CMD     *
 Echo  *------------------------------------------#-----------------------------------------*
@@ -49,8 +49,14 @@ Echo.
 Set /p choice="Your choice (Ваш выбор): "
 
 
-if "%choice%"=="1" call update-DEV-from-Git.cmd 1
-if "%choice%"=="2" call update-DEV-from-Git.cmd 2
+if "%choice%"=="1" (
+	call update-DEV-from-Git.cmd 1
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" lib update
+)
+if "%choice%"=="2" (
+	call update-DEV-from-Git.cmd 2
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" lib update
+)
 if "%choice%"=="3" call update-DEV-from-Git.cmd 3
 if "%choice%"=="4" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160)
 if "%choice%"=="5" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266)
@@ -73,6 +79,7 @@ if "%choice%"=="c" (
 if "%choice%"=="g" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" upgrade
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" update
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" lib update
 )
 if "%choice%"=="m" (start cmd)
 if "%choice%"=="R" (rmdir /S "%USERPROFILE%\.platformio")
