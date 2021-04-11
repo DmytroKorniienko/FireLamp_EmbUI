@@ -1757,23 +1757,23 @@ void show_event_conf(Interface *interf, JsonObject *data){
 
     interf->json_section_line();
         interf->select(FPSTR(TCONST_0068), String(cur_edit_event->event), String(FPSTR(TINTF_05F)), true);
-        interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
-        interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
-        interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
-        interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
-        interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
-        interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
-        interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
-        interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
-        interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
-        interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
+            interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
+            interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
+            interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
+            interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
+            interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
+            interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
+            interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
+            interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
+            interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
+            interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
 #ifdef AUX_PIN
-        interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
-        interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
-        interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
+            interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
+            interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
+            interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
 #endif
-        interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
-        interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
+            interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
+            interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
         interf->json_section_end();
         interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), FPSTR(TINTF_06D));
     interf->json_section_end();
@@ -1793,20 +1793,20 @@ void show_event_conf(Interface *interf, JsonObject *data){
                 String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
 
                 interf->spacer(FPSTR(TINTF_0BA));
-                interf->json_section_begin("AS");
-                    interf->json_section_line();
-                        interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
-                        interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
-                    interf->json_section_end();
+                interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
+                interf->json_section_line();
+                    interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
+                    interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                interf->json_section_end();
 #ifdef MP3PLAYER
-                    String limitAlarmVolume = !err && doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)] : String(myLamp.getLampSettings().limitAlarmVolume ? "1" : "0");
-                    String alarmFromStart = !err && doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)] : String("1");
-                    String st = !err && doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)] : String(myLamp.getLampSettings().alarmSound);
-                    interf->json_section_line();
-                        interf->checkbox(FPSTR(TCONST_00D1), alarmFromStart, FPSTR(TINTF_0D1), false);
-                        interf->checkbox(FPSTR(TCONST_00D2), limitAlarmVolume, FPSTR(TINTF_0D2), false);
-                    interf->json_section_end();
-                    interf->select(FPSTR(TCONST_00D3), st, String(FPSTR(TINTF_0A3)), false);
+                String limitAlarmVolume = !err && doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)] : String(myLamp.getLampSettings().limitAlarmVolume ? "1" : "0");
+                String alarmFromStart = !err && doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)] : String("1");
+                String st = !err && doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)] : String(myLamp.getLampSettings().alarmSound);
+                interf->json_section_line();
+                    interf->checkbox(FPSTR(TCONST_00D1), alarmFromStart, FPSTR(TINTF_0D1), false);
+                    interf->checkbox(FPSTR(TCONST_00D2), limitAlarmVolume, FPSTR(TINTF_0D2), false);
+                interf->json_section_end();
+                interf->select(FPSTR(TCONST_00D3), st, String(FPSTR(TINTF_0A3)), false);
                     interf->option(String(ALARM_SOUND_TYPE::AT_NONE), FPSTR(TINTF_09F));
                     interf->option(String(ALARM_SOUND_TYPE::AT_FIRST), FPSTR(TINTF_0A0));
                     interf->option(String(ALARM_SOUND_TYPE::AT_SECOND), FPSTR(TINTF_0A4));
@@ -1815,17 +1815,14 @@ void show_event_conf(Interface *interf, JsonObject *data){
                     interf->option(String(ALARM_SOUND_TYPE::AT_FIFTH), FPSTR(TINTF_0A7));
                     interf->option(String(ALARM_SOUND_TYPE::AT_RANDOM), FPSTR(TINTF_0A1));
                     interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
-                    interf->json_section_end();
-#endif
-                    interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
                 interf->json_section_end();
+#endif
             }
             break;
         default:
             interf->text(FPSTR(TCONST_0035), String(cur_edit_event->message!=NULL?cur_edit_event->message:""), FPSTR(TINTF_070), false);
             break;
     }
-
     interf->json_section_hidden(FPSTR(TCONST_0069), FPSTR(TINTF_071));
         interf->json_section_line();
             interf->checkbox(FPSTR(TCONST_0061), (cur_edit_event->d1? "1" : "0"), FPSTR(TINTF_072), false);

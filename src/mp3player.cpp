@@ -63,7 +63,8 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
 
   LOG(println, F("DFPlayer Mini online."));
   outputDevice(DFPLAYER_DEVICE_SD);
-  Task *t = new Task(1.21 * TASK_SECOND, TASK_FOREVER, [this](){ handle(); }, &ts, true); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
+  Task *t = new Task(1.21 * TASK_SECOND, TASK_FOREVER, [this](){ handle(); }, &ts, false); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
+  t->restartDelayed();
   //periodicCall.attach_scheduled(1.21, std::bind(&MP3PLAYERDEVICE::handle, this)); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
   volume(5);  // start volume
 }
