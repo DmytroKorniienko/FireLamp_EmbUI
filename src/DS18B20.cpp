@@ -89,7 +89,7 @@ void ds_loop() {
 
   tempToSpeed(curTemp);
 
-  if (myLamp.isLampOn() && CURRENT_LIMIT_STEP == 0U) {
+  if (myLamp.isLampOn() && CURRENT_LIMIT_STEP > 0U) {
     static uint8_t delayCounter = 0;
     static uint16_t myCurrlimit = myLamp.getcurLimit();
     delayCounter++;
