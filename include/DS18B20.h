@@ -35,38 +35,22 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#ifndef __MAIN_H_
-#define __MAIN_H_
+#ifndef _DS18B20_H
+#define _DS18B20_H
 
-#include <Arduino.h>
+#include "misc.h"
+#include "main.h"
 #include "config.h"
-#include "EmbUI.h"
-#include "lamp.h"
-#include "buttons.h"
+//#include <OneWire.h>
+//#include <DallasTemperature.h>
+#include "microDS18B20.h";
 
-// TaskScheduler
-extern Scheduler ts;
 
-// глобальные переменные для работы с ними в программе
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
-#endif
-#ifdef MP3PLAYER
-#include "mp3player.h"
-extern MP3PLAYERDEVICE *mp3;
-#endif
-#ifdef DS18B20
-#include "DS18B20.h"
-#endif
 
-void mqttCallback(const String &topic, const String &payload);
-void  sendData(bool force=false);
+extern void ds_setup();
+extern void ds_loop();
+extern int16_t getTemp();
+extern void tempToSpeed(int16_t& currentTemp);
 
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-//ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
-
+ 
 #endif

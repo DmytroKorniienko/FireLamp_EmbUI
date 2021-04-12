@@ -122,6 +122,10 @@ void setup() {
   tm_setup();
 #endif 
 
+#ifdef DS18B20
+  ds_setup();
+#endif
+
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
@@ -140,6 +144,11 @@ void loop() {
 #ifdef TM1637_CLOCK
     EVERY_N_SECONDS(1) {
         tm_loop();
+    }
+#endif
+#ifdef DS18B20
+    EVERY_N_MILLIS(DS18B_READ_DELAY) {
+        ds_loop();
     }
 #endif
 }

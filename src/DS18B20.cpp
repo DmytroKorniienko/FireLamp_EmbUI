@@ -35,38 +35,71 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#ifndef __MAIN_H_
-#define __MAIN_H_
-
-#include <Arduino.h>
 #include "config.h"
-#include "EmbUI.h"
-#include "lamp.h"
-#include "buttons.h"
-
-// TaskScheduler
-extern Scheduler ts;
-
-// глобальные переменные для работы с ними в программе
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
-#endif
-#ifdef MP3PLAYER
-#include "mp3player.h"
-extern MP3PLAYERDEVICE *mp3;
-#endif
 #ifdef DS18B20
 #include "DS18B20.h"
+
+MicroDS18B20 dallas(DS18B20_PIN);
+
+
+void ds_setup() {
+  analogWriteFreq(25000);
+  pinMode(COOLER_PIN, OUTPUT);
+  dallas.requestTemp();
+  LOG(printf_P, PSTR("DS18b20 was initialized \n")); 
+}
+
+int16_t getTemp() {
+  int currentTemp = dallas.getTemp(); // получить с далласа
+  dallas.requestTemp();           // запросить измерение
+  LOG(printf_P, PSTR("Sensor temperature  %d\U000000B0\n"), currentTemp);
+  return currentTemp;
+}
+
+// преобразуем температуру в скорость
+void tempToSpeed(int16_t& currentTemp) {
+#if COOLER_PIN_TYPE
+  uint16_t fanSpeed = 0;
 #endif
 
-void mqttCallback(const String &topic, const String &payload);
-void  sendData(bool force=false);
+    // преобразовать диапазон и ограничить значение
+  #if COOLER_PIN_TYPE
+      if (currentTemp >= (int)(TEMP_LOW - TEMP_LOW/10U)) {
+        fanSpeed = constrain(map(currentTemp, TEMP_LOW - TEMP_LOW/10U, TEMP_HIGH, MIN_SPEED, MAX_SPEED), 0, MAX_SPEED);  
+      } else {
+        fanSpeed = 0;
+      }
+      analogWrite(COOLER_PIN, fanSpeed);
+      LOG(printf_P, PSTR("New PWM value  - %d\n"), fanSpeed);
+  #else
+    if (currentTemp >= (int)TEMP_LOW && digitalRead(COOLER_PIN) != COOLER_PIN_LEVEL) {
+      digitalWrite(COOLER_PIN, COOLER_PIN_LEVEL);
+      LOG(printf_P, PSTR("Cooler fan activated \n"));
+    }
+    else if (currentTemp <= (int)(TEMP_LOW - TEMP_LOW/10U) && digitalRead(COOLER_PIN) != !COOLER_PIN_LEVEL) {
+      digitalWrite(COOLER_PIN, !COOLER_PIN_LEVEL);
+      LOG(printf_P, PSTR("Cooler fan desactivated \n"));
+    }
+  #endif
+}
 
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-//ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
+
+void ds_loop() { 
+  int16_t curTemp = getTemp();
+
+  tempToSpeed(curTemp);
+
+  if (myLamp.isLampOn() && CURRENT_LIMIT_STEP == 0U) {
+    static uint8_t delayCounter = 0;
+    static uint16_t myCurrlimit = myLamp.getcurLimit();
+    delayCounter++;
+    if (delayCounter%COOLING_FAIL == 0 && curTemp > (int)TEMP_LOW) {
+      myCurrlimit -= myCurrlimit/100*CURRENT_LIMIT_STEP;
+      LOG(printf_P, PSTR("Cooling failure! Current Limit will be charged to: %d\n"), myCurrlimit);
+      myLamp.setcurLimit(myCurrlimit);
+      delayCounter = 0;
+    }
+  }
+}
 
 #endif
