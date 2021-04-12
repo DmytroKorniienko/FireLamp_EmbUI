@@ -15,7 +15,7 @@ void MicroDS18B20::requestTemp() {
 }
 
 void MicroDS18B20::setResolution(uint8_t res) {
-	uint8_t reg = (res - 9 << 5) | 0x1F; // собрали байт
+	uint8_t reg = ((res - 9) << 5) | 0x1F; // собрали байт
 	if (oneWire_reset(_pin)) return; // если устройство не ответило - вышли
 	oneWire_write(0x4E, _pin); // команда на запись 
 	oneWire_write(0x00, _pin); // мусор
@@ -42,6 +42,9 @@ float MicroDS18B20::getTemp() {
 		break;
 	case 12:
 		return (float)((data[1] << 8) | data[0]) * 0.0625;
+		break;
+	default:
+		return -300.;
 		break;
 	}
 }
