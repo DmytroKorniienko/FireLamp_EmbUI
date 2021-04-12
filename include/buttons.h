@@ -84,8 +84,8 @@ class Buttons {
 	Task tButton; // планировщик кнопки
 	Task tIsr;
 	Task tLazy;	// таймер переводящий кнопку на прерывание и ленивый опрос 
+	Task tClicksClear; // очистка кол-ва нажатий, после таймаута
 	LList<Button*> buttons;
-	timerMinim holdtm; // таймаут удержания кнопки в мс
 
 	void resetStates() { clicks=0; holding=false; holded=false; touch.resetStates();}
 

@@ -554,11 +554,11 @@ void LAMP::restoreStored()
 void LAMP::startNormalMode(bool forceOff)
 {
   LOG(println,F("Normal mode"));
+  if(forceOff)
+    flags.ONflag=false;
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   restoreStored();
-  if(forceOff)
-    flags.ONflag=false;
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()

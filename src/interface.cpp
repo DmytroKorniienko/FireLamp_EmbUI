@@ -66,22 +66,22 @@ Task ctrlsTicker;            // планировщик контролов
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
 
 bool check_recovery_state(bool isSet){
-    bool state = false; //return state;
+    return false; // оключено до выяснения... какого-то хрена не работает :(
     if(LittleFS.begin()){
-        if(isSet && LittleFS.exists(F("/recovery.state"))){ // если перед созданием такой файл уже есть, то похоже бутлуп
-            state = true;
-            LittleFS.remove(F("/recovery.state"));
-        } else if(isSet){ // создаем файл-маркер, раз его не было
-            File f = LittleFS.open(F("/recovery.state"), "w");
-            f.print(embui.param(FPSTR(TCONST_0016)).c_str());
-            f.flush();
-            f.close();
-            delay(100);
-        } else { // удаляем файл-маркер, инициализация завершена
-            LittleFS.remove(F("/recovery.state"));
+        if(isSet){ // создаем файл-маркер
+            if(!LittleFS.exists(String(F("/recovery.sta")))){ // проверка на существование
+                File f = LittleFS.open(String(F("/recovery.sta")), "w");
+                f.print(embui.param(FPSTR(TCONST_0016)).c_str());
+                f.close();
+                return false;
+            } else {
+                return true; // файл есть, похоже на бутлуп
+            }
+        } else { // переименовываем
+            LittleFS.rename(String(F("/recovery.sta")),String(F("/recovery.old")));
         }
     }
-    return state;
+    return false;
 }
 
 void resetAutoTimers(bool isEffects=false) // сброс таймера демо и настройка автосохранений
@@ -595,22 +595,22 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
     resetAutoTimers(true);
 
-    // DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
-    // (*_str)=(*data);
-    // LOG(println, "Delaying dynctrl");
-    // new Task(100, TASK_ONCE,
-    //     nullptr,
-    //     &ts, true,
-    //     nullptr,
-    //     [_str]()
+    DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
+    (*_str)=(*data);
+    LOG(println, "Delaying dynctrl");
+    new Task(100, TASK_ONCE,
+        nullptr,
+        &ts, true,
+        nullptr,
+        [_str]()
         
         {
-            // JsonObject dataStore = (*_str).as<JsonObject>();
-            // JsonObject *data = &dataStore;
+            JsonObject dataStore = (*_str).as<JsonObject>();
+            JsonObject *data = &dataStore;
             
-            // LOG(println, "processing dynctrl...");
-            // String tmp; serializeJson(*data,tmp); LOG(println, tmp);
-///*
+            LOG(println, "processing dynctrl...");
+            String tmp; serializeJson(*data,tmp); LOG(println, tmp);
+
             String ctrlName;
             LList<UIControl*>&controls = myLamp.effects.getControls();
             for(int i=0; i<controls.size();i++){
@@ -635,11 +635,11 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                     publish_ctrls_vals();
                 }
             }
-//*/
-            // delete _str;
-            // TASK_RECYCLE;
+
+            delete _str;
+            TASK_RECYCLE;
         }
-    // );
+    );
 }
 
 /**

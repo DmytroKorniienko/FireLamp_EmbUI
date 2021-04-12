@@ -108,7 +108,7 @@ String Button::getName(){
 		return buffer;
 };
 
-Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), holdtm(NUMHOLD_TIME), touch(_pin, _pullmode, _state){
+Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), touch(_pin, _pullmode, _state){
 	pin = _pin;
 	pullmode = _pullmode;
 	state = _state;
@@ -146,6 +146,9 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), ho
 	tIsr.set(TASK_SECOND, TASK_ONCE, [this](){tLazy.restartDelayed(); }, nullptr, [this](){attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );}  );
 	ts.addTask(tIsr);
 
+	tClicksClear.set(NUMHOLD_TIME, TASK_ONCE, [this](){ holded = true; clicks=0; });
+	ts.addTask(tClicksClear);
+
 	isrEnable();
 }
 
@@ -158,19 +161,23 @@ void Buttons::buttonTick(){
 	bool reverse = false;
 
 	if ((holding = touch.isHolded())) {
-		if (holdtm.isReady()) {
-			holded = true;
-			clicks = touch.getHoldClicks();
-			startLampState = myLamp.isLampOn(); // получить начальный статус
-		}
+		// начало удержания кнопки
+		if(!tClicksClear.isEnabled()) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear
+			clicks=touch.getHoldClicks();
+		tClicksClear.enableIfNot();
+		startLampState = myLamp.isLampOn(); // получить начальный статус
 		reverse = true;
+		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 	} else if ((holding = touch.isStep())) {
-		holdtm.reset();
+		// кнопка удерживается
+		tLazy.restartDelayed();
+		tClicksClear.restartDelayed(); // отсрочиваем сброс нажатий
 	} else if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
-			LOG(println,F("Сброс состояния кнопки после окончания действий"));
+			LOG(println,F("Сброс состояния кнопки после окончания удержания"));
 			resetStates();
 			startLampState = myLamp.isLampOn();
+			LOG(printf_P, PSTR("reset - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 			for (int i = 0; i < buttons.size(); i++) {
 				buttons[i]->flags.onetime&=1;
 			}
@@ -183,7 +190,7 @@ void Buttons::buttonTick(){
 		// здесь баг, этот выход часто перехватывает "одиночные" нажатия и превращает их в "клик"
 		return;
 	}
-	LOG(printf_P, PSTR("buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+	LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
 		myLamp.stopAlarm();
@@ -202,13 +209,18 @@ void Buttons::buttonTick(){
 				// действие не подразумевает повтора
 				if(buttons[i]->flags.onetime && touch.isHold()){ // в процессе удержания
 					buttons[i]->flags.onetime|=3; // установить старший бит сработавшего действия
-				} else {
-					touch.resetStates();
-					startLampState = myLamp.isLampOn();
 				}
 			}
 			// break; // Не выходим после первого найденного совпадения. Можем делать макросы из нажатий
 		}
+	}
+
+	// Здесь уже все отработало, и кнопка точно не удерживается
+	if(!holding){
+		LOG(println,F("Сброс состояния кнопки"));
+		resetStates();
+		//touch.resetStates();
+		startLampState = myLamp.isLampOn();
 	}
 }
 
@@ -288,11 +300,12 @@ void Buttons::saveConfig(const char *cfg){
 }
 
 void IRAM_ATTR Buttons::isrPress() {
-    detachInterrupt(pin);
-	LOG(print,"i");
+  detachInterrupt(pin);
+	//LOG(println,"i");
 
 	tLazy.restartDelayed();
-	tButton.setInterval(BUTTON_STEP_TIMEOUT/2);
+	tButton.setInterval(constrain((BUTTON_STEP_TIMEOUT-BUTTON_DEBOUNCE)/2,1,BUTTON_STEP_TIMEOUT));
+	//buttonTick();
 
 	//isrEnable();
 //	tLazy = new Task(10 * TASK_SECOND, TASK_ONCE, [this](){ tButton.setInterval(TASK_SECOND); LOG(println,F("Button released")); TASK_RECYCLE; tLazy = nullptr; }, &ts, false);
@@ -316,6 +329,7 @@ void Buttons::isrEnable(){
 
 void Buttons::setButtonOn(bool flag) {
 	buttonEnabled = flag;
+	resetStates();
 	if (flag){
 		LOG(println,F("Button watch enabled"));
 		isrEnable();
