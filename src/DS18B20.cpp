@@ -64,21 +64,21 @@ void tempToSpeed(int16_t& currentTemp) {
 
     // преобразовать диапазон и ограничить значение
   #if COOLER_PIN_TYPE
-      if (currentTemp >= (int)(TEMP_LOW - TEMP_LOW/10U)) {
-        fanSpeed = constrain(map(currentTemp, TEMP_LOW - TEMP_LOW/10U, TEMP_HIGH, MIN_SPEED, MAX_SPEED), 0, MAX_SPEED);  
+      if (currentTemp >= (int)TEMP_MIN) {
+        fanSpeed = constrain(map(currentTemp, TEMP_MIN, TEMP_MAX, MIN_SPEED, MAX_SPEED), 0, MAX_SPEED);  
       } else {
         fanSpeed = 0;
       }
       analogWrite(COOLER_PIN, fanSpeed);
-      LOG(printf_P, PSTR("New PWM value  - %d\n"), fanSpeed);
+      LOG(printf_P, PSTR("New fan PWM value: %d\n"), fanSpeed);
   #else
-    if (currentTemp >= (int)TEMP_LOW && digitalRead(COOLER_PIN) != COOLER_PIN_LEVEL) {
+    if (currentTemp >= (int)(TEMP_DEST + TEMP_DEST/10U) && digitalRead(COOLER_PIN) != COOLER_PIN_LEVEL) {
       digitalWrite(COOLER_PIN, COOLER_PIN_LEVEL);
-      LOG(printf_P, PSTR("Cooler fan activated \n"));
+      LOG(printf_P, PSTR("Fan activated! \n"));
     }
-    else if (currentTemp <= (int)(TEMP_LOW - TEMP_LOW/10U) && digitalRead(COOLER_PIN) != !COOLER_PIN_LEVEL) {
+    else if (currentTemp <= (int)(TEMP_DEST - TEMP_DEST/10U) && digitalRead(COOLER_PIN) != !COOLER_PIN_LEVEL) {
       digitalWrite(COOLER_PIN, !COOLER_PIN_LEVEL);
-      LOG(printf_P, PSTR("Cooler fan desactivated \n"));
+      LOG(printf_P, PSTR("Fan desactivated. \n"));
     }
   #endif
 }
@@ -91,13 +91,18 @@ void ds_loop() {
 
   if (myLamp.isLampOn() && CURRENT_LIMIT_STEP > 0U) {
     static uint8_t delayCounter = 0;
-    static uint16_t myCurrlimit = myLamp.getcurLimit();
     delayCounter++;
-    if (delayCounter%COOLING_FAIL == 0 && curTemp > (int)TEMP_LOW) {
+#if COOLER_PIN_TYPE
+    if (delayCounter%COOLING_FAIL == 0 && curTemp > (int)TEMP_MAX) { // троттлинг по максимальной температуре (ШИМ)
+#else
+    if (delayCounter%COOLING_FAIL == 0 && curTemp > (int)(TEMP_DEST+TEMP_DEST/10U)) {  // троттлинг по желаемой рабочей + 10% (Дискретный)
+#endif
+      uint16_t myCurrlimit = myLamp.getcurLimit();
       myCurrlimit -= myCurrlimit/100*CURRENT_LIMIT_STEP;
-      LOG(printf_P, PSTR("Cooling failure! Current Limit will be charged to: %d\n"), myCurrlimit);
       myLamp.setcurLimit(myCurrlimit);
+      FastLED.setMaxPowerInVoltsAndMilliamps(5, myCurrlimit);
       delayCounter = 0;
+      LOG(printf_P, PSTR("Cooling failure! New Current Limit is (mA): %d\n"), myLamp.getcurLimit());
     }
   }
 }

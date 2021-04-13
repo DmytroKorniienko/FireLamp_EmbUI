@@ -41,9 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "misc.h"
 #include "main.h"
 #include "config.h"
-//#include <OneWire.h>
-//#include <DallasTemperature.h>
-#include "microDS18B20.h";
+#include "microDS18B20.h"
 
 
 
