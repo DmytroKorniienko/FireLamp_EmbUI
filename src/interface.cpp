@@ -61,27 +61,38 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // планировщик заполнения списка
 Task optionsTicker(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false );
-Task ctrlsTicker;            // планировщик контролов
+Task *ctrlsTicker = nullptr;            // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
 
 bool check_recovery_state(bool isSet){
     return false; // оключено до выяснения... какого-то хрена не работает :(
     if(LittleFS.begin()){
-        if(isSet){ // создаем файл-маркер
-            if(!LittleFS.exists(String(F("/recovery.sta")))){ // проверка на существование
-                File f = LittleFS.open(String(F("/recovery.sta")), "w");
-                f.print(embui.param(FPSTR(TCONST_0016)).c_str());
-                f.close();
-                return false;
+        String eff=embui.param(FPSTR(TCONST_0016));
+        if(isSet) {
+            File r = LittleFS.open(String(F("/recovery.chk")), "r"); // read
+            String data = r.readString();
+            LOG(printf_P, PSTR("prev check_recovery_state = %s\n"), data.c_str());
+            if(data.startsWith(F("start"))){
+                // похоже бутлуп, т.к. до конца инициализации не дошли...
+                r.close();
+                return true; // все плохо
             } else {
-                return true; // файл есть, похоже на бутлуп
+                r.close();
+                File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
+                w.print(F("start - "));
+                w.println(eff); // пишу номер эффекта
+                w.close();
+                return false; // все хорошо
             }
-        } else { // переименовываем
-            LittleFS.rename(String(F("/recovery.sta")),String(F("/recovery.old")));
+        } else {
+            File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
+            w.print(F("end - "));
+            w.println(eff); // пишу номер эффекта
+            w.close();
+            return false; // все хорошо
         }
     }
-    return false;
 }
 
 void resetAutoTimers(bool isEffects=false) // сброс таймера демо и настройка автосохранений
@@ -589,57 +600,82 @@ void set_effects_list(Interface *interf, JsonObject *data){
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(eff->eff_nb).toInt(), myLamp.getNormalizedLampBrightness()), true); // publish_ctrls_vals
 }
 
+// этот метод меняет контролы БЕЗ синхронизации со внешними системами
+void direct_set_effects_dynCtrl(JsonObject *data){
+    if (!data) return;
+
+    String ctrlName;
+    LList<UIControl*>&controls = myLamp.effects.getControls();
+    for(int i=0; i<controls.size();i++){
+        ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
+        if((*data).containsKey(ctrlName)){
+            if(!i){ // яркость???
+                byte bright = (*data)[ctrlName];
+                if (myLamp.getNormalizedLampBrightness() != bright) {
+                    myLamp.setLampBrightness(bright);
+                    if(myLamp.isLampOn())
+                        myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
+                    if (myLamp.IsGlobalBrightness()) {
+                        embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
+                    }
+                } else
+                    myLamp.setLampBrightness(bright);
+            } else
+                controls[i]->setVal((*data)[ctrlName]); // для всех остальных
+            if(myLamp.effects.worker) // && myLamp.effects.getEn()
+                myLamp.effects.worker->setDynCtrl(controls[i]);
+        }
+    }
+}
+
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
     resetAutoTimers(true);
+    direct_set_effects_dynCtrl(data);
 
-    DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
+    if(ctrlsTicker && ctrlsTicker->isEnabled())
+        ctrlsTicker->disable();
+
+    DynamicJsonDocument *_str = new DynamicJsonDocument(256);
     (*_str)=(*data);
-    LOG(println, "Delaying dynctrl");
-    new Task(100, TASK_ONCE,
-        nullptr,
-        &ts, true,
-        nullptr,
-        [_str]()
-        
-        {
+    //LOG(println, "Delaying dynctrl");
+
+    ctrlsTicker = new Task(300, TASK_ONCE,
+        [_str](){
             JsonObject dataStore = (*_str).as<JsonObject>();
             JsonObject *data = &dataStore;
             
-            LOG(println, "processing dynctrl...");
-            String tmp; serializeJson(*data,tmp); LOG(println, tmp);
-
-            String ctrlName;
-            LList<UIControl*>&controls = myLamp.effects.getControls();
-            for(int i=0; i<controls.size();i++){
-                ctrlName = String(FPSTR(TCONST_0015))+String(controls[i]->getId());
-                if((*data).containsKey(ctrlName)){
-                    if(!i){ // яркость???
-                        byte bright = (*data)[ctrlName];
-                        if (myLamp.getNormalizedLampBrightness() != bright) {
-                            myLamp.setLampBrightness(bright);
-                            if(myLamp.isLampOn())
-                                myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
-                            if (myLamp.IsGlobalBrightness()) {
-                                embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
-                            }
-                        } else
-                            myLamp.setLampBrightness(bright);
-                    } else
-                        controls[i]->setVal((*data)[ctrlName]); // для всех остальных
-                    LOG(printf_P, PSTR("Новое значение дин. контрола %d: %s\n"), controls[i]->getId(), (*data)[ctrlName].as<String>().c_str());
-                    if(myLamp.effects.worker) // && myLamp.effects.getEn()
-                        myLamp.effects.worker->setDynCtrl(controls[i]);
-                    publish_ctrls_vals();
+            LOG(println, "publishing & sending dynctrl...");
+            String tmp; serializeJson(*data,tmp);
+            
+            LOG(println, tmp);
+            publish_ctrls_vals();
+            // отправка данных в WebUI
+            {
+                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 512) : nullptr;
+                if (interf) {
+                    interf->json_frame_value();
+                    for (JsonPair kv : *data){
+                        interf->value(kv.key().c_str(), kv.value(), false);
+                    }
+                    interf->json_frame_flush();
+                    delete interf;
                 }
             }
-
+        },
+        &ts,
+        false,
+        nullptr,
+        [_str](){
+            //LOG(println, "Clearing dynctrl");
             delete _str;
+            ctrlsTicker = nullptr;
             TASK_RECYCLE;
         }
     );
+    ctrlsTicker->enableDelayed();
 }
 
 /**
@@ -2518,7 +2554,6 @@ void sync_parameters(){
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
-    check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
     //save_lamp_flags(); // обновить состояние флагов (закомментированно, окончательно состояние установится через 0.3 секунды, после set_settings_other)
 
     //--------------- начальная инициализация состояния
@@ -2535,6 +2570,7 @@ void sync_parameters(){
 #endif
     //--------------- начальная инициализация состояния
 
+    check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
     LOG(println, F("sync_parameters() done"));
 }
 
@@ -2612,22 +2648,27 @@ void remote_action(RA action, ...){
         case RA::RA_BRIGHT_NF:
             obj[String(FPSTR(TCONST_0015)) + "0"] = value;
             obj[FPSTR(TCONST_0017)] = true;
-            CALL_INTF_OBJ(set_effects_dynCtrl);
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
+            set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_BRIGHT:
             obj[String(FPSTR(TCONST_0015)) + "0"] = value;
-            CALL_INTF_OBJ(set_effects_dynCtrl);
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
+            set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_SPEED:
             obj[String(FPSTR(TCONST_0015)) + "1"] = value;
-            CALL_INTF_OBJ(set_effects_dynCtrl);
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
+            set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_SCALE:
             obj[String(FPSTR(TCONST_0015)) + "2"] = value;
-            CALL_INTF_OBJ(set_effects_dynCtrl);
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
+            set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_EXTRA:
-            CALL_INTF_OBJ(set_effects_dynCtrl);
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
+            set_effects_dynCtrl(nullptr, &obj);
             break;
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
@@ -2807,12 +2848,12 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = myLamp.IsGlobalBrightness() ? "1" : "0"; }
         else if (param == FPSTR(TCONST_00AA))
             { result = myLamp.getMode() == LAMPMODE::MODE_DEMO ? "1" : "0"; }
-        else if (param == FPSTR(TCONST_0012))
-            { result = String(myLamp.getLampBrightness()); }
-        else if (param == FPSTR(TCONST_0013))
-            { result = myLamp.effects.getControls()[1]->getVal(); }
-        else if (param == FPSTR(TCONST_0014))
-            { result = myLamp.effects.getControls()[2]->getVal(); }
+        // else if (param == FPSTR(TCONST_0012))
+        //     { result = String(myLamp.getLampBrightness()); }
+        // else if (param == FPSTR(TCONST_0013))
+        //     { result = myLamp.effects.getControls()[1]->getVal(); }
+        // else if (param == FPSTR(TCONST_0014))
+        //     { result = myLamp.effects.getControls()[2]->getVal(); }
         else if (param == FPSTR(TCONST_0082))
             { result = String(myLamp.effects.getCurrent());  }
         else if (param == FPSTR(TCONST_00B7))
@@ -2954,9 +2995,9 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0081)) { action = (value!="0" ? RA_OFF : RA_ON); }
         else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
         else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
-        else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
-        else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
-        else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
+        // else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
+        // else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
+        // else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
         else if (param == FPSTR(TCONST_0082)) action = RA_EFFECT;
         else if (param == FPSTR(TCONST_0083)) action = RA_EFF_NEXT;
         else if (param == FPSTR(TCONST_0084)) action = RA_EFF_PREV;
@@ -3003,10 +3044,10 @@ String httpCallback(const String &param, const String &value, bool isset){
                 }
 			}
             remote_action(RA_EXTRA, (String(FPSTR(TCONST_0015))+id).c_str(), val.c_str(), NULL);
-            result = String(F("[")) + String(id) + String(F(",\"")) + val + String(F("\"]"));
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
+            //result = String(F("[")) + String(id) + String(F(",\"")) + val + String(F("\"]"));
+            //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
 
-            //return httpCallback(FPSTR(TCONST_00D0), String(id), false); // т.к. отложенный вызов, то иначе обрабатыаем
+            return httpCallback(FPSTR(TCONST_00D0), String(id), false); // т.к. отложенный вызов, то иначе обрабатыаем
         }
         else if (param == F("effname"))  {
             String effname((char *)0);

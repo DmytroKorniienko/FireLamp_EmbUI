@@ -162,8 +162,9 @@ void Buttons::buttonTick(){
 
 	if ((holding = touch.isHolded())) {
 		// начало удержания кнопки
-		if(!tClicksClear.isEnabled()) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear
-			clicks=touch.getHoldClicks();
+		byte tstclicks = touch.getHoldClicks();
+		if(!tClicksClear.isEnabled() || (tstclicks && tstclicks!=clicks)) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear или по смене кол-ва нажатий до удержания
+			clicks=tstclicks;
 		tClicksClear.enableIfNot();
 		startLampState = myLamp.isLampOn(); // получить начальный статус
 		reverse = true;
@@ -304,7 +305,8 @@ void IRAM_ATTR Buttons::isrPress() {
 	//LOG(println,"i");
 
 	tLazy.restartDelayed();
-	tButton.setInterval(constrain((BUTTON_STEP_TIMEOUT-BUTTON_DEBOUNCE)/2,1,BUTTON_STEP_TIMEOUT));
+	tButton.setInterval(20);
+	//tButton.setInterval(constrain((BUTTON_STEP_TIMEOUT-BUTTON_DEBOUNCE)/2,1,BUTTON_STEP_TIMEOUT));
 	//buttonTick();
 
 	//isrEnable();
