@@ -25,6 +25,7 @@ const char *btn_get_desc(BA action){
 	return PSTR("");
 }
 
+Task *tReverseTimeout = nullptr; // задержка переключения направления
 bool Button::activate(btnflags& flg, bool reverse){
 		uint8_t newval;
 		RA ract = RA_UNKNOWN;
@@ -35,11 +36,11 @@ bool Button::activate(btnflags& flg, bool reverse){
 				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
 				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
 					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
-									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); TASK_RECYCLE; tReverseTimeout = nullptr; },
-									&ts, false
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); },
+									&ts, false, nullptr, [](){TASK_RECYCLE; tReverseTimeout = nullptr;}
 							);
 					tReverseTimeout->enableDelayed();
-				}
+				} 
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 10);
 #endif
@@ -50,8 +51,8 @@ bool Button::activate(btnflags& flg, bool reverse){
 				newval = constrain( speed + (speed / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
 				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
 					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
-									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); TASK_RECYCLE; tReverseTimeout = nullptr; },
-									&ts, false
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); },
+									&ts, false, nullptr, [](){TASK_RECYCLE; tReverseTimeout = nullptr;}
 							);
 					tReverseTimeout->enableDelayed();
 				}
@@ -66,8 +67,8 @@ bool Button::activate(btnflags& flg, bool reverse){
 				newval = constrain(scale + (scale / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
 				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
 					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
-									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); TASK_RECYCLE; tReverseTimeout = nullptr; },
-									&ts, false
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); },
+									&ts, false, nullptr, [](){TASK_RECYCLE; tReverseTimeout = nullptr;}
 							);
 					tReverseTimeout->enableDelayed();
 				}
@@ -178,6 +179,10 @@ void Buttons::buttonTick(){
 		tClicksClear.enableIfNot();
 		startLampState = myLamp.isLampOn(); // получить начальный статус
 		reverse = true;
+		if(tReverseTimeout){ // сброс реверса, если он включен
+			LOG(println,F("reverce canceled"));
+			tReverseTimeout->cancel();
+		}
 		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 	} else if ((holding = touch.isStep())) {
 		// кнопка удерживается
@@ -227,7 +232,6 @@ void Buttons::buttonTick(){
 	if(!holding){
 		LOG(println,F("Сброс состояния кнопки"));
 		resetStates();
-		//touch.resetStates();
 		startLampState = myLamp.isLampOn();
 		isrEnable();
 	}

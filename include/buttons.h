@@ -55,7 +55,6 @@ class Button{
 		Button(uint8_t mask, BA act = BA_NONE, const String& _param=String()) {
 			flags.direction = false; flags.mask = mask; action = act; param=_param;
 		}
-		Task *tReverseTimeout = nullptr; // задержка переключения направления
 		bool activate(btnflags& flg, bool reverse);
 		String getName();
 		const String& getParam() {return param;}
