@@ -1143,6 +1143,7 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
 void block_drawing(Interface *interf, JsonObject *data){
     //Страница "Рисование"
     if (!interf) return;
+    optionsTicker.cancel();
     interf->json_section_main(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));
 
     DynamicJsonDocument doc(512);
@@ -1177,6 +1178,7 @@ void set_drawing(Interface *interf, JsonObject *data){
 void block_lamptext(Interface *interf, JsonObject *data){
     //Страница "Вывод текста"
     if (!interf) return;
+    optionsTicker.cancel();
     interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
@@ -2108,7 +2110,9 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
 }
 
 void user_settings_frame(Interface *interf, JsonObject *data){
+    // Страница "Настройки"
     if (!interf) return;
+    optionsTicker.cancel();
 /*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
@@ -2159,8 +2163,9 @@ void section_main_frame(Interface *interf, JsonObject *data){
 }
 
 void section_sys_settings_frame(Interface *interf, JsonObject *data){
+    // Страница "Настройки ESP"
     if (!interf) return;
-
+    optionsTicker.cancel();
     interf->json_frame_interface(FPSTR(TINTF_08F));
 
     block_menu(interf, data);
