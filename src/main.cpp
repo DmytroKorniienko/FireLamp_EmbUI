@@ -72,8 +72,6 @@ void setup() {
 #endif
 
     // EmbUI
-    //create_parameters(); // теперь это weak метод EmbUI, вызывается внутри фреймворка на стадии begin чтобы слить конфиг на флеше с дефолтовыми перменными
-    //embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
     embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
     //embui.mqtt(embui.param(F("m_pref")), embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
     embui.mqtt(mqttCallback, true);
@@ -94,7 +92,6 @@ void setup() {
       default_buttons();
       myButtons->saveConfig();
     }
-//    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
 #endif
 
     myLamp.events.setEventCallback(event_worker);
@@ -185,29 +182,4 @@ void sendData(bool force){
     serializeJson(obj, out);
     LOG(println, out);
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
-
-    // // также отправим конфиг текущего эффекта
-    // sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
-    // String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
-    // embui.publish(sendtopic, effcfg, true);
 }
-
-#ifdef ESP_USE_BUTTON
-/*
- *  Button pin interrupt handler
- */
-/*
-
-ICACHE_RAM_ATTR void buttonpinisr(){
-    detachInterrupt(myLamp.getbPin());
-    //_isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
-    bool _t = myButtons->getpinTransition();
-    new Task(BUTTON_DEBOUNCE, TASK_ONCE, nullptr, &ts, true, nullptr,
-      [_t](){ myButtons->buttonPress(_t);
-                myButtons->setpinTransition(!myButtons->getpinTransition());
-                attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? myButtons->getPressTransitionType() : myButtons->getReleaseTransitionType());  // меням прерывание
-                TASK_RECYCLE; }
-    );
-}
-*/
-#endif

@@ -624,6 +624,7 @@ void direct_set_effects_dynCtrl(JsonObject *data){
                 controls[i]->setVal((*data)[ctrlName]); // для всех остальных
             if(myLamp.effects.worker) // && myLamp.effects.getEn()
                 myLamp.effects.worker->setDynCtrl(controls[i]);
+            break;
         }
     }
 }
@@ -633,7 +634,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
 
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
     resetAutoTimers(true);
-    direct_set_effects_dynCtrl(data);
+    if((*data).containsKey(FPSTR(TCONST_00D5)))
+        direct_set_effects_dynCtrl(data);
 
     if(ctrlsTicker && ctrlsTicker->isEnabled())
         ctrlsTicker->disable();
@@ -649,7 +651,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             
             LOG(println, "publishing & sending dynctrl...");
             String tmp; serializeJson(*data,tmp);
-            
+            direct_set_effects_dynCtrl(data);
+
             LOG(println, tmp);
             publish_ctrls_vals();
             // отправка данных в WebUI
@@ -2648,21 +2651,25 @@ void remote_action(RA action, ...){
         case RA::RA_BRIGHT_NF:
             obj[String(FPSTR(TCONST_0015)) + "0"] = value;
             obj[FPSTR(TCONST_0017)] = true;
+            obj[FPSTR(TCONST_00D5)] = true;
             //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_BRIGHT:
             obj[String(FPSTR(TCONST_0015)) + "0"] = value;
+            obj[FPSTR(TCONST_00D5)] = true;
             //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_SPEED:
             obj[String(FPSTR(TCONST_0015)) + "1"] = value;
+            obj[FPSTR(TCONST_00D5)] = true;
             //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_SCALE:
             obj[String(FPSTR(TCONST_0015)) + "2"] = value;
+            obj[FPSTR(TCONST_00D5)] = true;
             //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;

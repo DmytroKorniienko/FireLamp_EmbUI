@@ -33,7 +33,13 @@ bool Button::activate(btnflags& flg, bool reverse){
 		switch (action) {
 			case BA_BRIGHT:
 				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
+				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
+					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); TASK_RECYCLE; tReverseTimeout = nullptr; },
+									&ts, false
+							);
+					tReverseTimeout->enableDelayed();
+				}
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 10);
 #endif
@@ -42,7 +48,13 @@ bool Button::activate(btnflags& flg, bool reverse){
 			case BA_SPEED: {
 				byte speed = (myLamp.effects.getControls()[1]->getVal()).toInt();
 				newval = constrain( speed + (speed / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
+				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
+					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); TASK_RECYCLE; tReverseTimeout = nullptr; },
+									&ts, false
+							);
+					tReverseTimeout->enableDelayed();
+				}
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 100);
 #endif
@@ -52,7 +64,13 @@ bool Button::activate(btnflags& flg, bool reverse){
 			case BA_SCALE: {
 				byte scale = (myLamp.effects.getControls()[2]->getVal()).toInt();
 				newval = constrain(scale + (scale / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
+				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
+					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); TASK_RECYCLE; tReverseTimeout = nullptr; },
+									&ts, false
+							);
+					tReverseTimeout->enableDelayed();
+				}
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 150);
 #endif
@@ -136,15 +154,7 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 	ts.addTask(tButton);
 	tButton.enableDelayed();
 
-	/* так и не разобрался как получить статус "кнопка сейчас не нажата" или событие "кнопку отпустили" или вообще "событие произошло",
-	 * поэтому включаю таймер на 20 сек на обратный преход на прерывание от "нажатия" и ленивый опрос
-	 * если кто-то "держит" кнопку более 20 секунд - придется отпустить и нажать заново:)
-	 */ 
-	tLazy.set(20 * TASK_SECOND, TASK_ONCE, [this](){ isrEnable(); LOG(println,F("Button switch to lazy"));} );
-	ts.addTask(tLazy);
-
-	tIsr.set(TASK_SECOND, TASK_ONCE, [this](){tLazy.restartDelayed(); }, nullptr, [this](){attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );}  );
-	ts.addTask(tIsr);
+	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
 
 	tClicksClear.set(NUMHOLD_TIME, TASK_ONCE, [this](){ holded = true; clicks=0; });
 	ts.addTask(tClicksClear);
@@ -171,7 +181,6 @@ void Buttons::buttonTick(){
 		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
 	} else if ((holding = touch.isStep())) {
 		// кнопка удерживается
-		tLazy.restartDelayed();
 		tClicksClear.restartDelayed(); // отсрочиваем сброс нажатий
 	} else if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
@@ -182,25 +191,23 @@ void Buttons::buttonTick(){
 			for (int i = 0; i < buttons.size(); i++) {
 				buttons[i]->flags.onetime&=1;
 			}
-			// это покрывает только часть завершенных событий кнопки
-			if(tLazy.isEnabled()){
-				tLazy.disable();
-				isrEnable();
-			}
+			isrEnable(); // переключение на ленивый опрос
 		}
 		// здесь баг, этот выход часто перехватывает "одиночные" нажатия и превращает их в "клик"
 		return;
 	}
-	LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+	
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
 		myLamp.stopAlarm();
 		return;
 	}
 
-	if(!holding)
+	if(!holding){
 		startLampState=myLamp.isLampOn();
-
+		LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+	}
+	
 	Button btn(startLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
@@ -222,6 +229,7 @@ void Buttons::buttonTick(){
 		resetStates();
 		//touch.resetStates();
 		startLampState = myLamp.isLampOn();
+		isrEnable();
 	}
 }
 
@@ -302,25 +310,8 @@ void Buttons::saveConfig(const char *cfg){
 
 void IRAM_ATTR Buttons::isrPress() {
   detachInterrupt(pin);
-	//LOG(println,"i");
-
-	tLazy.restartDelayed();
-	tButton.setInterval(20);
-	//tButton.setInterval(constrain((BUTTON_STEP_TIMEOUT-BUTTON_DEBOUNCE)/2,1,BUTTON_STEP_TIMEOUT));
-	//buttonTick();
-
-	//isrEnable();
-//	tLazy = new Task(10 * TASK_SECOND, TASK_ONCE, [this](){ tButton.setInterval(TASK_SECOND); LOG(println,F("Button released")); TASK_RECYCLE; tLazy = nullptr; }, &ts, false);
-//	tLazy->enableDelayed();
+	tButton.setInterval(20); // переключение в режим удержания кнопки
 }
-
-/*
-void IRAM_ATTR Buttons::isrRelease(){
-    detachInterrupt(pin);
-		tButton.setInterval(TASK_SECOND);
-	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
-}
-*/
 
 void Buttons::isrEnable(){
 	tButton.setInterval(TASK_SECOND);

@@ -281,6 +281,7 @@ static const char TCONST_00D1[] PROGMEM = "afS";
 static const char TCONST_00D2[] PROGMEM = "lV";
 static const char TCONST_00D3[] PROGMEM = "sT";
 static const char TCONST_00D4[] PROGMEM = "inccontrol";
+static const char TCONST_00D5[] PROGMEM = "force";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка

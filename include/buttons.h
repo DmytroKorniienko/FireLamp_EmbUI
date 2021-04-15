@@ -49,9 +49,13 @@ class Button{
 	friend bool operator!= (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) != (f2.flags.mask&0x1F)); }
 
 	public:
-		Button(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE, const String& _param=String()) { flags.direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; flags.onetime=onetime; action = act; param=_param; }
-		Button(uint8_t mask, BA act = BA_NONE, const String& _param=String()) { flags.direction = false; flags.mask = mask; action = act; param=_param; }
-
+		Button(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE, const String& _param=String()) {
+			flags.direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; flags.onetime=onetime; action = act; param=_param;
+		}
+		Button(uint8_t mask, BA act = BA_NONE, const String& _param=String()) {
+			flags.direction = false; flags.mask = mask; action = act; param=_param;
+		}
+		Task *tReverseTimeout = nullptr; // задержка переключения направления
 		bool activate(btnflags& flg, bool reverse);
 		String getName();
 		const String& getParam() {return param;}
@@ -82,8 +86,6 @@ class Buttons {
 
 	byte clicks = 0;
 	Task tButton; // планировщик кнопки
-	Task tIsr;
-	Task tLazy;	// таймер переводящий кнопку на прерывание и ленивый опрос 
 	Task tClicksClear; // очистка кол-ва нажатий, после таймаута
 	LList<Button*> buttons;
 
