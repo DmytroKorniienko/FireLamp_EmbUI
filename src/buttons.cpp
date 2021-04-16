@@ -135,6 +135,7 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 	holded = false;
 	buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
 	pinTransition = true;
+	onoffLampState = myLamp.isLampOn();
 
 	clicks = 0;
 
@@ -166,8 +167,6 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 void Buttons::buttonTick(){
 	if (!buttonEnabled) return;
 
-	static bool startLampState = myLamp.isLampOn();
-	
 	touch.tick();
 	bool reverse = false;
 
@@ -177,13 +176,13 @@ void Buttons::buttonTick(){
 		if(!tClicksClear.isEnabled() || (tstclicks && tstclicks!=clicks)) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear или по смене кол-ва нажатий до удержания
 			clicks=tstclicks;
 		tClicksClear.enableIfNot();
-		startLampState = myLamp.isLampOn(); // получить начальный статус
+		onoffLampState = myLamp.isLampOn(); // получить статус на начало удержания
 		reverse = true;
 		if(tReverseTimeout){ // сброс реверса, если он включен
 			LOG(println,F("reverce canceled"));
 			tReverseTimeout->cancel();
 		}
-		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 	} else if ((holding = touch.isStep())) {
 		// кнопка удерживается
 		tClicksClear.restartDelayed(); // отсрочиваем сброс нажатий
@@ -191,8 +190,8 @@ void Buttons::buttonTick(){
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
 			LOG(println,F("Сброс состояния кнопки после окончания удержания"));
 			resetStates();
-			startLampState = myLamp.isLampOn();
-			LOG(printf_P, PSTR("reset - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+			onoffLampState = myLamp.isLampOn(); // сменить статус после удержания
+			LOG(printf_P, PSTR("reset - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 			for (int i = 0; i < buttons.size(); i++) {
 				buttons[i]->flags.onetime&=1;
 			}
@@ -209,11 +208,11 @@ void Buttons::buttonTick(){
 	}
 
 	if(!holding){
-		startLampState=myLamp.isLampOn();
-		LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+		onoffLampState=myLamp.isLampOn(); // обновить статус, если не удерживается и это однократное нажатие
+		LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 	}
 	
-	Button btn(startLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
+	Button btn(onoffLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
 			//if(buttons[i]->action==1) continue; // отладка, отключить действие увеличения яркости
@@ -232,7 +231,7 @@ void Buttons::buttonTick(){
 	if(!holding){
 		LOG(println,F("Сброс состояния кнопки"));
 		resetStates();
-		startLampState = myLamp.isLampOn();
+		onoffLampState = myLamp.isLampOn(); // обновить статус по итогу работы
 		isrEnable();
 	}
 }

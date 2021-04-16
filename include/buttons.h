@@ -75,6 +75,7 @@ class Buttons {
 			bool holding:1; // кнопка удерживается
 			bool holded:1; // кнопка удерживалась (touch.isHolded() можно проверить только однократно!!!)
 			bool pinTransition:1;  // ловим "нажатие" кнопки
+			bool onoffLampState:1;
 		};
 		uint8_t btnflags = 0; // очистим флаги
 	};

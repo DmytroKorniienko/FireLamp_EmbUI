@@ -53,18 +53,18 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     #include "esp_littlefs.h"
 #endif
 
-#ifdef DELAYED_EFFECTS
- #define INDEX_BUILD_DELAY 5
-#else
- #define INDEX_BUILD_DELAY 1
-#endif
-
+namespace INTERFACE {
+// ------------- глобальные переменные построения интерфейса
 // планировщик заполнения списка
 Task optionsTicker(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false );
 Task *delayedoptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
 Task *ctrlsTicker = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
+static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
+// ------------- глобальные переменные построения интерфейса
+} // namespace INTERFACE
+using namespace INTERFACE;
 
 bool check_recovery_state(bool isSet){
     return false; // оключено до выяснения... какого-то хрена не работает :(
@@ -118,20 +118,6 @@ void AUX_toggle(bool key)
     }
 }
 #endif
-
-// Вывод значка микрофона в списке эффектов
-#ifdef MIC_EFFECTS
-    #define MIC_SYMBOL (micSymb ? (pgm_read_byte(T_EFFVER + (uint8_t)eff->eff_nb) % 2 == 0 ? " \U0001F399" : "") : "")
-    #define MIC_SYMB bool micSymb = myLamp.getLampSettings().effHasMic
-#else
-    #define MIC_SYMBOL ""
-    #define MIC_SYMB
-#endif
-
-// Вывод номеров эффектов в списке, в WebUI
-//#define EFF_NUMBER (numList ? (String(eff->eff_nb) + ". ") : "")
-#define EFF_NUMBER   (numList ? (eff->eff_nb <= 255 ? (String(eff->eff_nb) + ". ") : (String((byte)(eff->eff_nb & 0xFF)) + "." + String((byte)(eff->eff_nb >> 8) - 1U) + ". ")) : "")
-
 
 /**
  * @brief - callback function that is triggered every PUB_PERIOD seconds via EmbUI scheduler
@@ -1678,8 +1664,6 @@ void block_settings_event(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
-static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
-
 void show_settings_event(Interface *interf, JsonObject *data){
     if (!interf) return;
 
@@ -2621,6 +2605,119 @@ void sync_parameters(){
     LOG(println, F("sync_parameters() done"));
 }
 
+// обработка эвентов лампы
+void event_worker(const EVENT *event){
+    RA action = RA_UNKNOWN;
+    LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), embui.timeProcessor.getFormattedShortTime().c_str());
+
+    switch (event->event) {
+    case EVENT_TYPE::ON: action = RA_ON; break;
+    case EVENT_TYPE::OFF: action = RA_OFF; break;
+    case EVENT_TYPE::DEMO_ON: action = RA_DEMO; break;
+    case EVENT_TYPE::ALARM: action = RA_ALARM; break;
+    case EVENT_TYPE::LAMP_CONFIG_LOAD: action = RA_LAMP_CONFIG; break;
+    case EVENT_TYPE::EFF_CONFIG_LOAD:  action = RA_EFF_CONFIG; break;
+    case EVENT_TYPE::EVENTS_CONFIG_LOAD: action = RA_EVENTS_CONFIG; break;
+    case EVENT_TYPE::SEND_TEXT:  action = RA_SEND_TEXT; break;
+    case EVENT_TYPE::SEND_TIME:  action = RA_SEND_TIME; break;
+#ifdef AUX_PIN
+    case EVENT_TYPE::AUX_ON: action = RA_AUX_ON; break;
+    case EVENT_TYPE::AUX_OFF: action = RA_AUX_OFF; break;
+    case EVENT_TYPE::AUX_TOGGLE: action = RA_AUX_TOGLE; break;
+#endif
+    case EVENT_TYPE::PIN_STATE: {
+        if (event->message == nullptr) break;
+
+        String tmpS(event->message);
+        tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
+        StaticJsonDocument<256> doc;
+        deserializeJson(doc, tmpS);
+        JsonArray arr = doc.as<JsonArray>();
+        for (size_t i = 0; i < arr.size(); i++) {
+            JsonObject item = arr[i];
+            uint8_t pin = item[FPSTR(TCONST_008C)].as<int>();
+            String action = item[FPSTR(TCONST_008D)].as<String>();
+            pinMode(pin, OUTPUT);
+            switch(action.c_str()[0]){
+                case 'H':
+                    digitalWrite(pin, HIGH); // LOW
+                    break;
+                case 'L':
+                    digitalWrite(pin, LOW); // LOW
+                    break;
+                case 'T':
+                    digitalWrite(pin, !digitalRead(pin)); // inverse
+                    break;
+                default:
+                    break;
+            }
+        }
+        break;
+    }
+    case EVENT_TYPE::SET_EFFECT: action = RA_EFFECT; break;
+    case EVENT_TYPE::SET_WARNING: action = RA_WARNING; break;
+    default:;
+    }
+
+    remote_action(action, event->message, NULL);
+}
+
+void show_progress(Interface *interf, JsonObject *data){
+    if (!interf) return;
+    interf->json_frame_interface();
+    interf->json_section_hidden(FPSTR(TCONST_005A), String(FPSTR(TINTF_056)) + String(F(" : ")) + (*data)[FPSTR(TINTF_05A)].as<String>()+ String("%"));
+    interf->json_section_end();
+    interf->json_frame_flush();
+}
+
+uint8_t uploadProgress(size_t len, size_t total){
+    DynamicJsonDocument doc(256);
+    JsonObject obj = doc.to<JsonObject>();
+    static int prev = 0; // используется чтобы не выводить повторно предыдущее значение, хрен с ней, пусть живет
+    float part = total / 50.0;
+    int curr = len / part;
+    uint8_t progress = 100*len/total;
+    if (curr != prev) {
+        prev = curr;
+        for (int i = 0; i < curr; i++) Serial.print(F("="));
+        Serial.print(F("\n"));
+        obj[FPSTR(TINTF_05A)] = String(progress);
+        CALL_INTF_OBJ(show_progress);
+    }
+#ifdef VERTGAUGE
+    myLamp.GaugeShow(len, total, 100);
+#endif
+    return progress;
+}
+
+// Функции обработчики и другие служебные
+#ifdef ESP_USE_BUTTON
+void default_buttons(){
+    myButtons->clear();
+    // Выключена
+    myButtons->add(new Button(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
+    myButtons->add(new Button(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons->add(new Button(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
+    myButtons->add(new Button(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
+    myButtons->add(new Button(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+    myButtons->add(new Button(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+
+    // Включена
+    myButtons->add(new Button(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
+    myButtons->add(new Button(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons->add(new Button(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
+#ifdef OTA
+    myButtons->add(new Button(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
+#endif
+    myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons->add(new Button(true, false, 7, true, BA::BA_EFFECT, String(F("253")))); // 7 кликов - эффект часы
+    myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
+    myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
+    myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
+}
+
+
 void remote_action(RA action, ...){
     LOG(printf_P, PSTR("RA %d: "), action);
     DynamicJsonDocument doc(512);
@@ -3128,114 +3225,4 @@ String httpCallback(const String &param, const String &value, bool isset){
     }
     return result;
 }
-
-// обработка эвентов лампы
-void event_worker(const EVENT *event){
-    RA action = RA_UNKNOWN;
-    LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), embui.timeProcessor.getFormattedShortTime().c_str());
-
-    switch (event->event) {
-    case EVENT_TYPE::ON: action = RA_ON; break;
-    case EVENT_TYPE::OFF: action = RA_OFF; break;
-    case EVENT_TYPE::DEMO_ON: action = RA_DEMO; break;
-    case EVENT_TYPE::ALARM: action = RA_ALARM; break;
-    case EVENT_TYPE::LAMP_CONFIG_LOAD: action = RA_LAMP_CONFIG; break;
-    case EVENT_TYPE::EFF_CONFIG_LOAD:  action = RA_EFF_CONFIG; break;
-    case EVENT_TYPE::EVENTS_CONFIG_LOAD: action = RA_EVENTS_CONFIG; break;
-    case EVENT_TYPE::SEND_TEXT:  action = RA_SEND_TEXT; break;
-    case EVENT_TYPE::SEND_TIME:  action = RA_SEND_TIME; break;
-#ifdef AUX_PIN
-    case EVENT_TYPE::AUX_ON: action = RA_AUX_ON; break;
-    case EVENT_TYPE::AUX_OFF: action = RA_AUX_OFF; break;
-    case EVENT_TYPE::AUX_TOGGLE: action = RA_AUX_TOGLE; break;
 #endif
-    case EVENT_TYPE::PIN_STATE: {
-        if (event->message == nullptr) break;
-
-        String tmpS(event->message);
-        tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
-        StaticJsonDocument<256> doc;
-        deserializeJson(doc, tmpS);
-        JsonArray arr = doc.as<JsonArray>();
-        for (size_t i = 0; i < arr.size(); i++) {
-            JsonObject item = arr[i];
-            uint8_t pin = item[FPSTR(TCONST_008C)].as<int>();
-            String action = item[FPSTR(TCONST_008D)].as<String>();
-            pinMode(pin, OUTPUT);
-            switch(action.c_str()[0]){
-                case 'H':
-                    digitalWrite(pin, HIGH); // LOW
-                    break;
-                case 'L':
-                    digitalWrite(pin, LOW); // LOW
-                    break;
-                case 'T':
-                    digitalWrite(pin, !digitalRead(pin)); // inverse
-                    break;
-                default:
-                    break;
-            }
-        }
-        break;
-    }
-    case EVENT_TYPE::SET_EFFECT: action = RA_EFFECT; break;
-    case EVENT_TYPE::SET_WARNING: action = RA_WARNING; break;
-    default:;
-    }
-
-    remote_action(action, event->message, NULL);
-}
-#ifdef ESP_USE_BUTTON
-void default_buttons(){
-    myButtons->clear();
-    // Выключена
-    myButtons->add(new Button(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
-    myButtons->add(new Button(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
-    myButtons->add(new Button(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
-    myButtons->add(new Button(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
-    myButtons->add(new Button(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
-    myButtons->add(new Button(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
-
-    // Включена
-    myButtons->add(new Button(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
-    myButtons->add(new Button(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
-    myButtons->add(new Button(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
-#ifdef OTA
-    myButtons->add(new Button(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
-#endif
-    myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
-    myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
-    myButtons->add(new Button(true, false, 7, true, BA::BA_EFFECT, String(F("253")))); // 7 кликов - эффект часы
-    myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
-    myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
-    myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
-}
-#endif
-
-void show_progress(Interface *interf, JsonObject *data){
-    if (!interf) return;
-    interf->json_frame_interface();
-    interf->json_section_hidden(FPSTR(TCONST_005A), String(FPSTR(TINTF_056)) + String(F(" : ")) + (*data)[FPSTR(TINTF_05A)].as<String>()+ String("%"));
-    interf->json_section_end();
-    interf->json_frame_flush();
-}
-
-uint8_t uploadProgress(size_t len, size_t total){
-    DynamicJsonDocument doc(256);
-    JsonObject obj = doc.to<JsonObject>();
-    static int prev = 0;
-    float part = total / 50.0;
-    int curr = len / part;
-    uint8_t progress = 100*len/total;
-    if (curr != prev) {
-        prev = curr;
-        for (int i = 0; i < curr; i++) Serial.print(F("="));
-        Serial.print(F("\n"));
-        obj[FPSTR(TINTF_05A)] = String(progress);
-        CALL_INTF_OBJ(show_progress);
-    }
-#ifdef VERTGAUGE
-    myLamp.GaugeShow(len, total, 100);
-#endif
-    return progress;
-}
