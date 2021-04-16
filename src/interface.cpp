@@ -61,7 +61,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // планировщик заполнения списка
 Task optionsTicker(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false );
-Task *ctrlsTicker = nullptr;            // планировщик контролов
+Task *delayedoptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
+Task *ctrlsTicker = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
 
@@ -261,8 +262,11 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 INDEX_BUILD_DELAY * TASK_SECOND,
                 TASK_ONCE, [](){
                                    myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                   if (!optionsTicker.isEnabled())
+                                    if (!optionsTicker.isEnabled()){
                                         optionsTicker.restartDelayed();
+                                        if(delayedoptionTask)
+                                            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+                                    }
                                    TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -271,8 +275,11 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 INDEX_BUILD_DELAY * TASK_SECOND,
                 TASK_ONCE, [](){
                                     myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
-                                    if (!optionsTicker.isEnabled())
+                                    if (!optionsTicker.isEnabled()){
                                         optionsTicker.restartDelayed();
+                                        if(delayedoptionTask)
+                                            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+                                    }
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -284,8 +291,11 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             INDEX_BUILD_DELAY * TASK_SECOND,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                if (!optionsTicker.isEnabled())
+                                if (!optionsTicker.isEnabled()){
                                     optionsTicker.restartDelayed();
+                                    if(delayedoptionTask)
+                                        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+                                }
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -384,22 +394,30 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
 // Построение выпадающего списка эффектов для вебморды
 void delayedcall_show_effects(){
 
-    LOG(println, F("=== GENERATE EffLIst for GUI===="));
+    LOG(println, F("=== GENERATE EffLIst for GUI ==="));
     uint16_t effnb = confEff?(int)confEff->eff_nb:myLamp.effects.getSelected(); // если confEff не NULL, то мы в конфирурировании, иначе в основном режиме
     
     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 2048) : nullptr;
     if (!interf) return;
+
+    if(delayedoptionTask)
+        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+
     interf->json_frame_interface();
     interf->json_section_content();
     interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
 
-    new Task(300, TASK_FOREVER,
+    EffectListElem **peff = new (EffectListElem *); // выделяем память под укзатель на указатель
+    //LOG(print,(uint32_t)peff); LOG(print," "); LOG(println,(uint32_t)*peff);
+    *peff = nullptr; // чистим содержимое
+    delayedoptionTask = new Task(300, TASK_FOREVER,
         // loop
-        [interf](){
+        [interf, peff](){
+            EffectListElem *&eff = *peff; // здесь ссылка на указатель, т.к. нам нужно менять значение :)
+            //LOG(print,(uint32_t)peff); LOG(print," "); LOG(println,(uint32_t)*peff);
             String effname((char *)0);
             MIC_SYMB;
             size_t cnt = 5; // генерим по 5 элементов
-            static EffectListElem *eff = nullptr;
             bool numList = myLamp.getLampSettings().numInList;
             while (--cnt) {
                 eff = myLamp.effects.getNextEffect(eff);
@@ -413,20 +431,28 @@ void delayedcall_show_effects(){
                             MIC_SYMBOL
                         );
                     }
-                } else { Task *_t = &ts.currentTask(); _t->disable(); delete eff; return; }
+                } else {
+                    // тут перебрали все элементы и готовы к завершению
+                    EffectListElem * first_eff=myLamp.effects.getFirstEffect();
+                    if(!confEff && first_eff && !first_eff->canBeSelected()) // если мы не в конфигурировании эффектов и первый не может быть выбран, то пустой будет добавлен в конец
+                        interf->option(String(0),"");
+                    interf->json_section_end();
+                    interf->json_section_end();
+                    interf->json_frame_flush();
+                    Task *_t = &ts.currentTask();
+                    _t->disable();
+                    return;
+                }
             }
         },
         &ts, true,
         nullptr,
         //onDisable
-        [interf](){
-            EffectListElem * first_eff=myLamp.effects.getFirstEffect();
-            if(!confEff && first_eff && !first_eff->canBeSelected()) // если мы не в конфигурировании эффектов и первый не может быть выбран, то пустой будет добавлен в конец
-                interf->option(String(0),"");
-            interf->json_section_end();
-            interf->json_section_end();
-            interf->json_frame_flush();
+        [interf, peff](){
+            LOG(println, F("=== GENERATE EffLIst for GUI completed ==="));
+            delete peff; // освободить указатель на указатель
             delete interf;
+            delayedoptionTask = nullptr;
             TASK_RECYCLE;
         }
     );
@@ -438,9 +464,11 @@ void show_effects_config(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_effects_config(interf, data);
     interf->json_frame_flush();
-    if (!optionsTicker.isEnabled())
+    if (!optionsTicker.isEnabled()){
         optionsTicker.restartDelayed();
-
+        if(delayedoptionTask)
+            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    }
 #else
     if (!interf) return;
     interf->json_frame_interface();
@@ -827,8 +855,11 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
     interf->json_section_end();
 #ifdef DELAYED_EFFECTS
-    if (!optionsTicker.isEnabled())
+    if (!optionsTicker.isEnabled()){
         optionsTicker.restartDelayed();
+        if(delayedoptionTask)
+            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    }
 #endif
 }
 
@@ -1144,6 +1175,8 @@ void block_drawing(Interface *interf, JsonObject *data){
     //Страница "Рисование"
     if (!interf) return;
     optionsTicker.cancel();
+    if(delayedoptionTask)
+        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
     interf->json_section_main(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));
 
     DynamicJsonDocument doc(512);
@@ -1179,6 +1212,8 @@ void block_lamptext(Interface *interf, JsonObject *data){
     //Страница "Вывод текста"
     if (!interf) return;
     optionsTicker.cancel();
+    if(delayedoptionTask)
+        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
     interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
@@ -2113,6 +2148,8 @@ void user_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки"
     if (!interf) return;
     optionsTicker.cancel();
+    if(delayedoptionTask)
+        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
 /*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
@@ -2166,6 +2203,8 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки ESP"
     if (!interf) return;
     optionsTicker.cancel();
+    if(delayedoptionTask)
+        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
     interf->json_frame_interface(FPSTR(TINTF_08F));
 
     block_menu(interf, data);
