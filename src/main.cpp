@@ -111,10 +111,6 @@ void setup() {
 
   //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
 
-  // periodic MQTT publish
-  Task *t = new Task(myLamp.getmqtt_int() * TASK_SECOND, TASK_FOREVER, [](){ sendData(); }, &ts, false);
-  t->enableDelayed();
-
 #ifdef TM1637_CLOCK
   tm_setup();
 #endif 
@@ -160,13 +156,13 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
         String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
         embui.publish(sendtopic, effcfg, true); // отправляем обратно в MQTT в топик embui/pub/
     } else if(sendtopic==FPSTR(TCONST_00AD)){
-        sendData(true);
+        sendData();
     }
   }
 }
 
 // Periodic MQTT publishing
-void sendData(bool force){
+void sendData(){
 
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
     LOG(println, F("send MQTT Data :"));

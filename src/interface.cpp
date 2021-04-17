@@ -1481,22 +1481,15 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
 
     section_settings_frame(interf, data);
 }
-
+*/
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
-    SETPARAM(FPSTR(P_m_host));
-    SETPARAM(FPSTR(P_m_user));
-    SETPARAM(FPSTR(P_m_pass));
-    SETPARAM(FPSTR(TCONST_007B));
-    SETPARAM(FPSTR(P_m_port));
-    SETPARAM(FPSTR(TCONST_004A), myLamp.semqtt_int((*data)[FPSTR(TCONST_004A)]));
-
-    embui.save();
+    BasicUI::set_settings_mqtt(interf,data);
     embui.mqttReconnect();
-
-    section_settings_frame(interf, data);
+    int interval = (*data)[FPSTR(TCONST_004A)];
+    LOG(print, F("New MQTT interval: ")); LOG(println, interval);
+    myLamp.setmqtt_int(interval);
 }
- */
 
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -2377,7 +2370,9 @@ void create_parameters(){
 //    embui.section_handle_add(FPSTR(TCONST_0078), show_settings_wifi);
 //    embui.section_handle_add(FPSTR(TCONST_003E), set_settings_wifi);
 //    embui.section_handle_add(FPSTR(T_SET_WIFIAP), set_settings_wifiAP);
-//    embui.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
+
+    embui.section_handle_remove(FPSTR(TCONST_0045));
+    embui.section_handle_add(FPSTR(TCONST_0045), set_settings_mqtt);
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
 //    embui.section_handle_add(FPSTR(TCONST_0077), show_settings_time);
@@ -2434,7 +2429,7 @@ void sync_parameters(){
         embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был ребут, сбрасываем эффект
     }
 
-    myLamp.semqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
+    myLamp.setmqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
 
     String syslampFlags(embui.param(FPSTR(TCONST_0094)));
     LAMPFLAGS tmp;

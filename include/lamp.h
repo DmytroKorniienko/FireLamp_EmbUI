@@ -210,7 +210,8 @@ private:
 
     Task demoTask;             // планировщик Смены эффектов в ДЕМО
     Task effectsTask;          // планировщик обработки эффектов
-    Task* warningTask = nullptr;          // указатель на динамический планировщик переключалки флага lampState.isWarning
+    Task* warningTask = nullptr; // указатель на динамический планировщик переключалки флага lampState.isWarning
+    Task* tmqtt_pub = nullptr; // указалель на динамический планировщик публикации через mqtt
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
 
     void effectsTick(); // обработчик эффектов
@@ -313,7 +314,16 @@ public:
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
     int getmqtt_int() {return mqtt_int;}
-    void semqtt_int(int val) { if (val < DEFAULT_MQTTPUB_INTERVAL) {mqtt_int = DEFAULT_MQTTPUB_INTERVAL;} else mqtt_int = val;}
+    void setmqtt_int(int val=DEFAULT_MQTTPUB_INTERVAL) {
+        mqtt_int = val;
+        if(tmqtt_pub)
+            tmqtt_pub->cancel(); // cancel & delete
+
+        extern void sendData();
+        if (mqtt_int){
+            tmqtt_pub = new Task(mqtt_int * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
+        }
+    }
 
     LAMPMODE getMode() {return mode;}
     void setMode(LAMPMODE _mode) {mode=_mode;}
