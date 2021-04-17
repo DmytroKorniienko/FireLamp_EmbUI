@@ -56,8 +56,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 namespace INTERFACE {
 // ------------- глобальные переменные построения интерфейса
 // планировщик заполнения списка
-Task optionsTicker(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false );
-Task *delayedoptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
+Task *optionsTicker = nullptr;     // задача для отложенной генерации списка
+Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
 Task *ctrlsTicker = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
@@ -65,6 +65,20 @@ static EVENT *cur_edit_event = NULL; // текущее редактируемо�
 // ------------- глобальные переменные построения интерфейса
 } // namespace INTERFACE
 using namespace INTERFACE;
+
+// функция пересоздания/отмены генерации списка эффектов
+void recreateOptionsTickerTask(bool isCancelOnly=false){
+    if(optionsTicker)
+        optionsTicker->cancel();
+    if(delayedOptionTask)
+        delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    optionsTicker = new Task(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
+        TASK_RECYCLE;
+        optionsTicker=nullptr;
+    });
+    if(!isCancelOnly)
+        optionsTicker->enableDelayed();
+}
 
 bool check_recovery_state(bool isSet){
     return false; // оключено до выяснения... какого-то хрена не работает :(
@@ -219,7 +233,7 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
  */
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
-    optionsTicker.disable();
+    recreateOptionsTickerTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
@@ -248,11 +262,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 INDEX_BUILD_DELAY * TASK_SECOND,
                 TASK_ONCE, [](){
                                    myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                    if (!optionsTicker.isEnabled()){
-                                        optionsTicker.restartDelayed();
-                                        if(delayedoptionTask)
-                                            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-                                    }
+                                   recreateOptionsTickerTask();
                                    TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -261,11 +271,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 INDEX_BUILD_DELAY * TASK_SECOND,
                 TASK_ONCE, [](){
                                     myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
-                                    if (!optionsTicker.isEnabled()){
-                                        optionsTicker.restartDelayed();
-                                        if(delayedoptionTask)
-                                            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-                                    }
+                                    recreateOptionsTickerTask();
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -277,11 +283,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             INDEX_BUILD_DELAY * TASK_SECOND,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                if (!optionsTicker.isEnabled()){
-                                    optionsTicker.restartDelayed();
-                                    if(delayedoptionTask)
-                                        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-                                }
+                                recreateOptionsTickerTask();
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -386,8 +388,8 @@ void delayedcall_show_effects(){
     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 2048) : nullptr;
     if (!interf) return;
 
-    if(delayedoptionTask)
-        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    if(delayedOptionTask)
+        delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
 
     interf->json_frame_interface();
     interf->json_section_content();
@@ -396,7 +398,7 @@ void delayedcall_show_effects(){
     EffectListElem **peff = new (EffectListElem *); // выделяем память под укзатель на указатель
     //LOG(print,(uint32_t)peff); LOG(print," "); LOG(println,(uint32_t)*peff);
     *peff = nullptr; // чистим содержимое
-    delayedoptionTask = new Task(300, TASK_FOREVER,
+    delayedOptionTask = new Task(300, TASK_FOREVER,
         // loop
         [interf, peff](){
             EffectListElem *&eff = *peff; // здесь ссылка на указатель, т.к. нам нужно менять значение :)
@@ -438,7 +440,7 @@ void delayedcall_show_effects(){
             LOG(println, F("=== GENERATE EffLIst for GUI completed ==="));
             delete peff; // освободить указатель на указатель
             delete interf;
-            delayedoptionTask = nullptr;
+            delayedOptionTask = nullptr;
             TASK_RECYCLE;
         }
     );
@@ -450,11 +452,7 @@ void show_effects_config(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_effects_config(interf, data);
     interf->json_frame_flush();
-    if (!optionsTicker.isEnabled()){
-        optionsTicker.restartDelayed();
-        if(delayedoptionTask)
-            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-    }
+    recreateOptionsTickerTask();
 #else
     if (!interf) return;
     interf->json_frame_interface();
@@ -841,11 +839,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
     interf->json_section_end();
 #ifdef DELAYED_EFFECTS
-    if (!optionsTicker.isEnabled()){
-        optionsTicker.restartDelayed();
-        if(delayedoptionTask)
-            delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-    }
+    recreateOptionsTickerTask();
 #endif
 }
 
@@ -1160,9 +1154,7 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
 void block_drawing(Interface *interf, JsonObject *data){
     //Страница "Рисование"
     if (!interf) return;
-    optionsTicker.cancel();
-    if(delayedoptionTask)
-        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    recreateOptionsTickerTask(true); // only cancel task
     interf->json_section_main(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));
 
     DynamicJsonDocument doc(512);
@@ -1197,9 +1189,7 @@ void set_drawing(Interface *interf, JsonObject *data){
 void block_lamptext(Interface *interf, JsonObject *data){
     //Страница "Вывод текста"
     if (!interf) return;
-    optionsTicker.cancel();
-    if(delayedoptionTask)
-        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    recreateOptionsTickerTask(true); // only cancel task
     interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
@@ -2106,7 +2096,7 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 #endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
-    optionsTicker.disable();
+    //recreateOptionsTickerTask(true); // only cancel task
     if (!interf) return;
     interf->json_frame_interface(FPSTR(TINTF_080));
     block_effects_main(interf, data);
@@ -2131,9 +2121,7 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
 void user_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки"
     if (!interf) return;
-    optionsTicker.cancel();
-    if(delayedoptionTask)
-        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    //recreateOptionsTickerTask(true); // only cancel task
 /*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
@@ -2186,9 +2174,7 @@ void section_main_frame(Interface *interf, JsonObject *data){
 void section_sys_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки ESP"
     if (!interf) return;
-    optionsTicker.cancel();
-    if(delayedoptionTask)
-        delayedoptionTask->cancel(); // отмена предыдущей задачи, если была запущена
+    recreateOptionsTickerTask(true); // only cancel task
     interf->json_frame_interface(FPSTR(TINTF_08F));
 
     block_menu(interf, data);
