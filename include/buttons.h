@@ -86,7 +86,7 @@ class Buttons {
 
 	byte clicks = 0;
 	Task tButton; // планировщик кнопки
-	Task tClicksClear; // очистка кол-ва нажатий, после таймаута
+	Task *tClicksClear = nullptr; // очистка кол-ва нажатий, после таймаута
 	LList<Button*> buttons;
 
 	void resetStates() { clicks=0; holding=false; holded=false; touch.resetStates();}

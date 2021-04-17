@@ -158,9 +158,6 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 
 	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
 
-	tClicksClear.set(NUMHOLD_TIME, TASK_ONCE, [this](){ holded = true; clicks=0; });
-	ts.addTask(tClicksClear);
-
 	isrEnable();
 }
 
@@ -173,9 +170,12 @@ void Buttons::buttonTick(){
 	if ((holding = touch.isHolded())) {
 		// начало удержания кнопки
 		byte tstclicks = touch.getHoldClicks();
-		if(!tClicksClear.isEnabled() || (tstclicks && tstclicks!=clicks)) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear или по смене кол-ва нажатий до удержания
+		if(!tClicksClear || (tstclicks && tstclicks!=clicks)) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear или по смене кол-ва нажатий до удержания
 			clicks=tstclicks;
-		tClicksClear.enableIfNot();
+		if(!tClicksClear){
+			tClicksClear = new Task(NUMHOLD_TIME, TASK_ONCE, [this](){ holded = true; clicks=0; }, &ts, false, nullptr, [this](){TASK_RECYCLE; tClicksClear=nullptr;});
+			tClicksClear->enableDelayed();
+		}
 		onoffLampState = myLamp.isLampOn(); // получить статус на начало удержания
 		reverse = true;
 		if(tReverseTimeout){ // сброс реверса, если он включен
@@ -185,7 +185,8 @@ void Buttons::buttonTick(){
 		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 	} else if ((holding = touch.isStep())) {
 		// кнопка удерживается
-		tClicksClear.restartDelayed(); // отсрочиваем сброс нажатий
+		if(tClicksClear)
+			tClicksClear->restartDelayed(); // отсрочиваем сброс нажатий
 	} else if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
 			LOG(println,F("Сброс состояния кнопки после окончания удержания"));
