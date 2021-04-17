@@ -43,16 +43,18 @@ MicroDS18B20 dallas(DS18B20_PIN);
 
 
 void ds_setup() {
+#if COOLER_PIN_TYPE
   analogWriteFreq(25000);
+#endif
   pinMode(COOLER_PIN, OUTPUT);
   dallas.requestTemp();
-  LOG(printf_P, PSTR("DS18b20 was initialized \n")); 
+  LOG(printf_P, PSTR("DS18b20 was initialized.\n")); 
 }
 
 int16_t getTemp() {
   int currentTemp = dallas.getTemp(); // получить с далласа
   dallas.requestTemp();           // запросить измерение
-  LOG(printf_P, PSTR("Sensor temperature  %d\U000000B0\n"), currentTemp);
+  LOG(printf_P, PSTR("DS18B20 temperature  %d\U000000B0C\n"), currentTemp);
   return currentTemp;
 }
 
