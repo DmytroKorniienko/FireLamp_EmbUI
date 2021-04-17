@@ -109,7 +109,7 @@ void setup() {
 #endif
   sync_parameters();        // падение есп32 не воспоизводится, kDn
 
-  embui.setPubInterval(60);   // change periodic WebUI publish interval to 60 sec
+  //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
 
   // periodic MQTT publish
   Task *t = new Task(myLamp.getmqtt_int() * TASK_SECOND, TASK_FOREVER, [](){ sendData(); }, &ts, false);
