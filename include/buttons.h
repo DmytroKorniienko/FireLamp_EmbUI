@@ -85,7 +85,7 @@ class Buttons {
 	uint8_t state; // тип (нормально открытый/закрытый)
 
 	byte clicks = 0;
-	Task tButton; // планировщик кнопки
+	Task *tButton = nullptr;      // планировщик кнопки
 	Task *tClicksClear = nullptr; // очистка кол-ва нажатий, после таймаута
 	LList<Button*> buttons;
 
@@ -115,7 +115,7 @@ class Buttons {
 
 	Buttons(uint8_t _pin=BTN_PIN, uint8_t _pullmode=PULL_MODE, uint8_t _state=NORM_OPEN);
 
-	~Buttons(){ setButtonOn(false); ts.deleteTask(tButton);	}
+	~Buttons(){ setButtonOn(false); }
 
 	int loadConfig(const char *cfg = nullptr);
 	void saveConfig(const char *cfg = nullptr);

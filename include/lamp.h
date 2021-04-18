@@ -311,7 +311,6 @@ public:
 
     void handle();          // главная функция обработки эффектов
 
-//    void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
     void setFaderFlag(bool flag) {flags.isFaderON = flag;}
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
@@ -475,6 +474,7 @@ public:
 
 /**
  * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
+ * @param LAMP *lamp - lamp instance
  * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
  *                                   function applied internaly for natiral dimming
  * @param uint32_t _duration - fade effect duraion, ms

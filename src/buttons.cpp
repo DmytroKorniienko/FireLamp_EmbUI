@@ -152,12 +152,7 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 	touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
 	touch.resetStates();
 
-	tButton.set(TASK_SECOND, TASK_FOREVER, std::bind(&Buttons::buttonTick, this));	// "ленивый" опрос 1 раз в сек
-	ts.addTask(tButton);
-	tButton.enableDelayed();
-
 	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
-
 	isrEnable();
 }
 
@@ -314,14 +309,17 @@ void Buttons::saveConfig(const char *cfg){
 
 void IRAM_ATTR Buttons::isrPress() {
   detachInterrupt(pin);
-	tButton.setInterval(20); // переключение в режим удержания кнопки
+	if(tButton)
+		tButton->cancel();
+	tButton = new Task(20, TASK_FOREVER, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;}); // переключение в режим удержания кнопки
 }
 
 void Buttons::isrEnable(){
-	tButton.setInterval(TASK_SECOND);
-	tButton.enableIfNot();
-	LOG(println,F("Button switch to isr+Lazy"));
+	LOG(println,F("Button switch to isr"));
 	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode==LOW_PULL ? RISING : FALLING );
+	if(tButton)
+		tButton->cancel();
+	tButton = new Task(TASK_SECOND, 5, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;});	// "ленивый" опрос 1 раз в сек в течение 5 секунд
 }
 
 void Buttons::setButtonOn(bool flag) {
@@ -331,8 +329,9 @@ void Buttons::setButtonOn(bool flag) {
 		LOG(println,F("Button watch enabled"));
 		isrEnable();
 	} else {
-	    detachInterrupt(pin);
-		tButton.disable();
+	  detachInterrupt(pin);
+		if(tButton)
+			tButton->cancel();
 		LOG(println,F("Button watch disabled"));
 	}
 }

@@ -604,7 +604,6 @@ void set_effects_list(Interface *interf, JsonObject *data){
         if(myLamp.getMode()==LAMPMODE::MODE_NORMAL)
             embui.var(FPSTR(TCONST_0016), (*data)[FPSTR(TCONST_0016)]);
         resetAutoTimers();
-        myLamp.effects.autoSaveConfig();    // DelayedAutoEffectConfigSave(0);
     }
 
     show_effects_param(interf, data);
@@ -629,11 +628,17 @@ void direct_set_effects_dynCtrl(JsonObject *data){
                         myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), !((*data)[FPSTR(TCONST_0017)]));
                     if (myLamp.IsGlobalBrightness()) {
                         embui.var(FPSTR(TCONST_0018), (*data)[ctrlName]);
-                    }
-                } else
+                    } else
+                        resetAutoTimers(true);
+                } else {
                     myLamp.setLampBrightness(bright);
-            } else
+                    if (!myLamp.IsGlobalBrightness())
+                        resetAutoTimers(true);
+                }
+            } else {
                 controls[i]->setVal((*data)[ctrlName]); // для всех остальных
+                resetAutoTimers(true);
+            }
             if(myLamp.effects.worker) // && myLamp.effects.getEn()
                 myLamp.effects.worker->setDynCtrl(controls[i]);
             break;
@@ -645,7 +650,6 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
-    resetAutoTimers(true);
     if((*data).containsKey(FPSTR(TCONST_00D5)))
         direct_set_effects_dynCtrl(data);
 
@@ -2477,9 +2481,8 @@ void sync_parameters(){
     CALL_SETTER(FPSTR(TCONST_0016), embui.param(FPSTR(TCONST_0016)), set_effects_list);
 #endif
 
-    CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
-    //myLamp.DelayedAutoEffectConfigSave(0);
-    myLamp.effects.autoSaveConfig();
+    if(tmp.isGlobalBrightness)
+        CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
 
 #ifdef MP3PLAYER
     //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
@@ -2806,12 +2809,10 @@ void remote_action(RA action, ...){
 #endif
         case RA::RA_EFF_NEXT:
             resetAutoTimers(); // сборс таймера демо, если есть перемещение
-            myLamp.effects.autoSaveConfig();
             myLamp.switcheffect(SW_NEXT, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFF_PREV:
             resetAutoTimers(); // сборс таймера демо, если есть перемещение
-            myLamp.effects.autoSaveConfig();
             myLamp.switcheffect(SW_PREV, myLamp.getFaderFlag());
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_EFF_RAND:

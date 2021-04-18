@@ -446,7 +446,7 @@ private:
     LList<UIControl*> controls; // список контроллов текущего эффекта
     LList<UIControl*> selcontrols; // список контроллов выбранного эффекта (пока еще идет фейдер)
 
-    Task tConfigSave;       // таска, задержки при сохранении текущего конфига эффекта в файл
+    Task *tConfigSave;       // динамическая таска, задержки при сохранении текущего конфига эффекта в файл
 
 
     /**
@@ -531,10 +531,6 @@ public:
         // ));
       }
       selcontrols = controls;
-
-      // task for delayed config autosave
-      tConfigSave.set(CFG_AUTOSAVE_TIMEOUT, TASK_ONCE, [this](){saveeffconfig(curEff);});
-      ts.addTask(tConfigSave);
     }
 
     // тип сортировки

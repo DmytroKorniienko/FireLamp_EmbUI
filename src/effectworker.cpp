@@ -657,7 +657,9 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
   if(millis()<10000) return; // в первые десять секунд после рестарта запрещаем запись
-
+  if(tConfigSave)
+    tConfigSave->cancel(); // если оказались здесь, и есть отложенная задача сохранения конфига, то отменить ее
+  
   File configFile;
   String filename = geteffectpathname(nb,folder);
   configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
@@ -686,10 +688,19 @@ void EffectWorker::chckdefconfigs(const char *folder){
 
 void EffectWorker::autoSaveConfig(bool force) {
     if (force){
-        tConfigSave.disable();
+        if(tConfigSave)
+          tConfigSave->cancel();
         saveeffconfig(curEff);
+        LOG(printf_P,PSTR("Force save effect config: %d\n"), curEff);
     } else {
-        tConfigSave.restartDelayed();
+        if(!tConfigSave){ // task for delayed config autosave
+          tConfigSave = new Task(CFG_AUTOSAVE_TIMEOUT, TASK_ONCE, [this](){
+            saveeffconfig(curEff);
+            LOG(printf_P,PSTR("Autosave effect config: %d\n"), curEff);
+          }, &ts, false, nullptr, [this](){TASK_RECYCLE; tConfigSave=nullptr;});
+          tConfigSave->enableDelayed();
+        } else
+          tConfigSave->restartDelayed();
     }
 #ifdef ESP8266
     FSInfo fs_info;
