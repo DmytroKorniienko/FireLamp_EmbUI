@@ -140,7 +140,7 @@ void loop() {
     }
 #endif
 #ifdef DS18B20
-    EVERY_N_MILLIS(DS18B_READ_DELAY) {
+    EVERY_N_SECONDS(DS18B_READ_DELAY) {
         ds_loop();
     }
 #endif
