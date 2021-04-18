@@ -208,10 +208,10 @@ private:
 
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
 
-    Task demoTask;             // планировщик Смены эффектов в ДЕМО
-    Task effectsTask;          // планировщик обработки эффектов
-    Task* warningTask = nullptr; // указатель на динамический планировщик переключалки флага lampState.isWarning
-    Task* tmqtt_pub = nullptr; // указалель на динамический планировщик публикации через mqtt
+    Task *demoTask = nullptr;    // динамический планировщик Смены эффектов в ДЕМО
+    Task effectsTask;            // планировщик обработки эффектов
+    Task *warningTask = nullptr; // динамический планировщик переключалки флага lampState.isWarning
+    Task *tmqtt_pub = nullptr;   // динамический планировщик публикации через mqtt
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
 
     void effectsTick(); // обработчик эффектов

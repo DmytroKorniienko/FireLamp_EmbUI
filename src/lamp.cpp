@@ -412,10 +412,6 @@ LAMP::LAMP() : docArrMessages(512), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewY
       lampState.brightness = 127;
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
 
-      // tasks binding
-      demoTask.set(DEFAULT_DEMO_TIMER * TASK_SECOND, TASK_FOREVER, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
-      ts.addTask(demoTask);
-
       ts.addTask(effectsTask);
       fader = new LEDFader(this);
     }
@@ -1152,18 +1148,24 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
   switch (action)
   {
   case SCHEDULER::T_DISABLE :
-    demoTask.disable();
+    if(demoTask){
+      demoTask->cancel();
+    }
     break;
   case SCHEDULER::T_ENABLE :
-    demoTask.setInterval(tmout * TASK_SECOND);
-    demoTask.enableIfNot();
+    if(tmout){
+      if(demoTask){
+        demoTask->cancel();
+      }
+      demoTask = new Task(tmout * TASK_SECOND, TASK_FOREVER, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL), &ts, false, nullptr, [this](){TASK_RECYCLE; demoTask = nullptr;});
+      demoTask->enableDelayed();
+    }
     break;
   case SCHEDULER::T_RESET :
     if (isAlarm())
       stopAlarm(); // тут же сбросим и будильник
-    if (mode==MODE_DEMO)  
-      //demoTask.restart();
-      demoTask.restartDelayed(tmout * TASK_SECOND);
+    if (mode==MODE_DEMO && demoTask)
+      demoTask->restartDelayed();
     break;
   default:
     return;
