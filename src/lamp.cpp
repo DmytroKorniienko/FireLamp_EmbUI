@@ -257,7 +257,7 @@ void LAMP::alarmWorker(){
 void LAMP::effectsTick(){
   uint32_t _begin = millis();
 
-  if (effectsTask.isEnabled() && !isAlarm()) { // && !isWarning()
+  if (effectsTask && !isAlarm()) { // && !isWarning()
     if(!lampState.isEffectsDisabledUntilText){
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), getUnsafeLedsArray() );
@@ -301,13 +301,11 @@ void LAMP::effectsTick(){
 
   if (isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
-    effectsTask.set(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);});
-    effectsTask.restartDelayed();
+    effectsTimer(T_FRAME_ENABLE, _begin);
 
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
-    effectsTask.set(EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();});
-    effectsTask.restartDelayed();
+    effectsTimer(T_ENABLE);
   }
 }
 
@@ -316,7 +314,7 @@ void LAMP::effectsTick(){
  * и перезапуск эффект-процессора
  */
 void LAMP::frameShow(const uint32_t ticktime){
-  if ( !fader->inprogress() && !isLampOn() && !isAlarm() ) return;
+  if ( !fader && !isLampOn() && !isAlarm() ) return;
 
   FastLED.show();
 
@@ -325,8 +323,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
   if (delay < LED_SHOW_DELAY || !(effects.worker ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
 
-  effectsTask.set(delay, TASK_ONCE, [this](){effectsTick();});
-  effectsTask.restartDelayed();
+  effectsTimer(T_ENABLE, delay);
   ++fps;
 }
 
@@ -411,9 +408,6 @@ LAMP::LAMP() : docArrMessages(512), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewY
       lampState.speedfactor = 1.0; // дефолтное значение
       lampState.brightness = 127;
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
-
-      ts.addTask(effectsTask);
-      fader = new LEDFader(this);
     }
 
 void LAMP::changePower() {changePower(!flags.ONflag);}
@@ -433,7 +427,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     if(mode == LAMPMODE::MODE_DEMO)
       demoTimer(T_ENABLE);
   } else  {
-    fadelight(0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE));  // гасим эффект-процессор
+    fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
     demoTimer(T_DISABLE);     // гасим Демо-таймер
   }
 
@@ -1008,7 +1002,7 @@ void LAMP::micHandler()
 void LAMP::setBrightness(const uint8_t _brt, const bool fade, const bool natural){
     LOG(printf_P, PSTR("Set brightness: %u\n"), _brt);
     if (fade) {
-        fadelight(_brt);
+        fadelight(this, _brt);
     } else {
         brightness(_brt, natural);
     }
@@ -1084,7 +1078,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
     if (fade && flags.ONflag) {
-      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      fadelight(this, FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
   } else {
@@ -1181,20 +1175,32 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
  * включает/выключает таймер обработки эффектов
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
-void LAMP::effectsTimer(SCHEDULER action) {
+void LAMP::effectsTimer(SCHEDULER action, uint32_t _begin) {
 //  LOG.printf_P(PSTR("effectsTimer: %u\n"), action);
   switch (action)
   {
   case SCHEDULER::T_DISABLE :
-    effectsTask.disable();
+    if(effectsTask){
+      effectsTask->cancel();
+    }
     break;
   case SCHEDULER::T_ENABLE :
-    effectsTask.set(EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();});
-    effectsTask.restartDelayed();
+    if(effectsTask){
+      effectsTask->cancel();
+    }
+    effectsTask = new Task(_begin?_begin:EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();}, &ts, false, nullptr, [this](){TASK_RECYCLE; effectsTask = nullptr;});
+    effectsTask->enableDelayed();
+    break;
+  case SCHEDULER::T_FRAME_ENABLE :
+    if(effectsTask){
+      effectsTask->cancel();
+    }
+    effectsTask = new Task(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);}, &ts, false, nullptr, [this](){TASK_RECYCLE; effectsTask = nullptr;});
+    effectsTask->enableDelayed();
     break;
   case SCHEDULER::T_RESET :
-    if (effectsTask.isEnabled() )
-      effectsTask.restartDelayed();
+    if (effectsTask)
+      effectsTask->restartDelayed();
     break;
   default:
     return;
@@ -1210,7 +1216,7 @@ void LAMP::showWarning(
 {
   uint32_t blinkTimer = millis();
   enum BlinkState { OFF = 0, ON = 1 } blinkState = BlinkState::OFF;
-  myLamp.fadelight(myLamp.getLampBrightness());    // установка яркости для предупреждения
+  fadelight(&myLamp, myLamp.getLampBrightness());    // установка яркости для предупреждения
   FastLED.clear();
   delay(2);
   FastLED.show();
@@ -1232,7 +1238,7 @@ void LAMP::showWarning(
   }
 
   FastLED.clear();
-  myLamp.fadelight(myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
+  fadelight(&myLamp, myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
   delay(1);
   FastLED.show();
   // наверное это не актуально
@@ -1297,40 +1303,18 @@ void LAMP::showWarning2(
 
 }
 
-
-void LEDFader::run(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback){
-    _cb = callback;
-
-    LOG(printf, PSTR("Fading to: %d\n"), _targetbrightness);
-
-    uint8_t _maxsteps = _duration / FADE_STEPTIME;
-    _brt = lmp->getBrightness();
-    uint8_t _brtdiff = abs(_targetbrightness - _brt);
-    uint8_t _steps;
-    if (_brtdiff > FADE_MININCREMENT * _maxsteps) {
-        _steps = _maxsteps;
-    } else {
-        _steps = _brtdiff/FADE_MININCREMENT;
-    }
-
-    if (_steps < 3) {
-      onDisable(_targetbrightness);
-        return;
-    }
-
-    _brtincrement = (_targetbrightness - _brt) / _steps;
-
-    tFader.set(FADE_STEPTIME,
-                _steps,
-                [this](){_brt += _brtincrement; lmp->brightness(_brt);},
-                nullptr,
-                [this, _targetbrightness](){onDisable(_targetbrightness);}
-    );
-    tFader.restart();
-}
-
-void LEDFader::onDisable(uint8_t _b){
-  lmp->brightness(_b);
-  if(_cb) _cb();
-  _cb=nullptr;
+// Fader object
+LEDFader *fader = nullptr;
+/**
+ * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
+ * @param LAMP *lamp - lamp instance
+ * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
+ *                                   function applied internaly for natiral dimming
+ * @param uint32_t _duration - fade effect duraion, ms
+ * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
+ */
+void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void()> callback){
+    if(fader)
+      fader->cancel();
+    fader = new LEDFader(&ts, lamp,_targetbrightness, _duration, callback);
 }

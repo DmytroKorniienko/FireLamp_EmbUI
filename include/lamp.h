@@ -83,6 +83,7 @@ typedef enum _EFFSWITCH {
 typedef enum _SCHEDULER {
     T_DISABLE = 0,    // Выкл
     T_ENABLE,         // Вкл
+    T_FRAME_ENABLE,   // Вкл
     T_RESET,          // сброс
 } SCHEDULER;
 
@@ -138,28 +139,8 @@ uint32_t lampflags; // набор битов для конфига
 } LAMPFLAGS;
 //#pragma pack(pop)
 
-class LAMP;
-class LEDFader {
-    Task tFader;
-    LAMP *lmp;
-    uint8_t _brt, _brtincrement;
-    std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
-    void onDisable(uint8_t _b);
-
-public:
-    LEDFader(LAMP *_l){
-        this->lmp = _l;
-        ts.addTask(tFader);
-    }
-    ~LEDFader(){ts.deleteTask(tFader);}
-    bool inprogress(){return tFader.isEnabled();};
-
-    void run(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback);
-
-};
-
-
 class LAMP {
+    friend class LEDFader;
 private:
     LAMPFLAGS flags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
@@ -209,7 +190,7 @@ private:
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
 
     Task *demoTask = nullptr;    // динамический планировщик Смены эффектов в ДЕМО
-    Task effectsTask;            // планировщик обработки эффектов
+    Task *effectsTask;           // динамический планировщик обработки эффектов
     Task *warningTask = nullptr; // динамический планировщик переключалки флага lampState.isWarning
     Task *tmqtt_pub = nullptr;   // динамический планировщик публикации через mqtt
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
@@ -247,11 +228,6 @@ private:
      * и перезапуск эффект-процессора
      */
     void frameShow(const uint32_t ticktime);
-
-    // Fader object
-    LEDFader *fader = nullptr;
-    friend class LEDFader;
-
 public:
     void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
     void warning2Helper();
@@ -427,18 +403,6 @@ public:
     uint8_t getBrightness(const bool natural=true);
 
     /**
-     * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
-     * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
-     *                                   function applied internaly for natiral dimming
-     * @param uint32_t _duration - fade effect duraion, ms
-     * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
-     */
-    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr){
-        fader->run(_targetbrightness, _duration, callback);
-    };
-
-
-    /**
      * @brief - переключатель эффектов для других методов,
      * может использовать фейдер, выбирать случайный эффект для демо
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
@@ -458,10 +422,10 @@ public:
      * включает/выключает "эффект"-таймер
      * @param TICKER action - enable/disable/reset
      */
-    void effectsTimer(SCHEDULER action);
+    void effectsTimer(SCHEDULER action, uint32_t _begin = 0);
 
 
-    ~LAMP() { delete fader; fader = nullptr; }
+    ~LAMP() {}
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
@@ -469,6 +433,52 @@ private:
     std::vector<CRGB> drawbuff; // буфер для рисования
 };
 
+// Fader object
+class LEDFader;
+extern LEDFader *fader;
+class LEDFader : public Task {
+    LAMP *lmp;
+    uint8_t _brt, _brtincrement;
+    std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
+    LEDFader() = delete; 
+public:
+    LEDFader(Scheduler* aS, LAMP *_l, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback)
+        : Task((unsigned long)FADE_STEPTIME,
+        (abs(_targetbrightness - _l->getBrightness()) > FADE_MININCREMENT * _duration / FADE_STEPTIME) ? (long)(_duration / FADE_STEPTIME) : (long)(abs(_targetbrightness - _l->getBrightness())/FADE_MININCREMENT),
+        [this](){_brt += _brtincrement; lmp->brightness(_brt);},
+        aS,
+        false,
+        nullptr,
+        [this, _targetbrightness](){
+            lmp->brightness(_targetbrightness);
+            if(_cb) _cb();
+            _cb=nullptr;
+            TASK_RECYCLE;
+            fader = nullptr;
+            LOG(printf_P, PSTR("Fading to %d done\n"), _targetbrightness);
+        })
+    {
+        this->_cb = callback;
+        this->lmp = _l;
+        this->restart();
 
+        this->_brt = lmp->getBrightness();
+        int _steps = (abs(_targetbrightness - _brt) > FADE_MININCREMENT * _duration / FADE_STEPTIME) ? (long)(_duration / FADE_STEPTIME) : (long)(abs(_targetbrightness - _brt)/FADE_MININCREMENT);
+        if (_steps < 3) {
+            this->cancel();
+            return;
+        }
+        _brtincrement = (_targetbrightness - _brt) / _steps;
+        LOG(printf_P, PSTR("Fading to: %d\n"), _targetbrightness);
+    }
+};
 
+/**
+ * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
+ * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
+ *                                   function applied internaly for natiral dimming
+ * @param uint32_t _duration - fade effect duraion, ms
+ * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
+ */
+void fadelight(LAMP *lamp, const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
 #endif
