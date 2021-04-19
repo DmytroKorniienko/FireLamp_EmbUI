@@ -257,14 +257,10 @@ void LAMP::alarmWorker(){
 void LAMP::effectsTick(){
   uint32_t _begin = millis();
 
-  if (effectsTask && !isAlarm()) { // && !isWarning()
+  if (effects.worker && flags.ONflag && !isAlarm()) {
     if(!lampState.isEffectsDisabledUntilText){
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), getUnsafeLedsArray() );
-        if(!lampState.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
-          ledsbuff.resize(0);
-          ledsbuff.shrink_to_fit();
-        }
       }
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
       if(effects.worker ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
@@ -272,6 +268,11 @@ void LAMP::effectsTick(){
         std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
       }
     }
+  }
+
+  if(!lampState.isStringPrinting && !flags.ONflag){ // чистить буфер только если не выводится строка, иначе держать его
+    ledsbuff.resize(0);
+    ledsbuff.shrink_to_fit();
   }
 
   if(!drawbuff.empty()){
@@ -1149,7 +1150,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   if(effects.worker && flags.ONflag && !lampState.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
     ledsbuff.resize(NUM_LEDS);
-    std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
+    std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin()); // сохранить кадр в буфер
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
