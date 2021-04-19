@@ -4,7 +4,6 @@
 #include "misc.h"
 #include <FunctionalInterrupt.h>
 #include "ts.h"
-//#include <Ticker.h>
 #include "../../include/LList.h"
 
 typedef enum _button_action {

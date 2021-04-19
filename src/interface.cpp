@@ -56,9 +56,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 namespace INTERFACE {
 // ------------- глобальные переменные построения интерфейса
 // планировщик заполнения списка
-Task *optionsTicker = nullptr;     // задача для отложенной генерации списка
+Task *optionsTask = nullptr;     // задача для отложенной генерации списка
 Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
-Task *ctrlsTicker = nullptr;       // планировщик контролов
+Task *ctrlsTask = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
 static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
@@ -67,17 +67,17 @@ static EVENT *cur_edit_event = NULL; // текущее редактируемо�
 using namespace INTERFACE;
 
 // функция пересоздания/отмены генерации списка эффектов
-void recreateOptionsTickerTask(bool isCancelOnly=false){
-    if(optionsTicker)
-        optionsTicker->cancel();
+void recreateoptionsTaskTask(bool isCancelOnly=false){
+    if(optionsTask)
+        optionsTask->cancel();
     if(delayedOptionTask)
         delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-    optionsTicker = new Task(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
+    optionsTask = new Task(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
         TASK_RECYCLE;
-        optionsTicker=nullptr;
+        optionsTask=nullptr;
     });
     if(!isCancelOnly)
-        optionsTicker->enableDelayed();
+        optionsTask->enableDelayed();
 }
 
 bool check_recovery_state(bool isSet){
@@ -233,7 +233,7 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
  */
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
-    recreateOptionsTickerTask(true); // only cancel task
+    recreateoptionsTaskTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
@@ -262,7 +262,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 INDEX_BUILD_DELAY * TASK_SECOND,
                 TASK_ONCE, [](){
                                    myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                   recreateOptionsTickerTask();
+                                   recreateoptionsTaskTask();
                                    TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -271,7 +271,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 INDEX_BUILD_DELAY * TASK_SECOND,
                 TASK_ONCE, [](){
                                     myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
-                                    recreateOptionsTickerTask();
+                                    recreateoptionsTaskTask();
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -283,7 +283,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             INDEX_BUILD_DELAY * TASK_SECOND,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                recreateOptionsTickerTask();
+                                recreateoptionsTaskTask();
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -452,7 +452,7 @@ void show_effects_config(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_effects_config(interf, data);
     interf->json_frame_flush();
-    recreateOptionsTickerTask();
+    recreateoptionsTaskTask();
 #else
     if (!interf) return;
     interf->json_frame_interface();
@@ -653,14 +653,14 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if((*data).containsKey(FPSTR(TCONST_00D5)))
         direct_set_effects_dynCtrl(data);
 
-    if(ctrlsTicker && ctrlsTicker->isEnabled())
-        ctrlsTicker->disable();
+    if(ctrlsTask && ctrlsTask->isEnabled())
+        ctrlsTask->disable();
 
     DynamicJsonDocument *_str = new DynamicJsonDocument(256);
     (*_str)=(*data);
     //LOG(println, "Delaying dynctrl");
 
-    ctrlsTicker = new Task(300, TASK_ONCE,
+    ctrlsTask = new Task(300, TASK_ONCE,
         [_str](){
             JsonObject dataStore = (*_str).as<JsonObject>();
             JsonObject *data = &dataStore;
@@ -690,11 +690,11 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
         [_str](){
             //LOG(println, "Clearing dynctrl");
             delete _str;
-            ctrlsTicker = nullptr;
+            ctrlsTask = nullptr;
             TASK_RECYCLE;
         }
     );
-    ctrlsTicker->enableDelayed();
+    ctrlsTask->enableDelayed();
 }
 
 /**
@@ -843,7 +843,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
     interf->json_section_end();
 #ifdef DELAYED_EFFECTS
-    recreateOptionsTickerTask();
+    recreateoptionsTaskTask();
 #endif
 }
 
@@ -1158,7 +1158,7 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
 void block_drawing(Interface *interf, JsonObject *data){
     //Страница "Рисование"
     if (!interf) return;
-    recreateOptionsTickerTask(true); // only cancel task
+    recreateoptionsTaskTask(true); // only cancel task
     interf->json_section_main(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));
 
     DynamicJsonDocument doc(512);
@@ -1193,7 +1193,7 @@ void set_drawing(Interface *interf, JsonObject *data){
 void block_lamptext(Interface *interf, JsonObject *data){
     //Страница "Вывод текста"
     if (!interf) return;
-    recreateOptionsTickerTask(true); // only cancel task
+    recreateoptionsTaskTask(true); // only cancel task
     interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
@@ -1318,9 +1318,6 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
     //SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume((*data)[FPSTR(TCONST_00A2)].as<int>()));
     SETPARAM(FPSTR(TCONST_00A2)); // тоже пишет в плеер, разносим во времени
-    // sysTicker.once(0.3,std::bind([](){
-    //     mp3->setVolume(embui.param(FPSTR(TCONST_00A2)).toInt());
-    // }));
 
     save_lamp_flags();
     BasicUI::section_settings_frame(interf, data);
@@ -2093,7 +2090,7 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 #endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
-    //recreateOptionsTickerTask(true); // only cancel task
+    //recreateoptionsTaskTask(true); // only cancel task
     if (!interf) return;
     interf->json_frame_interface(FPSTR(TINTF_080));
     block_effects_main(interf, data);
@@ -2118,7 +2115,7 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
 void user_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки"
     if (!interf) return;
-    //recreateOptionsTickerTask(true); // only cancel task
+    //recreateoptionsTaskTask(true); // only cancel task
 /*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
@@ -2171,7 +2168,7 @@ void section_main_frame(Interface *interf, JsonObject *data){
 void section_sys_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки ESP"
     if (!interf) return;
-    recreateOptionsTickerTask(true); // only cancel task
+    recreateoptionsTaskTask(true); // only cancel task
     interf->json_frame_interface(FPSTR(TINTF_08F));
 
     block_menu(interf, data);
@@ -2892,7 +2889,7 @@ void remote_action(RA action, ...){
                     default : break;
                 }
 			}
-            myLamp.showWarning2(col,dur,per,type);
+            myLamp.showWarning(col,dur,per,type);
             break; 
         }
 
@@ -2987,7 +2984,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0082))
             { result = String(myLamp.effects.getCurrent());  }
         else if (param == FPSTR(TCONST_00B7))
-            { myLamp.showWarning2(CRGB::Orange,5000,500); }
+            { myLamp.showWarning(CRGB::Orange,5000,500); }
         else if (param == FPSTR(TCONST_00AE)) {
                 String result = myLamp.effects.geteffconfig(myLamp.effects.getCurrent(), myLamp.getNormalizedLampBrightness());
                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), result, true);

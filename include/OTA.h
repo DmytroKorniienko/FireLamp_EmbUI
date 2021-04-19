@@ -52,16 +52,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "EmbUI.h"
 #ifdef OTA
 #include <ArduinoOTA.h>
-//#include <ESP8266WiFi.h>
-//#include <ESP8266mDNS.h>
-//#include <WiFiUdp.h>
 
 #define ESP_OTA_PORT          (3232U)                       // номер порта, который будет "прослушиваться" в ожидании команды прошивки по воздуху 8266U/3232U
 #define CONFIRMATION_TIMEOUT  (30U)                         // время в сеундах, в течение которого нужно дважды подтвердить старт обновлениЯ по воздуху (иначе сброс в None)
 #define ESP_CONF_TIMEOUT      (120U)                        // время ожидания ОТА
 #define OTA_PASS "12345"
-typedef void (*ShowWarningDelegate)(CRGB color, uint32_t duration, uint16_t blinkHalfPeriod);
-//extern void showWarning(CRGB color,uint32_t duration,uint16_t blinkHalfPeriod);
 
 enum OtaPhase                                               // определение стадий процесса обновления по воздуху: нет, получено первое подтверждение, получено второе подтверждение, получено второе подтверждение - в процессе, обновление окончено
 {
@@ -78,9 +73,8 @@ class OtaManager
     OtaPhase OtaFlag = OtaPhase::None;
   public:
 
-    OtaManager(ShowWarningDelegate showWarningDelegate)
+    OtaManager()
     {
-      this->showWarningDelegate = showWarningDelegate;
     }
 
     bool RequestOtaUpdate()                                 // пользователь однократно запросил обновление по воздуху; возвращает true, когда переходит в режим обновления - startOtaUpdate()
@@ -101,8 +95,6 @@ class OtaManager
         momentOfOtaStart = millis();
 
         LOG(print,F("Получено второе подтверждение обновления по воздуху\nСтарт режима обновления\n"));
-
-        showWarningDelegate(CRGB::Yellow, 2000U, 500U);     // мигание жёлтым цветом 2 секунды (2 раза) - готовность к прошивке
         return true;
       }
 
@@ -130,8 +122,6 @@ class OtaManager
 
         LOG(print,F("Таймаут ожидания прошивки по воздуху превышен\nСброс флага в исходное состояние\nПерезагрузка\n"));
         delay(500);
-
-        showWarningDelegate(CRGB::Red, 2000U, 500U);        // мигание красным цветом 2 секунды (2 раза) - ожидание прошивки по воздуху прекращено, перезагрузка
 
         ESP.restart();
         return;
@@ -233,7 +223,6 @@ class OtaManager
     private:
     uint64_t momentOfFirstConfirmation = 0;                 // момент времени, когда получено первое подтверждение и с которого начинается отсчёт ожидания второго подтверждения
     uint64_t momentOfOtaStart = 0;                          // момент времени, когда развёрнута WiFi точка доступа для обновления по воздуху
-    ShowWarningDelegate showWarningDelegate;
 };
 
 #endif

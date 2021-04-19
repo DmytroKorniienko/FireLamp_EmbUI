@@ -209,8 +209,6 @@ private:
 #ifdef OTA
     OtaManager otaManager;
 #endif
-    static void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
-
     CRGB warn_color;
     uint32_t warn_duration;
     uint16_t warn_blinkHalfPeriod;
@@ -229,8 +227,8 @@ private:
      */
     void frameShow(const uint32_t ticktime);
 public:
-    void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
-    void warning2Helper();
+    void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
+    void warningHelper();
 
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -413,13 +411,13 @@ public:
 
     /*
      * включает/выключает "демо"-таймер
-     * @param TICKER action - enable/disable/reset
+     * @param SCHEDULER action - enable/disable/reset
      */
     void demoTimer(SCHEDULER action, byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
 
     /*
      * включает/выключает "эффект"-таймер
-     * @param TICKER action - enable/disable/reset
+     * @param SCHEDULER action - enable/disable/reset
      */
     void effectsTimer(SCHEDULER action, uint32_t _begin = 0);
 

@@ -288,7 +288,7 @@ void LAMP::effectsTick(){
   }
 
   if(isWarning()) {
-    warning2Helper(); // вывод предупреждения
+    warningHelper(); // вывод предупреждения
   }
 
   if (isAlarm() || lampState.isStringPrinting) { // isWarning() || 
@@ -364,7 +364,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 
 LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef OTA
-    , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
+    , otaManager()
 #endif
     , effects(&lampState)
     {
@@ -755,7 +755,7 @@ String &LAMP::prepareText(String &source){
   sprintf_P(buffer,PSTR("%02d.%02d.%04d"),tm->tm_mday,tm->tm_mon+1,tm->tm_year+TM_BASE_YEAR);
   source.replace(F("%DT"), buffer);
 #ifdef LAMP_DEBUG  
-  if(!source.isEmpty() && effects.getCurrent()!=EFF_ENUM::EFF_TIME) // спам эффекта часы убираем костыльным способом :)
+  if(!source.isEmpty() && effects.getCurrent()!=EFF_ENUM::EFF_TIME && !isWarning()) // спам эффекта часы и предупреждений убираем костыльным способом :)
     LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
 #endif
   return source;  
@@ -1197,21 +1197,25 @@ void LAMP::effectsTimer(SCHEDULER action, uint32_t _begin) {
   case SCHEDULER::T_DISABLE :
     if(effectsTask){
       effectsTask->cancel();
+      embui.taskRecycle(effectsTask);
+      effectsTask = nullptr;
     }
     break;
   case SCHEDULER::T_ENABLE :
-    if(effectsTask){
-      effectsTask->cancel();
+    if(!effectsTask){
+      effectsTask = new Task(_begin?_begin:EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();}, &ts, false);
+    } else {
+      effectsTask->set(_begin?_begin:EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();});
     }
-    effectsTask = new Task(_begin?_begin:EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();}, &ts, false, nullptr, [this](){TASK_RECYCLE; effectsTask = nullptr;});
-    effectsTask->enableDelayed();
+    effectsTask->restartDelayed();
     break;
   case SCHEDULER::T_FRAME_ENABLE :
-    if(effectsTask){
-      effectsTask->cancel();
+    if(!effectsTask){
+      effectsTask = new Task(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);}, &ts, false);
+    } else {
+      effectsTask->set(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);});
     }
-    effectsTask = new Task(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);}, &ts, false, nullptr, [this](){TASK_RECYCLE; effectsTask = nullptr;});
-    effectsTask->enableDelayed();
+    effectsTask->restartDelayed();
     break;
   case SCHEDULER::T_RESET :
     if (effectsTask)
@@ -1223,69 +1227,30 @@ void LAMP::effectsTimer(SCHEDULER action, uint32_t _begin) {
 }
 
 //-----------------------------
-// ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; блокирующий код!) -------------
-void LAMP::showWarning(
-  const CRGB &color,                                        /* цвет вспышки                                                 */
-  uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
-  uint16_t blinkHalfPeriod)                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
-{
-  uint32_t blinkTimer = millis();
-  enum BlinkState { OFF = 0, ON = 1 } blinkState = BlinkState::OFF;
-  fadelight(&myLamp, myLamp.getLampBrightness());    // установка яркости для предупреждения
-  FastLED.clear();
-  delay(2);
-  FastLED.show();
 
-  EffectMath::fillAll(color);                               // установка цвета всех диодов в WARNING_COLOR
-
-  uint32_t startTime = millis();
-  while (millis() - startTime <= (duration + 5))            // блокировка дальнейшего выполнения циклом на время отображения предупреждения
-  {
-    if (millis() - blinkTimer >= blinkHalfPeriod)           // переключение вспышка/темнота
-    {
-      blinkTimer = millis();
-      blinkState = (BlinkState)!blinkState;
-      myLamp.brightness(blinkState == BlinkState::OFF ? 0 : myLamp.getLampBrightness());
-      delay(1);
-      FastLED.show();
-    }
-    delay(50);
-  }
-
-  FastLED.clear();
-  fadelight(&myLamp, myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
-  delay(1);
-  FastLED.show();
-  // наверное это не актуально
-  //myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
-}
-//-----------------------------
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; неблокирующий код, рисует поверх эффекта!) -------------
-
-void LAMP::warning2Helper(){
+void LAMP::warningHelper(){
   if(lampState.isWarning) {
+    uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+    uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;    
     switch(lampState.warnType){
-      case 0: EffectMath::fillAll(warn_color); break;
+      case 0: EffectMath::fillAll(warn_color);
+        break;
       case 1: {
-        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
         EffectMath::fillAll(warn_color);
         if (!myLamp.isPrintingNow())
           myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
         break;
       }
       case 2: {
-        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
         EffectMath::fillAll(warn_color);
         if (!myLamp.isPrintingNow())
           myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
         break;
       }
       case 3: {
-        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
         if (!myLamp.isPrintingNow())
+          //myLamp.sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, -128, xPos);
           myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
         break;
       }
@@ -1294,28 +1259,39 @@ void LAMP::warning2Helper(){
   }
 }
 
-void LAMP::showWarning2(
+void LAMP::showWarning(
   const CRGB &color,                                        /* цвет вспышки                                                 */
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
   uint16_t blinkHalfPeriod,                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
   uint8_t warnType,                                         /* тип предупреждения 0...3                                     */
   bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения  */
 {
+  if(forcerestart || !warningTask){
     warn_color = color;
-    lampState.isWarning = true;
-    lampState.warnType = warnType;
     warn_duration = duration;
     warn_blinkHalfPeriod = blinkHalfPeriod;
-
-  if(forcerestart && warningTask){
-    warningTask->setInterval(blinkHalfPeriod);
-    warningTask->setIterations(duration/blinkHalfPeriod);     // вероятна ошибка округления нечетного числа периодов, если критично нужно будет исправить
-  } else {
-    // динамический тикер переключает флаг lampState.isWarning каждые blinkHalfPeriod мс в течение duration мс, по завершении утилизирует сам себя
-    warningTask = new Task( blinkHalfPeriod, duration/blinkHalfPeriod, [this](){ lampState.isWarning=!lampState.isWarning; }, &ts, false, nullptr, [this](){lampState.isWarning = false; embui.taskRecycle(warningTask); warningTask = nullptr;} );
-    warningTask->enableDelayed();
+    lampState.isWarning = true;
+    lampState.warnType = warnType;
   }
 
+  if(!forcerestart && warnType<2)
+    lampState.isWarning=!lampState.isWarning;
+  if(warn_duration>warn_blinkHalfPeriod)
+    warn_duration-=warn_blinkHalfPeriod;
+  else
+    warn_duration=0;
+  if(warn_duration){
+    if(warningTask)
+      warningTask->cancel();
+    warningTask = new Task(blinkHalfPeriod, TASK_ONCE, std::bind(&LAMP::showWarning, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)lampState.warnType, !lampState.isWarning), &ts, false, nullptr, [](){TASK_RECYCLE;});
+    warningTask->enableDelayed();
+  }
+  else {
+    lampState.isWarning = false;
+    if(warningTask)
+      warningTask->cancel();
+    warningTask = nullptr;
+  }
 }
 
 // Fader object

@@ -62,8 +62,6 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t prev_effnb=0; // предыдущий эффект
     ALARM_SOUND_TYPE tAlarm;
     SoftwareSerial mp3player;
-    //Ticker delayedCall;
-    //Ticker periodicCall;
     String soundfile; // хранилище пути/имени
     unsigned long restartTimeout = millis(); // таймаут воспроизведения имени эффекта
     void printSatusDetail();
