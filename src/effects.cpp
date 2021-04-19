@@ -3628,7 +3628,12 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 // Генератор бликов (c) stepko
 
 void EffectAquarium::load(){
-  currentPalette=PartyColors_p;
+  currentPalette = PartyColors_p;
+  for (uint8_t i = 0; i < amountDrops-1; i++) {
+    posX[i] = random(WIDTH);
+    posY[i] = random(HEIGHT);
+    radius[i] = EffectMath::randomf(-1, maxRadius);
+  }
 }
 
 // !++
@@ -3640,37 +3645,30 @@ String EffectAquarium::setDynCtrl(UIControl*_val){
   return String();
 }
 
-bool EffectAquarium::run(CRGB *ledarr, EffectWorker *opt) {
-  return aquariumRoutine(*&ledarr, &*opt);
-}
-
-void EffectAquarium::nPatterns() {
-  if (glare == 1)
-    iconIdx = (millis() >> 15) % 12;
-  else
-    iconIdx = glare - 3;
- #ifdef MIC_EFFECTS
+void EffectAquarium::nDrops() {
+/*#ifdef MIC_EFFECTS
   byte _video = isMicOn() ? constrain(getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
 #else
   byte _video = 255;
-#endif
-  for (byte x = 0; x < WIDTH * 2; x++)
-  {
-    for (byte y = 0; y < HEIGHT * 2; y++)
-    {
-      ledbuff[EffectMath::getPixelNumberBuff(x, y, WIDTH * 2, HEIGHT * 2)] = (pgm_read_byte(&patterns[iconIdx][y % 10][x % 10]));
-    }
+#endif*/
+  fill_solid(currentPalette, 16, CHSV(hue, satur, 230));
+  currentPalette[10] = CHSV(hue, satur - 60, 255);
+  currentPalette[9] = CHSV(hue, 255 - satur, 210);
+  currentPalette[8] = CHSV(hue, 255 - satur, 210);
+  currentPalette[7] = CHSV(hue, satur - 60, 255);
+  EffectMath::fillAll(ColorFromPalette(currentPalette, 1));
+  for (uint8_t i = amountDrops - 1; i > 0; i--) {
+    EffectMath::drawCircle(posX[i], posY[i], radius[i], ColorFromPalette(currentPalette, (256/16)*8.5-radius[i]));
+    EffectMath::drawCircle(posX[i], posY[i], radius[i] - 1., ColorFromPalette(currentPalette,(256/16)*7.5-radius[i] , 256/radius[i]));
+    if (radius[i] >= maxRadius) {
+      radius[i] = -1;
+      posX[i] = random(WIDTH);
+      posY[i] = random(HEIGHT);
+    } else
+      radius[i] += 0.25;
   }
 
-  for (byte x = 0; x < WIDTH; x ++)
-  {
-    for (byte y = 0; y < HEIGHT; y ++)
-    {
-      byte val = ledbuff[EffectMath::getPixelNumberBuff((xsin + x) % (WIDTH * 2), (ysin + y) % (HEIGHT * 2), WIDTH * 2, HEIGHT * 2)];
-      EffectMath::drawPixelXY(x, EffectMath::getmaxHeightIndex() - y, CHSV((uint8_t)((uint16_t)hue - val* 31), map((satur + 32 * val), 1, 510, 1, 255), _video));
-
-    }
-  }
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 128);
 }
 
 void EffectAquarium::nGlare(CRGB *leds) {
@@ -3723,7 +3721,7 @@ void EffectAquarium::fillNoiseLED(CRGB *leds) {
   }
 }
 
-bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
+bool EffectAquarium::run(CRGB *leds, EffectWorker *param) {
   float speedFactor2 = EffectMath::fmap(speedFactor, .1, 1., 1, 4.);
   xsin = beatsin88(175 * speedFactor2, 0, WIDTH * WIDTH);
   ysin = beatsin88(225 * speedFactor2, 0, HEIGHT * HEIGHT);
@@ -3735,7 +3733,7 @@ bool EffectAquarium::aquariumRoutine(CRGB *leds, EffectWorker *param) {
     nGlare(leds);
     break;
   default:
-    nPatterns();
+    nDrops();
     break;
   }
 

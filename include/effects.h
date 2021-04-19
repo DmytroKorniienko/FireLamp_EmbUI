@@ -869,14 +869,18 @@ private:
     byte ledbuff[WIDTH*2 * HEIGHT*2];
     uint16_t xsin;
     uint16_t ysin;
+#define amountDrops ((HEIGHT + WIDTH) / 6)
+    const uint8_t maxRadius = WIDTH + HEIGHT;
+    uint8_t posX[amountDrops];
+    uint8_t posY[amountDrops];
+    float radius[amountDrops];
     uint8_t satur;
     uint8_t glare = 0;
     uint8_t iconIdx = 0;
 	float speedFactor;
 
     void nGlare(CRGB *leds);
-    void nPatterns();
-    bool aquariumRoutine(CRGB *leds, EffectWorker *param);
+    void nDrops();
     void fillNoiseLED(CRGB *leds);
 
 public:
