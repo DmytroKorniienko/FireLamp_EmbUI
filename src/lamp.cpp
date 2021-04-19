@@ -295,7 +295,7 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
+  if (isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || fader || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     effectsTimer(T_FRAME_ENABLE, _begin);
 
