@@ -257,7 +257,7 @@ void LAMP::alarmWorker(){
 void LAMP::effectsTick(){
   uint32_t _begin = millis();
 
-  if (effects.worker && flags.ONflag && !isAlarm()) {
+  if (effects.worker && (flags.ONflag || fader) && !isAlarm()) {
     if(!lampState.isEffectsDisabledUntilText){
       if (!ledsbuff.empty()) {
         std::copy( ledsbuff.begin(), ledsbuff.end(), getUnsafeLedsArray() );
@@ -268,11 +268,6 @@ void LAMP::effectsTick(){
         std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
       }
     }
-  }
-
-  if(!lampState.isStringPrinting && !flags.ONflag){ // чистить буфер только если не выводится строка, иначе держать его
-    ledsbuff.resize(0);
-    ledsbuff.shrink_to_fit();
   }
 
   if(!drawbuff.empty()){
@@ -307,6 +302,11 @@ void LAMP::effectsTick(){
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
     effectsTimer(T_ENABLE);
+  }
+  
+  if(!lampState.isStringPrinting && !flags.ONflag && !fader){ // чистить буфер только если не выводится строка, иначе держать его
+    ledsbuff.resize(0);
+    ledsbuff.shrink_to_fit();
   }
 }
 
