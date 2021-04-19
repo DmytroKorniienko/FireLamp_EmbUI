@@ -43,9 +43,6 @@ MicroDS18B20 dallas(DS18B20_PIN);
 
 
 void ds_setup() {
-#if COOLER_PIN_TYPE
-  analogWriteFreq(25000);
-#endif
   pinMode(COOLER_PIN, OUTPUT);
   dallas.requestTemp();
   LOG(printf_P, PSTR("DS18b20 was initialized.\n")); 
