@@ -54,6 +54,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       };
       uint32_t flags;
     };
+    Task *tPeriodic = nullptr; // периодический опрос плеера
     uint8_t cur_volume = 0;
     uint16_t mp3filescount = 255; // кол-во файлов в каталоге MP3
     uint16_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
@@ -76,7 +77,21 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     bool isReady() {return ready;}
     bool isOn() {return on && ready;}
     bool isMP3Mode() {return mp3mode;}
-    void setIsOn(bool val, bool forcePlay=true) {on = val; if(!on) stop(); else if(forcePlay && (effectmode || mp3mode)) playEffect(cur_effnb, soundfile);}
+    void setIsOn(bool val, bool forcePlay=true) {
+      on = val;
+      if(!on)
+        stop();
+      else if(forcePlay && (effectmode || mp3mode))
+        playEffect(cur_effnb, soundfile);
+
+      if(tPeriodic)
+        tPeriodic->cancel();
+      
+      if(on){
+        tPeriodic = new Task(1.21 * TASK_SECOND, TASK_FOREVER, std::bind(&MP3PLAYERDEVICE::handle,this), &ts, false, nullptr, [this](){TASK_RECYCLE; tPeriodic = nullptr;}); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
+        tPeriodic->enableDelayed();
+      }
+    }
     void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
     void playName(uint16_t effnb);
