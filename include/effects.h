@@ -867,8 +867,6 @@ private:
     uint16_t y;
     uint16_t z;
     byte ledbuff[WIDTH*2 * HEIGHT*2];
-    uint16_t xsin;
-    uint16_t ysin;
 #define amountDrops ((HEIGHT + WIDTH) / 6)
     const uint8_t maxRadius = WIDTH + HEIGHT;
     uint8_t posX[amountDrops];
@@ -879,8 +877,8 @@ private:
     uint8_t iconIdx = 0;
 	float speedFactor;
 
-    void nGlare(CRGB *leds);
-    void nDrops();
+    void nGlare(uint8_t bri);
+    void nDrops(uint8_t bri);
     void fillNoiseLED(CRGB *leds);
 
 public:

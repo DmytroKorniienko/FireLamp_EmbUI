@@ -3639,19 +3639,16 @@ void EffectAquarium::load(){
 // !++
 String EffectAquarium::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 1.);
+  else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==3) satur = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) glare = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-void EffectAquarium::nDrops() {
-/*#ifdef MIC_EFFECTS
-  byte _video = isMicOn() ? constrain(getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
-#else
-  byte _video = 255;
-#endif*/
-  fill_solid(currentPalette, 16, CHSV(hue, satur, 230));
+void EffectAquarium::nDrops(uint8_t bri) {
+
+  fill_solid(currentPalette, 16, CHSV(hue, satur, bri));
   currentPalette[10] = CHSV(hue, satur - 60, 255);
   currentPalette[9] = CHSV(hue, 255 - satur, 210);
   currentPalette[8] = CHSV(hue, 255 - satur, 210);
@@ -3671,14 +3668,9 @@ void EffectAquarium::nDrops() {
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 128);
 }
 
-void EffectAquarium::nGlare(CRGB *leds) {
-/*#ifdef MIC_EFFECTS
-  byte _video = isMicOn() ? constrain(getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
-#else
-  byte _video = 255;
-#endif
-*/
-  fill_solid(currentPalette, 16, CHSV(hue, satur, 200));
+void EffectAquarium::nGlare(uint8_t bri) {
+
+  fill_solid(currentPalette, 16, CHSV(hue, satur, bri));
   currentPalette[10] = CHSV(hue, satur - 60, 225);
   currentPalette[9] = CHSV(hue, 255 - satur, 180);
   currentPalette[8] = CHSV(hue, 255 - satur, 180);
@@ -3722,34 +3714,30 @@ void EffectAquarium::fillNoiseLED(CRGB *leds) {
 }
 
 bool EffectAquarium::run(CRGB *leds, EffectWorker *param) {
-  float speedFactor2 = EffectMath::fmap(speedFactor, .1, 1., 1, 4.);
-  xsin = beatsin88(175 * speedFactor2, 0, WIDTH * WIDTH);
-  ysin = beatsin88(225 * speedFactor2, 0, HEIGHT * HEIGHT);
-
+#ifdef MIC_EFFECTS
+  byte _video = isMicOn() ? constrain(getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
+#else
+  byte _video = 255;
+#endif
   switch (glare) { //
   case 0:
     break;
   case 2:
-    nGlare(leds);
+    nGlare(_video);
     break;
   default:
-    nDrops();
+    nDrops(_video);
     break;
   }
 
-  if (!glare) {// если блики включены
+  if (!glare) {// если блики выключены
     for (byte x = 0; x < WIDTH; x++)
     for (byte y = 0U; y < HEIGHT; y++)
     {
 #ifdef MIC_EFFECTS
       if (isMicOn()) {
         hue = getMicMapFreq();
-        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue,
-          satur,
-          constrain(getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f),
-          48,
-          255)
-          ));
+        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, _video));
       }
       else
         EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
