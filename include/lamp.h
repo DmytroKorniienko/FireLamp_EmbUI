@@ -182,7 +182,7 @@ private:
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
 
-    DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
+    DynamicJsonDocument *docArrMessages = nullptr; // массив сообщений для вывода на лампу
 
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения

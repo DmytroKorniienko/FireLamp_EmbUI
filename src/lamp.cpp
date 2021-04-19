@@ -362,7 +362,7 @@ void LAMP::frameShow(const uint32_t ticktime){
     }
 #endif
 
-LAMP::LAMP() : docArrMessages(512), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
+LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef OTA
     , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
 #endif
@@ -768,11 +768,11 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 
   if(text==nullptr){ // текст пустой
     if(!lampState.isStringPrinting){ // ничего сейчас не печатается
-      if(docArrMessages.isNull()){ // массив пустой
+      if(!docArrMessages){ // массив пустой
         return; // на выход
       }
       else { // есть что печатать
-        JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
+        JsonArray arr = (*docArrMessages).as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
         if(!var.isNull()){
           String storage = var[F("s")];
@@ -786,6 +786,10 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         }
         if(arr.size()>0)
           arr.remove(0); // удаляем отправленный
+        if(!arr.size()){ // очередь опустела, освобождаем массив
+          delete docArrMessages;
+          docArrMessages = nullptr;
+        }
       }
     } else {
         // текст на входе пустой, идет печать
@@ -804,10 +808,20 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
 
-      if(!docArrMessages.isNull())
-        arr = docArrMessages.as<JsonArray>(); // используем имеющийся
-      else
-        arr = docArrMessages.to<JsonArray>(); // создаем новый
+      if(docArrMessages){
+        arr = (*docArrMessages).as<JsonArray>(); // используем имеющийся
+      } else {
+        docArrMessages = new DynamicJsonDocument(512);
+        arr = (*docArrMessages).to<JsonArray>(); // создаем новый
+      }
+
+      for (size_t i = 0; i < arr.size(); i++)
+      {
+        if((arr[i])[F("s")]=text){
+          LOG(println, F("Duplicated string"));
+          return;
+        }
+      }
 
       JsonObject var = arr.createNestedObject();
       var[F("s")]=text;
@@ -815,11 +829,12 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       var[F("o")]=textOffset;
       var[F("f")]=fixedPos;
 
-      LOG(println, docArrMessages.as<String>());
+      LOG(print, F("Array: "));
+      LOG(println, (*docArrMessages).as<String>());
 
       String tmp; // Тут шаманство, чтобы не ломало JSON
-      serializeJson(docArrMessages, tmp);
-      deserializeJson(docArrMessages, tmp);
+      serializeJson((*docArrMessages), tmp);
+      deserializeJson((*docArrMessages), tmp);
     }
   }
 }
