@@ -2697,7 +2697,7 @@ void default_buttons(){
     myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
     myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
-
+#endif
 
 void remote_action(RA action, ...){
     LOG(printf_P, PSTR("RA %d: "), action);
@@ -3204,4 +3204,3 @@ String httpCallback(const String &param, const String &value, bool isset){
     }
     return result;
 }
-#endif
