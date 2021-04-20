@@ -1678,7 +1678,7 @@ public:
 //при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
 //ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
 
-// ============= ЭФФЕКТ ФЕЯ ===============
+// ============= ЭФФЕКТ Фея/Источник ===============
 // (c) SottNick
 
 #define trackingOBJECT_MAX_COUNT    (WIDTH * 3)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -1707,8 +1707,10 @@ private:
     float speedFactor;
     byte type = false;
     byte blur;
+    uint8_t _video = 255;
+    uint8_t gain;
 
-    void particlesUpdate2(uint8_t i);
+    void particlesUpdate(uint8_t i);
     void fairyEmit(uint8_t i);
     void fountEmit(uint8_t i);
     bool fairy(CRGB *leds);
