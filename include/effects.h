@@ -1726,10 +1726,14 @@ public:
 // ---------- Эффект "Бульбулятор"
 // "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
-#define NUMBER_OF_CIRCLES (NUM_LEDS / 32U)
+#define NUMBER_OF_CIRCLES (NUM_LEDS / 16U)
 class EffectCircles : public EffectCalc {
 private:
     byte color;
+    byte count;
+    float speedFactor;
+    byte _video = 255;
+    byte gain;
     class Circle
     {
     public:
@@ -1759,6 +1763,7 @@ private:
     Circle circles[NUMBER_OF_CIRCLES] = {};
 
     void drawCircle(CRGB *leds, Circle circle);
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1788,7 +1793,6 @@ private:
 
     void regen(byte id);
     void phisics(byte id);
-    //void setspd(const byte _spd) override;
     String setDynCtrl(UIControl*_val) override;
 
 

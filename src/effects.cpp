@@ -7218,6 +7218,16 @@ String EffectFairy::setDynCtrl(UIControl*_val){
 // ---------- Эффект "Бульбулятор"
 // "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
+
+//!++
+String EffectCircles::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 5) * EffectCalc::speedfactor;
+  else if(_val->getId()==2) count = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, NUMBER_OF_CIRCLES);
+  else if(_val->getId()==4) gain = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
 void EffectCircles::load() {
   palettesload();
   for (uint8_t i = 0; i < NUMBER_OF_CIRCLES; i++) {
@@ -7228,7 +7238,7 @@ void EffectCircles::load() {
 void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
   int16_t centerX = circle.centerX;
   int16_t centerY = circle.centerY;
-  int hue = circle.hue;
+  uint8_t hue = circle.hue;
   float radius = circle.radius();
 
   int16_t startX = centerX - ceil(radius);
@@ -7253,7 +7263,7 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
       } else {
         float percentage = distance / radius;
         float fraction = 1.0 - percentage;
-        brightness = 255.0 * fraction;
+        brightness = (float)_video * fraction;
       }
       EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, hue, brightness), 1);
     }
@@ -7261,13 +7271,19 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
 }
 
 bool EffectCircles::run(CRGB *leds, EffectWorker *opt) {
+#ifdef MIC_EFFECTS
+  _video = isMicOn() ? constrain(getMicMaxPeak() * EffectMath::fmap(gain, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
+#endif
   randomSeed(millis());
   FastLED.clear();
-  byte count = map(scale, 1, 255, 3, NUMBER_OF_CIRCLES);
   for (uint8_t i = 0; i < count; i++) {
-    circles[i].bpm += EffectMath::fmap(speed, 1, 255, 0.5, 3.33);
+    circles[i].bpm += speedFactor;
     if (circles[i].radius() < 0.001) {
+#ifdef MIC_EFFECTS
+      circles[i].hue = isMicOn() ? getMicMapFreq() : random(0, NUMBER_OF_CIRCLES) * 255 / count;
+#else
       circles[i].hue = random(0, NUMBER_OF_CIRCLES) * 255 / count;
+#endif
       circles[i].move();
     }
     drawCircle(leds, circles[i]);
