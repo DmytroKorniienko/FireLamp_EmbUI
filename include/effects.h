@@ -867,16 +867,18 @@ private:
     uint16_t y;
     uint16_t z;
     byte ledbuff[WIDTH*2 * HEIGHT*2];
-    uint16_t xsin;
-    uint16_t ysin;
+#define amountDrops ((HEIGHT + WIDTH) / 6)
+    const uint8_t maxRadius = WIDTH + HEIGHT;
+    uint8_t posX[amountDrops];
+    uint8_t posY[amountDrops];
+    float radius[amountDrops];
     uint8_t satur;
     uint8_t glare = 0;
     uint8_t iconIdx = 0;
 	float speedFactor;
 
-    void nGlare(CRGB *leds);
-    void nPatterns();
-    bool aquariumRoutine(CRGB *leds, EffectWorker *param);
+    void nGlare(uint8_t bri);
+    void nDrops(uint8_t bri);
     void fillNoiseLED(CRGB *leds);
 
 public:
@@ -1676,7 +1678,7 @@ public:
 //при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
 //ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
 
-// ============= ЭФФЕКТ ФЕЯ ===============
+// ============= ЭФФЕКТ Фея/Источник ===============
 // (c) SottNick
 
 #define trackingOBJECT_MAX_COUNT    (WIDTH * 3)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -1705,8 +1707,10 @@ private:
     float speedFactor;
     byte type = false;
     byte blur;
+    uint8_t _video = 255;
+    uint8_t gain;
 
-    void particlesUpdate2(uint8_t i);
+    void particlesUpdate(uint8_t i);
     void fairyEmit(uint8_t i);
     void fountEmit(uint8_t i);
     bool fairy(CRGB *leds);
