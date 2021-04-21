@@ -2185,7 +2185,7 @@ class EffectStarShips: public EffectCalc {
 private:
     byte _scale = 8;
     const byte DIR_CHARGE = 2; // Chance to change direction 1-5
-    const uint16_t chance = 4096;
+    uint16_t chance = 4096;
 
     byte dir = 3;
     byte _dir;
