@@ -427,6 +427,12 @@ void delayedcall_show_effects(){
                     interf->json_section_end();
                     interf->json_section_end();
                     interf->json_frame_flush();
+
+                    // восстановить позицию, если переключение произошло во время генерации списка
+                    interf->json_frame_value();
+                    interf->value(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), myLamp.effects.getSelected(), false);
+                    interf->json_frame_flush();
+
                     Task *_t = &ts.currentTask();
                     _t->disable();
                     return;
@@ -487,6 +493,12 @@ void block_effects_param(Interface *interf, JsonObject *data){
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     uint8_t ctrlCaseType; // тип контрола, старшие 4 бита соответствуют CONTROL_CASE, младшие 4 - CONTROL_TYPE
+
+   bool isMicOn = myLamp.isMicOnOff();
+    for(int i=0; i<controls.size();i++)
+         if(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020)))
+            isMicOn = isMicOn && controls[i]->getVal().toInt();
+
     for(int i=0; i<controls.size();i++){
         ctrlCaseType = controls[i]->getType();
         switch(ctrlCaseType>>4){
@@ -495,14 +507,16 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 break;
             case CONTROL_CASE::ISMICON :
 #ifdef MIC_EFFECTS
-                if(!myLamp.isMicOnOff()) continue;
+                //if(!myLamp.isMicOnOff()) continue;
+                if(!isMicOn && (!myLamp.isMicOnOff() || controls[i]->getId()!=7)) continue;
 #else
                 continue;
 #endif          
                 break;
             case CONTROL_CASE::ISMICOFF :
 #ifdef MIC_EFFECTS
-                if(myLamp.isMicOnOff()) continue;
+                //if(myLamp.isMicOnOff()) continue;
+                if(isMicOn && (myLamp.isMicOnOff() || controls[i]->getId()!=7)) continue;
 #else
                 continue;
 #endif   
@@ -673,13 +687,21 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             publish_ctrls_vals();
             // отправка данных в WebUI
             {
+                bool isLocalMic = false;
                 Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 512) : nullptr;
                 if (interf) {
                     interf->json_frame_value();
                     for (JsonPair kv : *data){
                         interf->value(kv.key().c_str(), kv.value(), false);
+                        if(String(kv.key().c_str())==String(F("dynCtrl7"))) // будем считать что это микрофон дергается, тогда обновим все контролы
+                            isLocalMic = true;
                     }
                     interf->json_frame_flush();
+                    delete interf;
+                }
+                if(isLocalMic){
+                    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws) : nullptr;
+                    show_effects_param(interf, data);
                     delete interf;
                 }
             }
