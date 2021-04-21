@@ -120,8 +120,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SNOWSTORMSTARFALL :
     worker = std::unique_ptr<EffectStarFall>(new EffectStarFall());
     break;
-  case EFF_ENUM::EFF_LIGHTERS :
-    worker = std::unique_ptr<EffectLighters>(new EffectLighters());
+  case EFF_ENUM::EFF_DNA2 :
+    worker = std::unique_ptr<EffectDNA2>(new EffectDNA2());
     break;
   case EFF_ENUM::EFF_3DNOISE :
     worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());

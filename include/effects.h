@@ -311,7 +311,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- светлячки -------------
+// ------------- класс Светлячки -------------
+// нужен для некоторых эффектов
 class EffectLighters : public EffectCalc {
 protected:
     uint8_t cnt = 1;
@@ -323,10 +324,32 @@ protected:
     byte light[LIGHTERS_AM];
     float speedFactor;
 private:
-    bool lightersRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------- "ДНК Вариант" -------------
+//Yaroslaw Turbin 08.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+//updated & adopted by kostyamat
+class EffectDNA2 : public EffectCalc {
+protected:
+    const uint8_t freq = 6;
+    byte hue = 0;
+    uint32_t ms;
+    uint8_t speeds;
+    bool rotate = true;
+    bool dots = true;
+
+private:
+    void mydrawLine(byte x, byte x1, byte y, CRGB& color, bool dot, bool grad);
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -2155,23 +2178,19 @@ public:
 };
 
 // --------------------- Эффект "Звездный Десант"
-// Space Ships https://editor.soulmatelights.com/gallery/639-space-ships
-//(c)stepko
-//05.02.21
-// adopted/updatet by kostyamat
+// Starship Troopers https://editor.soulmatelights.com/gallery/839-starship-troopers
+// Based on (c) stepko`s codes https://editor.soulmatelights.com/gallery/639-space-ships
+// reworked (c) kostyamat (subpixel, shift speed control, etc) 08.04.2021
 class EffectStarShips: public EffectCalc {
 private:
     byte _scale = 8;
-#ifdef BIGMATRIX
-    const byte deviator = 2;
-#else
-    const byte deviator = 4;
-#endif
+    const byte DIR_CHARGE = 2; // Chance to change direction 1-5
+    const uint16_t chance = 4096;
+
     byte dir = 3;
     byte _dir;
     byte count = 0;
     uint8_t _fade;
-    float x, y;
 
 	float speedFactor;
 

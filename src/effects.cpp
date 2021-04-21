@@ -652,10 +652,6 @@ void EffectLighters::load(){
   }
 }
 
-bool EffectLighters::run(CRGB *ledarr, EffectWorker *opt){
-  return lightersRoutine(*&ledarr, &*opt);
-}
-
 // !++
 String EffectLighters::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt() / 4096.0f + 0.005f)*EffectCalc::speedfactor;
@@ -665,7 +661,7 @@ String EffectLighters::setDynCtrl(UIControl*_val) {
   return String();
 }
 
-bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
+bool EffectLighters::run(CRGB *leds, EffectWorker *param)
 {
   memset8( leds, 0, NUM_LEDS * 3);
 
@@ -713,6 +709,67 @@ bool EffectLighters::lightersRoutine(CRGB *leds, EffectWorker *param)
   }
   return true;
 }
+
+// ------------- "ДНК Вариант" -------------
+//Yaroslaw Turbin 08.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+//updated & adopted by kostyamat
+void EffectDNA2::mydrawLine(byte x, byte x1, byte y, CRGB& color, bool dot, bool grad) { // my ugly hori line draw function )))
+  uint8_t steps = abs8(x - x1) + 1;
+  
+  for (byte i = 1; i <= steps; i++) {
+    byte dx = lerp8by8(x, x1, i * 255 / steps);
+    if (!rotate) EffectMath::getPixel(dx, y) = color; // change to += for brightness look
+    else EffectMath::getPixel(y, dx) = color;
+    if (grad) {
+      if (!rotate) EffectMath::getPixel(dx, y) %= (i * 255 / steps); //for draw gradient line  
+      else EffectMath::getPixel(y, dx) %= (i * 255 / steps);
+    }
+  }
+  
+  if (dot) { //add white point at the ends of line 
+    if (!rotate) {
+      EffectMath::getPixel(x, y) += CRGB::DarkSlateGray;
+      EffectMath::getPixel(x1, y) += CRGB::White;
+    } else {
+      EffectMath::getPixel(y, x) += CRGB::DarkSlateGray;
+      EffectMath::getPixel(y, x1) += CRGB::White;     
+    }
+  }
+}
+
+
+
+bool EffectDNA2::run(CRGB *ledarr, EffectWorker *opt){
+  ms += speeds / 10; // синхронизируем скорость смены цвета с перемещением спирали
+  fadeToBlackBy(leds, NUM_LEDS, 120);
+  //FastLED.clear();
+  
+  for (uint8_t i = 0; i < (rotate ? WIDTH : HEIGHT); i++) {
+    uint8_t x = beatsin8(speeds, 0, rotate ? EffectMath::getmaxHeightIndex() : EffectMath::getmaxWidthIndex(), 0, i * freq) + beatsin8(speeds - 7, 0, rotate ? EffectMath::getmaxHeightIndex() : EffectMath::getmaxWidthIndex(), 0, i * freq + 128);
+    uint8_t x1 = beatsin8(speeds, 0, rotate ? EffectMath::getmaxHeightIndex() : EffectMath::getmaxWidthIndex(), 0, 128 + i * freq) + beatsin8(speeds - 7, 0, rotate ? EffectMath::getmaxHeightIndex() : EffectMath::getmaxWidthIndex(), 0, 128 + 64 + i * freq);
+    
+    hue = i * 128 / (rotate ? EffectMath::getmaxHeightIndex() : EffectMath::getmaxWidthIndex()) + ms;
+    CRGB color = CHSV(hue, 255, 255);
+    
+    if ((i + ms / 8) & 3) mydrawLine(x / 2, x1 / 2, i, color, dots, 1);    
+  }
+  EffectMath::nightMode(leds);
+  EffectMath::blur2d(64);
+  return true;
+}
+
+// !++
+String EffectDNA2::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speeds = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 80);
+  else if(_val->getId()==3) rotate = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) dots = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+
 
 // ------------- светлячки со шлейфом -------------
 // !++
@@ -8099,16 +8156,17 @@ void EffectMagma::LeapersRestart_leaper(uint8_t l) {
 
 
 // --------------------- Эффект "Звездный Десант"
-// Space Ships https://editor.soulmatelights.com/gallery/639-space-ships
-//(c)stepko
-//05.02.21
-// adopted/updatet by kostyamat
+// Starship Troopers https://editor.soulmatelights.com/gallery/839-starship-troopers
+// Based on (c) stepko`s codes https://editor.soulmatelights.com/gallery/639-space-ships
+// reworked (c) kostyamat (subpixel, shift speed control, etc)  08.04.2021
+
 // !++
 String EffectStarShips::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
-    _fade = map(speed, 1, 255, 80, 40);
-    speedFactor = EffectMath::fmap(speed, 1, 255, 0.1, 1);
+    //_fade = map(speed, 1, 255, 5, 10);
+    _fade = map(speed, 1, 255, 35, 25);
+    speedFactor = EffectMath::fmap(speed, 1, 255, 0.25, 1) * speedfactor;
   }
   else if (_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else if (_val->getId()==4) {
@@ -8124,65 +8182,52 @@ void EffectStarShips::load() {
 }
 
 bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
+  randomSeed(millis());
   fadeToBlackBy(leds, NUM_LEDS, _fade);
   switch (dir) {
-  case 0:
-    for (byte x = 0; x < WIDTH; x++) {
-      for (byte y = 0; y < HEIGHT; y++) {
-        EffectMath::getPixel(x, y) = ((y == HEIGHT - 1) ? CRGB::Black : EffectMath::getPixel(x, y + 1));
+    case 0:
+      for (byte x = 0; x < WIDTH; x++) {
+        if (!_dir and x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        for (float y = 0; y < HEIGHT; y+=speedFactor) {
+          EffectMath::getPixel(x, (int)y) = (((int)y == HEIGHT - 1) ? CRGB::Black : EffectMath::getPixel(x, (int)(y + 1)));
+        }
       }
-    }
-    for (byte i = 0; i < _scale; i++) {
-      x = (float)beatsin88(3072 * speedFactor + i * 256, 0, (WIDTH - 1) * deviator) / deviator;
-      y = (float)beatsin88(3840 * speedFactor + i * 256, (HEIGHT / 2) * deviator, (HEIGHT - 1) * deviator, 0, _scale * i * 256) / deviator;
-      draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072 * speedFactor + i * 256, 0, 255), 255));
-    }
-    break;
-  case 2:
-    for (byte x = 0; x < WIDTH; x++) {
-      for (byte y = HEIGHT - 1; y > 0; y--) {
-        EffectMath::getPixel(x, y) = ((y == 0) ? CRGB::Black : EffectMath::getPixel(x, y - 1));
+      break;
+    case 1:
+      for (float x = 0; x < WIDTH; x+=speedFactor) {
+        if (!_dir and x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        for (byte y = HEIGHT - 1; y > 0; y--) {
+          EffectMath::getPixel((int)x, y) = (((int)x == WIDTH - 1) ? CRGB::Black : EffectMath::getPixel((int)(x + 1), y));
+        }
       }
-    }
-    for (byte i = 0; i < _scale; i++) {
-      x = (float)beatsin88(3072 * speedFactor + i * 256, 0, (WIDTH - 1) * deviator) / deviator;
-      y = (float)beatsin88(3840 * speedFactor + i * 256, 0, (HEIGHT / 2) * deviator, 0, _scale * i * 256) / deviator;
-      draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072 * speedFactor + i * 256, 0, 255), 255));
-    }
-    break;
-  case 1:
-    for (byte x = 0; x < WIDTH; x++) {
-      for (byte y = HEIGHT - 1; y > 0; y--) {
-        EffectMath::getPixel(x, y) = ((x == WIDTH - 1) ? CRGB::Black : EffectMath::getPixel(x + 1, y));
+      break;
+    case 2:
+      for (byte x = 0; x < WIDTH; x++) {
+        if (!_dir and x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        for (float y = HEIGHT - 1; y > 0; y-=speedFactor) {
+          EffectMath::getPixel(x, (int)y) = (((int)y == 0) ? CRGB::Black : EffectMath::getPixel(x, (int)(y - 1)));
+        }
       }
-    }
-    for (byte i = 0; i < _scale; i++) {
-      x = (float)beatsin88(3840 * speedFactor + i * 256, (WIDTH / 2) * deviator, (WIDTH - 1) * deviator, 0, _scale * i * 256) / deviator;
-      y = (float)beatsin88(3072 * speedFactor + i * 256, 0, (HEIGHT - 1) * deviator) / deviator;
-      draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072 * speedFactor + i * 256, 0, 255), 255));
-    }
-    break;
-  case 3:
-    for (byte x = WIDTH; x > 0; x--) {
-      for (byte y = HEIGHT; y > 0; y--) {
-        EffectMath::getPixel(x, y) = ((x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y));
+      break;
+    case 3:
+      for (byte x = WIDTH - 1; x > 0; x--) {
+        if (!_dir and x < WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        for (float y = HEIGHT - 1; y > 0; y-=speedFactor) {
+          EffectMath::getPixel((int)x, y) = (((int)x == 0) ? CRGB::Black : EffectMath::getPixel((int)(x - 1), y));
+        }
       }
-    }
-    for (byte i = 0; i < _scale; i++) {
-      x = (float)beatsin88(3840 * speedFactor + i * 256, 0, (WIDTH / 2) * deviator, 0, _scale * i * 256) / deviator;
-      y = (float)beatsin88(3072 * speedFactor + i * 256, 0, (HEIGHT - 1) * deviator) / deviator;
-      draw(x, y, ColorFromPalette(*curPalette, beatsin88(3072. * speedFactor + i * 256, 0, 255), 255));
-    }
-    break;
+      break;
   }
-  if (!_dir) {
-    EVERY_N_SECONDS(random8(20, 40)) {
-      count++;
-      dir = count % 4;
-    }
+
+  for (byte i = 0; i < _scale; i++) {
+    float x = (float)beatsin88(3840*speedFactor + i*256, 0, (WIDTH-1) *4, 0, _scale*i*256) /4;
+    float y = (float)beatsin88(3072*speedFactor + i*256, 0, (HEIGHT-1) *4, 0, 0) /4;
+    if ((x >= 0 and x <= WIDTH-1) and (y >= 0 and y <= HEIGHT -1)) draw(x, y, ColorFromPalette(*curPalette, beatsin88(256*12.*speedFactor + i*256, 0, 255), 255));
   }
-  else
+
+  if (_dir) 
     dir = _dir - 1;
+  else dir = count%4;
   return true;
 }
 
