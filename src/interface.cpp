@@ -701,7 +701,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                     delete interf;
                 }
                 if(isLocalMic){
-                    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws) : nullptr;
+                    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
                     show_effects_param(interf, data);
                     delete interf;
                 }
@@ -1252,7 +1252,7 @@ void set_text_config(Interface *interf, JsonObject *data){
     embui.var(FPSTR(TCONST_0055),String(ny_unixtime)); myLamp.setNYUnixTime(ny_unixtime);
 
     if(!interf){
-        interf = embui.ws.count()? new Interface(&embui, &embui.ws, 3000) : nullptr;
+        interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
         //section_text_frame(interf, data);
         section_main_frame(interf, nullptr); // вернемся на главный экран (то же самое при начальном запуске)
         delete interf;
@@ -2113,7 +2113,7 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 #endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
-    //recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTaskTask(true); // only cancel task
     if (!interf) return;
     interf->json_frame_interface(FPSTR(TINTF_080));
     block_effects_main(interf, data);
@@ -2138,7 +2138,7 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
 void user_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки"
     if (!interf) return;
-    //recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTaskTask(true); // only cancel task
 /*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
