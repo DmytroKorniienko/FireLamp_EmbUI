@@ -493,11 +493,12 @@ void block_effects_param(Interface *interf, JsonObject *data){
 
     LList<UIControl*>&controls = myLamp.effects.getControls();
     uint8_t ctrlCaseType; // тип контрола, старшие 4 бита соответствуют CONTROL_CASE, младшие 4 - CONTROL_TYPE
-
+#ifdef MIC_EFFECTS
    bool isMicOn = myLamp.isMicOnOff();
     for(int i=0; i<controls.size();i++)
-         if(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020)))
+        if(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020)))
             isMicOn = isMicOn && controls[i]->getVal().toInt();
+#endif
 
     for(int i=0; i<controls.size();i++){
         ctrlCaseType = controls[i]->getType();
