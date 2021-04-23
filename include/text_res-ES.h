@@ -120,6 +120,7 @@ static const char TEFF_071 [] PROGMEM = "Metabolas";
 static const char TEFF_072 [] PROGMEM = "Lámpara de lava";
 static const char TEFF_073 [] PROGMEM = "Corredor";
 static const char TEFF_074 [] PROGMEM = "Humo";
+static const char TEFF_252[] PROGMEM = "VU Meter";
 static const char TEFF_253 [] PROGMEM = "Reloj";
 static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";
@@ -201,6 +202,7 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 #define DFTINTF_115 "Desenfocar (1-4 con viento)"
 #define DFTINTF_116 "Desplazamiento sinusoidal"
 #define DFTINTF_117 "Direccion (0: cíclico)"
+#define DFTINTF_118 "Filtro"
 
 /** набор строк с текстовыми константами интерфейса
  */

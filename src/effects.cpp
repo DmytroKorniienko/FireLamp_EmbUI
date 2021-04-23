@@ -8346,3 +8346,251 @@ void EffectFlags::changeFlags() {
   else
     flag = _flag - 1;
 }
+
+// ------------ VU-meter
+String EffectVU::setDynCtrl(UIControl*_val){
+  if (_val->getId()==1) amplitude = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 2040, 8);
+  else if (_val->getId()==2) noise = EffectCalc::setDynCtrl(_val).toInt() * 4;
+  else if (_val->getId()==3) effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectVU::load() {
+  fft = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
+  //sampling_period_us = round(1000000 * (1.0 / SAMPLING_FREQ*2));
+}
+
+bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
+  if (tickTack) {
+    // Don't clear screen if waterfall pattern, be sure to change this is you change the patterns / order
+    // Reset bandValues[]
+    for (uint8_t i = 0; i < NUM_BANDS; i++){
+      bandValues[i] = 0;
+    }
+
+    // Sample the audio pin
+    for (uint16_t i = 0; i < SAMPLES; i++) {
+      //newTime = micros();
+      vReal[i] = analogRead(MIC_PIN); // A conversion takes about 9.7uS on an ESP32
+      vImag[i] = 0;
+      //while ((micros() - newTime) < sampling_period_us) { /* chill */ }
+      delayMicroseconds(sampling_period_us);
+    }
+
+    //Compute FFT
+    fft.dcRemoval();
+    fft.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+    fft.compute(FFTDirection::Forward);
+    fft.complexToMagnitude();
+
+
+
+    // Analyse FFT results
+    for (uint16_t i = 2; i < (SAMPLES/2); i++){       // Don't use sample 0 and only first SAMPLES/2 are usable. Each array element represents a frequency bin and its value the amplitude.
+      if (vReal[i] > noise) {                    // Add a crude noise filter
+#if NUM_BANDS == 8
+      //8 bands, 12kHz top band
+        if (i<=3 )           bandValues[0]  += (int)vReal[i];
+        if (i>3   && i<=6  ) bandValues[1]  += (int)vReal[i];
+        if (i>6   && i<=13 ) bandValues[2]  += (int)vReal[i];
+        if (i>13  && i<=27 ) bandValues[3]  += (int)vReal[i];
+        if (i>27  && i<=55 ) bandValues[4]  += (int)vReal[i];
+        if (i>55  && i<=112) bandValues[5]  += (int)vReal[i];
+        if (i>112 && i<=229) bandValues[6]  += (int)vReal[i];
+        if (i>229          ) bandValues[7]  += (int)vReal[i];
+#else
+      //16 bands, 12kHz top band
+        if (i<=2 )           bandValues[0]  += (int)vReal[i];
+        if (i>2   && i<=3  ) bandValues[1]  += (int)vReal[i];
+        if (i>3   && i<=5  ) bandValues[2]  += (int)vReal[i];
+        if (i>5   && i<=7  ) bandValues[3]  += (int)vReal[i];
+        if (i>7   && i<=9  ) bandValues[4]  += (int)vReal[i];
+        if (i>9   && i<=13 ) bandValues[5]  += (int)vReal[i];
+        if (i>13  && i<=18 ) bandValues[6]  += (int)vReal[i];
+        if (i>18  && i<=25 ) bandValues[7]  += (int)vReal[i];
+        if (i>25  && i<=36 ) bandValues[8]  += (int)vReal[i];
+        if (i>36  && i<=50 ) bandValues[9]  += (int)vReal[i];
+        if (i>50  && i<=69 ) bandValues[10] += (int)vReal[i];
+        if (i>69  && i<=97 ) bandValues[11] += (int)vReal[i];
+        if (i>97  && i<=135) bandValues[12] += (int)vReal[i];
+        if (i>135 && i<=189) bandValues[13] += (int)vReal[i];
+        if (i>189 && i<=264) bandValues[14] += (int)vReal[i];
+        if (i>264          ) bandValues[15] += (int)vReal[i];
+#endif
+      }
+    }
+  }
+
+  tickTack = !tickTack; // Раз считаем, второй раз выводим.
+  if (tickTack) return false;
+  
+  /*if (effId != 5)*/ FastLED.clear();
+
+  // Process the FFT data into bar heights
+  for (byte band = 0; band < NUM_BANDS; band++) {
+
+    // Scale the bars for the display
+    uint8_t barHeight = bandValues[band] / amplitude;
+    if (barHeight > TOP) barHeight = TOP;
+
+    // Small amount of averaging between frames
+    barHeight = ((oldBarHeights[band] * 1) + barHeight) / 2;
+
+    // Move peak up
+    if (barHeight > peak[band]) {
+      peak[band] = min((uint8_t)TOP, barHeight);
+    }
+
+    // Draw bars
+    switch (effId) {
+      case 0:
+        rainbowBars(band, barHeight);
+        break;
+      case 1:
+        // No bars on this one
+        break;
+      case 2:
+        purpleBars(band, barHeight);
+        break;
+      case 3:
+        centerBars(band, barHeight);
+        break;
+      case 4:
+        changingBars(band, barHeight);
+        break;
+      case 5:
+        rainbowBars(band, barHeight);
+        //waterfall(band,  barHeight);
+        break;
+    }
+
+    // Draw peaks
+    switch (effId) {
+      case 0:
+        whitePeak(band);
+        break;
+      case 1:
+        outrunPeak(band);
+        break;
+      case 2:
+        whitePeak(band);
+        break;
+      case 3:
+        // No peaks
+        break;
+      case 4:
+        // No peaks
+        break;
+      case 5:
+        // No peaks
+        break;
+    }
+
+    // Save oldBarHeights for averaging later
+    oldBarHeights[band] = barHeight;
+  }
+
+  // Decay peak
+  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 6) {
+    for (byte band = 0; band < NUM_BANDS; band++)
+      if (peak[band] > 0) peak[band] -= 1;
+    colorTimer++;
+  }
+
+  // Used in some of the patterns
+  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER) {
+    colorTimer++;
+  }
+/*
+  EVERY_N_SECONDS(10) {
+    if (autoChangePatterns) effId = (effId + 1) % 6;
+  }
+*/
+  return true;
+}
+
+// PATTERNS BELOW //
+
+void EffectVU::rainbowBars(uint8_t band, uint8_t barHeight) {
+  int xStart = BAR_WIDTH * band;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
+      EffectMath::drawPixelXY(x, HEIGHT -1 - y, CHSV((x / BAR_WIDTH) * (255 / NUM_BANDS), 255, 255));
+    }
+  }
+}
+
+void EffectVU::purpleBars(uint8_t band, uint8_t barHeight) {
+  int xStart = BAR_WIDTH * band;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
+      EffectMath::drawPixelXY(x, HEIGHT - 1 - y, ColorFromPalette(purplePal, y * (255 / (barHeight + 1))));
+    }
+  }
+}
+
+void EffectVU::changingBars(uint8_t band, uint8_t barHeight) {
+  int xStart = BAR_WIDTH * band;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
+      EffectMath::drawPixelXY(x, HEIGHT - 1 - y, CHSV(y * (255 / HEIGHT) + colorTimer, 255, 255));
+    }
+  }
+}
+
+void EffectVU::centerBars(uint8_t band, uint8_t barHeight) {
+  int xStart = BAR_WIDTH * band;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    if (barHeight % 2 == 0) barHeight--;
+    int yStart = ((HEIGHT - barHeight) / 2 );
+    for (uint8_t y = yStart; y <= (yStart + barHeight); y++) {
+      int colorIndex = constrain((y - yStart) * (255 / barHeight), 0, 255);
+      EffectMath::drawPixelXY(x, HEIGHT -1 - y, ColorFromPalette(heatPal, colorIndex));
+    }
+  }
+}
+
+void EffectVU::whitePeak(uint8_t band) {
+  int xStart = BAR_WIDTH * band;
+  int peakHeight = TOP - peak[band] - 1;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    EffectMath::drawPixelXY(x, HEIGHT - 1 - peakHeight, CHSV(0,0,255));
+  }
+}
+
+void EffectVU::outrunPeak(uint8_t band) {
+  int xStart = BAR_WIDTH * band;
+  int peakHeight = TOP - peak[band] - 1;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    EffectMath::drawPixelXY(x, HEIGHT -1 - peakHeight, ColorFromPalette(outrunPal, peakHeight * (255 / HEIGHT)));
+  }
+}
+
+void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
+/*
+  uint16_t xStart = BAR_WIDTH * band;
+  double highestBandValue = 6000;        // Set this to calibrate your waterfall
+
+  // Draw bottom line
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    EffectMath::drawPixelXY(x, 0, CHSV(constrain(map(bandValues[band],0,highestBandValue,160,0),0,160), 255, 255));
+  }
+*/
+  int xStart = BAR_WIDTH * band;
+  for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
+    //for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
+      EffectMath::drawPixelXY(x, 0, CHSV((x / BAR_WIDTH) * (255 / NUM_BANDS), 255, 255));
+    //}
+  }
+
+  // Move screen up starting at 2nd row from top
+  if (band == NUM_BANDS - 1){
+    for (byte x = 0; x < WIDTH; x++) {
+      for (byte y = 0; y < HEIGHT; y++) {
+        EffectMath::getPixel(x, y) = (((int)y == HEIGHT - 1) ? CRGB::Black : EffectMath::getPixel(x, y + 1));
+      }
+    }
+  }
+}
+

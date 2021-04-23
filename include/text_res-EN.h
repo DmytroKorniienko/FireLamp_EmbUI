@@ -120,6 +120,7 @@ static const char TEFF_071[] PROGMEM = "Metasphares";
 static const char TEFF_072[] PROGMEM = "Lava lamp";
 static const char TEFF_073[] PROGMEM = "Racer";
 static const char TEFF_074[] PROGMEM = "Smoke" ;
+static const char TEFF_252[] PROGMEM = "VU Meter";
 static const char TEFF_253[] PROGMEM = "Clock";
 static const char TEFF_254[] PROGMEM = "Frequency Analyzer";
 static const char TEFF_255[] PROGMEM = "Oscilloscope";
@@ -200,6 +201,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_115 "Blur (1-4 with wind)"
 #define DFTINTF_116 "Sin function moving"
 #define DFTINTF_117 "Direction (0: cyclical)"
+#define DFTINTF_118 "Filtr"
 
 /** набор строк с текстовыми константами интерфейса
  */

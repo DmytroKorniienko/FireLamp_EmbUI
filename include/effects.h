@@ -2201,6 +2201,46 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
+
+// -------------- VU-meter
+class EffectVU: public EffectCalc {
+private:
+    CRGBPalette16 purplePal = purple_gp;
+    CRGBPalette16 outrunPal = outrun_gp;
+    CRGBPalette16 greenbluePal = greenblue_gp;
+    CRGBPalette16 heatPal = redyellow_gp;
+
+    uint8_t colorTimer = 0;
+    // Sampling and FFT stuff
+    uint8_t sampling_period_us = 10;
+    byte peak[NUM_BANDS];              // The length of these arrays must be >= NUM_BANDS
+    int oldBarHeights[NUM_BANDS];
+    int bandValues[NUM_BANDS];
+    unsigned long newTime;
+    float vReal[SAMPLES];
+    float vImag[SAMPLES];
+    double samplingFrequency = SAMPLING_FREQ;
+    static const uint16_t samples=SAMPLES;
+    bool tickTack = false;
+
+    uint16_t amplitude = 1000;
+    uint16_t noise = 200;
+    int effId = 0;
+
+    String setDynCtrl(UIControl*_val) override;
+    void rainbowBars(uint8_t band, uint8_t barHeight);
+    void purpleBars(uint8_t band, uint8_t barHeight);
+    void changingBars(uint8_t band, uint8_t barHeight);
+    void centerBars(uint8_t band, uint8_t barHeight);
+    void whitePeak(uint8_t band);
+    void outrunPeak(uint8_t band);
+    void waterfall(uint8_t band, uint8_t barHeight);
+    ArduinoFFT<float> fft = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
 // --------- конец секции эффектов
 
 #endif

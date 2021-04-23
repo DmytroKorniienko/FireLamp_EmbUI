@@ -272,6 +272,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_MAGMA :
     worker = std::unique_ptr<EffectMagma>(new EffectMagma());
     break;
+   case EFF_ENUM::EFF_VU :
+    worker = std::unique_ptr<EffectVU>(new EffectVU());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());

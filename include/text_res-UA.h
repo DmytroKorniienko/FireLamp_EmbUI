@@ -120,6 +120,7 @@ static const char TEFF_071[] PROGMEM = "Метабульки";
 static const char TEFF_072[] PROGMEM = "Лавова Лампа";
 static const char TEFF_074[] PROGMEM = "Дим";
 static const char TEFF_073[] PROGMEM = "Гонщик";
+static const char TEFF_252[] PROGMEM = "VU Метер (Тест)";
 static const char TEFF_253[] PROGMEM = "Годинник";
 static const char TEFF_254[] PROGMEM = "Частотний аналізатор";
 static const char TEFF_255[] PROGMEM = "Осцилограф";
@@ -199,6 +200,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_115 "Розмиття (1-4 з вітром)"
 #define DFTINTF_116 "Переміщення по синусу"
 #define DFTINTF_117 "Напрямок (0: циклічно)"
+#define DFTINTF_118 "Фільтр"
 
 
 /** набор строк с текстовыми константами интерфейса
