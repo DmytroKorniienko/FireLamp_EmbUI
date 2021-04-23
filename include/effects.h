@@ -2220,6 +2220,7 @@ private:
     double last_freq = 0;
     uint8_t last_min_peak, last_max_peak;
     float maxVal;
+    float threshold;
 
     float amplitude = 1.0;
     int effId = 0;
