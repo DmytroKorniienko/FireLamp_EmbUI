@@ -132,7 +132,7 @@ public:
         currentAnimation = Animation::FADE_IN;
     }
 
-    void scrollLeft(Tasker::duration_type delay)
+    void scrollLeft(Tasker::duration_type delay, byte k=1)  // Добавил возможность выставлять свой индекс (отображение нескольких цифр сразу)
     {
         if (currentAnimation == Animation::SCROLL_LEFT) {
             if (tasker.check()) {
@@ -143,7 +143,7 @@ public:
                     return;
                 }
                 String s(buffer_.substring(index, buffer_.length()));
-                ++index;
+                index = index + k;
                 for (size_t counter = s.length(); counter < totalDigits_; ++counter)
                     s.concat(static_cast<char>(0x00));
                 sendToDisplay<DataCommand_e::AUTOMATIC_ADDRESS_ADDING, AddressCommand_e::C0H>(
