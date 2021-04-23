@@ -39,14 +39,19 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef TM1637_CLOCK
 #include "tm.h"
 
-#ifndef GYVERTM1637
+
+static bool showPoints = false;
+static bool timeSetted = false;
+
+
+
 #if TM_SHOW_BANNER
-String welcome_banner = "FIRE_START"; // Список букв для вывода A Bb Cc Dd Ee F G Hh Ii J K Ll m Nn Oo P q r S t U v w x Y Z
+String splittedIp[5] = {};
+// String welcome_banner = "FIRE_START"; // Список букв для вывода A Bb Cc Dd Ee F G Hh Ii J K Ll m Nn Oo P q r S t U v w x Y Z
 /* Указывать можно в любом регистре, разделять лучше нижним подчеркиванием "_", если поставить пробел, то слова разделятся и будут отображаться по очереди, например сначала заскроллится "FIRE",
 дойдет до конца, потухнет и только тогда появится "START"*/
-uint8_t l = 0;           // Переменная для баннера
-
 #endif
+
 
 
 void tm_setup() {
@@ -56,17 +61,29 @@ void tm_setup() {
     LOG(printf_P, PSTR("TM1637 was initialized \n"));
 }
 
+
 void tm_loop() {
 
-  #if TM_SHOW_BANNER
-  if( l < 250) l++;                                 // Добавляем счетчик
-  if (l <= welcome_banner.length()+2)   // Прокручиваем баннер на всю длину
-  tm1637.display(welcome_banner)->scrollLeft(500); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек)
-  if (l >= welcome_banner.length()+3) {          // Запускаем отображение времени после прокрутки баннера
-  #endif
+#if TM_SHOW_BANNER
+static uint8_t l = 0;           // Переменная для баннера
+if (l < 255) l++;   // Добавляем счетчик и ограничиваем, чтобы не гонял по кругу
+if (embui.sysData.wifi_sta && l <= 20 && l > 4) {
+String ip = (String) "IP." + (String) WiFi.localIP().toString();
+splitIp(ip, ".", splittedIp);
+tm1637.display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+}
+else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) tm1637.display("__AP_192_168___4___1")->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
+else {
+#endif
 
-  const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени
-  static bool showPoints = false;      
+  if(!embui.sysData.wifi_sta && !timeSetted) {      // Светим --:--, если не подтянулось время с инета или не было настроено вручную
+    auto d =  (showPoints) ? DisplayDigit().setG().setDot() : DisplayDigit().setG();
+    const uint8_t rawBuffer[4] = {d, d, d, d};
+    tm1637.displayRawBytes(rawBuffer, 4);
+  }
+
+else {
+  const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени 
   char dispTime[5];            // Массив для сбора времени
 
   #ifdef TM_24
@@ -124,47 +141,59 @@ void tm_loop() {
       tm1637.display(timeDisp);
     #endif
   #endif
-
-  showPoints=!showPoints;
-  #if TM_SHOW_BANNER
+  }
+  #if TM_SHOW_BANNER  
   }
   #endif
+  showPoints=!showPoints;
+
+
+}
+
+void tm_setted() {        // Проверяем, было ли установлено время
+  timeSetted++;
 }
 
 
-#endif
-#ifdef GYVERTM1637
-#if TM_SHOW_BANNER
-byte welcome_banner[] = {TM_F, TM_i, TM_r, TM_e, TM_empty, TM_empty, TM_S, TM_t, TM_a, TM_r, TM_t};
-#endif
+// | FUNC - Split IP
+// |----------
+void splitIp(String str, String dlm, String dest[])
+{
+  int nextPos      = str.indexOf(dlm);
 
+  for(short i=0; i<5; i++)
+  {
+    dest[i] = str.substring(0, nextPos);
 
-
-void tm_setup() {
-  disp.clear();
-  disp.brightness(TM_BRIGHTNESS);
-#if TM_SHOW_BANNER
-  disp.runningString(welcome_banner, sizeof(welcome_banner), 300);  //время в миллисекундах!
-#endif
-  LOG(printf_P, PSTR("TM1637 was initialized \n"));
+    str     = str.substring(nextPos+1);
+    nextPos = str.indexOf(dlm);
+  }
 }
 
-void tm_loop() {
-  static bool showPoints = false;
 
-  const tm* t = localtime(embui.timeProcessor.now());
+// | FUNC - Format IP
+// |----------
+String formatIp(String inArr[], String dlm)
+{
+  String tmp    = "____";
+  String output = "";
 
-  disp.point(showPoints);
-  showPoints = !showPoints;
+  for(short i=0; i<5; i++){
+    String crnt = inArr[i];
 
-  #ifdef TM_24
-  disp.displayClock(t->tm_hour, t->tm_min);
-  #endif
+    for(short j=0; j<crnt.length(); j++){
+      tmp.setCharAt(tmp.length()-j-1, crnt.charAt(crnt.length()-j-1));
+    }
 
-  #ifndef TM_24
-  disp.displayClock((t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);
-  #endif
-  //if (showPoints) LOG(printf_P, PSTR("TM1637 updated \n"));
+    output += tmp;
+    if(i<3){
+      output += dlm;
+    }
+
+    tmp    = "____";
+  }
+
+  return output;
 }
-#endif
+
 #endif

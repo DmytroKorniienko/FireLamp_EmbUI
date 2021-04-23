@@ -39,6 +39,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
+#ifdef TM1637_CLOCK
+#include "tm.h"				// Подключаем функции
+#endif
 #include LANG_FILE                  //"text_res.h"
 
 /**
@@ -1622,6 +1625,9 @@ void show_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     BasicUI::set_settings_time(interf, data);
     myLamp.sendStringToLamp(String(F("%TM")).c_str(), CRGB::Green);
+    #ifdef TM1637_CLOCK
+    tm_setted();			// Проверяем, было ли настроено время
+    #endif
 }
 
 void block_settings_update(Interface *interf, JsonObject *data){
