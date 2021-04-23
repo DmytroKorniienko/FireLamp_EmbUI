@@ -372,7 +372,9 @@ EFF_PICASSO4,                                 // Меташары
 EFF_LIQUIDLAMP,                               // Лаваламп 
 EFF_RACER,                                    // Космо-Гонщик
 EFF_SMOKER,                                   // Дым (Тест) 
+#ifdef MIC_EFFECTS
 EFF_VU = (252U),
+#endif
 EFF_TIME = (253U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)

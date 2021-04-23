@@ -8348,7 +8348,7 @@ void EffectFlags::changeFlags() {
   else
     flag = _flag - 1;
 }
-
+#ifdef MIC_EFFECTS
 // ------------ VU-meter
 String EffectVU::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, 0.75);
@@ -8575,4 +8575,4 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
     }
   }
 }
-
+#endif
