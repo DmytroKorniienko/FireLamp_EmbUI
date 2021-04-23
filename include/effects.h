@@ -2201,7 +2201,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
-
+#ifdef MIC_EFFECTS
 // -------------- VU-meter
 class EffectVU: public EffectCalc {
 private:
@@ -2241,6 +2241,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
+#endif
 // --------- конец секции эффектов
 
 #endif
