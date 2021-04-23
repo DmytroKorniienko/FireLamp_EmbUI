@@ -2212,19 +2212,16 @@ private:
 
     uint8_t colorTimer = 0;
     // Sampling and FFT stuff
-    uint8_t sampling_period_us = 10;
     byte peak[NUM_BANDS];              // The length of these arrays must be >= NUM_BANDS
-    int oldBarHeights[NUM_BANDS];
-    int bandValues[NUM_BANDS];
-    unsigned long newTime;
-    float vReal[SAMPLES];
-    float vImag[SAMPLES];
-    double samplingFrequency = SAMPLING_FREQ;
-    static const uint16_t samples=SAMPLES;
-    bool tickTack = false;
+    float oldBarHeights[NUM_BANDS];
+    float bandValues[NUM_BANDS+1];
 
-    uint16_t amplitude = 1000;
-    uint16_t noise = 200;
+    float samp_freq;
+    double last_freq = 0;
+    uint8_t last_min_peak, last_max_peak;
+    float maxVal;
+
+    float amplitude = 1.0;
     int effId = 0;
 
     String setDynCtrl(UIControl*_val) override;
@@ -2235,7 +2232,6 @@ private:
     void whitePeak(uint8_t band);
     void outrunPeak(uint8_t band);
     void waterfall(uint8_t band, uint8_t barHeight);
-    ArduinoFFT<float> fft = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

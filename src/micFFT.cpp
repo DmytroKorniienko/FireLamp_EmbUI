@@ -170,7 +170,6 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
     }
     minVal = min(minVal,abs((int)vReal[i]));
     maxVal = max(maxVal,abs((int)vReal[i]));
-    vImag[i] = 0.0; // обнулить массив предыдущих измерений
   }
   minPeak = minVal; // минимальное амплитудное
   maxPeak = maxVal; // максимальное амплитудное
@@ -179,6 +178,10 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
 
 double MICWORKER::analyse()
 {
+  //memset(vImag,0,sizeof(samples*sizeof(*vImag))); // обнулить массив предыдущих измерений (так нельзя, ломает float)
+  for(uint16_t i=0; i<samples; i++)
+    vImag[i] = 0.0f;
+  
   FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
   FFT.complexToMagnitude(); /* Compute magnitudes */
@@ -188,9 +191,7 @@ double MICWORKER::analyse()
 
 float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив должен передаваться на 1 ед. большего размера
 {
-  FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
-  FFT.compute(FFTDirection::Forward); /* Compute FFT */
-  FFT.complexToMagnitude(); /* Compute magnitudes */
+  arr[size] = analyse(); // сюда запишем частоту главной гармоники
 
   // for(uint8_t i=0; i<(samples >> 1); i++){
   //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
@@ -211,9 +212,9 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
     arr[idx]=(tmp<0?0:tmp+arr[idx])/2.0; // усредняем
   }
   float maxVal=0; // ищем максимум
-  for(uint8_t i=0;i<size;i++)
+  for(uint8_t i=0;i<size-1;i++)
     maxVal=max(maxVal,arr[i]);
-  arr[size] = FFT.majorPeak(); // сюда запишем частоту главной гармоники
+
   return maxVal<0?0:maxVal;
 }
 

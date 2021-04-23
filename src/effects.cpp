@@ -1934,7 +1934,9 @@ void EffectFreq::load()
 {
   palettesload();    // подгружаем дефолтные палитры
   memset(peakX,0,sizeof(peakX));
-  memset(x,0,sizeof(x));
+  //memset(x,0,sizeof(x)); // так нельзя, ломает float!!!
+  for(uint16_t i=0; i<sizeof(x)/(sizeof(*x));i++)
+    x[i]=0.0f;
 }
 
 // !++
@@ -1962,7 +1964,7 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
       last_min_peak = mw->getMinPeak();
       last_max_peak = mw->getMaxPeak()*2;
 
-      EVERY_N_MILLIS(MIC_POLLRATE){
+      EVERY_N_MILLIS(MIC_POLLRATE*2){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
         maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
       }
       samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
@@ -1986,8 +1988,8 @@ bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 // #ifdef LAMP_DEBUG
 // EVERY_N_SECONDS(1){
 //   for(uint8_t i=0; i<WIDTH/freqDiv; i++)
-//     LOG(printf_P,PSTR("%5.2f "),x[i]);
-//   LOG(printf_P,PSTR("F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv], scale);
+//     LOG(printf_P,PSTR("%7.2f"),x[i]);
+//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv]*_scale, _scale);
 // }
 // #endif
 
@@ -8349,89 +8351,65 @@ void EffectFlags::changeFlags() {
 
 // ------------ VU-meter
 String EffectVU::setDynCtrl(UIControl*_val){
-  if (_val->getId()==1) amplitude = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 2040, 8);
-  else if (_val->getId()==2) noise = EffectCalc::setDynCtrl(_val).toInt() * 4;
+  if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, 0.75);
+  //else if (_val->getId()==2) noise = EffectCalc::setDynCtrl(_val).toInt() * 4;
   else if (_val->getId()==3) effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 void EffectVU::load() {
-  fft = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
-  //sampling_period_us = round(1000000 * (1.0 / SAMPLING_FREQ*2));
+  setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
+  //memset(oldBarHeights,0,sizeof(oldBarHeights));
+  for(uint16_t i=0; i<sizeof(oldBarHeights)/(sizeof(*oldBarHeights));i++)
+    oldBarHeights[i]=0.0f;
+  for(uint16_t i=0; i<sizeof(bandValues)/(sizeof(*bandValues));i++)
+    bandValues[i]=0.0f;
 }
 
 bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
-  if (tickTack) {
-    // Don't clear screen if waterfall pattern, be sure to change this is you change the patterns / order
-    // Reset bandValues[]
-    for (uint8_t i = 0; i < NUM_BANDS; i++){
-      bandValues[i] = 0;
-    }
+  if(isMicOn()){ // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
+    MICWORKER *mw = new MICWORKER(getMicScale(),getMicNoise());
 
-    // Sample the audio pin
-    for (uint16_t i = 0; i < SAMPLES; i++) {
-      //newTime = micros();
-      vReal[i] = analogRead(MIC_PIN); // A conversion takes about 9.7uS on an ESP32
-      vImag[i] = 0;
-      //while ((micros() - newTime) < sampling_period_us) { /* chill */ }
-      delayMicroseconds(sampling_period_us);
-    }
+    if(mw!=nullptr){
+      samp_freq = mw->process(getMicNoiseRdcLevel()); // частота семплирования
+      last_min_peak = mw->getMinPeak();
+      last_max_peak = mw->getMaxPeak()*2;
 
-    //Compute FFT
-    fft.dcRemoval();
-    fft.windowing(FFTWindow::Hamming, FFTDirection::Forward);
-    fft.compute(FFTDirection::Forward);
-    fft.complexToMagnitude();
-
-
-
-    // Analyse FFT results
-    for (uint16_t i = 2; i < (SAMPLES/2); i++){       // Don't use sample 0 and only first SAMPLES/2 are usable. Each array element represents a frequency bin and its value the amplitude.
-      if (vReal[i] > noise) {                    // Add a crude noise filter
-#if NUM_BANDS == 8
-      //8 bands, 12kHz top band
-        if (i<=3 )           bandValues[0]  += (int)vReal[i];
-        if (i>3   && i<=6  ) bandValues[1]  += (int)vReal[i];
-        if (i>6   && i<=13 ) bandValues[2]  += (int)vReal[i];
-        if (i>13  && i<=27 ) bandValues[3]  += (int)vReal[i];
-        if (i>27  && i<=55 ) bandValues[4]  += (int)vReal[i];
-        if (i>55  && i<=112) bandValues[5]  += (int)vReal[i];
-        if (i>112 && i<=229) bandValues[6]  += (int)vReal[i];
-        if (i>229          ) bandValues[7]  += (int)vReal[i];
-#else
-      //16 bands, 12kHz top band
-        if (i<=2 )           bandValues[0]  += (int)vReal[i];
-        if (i>2   && i<=3  ) bandValues[1]  += (int)vReal[i];
-        if (i>3   && i<=5  ) bandValues[2]  += (int)vReal[i];
-        if (i>5   && i<=7  ) bandValues[3]  += (int)vReal[i];
-        if (i>7   && i<=9  ) bandValues[4]  += (int)vReal[i];
-        if (i>9   && i<=13 ) bandValues[5]  += (int)vReal[i];
-        if (i>13  && i<=18 ) bandValues[6]  += (int)vReal[i];
-        if (i>18  && i<=25 ) bandValues[7]  += (int)vReal[i];
-        if (i>25  && i<=36 ) bandValues[8]  += (int)vReal[i];
-        if (i>36  && i<=50 ) bandValues[9]  += (int)vReal[i];
-        if (i>50  && i<=69 ) bandValues[10] += (int)vReal[i];
-        if (i>69  && i<=97 ) bandValues[11] += (int)vReal[i];
-        if (i>97  && i<=135) bandValues[12] += (int)vReal[i];
-        if (i>135 && i<=189) bandValues[13] += (int)vReal[i];
-        if (i>189 && i<=264) bandValues[14] += (int)vReal[i];
-        if (i>264          ) bandValues[15] += (int)vReal[i];
-#endif
+      EVERY_N_MILLIS(MIC_POLLRATE*2){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
+        maxVal=mw->fillSizeScaledArray(bandValues,NUM_BANDS); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
       }
+      samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
+    }
+    delete mw;
+  } else {
+    EVERY_N_MILLIS(random(50,300)){
+      last_max_peak=random(0,HEIGHT);
+      maxVal=random(0,last_max_peak);
+      for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float))-1U;i++){
+        bandValues[i] = random(2)?random(0,HEIGHT):bandValues[i];
+      }
+      bandValues[sizeof(bandValues)/sizeof(float)-1] = random(60,20000);
     }
   }
 
-  tickTack = !tickTack; // Раз считаем, второй раз выводим.
-  if (tickTack) return false;
-  
-  /*if (effId != 5)*/ FastLED.clear();
+  float _scale = (maxVal==0? 0 : last_max_peak/maxVal) * amplitude;
+
+// #ifdef LAMP_DEBUG
+// EVERY_N_SECONDS(1){
+//   for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float))-1U;i++)
+//     LOG(printf_P,PSTR("%7.2f"),bandValues[i]);
+//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),bandValues[NUM_BANDS], _scale);
+// }
+// #endif
+
+  FastLED.clear();
 
   // Process the FFT data into bar heights
   for (byte band = 0; band < NUM_BANDS; band++) {
 
     // Scale the bars for the display
-    uint8_t barHeight = bandValues[band] / amplitude;
+    uint8_t barHeight = (uint8_t)(bandValues[band] * _scale);
     if (barHeight > TOP) barHeight = TOP;
 
     // Small amount of averaging between frames
@@ -8439,8 +8417,12 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 
     // Move peak up
     if (barHeight > peak[band]) {
-      peak[band] = min((uint8_t)TOP, barHeight);
+      peak[band] = min((uint8_t)TOP, (uint8_t)barHeight);
     }
+
+  // EVERY_N_SECONDS(1){
+  //     LOG(printf_P,PSTR("%d: %d %d %d %d,\n"),band, (int)bandValues[band], peak[band], (int)barHeight, oldBarHeights[band]);
+  // }
 
     // Draw bars
     switch (effId) {
