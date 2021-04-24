@@ -1955,41 +1955,46 @@ bool EffectFreq::run(CRGB *ledarr, EffectWorker *opt){
 
 bool EffectFreq::freqAnalyseRoutine(CRGB *leds, EffectWorker *param)
 {
-  if(isMicOn())
-  { // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
-    MICWORKER *mw = new MICWORKER(getMicScale(),getMicNoise());
+  setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
+  freqDiv = 2U-scale/128; //1...2
 
-    if(mw!=nullptr){
-      samp_freq = mw->process(getMicNoiseRdcLevel()); // частота семплирования
-      last_min_peak = mw->getMinPeak();
-      last_max_peak = mw->getMaxPeak()*2;
+  if(isMicOn()){ // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
+    EVERY_N_MILLIS(100){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
+      bool withAnalyse = !(++calcArray%3);
+      MICWORKER *mw = new MICWORKER(getMicScale(),getMicNoise(), withAnalyse);
 
-      EVERY_N_MILLIS(MIC_POLLRATE*2){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
-        maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
+      if(mw!=nullptr){
+        samp_freq = mw->process(getMicNoiseRdcLevel()); // частота семплирования
+        last_min_peak = mw->getMinPeak();
+        last_max_peak = mw->getMaxPeak()*2;
+        if(withAnalyse){
+          maxVal=mw->fillSizeScaledArray(x,WIDTH/freqDiv);
+          last_freq=mw->getFreq();
+          calcArray=1;
+        }
+        samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
+        delete mw;
       }
-      samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     }
-    delete mw;
   } else {
     EVERY_N_MILLIS(random(50,300)){
       last_max_peak=random(0,128);
       maxVal=random(0,last_max_peak)/10.0;
-      for(uint16_t i=0; i<(sizeof(x)/sizeof(float))-1U;i++){
+      for(uint16_t i=0; i<(sizeof(x)/sizeof(float));i++){
         x[i] = random(0,128)/100.0;
       }
-      x[sizeof(x)/sizeof(float)-1] = random(60,20000);
+      last_freq = random(100,20000);
     }
   }
 
   float _scale = (maxVal==0? 0 : last_max_peak/maxVal);
   _scale = _scale * ((scale%128)/127.0);
-  freqDiv = 2U-scale/128; //1...2
 
 // #ifdef LAMP_DEBUG
 // EVERY_N_SECONDS(1){
 //   for(uint8_t i=0; i<WIDTH/freqDiv; i++)
-//     LOG(printf_P,PSTR("%7.2f"),x[i]);
-//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),x[WIDTH/freqDiv]*_scale, _scale);
+//     LOG(printf_P,PSTR("%7.2f"),x[i]*_scale);
+//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),last_freq, _scale);
 // }
 // #endif
 
@@ -8351,7 +8356,7 @@ void EffectFlags::changeFlags() {
 #ifdef MIC_EFFECTS
 // ------------ VU-meter
 String EffectVU::setDynCtrl(UIControl*_val){
-  if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, 0.75);
+  if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.025, 0.5);
   //else if (_val->getId()==2) noise = EffectCalc::setDynCtrl(_val).toInt() * 4;
   else if (_val->getId()==3) effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -8368,28 +8373,35 @@ void EffectVU::load() {
 }
 
 bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
+  setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
   if(isMicOn()){ // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
-    MICWORKER *mw = new MICWORKER(getMicScale(),getMicNoise());
+    EVERY_N_MILLIS(100){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
+      bool withAnalyse = !(++calcArray%3);
+      MICWORKER *mw = new MICWORKER(getMicScale(),getMicNoise(), withAnalyse);
 
-    if(mw!=nullptr){
-      samp_freq = mw->process(getMicNoiseRdcLevel()); // частота семплирования
-      last_min_peak = mw->getMinPeak();
-      last_max_peak = mw->getMaxPeak()*2;
-
-      EVERY_N_MILLIS(MIC_POLLRATE*2){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
-        maxVal=mw->fillSizeScaledArray(bandValues,NUM_BANDS); // массив должен передаваться на 1 ед. большего размера, т.е. для 16 полос его размер 17!!!
+      if(mw!=nullptr){
+        samp_freq = mw->process(getMicNoiseRdcLevel()); // частота семплирования
+        last_min_peak = mw->getMinPeak();
+        last_max_peak = mw->getMaxPeak()*2;
+        // for(uint16_t i=0; i<sizeof(bandValues)/(sizeof(*bandValues));i++)
+        //   bandValues[i]=0.0f;
+        if(withAnalyse){
+          maxVal=mw->fillSizeScaledArray(bandValues,NUM_BANDS);
+          last_freq=mw->getFreq();
+          calcArray=1;
+        }
+        samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
+        delete mw;
       }
-      samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
     }
-    delete mw;
   } else {
     EVERY_N_MILLIS(random(50,300)){
       last_max_peak=random(0,HEIGHT);
       maxVal=random(0,last_max_peak);
-      for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float))-1U;i++){
+      for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float));i++){
         bandValues[i] = random(2)?random(0,HEIGHT):bandValues[i];
       }
-      bandValues[sizeof(bandValues)/sizeof(float)-1] = random(60,20000);
+      last_freq = random(100,20000);
     }
   }
 
@@ -8397,9 +8409,9 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 
 // #ifdef LAMP_DEBUG
 // EVERY_N_SECONDS(1){
-//   for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float))-1U;i++)
-//     LOG(printf_P,PSTR("%7.2f"),bandValues[i]);
-//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),bandValues[NUM_BANDS], _scale);
+//   for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float));i++)
+//     LOG(printf_P,PSTR("%7.2f"),bandValues[i]*_scale);
+//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),last_freq, _scale);
 // }
 // #endif
 

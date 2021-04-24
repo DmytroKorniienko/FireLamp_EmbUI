@@ -191,7 +191,7 @@ double MICWORKER::analyse()
 
 float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив должен передаваться на 1 ед. большего размера
 {
-  arr[size] = analyse(); // сюда запишем частоту главной гармоники
+  signalFrequency = (float)analyse(); // сюда запишем частоту главной гармоники
 
   // for(uint8_t i=0; i<(samples >> 1); i++){
   //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
@@ -207,13 +207,24 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
   for(uint8_t i=0; i<(samples>>1); i++){
     float idx_freq=(((float)samplingFrequency/samples)*(i+1));
     uint8_t idx=(log(idx_freq)-minFreq)*scale;
+    idx=(idx>=size?0:idx);
 
     float tmp = (float)(20 * log10(vReal[i]));
     arr[idx]=(tmp<0?0:tmp+arr[idx])/2.0; // усредняем
   }
   float maxVal=0; // ищем максимум
-  for(uint8_t i=0;i<size-1;i++)
+  for(uint8_t i=0;i<size;i++)
     maxVal=max(maxVal,arr[i]);
+
+  // EVERY_N_SECONDS(1){
+  //   for(uint8_t i=0; i<(samples>>1); i++){
+  //     float idx_freq=(((float)samplingFrequency/samples)*(i+1));
+  //     uint8_t idx=(log(idx_freq)-minFreq)*scale;
+  //     idx=(idx>=size?0:idx);
+  //     LOG(printf_P, PSTR("%7.1f:%d "),idx_freq, idx);
+  //   }
+  //   LOG(println);
+  // }
 
   return maxVal<0?0:maxVal;
 }

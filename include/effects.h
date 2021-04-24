@@ -51,12 +51,13 @@ const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
 #ifdef MIC_EFFECTS
 class EffectFreq : public EffectCalc {
 private:
+    uint8_t calcArray = 1; // уменьшение частоты пересчета массива
     uint8_t type=1;
     int8_t peakX[2][WIDTH];
     float samp_freq;
     double last_freq = 0;
     uint8_t last_min_peak, last_max_peak;
-    float x[WIDTH+1];
+    float x[WIDTH];
     float maxVal;
     uint8_t freqDiv = 2U-scale/128; //1...2
 
@@ -2210,11 +2211,12 @@ private:
     CRGBPalette16 greenbluePal = greenblue_gp;
     CRGBPalette16 heatPal = redyellow_gp;
 
+    uint8_t calcArray = 1; // уменьшение частоты пересчета массива
     uint8_t colorTimer = 0;
     // Sampling and FFT stuff
     byte peak[NUM_BANDS];              // The length of these arrays must be >= NUM_BANDS
     float oldBarHeights[NUM_BANDS];
-    float bandValues[NUM_BANDS+1];
+    float bandValues[NUM_BANDS];
 
     float samp_freq;
     double last_freq = 0;

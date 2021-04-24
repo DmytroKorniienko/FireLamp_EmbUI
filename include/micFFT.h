@@ -78,10 +78,16 @@ public:
 #else
   static const uint16_t samples=64U;     //This value MUST ALWAYS be a power of 2
 #endif
-  MICWORKER(float scale = 1.28, float noise = 0) {
-    this->vReal = new float[samples]; this->vImag = new float[samples]; this->scale=scale; this->noise=noise;
+  MICWORKER(float scale = 1.28, float noise = 0, bool withAnalyse=true) {
+    this->vReal = new float[samples];
+    if(withAnalyse)
+      this->vImag = new float[samples];
+    else
+      this->vImag = nullptr;
+    this->scale=scale;
+    this->noise=noise;
   }
-  ~MICWORKER() { delete [] vReal; delete [] vImag; }
+  ~MICWORKER() { if(vReal) delete [] vReal; if(vImag) delete [] vImag; }
   bool isCaliblation() {return _isCaliblation;}
   void calibrate();
   double process(MIC_NOISE_REDUCE_LEVEL level=MIC_NOISE_REDUCE_LEVEL::NR_NONE);

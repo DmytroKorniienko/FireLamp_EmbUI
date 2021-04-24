@@ -961,8 +961,8 @@ void LAMP::micHandler()
   static uint8_t counter=0;
   if(effects.getEn()==EFF_ENUM::EFF_NONE)
     return;
-  if(mw==nullptr && !lampState.isCalibrationRequest){ // обычный режим
-    mw = new MICWORKER(lampState.mic_scale,lampState.mic_noise);
+  if(mw==nullptr && !lampState.isCalibrationRequest && lampState.micAnalyseDivider){ // обычный режим
+    mw = new MICWORKER(lampState.mic_scale,lampState.mic_noise,!counter);
     if(!mw) {
       mw=nullptr;
       return; // не удалось выделить память, на выход
