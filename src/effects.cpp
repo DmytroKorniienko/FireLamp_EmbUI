@@ -8353,12 +8353,20 @@ void EffectFlags::changeFlags() {
   else
     flag = _flag - 1;
 }
+
+
 #ifdef MIC_EFFECTS
 // ------------ VU-meter
 String EffectVU::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.025, 0.5);
-  //else if (_val->getId()==2) noise = EffectCalc::setDynCtrl(_val).toInt() * 4;
+  else if (_val->getId()==2) threshold = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0, 50);
   else if (_val->getId()==3) effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
+  else if (_val->getId()==4) {
+    colorTimer = EffectCalc::setDynCtrl(_val).toInt();
+    if (!colorTimer) colorShifting = true;
+    else colorShifting = false;
+  }
+  else if (_val->getId()==5) type = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -8374,6 +8382,9 @@ void EffectVU::load() {
 
 bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
   setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
+  // Оставлю себе напоминалку как все это работает https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-85649
+  bool ready = false;
+
   if(isMicOn()){ // вот этот блок медленный, особенно нагружающим будет вызов заполенния массива
     EVERY_N_MILLIS(100){ // обсчет тяжелый, так что желательно не дергать его чаще 10 раз в секунду, лучеш реже
       bool withAnalyse = !(++calcArray%3);
@@ -8388,12 +8399,14 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
         if(withAnalyse){
           maxVal=mw->fillSizeScaledArray(bandValues,NUM_BANDS);
           last_freq=mw->getFreq();
+          ready = true; // рассчет готов. Выводить будем в следующей итерации эффекта. Выводить сразу == длинный цикл итерации эффекта.
           calcArray=1;
         }
         samp_freq = samp_freq; last_min_peak=last_min_peak; last_freq=last_freq; // давим варнинги
         delete mw;
       }
     }
+    if (ready) return false; // не будем заставлять бедный контроллер еще и выводить инфу в том же цикле, что и рассчеты. Это режет ФПС. Но без новых рассчетов - ФПС просто спам.
   } else {
     EVERY_N_MILLIS(random(50,300)){
       last_max_peak=random(0,HEIGHT);
@@ -8421,7 +8434,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
   for (byte band = 0; band < NUM_BANDS; band++) {
 
     // Scale the bars for the display
-    uint8_t barHeight = (uint8_t)(bandValues[band] * _scale);
+    float barHeight = bandValues[band] * _scale > threshold ? (uint8_t)(bandValues[band] * _scale) : 0.;
     if (barHeight > TOP) barHeight = TOP;
 
     // Small amount of averaging between frames
@@ -8429,7 +8442,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 
     // Move peak up
     if (barHeight > peak[band]) {
-      peak[band] = min((uint8_t)TOP, (uint8_t)barHeight);
+      peak[band] = min((float)TOP, barHeight);
     }
 
   // EVERY_N_SECONDS(1){
@@ -8439,63 +8452,63 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
     // Draw bars
     switch (effId) {
       case 0:
-        rainbowBars(band, barHeight);
+        rainbowBars(band, barHeight, colorTimer);
         break;
       case 1:
-        // No bars on this one
+        outrunPeak(band, colorTimer);
         break;
       case 2:
-        purpleBars(band, barHeight);
+        paletteBars(band, barHeight, purplePal, colorTimer);
         break;
       case 3:
-        centerBars(band, barHeight);
+        centerBars(band, barHeight, heatPal, colorTimer);
         break;
       case 4:
-        changingBars(band, barHeight);
-        break;
       case 5:
+      case 6:
+      case 7:
+        verticalColoredBars(band, barHeight, effId - 4, colorTimer);
+        break;
+      case 8:
         rainbowBars(band, barHeight);
         //waterfall(band,  barHeight);
         break;
     }
 
-    // Draw peaks
-    switch (effId) {
-      case 0:
-        whitePeak(band);
-        break;
+
+    if(type) 
+      switch (effId)
+      {
       case 1:
-        outrunPeak(band);
-        break;
-      case 2:
+      case 3:
+        /* code */
+        break;      
+      default:
         whitePeak(band);
         break;
-      case 3:
-        // No peaks
-        break;
-      case 4:
-        // No peaks
-        break;
-      case 5:
-        // No peaks
-        break;
-    }
+      }
+
+
+
+
 
     // Save oldBarHeights for averaging later
     oldBarHeights[band] = barHeight;
   }
 
   // Decay peak
-  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER * 6) {
+ // EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER +1) {
     for (byte band = 0; band < NUM_BANDS; band++)
-      if (peak[band] > 0) peak[band] -= 1;
-    colorTimer++;
-  }
+      if (peak[band] > 0) peak[band] -= 0.25;
+    //colorTimer++;
+  //}
 
   // Used in some of the patterns
-  EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER) {
+if (colorShifting) {
+  //EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER*4) {
     colorTimer++;
-  }
+  //}
+}
 /*
   EVERY_N_SECONDS(10) {
     if (autoChangePatterns) effId = (effId + 1) % 6;
@@ -8506,58 +8519,73 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 
 // PATTERNS BELOW //
 
-void EffectVU::rainbowBars(uint8_t band, uint8_t barHeight) {
-  int xStart = BAR_WIDTH * band;
+void EffectVU::rainbowBars(uint8_t band, float barHeight, uint8_t colorShift) {
+  uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
-      EffectMath::drawPixelXY(x, HEIGHT -1 - y, CHSV((x / BAR_WIDTH) * (255 / NUM_BANDS), 255, 255));
+    for (float y = TOP; y >= (float)TOP - barHeight; y-= 0.5) {
+      EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV((uint8_t)(x / BAR_WIDTH) * (255 / NUM_BANDS) + colorShift, 255, 255));
     }
   }
 }
 
-void EffectVU::purpleBars(uint8_t band, uint8_t barHeight) {
-  int xStart = BAR_WIDTH * band;
+void EffectVU::paletteBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift) {
+  uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
-      EffectMath::drawPixelXY(x, HEIGHT - 1 - y, ColorFromPalette(purplePal, y * (255 / (barHeight + 1))));
+    for (float y = TOP; y >= (float)TOP - barHeight; y-= 0.5) {
+      EffectMath::drawPixelXYF_Y(x, (float)TOP - y, ColorFromPalette(palette, y * (255 / (barHeight + 1)) + colorShift));
     }
   }
 }
 
-void EffectVU::changingBars(uint8_t band, uint8_t barHeight) {
-  int xStart = BAR_WIDTH * band;
+void EffectVU::verticalColoredBars(uint8_t band, float barHeight, uint8_t type, uint8_t colorShift) {
+  uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    for (uint8_t y = TOP; y >= TOP - barHeight; y--) {
-      EffectMath::drawPixelXY(x, HEIGHT - 1 - y, CHSV(y * (255 / HEIGHT) + colorTimer, 255, 255));
+    for (float y = TOP; y >= (float)TOP - barHeight; y-= 0.5) {
+      switch (type)
+      {
+      case 0: // Только цвет по высоте
+        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 255, 255));
+        break;
+      case 1: // Цвет и насыщенность
+        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 256/TOP * y, 255));
+        break;
+      case 2: // Цвет и яркость
+      EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 255, 255 - constrain(256/TOP * y, 0, 200)));
+        break;
+      case 3: // Цвет, насыщенность и яркость
+        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 256/TOP * y, 255 - constrain(256/TOP * y, 0, 200)));
+        break;
+      }
+
     }
   }
 }
 
-void EffectVU::centerBars(uint8_t band, uint8_t barHeight) {
-  int xStart = BAR_WIDTH * band;
+void EffectVU::centerBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift) {
+  uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    if (barHeight % 2 == 0) barHeight--;
-    int yStart = ((HEIGHT - barHeight) / 2 );
-    for (uint8_t y = yStart; y <= (yStart + barHeight); y++) {
-      int colorIndex = constrain((y - yStart) * (255 / barHeight), 0, 255);
-      EffectMath::drawPixelXY(x, HEIGHT -1 - y, ColorFromPalette(heatPal, colorIndex));
+    if ((int)barHeight % 2 == 0) barHeight--;
+    float yStart = (((float)HEIGHT - barHeight) / 2 );
+    for (float y = yStart; y <= (yStart + barHeight); y+= 0.25) {
+      uint8_t colorIndex = constrain((y - yStart) * (255 / barHeight), 0, 255);
+      EffectMath::drawPixelXYF_Y(x, y, ColorFromPalette(palette, colorIndex + colorShift));
     }
   }
 }
 
 void EffectVU::whitePeak(uint8_t band) {
-  int xStart = BAR_WIDTH * band;
-  int peakHeight = TOP - peak[band] - 1;
+  uint8_t xStart = BAR_WIDTH * band;
+  float peakHeight = (float)TOP - peak[band] - 1;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    EffectMath::drawPixelXY(x, HEIGHT - 1 - peakHeight, CHSV(0,0,255));
+    EffectMath::drawPixelXYF_Y(x, (float)TOP - peakHeight, CHSV(0,0,255));
   }
 }
 
-void EffectVU::outrunPeak(uint8_t band) {
-  int xStart = BAR_WIDTH * band;
-  int peakHeight = TOP - peak[band] - 1;
+void EffectVU::outrunPeak(uint8_t band, uint8_t colorShift) {
+  uint8_t xStart = BAR_WIDTH * band;
+  float peakHeight = (float)TOP - peak[band] - 1;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    EffectMath::drawPixelXY(x, HEIGHT -1 - peakHeight, ColorFromPalette(outrunPal, peakHeight * (255 / HEIGHT)));
+    EffectMath::drawPixelXY(x, (float)TOP - peakHeight, type ? ColorFromPalette(outrunPal, peakHeight * (255 / HEIGHT) + colorShift) : CHSV(colorShift, 255, 255));
   }
 }
 

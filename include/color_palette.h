@@ -49,7 +49,7 @@ DECLARE_GRADIENT_PALETTE(Blue_Cyan_Yellow_gp);
 
 DECLARE_GRADIENT_PALETTE(purple_gp);
 DECLARE_GRADIENT_PALETTE(outrun_gp);
-DECLARE_GRADIENT_PALETTE(greenblue_gp);
+//DECLARE_GRADIENT_PALETTE(greenblue_gp);
 DECLARE_GRADIENT_PALETTE(redyellow_gp);
 
 class GradientPalette{

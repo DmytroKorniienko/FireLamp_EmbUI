@@ -2207,14 +2207,14 @@ public:
 class EffectVU: public EffectCalc {
 private:
     CRGBPalette16 purplePal = purple_gp;
-    CRGBPalette16 outrunPal = outrun_gp;
-    CRGBPalette16 greenbluePal = greenblue_gp;
+    CRGBPalette16 outrunPal = lava_gp; //outrun_gp;
+    //CRGBPalette16 greenbluePal = greenblue_gp;
     CRGBPalette16 heatPal = redyellow_gp;
 
     uint8_t calcArray = 1; // уменьшение частоты пересчета массива
     uint8_t colorTimer = 0;
     // Sampling and FFT stuff
-    byte peak[NUM_BANDS];              // The length of these arrays must be >= NUM_BANDS
+    float peak[NUM_BANDS];              // The length of these arrays must be >= NUM_BANDS
     float oldBarHeights[NUM_BANDS];
     float bandValues[NUM_BANDS];
 
@@ -2222,17 +2222,20 @@ private:
     double last_freq = 0;
     uint8_t last_min_peak, last_max_peak;
     float maxVal;
+    float threshold;
 
     float amplitude = 1.0;
     int effId = 0;
+    bool type = false;
+    bool colorShifting = false;
 
     String setDynCtrl(UIControl*_val) override;
-    void rainbowBars(uint8_t band, uint8_t barHeight);
-    void purpleBars(uint8_t band, uint8_t barHeight);
-    void changingBars(uint8_t band, uint8_t barHeight);
-    void centerBars(uint8_t band, uint8_t barHeight);
+    void rainbowBars(uint8_t band, float barHeight, uint8_t colorShift = 0);
+    void paletteBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift = 0);
+    void verticalColoredBars(uint8_t band, float barHeight, uint8_t type = 0, uint8_t colorShift = 0);
+    void centerBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift = 0);
     void whitePeak(uint8_t band);
-    void outrunPeak(uint8_t band);
+    void outrunPeak(uint8_t band, uint8_t colorShift = 0);
     void waterfall(uint8_t band, uint8_t barHeight);
 
 public:
