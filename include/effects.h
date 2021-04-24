@@ -2202,14 +2202,19 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
-#ifdef MIC_EFFECTS
-// -------------- VU-meter
+
+/* -------------- эффект "VU-meter"
+    (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
+    reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
+    adopted for FireLamp_jeeUI by kostyamat, kDn
+    reworked and updated (c) kostyamat 24.04.2021
+*/
 class EffectVU: public EffectCalc {
 private:
-    CRGBPalette16 purplePal = purple_gp;
-    CRGBPalette16 outrunPal = lava_gp; //outrun_gp;
-    //CRGBPalette16 greenbluePal = greenblue_gp;
-    CRGBPalette16 heatPal = redyellow_gp;
+    CRGBPalette16 gradPal[4] = { 
+    purple_gp,    rainbowsherbet_gp, 
+    redyellow_gp, Colorfull_gp
+    };
 
     uint8_t calcArray = 1; // уменьшение частоты пересчета массива
     uint8_t colorTimer = 0;
@@ -2223,6 +2228,8 @@ private:
     uint8_t last_min_peak, last_max_peak;
     float maxVal;
     float threshold;
+    byte tickCounter;
+    byte colorType;
 
     float amplitude = 1.0;
     int effId = 0;
@@ -2230,19 +2237,19 @@ private:
     bool colorShifting = false;
 
     String setDynCtrl(UIControl*_val) override;
-    void rainbowBars(uint8_t band, float barHeight, uint8_t colorShift = 0);
+    void horizontalColoredBars(uint8_t band, float barHeight, uint8_t type = 0, uint8_t colorShift = 0);
     void paletteBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift = 0);
     void verticalColoredBars(uint8_t band, float barHeight, uint8_t type = 0, uint8_t colorShift = 0);
     void centerBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift = 0);
     void whitePeak(uint8_t band);
-    void outrunPeak(uint8_t band, uint8_t colorShift = 0);
+    void outrunPeak(uint8_t band, CRGBPalette16& palette, uint8_t colorShift = 0);
     void waterfall(uint8_t band, uint8_t barHeight);
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
-#endif
+
 // --------- конец секции эффектов
 
 #endif
