@@ -8363,8 +8363,18 @@ void EffectFlags::changeFlags() {
 */
 String EffectVU::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.025, 0.5);
-  else if (_val->getId()==2) threshold = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0, 50);
-  else if (_val->getId()==3) effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
+  else if (_val->getId()==2) threshold = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0, 30);
+  else if (_val->getId()==3) {
+    effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
+    NUM_BANDS = effId & 01 ? (WIDTH/2 + (WIDTH & 01 ? 1:0)) : WIDTH;
+    BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
+
+    //memset(oldBarHeights,0,sizeof(oldBarHeights));
+    for(uint16_t i = 0; i < WIDTH; i++) {
+      oldBarHeights[i] = 0.;
+      bandValues[i] = 0.;
+    }
+  }
   else if (_val->getId()==4) colorType = EffectCalc::setDynCtrl(_val).toInt() - 1;
   else if (_val->getId()==5) {
     colorTimer = EffectCalc::setDynCtrl(_val).toInt();
@@ -8380,11 +8390,15 @@ void EffectVU::load() {
 #ifdef MIC_EFFECTS
   setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
 #endif
+  NUM_BANDS = halfBands ? WIDTH/2 + (WIDTH & 01 ? 1:0 ): WIDTH;
+  BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
+
   //memset(oldBarHeights,0,sizeof(oldBarHeights));
-  for(uint16_t i=0; i<sizeof(oldBarHeights)/(sizeof(*oldBarHeights));i++)
-    oldBarHeights[i]=0.0f;
-  for(uint16_t i=0; i<sizeof(bandValues)/(sizeof(*bandValues));i++)
-    bandValues[i]=0.0f;
+  for(uint16_t i = 0; i < WIDTH; i++) {
+    oldBarHeights[i] = 0.;
+    bandValues[i] = 0.;
+  }
+
 }
 
 bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
@@ -8408,7 +8422,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
         // for(uint16_t i=0; i<sizeof(bandValues)/(sizeof(*bandValues));i++)
         //   bandValues[i]=0.0f;
         if(withAnalyse){
-          maxVal=mw->fillSizeScaledArray(bandValues,NUM_BANDS);
+          maxVal=mw->fillSizeScaledArray(bandValues, NUM_BANDS);
           last_freq=mw->getFreq();
           //ready = true; // рассчет готов. Выводить будем в следующей итерации эффекта. Выводить сразу == длинный цикл итерации эффекта.
           calcArray=1;
@@ -8466,21 +8480,27 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
     // Draw bars
     switch (effId) {
       case 0:
+      case 1:
         horizontalColoredBars(band, barHeight, colorType, colorTimer);
         break;
-      case 1:
+      case 2:
+      case 3:
         outrunPeak(band, gradPal[colorType], colorTimer);
         break;
-      case 2:
+      case 4:
+      case 5:
         paletteBars(band, barHeight, gradPal[colorType], colorTimer);
         break;
-      case 3:
+      case 6:
+      case 7:
         centerBars(band, barHeight, gradPal[colorType], colorTimer);
         break;
-      case 4:
+      case 8:
+      case 9:
         verticalColoredBars(band, barHeight, colorType, colorTimer);
         break;
-      case 5:
+      case 10:
+      case 11:
         horizontalColoredBars(band, barHeight);
         //waterfall(band,  barHeight);
         break;
@@ -8489,8 +8509,10 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
     if(type) 
       switch (effId)
       {
-      case 1:
+      case 2:
       case 3:
+      case 6:
+      case 7:
         /* code */
         break;      
       default:
