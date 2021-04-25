@@ -2235,6 +2235,7 @@ private:
     int effId = 0;
     bool type = false;
     bool colorShifting = false;
+    const float speedFactorVertical = (float)HEIGHT / 16;
 
     String setDynCtrl(UIControl*_val) override;
     void horizontalColoredBars(uint8_t band, float barHeight, uint8_t type = 0, uint8_t colorShift = 0);

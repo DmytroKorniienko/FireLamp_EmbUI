@@ -8486,7 +8486,6 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
         break;
     }
 
-
     if(type) 
       switch (effId)
       {
@@ -8499,18 +8498,14 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
         break;
       }
 
-
-
-
-
     // Save oldBarHeights for averaging later
     oldBarHeights[band] = barHeight;
   }
 
-  // Decay peak
+// Decay peak
  // EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER +1) {
     for (byte band = 0; band < NUM_BANDS; band++)
-      if (peak[band] > 0) peak[band] -= 0.25;
+      if (peak[band] > 0) peak[band] -= 0.25 * speedFactorVertical;
     //colorTimer++;
   //}
 
@@ -8531,21 +8526,22 @@ if (colorShifting) {
 // PATTERNS BELOW //
 
 void EffectVU::horizontalColoredBars(uint8_t band, float barHeight, uint8_t type, uint8_t colorShift) {
+  colorShift--;
   uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
     for (float y = TOP; y >= (float)TOP - barHeight; y-= 0.5) {
       switch (type) {
       case 0: // Только цвет по высоте
-        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV((uint8_t)(x / BAR_WIDTH) * (255 / NUM_BANDS) + colorShift, 255, 255));
+        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV(band * (232 / NUM_BANDS) + colorShift, 255, 255));
         break;
       case 1: // Цвет и насыщенность
-        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV((uint8_t)(x / BAR_WIDTH) * (255 / NUM_BANDS) + colorShift, 256/TOP * y, 255));
+        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV(band * (232 / NUM_BANDS) + colorShift, 256/TOP * (uint8_t)y, 255));
         break;
       case 2: // Цвет и яркость
-        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV((uint8_t)(x / BAR_WIDTH) * (255 / NUM_BANDS) + colorShift, 255, 255 - constrain(256/TOP * y, 0, 200)));
+        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV(band * (232 / NUM_BANDS) + colorShift, 255, (uint8_t)255 - constrain(256/TOP * (uint8_t)y, 0, 200)));
         break;
       case 3: // Цвет, насыщенность и яркость
-        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV((uint8_t)(x / BAR_WIDTH) * (255 / NUM_BANDS) + colorShift, 256/TOP * y, 255 - constrain(256/TOP * y, 0, 200)));
+        EffectMath::drawPixelXYF_Y(x, (float)TOP - y, CHSV(band * (232 / NUM_BANDS) + colorShift, 256/TOP * (uint8_t)y, (uint8_t)255 - constrain(256/TOP * (uint8_t)y, 0, 200)));
         break;
       }
     }
@@ -8553,30 +8549,32 @@ void EffectVU::horizontalColoredBars(uint8_t band, float barHeight, uint8_t type
 }
 
 void EffectVU::paletteBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift) {
+  colorShift--;
   uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
     for (float y = TOP; y >= (float)TOP - barHeight; y-= 0.5) {
-      EffectMath::drawPixelXYF_Y(x, (float)TOP - y, ColorFromPalette(palette, y * (255 / (barHeight + 1)) + colorShift));
+      EffectMath::drawPixelXYF_Y(x, (float)TOP - y, ColorFromPalette(palette, (uint8_t)y * (255 / (barHeight + 1)) + colorShift));
     }
   }
 }
 
 void EffectVU::verticalColoredBars(uint8_t band, float barHeight, uint8_t type, uint8_t colorShift) {
+  colorShift--;
   uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
     for (float y = TOP; y >= (float)TOP - barHeight; y-= 0.5) {
       switch (type) {
       case 0: // Только цвет по высоте
-        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 255, 255));
+        EffectMath::drawPixelXYF_Y(x, TOP - y, CHSV((uint8_t)y * (255 / HEIGHT) + colorShift, 255, 255));
         break;
       case 1: // Цвет и насыщенность
-        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 256/TOP * y, 255));
+        EffectMath::drawPixelXYF_Y(x, TOP - y, CHSV((uint8_t)y * (255 / HEIGHT) + colorShift, 256/TOP * (uint8_t)y, 255));
         break;
       case 2: // Цвет и яркость
-        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 255, 255 - constrain(256/TOP * y, 0, 200)));
+        EffectMath::drawPixelXYF_Y(x, TOP - y, CHSV((uint8_t)y * (255 / HEIGHT) + colorShift, 255, (uint8_t)255 - constrain(256/TOP * (uint8_t)y, 0, 200)));
         break;
       case 3: // Цвет, насыщенность и яркость
-        EffectMath::drawPixelXY(x, TOP - y, CHSV(y * (255 / HEIGHT) + colorShift, 256/TOP * y, 255 - constrain(256/TOP * y, 0, 200)));
+        EffectMath::drawPixelXYF_Y(x, TOP - y, CHSV((uint8_t)y * (255 / HEIGHT) + colorShift, 256/TOP * (uint8_t)y, (uint8_t)255 - constrain(256/TOP * (uint8_t)y, 0, 200)));
         break;
       }
 
@@ -8585,6 +8583,7 @@ void EffectVU::verticalColoredBars(uint8_t band, float barHeight, uint8_t type, 
 }
 
 void EffectVU::centerBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift) {
+  colorShift--;
   uint8_t xStart = BAR_WIDTH * band;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
     if ((int)barHeight % 2 == 0) barHeight--;
@@ -8605,10 +8604,11 @@ void EffectVU::whitePeak(uint8_t band) {
 }
 
 void EffectVU::outrunPeak(uint8_t band, CRGBPalette16& palette, uint8_t colorShift) {
+  colorShift--;
   uint8_t xStart = BAR_WIDTH * band;
   float peakHeight = (float)TOP - peak[band] - 1;
   for (uint8_t x = xStart; x < xStart + BAR_WIDTH; x++) {
-    EffectMath::drawPixelXY(x, (float)TOP - peakHeight, type ? ColorFromPalette(palette, peakHeight * (255 / HEIGHT) + colorShift) : CHSV(colorShift, 255, 255));
+    EffectMath::drawPixelXYF_Y(x, (float)TOP - peakHeight, type ? ColorFromPalette(palette, (uint8_t)(peakHeight * (255 / HEIGHT)) + colorShift) : CHSV(colorShift, 255, 255));
   }
 }
 

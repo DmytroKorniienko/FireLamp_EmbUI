@@ -1231,11 +1231,11 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 
 // VU-meter
 #define SAMPLES           256U          // Must be a power of 8
-#if WIDTH >=16
-  #define NUM_BANDS       16U         // 8 or 16 only! To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
-#else
-  #define NUM_BANDS       8U          // 8 or 16 only! To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
-#endif
+//#if WIDTH >=16
+  #define NUM_BANDS       WIDTH         // 8 or 16 only! To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
+//#else
+//  #define NUM_BANDS       8U          // 8 or 16 only! To change this, you will need to change the bunch of if statements describing the mapping from bins to bands
+//#endif
 #define TOP            (HEIGHT - 1)                // Don't allow the bars to go offscreen
 #define BAR_WIDTH      (WIDTH  / (NUM_BANDS - 1))  // If width >= 8 light 1 LED width per bar, >= 16 light 2 LEDs width bar etc
 
