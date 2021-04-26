@@ -87,7 +87,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef MIC_EFFECTS
 #define MIC_POLLRATE          (100U)                         // как часто опрашиваем микрофон, мс
 #define FAST_ADC_READ                                        // микрофон, использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
-#define SAMPLING_FREQ         (12000U*2U)
+#define SAMPLING_FREQ         (18000U*2U)
 #endif
 
 

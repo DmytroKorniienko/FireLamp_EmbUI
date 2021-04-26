@@ -373,8 +373,8 @@ EFF_LIQUIDLAMP,                               // Лаваламп
 EFF_RACER,                                    // Космо-Гонщик
 EFF_SMOKER,                                   // Дым (Тест) 
 EFF_TIME = (250U)                             // Часы (служебный, смещаем в конец)
-#ifdef MIC_EFFECTS
 ,EFF_VU = (253U)                              // VU - Метер
+#ifdef MIC_EFFECTS
 ,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
 ,EFF_OSC = (255U)                             // Осциллограф
 #endif
@@ -426,7 +426,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 6, 6, // 240 - 255
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 4, 6, 6, // 240 - 255
 };
 
 
@@ -531,7 +531,7 @@ static const char E_DRAGE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_PICAS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":5,\"val\":1,\"max\":3,\"name\":\"" DFTINTF_00A "\"}]}";
 static const char E_SSHIPS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"val\":8,\"max\":15,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":8,\"name\":\"" DFTINTF_117 "\"}, {\"id\":5,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_FLAGS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"min\":0,\"val\":0,\"max\":10,\"name\":\"" DFTINTF_00A "\"}]}";
-static const char E_VU[]        PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"min\":1,\"val\":30,\"max\":255,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":2,\"min\":1,\"val\":30,\"max\":256,\"name\":\"" DFTINTF_118 "\"}, {\"id\":3,\"min\":1,\"val\":1,\"max\":8,\"name\":\"" DFTINTF_00A "\"}, {\"id\":4,\"min\":1,\"val\":1,\"max\":4,\"name\":\"" DFTINTF_0D6 "\"}, {\"id\":5,\"min\":0,\"val\":1,\"max\":255,\"name\":\"" DFTINTF_0D3 "\"}, {\"id\":6,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_108 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_VU[]        PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"min\":1,\"val\":30,\"max\":255,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":2,\"min\":1,\"val\":30,\"max\":256,\"name\":\"" DFTINTF_118 "\"}, {\"id\":3,\"min\":1,\"val\":1,\"max\":8,\"name\":\"" DFTINTF_00A "\"}, {\"id\":4,\"min\":1,\"val\":1,\"max\":4,\"name\":\"" DFTINTF_0D6 "\"}, {\"id\":5,\"min\":0,\"val\":1,\"max\":255,\"name\":\"" DFTINTF_0D3 "\"}, {\"id\":6,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_108 "\"}, {\"id\":7,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}]}";
 
 // Инженерный
 //static const char E_TEST[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";

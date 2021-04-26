@@ -8382,6 +8382,7 @@ String EffectVU::setDynCtrl(UIControl*_val){
     else colorShifting = false;
   }
   else if (_val->getId()==6) type = EffectCalc::setDynCtrl(_val).toInt();
+  else if (_val->getId()==7) averaging = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -8390,8 +8391,8 @@ void EffectVU::load() {
 #ifdef MIC_EFFECTS
   setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
 #endif
-  NUM_BANDS = halfBands ? WIDTH/2 + (WIDTH & 01 ? 1:0 ): WIDTH;
-  BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
+    NUM_BANDS = effId & 01 ? (WIDTH/2 + (WIDTH & 01 ? 1:0)) : WIDTH;
+    BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
 
   //memset(oldBarHeights,0,sizeof(oldBarHeights));
   for(uint16_t i = 0; i < WIDTH; i++) {
@@ -8448,13 +8449,13 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 
   float _scale = (maxVal==0? 0 : last_max_peak/maxVal) * amplitude;
 
-// #ifdef LAMP_DEBUG
-// EVERY_N_SECONDS(1){
-//   for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float));i++)
-//     LOG(printf_P,PSTR("%7.2f"),bandValues[i]*_scale);
-//   LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),last_freq, _scale);
-// }
-// #endif
+#ifdef LAMP_DEBUG
+ EVERY_N_SECONDS(1){
+  for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float));i++)
+    LOG(printf_P,PSTR("%7.2f"),bandValues[i]*_scale);
+    LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),last_freq, _scale);
+  }
+#endif
 
   FastLED.clear();
 
@@ -8466,7 +8467,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
     if (barHeight > TOP) barHeight = TOP;
 
     // Small amount of averaging between frames
-    barHeight = ((oldBarHeights[band] * 1) + barHeight) / 2;
+    if (averaging) barHeight = (oldBarHeights[band] + barHeight) / 2;
 
     // Move peak up
     if (barHeight > peak[band]) {
@@ -8521,7 +8522,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
       }
 
     // Save oldBarHeights for averaging later
-    oldBarHeights[band] = barHeight;
+    if (averaging) oldBarHeights[band] = barHeight;
   }
 
 // Decay peak

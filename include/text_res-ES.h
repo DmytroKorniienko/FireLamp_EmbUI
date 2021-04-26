@@ -120,8 +120,8 @@ static const char TEFF_071 [] PROGMEM = "Metabolas";
 static const char TEFF_072 [] PROGMEM = "Lámpara de lava";
 static const char TEFF_073 [] PROGMEM = "Corredor";
 static const char TEFF_074 [] PROGMEM = "Humo";
-static const char TEFF_252[] PROGMEM = "VU-Medidor";
-static const char TEFF_253 [] PROGMEM = "Reloj";
+static const char TEFF_250 [] PROGMEM = "Reloj";
+static const char TEFF_253 [] PROGMEM = "VU-Medidor";
 static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 

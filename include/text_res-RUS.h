@@ -203,6 +203,7 @@ static const char TEFF_255[] PROGMEM = "Осциллограф";
 #define DFTINTF_117 "Направление (0 = циклично)"
 #define DFTINTF_118 "Порог сигнала"
 
+
 /** набор строк с текстовыми константами интерфейса
  */
 static const char TINTF_000[] PROGMEM = "Эффекты";
