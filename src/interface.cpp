@@ -70,12 +70,12 @@ static EVENT *cur_edit_event = NULL; // текущее редактируемо�
 using namespace INTERFACE;
 
 // функция пересоздания/отмены генерации списка эффектов
-void recreateoptionsTaskTask(bool isCancelOnly=false){
+void recreateoptionsTask(bool isCancelOnly=false){
     if(optionsTask)
         optionsTask->cancel();
     if(delayedOptionTask)
         delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-    optionsTask = new Task(5 * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
+    optionsTask = new Task(INDEX_BUILD_DELAY * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
         TASK_RECYCLE;
         optionsTask=nullptr;
     });
@@ -236,7 +236,7 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
  */
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
-    recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
@@ -251,30 +251,29 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         LOG(printf_P,PSTR("confEff->eff_nb=%d\n"), tmpEffnb);
         if(tmpEffnb==myLamp.effects.getCurrent()){
             myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
-            myLamp.effects.deleteEffect(effect, isCfgRemove); // удаляем текущий
             remote_action(RA_EFF_NEXT, NULL);
-        } else {
-            myLamp.effects.deleteEffect(effect, isCfgRemove); // удаляем текущий
         }
         String tmpStr=F("- ");
         tmpStr+=String(tmpEffnb);
         myLamp.sendString(tmpStr.c_str(), CRGB::Red);
-        //confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
+        confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
         if(isCfgRemove){
             Task *_t = new Task(
-                INDEX_BUILD_DELAY * TASK_SECOND,
-                TASK_ONCE, [](){
+                300,
+                TASK_ONCE, [effect](){
+                                   myLamp.effects.deleteEffect(effect, true); // удаляем эффект из ФС
                                    myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                   recreateoptionsTaskTask();
+                                   recreateoptionsTask();
                                    TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
         } else {
             Task *_t = new Task(
-                INDEX_BUILD_DELAY * TASK_SECOND,
-                TASK_ONCE, [](){
+                300,
+                TASK_ONCE, [effect](){
+                                    myLamp.effects.deleteEffect(effect, false); // удаляем эффект из списка
                                     myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
-                                    recreateoptionsTaskTask();
+                                    recreateoptionsTask();
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -283,10 +282,10 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         return;
     } else if (act == FPSTR(TCONST_000B)) {
         Task *_t = new Task(
-            INDEX_BUILD_DELAY * TASK_SECOND,
+            300,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                recreateoptionsTaskTask();
+                                recreateoptionsTask();
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -433,7 +432,7 @@ void delayedcall_show_effects(){
 
                     // восстановить позицию, если переключение произошло во время генерации списка
                     interf->json_frame_value();
-                    interf->value(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), myLamp.effects.getSelected(), false);
+                    interf->value(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), confEff?confEff->eff_nb:myLamp.effects.getSelected(), false);
                     interf->json_frame_flush();
 
                     Task *_t = &ts.currentTask();
@@ -461,7 +460,7 @@ void show_effects_config(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_effects_config(interf, data);
     interf->json_frame_flush();
-    recreateoptionsTaskTask();
+    recreateoptionsTask();
 #else
     if (!interf) return;
     interf->json_frame_interface();
@@ -512,7 +511,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_CASE::ISMICON :
 #ifdef MIC_EFFECTS
                 //if(!myLamp.isMicOnOff()) continue;
-                if(!isMicOn && (!myLamp.isMicOnOff() || controls[i]->getId()!=7)) continue;
+                if(!isMicOn && (!myLamp.isMicOnOff() || !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1) )) continue;
 #else
                 continue;
 #endif          
@@ -520,7 +519,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_CASE::ISMICOFF :
 #ifdef MIC_EFFECTS
                 //if(myLamp.isMicOnOff()) continue;
-                if(isMicOn && (myLamp.isMicOnOff() || controls[i]->getId()!=7)) continue;
+                if(isMicOn && (myLamp.isMicOnOff() || !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1) )) continue;
 #else
                 continue;
 #endif   
@@ -537,7 +536,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                     //     : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
                     String ctrlId = String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
                     String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
-                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
                     if(isinterf) interf->range(
@@ -555,7 +554,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_TYPE::EDIT :
                 {
                     String ctrlName = controls[i]->getName();
-                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     
                     if(isinterf) interf->text(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -569,7 +568,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
             case CONTROL_TYPE::CHECKBOX :
                 {
                     String ctrlName = controls[i]->getName();
-                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getName().startsWith(FPSTR(TINTF_020))==1 && controls[i]->getId()==7))
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
 
                     if(isinterf) interf->checkbox(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
@@ -869,7 +868,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
 
     interf->json_section_end();
 #ifdef DELAYED_EFFECTS
-    recreateoptionsTaskTask();
+    recreateoptionsTask();
 #endif
 }
 
@@ -1184,7 +1183,7 @@ void set_lamp_textsend(Interface *interf, JsonObject *data){
 void block_drawing(Interface *interf, JsonObject *data){
     //Страница "Рисование"
     if (!interf) return;
-    recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTask(true); // only cancel task
     interf->json_section_main(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));
 
     DynamicJsonDocument doc(512);
@@ -1219,7 +1218,7 @@ void set_drawing(Interface *interf, JsonObject *data){
 void block_lamptext(Interface *interf, JsonObject *data){
     //Страница "Вывод текста"
     if (!interf) return;
-    recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTask(true); // only cancel task
     interf->json_section_main(FPSTR(TCONST_0003), FPSTR(TINTF_001));
 
     block_lamp_textsend(interf, data);
@@ -2119,7 +2118,7 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 #endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
-    recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTask(true); // only cancel task
     if (!interf) return;
     interf->json_frame_interface(FPSTR(TINTF_080));
     block_effects_main(interf, data);
@@ -2144,7 +2143,7 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
 void user_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки"
     if (!interf) return;
-    recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTask(true); // only cancel task
 /*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
@@ -2197,7 +2196,7 @@ void section_main_frame(Interface *interf, JsonObject *data){
 void section_sys_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки ESP"
     if (!interf) return;
-    recreateoptionsTaskTask(true); // only cancel task
+    recreateoptionsTask(true); // only cancel task
     interf->json_frame_interface(FPSTR(TINTF_08F));
 
     block_menu(interf, data);

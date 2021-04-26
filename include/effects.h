@@ -2202,7 +2202,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
-
+#ifdef MIC_EFFECTS
 /* -------------- эффект "VU-meter"
     (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
     reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
@@ -2252,7 +2252,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
 };
-
+#endif
 // --------- конец секции эффектов
 
 #endif

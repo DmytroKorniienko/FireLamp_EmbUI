@@ -254,7 +254,7 @@ public:
         LList<UIControl*>&controls = effects.getControls();
         if(val){
             for(int i=3; i<controls.size(); i++) {
-                if(controls[i]->getId()==7){
+                if(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1){
                     if(effects.worker) effects.worker->setDynCtrl(controls[i]);
                     found=true;
                 }

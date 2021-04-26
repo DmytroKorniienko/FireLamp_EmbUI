@@ -120,8 +120,8 @@ static const char TEFF_071[] PROGMEM = "Меташары";
 static const char TEFF_072[] PROGMEM = "Лавовая лампа";
 static const char TEFF_073[] PROGMEM = "Космо-Гонщик";
 static const char TEFF_074[] PROGMEM = "Дым";
-static const char TEFF_252[] PROGMEM = "VU-Метер";
-static const char TEFF_253[] PROGMEM = "Часы";
+static const char TEFF_250[] PROGMEM = "Часы";
+static const char TEFF_253[] PROGMEM = "VU-Метер";
 static const char TEFF_254[] PROGMEM = "Частотный анализатор";
 static const char TEFF_255[] PROGMEM = "Осциллограф";
 

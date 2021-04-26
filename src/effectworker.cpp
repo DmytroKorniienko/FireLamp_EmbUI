@@ -272,10 +272,10 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_MAGMA :
     worker = std::unique_ptr<EffectMagma>(new EffectMagma());
     break;
-   case EFF_ENUM::EFF_VU :
+#ifdef MIC_EFFECTS
+  case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());
     break;
-#ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());
     break;
@@ -390,6 +390,7 @@ void EffectWorker::initDefault(const char *folder)
 void EffectWorker::removeConfig(const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
+  LOG(printf_P,PSTR("Remove from FS: %s\n"), filename.c_str());
   LittleFS.remove(filename); // удаляем файл
 }
 
@@ -679,7 +680,7 @@ void EffectWorker::chckdefconfigs(const char *folder){
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
       continue;
 #ifndef MIC_EFFECTS
-    if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
+    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
 
     String cfgfilename = geteffectpathname(i, folder);
@@ -808,7 +809,7 @@ void EffectWorker::makeIndexFile(const char *folder)
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
 #ifndef MIC_EFFECTS
-    if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
+    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
 
     eff = getEffect(i);
@@ -1274,7 +1275,7 @@ String EffectCalc::setDynCtrl(UIControl*_val){
     isCtrlPallete = true;
   }
 
-  if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
+  if(_val->getId()==7 && _val->getName().startsWith(FPSTR(TINTF_020))==1){ // Начинается с микрофон и имеет 7 id
     isMicActive = (ret_val.toInt() && isMicOnState()) ? true : false;
 #ifdef MIC_EFFECTS
     if(lampstate!=nullptr)

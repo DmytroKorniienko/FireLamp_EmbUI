@@ -8354,7 +8354,7 @@ void EffectFlags::changeFlags() {
     flag = _flag - 1;
 }
 
-
+#ifdef MIC_EFFECTS
 /* -------------- эффект "VU-Meter"
     (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
     reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
@@ -8660,4 +8660,4 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
     }
   }
 }
-
+#endif
