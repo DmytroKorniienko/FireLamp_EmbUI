@@ -8448,7 +8448,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
   }
 
   float _scale = (maxVal==0? 0 : last_max_peak/maxVal) * amplitude;
-
+/*
 #ifdef LAMP_DEBUG
  EVERY_N_SECONDS(1){
   for(uint16_t i=0; i<(sizeof(bandValues)/sizeof(float));i++)
@@ -8456,7 +8456,7 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
     LOG(printf_P,PSTR(" F: %8.2f SC: %5.2f\n"),last_freq, _scale);
   }
 #endif
-
+*/
   FastLED.clear();
 
   // Process the FFT data into bar heights
