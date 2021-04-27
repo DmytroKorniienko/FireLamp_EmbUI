@@ -216,7 +216,6 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     interf->json_section_end();
 
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(TCONST_000D));
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0093), FPSTR(TINTF_08B), FPSTR(TCONST_000D));
 
     interf->json_section_end();
 }
@@ -243,7 +242,15 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
-        myLamp.effects.copyEffect(effect); // копируем текущий
+        Task *_t = new Task(
+            300,
+            TASK_ONCE, [effect](){
+                                myLamp.effects.copyEffect(effect); // копируем текущий
+                                myLamp.effects.makeIndexFileFromList(); // создаем индекс по файлам ФС и на выход
+                                recreateoptionsTask();
+                                TASK_RECYCLE; },
+            &ts, false);
+        _t->enableDelayed();
     //} else if (act == FPSTR(TCONST_000A)) {
     } else if (act == FPSTR(TCONST_00B0) || act == FPSTR(TCONST_00B1)) {
         uint16_t tmpEffnb = effect->eff_nb;
@@ -267,6 +274,8 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                                    TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
+            section_main_frame(interf, data);
+            return;
         } else {
             Task *_t = new Task(
                 300,
@@ -291,23 +300,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         _t->enableDelayed();
         section_main_frame(interf, data);
         return;
-    } else if (act == FPSTR(TCONST_0093)) {
-        LOG(printf_P,PSTR("confEff->eff_nb=%d\n"), effect->eff_nb);
-        if(effect->eff_nb==myLamp.effects.getCurrent()){
-            myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
-            myLamp.effects.removeConfig(effect->eff_nb);
-            remote_action(RA_EFF_NEXT, NULL);
-        } else {
-            myLamp.effects.removeConfig(effect->eff_nb);
-        }
-        String tmpStr=F("- ");
-        tmpStr+=effect->eff_nb;
-        myLamp.sendString(tmpStr.c_str(), CRGB::Red);
-        //confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
-        section_main_frame(interf, data);
-        return;
-    }
-    else {
+    } else {
         effect->canBeSelected((*data)[FPSTR(TCONST_0006)] == "1");
         effect->isFavorite((*data)[FPSTR(TCONST_0007)] == "1");
         myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], effect);
