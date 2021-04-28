@@ -706,10 +706,10 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             JsonObject *data = &dataStore;
             
             LOG(println, "publishing & sending dynctrl...");
-            String tmp; serializeJson(*data,tmp);
+            String tmp; serializeJson(*data,tmp);LOG(println, tmp);
+
             direct_set_effects_dynCtrl(data);
 
-            LOG(println, tmp);
             publish_ctrls_vals();
             // отправка данных в WebUI
             {
@@ -731,15 +731,12 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
                     delete interf;
                 }
             }
+            if(task==ctrlsTask)
+                ctrlsTask = nullptr;
+            TASK_RECYCLE;
         },
         &ts,
-        false,
-        nullptr,
-        [](){
-            //LOG(println, "Clearing dynctrl");
-            ctrlsTask = nullptr;
-            TASK_RECYCLE;
-        }
+        false
     );
     ctrlsTask->restartDelayed();
 }
