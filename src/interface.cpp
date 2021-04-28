@@ -61,7 +61,30 @@ namespace INTERFACE {
 // планировщик заполнения списка
 Task *optionsTask = nullptr;     // задача для отложенной генерации списка
 Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
-Task *ctrlsTask = nullptr;       // планировщик контролов
+
+class CtrlsTask : public Task {
+    DynamicJsonDocument *_data = nullptr;
+public:
+    INLINE DynamicJsonDocument *getData() {return _data;}
+    INLINE void setNewData(DynamicJsonDocument *newData) {if(_data) delete _data; _data=newData;} 
+    bool checkIsSame(DynamicJsonDocument *test) {
+        // сравниваем предыдущий и текущий ответы на совпадение пар
+        bool same=true;
+        JsonObject data = (*getData()).as<JsonObject>();
+        for (JsonPair kv : data) {
+            if(!((*test).as<JsonObject>()).containsKey(kv.key())){
+                same=false;
+                break;
+            }
+        }
+        return same;
+    }
+
+    INLINE CtrlsTask(DynamicJsonDocument *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
+    : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable), _data(data){}
+    ~CtrlsTask() {if(_data) delete _data;}
+};
+CtrlsTask *ctrlsTask = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
 static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
@@ -663,16 +686,23 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if((*data).containsKey(FPSTR(TCONST_00D5)))
         direct_set_effects_dynCtrl(data);
 
-    if(ctrlsTask && ctrlsTask->isEnabled())
-        ctrlsTask->disable();
+    DynamicJsonDocument *storage = new DynamicJsonDocument(256);
+    (*storage)=(*data);
 
-    DynamicJsonDocument *_str = new DynamicJsonDocument(256);
-    (*_str)=(*data);
+    if(ctrlsTask){
+        if(ctrlsTask->checkIsSame(storage)){
+            ctrlsTask->setNewData(storage);
+            ctrlsTask->restartDelayed();
+            return;
+        }
+    }
+
     //LOG(println, "Delaying dynctrl");
 
-    ctrlsTask = new Task(300, TASK_ONCE,
-        [_str](){
-            JsonObject dataStore = (*_str).as<JsonObject>();
+    ctrlsTask = new CtrlsTask(storage, 300, TASK_ONCE,
+        [](){
+            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+            JsonObject dataStore = (*task->getData()).as<JsonObject>();
             JsonObject *data = &dataStore;
             
             LOG(println, "publishing & sending dynctrl...");
@@ -705,14 +735,13 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
         &ts,
         false,
         nullptr,
-        [_str](){
+        [](){
             //LOG(println, "Clearing dynctrl");
-            delete _str;
             ctrlsTask = nullptr;
             TASK_RECYCLE;
         }
     );
-    ctrlsTask->enableDelayed();
+    ctrlsTask->restartDelayed();
 }
 
 /**
