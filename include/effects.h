@@ -992,10 +992,9 @@ private:
     float pointer;
     const float _scaler = 3.3 / 1024;
     CRGB color;
-    bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
     byte gain;
-    double y[2] = {0., 0.};
+    float y[2] = {0., 0.};
     String setDynCtrl(UIControl*_val) override;
     
 

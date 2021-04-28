@@ -4211,53 +4211,55 @@ bool EffectPacific::run(CRGB *leds, EffectWorker *param)
 // !++
 String EffectOsc::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) {
-    pointer = (float)getMicScale() / _scaler;
-    if (EffectCalc::setDynCtrl(_val).toInt() <= 127) {
-      div = EffectMath::fmap(getCtrlVal(1).toInt(), 1., 127., 0.5, 4.);
+    speed = EffectCalc::setDynCtrl(_val).toInt();
+    pointer = getMicScale() / _scaler;
+    if (speed <= 127) {
+      div = EffectMath::fmap(speed, 1, 127, 0.5, 4);
       oscHV = HEIGHT;
       oscilLimit = WIDTH;
     } else{
-      div = EffectMath::fmap(getCtrlVal(1).toInt(), 128., 255., 0.5, 4.);
+      div = EffectMath::fmap(speed, 128, 255, 0.5, 4);
       oscHV = WIDTH;
       oscilLimit = HEIGHT;
     }
   }
+  if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==3) gain = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectOsc::run(CRGB *ledarr, EffectWorker *opt) {
+bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
   if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) 
     return false;
   else {
     lastrun = millis();
   }
-  //fpsmeter();
-  return oscRoutine(*&ledarr, &*opt);
-}
-
-bool EffectOsc::oscRoutine(CRGB *leds, EffectWorker *param) {
-  //memset8(leds, 0, NUM_LEDS * 3);
-  fadeToBlackBy(leds, NUM_LEDS, 200);
+  //fadeToBlackBy(leds, NUM_LEDS, 200);
+  FastLED.clear();
 
   byte micPick = (isMicOn()? getMicMaxPeak() : random8(200));
-  color = CHSV(isMicOn()? getMicFreq() : random(240), 255, scale == 1 ? 100 : constrain(micPick * EffectMath::fmap(scale, 1., 255., 1., 5.), 51, 255));
-  
-  for (float x = 0.; (uint8_t)x < oscHV; x += div) {
-    if (speed <= 127)
-      EffectMath::drawLineF(y[0], x, y[1], (x + div) >= oscHV ? oscHV - 1 : (x + div), color);
+  if (scale == 1)
+    color = CHSV((isMicOn()? getMicFreq() : random(240)), 255, scale == 1 ? 100 : constrain(micPick * EffectMath::fmap(gain, 1., 255., 1., 5.), 51, 255));
+  else if (scale == 255)
+    color = CHSV(0, 0, 255);
+  else 
+    color = CHSV(scale, 255, 255);
+
+  for (float x = 0.; x < oscHV; x += div) {
+    if (speed < 128)
+      EffectMath::drawLineF(y[0], x, y[1], /*(x + div) >= oscHV ? oscHV - 1 : */(x + div), color);
     else
-      EffectMath::drawLineF(x, y[0], (x + div) >= oscHV ? oscHV - 1 : (x + div), y[1], color);
+      EffectMath::drawLineF(x, y[0], /*(x + div) >= oscHV ? oscHV - 1 : */(x + div), y[1], color);
 
     y[0] = y[1];
     y[1] = EffectMath::fmap(
                           (isMicOn() ? analogRead(MIC_PIN) :  EffectMath::randomf(pointer - gain, pointer + gain)),
-                          (double)gain,
-                          pointer * 2. - (double)gain,
+                          gain,
+                          pointer * 2. - gain,
                           0., 
                           oscilLimit - 1);
-    delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024 * div));
+    delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024.0f * div));
 
   }
 
