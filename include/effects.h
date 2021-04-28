@@ -2210,14 +2210,15 @@ public:
 */
 class EffectVU: public EffectCalc {
 private:
-    CRGBPalette16 gradPal[4] = { 
+    CRGBPalette16 gradPal[5] = { 
     purple_gp,    rainbowsherbet_gp, 
-    redyellow_gp, Colorfull_gp
+    redyellow_gp, Colorfull_gp, es_ocean_breeze_068_gp
     };
     uint8_t NUM_BANDS = WIDTH;
     uint8_t BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
     uint8_t calcArray = 1; // уменьшение частоты пересчета массива
     uint8_t colorTimer = 0;
+    const uint8_t colorDev = 256/TOP;
     // Sampling and FFT stuff
     float peak[WIDTH];              // The length of these arrays must be >= NUM_BANDS
     float oldBarHeights[WIDTH];
