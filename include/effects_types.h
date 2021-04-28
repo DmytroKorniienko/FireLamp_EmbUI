@@ -374,8 +374,7 @@ EFF_RACER,                                    // Космо-Гонщик
 EFF_SMOKER,                                   // Дым (Тест) 
 EFF_TIME = (250U)                             // Часы (служебный, смещаем в конец)
 #ifdef MIC_EFFECTS
-,EFF_VU = (253U)                              // VU - Метер
-,EFF_FREQ = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
+,EFF_VU = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
 ,EFF_OSC = (255U)                             // Осциллограф
 #endif
 } EFF_ENUM;
@@ -400,7 +399,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 192 - 207
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 208 - 223
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 224 - 39
-  TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_250, TEFF_000, TEFF_000, TEFF_253, TEFF_254, TEFF_255  // 240 - 255
+  TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_250, TEFF_000, TEFF_000, TEFF_000, TEFF_254, TEFF_255  // 240 - 255
 };
 
 /**
@@ -426,7 +425,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 6, 2, // 240 - 255
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 2, // 240 - 255
 };
 
 
@@ -484,7 +483,6 @@ static const char E_PULS[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_BBALLS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":32,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E1 "\"}]}";
 static const char E_PRIZMATA[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_AQUARIUM[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DA "\"},  {\"id\":4,\"min\":0,\"max\":2,\"name\":\"" DFTINTF_0E2 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
-static const char E_FREQ[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":2,\"max\":3,\"name\":\"" DFTINTF_0E3 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_OSC[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0DC "\"},  {\"id\":2,\"val\":160,\"min\":1,\"max\":255,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 // размерность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
 static const char E_PATT[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48},  {\"id\":2,\"type\":48},  {\"id\":3,\"val\":0,\"min\":-32,\"max\":32,\"name\":\"" DFTINTF_0EA "\"},  {\"id\":4,\"val\":0,\"min\":-32,\"max\":32,\"name\":\"" DFTINTF_0EB "\"},  {\"id\":5,\"min\":0,\"max\":38,\"val\":0,\"name\":\"" DFTINTF_0EC "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":7,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_116 "\"}]}";
@@ -531,7 +529,7 @@ static const char E_DRAGE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_PICAS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":5,\"val\":1,\"max\":3,\"name\":\"" DFTINTF_00A "\"}]}";
 static const char E_SSHIPS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"val\":8,\"max\":15,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":8,\"name\":\"" DFTINTF_117 "\"}, {\"id\":5,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_FLAGS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"min\":0,\"val\":0,\"max\":10,\"name\":\"" DFTINTF_00A "\"}]}";
-static const char E_VU[]        PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"min\":1,\"val\":50,\"max\":255,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":2,\"min\":1,\"val\":30,\"max\":255,\"name\":\"" DFTINTF_118 "\"}, {\"id\":3,\"min\":1,\"val\":1,\"max\":10,\"name\":\"" DFTINTF_00A "\"}, {\"id\":4,\"min\":1,\"val\":1,\"max\":4,\"name\":\"" DFTINTF_0D6 "\"}, {\"id\":5,\"min\":0,\"val\":1,\"max\":255,\"name\":\"" DFTINTF_0D3 "\"}, {\"id\":6,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_108 "\"}, {\"id\":7,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}]}";
+static const char E_FREQ[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"min\":1,\"val\":50,\"max\":255,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":2,\"min\":1,\"val\":30,\"max\":255,\"name\":\"" DFTINTF_118 "\"}, {\"id\":3,\"min\":1,\"val\":1,\"max\":10,\"name\":\"" DFTINTF_00A "\"}, {\"id\":4,\"min\":1,\"val\":1,\"max\":4,\"name\":\"" DFTINTF_0D6 "\"}, {\"id\":5,\"min\":0,\"val\":1,\"max\":255,\"name\":\"" DFTINTF_0D3 "\"}, {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_108 "\"}, {\"id\":7,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}]}";
 
 // Инженерный
 //static const char E_TEST[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
@@ -558,7 +556,7 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 192 - 207
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 208 - 223
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 224 - 39
-  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL,  E_DEFUI, E_DEFUI, E_VU,    E_FREQ,  E_OSC  // 240 - 255
+  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL,  E_DEFUI, E_DEFUI, E_DEFUI, E_FREQ,  E_OSC  // 240 - 255
 };
 
 /**
