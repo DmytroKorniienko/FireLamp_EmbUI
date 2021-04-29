@@ -68,9 +68,9 @@ void tm_loop() {
 static uint8_t l = 0;           // Переменная для баннера
 if (l < 255) l++;   // Добавляем счетчик и ограничиваем, чтобы не гонял по кругу
 if (embui.sysData.wifi_sta && l <= 20 && l > 4) {
-String ip = (String) "IP." + (String) WiFi.localIP().toString();
-splitIp(ip, ".", splittedIp);
-tm1637.display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+  String ip = (String) "IP." + (String) WiFi.localIP().toString();
+  splitIp(ip, ".", splittedIp);
+  tm1637.display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
 }
 else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) tm1637.display("__AP_192_168___4___1")->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
 else {

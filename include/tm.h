@@ -38,26 +38,20 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef _TM_H
 #define _TM_H
 
-#ifndef GYVERTM1637
+#ifdef TM1637_CLOCK
 #include "TM1637.h"
-#endif
-#ifdef GYVERTM1637
-#include "GyverTM1637.h"
-#endif
 #include "misc.h"
 #include "main.h"
 #include "config.h"
 
-#ifndef GYVERTM1637
+
 static TM1637 tm1637(TM_CLK_PIN, TM_DIO_PIN);
-#endif
-#ifdef GYVERTM1637
-static GyverTM1637 disp(TM_CLK_PIN, TM_DIO_PIN); 
-#endif
+
+
 extern void tm_setup();
 extern void tm_loop();
 extern void tm_setted();  // Проверка, установлено ли время
-void splitIp(String str, String dlm, String dest[]);  // Функция разделителя по указателю
-String formatIp(String inArr[], String dlm);    // Функция форматирования
- 
+extern void splitIp(String str, String dlm, String dest[]);  // Функция разделителя по указателю
+extern String formatIp(String inArr[], String dlm);    // Функция форматирования
+#endif
 #endif

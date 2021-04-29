@@ -279,9 +279,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());
     break;
-  case EFF_ENUM::EFF_FREQ :
-    worker = std::unique_ptr<EffectFreq>(new EffectFreq());
-    break;
 #endif
 
   default:

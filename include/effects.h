@@ -48,27 +48,6 @@ const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
 const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
 
 
-#ifdef MIC_EFFECTS
-class EffectFreq : public EffectCalc {
-private:
-    uint8_t calcArray = 1; // уменьшение частоты пересчета массива
-    uint8_t type=1;
-    int8_t peakX[2][WIDTH];
-    float samp_freq;
-    double last_freq = 0;
-    uint8_t last_min_peak, last_max_peak;
-    float x[WIDTH];
-    float maxVal;
-    uint8_t freqDiv = 2U-scale/128; //1...2
-
-    bool freqAnalyseRoutine(CRGB *leds, EffectWorker *param);
-    void load() override;
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    String setDynCtrl(UIControl*_val) override;
-};
-#endif
-
 //-------------- Специально обученный пустой эффект :)
 class EffectNone : public EffectCalc {
 private:
