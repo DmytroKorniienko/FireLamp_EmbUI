@@ -173,6 +173,7 @@ double MICWORKER::process(MIC_NOISE_REDUCE_LEVEL level)
   }
   minPeak = minVal; // минимальное амплитудное
   maxPeak = maxVal; // максимальное амплитудное
+  curVal = vReal[0];
   return samplingFrequency; // частота семплирования
 }
 

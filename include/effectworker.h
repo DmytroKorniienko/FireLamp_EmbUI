@@ -88,10 +88,12 @@ typedef struct {
     float mic_scale = 1.0; // коэф. смещения
     float last_freq = 0.0; // последняя измеренная часота
     float samp_freq = 0.0; // часота семплирования
+    float cur_val = 0.0;   // текущее значение
     uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
     uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
     MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
 
+    float getCurVal() {return cur_val;}
     void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
     float getMicScale() {return mic_scale;}
     void setMicScale(float scale) {mic_scale = scale;}
@@ -267,6 +269,7 @@ protected:
     uint8_t getMicMapFreq() {return lampstate!=nullptr ? lampstate->getMicMapFreq() : 0;}
     uint8_t getMicMaxPeak() {return lampstate!=nullptr ? lampstate->getMicMaxPeak() : 0;}
     
+    float getCurVal() {return lampstate!=nullptr ? lampstate->getCurVal() : 0;}
     float getMicFreq() {return lampstate!=nullptr ? lampstate->getMicFreq() : 0;}
     float getMicScale() {return lampstate!=nullptr ? lampstate->getMicScale() : 0;}
     float getMicNoise() {return lampstate!=nullptr ? lampstate->getMicNoise() : 0;}

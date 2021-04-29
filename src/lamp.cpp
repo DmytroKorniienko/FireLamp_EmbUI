@@ -972,6 +972,7 @@ void LAMP::micHandler()
     lampState.samp_freq = mw->process(lampState.noise_reduce); // возвращаемое значение - частота семплирования
     lampState.last_min_peak = mw->getMinPeak();
     lampState.last_max_peak = mw->getMaxPeak();
+    lampState.cur_val = mw->getCurVal();
 
     if(!counter) // раз на N измерений берем частоту, т.к. это требует обсчетов
       lampState.last_freq = mw->analyse(); // возвращаемое значение - частота главной гармоники

@@ -130,6 +130,17 @@ void loop() {
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
 
+// // тестирование стабильности
+// EVERY_N_MILLIS(20) {
+//     Task *t = new Task(10, TASK_ONCE, [](){
+//         Task *task = ts.getCurrentTask();
+//         //TASK_RECYCLE;
+//         delete task;
+//     }, &ts, false
+//     );
+//     t->enableDelayed();
+// }
+
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
 #endif

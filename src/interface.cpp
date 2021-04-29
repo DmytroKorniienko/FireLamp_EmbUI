@@ -64,24 +64,37 @@ Task *delayedOptionTask = nullptr; // текущая отложенная зад
 
 class CtrlsTask : public Task {
     DynamicJsonDocument *_data = nullptr;
+    INLINE DynamicJsonDocument *makeDoc(JsonObject *data) {
+        DynamicJsonDocument *storage = new DynamicJsonDocument(data->size()*2+32);
+        if(!storage) return nullptr;
+        String tmp; serializeJson(*data,tmp); //LOG(printf_P, PSTR("makeDoc: %s\n"), tmp.c_str());
+        deserializeJson((*storage), tmp);
+        return storage;
+    }
+    INLINE void setNewData(DynamicJsonDocument *newData) {if(_data) delete _data; _data=newData;}
 public:
-    INLINE DynamicJsonDocument *getData() {return _data;}
-    INLINE void setNewData(DynamicJsonDocument *newData) {if(_data) delete _data; _data=newData;} 
-    bool checkIsSame(DynamicJsonDocument *test) {
+    INLINE JsonObject getData() {return (_data ? _data->as<JsonObject>() : JsonObject());}
+    bool replaceIfSame(JsonObject *test) {
         // сравниваем предыдущий и текущий ответы на совпадение пар
-        bool same=true;
-        JsonObject data = (*getData()).as<JsonObject>();
-        for (JsonPair kv : data) {
-            if(!((*test).as<JsonObject>()).containsKey(kv.key())){
+        if(!test) return false;
+        JsonObject obj = getData();
+        bool same=!obj.isNull();
+        for (JsonPair kv : obj) {
+            if(!((*test)).containsKey(kv.key())){
                 same=false;
                 break;
             }
         }
+        if(same){
+            DynamicJsonDocument *doc = makeDoc(test);
+            setNewData(doc);
+        }
         return same;
     }
-
-    INLINE CtrlsTask(DynamicJsonDocument *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
-    : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable), _data(data){}
+    INLINE CtrlsTask(JsonObject *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
+    : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable){
+        _data = makeDoc(data);
+    }
     ~CtrlsTask() {if(_data) delete _data;}
 };
 CtrlsTask *ctrlsTask = nullptr;       // планировщик контролов
@@ -686,25 +699,22 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if((*data).containsKey(FPSTR(TCONST_00D5)))
         direct_set_effects_dynCtrl(data);
 
-    DynamicJsonDocument *storage = new DynamicJsonDocument(256);
-    (*storage)=(*data);
-
-    if(ctrlsTask){
-        if(ctrlsTask->checkIsSame(storage)){
-            ctrlsTask->setNewData(storage);
-            ctrlsTask->restartDelayed();
-            return;
-        }
-    }
+    // if(ctrlsTask){
+    //     if(ctrlsTask->replaceIfSame(data)){
+    //         ctrlsTask->restartDelayed();
+    //         return;
+    //     }
+    // }
 
     //LOG(println, "Delaying dynctrl");
-
-    ctrlsTask = new CtrlsTask(storage, 300, TASK_ONCE,
+//return;
+    ctrlsTask = new CtrlsTask(data, 300, TASK_ONCE,
         [](){
             CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
-            JsonObject dataStore = (*task->getData()).as<JsonObject>();
-            JsonObject *data = &dataStore;
-            
+            JsonObject storage = task->getData();
+            JsonObject *data = &storage; // task->getData();
+            if(!data) return;
+
             LOG(println, "publishing & sending dynctrl...");
             String tmp; serializeJson(*data,tmp);LOG(println, tmp);
 
@@ -733,7 +743,8 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             }
             if(task==ctrlsTask)
                 ctrlsTask = nullptr;
-            TASK_RECYCLE;
+            //TASK_RECYCLE;
+            delete task;
         },
         &ts,
         false

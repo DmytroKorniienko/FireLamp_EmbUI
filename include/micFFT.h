@@ -66,8 +66,9 @@ private:
   const uint8_t amplitude = 100;
   float *vReal = nullptr;
   float *vImag = nullptr;
-  uint8_t minPeak = 0.0;
-  uint8_t maxPeak = 0.0;
+  uint8_t minPeak = 0;
+  uint8_t maxPeak = 0;
+  float curVal = 0.0;
   ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
   void PrintVector(float *vData, uint16_t bufferSize, uint8_t scaleType);
   void read_data();
@@ -95,6 +96,7 @@ public:
   float getScale() {return scale;}
   float getNoise() {return noise;}
   float getFreq() {return signalFrequency;}
+  float getCurVal() {return curVal;}
   uint8_t getMinPeak() {return minPeak;}
   uint8_t getMaxPeak() {return maxPeak;}
   float fillSizeScaledArray(float *arr, size_t size);

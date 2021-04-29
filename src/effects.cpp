@@ -4223,7 +4223,7 @@ String EffectOsc::setDynCtrl(UIControl*_val) {
       oscilLimit = HEIGHT;
     }
   }
-  if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==3) gain = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
