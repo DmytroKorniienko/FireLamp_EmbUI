@@ -62,6 +62,25 @@ namespace INTERFACE {
 Task *optionsTask = nullptr;     // задача для отложенной генерации списка
 Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
 
+class StringTask : public Task {
+    char *_data = nullptr;
+    INLINE char *makeCopy(const char *data) {
+        size_t size = strlen(data);
+        char *storage = new char[size+1];
+        strncpy(storage,data,size);
+        if(!storage) return nullptr;
+        return storage;
+    }
+    INLINE void setNewData(char *newData) {if(_data) delete []_data; _data=newData;}
+public:
+    INLINE char *getData() {return _data;}
+    INLINE StringTask(const char *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
+    : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable){
+        _data = makeCopy(data);
+    }
+    ~StringTask() {if(_data) delete[] _data;}
+};
+
 class CtrlsTask : public Task {
     DynamicJsonDocument *_data = nullptr;
     INLINE DynamicJsonDocument *makeDoc(JsonObject *data) {
@@ -2779,17 +2798,39 @@ void remote_action(RA action, ...){
     switch (action) {
         case RA::RA_ON:
             CALL_INTF(FPSTR(TCONST_001A), "1", set_onflag);
+            if(value){
+                StringTask *t = new StringTask(value, 3 * TASK_SECOND, TASK_ONCE, nullptr, &ts, false, nullptr,  [](){
+                    StringTask *cur = (StringTask *)ts.getCurrentTask();
+                    remote_action(RA::RA_SEND_TEXT, cur->getData(), NULL);
+                    TASK_RECYCLE;
+                });
+                t->enableDelayed();
+            }
             break;
         case RA::RA_OFF: {
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
-                LAMPMODE mode = myLamp.getMode();
-                if(mode!=LAMPMODE::MODE_NORMAL){
-                    CALL_INTF(FPSTR(TCONST_001B), "0", set_demoflag); // отключить демо, если было включено
-                    if (myLamp.IsGlobalBrightness()) {
-                        embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
-                    }
+                if(value){
+                   remote_action(RA::RA_SEND_TEXT, value, NULL);
                 }
-                CALL_INTF(FPSTR(TCONST_001A), "0", set_onflag);
+                new Task(500, TASK_FOREVER, [](){
+                    if(!myLamp.isPrintingNow()){
+                        Task *task = ts.getCurrentTask();
+                        DynamicJsonDocument doc(512);
+                        JsonObject obj = doc.to<JsonObject>();
+                        LAMPMODE mode = myLamp.getMode();
+                        if(mode!=LAMPMODE::MODE_NORMAL){
+                            CALL_INTF(FPSTR(TCONST_001B), "0", set_demoflag); // отключить демо, если было включено
+                            if (myLamp.IsGlobalBrightness()) {
+                                embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
+                            }
+                        }
+                        obj.clear();
+                        doc.garbageCollect();
+                        CALL_INTF(FPSTR(TCONST_001A), "0", set_onflag);
+                        task->disable();
+                        TASK_RECYCLE;
+                    }
+                }, &ts, true);
             }
             break;
         case RA::RA_DEMO:
@@ -2885,9 +2926,11 @@ void remote_action(RA action, ...){
         case RA::RA_ALARM_OFF:
             myLamp.stopAlarm();
             break;
-        case RA::RA_REBOOT:
-            remote_action(RA::RA_WARNING, F("[16711680,3000,500]"), NULL);
-            new Task(3 * TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr,  [](){ ESP.restart(); });
+        case RA::RA_REBOOT: {
+                remote_action(RA::RA_WARNING, F("[16711680,3000,500]"), NULL);
+                Task *t = new Task(3 * TASK_SECOND, TASK_ONCE, nullptr, &ts, false, nullptr, [](){ ESP.restart(); TASK_RECYCLE; });
+                t->enableDelayed();
+            }
             break;
         case RA::RA_WIFI_REC:
             CALL_INTF(FPSTR(TINTF_028), FPSTR(TCONST_0080), BasicUI::set_settings_wifi);
