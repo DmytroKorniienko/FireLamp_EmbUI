@@ -35,42 +35,40 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#ifndef __MAIN_H_
-#define __MAIN_H_
+#ifndef _ENC_H
+#define _ENC_H
 
-#include <Arduino.h>
 #include "config.h"
-#include "EmbUI.h"
-#include "lamp.h"
-#include "buttons.h"
-
-// TaskScheduler
-extern Scheduler ts;
-
-// глобальные переменные для работы с ними в программе
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
-#endif
-#ifdef MP3PLAYER
-#include "mp3player.h"
-extern MP3PLAYERDEVICE *mp3;
-#endif
-#ifdef DS18B20
-#include "DS18B20.h"
-#endif
 
 #ifdef ENCODER
-#include "enc.h"
+#include "main.h"
+
+// Опциональные настройки (показаны по умолчанию)
+//#define EB_FAST 30     // таймаут быстрого поворота, мс
+//#define EB_DEB 80      // дебаунс кнопки, мс
+//#define EB_HOLD 1000   // таймаут удержания кнопки, мс
+//#define EB_STEP 500    // период срабатывания степ, мс
+//#define EB_CLICK 400   // таймаут накликивания, мс
+
+#include "EncButton.h"
+
+static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кнопкой <A, B, KEY>
+
+
+//  INLINE Task(unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL);
+//encTask = new Task(30* TASK_MILLISECOND, TASK_FOREVER, [this](){ enc.tick(); }, &ts, true); // опрос энкодера
+void callEncTick ();
+
+void IRAM_ATTR isrEnc();
+
+void myTurn();
+void myClick();
+void myHolded();
+void myStep();
+void myClicks();
+void fiveClicks();
+
+void enc_setup(); 
+
 #endif
-
-void mqttCallback(const String &topic, const String &payload);
-void sendData();
-
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-//ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
-
 #endif
