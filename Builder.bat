@@ -60,7 +60,6 @@ if "%choice%"=="2" (
 if "%choice%"=="3" call update-DEV-from-Git.cmd 3
 if "%choice%"=="4" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160
-	curl -v http://192.168.2.83/update -F "name=@.pio\build\esp8266@160\firmware.bin"
 )
 if "%choice%"=="5" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266)
 if "%choice%"=="6" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp32)

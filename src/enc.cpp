@@ -35,42 +35,73 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#ifndef __MAIN_H_
-#define __MAIN_H_
-
-#include <Arduino.h>
 #include "config.h"
-#include "EmbUI.h"
-#include "lamp.h"
-#include "buttons.h"
-
-// TaskScheduler
-extern Scheduler ts;
-
-// глобальные переменные для работы с ними в программе
-extern LAMP myLamp; // Объект лампы
-#ifdef ESP_USE_BUTTON
-extern Buttons *myButtons;
-extern GButton touch;
-#endif
-#ifdef MP3PLAYER
-#include "mp3player.h"
-extern MP3PLAYERDEVICE *mp3;
-#endif
-#ifdef DS18B20
-#include "DS18B20.h"
-#endif
-
 #ifdef ENCODER
 #include "enc.h"
-#endif
 
-void mqttCallback(const String &topic, const String &payload);
-void sendData();
+void callEncTick () {
+  enc.tick();
+}
 
-void create_parameters();
-void sync_parameters();
-void event_worker(const EVENT *);
-//ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
+
+void IRAM_ATTR isrEnc() {
+  enc.tick();  // отработка в прерывании
+}
+
+void myTurn() {
+  Serial.print(F("turn "));
+  Serial.println(enc.counter);    // вывод счётчика
+
+  // также можно опросить здесь (isRight, isLeft, isRightH, isLeftH)
+    if (enc.isLeft()) {
+        if (enc.isFast()) Serial.println(F("Fast left"));
+        else Serial.println(F("Left"));
+    } else if (enc.isLeftH()) {
+        if (enc.isFast()) Serial.println(F("Fast left hold"));
+        else Serial.println(F("Hold left"));
+    } else if (enc.isRight()) {
+        if (enc.isFast()) Serial.println(F("Fast right"));
+        else Serial.println(F("Right"));
+    } else if (enc.isRightH()) {
+        if (enc.isFast()) Serial.println(F("Fast right hold"));
+        else Serial.println(F("Hold right"));
+    }
+}
+
+void myClick() {
+    Serial.println(F("Click"));
+}
+
+void myHolded() {
+    Serial.println(F("Holded"));
+}
+
+void myStep() {
+    Serial.println(F("Step"));
+}
+
+void myClicks() {
+    Serial.print(F("Click: "));
+    Serial.println(enc.clicks);
+}
+
+void fiveClicks() {
+  Serial.println(F("Enc: 5 clicks! What may I to do?"));
+}
+
+void enc_setup() {
+  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, CHANGE);   // прерывание на DT пине
+  attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, CHANGE);  // прерывание на CLK пине
+  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, CHANGE);   // прерывание на SW пине
+  enc.counter = 100;      // изменение счётчика
+  enc.attach(TURN_HANDLER, myTurn);
+  enc.attach(CLICK_HANDLER, myClick);
+  enc.attach(HOLDED_HANDLER, myHolded);
+  enc.attach(STEP_HANDLER, myStep);
+  enc.attach(CLICKS_HANDLER, myClicks);
+  enc.attachClicks(5, fiveClicks);
+}
+
+Task encTask(30 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
 #endif

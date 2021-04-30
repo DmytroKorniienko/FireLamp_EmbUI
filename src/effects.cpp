@@ -4052,7 +4052,6 @@ bool EffectPacific::run(CRGB *leds, EffectWorker *param)
 String EffectOsc::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
-    pointer = getMicScale() / _scaler;
     if (speed <= 127) {
       div = EffectMath::fmap(speed, 1, 127, 0.5, 4);
       oscHV = HEIGHT;
@@ -4070,8 +4069,10 @@ String EffectOsc::setDynCtrl(UIControl*_val) {
 }
 
 bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
-  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) 
+  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) {
+    pointer = getMicScale() / _scaler;
     return false;
+  }
   else {
     lastrun = millis();
   }

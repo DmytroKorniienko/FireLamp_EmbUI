@@ -45,6 +45,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
   #include "tm.h"
 #endif
 
+#ifdef ENCODER
+  #include "enc.h"
+#endif
+
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
 #ifdef ESP_USE_BUTTON
@@ -119,11 +123,16 @@ void setup() {
   ds_setup();
 #endif
 
+#ifdef ENCODER
+  enc_setup();
+#endif
+
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
     LOG(println, F("setup() done"));
 }   // End setup()
+
 
 void loop() {
     embui.handle(); // цикл, необходимый фреймворку
@@ -143,6 +152,10 @@ void loop() {
 
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
+#endif
+
+#ifdef ENCODER
+    // enc.tick(); // цикл обработки событий энкодера
 #endif
 
 #ifdef TM1637_CLOCK
