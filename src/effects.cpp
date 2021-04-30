@@ -4050,9 +4050,9 @@ bool EffectPacific::run(CRGB *leds, EffectWorker *param)
 //----- Эффект "Осциллограф" (c) kostyamat
 // !++
 String EffectOsc::setDynCtrl(UIControl*_val) {
+  pointer = 1024/(getMicScale()*2);
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
-    pointer = getMicScale() / _scaler;
     if (speed <= 127) {
       div = EffectMath::fmap(speed, 1, 127, 0.5, 4);
       oscHV = HEIGHT;
@@ -4063,7 +4063,7 @@ String EffectOsc::setDynCtrl(UIControl*_val) {
       oscilLimit = HEIGHT;
     }
   }
-  else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
+  //else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==3) gain = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
