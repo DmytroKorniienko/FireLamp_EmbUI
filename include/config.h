@@ -186,6 +186,11 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #ifndef BRIGHTNESS
 #define BRIGHTNESS            (255U)                        // стандартная максимальная яркость (0-255)
 #endif
+
+#ifndef OFF_BRIGHTNESS
+#define OFF_BRIGHTNESS          (2U)                        // яркость вывода текста в случае выключенной лампы
+#endif
+
 #ifndef CURRENT_LIMIT
 #define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 #endif

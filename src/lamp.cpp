@@ -156,6 +156,7 @@ void LAMP::handle()
   if(lampState.isOffAfterText && !lampState.isStringPrinting) {
     lampState.isOffAfterText = false;
     changePower(false);
+    remote_action(RA::RA_OFF, NULL);
   }
 
   newYearMessageHandle();
@@ -740,7 +741,7 @@ void LAMP::sendString(const char* text, const CRGB &letterColor){
       disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
-      setBrightness(2, false, false); // выводить будем минимальной яркостью в 2 пункта
+      setBrightness(OFF_BRIGHTNESS, false, false); // выводить будем минимальной яркостью в OFF_BRIGHTNESS пункта
       sendStringToLamp(text, letterColor, true);
   } else {
       sendStringToLamp(text, letterColor);

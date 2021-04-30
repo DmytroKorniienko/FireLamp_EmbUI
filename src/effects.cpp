@@ -4070,10 +4070,8 @@ String EffectOsc::setDynCtrl(UIControl*_val) {
 }
 
 bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
-  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) {
-    pointer = getMicScale() / _scaler;
+  if((millis() - lastrun ) <= (isMicOn() ? 15U : map(speed, speed <= 127 ? 1 : 128, speed <= 12 ? 128 : 255, 15, 60))) 
     return false;
-  }
   else {
     lastrun = millis();
   }
