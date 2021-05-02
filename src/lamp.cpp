@@ -429,13 +429,27 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     if(mode == LAMPMODE::MODE_DEMO)
       demoTimer(T_ENABLE);
   } else  {
-    fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
+    if(flags.isFaderON)
+      fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
+    else {
+      brightness(0);
+      effectsTimer(SCHEDULER::T_DISABLE);
+    }
     demoTimer(T_DISABLE);     // гасим Демо-таймер
   }
 
+  Task *_t = new Task(flags.isFaderON && !flags.ONflag ? 5*TASK_SECOND : 50, TASK_ONCE, // для выключения - отложенное переключение мосфета 5 секунд
+    [this](){
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
   digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
+    TASK_RECYCLE; },
+    &ts, false);
+  _t->enableDelayed();
+
+// #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
+//   digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
+// #endif
 
   if (curLimit > 0){
 #ifdef DS18B20

@@ -2812,8 +2812,8 @@ void remote_action(RA action, ...){
                 if(value){
                    remote_action(RA::RA_SEND_TEXT, value, NULL);
                 }
-                new Task(500, TASK_FOREVER, [](){
-                    if(!myLamp.isPrintingNow()){
+                new Task(500, TASK_FOREVER, [value](){
+                    if((!myLamp.isPrintingNow() && value) || !value){ // отложенное выключение только для случая когда сообщение выводится в этом же экшене, а не чужое
                         Task *task = ts.getCurrentTask();
                         DynamicJsonDocument doc(512);
                         JsonObject obj = doc.to<JsonObject>();
