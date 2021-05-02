@@ -1,6 +1,5 @@
 
 #include "events.h"
-#include "ArduinoJson.h"
 
 #ifdef ESP8266
  #include <LittleFS.h>
@@ -134,29 +133,61 @@ void EVENT_MANAGER::events_handle()
     }
 }
 
+void EVENT_MANAGER::clear_events()
+{
+    EVENT *next = root;
+    EVENT *cur = root;
+    while (next!=nullptr)
+    {
+        next=next->next;
+        if(cur->message)
+            free(cur->message);
+        delete cur;
+        cur=next;
+    }
+    root = nullptr;
+}
+
+/**
+ *  метод загружает и пробует десериализовать джейсон из файла в предоставленный документ,
+ *  возвращает true если загрузка и десериализация прошла успешно
+ *  @param doc - DynamicJsonDocument куда будет загружен джейсон
+ *  @param jsonfile - файл, для загрузки
+ */
+bool EVENT_MANAGER::deserializeFile(DynamicJsonDocument& doc, const char* filepath){
+  if (!filepath || !*filepath)
+    return false;
+
+  File jfile = LittleFS.open(filepath, "r");
+  DeserializationError error;
+  if (jfile){
+    error = deserializeJson(doc, jfile);
+    jfile.close();
+  } else {
+    return false;
+  }
+
+  if (error) {
+    LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filepath);
+    LOG(println, error.code());
+    return false;
+  }
+  //LOG(printf_P,PSTR("File: %s deserialization took %d ms\n"), filepath, millis() - timest);
+  return true;
+}
+
 void EVENT_MANAGER::loadConfig(const char *cfg)
 {
     if(LittleFS.begin()){
-        File configFile;
-        if(cfg == nullptr)
-            configFile = LittleFS.open(F("/events_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
-        else
-            configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
-        String cfg_str = configFile.readString();
-        if (cfg_str == F("")){
-            LOG(println, F("Failed to open events config file"));
-            saveConfig();
-            return;
-        }
-        //LOG(println, F("\nStart desialization of events\n\n"));
-        DynamicJsonDocument doc(8192);
-        DeserializationError error = deserializeJson(doc, cfg_str);
-        if (error) {
+        clear_events();
+        DynamicJsonDocument doc(4096);
+        String filename = cfg ? String(cfg) : String(F("/events_config.json"));
+        if (!deserializeFile(doc, filename.c_str())){
             LOG(print, F("deserializeJson error: "));
-            LOG(println, error.code());
-            LOG(println, cfg_str);
+            LOG(println, filename);
             return;
         }
+
         JsonArray arr = doc.as<JsonArray>();
         EVENT event;
         for (size_t i=0; i<arr.size(); i++) {

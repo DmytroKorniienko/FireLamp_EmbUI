@@ -718,15 +718,15 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if((*data).containsKey(FPSTR(TCONST_00D5)))
         direct_set_effects_dynCtrl(data);
 
-    // if(ctrlsTask){
-    //     if(ctrlsTask->replaceIfSame(data)){
-    //         ctrlsTask->restartDelayed();
-    //         return;
-    //     }
-    // }
+    if(ctrlsTask){
+        if(ctrlsTask->replaceIfSame(data)){
+            ctrlsTask->restartDelayed();
+            return;
+        }
+    }
 
     //LOG(println, "Delaying dynctrl");
-//return;
+
     ctrlsTask = new CtrlsTask(data, 300, TASK_ONCE,
         [](){
             CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();

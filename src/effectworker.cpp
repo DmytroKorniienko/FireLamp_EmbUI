@@ -702,6 +702,7 @@ void EffectWorker::autoSaveConfig(bool force) {
           tConfigSave->enableDelayed();
         } else
           tConfigSave->restartDelayed();
+          return;
     }
 #ifdef ESP8266
     FSInfo fs_info;
