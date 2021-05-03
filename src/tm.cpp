@@ -37,7 +37,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "config.h"
 #ifdef TM1637_CLOCK
+#include "enc.h"
 #include "tm.h"
+
 
 
 static bool showPoints = false;
@@ -53,7 +55,6 @@ String splittedIp[5] = {};
 #endif
 
 
-
 void tm_setup() {
     tm1637.init();
     tm1637.begin();
@@ -63,6 +64,12 @@ void tm_setup() {
 
 
 void tm_loop() {
+#ifdef ENCODER
+  if (getDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу энкодера
+    getDelay()--;
+    return;
+  }
+#endif
 
 #if TM_SHOW_BANNER
 static uint8_t l = 0;           // Переменная для баннера
@@ -178,10 +185,10 @@ String formatIp(String inArr[], String dlm)
   String tmp    = "____";
   String output = "";
 
-  for(short i=0; i<5; i++){
+  for(uint8_t i=0; i<5; i++){
     String crnt = inArr[i];
 
-    for(short j=0; j<crnt.length(); j++){
+    for(uint8_t j=0; j<crnt.length(); j++){
       tmp.setCharAt(tmp.length()-j-1, crnt.charAt(crnt.length()-j-1));
     }
 

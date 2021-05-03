@@ -41,7 +41,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 
 #ifdef ENCODER
+#include "misc.h"
 #include "main.h"
+#include "tm.h"
 
 // Опциональные настройки (показаны по умолчанию)
 //#define EB_FAST 30     // таймаут быстрого поворота, мс
@@ -55,20 +57,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кнопкой <A, B, KEY>
 
 
-//  INLINE Task(unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL);
-//encTask = new Task(30* TASK_MILLISECOND, TASK_FOREVER, [this](){ enc.tick(); }, &ts, true); // опрос энкодера
 void callEncTick ();
-
 void IRAM_ATTR isrEnc();
+void inter();
+void noInter();
 
-void myTurn();
-void myClick();
-void myHolded();
-void myStep();
-void myClicks();
-void fiveClicks();
+void isTurn();
+void isClick();
+void isHolded();
+//void myStep();
+void encSetBri(int val);
+void encSetEffect(int val);
+void display(int16_t value, uint8_t type = 0);
 
 void enc_setup(); 
-
+extern void encLoop();
+uint8_t& getDelay(); 
 #endif
 #endif

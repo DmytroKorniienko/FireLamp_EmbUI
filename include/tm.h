@@ -43,6 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "misc.h"
 #include "main.h"
 #include "config.h"
+#include "enc.h"
 
 
 static TM1637 tm1637(TM_CLK_PIN, TM_DIO_PIN);
