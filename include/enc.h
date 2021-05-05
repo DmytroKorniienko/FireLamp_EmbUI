@@ -68,10 +68,9 @@ void isHolded();
 //void myStep();
 void encSetBri(int val);
 void encSetEffect(int val);
-void display(int16_t value, uint8_t type = 0);
+void display(int16_t value, String type = "");
 
 void enc_setup(); 
 extern void encLoop();
-uint8_t& getDelay(); 
 #endif
 #endif

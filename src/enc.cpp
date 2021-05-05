@@ -38,14 +38,14 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #ifdef ENCODER
 #include "enc.h"
+#include "tm.h"
 
 uint8_t lastAction; // id тложенной операции, котору нужно выпонить в enc_loop
 uint16_t effNum;
 uint16_t anyValue; // просто любое значение, которое крутить прямо сейчас, очищается в enc_loop
 bool done; // true == все отложенные до enc_loop операции выполнены.
 uint16_t loops; // счетчик псевдотаймера
-uint8_t otherInf;
-#define TM_TIME_DELAY 3U
+
 
 
 
@@ -58,7 +58,7 @@ void callEncTick () {
 }
 
 void encLoop() {
-  static uint16_t chk = anyValue;
+  static uint16_t valRepiteChk = anyValue;
   enc.tick();
   noInter();
   loops++;  // счетчик псевдотаймера
@@ -66,6 +66,8 @@ void encLoop() {
 *     Оперативные изменения, яркость например, чтобы было видно что происходит
 */
   if (loops%10 and !done) {
+    myLamp.demoTimer(T_RESET);
+    myLamp.effects.autoSaveConfig();
     switch (lastAction)
     {
     case 1: // регулировка яркости
@@ -79,9 +81,12 @@ void encLoop() {
 /*
 *     Отложенные операции, к примеру отправка яркости в УИ, запись новых значений в ФС, etc.
 */
-  if (loops%2000 == 0 and !done) {
-    if (chk != anyValue) {  // проверим менялось ли значение, чтобы не дергать почем зря отложенную операцию
-      chk = anyValue;
+  if (loops%3000 == 0 and !done) {
+    myLamp.demoTimer(T_RESET);
+    myLamp.effects.autoSaveConfig();
+    
+    if (valRepiteChk != anyValue) {  // проверим менялось ли значение, чтобы не дергать почем зря отложенную операцию
+      valRepiteChk = anyValue;
     } else {
       // Serial.println(lastAction);
       // Serial.println(anyValue);
@@ -95,14 +100,11 @@ void encLoop() {
         //CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
         //
         remote_action(RA::RA_BRIGHT_NF, String(anyValue).c_str(), NULL);
-        myLamp.demoTimer(T_RESET);
-        myLamp.effects.autoSaveConfig();
+
         break;
       case 2: // переключение эффектов
         Serial.print(F("Effect num: "));
         Serial.println(anyValue);
-        myLamp.demoTimer(T_RESET);
-        myLamp.effects.autoSaveConfig();
         myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), anyValue);
         done = true;
         remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
@@ -198,8 +200,7 @@ void isTurn() {
 void isClick() {
   myLamp.demoTimer(T_RESET);
   myLamp.effects.autoSaveConfig();
-  otherInf = TM_TIME_DELAY;
-  display(enc.clicks);
+  display(enc.clicks, "CL");
 }
 
 void isHolded() {
@@ -249,7 +250,6 @@ void myClicks() {
       remote_action(RA::RA_ON, NULL);
     }
 #ifdef TM1637_CLOCK
-    otherInf = TM_TIME_DELAY;
     tm1637.display(String(onOff ? F("On") : F("Off")), true, false, onOff ? 2 : 1);                // Выводим 
 #endif
     break;
@@ -284,7 +284,6 @@ void enc_setup() {
   anyValue = 0; // просто любое значение, которое крутить прямо сейчас, очищается в enc_loop
   done = true; // true == все отложенные до enc_loop операции выполнены.
   loops = 0;
-  otherInf = 0;
   inter(); // включаем прерывания энкодера и кнопки
   //enc.counter = 100;      // изменение счётчика
   enc.attach(TURN_HANDLER, isTurn);
@@ -299,46 +298,58 @@ void enc_setup() {
 
 
 void encSetBri(int val) {
-  lastAction = 1;
-  if (done) { 
+  loops = 0; // сбросим псевдотаймер
+
+  if (done or lastAction !=1) { 
     anyValue = myLamp.getLampBrightness();
     done = false;
   }
+  lastAction = 1;
   anyValue = constrain(anyValue+val, 1, 255);
 #ifdef VERTGAUGE
   myLamp.GaugeShow(anyValue, 255, 10);
 #endif
-  otherInf = TM_TIME_DELAY;
-  display(anyValue, 0);
-
+  display(anyValue, "b");
 }
 
 void encSetEffect(int val) {
-  lastAction = 2;
-  if (done) { 
+  loops = 0; // сбросим псевдотаймер
+
+  if (done or lastAction !=2) { // если сеттер отраболтал или предыдущий мод не отвечает текущему, перечитаем значение, и взведем сеттер
     anyValue = myLamp.effects.getSelected();
     done = false;
   }
+  lastAction = 2;
 
-  //do {
-    anyValue = constrain(anyValue +val, 1, myLamp.effects.getModeAmount());
-  // } while () // блин, тут хотел как-то идти по отсортированному списку, с учетом флага canBeSelect. Пока не соображу как єто делать
+  anyValue = anyValue+val;
   
-  //anyValue = constrain(anyValue +val, 1, myLamp.effects.getModeAmount());
-  otherInf = TM_TIME_DELAY;
-  display(anyValue, 0);
+  while (!myLamp.effects.effCanBeSelected(anyValue))  // в цикле проверим может быть текущий накрученный выбранным
+  {
+    if (val > 0) { // если курутили вперед по списку - скипим в том же направлении, если назад - в обратном
+      anyValue++; 
+      if(anyValue == myLamp.effects.getModeAmount()) // если ничего не нашли, - снова начинаем сначала
+        anyValue = 0;
+    }
+    else {
+      anyValue--;
+      if (anyValue == 0) // если ничего не нашли, - снова начинаем с конца
+        anyValue = myLamp.effects.getModeAmount()-1;
+    }
+  }
 
+  display(myLamp.effects.realEffNumdByList(anyValue), "");
 }
 
-void display(int16_t value, uint8_t type) {
+void display(int16_t value, String type) {
 #ifdef TM1637_CLOCK
-  tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );                // Выводим время с отступом справа
+  getSetDelay() = TM_TIME_DELAY;
+  tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
+  tm1637.display(type);
+
+
 #endif
 }
 
-uint8_t& getDelay() {
-  return otherInf;
-};
 
 #endif
 

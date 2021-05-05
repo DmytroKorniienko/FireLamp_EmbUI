@@ -91,7 +91,7 @@ void tempToSpeed(int16_t& currentTemp) {
 
 void ds_loop() { 
   int16_t curTemp = getTemp();
-
+  //ds_display(curTemp);
   tempToSpeed(curTemp);
 
   if (myLamp.isLampOn() && CURRENT_LIMIT_STEP > 0U) {
@@ -110,6 +110,15 @@ void ds_loop() {
       LOG(printf_P, PSTR("Cooling failure! New Current Limit is (mA): %d\n"), myLamp.getcurLimit());
     }
   }
+}
+
+void ds_display(uint16_t value) { // хрен его знает почему выводит через раз, потом разбираться буду, пока отключю
+#ifdef TM1637_CLOCK
+  getSetDelay() = TM_TIME_DELAY;
+  //tm1637.clearScreen();
+  //tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );   // 
+  tm1637.display(String(value));
+#endif
 }
 
 #endif
