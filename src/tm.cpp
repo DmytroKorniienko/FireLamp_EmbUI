@@ -45,9 +45,7 @@ static bool showPoints = false;
 static bool timeSetted = false;
 
 uint8_t tmDelayTime;
-#ifndef TM_TIME_DELAY
-  #define TM_TIME_DELAY 3U
-#endif
+
 
 
 

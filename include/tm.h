@@ -45,6 +45,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #include "enc.h"
 
+#ifndef TM_TIME_DELAY
+  #define TM_TIME_DELAY 3U
+#endif
+
 
 static TM1637 tm1637(TM_CLK_PIN, TM_DIO_PIN);
 

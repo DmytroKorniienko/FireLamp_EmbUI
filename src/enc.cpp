@@ -65,10 +65,12 @@ void encLoop() {
   enc.tick();
   noInter();
   loops++;  // счетчик псевдотаймера
+
 /*
 *     Оперативные изменения, яркость например, чтобы было видно что происходит
 */
-  if (loops%10 and !done) {
+  if (valRepiteChk != anyValue and !done) {  // проверим менялось ли значение, чтобы не дергать почем зря 
+    valRepiteChk = anyValue;
     myLamp.demoTimer(T_RESET);
     myLamp.effects.autoSaveConfig();
     switch (lastAction)
@@ -81,6 +83,7 @@ void encLoop() {
       break;
     } 
   }
+
 /*
 *     Отложенные операции, к примеру отправка яркости в УИ, запись новых значений в ФС, etc.
 */

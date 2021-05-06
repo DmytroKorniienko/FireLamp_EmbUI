@@ -38,6 +38,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #ifdef DS18B20
 #include "DS18B20.h"
+#include "tm.h"
 
 MicroDS18B20 dallas(DS18B20_PIN);
 
