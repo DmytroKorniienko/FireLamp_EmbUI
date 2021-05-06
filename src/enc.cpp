@@ -39,6 +39,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef ENCODER
 #include "enc.h"
 #include "tm.h"
+#include "interface.h"
+#include "effects.h"
+#include "ui.h"
 
 uint8_t lastAction; // id тложенной операции, котору нужно выпонить в enc_loop
 uint16_t effNum;
@@ -81,30 +84,22 @@ void encLoop() {
 /*
 *     Отложенные операции, к примеру отправка яркости в УИ, запись новых значений в ФС, etc.
 */
-  if (loops%3000 == 0 and !done) {
+  if (loops%3000 == 0 and !done) { // пока псевдотаймер. Тут кровь из носу нужен четкий таск. Вообще все это в другую процедуру и в таск.
     myLamp.demoTimer(T_RESET);
     myLamp.effects.autoSaveConfig();
     
     if (valRepiteChk != anyValue) {  // проверим менялось ли значение, чтобы не дергать почем зря отложенную операцию
       valRepiteChk = anyValue;
     } else {
-      // Serial.println(lastAction);
-      // Serial.println(anyValue);
-      Serial.println(F("Done"));
+      LOG(printf_P, PSTR("Enc: New setting appled.\n"));
 
       switch (lastAction)
       {
       case 1: // регулировка яркости
-        //DynamicJsonDocument doc(256);
-        //JsonObject obj = doc.to<JsonObject>();
-        //CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
-        //
         remote_action(RA::RA_BRIGHT_NF, String(anyValue).c_str(), NULL);
-
         break;
       case 2: // переключение эффектов
-        Serial.print(F("Effect num: "));
-        Serial.println(anyValue);
+        LOG(printf_P, PSTR("Enc: Effect number: %d\n"), anyValue);
         myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), anyValue);
         done = true;
         remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
@@ -193,22 +188,33 @@ void isTurn() {
   default:
     break;
   }
-  Serial.println(turnType); 
+  LOG(printf_P, PSTR("Enc: Turn type: %d\n"), turnType);
   inter();
 }
 
 void isClick() {
   myLamp.demoTimer(T_RESET);
   myLamp.effects.autoSaveConfig();
-  display(enc.clicks, "CL");
+  display(enc.clicks, FPSTR("CL."));
 }
 
 void isHolded() {
-     Serial.println("Holded");
-    if (!myLamp.isLampOn()) {
-      Serial.println("White lamp ON");
-      remote_action(RA::RA_WHITE_LO, "0", NULL); // для энкодера я хочу сделать запуск белой лампы с яркостью из конфига, а не фиксированной
-    }
+  LOG(printf_P, PSTR("Enc: Pressed and holded\n"));
+  display(FPSTR("Ctrl"));
+  if (!myLamp.isLampOn()) {
+    remote_action(RA::RA_WHITE_LO, "0", NULL); // для энкодера я хочу сделать запуск белой лампы с яркостью из конфига, а не фиксированной
+  }
+  for (uint8_t i = 0; i < myLamp.getEffControls().size(); i++) {
+    uint8_t id =    myLamp.getEffControls()[i]->getId();
+    uint8_t type =  myLamp.getEffControls()[i]->getType();
+    uint8_t min  =  myLamp.getEffControls()[i]->getMin().toInt();
+    uint8_t max  =  myLamp.getEffControls()[i]->getMax().toInt();
+    uint8_t value = myLamp.getEffControls()[i]->getVal().toInt();
+    String name = myLamp.getEffControls()[i]->getName();
+    LOG(printf_P, PSTR("Enc: Controls: id, type, min, max, value, name: %d, %d, %d, %d, %d, %s\n"), id, type, min, max, value, name.c_str());
+
+    
+  }
 }
 
 /*
@@ -250,7 +256,7 @@ void myClicks() {
       remote_action(RA::RA_ON, NULL);
     }
 #ifdef TM1637_CLOCK
-    tm1637.display(String(onOff ? F("On") : F("Off")), true, false, onOff ? 2 : 1);                // Выводим 
+    tm1637.display(String(onOff ? F("On") : F("Off")), true, false, onOff ? 2 : 1);  // Выводим 
 #endif
     break;
   case 2:  // Вкл\выкл Демо
@@ -271,7 +277,7 @@ void myClicks() {
     remote_action(RA::RA_OTA, NULL);
     break;
   default:
-    Serial.println(enc.clicks);
+    LOG(printf_P, PSTR("Enc: Click: %d\n"), enc.clicks);
     break;
   }
   inter();
@@ -309,7 +315,7 @@ void encSetBri(int val) {
 #ifdef VERTGAUGE
   myLamp.GaugeShow(anyValue, 255, 10);
 #endif
-  display(anyValue, "b");
+  display(anyValue, FPSTR("b."));
 }
 
 void encSetEffect(int val) {
@@ -340,16 +346,23 @@ void encSetEffect(int val) {
   display(myLamp.effects.realEffNumdByList(anyValue), "");
 }
 
-void display(int16_t value, String type) {
+void display(int16_t value, String type, uint8_t bri) {
 #ifdef TM1637_CLOCK
   getSetDelay() = TM_TIME_DELAY;
+  tm1637.setBrightness(bri);
   tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
   tm1637.display(type);
-
-
 #endif
 }
 
+void display(String str, uint8_t bri) {
+#ifdef TM1637_CLOCK
+  getSetDelay() = TM_TIME_DELAY;
+  tm1637.setBrightness(bri);
+  tm1637.display("");
+  tm1637.display(str);
+#endif
+}
 
 #endif
 

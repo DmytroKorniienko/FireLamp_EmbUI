@@ -341,7 +341,7 @@ void LAMP::frameShow(const uint32_t ticktime){
       if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
 #if (VERTGAUGE==1)
-      byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+/*      byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
       for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
         for (byte y = 0; y < HEIGHT ; y++) {
           if (ind > y)
@@ -349,6 +349,10 @@ void LAMP::frameShow(const uint32_t ticktime){
           else
             EffectMath::drawPixelXY(x, y,  0);
         }
+      }*/
+      for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
+        EffectMath::drawLine(x, 0, x, HEIGHT, 0);
+        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), CHSV(gauge_hue, 255, 255));
       }
 #else
       byte ind = (byte)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
