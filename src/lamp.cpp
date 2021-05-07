@@ -455,7 +455,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 #ifdef DS18B20
     // восстанавливаем значение тока после включения. Так как значение 0 не работает в ограничители тока по перегреву, 
     // то если ограничение тока установлено в 0, устанвливаем вместо него рассчетный максимум в 15.36А на 256 диодов (бред конечно, но нужно же хоть какое-то значение больше 0).
-    myLamp.setcurLimit(!embui.param(FPSTR(TCONST_0098)).toInt() ? ((float)NUM_LEDS/256 * 15360) : embui.param(FPSTR(TCONST_0098)).toInt());
+    setcurLimit(!embui.param(FPSTR(TCONST_0098)).toInt() ? ((float)NUM_LEDS/256 * 15360) : embui.param(FPSTR(TCONST_0098)).toInt());
 #endif
     FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
   }
@@ -497,7 +497,7 @@ void LAMP::stopAlarm(){
   lampState.dawnFlag = false;
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
 
-  myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
+  setBrightness(getNormalizedLampBrightness(), false, false);
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
   mp3->StopAndRestoreVolume(); // восстановить уровень громкости
@@ -536,7 +536,7 @@ void LAMP::startDemoMode(byte tmout)
   mode = LAMPMODE::MODE_DEMO;
   randomSeed(millis());
   remote_action(RA::RA_DEMO_NEXT, NULL);
-  myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
+  sendString(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
 }
 
 void LAMP::storeEffect()
@@ -581,7 +581,7 @@ void LAMP::startOTAUpdate()
   effects.directMoveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
   changePower(true);
-  sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
+  sendString(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
   otaManager.startOtaUpdate();
 }
 #endif
@@ -1097,12 +1097,12 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     case EFFSWITCH::SW_WHITE_HI:
         storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
-        myLamp.setMode(LAMPMODE::MODE_WHITELAMP);
+        setMode(LAMPMODE::MODE_WHITELAMP);
         break;
     case EFFSWITCH::SW_WHITE_LO:
         storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
-        myLamp.setMode(LAMPMODE::MODE_WHITELAMP);
+        setMode(LAMPMODE::MODE_WHITELAMP);
         break;
     default:
         return;
@@ -1130,7 +1130,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
 #endif
   if(isShowName){
-    myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
+    sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
     if(isPlayName && mp3!=nullptr && mp3->isOn()) // воспроизведение 
       mp3->playName(effects.getEn());
@@ -1248,27 +1248,31 @@ void LAMP::effectsTimer(SCHEDULER action, uint32_t _begin) {
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; неблокирующий код, рисует поверх эффекта!) -------------
 void LAMP::warningHelper(){
   if(lampState.isWarning) {
-    uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
+    if(!warningTask)
+      return;
+    String msg = warningTask->getData();
+
+    uint16_t cnt = warningTask->getWarn_duration()/(warningTask->getWarn_blinkHalfPeriod()*2);
     uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;    
     switch(lampState.warnType){
-      case 0: EffectMath::fillAll(warn_color);
+      case 0: EffectMath::fillAll(warningTask->getWarn_color());
         break;
       case 1: {
-        EffectMath::fillAll(warn_color);
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        EffectMath::fillAll(warningTask->getWarn_color());
+        if (!isPrintingNow())
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, -128, xPos);
         break;
       }
       case 2: {
-        EffectMath::fillAll(warn_color);
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
+        EffectMath::fillAll(warningTask->getWarn_color());
+        if (!isPrintingNow())
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), -warningTask->getWarn_color(), true, -128, xPos);
         break;
       }
       case 3: {
-        if (!myLamp.isPrintingNow())
-          //myLamp.sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, -128, xPos);
-          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        if (!isPrintingNow())
+          //sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, -128, xPos);
         break;
       }
       default: break;
@@ -1281,9 +1285,20 @@ void LAMP::showWarning(
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
   uint16_t blinkHalfPeriod,                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
   uint8_t warnType,                                         /* тип предупреждения 0...3                                     */
-  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения  */
+  bool forcerestart,                                        /* перезапускать, если пришло повторное событие предупреждения  */
+  const char *msg)                                          /* сообщение для вывода на матрицу                              */
 {
-  if(forcerestart || !warningTask){
+  CRGB warn_color = CRGB::Black;
+  uint32_t warn_duration = 1000;
+  uint16_t warn_blinkHalfPeriod = 500;
+
+  if(warningTask && !forcerestart){ // вытянуть данные из предыдущего таска, если таск существует и не перезапуск
+    warn_color = warningTask->getWarn_color();
+    warn_duration = warningTask->getWarn_duration();
+    warn_blinkHalfPeriod = warningTask->getWarn_blinkHalfPeriod();
+  }
+
+  if(forcerestart || !warningTask){ // перезапуск или таск не существует - инициализация из параметров
     warn_color = color;
     warn_duration = duration;
     warn_blinkHalfPeriod = blinkHalfPeriod;
@@ -1298,9 +1313,17 @@ void LAMP::showWarning(
   else
     warn_duration=0;
   if(warn_duration){
-    if(warningTask)
+    if(warningTask){
       warningTask->cancel();
-    warningTask = new Task(blinkHalfPeriod, TASK_ONCE, std::bind(&LAMP::showWarning, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)lampState.warnType, !lampState.isWarning), &ts, false, nullptr, [](){TASK_RECYCLE;});
+    }
+
+    warningTask = new WarningTask(warn_color, warn_duration, warn_blinkHalfPeriod, msg, blinkHalfPeriod, TASK_ONCE
+    //, std::bind(&LAMP::showWarning, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)lampState.warnType, !lampState.isWarning, msg)
+    ,[this](){
+      WarningTask *cur = (WarningTask *)ts.getCurrentTask();
+      showWarning(cur->getWarn_color(),cur->getWarn_duration(),cur->getWarn_blinkHalfPeriod(),(uint8_t)lampState.warnType, !lampState.isWarning, cur->getData());
+    }
+    , &ts, false, nullptr, [](){TASK_RECYCLE;});
     warningTask->enableDelayed();
   }
   else {

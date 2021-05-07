@@ -39,6 +39,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
+#include "extra_tasks.h"
 #ifdef TM1637_CLOCK
 #include "tm.h"				// Подключаем функции
 #endif
@@ -61,61 +62,6 @@ namespace INTERFACE {
 // планировщик заполнения списка
 Task *optionsTask = nullptr;     // задача для отложенной генерации списка
 Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
-
-class StringTask : public Task {
-    char *_data = nullptr;
-    INLINE char *makeCopy(const char *data) {
-        size_t size = strlen(data);
-        char *storage = new char[size+1];
-        strncpy(storage,data,size);
-        if(!storage) return nullptr;
-        return storage;
-    }
-    INLINE void setNewData(char *newData) {if(_data) delete []_data; _data=newData;}
-public:
-    INLINE char *getData() {return _data;}
-    INLINE StringTask(const char *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
-    : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable){
-        _data = makeCopy(data);
-    }
-    ~StringTask() {if(_data) delete[] _data;}
-};
-
-class CtrlsTask : public Task {
-    DynamicJsonDocument *_data = nullptr;
-    INLINE DynamicJsonDocument *makeDoc(JsonObject *data) {
-        DynamicJsonDocument *storage = new DynamicJsonDocument(data->size()*2+32);
-        if(!storage) return nullptr;
-        String tmp; serializeJson(*data,tmp); //LOG(printf_P, PSTR("makeDoc: %s\n"), tmp.c_str());
-        deserializeJson((*storage), tmp);
-        return storage;
-    }
-    INLINE void setNewData(DynamicJsonDocument *newData) {if(_data) delete _data; _data=newData;}
-public:
-    INLINE JsonObject getData() {return (_data ? _data->as<JsonObject>() : JsonObject());}
-    bool replaceIfSame(JsonObject *test) {
-        // сравниваем предыдущий и текущий ответы на совпадение пар
-        if(!test) return false;
-        JsonObject obj = getData();
-        bool same=!obj.isNull();
-        for (JsonPair kv : obj) {
-            if(!((*test)).containsKey(kv.key())){
-                same=false;
-                break;
-            }
-        }
-        if(same){
-            DynamicJsonDocument *doc = makeDoc(test);
-            setNewData(doc);
-        }
-        return same;
-    }
-    INLINE CtrlsTask(JsonObject *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
-    : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable){
-        _data = makeDoc(data);
-    }
-    ~CtrlsTask() {if(_data) delete _data;}
-};
 CtrlsTask *ctrlsTask = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
@@ -714,6 +660,10 @@ void direct_set_effects_dynCtrl(JsonObject *data){
 void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
+    // static unsigned long timeout = 0;
+    // if(timeout+100UL>millis()) return;
+    // timeout = millis();
+
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
     if((*data).containsKey(FPSTR(TCONST_00D5)))
         direct_set_effects_dynCtrl(data);
@@ -724,7 +674,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             return;
         }
     }
-
+   
     //LOG(println, "Delaying dynctrl");
 
     ctrlsTask = new CtrlsTask(data, 300, TASK_ONCE,
@@ -1461,12 +1411,12 @@ void set_micflag(Interface *interf, JsonObject *data){
 void set_settings_mic_calib(Interface *interf, JsonObject *data){
     //if (!data) return;
     if (!myLamp.isMicOnOff()) {
-        myLamp.sendStringToLamp(String(FPSTR(TINTF_026)).c_str(), CRGB::Red);
+        myLamp.sendString(String(FPSTR(TINTF_026)).c_str(), CRGB::Red);
     } else if(!myLamp.isMicCalibration()) {
-        myLamp.sendStringToLamp(String(FPSTR(TINTF_025)).c_str(), CRGB::Red);
+        myLamp.sendString(String(FPSTR(TINTF_025)).c_str(), CRGB::Red);
         myLamp.setMicCalibration();
     } else {
-        myLamp.sendStringToLamp(String(FPSTR(TINTF_027)).c_str(), CRGB::Red);
+        myLamp.sendString(String(FPSTR(TINTF_027)).c_str(), CRGB::Red);
     }
 
     show_settings_mic(interf, data);
@@ -1672,7 +1622,7 @@ void show_settings_time(Interface *interf, JsonObject *data){
 
 void set_settings_time(Interface *interf, JsonObject *data){
     BasicUI::set_settings_time(interf, data);
-    myLamp.sendStringToLamp(String(F("%TM")).c_str(), CRGB::Green);
+    myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
     #ifdef TM1637_CLOCK
     tm_setted();			// Проверяем, было ли настроено время
     #endif
@@ -2517,7 +2467,6 @@ void sync_parameters(){
 //#endif
     LOG(printf_P, PSTR("tmp.lampflags=%u\n"), tmp.lampflags);
 
-
     obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? "1" : "0";
     set_drawflag(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>(); // https://arduinojson.org/v6/how-to/reuse-a-json-document/
@@ -2530,7 +2479,8 @@ void sync_parameters(){
 
     //LOG(printf_P,PSTR("tmp.isEventsHandled=%d\n"), tmp.isEventsHandled);
     obj[FPSTR(TCONST_001D)] = tmp.isEventsHandled ? "1" : "0";
-    set_eventflag(nullptr, &obj);
+    CALL_INTF_OBJ(set_eventflag);
+    //set_eventflag(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
     embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
 
@@ -2970,6 +2920,7 @@ void remote_action(RA action, ...){
         }
         case RA::RA_WARNING: {
             String str=value;
+            String msg;
             DynamicJsonDocument doc(256);
             deserializeJson(doc,str);
             JsonArray arr = doc.as<JsonArray>();
@@ -2987,10 +2938,11 @@ void remote_action(RA action, ...){
                     case 1: dur = arr[i]; break;
                     case 2: per = arr[i]; break;
                     case 3: type = arr[i]; break;
+                    case 4: msg = arr[i].as<String>(); break;
                     default : break;
                 }
 			}
-            myLamp.showWarning(col,dur,per,type);
+            myLamp.showWarning(col,dur,per,type,true,msg.isEmpty()?(const char *)nullptr:msg.c_str());
             break; 
         }
 

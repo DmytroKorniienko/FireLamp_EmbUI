@@ -45,6 +45,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "events.h"
 #include "../../include/LList.h"
 #include "interface.h"
+#include "extra_tasks.h"
 
 #ifdef XY_EXTERN
 #include "XY.h"
@@ -191,7 +192,7 @@ private:
 
     Task *demoTask = nullptr;    // динамический планировщик Смены эффектов в ДЕМО
     Task *effectsTask;           // динамический планировщик обработки эффектов
-    Task *warningTask = nullptr; // динамический планировщик переключалки флага lampState.isWarning
+    WarningTask *warningTask = nullptr; // динамический планировщик переключалки флага lampState.isWarning
     Task *tmqtt_pub = nullptr;   // динамический планировщик публикации через mqtt
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
 
@@ -209,10 +210,6 @@ private:
 #ifdef OTA
     OtaManager otaManager;
 #endif
-    CRGB warn_color;
-    uint32_t warn_duration;
-    uint16_t warn_blinkHalfPeriod;
-
     String &prepareText(String &source);
     void doPrintStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool fillStringManual(const char* text,  const CRGB &letterColor, bool stopText = false, bool isInverse = false, int32_t pos = 0, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT); // -2147483648
@@ -227,7 +224,7 @@ private:
      */
     void frameShow(const uint32_t ticktime);
 public:
-    void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
+    void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true, const char *msg = nullptr); // Неблокирующая мигалка
     void warningHelper();
 
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
