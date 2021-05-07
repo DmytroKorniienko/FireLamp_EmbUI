@@ -238,6 +238,7 @@ public:
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
     LAMPSTATE &getLampState() {return lampState;}
+    LList<UIControl*>&getEffControls() { LList<UIControl*>&controls = effects.getControls(); return controls; }
 
 #ifdef MIC_EFFECTS
     void setMicCalibration() {lampState.isCalibrationRequest = true;}
@@ -263,6 +264,7 @@ public:
             delete ctrl;
         }
     }
+    
     bool isMicOnOff() {return flags.isMicOn;}
 #endif
 

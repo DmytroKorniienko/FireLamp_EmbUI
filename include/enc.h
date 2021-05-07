@@ -44,6 +44,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "misc.h"
 #include "main.h"
 #include "tm.h"
+#include "interface.h"
+#include "effects.h"
+#include "ui.h"
 
 // Опциональные настройки (показаны по умолчанию)
 //#define EB_FAST 30     // таймаут быстрого поворота, мс
@@ -68,10 +71,10 @@ void isHolded();
 //void myStep();
 void encSetBri(int val);
 void encSetEffect(int val);
-void display(int16_t value, uint8_t type = 0);
+void display(int16_t value, String type = "", uint8_t bri = TM_BRIGHTNESS);
+void display(String str, uint8_t bri = TM_BRIGHTNESS);
 
 void enc_setup(); 
 extern void encLoop();
-uint8_t& getDelay(); 
 #endif
 #endif

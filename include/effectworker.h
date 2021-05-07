@@ -636,6 +636,12 @@ public:
     void moveByCnt(byte cnt){ uint16_t eff = getByCnt(cnt); directMoveBy(eff); }
     // получить номер эффекта смещенного на количество шагов (для DEMO)
     uint16_t getByCnt(byte cnt);
+    bool validByList(int val);
+    // получить реальный номер эффекта по номеру элемента списка (для плагинов)
+    uint16_t realEffNumdByList(uint16_t val) { return effects[val]->eff_nb; }
+    // получить флаг canBeSelected по номеру элемента списка (для плагинов)
+    bool effCanBeSelected(uint16_t val) { if (val < effects.size())return effects[val]->canBeSelected(); return false; }
+
     // перейти на указанный в обход нормального переключения, использовать только понимая что это (нужно для начальной инициализации и переключений выключенной лампы)
     void directMoveBy(uint16_t select);
     // вернуть первый элемент списка

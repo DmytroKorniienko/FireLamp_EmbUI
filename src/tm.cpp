@@ -37,13 +37,15 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "config.h"
 #ifdef TM1637_CLOCK
-#include "enc.h"
 #include "tm.h"
 
 
 
 static bool showPoints = false;
 static bool timeSetted = false;
+
+uint8_t tmDelayTime;
+
 
 
 
@@ -53,6 +55,10 @@ String splittedIp[5] = {};
 /* Указывать можно в любом регистре, разделять лучше нижним подчеркиванием "_", если поставить пробел, то слова разделятся и будут отображаться по очереди, например сначала заскроллится "FIRE",
 дойдет до конца, потухнет и только тогда появится "START"*/
 #endif
+
+uint8_t& getSetDelay() { // для доступа к переменной из других плагинов, достаточно в h-файл плагина добавить #include "tm.h"
+  return tmDelayTime;
+};
 
 
 void tm_setup() {
@@ -64,12 +70,11 @@ void tm_setup() {
 
 
 void tm_loop() {
-#ifdef ENCODER
-  if (getDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу энкодера
-    getDelay()--;
+  if (getSetDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу с другиг палгинов
+    getSetDelay()--;
     return;
   }
-#endif
+
 
 #if TM_SHOW_BANNER
 static uint8_t l = 0;           // Переменная для баннера
