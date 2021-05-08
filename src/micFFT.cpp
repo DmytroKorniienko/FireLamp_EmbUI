@@ -190,9 +190,15 @@ double MICWORKER::analyse()
   return signalFrequency; // измеренная частота главной гармоники
 }
 
-float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив должен передаваться на 1 ед. большего размера
+float MICWORKER::fillSizeScaledArray(float *arr, size_t size, bool bound) // bound - ограничивать частотный диапазон или использовать 20-20000, по умолчанию - ограничивать
 {
   signalFrequency = (float)analyse(); // сюда запишем частоту главной гармоники
+
+  float maxFreq = bound?log(samplingFrequency/2):log(20000);
+  float minFreq = bound?log(samplingFrequency/samples):log(20);
+  float scale = (size)/(maxFreq-minFreq);
+  float step = samplingFrequency/samples;
+
 
   // for(uint8_t i=0; i<(samples >> 1); i++){
   //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
@@ -201,14 +207,11 @@ float MICWORKER::fillSizeScaledArray(float *arr, size_t size) // массив д
   // }
   // //LOG(println, FFT.majorPeak());
 
-  float minFreq=(log((float)samplingFrequency*2/samples));
-  float scale = size/(log(20000.0)-minFreq);
-  //log(125) = 4,8283137373023011238022779996786 (0)
-  //log(20000) = 9,9034875525361280454891979401956 (15)  9.90 / 16 = x / 1
+
   for(uint8_t i=0; i<(samples>>1); i++){
-    float idx_freq=(((float)samplingFrequency/samples)*(i+1));
-    uint8_t idx=(log(idx_freq)-minFreq)*scale;
-    idx=(idx>=size?0:idx);
+    float idx_freq=step*(i+1);
+    int16_t idx=(log(idx_freq)-minFreq)*scale;
+    idx=(idx<0?0:(idx>=(int16_t)size?size-1:(i<idx?i:idx)));
 
     float tmp = (float)(20 * log10(vReal[i]));
     arr[idx]=(tmp<0?0:tmp+arr[idx])/2.0; // усредняем
