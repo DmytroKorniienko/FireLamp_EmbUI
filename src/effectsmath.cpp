@@ -577,6 +577,13 @@ void EffectMath::drawLineF(float x1, float y1, float x2, float y2, const CRGB &c
   }
 }
 
+void EffectMath::drawSquareF(float x, float y, float leg, CRGB color) {
+  EffectMath::drawLineF(x+leg,y+leg,x+leg,y-leg,color);
+  EffectMath::drawLineF(x+leg,y-leg,x-leg,y-leg,color);
+  EffectMath::drawLineF(x-leg,y-leg,x-leg,y+leg,color);
+  EffectMath::drawLineF(x-leg,y+leg,x+leg,y+leg,color);
+}
+
 void EffectMath::drawCircle(int x0, int y0, int radius, const CRGB &color){
   int a = radius, b = 0;
   int radiusError = 1 - a;
