@@ -3064,6 +3064,9 @@ bool EffectPicasso::picassoRoutine(CRGB *leds, EffectWorker *param){
     case 3:
       EffectMath::drawCircleF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
       break;
+	case 4:
+      EffectMath::drawSquareF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
+      break;
     }
   }
 
