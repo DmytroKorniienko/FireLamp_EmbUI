@@ -1820,19 +1820,23 @@ bool EffectSwirl::swirlRoutine(CRGB *leds, EffectWorker *param)
 
   // Use two out-of-sync sine waves
   uint8_t i = beatsin8(27 * ((float)speed / 100.0) + 5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
+  uint8_t wi = map(i,e_swi_BORDER, HEIGHT - e_swi_BORDER, e_swi_BORDER, WIDTH - e_swi_BORDER);
   uint8_t j = beatsin8(41 * ((float)speed / 100.0) + 5, e_swi_BORDER, WIDTH - e_swi_BORDER);
+  uint8_t hj = map(j, e_swi_BORDER, WIDTH - e_swi_BORDER, e_swi_BORDER, HEIGHT - e_swi_BORDER);
   // Also calculate some reflections
-  uint8_t ni = EffectMath::getmaxWidthIndex() -i;
-  uint8_t nj = EffectMath::getmaxWidthIndex() -j;
+  uint8_t ni = HEIGHT - 1 -i;
+  uint8_t wni = WIDTH - 1 -wi;
+  uint8_t nj = WIDTH - 1 -j;
+  uint8_t hnj = HEIGHT - 1 -nj;
 
   // The color of each point shifts over time, each at a different speed.
   uint16_t ms = millis();
-  EffectMath::drawPixelXY(i, j, CRGB(EffectMath::getPixColorXY(i, j)) + ColorFromPalette(*curPalette, ms / 11));
+  EffectMath::drawPixelXY(wi, hj, CRGB(EffectMath::getPixColorXY(i, j)) + ColorFromPalette(*curPalette, ms / 11));
   EffectMath::drawPixelXY(j, i, CRGB(EffectMath::getPixColorXY(j, i)) + ColorFromPalette(*curPalette, ms / 13));
-  EffectMath::drawPixelXY(ni, nj, CRGB(EffectMath::getPixColorXY(ni, nj)) + ColorFromPalette(*curPalette, ms / 17));
+  EffectMath::drawPixelXY(wni, hnj, CRGB(EffectMath::getPixColorXY(ni, nj)) + ColorFromPalette(*curPalette, ms / 17));
   EffectMath::drawPixelXY(nj, ni, CRGB(EffectMath::getPixColorXY(nj, ni)) + ColorFromPalette(*curPalette, ms / 29));
-  EffectMath::drawPixelXY(i, nj, CRGB(EffectMath::getPixColorXY(i, nj)) + ColorFromPalette(*curPalette, ms / 37));
-  EffectMath::drawPixelXY(ni, j, CRGB(EffectMath::getPixColorXY(ni, j)) + ColorFromPalette(*curPalette, ms / 41));
+  EffectMath::drawPixelXY(wi, hnj, CRGB(EffectMath::getPixColorXY(i, nj)) + ColorFromPalette(*curPalette, ms / 37));
+  EffectMath::drawPixelXY(wni, hj, CRGB(EffectMath::getPixColorXY(ni, j)) + ColorFromPalette(*curPalette, ms / 41));
 
   return true;
 }
