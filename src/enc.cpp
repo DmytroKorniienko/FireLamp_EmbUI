@@ -46,8 +46,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 uint8_t controlsAmount;     // колличество контролов у эффекта
 uint8_t currDynCtrl;        // текущий контрол, с которым работаем
-uint8_t currAction;         // идент тложенной операции, котору нужно выпонить в enc_loop
-uint16_t currEffNum;            // текущий номер эффекта
+uint8_t currAction;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
+uint16_t currEffNum;        // текущий номер эффекта
 uint16_t anyValue;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
 uint32_t loops;             // счетчик псевдотаймера
 bool done;                  // true == все отложенные до enc_loop операции выполнены.
@@ -93,11 +93,12 @@ void encLoop() {
 #endif
   }
 
-  if (inSettings and loops == EXIT_TIMEOUT * 65000) {
+  if (inSettings and loops == EXIT_TIMEOUT * 32500) {
     inSettings =  false;
     exitSettings();
+    return;
   }
-  if (inSettings and loops%30000 == 0) {
+  if (inSettings and loops%10000 == 0) {
     myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, true); 
   }
 /*
@@ -140,13 +141,12 @@ void encLoop() {
       case 2: // переключение эффектов
         LOG(printf_P, PSTR("Enc: Effect number: %d\n"), currEffNum);
         myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
-        done = true;
         remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
       break;
       default:
         break;
       } 
-      currAction = 0;
+      //currAction = 0;
       //anyValue = 0;
       done = true;
     } 
@@ -240,6 +240,8 @@ void isClick() {
   if (!inSettings) encDisplay(enc.clicks, String(FPSTR("CL.")));
   else {
     enc.clicks = 0;
+    resetTimers();
+    loops = 0;
     while (1) {
       currDynCtrl ++;
       if (encDynCtrl[currDynCtrl].type == 0 or encDynCtrl[currDynCtrl].type == 2) 
@@ -343,7 +345,7 @@ void myClicks() {
       remote_action(RA::RA_ON, NULL);
     }
 #ifdef TM1637_CLOCK
-    tmDisplay(String(myLamp.isLampOn() ? F("On") : F("Off")), true, false, onOff ? 2 : 1);  // Выводим 
+    tmDisplay(String(myLamp.isLampOn() ? F("On") : F("Off")), true, false, myLamp.isLampOn() ? 2 : 1);  // Выводим 
 #endif
     break;
   case 2:  // Вкл\выкл Демо
@@ -401,6 +403,10 @@ void encSetBri(int val) {
     anyValue = myLamp.getLampBrightness();
     done = false;
   }
+  if (currAction == 2) {
+    currAction = 1; // сменим мод, но на вылет. Крутить яркостью будем в следующем цикле. Так уменьшим количество ошибок юзера, когда при отпускании энкодера он проворачивает его.
+    return;
+  }
   currAction = 1;
   anyValue = constrain(anyValue + val, 1, 255);
 #ifdef VERTGAUGE
@@ -417,6 +423,12 @@ void encSetEffect(int val) {
   if (done or currAction !=2) { // если сеттер отраболтал или предыдущий мод не отвечает текущему, перечитаем значение, и взведем сеттер
     anyValue = myLamp.effects.getSelected();
     done = false;
+    currEffNum = anyValue;
+    encDisplay(currEffNum, "");
+  }
+  if (currAction == 3) {
+    exitSettings();
+    return;
   }
   currAction = 2;
 
@@ -478,7 +490,6 @@ void resetTimers() {
   myLamp.demoTimer(T_RESET);
   myLamp.effects.autoSaveConfig();
   embui.autosave();
-  //loops = 0;
 }
 
 #endif
