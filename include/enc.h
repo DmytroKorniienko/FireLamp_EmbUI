@@ -60,10 +60,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кнопкой <A, B, KEY>
 
 
+
 void callEncTick ();
 void IRAM_ATTR isrEnc();
-void inter();
-void noInter();
+void interrupt();
+void noInterrupt();
 
 void isTurn();
 void isClick();
@@ -71,8 +72,12 @@ void isHolded();
 //void myStep();
 void encSetBri(int val);
 void encSetEffect(int val);
-void display(int16_t value, String type = "");
-void display(String str);
+void encSetDynCtrl(int val);
+void encDisplay(uint16_t value, String type = "");
+void encDisplay(String str);
+uint8_t getCurrDynCtrl();
+void resetTimers();
+void exitSettings();
 
 void enc_setup(); 
 extern void encLoop();

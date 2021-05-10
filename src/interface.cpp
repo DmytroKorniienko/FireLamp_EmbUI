@@ -43,6 +43,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef TM1637_CLOCK
 #include "tm.h"				// Подключаем функции
 #endif
+#ifdef ENCODER
+#include "enc.h"
+#endif
 #include LANG_FILE                  //"text_res.h"
 
 /**
@@ -895,8 +898,8 @@ void set_onflag(Interface *interf, JsonObject *data){
             if(myLamp.getLampSettings().isOnMP3)
                 mp3->setIsOn(true);
 #endif
-#ifndef ESP_USE_BUTTON
-            if(millis()<10000){
+#if !defined(ESP_USE_BUTTON) && !defined(ENCODER)
+            if(millis()<20000){        // 10 секунд мало, как показала практика, ставим 20
                 Task *_t = new Task(
                     INDEX_BUILD_DELAY * TASK_SECOND,
                     TASK_ONCE, [](){ myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White); TASK_RECYCLE; },
@@ -2896,6 +2899,14 @@ void remote_action(RA action, ...){
             //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
+#ifdef ENCODER
+        case RA::RA_DYNCTRL:
+            obj[String(FPSTR(TCONST_0015)) + String(getCurrDynCtrl())] = value;
+            obj[FPSTR(TCONST_00D5)] = true;
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
+            set_effects_dynCtrl(nullptr, &obj);
+            break;
+#endif
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
             CALL_INTF_OBJ(show_settings_mic);

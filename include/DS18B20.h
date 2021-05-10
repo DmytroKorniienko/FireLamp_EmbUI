@@ -52,7 +52,8 @@ int16_t getTemp();
 #if COOLER_PIN >= 0
 void tempToSpeed(int16_t& currentTemp);
 #endif
-void ds_display(uint16_t value);
+bool& canDisplayTemp();
+void ds_display(int16_t value);
 
  
 #endif

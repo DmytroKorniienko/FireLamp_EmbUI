@@ -39,9 +39,15 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef DS18B20
 #include "DS18B20.h"
 #include "tm.h"
+#ifdef ENCODR
+#include "enc.h"
+#endif
 
 MicroDS18B20 dallas(DS18B20_PIN);
 
+bool canBeDisplayed;
+
+bool& canDisplayTemp() {return canBeDisplayed;};
 
 void ds_setup() {
 #if COOLER_PIN >= 0
@@ -49,6 +55,7 @@ void ds_setup() {
 #endif
   dallas.requestTemp();
   LOG(printf_P, PSTR("DS18b20 was initialized.\n")); 
+  canBeDisplayed = true;
 }
 
 int16_t getTemp() {
@@ -95,7 +102,7 @@ void tempToSpeed(int16_t& currentTemp) {
 
 void ds_loop() { 
   int16_t curTemp = getTemp();
-  ds_display(curTemp); 
+  if (canDisplayTemp()) ds_display(curTemp); 
   #if COOLER_PIN >= 0
   tempToSpeed(curTemp);
   #endif
@@ -118,7 +125,7 @@ void ds_loop() {
   }
 }
 
-void ds_display(uint16_t value) { 
+void ds_display(int16_t value) { 
 #ifdef TM1637_CLOCK
   getSetDelay() = TM_TIME_DELAY;
   String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("%")));    // "%" - для отображения "о" вверху, "*" - для отображения "с" вверху
