@@ -121,12 +121,8 @@ void ds_loop() {
 void ds_display(uint16_t value) { 
 #ifdef TM1637_CLOCK
   getSetDelay() = TM_TIME_DELAY;
-
-  String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("C")));
-  tm1637.setBrightness(TM_BRIGHTNESS);
-  //tm1637.clearScreen();
-  tm1637.display("");  // это не ошибка, без этой строки выводит почему-то температуру только один раз, потом никогда.
-  tm1637.display(tmp, true, false, (value < -9 || value > 99) ? 0 : 1); 
+  String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("%")));    // "%" - для отображения "о" вверху, "*" - для отображения "с" вверху
+  tmDisplay(tmp, true, false, (value < -9 || value > 99) ? 0 : (value < 10 ? 2 : 1));
 #endif
 }
 

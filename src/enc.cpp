@@ -259,7 +259,7 @@ void myClicks() {
       remote_action(RA::RA_ON, NULL);
     }
 #ifdef TM1637_CLOCK
-    tm1637.display(String(onOff ? F("On") : F("Off")), true, false, onOff ? 2 : 1);  // Выводим 
+    tmDisplay(String(onOff ? F("On") : F("Off")), true, false, onOff ? 2 : 1);  // Выводим 
 #endif
     break;
   case 2:  // Вкл\выкл Демо
@@ -349,21 +349,18 @@ void encSetEffect(int val) {
   display(myLamp.effects.realEffNumdByList(anyValue), "");
 }
 
-void display(int16_t value, String type, uint8_t bri) {
+void display(int16_t value, String type) {
 #ifdef TM1637_CLOCK
   getSetDelay() = TM_TIME_DELAY;
-  tm1637.setBrightness(bri);
-  tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
-  tm1637.display(type);
+  tmDisplay(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
+  tmDisplay(type);
 #endif
 }
 
-void display(String str, uint8_t bri) {
+void display(String str) {
 #ifdef TM1637_CLOCK
   getSetDelay() = TM_TIME_DELAY;
-  tm1637.setBrightness(bri);
-  tm1637.display("");
-  tm1637.display(str);
+  tmDisplay(str);
 #endif
 }
 

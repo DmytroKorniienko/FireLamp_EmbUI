@@ -282,6 +282,12 @@ static const char TCONST_00D2[] PROGMEM = "lV";
 static const char TCONST_00D3[] PROGMEM = "sT";
 static const char TCONST_00D4[] PROGMEM = "inccontrol";
 static const char TCONST_00D5[] PROGMEM = "force";
+static const char TCONST_00D6[] PROGMEM = "tm1637";
+static const char TCONST_00D7[] PROGMEM = "tmBright";
+static const char TCONST_00D8[] PROGMEM = "tmBrightOn";
+static const char TCONST_00D9[] PROGMEM = "tmBrightOff";
+static const char TCONST_00DA[] PROGMEM = "tm24";
+static const char TCONST_00DB[] PROGMEM = "tmZero";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка
