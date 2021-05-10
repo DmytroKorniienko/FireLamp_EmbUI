@@ -38,6 +38,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef _DS18B20_H
 #define _DS18B20_H
 
+#ifdef DS18B20
+
 #include "misc.h"
 #include "main.h"
 #include "config.h"
@@ -55,5 +57,5 @@ void tempToSpeed(int16_t& currentTemp);
 bool& canDisplayTemp();
 void ds_display(int16_t value);
 
- 
+#endif 
 #endif

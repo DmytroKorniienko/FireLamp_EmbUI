@@ -81,6 +81,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define DT                    (D1)                          // Пин DT энкодера
 #define CLK                   (D2)                          // Пин CLK энкодера
 #define EXIT_TIMEOUT          (3U)                          // Таймаут выхода из настроек эффекта. Приблизительно равно (EXIT_TIMEOUT * 10 секунд)
+#define VERTGAUGE             (1U) 
 #endif
 
 // настройка кнопки, если разрешена

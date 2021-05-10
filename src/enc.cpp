@@ -88,7 +88,9 @@ void encLoop() {
   loops++;  // счетчик псевдотаймера
   if (inSettings and loops%100 == 0) {
     resetTimers();
+#ifdef TM1637_CLOCK
     getSetDelay() = TM_TIME_DELAY;
+#endif
   }
 
   if (inSettings and loops == EXIT_TIMEOUT * 65000) {
@@ -265,7 +267,9 @@ void isHolded() {
     encDisplay(String(FPSTR("Sets")));
     resetTimers();
     loops = 0;
+#ifdef DS18B20
     canDisplayTemp() = false;
+#endif
     myLamp.sendStringToLamp(String(FPSTR(TINTF_002)).c_str(), CRGB::Orange, true);
     controlsAmount = myLamp.getEffControls().size();
     encDynCtrl.resize(controlsAmount);
@@ -295,7 +299,9 @@ void exitSettings() {
   encDisplay(String(FPSTR("done")));
   myLamp.sendStringToLamp(String(FPSTR(TINTF_00B)).c_str(), CRGB::Orange, true);
   myLamp.effects.autoSaveConfig(true);
+#ifdef DS18B20
   canDisplayTemp() = true;
+#endif
   LOG(printf_P, PSTR("Enc: exit Settings\n"));
 }
 
@@ -330,16 +336,13 @@ void myClicks() {
   switch (enc.clicks)
   {
   case 1: // Включение\выключение лампы
-  bool onOff;
     if (myLamp.isLampOn()) {
-      onOff = false;
       remote_action(RA::RA_OFF, NULL);
     } else {
-      onOff = true;
       remote_action(RA::RA_ON, NULL);
     }
 #ifdef TM1637_CLOCK
-    tmDisplay(String(onOff ? F("On") : F("Off")), true, false, onOff ? 2 : 1);  // Выводим 
+    tmDisplay(String(myLamp.isLampOn() ? F("On") : F("Off")), true, false, onOff ? 2 : 1);  // Выводим 
 #endif
     break;
   case 2:  // Вкл\выкл Демо
