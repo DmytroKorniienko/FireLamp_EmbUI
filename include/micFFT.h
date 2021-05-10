@@ -99,7 +99,7 @@ public:
   float getCurVal() {return curVal;}
   uint8_t getMinPeak() {return minPeak;}
   uint8_t getMaxPeak() {return maxPeak;}
-  float fillSizeScaledArray(float *arr, size_t size);
+  float fillSizeScaledArray(float *arr, size_t size, bool bound=true);
 };
 
 #endif
