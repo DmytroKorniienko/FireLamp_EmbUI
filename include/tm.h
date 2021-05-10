@@ -58,7 +58,10 @@ extern void tm_loop();
 extern void tm_setted();  // Проверка, установлено ли время
 extern void splitIp(String str, String dlm, String dest[]);  // Функция разделителя по указателю
 extern String formatIp(String inArr[], String dlm);    // Функция форматирования
-uint8_t& getSetDelay();
+uint8_t& getSetDelay();  // Задержка, для отображения с других плагинов
+void tmDisplay(String val, bool over = true, bool pd = false, uint8_t offst = 0); // Функция для вывода данных с других плагинов
+void tmDisplay(int val, bool over = true, bool pd = false, uint8_t offst = 0);
+void tmDisplay(float val, bool over = true, bool pd = false, uint8_t offst = 0);
 
 #endif
 #endif

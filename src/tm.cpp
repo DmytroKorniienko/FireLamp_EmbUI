@@ -39,15 +39,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifdef TM1637_CLOCK
 #include "tm.h"
 
-
-
 static bool showPoints = false;
 static bool timeSetted = false;
-
 uint8_t tmDelayTime;
-
-
-
 
 #if TM_SHOW_BANNER
 String splittedIp[5] = {};
@@ -64,17 +58,18 @@ uint8_t& getSetDelay() { // для доступа к переменной из �
 void tm_setup() {
     tm1637.init();
     tm1637.begin();
-    tm1637.setBrightness(TM_BRIGHTNESS);
     LOG(printf_P, PSTR("TM1637 was initialized \n"));
 }
 
 
 void tm_loop() {
-  if (getSetDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу с другиг палгинов
+
+  if (getSetDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу с другиг плагинов
     getSetDelay()--;
     return;
   }
-
+ 
+ tm1637.setBrightness((myLamp.isLampOn()) ? myLamp.getBrightOn() : myLamp.getBrightOff());         // Чекаем статус лампы и меняем яркость
 
 #if TM_SHOW_BANNER
 static uint8_t l = 0;           // Переменная для баннера
@@ -95,71 +90,15 @@ else {
   }
 
 else {
-  const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени 
-  char dispTime[5];            // Массив для сбора времени
-
-  #ifdef TM_24
-  #ifdef TM_ZERO                                              // Заполнение 0 справа
-    if (showPoints)
-      sprintf(dispTime,"%02d.%02d", t->tm_hour, t->tm_min);  // Заполняем массив данными (обязательно с ., чтобы выводить с ее помощью : на дисплее)
-    else
-      sprintf(dispTime,"%02d%02d", t->tm_hour, t->tm_min);  // Тоже самое, только уже без . (чтобы было мигание : )
-
-    String timeDisp(dispTime);                              // Из массива делаем строку
-    tm1637.display(timeDisp);                               // Выводим на дисплей
-  #endif
-
-  #ifndef TM_ZERO
-    if (showPoints)
-      sprintf (dispTime,"%01d.%02d", t->tm_hour, t->tm_min);
-    else
-      sprintf (dispTime,"%01d%02d", t->tm_hour, t->tm_min);
-
-    String timeDisp(dispTime);
-    if(t->tm_hour < 10)
-      tm1637.display(timeDisp, true, false, 1);                // Выводим время с отступом справа
-    else
-      tm1637.display(timeDisp);
-  #endif
-  #endif
-
-  #ifndef TM_24
-    #ifdef TM_ZERO
-    if (showPoints)
-      sprintf (dispTime,"%02d.%02d", (t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);      // Выводим время и отнимаем 12 от часов, если значение выше 12
-    else
-      sprintf (dispTime,"%02d%02d", (t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);
-      String timeDisp (dispTime);
-      tm1637.display(timeDisp);
-    #endif
-
-
-    #ifndef TM_ZERO
-    if (showPoints)
-      sprintf(dispTime,"%01d.%02d", (t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);
-    else
-      sprintf(dispTime,"%01d%02d", (t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour, t->tm_min);
-
-    String timeDisp (dispTime);
-    if(                                                                                                // Условия для правильного отображения времени
-      t->tm_hour > 12
-      &&
-      t->tm_hour < 22
-      ||
-      t->tm_hour < 10
-    )
-      tm1637.display(timeDisp, true, false, 1);
-    else
-      tm1637.display(timeDisp);
-    #endif
-  #endif
+    const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени 
+    char dispTime[5];            // Массив для сбора времени
+    sprintf (dispTime, myLamp.isTmZero() ? (showPoints ? "%02d.%02d" : "%02d%02d") : (showPoints ? "%01d.%02d" : "%01d%02d") , myLamp.isTm24() ? t->tm_hour : ((t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour), t->tm_min);
+    myLamp.isTmZero() ? tm1637.display(String(dispTime)) : ((t->tm_hour < 10 || !myLamp.isTm24() && t->tm_hour > 12 && t->tm_hour < 22) ? tm1637.display(String(dispTime), true, false, 1) : tm1637.display(String(dispTime)));
   }
   #if TM_SHOW_BANNER  
   }
   #endif
   showPoints=!showPoints;
-
-
 }
 
 void tm_setted() {        // Проверяем, было ли установлено время
@@ -207,5 +146,17 @@ String formatIp(String inArr[], String dlm)
 
   return output;
 }
+
+void tmDisplay(String val, bool over, bool pd, uint8_t offst){
+  tm1637.display(val, over, pd, offst);
+  }
+
+void tmDisplay(int val, bool over, bool pd, uint8_t offst){
+  tm1637.display(val, over, pd, offst);
+  }
+
+void tmDisplay(float val, bool over, bool pd, uint8_t offst){
+  tm1637.display(val, over, pd, offst);
+  }
 
 #endif

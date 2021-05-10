@@ -417,6 +417,11 @@ static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
 static const char TINTF_0D1[] PROGMEM = "Звук вначале";
 static const char TINTF_0D2[] PROGMEM = "Ограничить громкость";
 static const char TINTF_0D3[] PROGMEM = "Коэф. скорости (1.0 по умолчанию)";
+static const char TINTF_0D4[] PROGMEM = "Настройки дисплея";
+static const char TINTF_0D5[] PROGMEM = "Яркость (0 - выключить)";
+static const char TINTF_0D6[] PROGMEM = "Яркость с выкл. лампой (0 - выключить)";
+static const char TINTF_0D7[] PROGMEM = "24х часовой формат";
+static const char TINTF_0D8[] PROGMEM = "Ведущий 0";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";

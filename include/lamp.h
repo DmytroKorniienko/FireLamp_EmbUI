@@ -112,8 +112,8 @@ struct {
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
-    bool reserved1:1;
-    bool reserved2:1;
+    bool tm24:1;   // 24х часовой формат
+    bool tmZero:1;  // ведущий 0
     bool limitAlarmVolume:1; // ограничивать громкость будильника
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
@@ -182,7 +182,9 @@ private:
     uint8_t BFade; // затенение фона под текстом
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
-
+#ifdef TM1637_CLOCK
+    uint8_t tmBright; // яркость дисплея при вкл - старшие 4 бита и яркость дисплея при выкл - младшие 4 бита
+#endif
     DynamicJsonDocument *docArrMessages = nullptr; // массив сообщений для вывода на лампу
 
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
@@ -352,6 +354,16 @@ public:
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 
     void periodicTimeHandle(bool force=false);
+
+    #ifdef TM1637_CLOCK
+    void settm24 (bool flag) {flags.tm24 = flag;}
+    void settmZero (bool flag) {flags.tmZero = flag;}
+    bool isTm24() {return flags.tm24;}
+    bool isTmZero() {return flags.tmZero;}
+    void setTmBright(uint8_t val) {tmBright = val;}
+    uint8_t getBrightOn() { return tmBright>>4; }
+    uint8_t getBrightOff() { return tmBright&0x0F; }
+    #endif
 
     void startAlarm(char *value = nullptr);
     void stopAlarm();

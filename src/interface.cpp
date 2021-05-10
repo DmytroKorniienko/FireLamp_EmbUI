@@ -1547,6 +1547,13 @@ void block_settings_other(Interface *interf, JsonObject *data){
 #ifdef SHOWSYSCONFIG
     interf->checkbox(FPSTR(TCONST_0096), myLamp.getLampSettings().isShowSysMenu ? "1" : "0", FPSTR(TINTF_093), false); // отображение системного меню
 #endif
+#ifdef TM1637_CLOCK
+    interf->spacer(FPSTR(TINTF_0D4));
+    interf->checkbox(FPSTR(TCONST_00DA), myLamp.getLampSettings().tm24 ? "1" : "0", FPSTR(TINTF_0D7), false);
+    interf->checkbox(FPSTR(TCONST_00DB), myLamp.getLampSettings().tmZero ? "1" : "0", FPSTR(TINTF_0D8), false);
+    interf->range(FPSTR(TCONST_00D8), myLamp.getBrightOn(), 0, 7, 1, FPSTR(TINTF_0D5), false);
+    interf->range(FPSTR(TCONST_00D9), myLamp.getBrightOff(), 0, 7, 1, FPSTR(TINTF_0D6), false);
+#endif
     interf->spacer(FPSTR(TINTF_0BA));
     interf->range(FPSTR(TCONST_00BB), myLamp.getAlarmP(), 1, 15, 1, FPSTR(TINTF_0BB), false);
     interf->range(FPSTR(TCONST_00BC), myLamp.getAlarmT(), 1, 15, 1, FPSTR(TINTF_0BC), false);
@@ -1595,6 +1602,16 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == "1");
     #endif
         myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == "1");
+
+    #ifdef TM1637_CLOCK
+        uint8_t tmBri = ((*data)[FPSTR(TCONST_00D8)]).as<uint8_t>()<<4; // старшие 4 бита
+        tmBri = tmBri | ((*data)[FPSTR(TCONST_00D9)]).as<uint8_t>(); // младшие 4 бита
+        embui.var(FPSTR(TCONST_00D7), String(tmBri)); myLamp.setTmBright(tmBri);
+        myLamp.settm24((*data)[FPSTR(TCONST_00DA)] == "1");
+        myLamp.settmZero((*data)[FPSTR(TCONST_00DB)] == "1");
+        
+
+    #endif
 
         uint8_t alatmPT = ((*data)[FPSTR(TCONST_00BB)]).as<uint8_t>()<<4; // старшие 4 бита
         alatmPT = alatmPT | ((*data)[FPSTR(TCONST_00BC)]).as<uint8_t>(); // младшие 4 бита
@@ -2116,6 +2133,24 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 
 #endif
 
+#ifdef TM1637_CLOCK
+// void set_tmbright(Interface *interf, JsonObject *data){
+//     if (!data) return;
+//     int tmbright = (*data)[FPSTR(TCONST_00D8)];
+//     SETPARAM(FPSTR(TCONST_00D8), set_tmbright(tmbright));
+// }
+// void set_tmbrightOff(Interface *interf, JsonObject *data){
+//     if (!data) return;
+//     int tmbrightOff = (*data)[FPSTR(TCONST_00D9)];
+//     SETPARAM(FPSTR(TCONST_00D9), set_tmbrightOff(tmbrightOff));
+// }
+// void set_tm24(Interface *interf, JsonObject *data){
+//     if (!data) return;
+//     bool tm24 = (*data)[FPSTR(TCONST_00D9)];
+//     SETPARAM(FPSTR(TCONST_00D9), set_tm24(tm24));
+// }
+#endif
+
 void section_effects_frame(Interface *interf, JsonObject *data){
     recreateoptionsTask(true); // only cancel task
     if (!interf) return;
@@ -2338,6 +2373,11 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
     embui.var_create(FPSTR(TCONST_00A2),F("15")); // громкость
     embui.var_create(FPSTR(TCONST_00A9),F("255")); // кол-во файлов в папке mp3
+#endif
+#ifdef TM1637_CLOCK
+    embui.var_create(FPSTR(TCONST_00D7), String(F("82"))); // 5<<4+5, старшие и младшие 4 байта содержат 5
+    // embui.var_create(FPSTR(TCONST_00D8), F("5"));   // Яркость при вкл
+    // embui.var_create(FPSTR(TCONST_00D9), F("1"));    // Яркость при выкл
 #endif
     embui.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
 
@@ -2563,6 +2603,14 @@ void sync_parameters(){
     obj[FPSTR(TCONST_009E)] = tmp.showName ? "1" : "0";
     obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? "1" : "0";
     obj[FPSTR(TCONST_0096)] = tmp.isShowSysMenu ? "1" : "0";
+
+    #ifdef TM1637_CLOCK
+    uint8_t tmBright = embui.param(FPSTR(TCONST_00D7)).toInt();
+    obj[FPSTR(TCONST_00D8)] = tmBright>>4;
+    obj[FPSTR(TCONST_00D9)] = tmBright&0x0F;
+    obj[FPSTR(TCONST_00DA)] = tmp.tm24 ? "1" : "0";
+    obj[FPSTR(TCONST_00DB)] = tmp.tmZero ? "1" : "0";
+#endif
 
     uint8_t alarmPT = embui.param(FPSTR(TCONST_00BD)).toInt();
     obj[FPSTR(TCONST_00BB)] = alarmPT>>4;

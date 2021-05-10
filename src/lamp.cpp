@@ -406,6 +406,8 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       flags.playMP3 = false;
       flags.limitAlarmVolume = false;
       flags.isDraw = false;
+      flags.tm24 = true;
+      flags.tmZero = false;
 
 #ifdef VERTGAUGE
       gauge_time = millis();

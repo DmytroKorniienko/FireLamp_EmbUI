@@ -71,8 +71,8 @@ void isHolded();
 //void myStep();
 void encSetBri(int val);
 void encSetEffect(int val);
-void display(int16_t value, String type = "", uint8_t bri = TM_BRIGHTNESS);
-void display(String str, uint8_t bri = TM_BRIGHTNESS);
+void display(int16_t value, String type = "");
+void display(String str);
 
 void enc_setup(); 
 extern void encLoop();
