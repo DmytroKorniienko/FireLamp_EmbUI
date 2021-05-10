@@ -416,6 +416,11 @@ static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
 static const char TINTF_0D1[] PROGMEM = "Звук спочатку";
 static const char TINTF_0D2[] PROGMEM = "Обмежити гучність";
 static const char TINTF_0D3[] PROGMEM = "Коеф. швидкості";
+static const char TINTF_0D4[] PROGMEM = "Налаштування дисплея";
+static const char TINTF_0D5[] PROGMEM = "Яскравість (0 - виключити)";
+static const char TINTF_0D6[] PROGMEM = "Яскравість з викл. лампою (0 - виключити)";
+static const char TINTF_0D7[] PROGMEM = "24х годинний формат";
+static const char TINTF_0D8[] PROGMEM = "Ведучий 0";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";
