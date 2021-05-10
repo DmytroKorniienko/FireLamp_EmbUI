@@ -93,7 +93,7 @@ else {
     const tm* t = localtime(embui.timeProcessor.now());  // Определяем для вывода времени 
     char dispTime[5];            // Массив для сбора времени
     sprintf (dispTime, myLamp.isTmZero() ? (showPoints ? "%02d.%02d" : "%02d%02d") : (showPoints ? "%01d.%02d" : "%01d%02d") , myLamp.isTm24() ? t->tm_hour : ((t->tm_hour > 12) ? t->tm_hour - 12 : t->tm_hour), t->tm_min);
-    myLamp.isTmZero() ? tm1637.display(String(dispTime)) : ((t->tm_hour < 10 || !myLamp.isTm24() && t->tm_hour > 12 && t->tm_hour < 22) ? tm1637.display(String(dispTime), true, false, 1) : tm1637.display(String(dispTime)));
+    myLamp.isTmZero() ? tm1637.display(String(dispTime)) : ((t->tm_hour < 10 || (!myLamp.isTm24() && t->tm_hour > 12 && t->tm_hour < 22)) ? tm1637.display(String(dispTime), true, false, 1) : tm1637.display(String(dispTime)));
   }
   #if TM_SHOW_BANNER  
   }
