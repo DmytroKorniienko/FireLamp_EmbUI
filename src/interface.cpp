@@ -2871,32 +2871,14 @@ void remote_action(RA action, ...){
             CALL_INTF(FPSTR(TCONST_001C), value, set_gbrflag);
             break;
         case RA::RA_BRIGHT_NF:
-            obj[String(FPSTR(TCONST_0015)) + "0"] = value;
             obj[FPSTR(TCONST_0017)] = true;
             obj[FPSTR(TCONST_00D5)] = true;
             //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
-        case RA::RA_BRIGHT:
-            obj[String(FPSTR(TCONST_0015)) + "0"] = value;
+        case RA::RA_CONTROL:
+            //CALL_INTF_OBJ(set_effects_dynCtrl);
             obj[FPSTR(TCONST_00D5)] = true;
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
-            set_effects_dynCtrl(nullptr, &obj);
-            break;
-        case RA::RA_SPEED:
-            obj[String(FPSTR(TCONST_0015)) + "1"] = value;
-            obj[FPSTR(TCONST_00D5)] = true;
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
-            set_effects_dynCtrl(nullptr, &obj);
-            break;
-        case RA::RA_SCALE:
-            obj[String(FPSTR(TCONST_0015)) + "2"] = value;
-            obj[FPSTR(TCONST_00D5)] = true;
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
-            set_effects_dynCtrl(nullptr, &obj);
-            break;
-        case RA::RA_EXTRA:
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
 #ifdef ENCODER
@@ -3247,7 +3229,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00B7)) action = RA_WARNING;
         else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
         else if (param == FPSTR(TCONST_00C7)) action = RA_FILLMATRIX;
-        //else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_EXTRA; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
+        //else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_CONTROL; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
         else if (param == FPSTR(TCONST_00AE)) {
             return httpCallback(param, "", false); // set пока не реализована
         }
@@ -3282,7 +3264,7 @@ String httpCallback(const String &param, const String &value, bool isset){
                     default : break;
                 }
 			}
-            remote_action(RA_EXTRA, (String(FPSTR(TCONST_0015))+id).c_str(), val.c_str(), NULL);
+            remote_action(RA_CONTROL, (String(FPSTR(TCONST_0015))+id).c_str(), val.c_str(), NULL);
             //result = String(F("[")) + String(id) + String(F(",\"")) + val + String(F("\"]"));
             //embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
 

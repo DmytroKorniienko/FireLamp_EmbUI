@@ -134,7 +134,8 @@ void encLoop() {
       switch (currAction)
       {
       case 1: // регулировка яркости
-        remote_action(RA::RA_BRIGHT_NF, String(anyValue).c_str(), NULL);
+        //remote_action(RA::RA_BRIGHT_NF, String(anyValue).c_str(), NULL);
+        remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(anyValue).c_str(), NULL);
         break;
       case 2: // переключение эффектов
         LOG(printf_P, PSTR("Enc: Effect number: %d\n"), currEffNum);

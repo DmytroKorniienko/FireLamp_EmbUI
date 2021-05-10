@@ -44,7 +44,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 10);
 #endif
-				remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
+				remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(newval).c_str(), NULL);
 				return true;
 			case BA_SPEED: {
 				byte speed = (myLamp.effects.getControls()[1]->getVal()).toInt();
@@ -59,7 +59,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 100);
 #endif
-				remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
+				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"1").c_str(), String(newval).c_str(), NULL);
 				return true;
 			}
 			case BA_SCALE: {
@@ -75,7 +75,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 150);
 #endif
-				remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
+				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"2").c_str(), String(newval).c_str(), NULL);
 				return true;
 			}
 			case BA_ON: ract = RA_ON; break;
