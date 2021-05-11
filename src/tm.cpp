@@ -40,7 +40,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "tm.h"
 
 static bool showPoints = false;
-static bool timeSetted = false;
 uint8_t tmDelayTime;
 
 #if TM_SHOW_BANNER
@@ -83,7 +82,7 @@ else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) tm1637.display("__AP_192_1
 else {
 #endif
 
-  if(!embui.sysData.wifi_sta && !timeSetted) {      // Светим --:--, если не подтянулось время с инета или не было настроено вручную
+  if(embui.timeProcessor.isDirtyTime()) {      // Светим --:--, если не подтянулось время с инета или не было настроено вручную
     auto d =  (showPoints) ? DisplayDigit().setG().setDot() : DisplayDigit().setG();
     const uint8_t rawBuffer[4] = {d, d, d, d};
     tm1637.displayRawBytes(rawBuffer, 4);
@@ -100,11 +99,6 @@ else {
   #endif
   showPoints=!showPoints;
 }
-
-void tm_setted() {        // Проверяем, было ли установлено время
-  timeSetted++;
-}
-
 
 // | FUNC - Split IP
 // |----------
