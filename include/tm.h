@@ -55,7 +55,6 @@ static TM1637 tm1637(TM_CLK_PIN, TM_DIO_PIN);
 
 extern void tm_setup();
 extern void tm_loop();
-extern void tm_setted();  // Проверка, установлено ли время
 extern void splitIp(String str, String dlm, String dest[]);  // Функция разделителя по указателю
 extern String formatIp(String inArr[], String dlm);    // Функция форматирования
 uint8_t& getSetDelay();  // Задержка, для отображения с других плагинов

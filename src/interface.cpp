@@ -1643,9 +1643,6 @@ void show_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     BasicUI::set_settings_time(interf, data);
     myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
-    #ifdef TM1637_CLOCK
-    tm_setted();			// Проверяем, было ли настроено время
-    #endif
 }
 
 void block_settings_update(Interface *interf, JsonObject *data){
