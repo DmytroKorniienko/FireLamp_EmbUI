@@ -2945,17 +2945,17 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
       String tmp = embui.timeProcessor.getFormattedShortTime();
       if(HEIGHT>=16){
         int16_t xPos = speed!=254 ? random(LET_WIDTH*2,WIDTH) : (WIDTH+LET_WIDTH*2)/2;
-        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, HEIGHT-LET_HEIGHT, xPos);
-        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, (int8_t)HEIGHT-(int8_t)(LET_HEIGHT*2), xPos);
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, false, (int8_t)HEIGHT-(int8_t)(LET_HEIGHT*2), xPos);
       } else if(WIDTH>=21){ // требуется минимум 5*4+1 символов
         int16_t xPos = speed!=254 ? random(LET_WIDTH*2+1,WIDTH) : (WIDTH+LET_WIDTH*2+1)/2;
-        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, HEIGHT-LET_HEIGHT, xPos);
-        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));
       } else {
         //int16_t xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
         int16_t xPos = speed!=254 ? random(LET_WIDTH*2,WIDTH) : (WIDTH+LET_WIDTH*2)/2;
         isMinute=!isMinute;
-        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : isMinute ? 64 : 127), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : isMinute ? 64 : 127), false, false, HEIGHT-LET_HEIGHT, xPos);
       }
     }
   } else {
@@ -2979,16 +2979,16 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
     String tmp = embui.timeProcessor.getFormattedShortTime();
     uint8_t shift = beatsin8(speed/5, -1, 1);
     if(HEIGHT>=16){
-      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
-      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
     } else if(WIDTH>=21){
-      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos+(LET_WIDTH*2+1));
-      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos+(LET_WIDTH*2+1));
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos);
     } else if(WIDTH>=10){
-      myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), hColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos);
     } else {
         xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
-        myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, (int)color_idx%16), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, (int)color_idx%16), false, false, HEIGHT-LET_HEIGHT, xPos);
         color_idx=color_idx+(speed/256.0);
     }
     curTimePos=curTimePos+(0.23*(speed/255.0))*(timeShiftDir?-1:1); // смещаем

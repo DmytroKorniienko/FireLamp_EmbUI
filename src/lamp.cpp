@@ -756,8 +756,8 @@ uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // �
   return 0;
 }
 
-void LAMP::sendString(const char* text, const CRGB &letterColor){
-  if (!isLampOn()){
+void LAMP::sendString(const char* text, const CRGB &letterColor, bool forcePrint){
+  if (!isLampOn() && forcePrint){
       disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
@@ -783,7 +783,7 @@ String &LAMP::prepareText(String &source){
   return source;  
 }
 
-void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
+void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
 {
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
   if(textOffset==-128) textOffset=this->txtOffset;
@@ -818,6 +818,14 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         return; // на выход
     }
   } else { // текст не пустой
+    if(clearQueue){
+      if(docArrMessages){ // очистить очередь, освободить память
+          delete docArrMessages;
+          docArrMessages = nullptr;
+      }
+      lampState.isStringPrinting = false; // сбросить текущий вывод строки
+    }
+
     if(!lampState.isStringPrinting){ // ничего сейчас не печатается
       String storage = text;
       prepareText(storage);
@@ -865,6 +873,10 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 {
   static String toPrint;
   static CRGB _letterColor;
+
+  if(!lampState.isStringPrinting){
+    toPrint.clear();
+  }
 
   lampState.isStringPrinting = true;
   int8_t offs=(textOffset==-128?txtOffset:textOffset);
@@ -1266,19 +1278,19 @@ void LAMP::warningHelper(){
       case 1: {
         EffectMath::fillAll(warningTask->getWarn_color());
         if (!isPrintingNow())
-          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       case 2: {
         EffectMath::fillAll(warningTask->getWarn_color());
         if (!isPrintingNow())
-          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), -warningTask->getWarn_color(), true, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), -warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       case 3: {
         if (!isPrintingNow())
-          //sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, -128, xPos);
-          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, -128, xPos);
+          //sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, false, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       default: break;

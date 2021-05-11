@@ -107,7 +107,7 @@ void encLoop() {
     return;
   }
   if (inSettings and loops%32500 == 0) {
-    myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, false); 
+    myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, false, true); 
     //myLamp.doPrintStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange);
   }
 /*
@@ -260,7 +260,7 @@ void isClick() {
     }
     //encDisplay(currDynCtrl, String(FPSTR("Ctr.")));
     encDisplay(encDynCtrl[currDynCtrl].value, String(encDynCtrl[currDynCtrl].id) + String(FPSTR(".")));
-    myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, true);  
+    myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, true, true);  
   }
   interrupt();
 }
@@ -280,7 +280,7 @@ void isHolded() {
 #ifdef DS18B20
     canDisplayTemp() = false;
 #endif
-    myLamp.sendStringToLamp(String(FPSTR(TINTF_002)).c_str(), CRGB::Green, true);
+    myLamp.sendStringToLamp(String(FPSTR(TINTF_002)).c_str(), CRGB::Green, true, true);
     encDynCtrl.resize(controlsAmount);
     for (uint8_t i = 0; i < myLamp.getEffControls().size(); i++) { // вычитаем
       encDynCtrl[i].id =    myLamp.getEffControls()[i]->getId();
@@ -308,7 +308,7 @@ void exitSettings() {
   currAction = 0;
   anyValue = 0;
   encDisplay(String(FPSTR("done")));
-  myLamp.sendStringToLamp(String(FPSTR(TINTF_00B)).c_str(), CRGB::Green, true);
+  myLamp.sendStringToLamp(String(FPSTR(TINTF_00B)).c_str(), CRGB::Green, true, true);
   myLamp.effects.autoSaveConfig(true);
 #ifdef DS18B20
   canDisplayTemp() = true;
