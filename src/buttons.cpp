@@ -91,8 +91,8 @@ bool Button::activate(btnflags& flg, bool reverse){
 			case BA_EFF_PREV: ract = RA_EFF_PREV; break;
 			case BA_SEND_TIME: ract = RA_SEND_TIME; break;
 			case BA_SEND_IP: ract = RA_SEND_IP; break;
-			case BA_WHITE_HI: ract = RA_WHITE_HI; break;
-			case BA_WHITE_LO: ract = RA_WHITE_LO; break;
+			case BA_WHITE_HI: flags.direction=true; ract = RA_WHITE_HI; break;
+			case BA_WHITE_LO: flags.direction=false; ract = RA_WHITE_LO; break;
 			case BA_WIFI_REC: ract = RA_WIFI_REC; break;
 			case BA_EFFECT: ract = RA_EFFECT; break;
 			default:;
