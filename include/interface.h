@@ -39,9 +39,6 @@ typedef enum _remote_action {
     RA_WARNING,
     RA_DRAW,
     RA_FILLMATRIX
-#ifdef ENCODER
-    , RA_DYNCTRL
-#endif
 } RA;
 
 void remote_action(RA action, ...);

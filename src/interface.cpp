@@ -2881,14 +2881,6 @@ void remote_action(RA action, ...){
             obj[FPSTR(TCONST_00D5)] = true;
             set_effects_dynCtrl(nullptr, &obj);
             break;
-#ifdef ENCODER
-        case RA::RA_DYNCTRL:
-            obj[String(FPSTR(TCONST_0015)) + String(getCurrDynCtrl())] = value;
-            obj[FPSTR(TCONST_00D5)] = true;
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
-            set_effects_dynCtrl(nullptr, &obj);
-            break;
-#endif
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
             CALL_INTF_OBJ(show_settings_mic);

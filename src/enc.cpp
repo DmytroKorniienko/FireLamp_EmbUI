@@ -74,7 +74,7 @@ std::vector<control> encDynCtrl;
 //Task encTask(100 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
 uint8_t getCurrDynCtrl() {
-  return currDynCtrl;
+  return encDynCtrl[currDynCtrl].id;
 }
 
 void callEncTick () {
@@ -86,20 +86,29 @@ void encLoop() {
   noInterrupt();
   enc.tick();
   loops++;  // счетчик псевдотаймера
+  // EVERY_N_SECONDS(1) {
+    // LOG(printf_P, PSTR("Enc: loops, currAction, done: %d, %d, %s\n"), loops, currAction, String(done ? FPSTR("true") : FPSTR("false")).c_str());
+  // }
   if (inSettings and loops%100 == 0) {
     resetTimers();
 #ifdef TM1637_CLOCK
     getSetDelay() = TM_TIME_DELAY;
 #endif
   }
+#ifdef DS18B20
+  if (!inSettings) {
+    canDisplayTemp() = done;
+  }
+#endif
 
   if (inSettings and loops == EXIT_TIMEOUT * 32500) {
     inSettings =  false;
     exitSettings();
     return;
   }
-  if (inSettings and loops%10000 == 0) {
-    myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, true); 
+  if (inSettings and loops%32500 == 0) {
+    myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, false); 
+    //myLamp.doPrintStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange);
   }
 /*
 *     Оперативные изменения, яркость например, чтобы было видно что происходит
@@ -112,7 +121,8 @@ void encLoop() {
       myLamp.setBrightness(anyValue);
       break;
     case 3:
-      remote_action(RA::RA_DYNCTRL, String(encDynCtrl[currDynCtrl].value).c_str(), nullptr);
+      //remote_action(RA::RA_DYNCTRL, String(encDynCtrl[currDynCtrl].value).c_str(), nullptr);
+      remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015)) + String(encDynCtrl[currDynCtrl].id)).c_str(), String(encDynCtrl[currDynCtrl].value).c_str(), NULL);
       done = true;
     break;
 
@@ -135,7 +145,6 @@ void encLoop() {
       switch (currAction)
       {
       case 1: // регулировка яркости
-        //remote_action(RA::RA_BRIGHT_NF, String(anyValue).c_str(), NULL);
         remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(anyValue).c_str(), NULL);
         break;
       case 2: // переключение эффектов
@@ -146,8 +155,6 @@ void encLoop() {
       default:
         break;
       } 
-      //currAction = 0;
-      //anyValue = 0;
       done = true;
     } 
   } 
@@ -251,7 +258,8 @@ void isClick() {
         break;
       }
     }
-    encDisplay(currDynCtrl, String(FPSTR("Ctr.")));
+    //encDisplay(currDynCtrl, String(FPSTR("Ctr.")));
+    encDisplay(encDynCtrl[currDynCtrl].value, String(encDynCtrl[currDynCtrl].id) + String(FPSTR(".")));
     myLamp.sendStringToLamp(encDynCtrl[currDynCtrl].name.c_str(), CRGB::Orange, true);  
   }
   interrupt();
@@ -265,16 +273,14 @@ void isHolded() {
     return;
   }
   
-  inSettings = !inSettings; // вошли\вышли
+  inSettings = !inSettings; // вошли\вышли в настройки эффекта
   if (inSettings) {
-    encDisplay(String(FPSTR("Sets")));
-    resetTimers();
+    controlsAmount = myLamp.getEffControls().size();
     loops = 0;
 #ifdef DS18B20
     canDisplayTemp() = false;
 #endif
-    myLamp.sendStringToLamp(String(FPSTR(TINTF_002)).c_str(), CRGB::Orange, true);
-    controlsAmount = myLamp.getEffControls().size();
+    myLamp.sendStringToLamp(String(FPSTR(TINTF_002)).c_str(), CRGB::Green, true);
     encDynCtrl.resize(controlsAmount);
     for (uint8_t i = 0; i < myLamp.getEffControls().size(); i++) { // вычитаем
       encDynCtrl[i].id =    myLamp.getEffControls()[i]->getId();
@@ -285,6 +291,7 @@ void isHolded() {
       encDynCtrl[i].name = myLamp.getEffControls()[i]->getName();
       LOG(printf_P, PSTR("Enc: in Settings: Controls: id, type, min, max, value, name: %d, %d, %d, %d, %d, %s\n"), encDynCtrl[i].id, encDynCtrl[i].type, encDynCtrl[i].min, encDynCtrl[i].max, encDynCtrl[i].value, encDynCtrl[i].name.c_str());
     }
+    encDisplay(encDynCtrl[currDynCtrl].value, String(currDynCtrl) + String(FPSTR(".")));
   } else {
       exitSettings();
   }
@@ -292,6 +299,7 @@ void isHolded() {
 }
 
 void exitSettings() {
+  noInterrupt();
   encDynCtrl.resize(0);
   controlsAmount = 0;
   currDynCtrl = 0;
@@ -300,12 +308,13 @@ void exitSettings() {
   currAction = 0;
   anyValue = 0;
   encDisplay(String(FPSTR("done")));
-  myLamp.sendStringToLamp(String(FPSTR(TINTF_00B)).c_str(), CRGB::Orange, true);
+  myLamp.sendStringToLamp(String(FPSTR(TINTF_00B)).c_str(), CRGB::Green, true);
   myLamp.effects.autoSaveConfig(true);
 #ifdef DS18B20
   canDisplayTemp() = true;
 #endif
   LOG(printf_P, PSTR("Enc: exit Settings\n"));
+  interrupt();
 }
 
 /*
@@ -341,12 +350,17 @@ void myClicks() {
   case 1: // Включение\выключение лампы
     if (myLamp.isLampOn()) {
       remote_action(RA::RA_OFF, NULL);
+#ifdef TM1637_CLOCK
+      getSetDelay() = 1;
+      tmDisplay(String(FPSTR("Off")), true, false, 1);  // Выводим 
+#endif
     } else {
       remote_action(RA::RA_ON, NULL);
-    }
 #ifdef TM1637_CLOCK
-    tmDisplay(String(myLamp.isLampOn() ? F("On") : F("Off")), true, false, myLamp.isLampOn() ? 2 : 1);  // Выводим 
+      getSetDelay() = 1;
+      tmDisplay(String(FPSTR("On")), true, false, 2);  // Выводим 
 #endif
+    }
     break;
   case 2:  // Вкл\выкл Демо
     if (myLamp.getMode() == MODE_DEMO) {
@@ -463,7 +477,7 @@ void encSetDynCtrl(int val) {
   }
   currAction = 3;
   encDynCtrl[currDynCtrl].value = constrain(encDynCtrl[currDynCtrl].value + val, encDynCtrl[currDynCtrl].min, encDynCtrl[currDynCtrl].max);
-  if (encDynCtrl[currDynCtrl].type == 2) myLamp.sendStringToLamp((encDynCtrl[currDynCtrl].name + String(encDynCtrl[currDynCtrl].value ? FPSTR(": On") : FPSTR(": Off"))).c_str(), CRGB::Orange, true); //myLamp.showWarning(CRGB::Orange,1000,100,3,true, encDynCtrl[currDynCtrl].value ? "On" : "Off");
+  if (encDynCtrl[currDynCtrl].type == 2) myLamp.sendStringToLamp(String(encDynCtrl[currDynCtrl].value ? FPSTR(": On") : FPSTR(": Off")).c_str(), CRGB::Green, true); //myLamp.showWarning(CRGB::Orange,1000,100,3,true, encDynCtrl[currDynCtrl].value ? "On" : "Off");
 #ifdef VERTGAUGE
   else myLamp.GaugeShow(encDynCtrl[currDynCtrl].value, encDynCtrl[currDynCtrl].max, 10);
 #endif
