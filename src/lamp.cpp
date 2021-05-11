@@ -604,6 +604,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
 
   if (!text || !strlen(text))
   {
+    offset = (flags.MIRR_V ? 0 : WIDTH);
     return true;
   }
 
@@ -756,15 +757,15 @@ uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // �
   return 0;
 }
 
-void LAMP::sendString(const char* text, const CRGB &letterColor, bool forcePrint){
+void LAMP::sendString(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue){
   if (!isLampOn() && forcePrint){
       disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
       setBrightness(OFF_BRIGHTNESS, false, false); // выводить будем минимальной яркостью в OFF_BRIGHTNESS пункта
-      sendStringToLamp(text, letterColor, true);
+      sendStringToLamp(text, letterColor, forcePrint, clearQueue);
   } else {
-      sendStringToLamp(text, letterColor);
+      sendStringToLamp(text, letterColor, forcePrint, clearQueue);
   }
 }
 
@@ -876,6 +877,7 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 
   if(!lampState.isStringPrinting){
     toPrint.clear();
+    fillStringManual(nullptr, CRGB::Black);
   }
 
   lampState.isStringPrinting = true;

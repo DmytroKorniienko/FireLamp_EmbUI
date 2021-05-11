@@ -303,7 +303,7 @@ public:
     LAMPMODE getMode() {return mode;}
     void setMode(LAMPMODE _mode) {mode=_mode;}
 
-    void sendString(const char* text, const CRGB &letterColor, bool forcePrint = true);
+    void sendString(const char* text, const CRGB &letterColor, bool forcePrint = true, bool clearQueue = false);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool isPrintingNow() { return lampState.isStringPrinting; }
     LAMP();
