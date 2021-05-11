@@ -820,6 +820,7 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
     }
   } else { // текст не пустой
     if(clearQueue){
+      LOG(println, F("Clear message queue"));
       if(docArrMessages){ // очистить очередь, освободить память
           delete docArrMessages;
           docArrMessages = nullptr;
@@ -848,8 +849,13 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 
       for (size_t i = 0; i < arr.size(); i++)
       {
-        if((arr[i])[F("s")]=text){
-          LOG(println, F("Duplicated string"));
+        if((arr[i])[F("s")]==text
+          && (arr[i])[F("c")]==((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b
+          && (arr[i])[F("o")]==textOffset
+          && (arr[i])[F("f")]==fixedPos
+        ){
+          LOG(println, F("Duplicate string skipped"));
+          //LOG(println, (*docArrMessages).as<String>());
           return;
         }
       }
@@ -860,12 +866,12 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       var[F("o")]=textOffset;
       var[F("f")]=fixedPos;
 
-      LOG(print, F("Array: "));
-      LOG(println, (*docArrMessages).as<String>());
-
       String tmp; // Тут шаманство, чтобы не ломало JSON
       serializeJson((*docArrMessages), tmp);
       deserializeJson((*docArrMessages), tmp);
+
+      LOG(print, F("Array: "));
+      LOG(println, (*docArrMessages).as<String>());
     }
   }
 }
