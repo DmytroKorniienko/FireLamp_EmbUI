@@ -59,6 +59,13 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кнопкой <A, B, KEY>
 
+#ifndef EXIT_TIMEOUT
+#define EXIT_TIMEOUT 3U
+#endif
+
+#ifndef ENC_STRING_DELAY
+#define ENC_STRING_DELAY 40
+#endif
 
 
 void callEncTick ();
@@ -75,9 +82,10 @@ void encSetEffect(int val);
 void encSetDynCtrl(int val);
 void encDisplay(uint16_t value, String type = "");
 void encDisplay(String str);
-uint8_t getCurrDynCtrl();
 void resetTimers();
 void exitSettings();
+void encSendString(String str, CRGB color, uint8_t delay = ENC_STRING_DELAY);
+bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
 extern void encLoop();
