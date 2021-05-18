@@ -2882,6 +2882,9 @@ void remote_action(RA action, ...){
         case RA::RA_MIC:
             CALL_INTF_OBJ(show_settings_mic);
             break;
+        case RA::RA_MICONOFF:
+            CALL_INTF(FPSTR(TCONST_001E), value, set_micflag);
+            break;
 #endif
         case RA::RA_EFF_NEXT:
             resetAutoTimers(); // сборс таймера демо, если есть перемещение

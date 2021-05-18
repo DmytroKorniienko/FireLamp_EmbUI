@@ -28,6 +28,9 @@ typedef enum _remote_action {
     RA_BRIGHT_NF,
     RA_CONTROL,
     RA_MIC,
+#ifdef MIC_EFFECTS
+    RA_MICONOFF,
+#endif
     RA_EFFECT,
     RA_SEND_TEXT,
     RA_SEND_TIME,

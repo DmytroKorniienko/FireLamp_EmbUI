@@ -89,5 +89,11 @@ bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
 extern void encLoop();
+
+void toggleDemo();
+void toggleGBrigh();
+void toggleMic();
+void sendTime();
+void sendIP();
 #endif
 #endif

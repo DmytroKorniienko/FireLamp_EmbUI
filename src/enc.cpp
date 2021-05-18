@@ -361,20 +361,23 @@ void myClicks() {
     }
     break;
   case 2:  // Вкл\выкл Демо
-    if (myLamp.getMode() == MODE_DEMO) {
-      remote_action(RA::RA_DEMO, "0", NULL); 
-      encSendString(String(PSTR("- Demo OFF -")).c_str(), CRGB::Orange);
-    }
-    else 
-      remote_action(RA::RA_DEMO, "1", NULL);
+    toggleDemo();
     break;
   case 3:
-    remote_action(RA::RA_SEND_TIME, NULL);
+    toggleGBrigh();
     break;
+#ifdef MIC_EFFECTS
   case 4:
-    remote_action(RA::RA_SEND_IP, NULL);
+    toggleMic();
     break;
+#endif
   case 5:
+    sendIP();
+    break;
+  case 6:
+    sendTime();
+    break;
+  case 7:
     remote_action(RA::RA_OTA, NULL);
     break;
   default:
@@ -530,6 +533,36 @@ void encSendString(String str, CRGB color, uint8_t delay) {
   myLamp.setBFade(fade);
   myLamp.setTextMovingSpeed(speed);
   
+}
+
+
+void toggleDemo() {
+  if (myLamp.getMode() == MODE_DEMO) {
+    remote_action(RA::RA_DEMO, "0", NULL); 
+    encSendString(String(PSTR("Demo OFF")).c_str(), CRGB::Orange);
+  }
+  else 
+    remote_action(RA::RA_DEMO, "1", NULL);
+}
+
+void toggleGBrigh() {
+  remote_action(RA::RA_GLOBAL_BRIGHT, myLamp.IsGlobalBrightness() ? "0" : "1", NULL);
+  encSendString(String(FPSTR(TINTF_00C)) + String(myLamp.IsGlobalBrightness() ? FPSTR(": ON") : FPSTR(": OFF")).c_str(), CRGB::Orange);
+}
+
+void toggleMic() {
+#ifdef MIC_EFFECTS
+  remote_action(RA::RA_MICONOFF, myLamp.isMicOnOff() ? "0" : "1", NULL);
+  encSendString(String(FPSTR(TINTF_021)) + String(myLamp.isMicOnOff() ? FPSTR(": ON") : FPSTR(": OFF")).c_str(), CRGB::Orange);
+#endif
+}
+
+void sendTime() {
+  remote_action(RA::RA_SEND_TIME, NULL);
+}
+
+void sendIP() {
+  remote_action(RA::RA_SEND_IP, NULL);
 }
 
 #endif
