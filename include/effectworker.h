@@ -639,6 +639,16 @@ public:
     bool validByList(int val);
     // получить реальный номер эффекта по номеру элемента списка (для плагинов)
     uint16_t realEffNumdByList(uint16_t val) { return effects[val]->eff_nb; }
+    // получить индекс эффекта по номеру (для плагинов)
+    uint16_t effIndexByList(uint16_t val) { 
+        uint16_t found = 0;
+        for (uint16_t i = 0; i < effects.size(); i++) {
+            if (effects[i]->eff_nb == val ) {
+                found = i;
+            } 
+        }
+        return found;
+    }
     // получить флаг canBeSelected по номеру элемента списка (для плагинов)
     bool effCanBeSelected(uint16_t val) { if (val < effects.size())return effects[val]->canBeSelected(); return false; }
 

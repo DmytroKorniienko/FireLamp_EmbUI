@@ -101,8 +101,11 @@ void tempToSpeed(int16_t& currentTemp) {
 #endif
 
 void ds_loop() { 
+#ifdef ENCODER
+  if (!digitalRead(SW)) return; // если кнопка энкодера нажата, пропускаем этот loop
+#endif
   int16_t curTemp = getTemp();
-  if (canDisplayTemp()) ds_display(curTemp); 
+  if (canDisplayTemp()) ds_display(curTemp);
   #if COOLER_PIN >= 0
   tempToSpeed(curTemp);
   #endif

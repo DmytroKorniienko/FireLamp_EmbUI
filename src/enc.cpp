@@ -86,7 +86,7 @@ void encLoop() {
     exitSettings();
     return;
   }
-  if (inSettings and loops%32500 == 0) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
+  if (inSettings and loops%30000 == 0) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     encSendString(myLamp.getEffControls()[currDynCtrl]->getName().c_str(), CRGB::Orange); 
   }
 
@@ -114,34 +114,36 @@ void encLoop() {
 /*
 *     Отложенные операции, к примеру отправка яркости в УИ, запись новых значений в ФС, etc.
 */
-  if (loops%3000 == 0 and !done) { // пока псевдотаймер. Тут кровь из носу нужен четкий таск. Вообще все это в другую процедуру и в таск.
-    resetTimers();
-    
-    if (valRepiteChk != anyValue) {  // проверим менялось ли значение, чтобы не дергать почем зря отложенную операцию
-      valRepiteChk = anyValue;
-    } else {
-      LOG(printf_P, PSTR("Enc: New setting appled.\n"));
+  EVERY_N_MILLIS(2000) {
+    if (!done) { // пока псевдотаймер. Тут кровь из носу нужен четкий таск. Вообще все это в другую процедуру и в таск.
+      resetTimers();
+      
+      if (valRepiteChk != anyValue) {  // проверим менялось ли значение, чтобы не дергать почем зря отложенную операцию
+        valRepiteChk = anyValue;
+      } else {
+        LOG(printf_P, PSTR("Enc: New setting appled.\n"));
 
-      switch (currAction)
-      {
-      case 1: // регулировка яркости
-        remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(anyValue).c_str(), NULL);
+        switch (currAction)
+        {
+        case 1: // регулировка яркости
+          remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(anyValue).c_str(), NULL);
+          break;
+        case 2: // переключение эффектов
+          LOG(printf_P, PSTR("Enc: Effect number: %d\n"), currEffNum);
+          myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
+          remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
+          encSendString(String(currEffNum).c_str(), CRGB::Orange);
         break;
-      case 2: // переключение эффектов
-        LOG(printf_P, PSTR("Enc: Effect number: %d\n"), currEffNum);
-        myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
-        remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
-        encSendString(String(currEffNum).c_str(), CRGB::Orange);
-      break;
-      default:
-        break;
+        default:
+          break;
+        } 
+        done = true;
       } 
-      done = true;
-    } 
-  } 
-  
+    }
+  }
   interrupt();
 }
+
 
 // Обработчик прерываний
 void IRAM_ATTR isrEnc() { 
@@ -426,28 +428,31 @@ void encSetBri(int val) {
 // Функция смены эффекта зажатым энкодером
 void encSetEffect(int val) {
   noInterrupt();
-  resetTimers();
-  loops = 0;
-
-  if (done or currAction !=2) { // если сеттер отраболтал или предыдущий мод не отвечает текущему, перечитаем значение, и взведем сеттер
-    anyValue = myLamp.effects.getSelected();
-    done = false;
-    currEffNum = anyValue;
-    encDisplay(currEffNum, "");
-  }
   if (currAction == 3) {
     exitSettings();
     return;
   }
+
+  resetTimers();
+  loops = 0;
+
+  if (done or currAction !=2) { // если сеттер отработал или предыдущий мод не отвечает текущему, перечитаем значение, и взведем сеттер
+    anyValue = myLamp.effects.effIndexByList(myLamp.effects.getCurrent());
+    done = false;
+    encDisplay(anyValue, "");
+  }
+
   currAction = 2;
 
-  anyValue = anyValue+val;
+  anyValue = anyValue + val;
   
-  while (!myLamp.effects.effCanBeSelected(anyValue))  // в цикле проверим может быть текущий накрученный выбранным
+  while (1)  // в цикле проверим может быть текущий накрученный выбранным
   {
+    if (myLamp.effects.effCanBeSelected(anyValue)) break;
+
     if (val > 0) { // если курутили вперед по списку - скипим в том же направлении, если назад - в обратном
       anyValue++; 
-      if(anyValue == myLamp.effects.getModeAmount()) // если ничего не нашли, - снова начинаем сначала
+      if(anyValue >= myLamp.effects.getModeAmount()) // если ничего не нашли, - снова начинаем сначала
         anyValue = 0;
     }
     else {
