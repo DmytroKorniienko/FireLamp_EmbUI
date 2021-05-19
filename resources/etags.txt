@@ -1,4 +1,4 @@
-https://github.com/DmytroKorniienko/EmbUI/raw/dev/resources/data.zip "5e8b8a567599d931600eca15d68391f8ded82f2ed814ac74ed9edc88f1aa3560"
+https://github.com/DmytroKorniienko/EmbUI/raw/dev/resources/data.zip "18da3b0073d70e57943e4607c4b02f719ba5854bce1e4f47dfba17f603c14084"
 https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/ace.js "6bb1dbefe1d44047292ec5f36c781ff1a455db5309a70ba0636cf1465c90d285"
 https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-html.js "cc3063d0a6efd56fcd0554b55e2454b828c2bb20d095c74b5529f09f58ee1b37"
 https://github.com/ajaxorg/ace-builds/raw/master/src-min-noconflict/mode-json.js "5fbe2a5c0e1bbbe3e2a155c342fb4b826759b7827cb42bf80d45bcba589234a5"

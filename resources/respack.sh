@@ -95,8 +95,8 @@ fi
 [ ! -f ../data/favicon.ico.gz ] || [ html/favicon.ico -nt ../data/favicon.ico.gz ] &&  gzip -9k html/favicon.ico && mv -f html/favicon.ico.gz ../data/
 
 cp -u html/.exclude.files ../data/
-cp -u html/events_config.json ../data/
-cp -u html/buttons_config.json ../data/
+#cp -u html/events_config.json ../data/
+#cp -u html/buttons_config.json ../data/
 
 ###
 # обновляем ace-editor в data/extras folder
