@@ -305,6 +305,7 @@ public:
 
     void sendString(const char* text, const CRGB &letterColor, bool forcePrint = true, bool clearQueue = false);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
+    void sendStringToLampDirect(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool isPrintingNow() { return lampState.isStringPrinting; }
     LAMP();
 

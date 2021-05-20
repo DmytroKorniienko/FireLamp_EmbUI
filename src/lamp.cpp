@@ -784,6 +784,13 @@ String &LAMP::prepareText(String &source){
   return source;  
 }
 
+void LAMP::sendStringToLampDirect(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
+{
+    String storage = text;
+    prepareText(storage);
+    doPrintStringToLamp(storage.c_str(), letterColor, textOffset, fixedPos); // отправляем
+}
+
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
 {
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
