@@ -2098,7 +2098,10 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 void set_btnflag(Interface *interf, JsonObject *data){
     if (!data) return;
     //SETPARAM(FPSTR(TCONST_001F), myButtons->setButtonOn((*data)[FPSTR(TCONST_001F)] == "1"));
-    myButtons->setButtonOn((*data)[FPSTR(TCONST_001F)] == "1");
+    bool isSet = (*data)[FPSTR(TCONST_001F)] == "1";
+    myButtons->setButtonOn(isSet);
+    myLamp.setButton(isSet);
+    save_lamp_flags();
 }
 #endif
 
@@ -2601,7 +2604,10 @@ void sync_parameters(){
     myLamp.setClearingFlag(tmp.isEffClearing);
 
 #ifdef ESP_USE_BUTTON
-    CALL_SETTER(FPSTR(TCONST_001F), embui.param(FPSTR(TCONST_001F)), set_btnflag);
+    CALL_SETTER(FPSTR(TCONST_001F), (tmp.isBtn ? "1" : "0"), set_btnflag);
+    // obj[FPSTR(TCONST_001F)] = tmp.isBtn ? "1" : "0";
+    // CALL_INTF_OBJ(set_btnflag);
+    // doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));

@@ -556,8 +556,8 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
               type,           // type
               name,           // name
               val,            // value
-              (type & 0x0F==CONTROL_TYPE::CHECKBOX) ? "0" : min,            // min
-              (type & 0x0F==CONTROL_TYPE::CHECKBOX) ? "1" : max,            // max
+              ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "0" : min,            // min
+              ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "1" : max,            // max
               step            // step
           ));
       }

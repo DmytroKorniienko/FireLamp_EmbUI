@@ -323,6 +323,7 @@ public:
     bool isDebugOn() {return flags.isDebug;}
     bool isDrawOn() {return flags.isDraw;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
+    void setButton(bool flag) {flags.isBtn=flag;}
     void setDrawBuff(bool flag) {
         flags.isDraw=flag;
         if(!flag){
