@@ -128,7 +128,7 @@ struct {
     uint8_t MP3eq:3; // вид эквалайзера
     bool isShowSysMenu:1; // показывать ли системное меню
     bool isOnMP3:1; // включен ли плеер?
-    bool reserved3:1;
+    bool isBtn:1; // включена ли кнопка?
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
     uint8_t alarmSound:3; // звук будильника ALARM_SOUND_TYPE
@@ -152,7 +152,7 @@ private:
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
-    int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
+    //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
     uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
@@ -288,15 +288,15 @@ public:
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
-    int getmqtt_int() {return mqtt_int;}
+    //int getmqtt_int() {return mqtt_int;}
     void setmqtt_int(int val=DEFAULT_MQTTPUB_INTERVAL) {
-        mqtt_int = val;
+        //mqtt_int = val;
         if(tmqtt_pub)
             tmqtt_pub->cancel(); // cancel & delete
 
         extern void sendData();
-        if (mqtt_int){
-            tmqtt_pub = new Task(mqtt_int * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
+        if(val){
+            tmqtt_pub = new Task(val * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
         }
     }
 

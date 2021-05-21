@@ -397,6 +397,7 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       flags.dRand = false;
       flags.isShowSysMenu = false;
       flags.isOnMP3 = false;
+      flags.isBtn = false;
       flags.showName = false;
       flags.playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
       flags.playName = false; // воспроизводить имя?

@@ -523,15 +523,6 @@ public:
             CONTROL_TYPE::RANGE,                    // type
             id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088))           // name
         ));
-        // selcontrols.add(new UIControl(
-        //     id,                                     // id
-        //     CONTROL_TYPE::RANGE,                    // type
-        //     id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088)),           // name
-        //     String(127),                            // value
-        //     String(1),                              // min
-        //     String(255),                            // max
-        //     String(1)                               // step
-        // ));
       }
       selcontrols = controls;
     }
