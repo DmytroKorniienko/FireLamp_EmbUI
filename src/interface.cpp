@@ -2329,6 +2329,41 @@ void save_lamp_flags(){
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 }
 
+// кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
+bool notfound_handle(AsyncWebServerRequest *request, const String& req)
+{
+    if (!(req.indexOf(F("win")) == 1)) return false;
+    LOG(println,req);
+
+    uint8_t bright = myLamp.getLampBrightness();
+    if ((req.indexOf(F("&T=2")) > 1)){
+        if(myLamp.isLampOn()){
+            remote_action(RA::RA_OFF, NULL);
+            bright = 0;
+        }
+        else
+            remote_action(RA::RA_ON, NULL);
+    }
+
+    if ((req.indexOf(F("&A=")) > 1)){
+        bright = req.substring(req.indexOf(F("&A="))+3).toInt();
+        if(bright)
+            remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(bright).c_str(), NULL);
+    }
+
+    String result = F("<?xml version=\"1.0\" ?><vs><ac>");
+    result.concat(myLamp.isLampOn()?bright:0);
+    result.concat(F("</ac><ds>"));
+    result.concat(embui.param(FPSTR(P_hostname)));
+    result.concat(F(".local-")); //lampname.local-IP
+    result.concat(WiFi.localIP().toString());
+    result.concat(F("</ds></vs>"));
+
+    request->send(200, FPSTR(PGmimexml), result);
+    return true;
+}
+
+
 /**
  * Набор конфигурационных переменных и обработчиков интерфейса
  */

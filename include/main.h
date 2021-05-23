@@ -71,6 +71,6 @@ void sendData();
 void create_parameters();
 void sync_parameters();
 void event_worker(const EVENT *);
-//ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
+bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
 
 #endif
