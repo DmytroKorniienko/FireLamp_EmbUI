@@ -376,10 +376,12 @@ void myClicks() {
     break;
   case 6:
     sendTime();
+#if OTA
     break;
   case 7:
     remote_action(RA::RA_OTA, NULL);
     break;
+#endif
   default:
     LOG(printf_P, PSTR("Enc: Click: %d\n"), enc.clicks);
     break;
@@ -547,7 +549,7 @@ void toggleDemo() {
 
 void toggleGBrigh() {
   remote_action(RA::RA_GLOBAL_BRIGHT, myLamp.IsGlobalBrightness() ? "0" : "1", NULL);
-  encSendString(String(FPSTR(TINTF_00C)) + String(myLamp.IsGlobalBrightness() ? FPSTR(": ON") : FPSTR(": OFF")).c_str(), CRGB::Orange);
+  encSendString(String(FPSTR(TINTF_00C)) + String(myLamp.IsGlobalBrightness() ? PSTR(": ON") : PSTR(": OFF")).c_str(), CRGB::Orange);
 }
 
 void toggleMic() {
