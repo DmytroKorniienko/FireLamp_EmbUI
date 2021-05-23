@@ -64,7 +64,7 @@ static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кноп�
 #endif
 
 #ifndef ENC_STRING_DELAY
-#define ENC_STRING_DELAY 40
+#define ENC_STRING_DELAY 30
 #endif
 
 
@@ -84,15 +84,16 @@ void encDisplay(uint16_t value, String type = "");
 void encDisplay(String str);
 void resetTimers();
 void exitSettings();
-void encSendString(String str, CRGB color, uint8_t delay = ENC_STRING_DELAY);
+void encSendString(String str, CRGB color, bool force = false, uint8_t delay = ENC_STRING_DELAY);
 bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
 extern void encLoop();
 
 void toggleDemo();
-void toggleGBrigh();
+void toggleGBright();
 void toggleMic();
+void toggleAUX();
 void sendTime();
 void sendIP();
 #endif
