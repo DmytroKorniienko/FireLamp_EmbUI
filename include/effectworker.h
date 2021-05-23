@@ -279,15 +279,15 @@ protected:
     bool isActive() {return active;}
     void setActive(bool flag) {active=flag;}
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
-    byte brightness;
-    byte speed;
-    byte scale;
+    byte brightness=1;
+    byte speed=1;
+    byte scale=1;
     float speedfactor=1.0;      // коэффициент скорости эффекта
 
-    uint8_t palettescale;       // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
-    float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-    uint8_t palettepos;         // позиция в массиве указателей паллитр
-    uint8_t paletteIdx;         // индекс палитры переданный с UI
+    uint8_t palettescale=1.0;     // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
+    float ptPallete=1.0;          // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    uint8_t palettepos=0;         // позиция в массиве указателей паллитр
+    uint8_t paletteIdx=0;         // индекс палитры переданный с UI
 
     /** флаг, включает использование палитр в эффекте.
      *  влияет на:
@@ -296,7 +296,7 @@ protected:
      */
     bool usepalettes=false;
     std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
-    TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
+    TProgmemRGBPalette16 const *curPalette = &RainbowColors_p;     /**< указатель на текущую палитру */
 
     const String &getCtrlVal(int idx) {
         //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;

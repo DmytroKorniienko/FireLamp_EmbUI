@@ -2363,7 +2363,6 @@ bool notfound_handle(AsyncWebServerRequest *request, const String& req)
     return true;
 }
 
-
 /**
  * Набор конфигурационных переменных и обработчиков интерфейса
  */
