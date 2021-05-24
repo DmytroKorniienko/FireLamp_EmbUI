@@ -3095,16 +3095,20 @@ void remote_action(RA action, ...){
         case RA::RA_AUX_ON:
             obj[FPSTR(TCONST_000E)] = true;
             set_auxflag(nullptr, &obj);
+            CALL_INTF(FPSTR(TCONST_000E), "1", set_auxflag);
             break;
         case RA::RA_AUX_OFF:
             obj[FPSTR(TCONST_000E)] = false;
             set_auxflag(nullptr, &obj);
+            CALL_INTF(FPSTR(TCONST_000E), "0", set_auxflag);
             break;
         case RA::RA_AUX_TOGLE:
             AUX_toggle(!digitalRead(AUX_PIN));
+            CALL_INTF(FPSTR(TCONST_000E), digitalRead(AUX_PIN) == AUX_LEVEL ? "1" : "0", set_auxflag);
             break;
 #endif
-        default:;
+        default:
+            break;
     }
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 }
