@@ -8242,8 +8242,8 @@ void EffectVU::load() {
 
   //memset(oldBarHeights,0,sizeof(oldBarHeights));
   for(uint16_t i = 0; i < WIDTH; i++) {
-    oldBarHeights[i] = 0.;
-    bandValues[i] = 0.;
+    oldBarHeights[i] = 0.0;
+    bandValues[i] = 0.0;
   }
 
 }

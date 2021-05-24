@@ -192,40 +192,50 @@ double MICWORKER::analyse()
 
 float MICWORKER::fillSizeScaledArray(float *arr, size_t size, bool bound) // bound - ограничивать частотный диапазон или использовать 20-20000, по умолчанию - ограничивать
 {
+  float prevdata[size];
+  for(size_t i=0; i<size; i++){
+    prevdata[i] = arr[i];
+    arr[i] = 0.0;
+  }
+  
   signalFrequency = (float)analyse(); // сюда запишем частоту главной гармоники
 
-  float maxFreq = bound?log(samplingFrequency/2):log(20000);
-  float minFreq = bound?log(samplingFrequency/samples):log(20);
+  // т.к. samplingFrequency удвоенная от реальной, то делим на 2, т.е -> samplingFrequency>>1
+  float maxFreq = bound?log((samplingFrequency>>1)):log(20000);
+  float minFreq = bound?log((samplingFrequency>>1)/samples):log(20);
   float scale = (size)/(maxFreq-minFreq);
   float step = samplingFrequency/samples;
 
-
-  // for(uint8_t i=0; i<(samples >> 1); i++){
-  //   maxVal = max(maxVal,(float)(20 * log10(vReal[i])));
-  //   //LOG(printf_P, PSTR("%3d "),(uint8_t)vReal[i]);
-  //   //LOG(printf_P, PSTR("%5.2f "),(20 * log10(vReal[i])));
+  // EVERY_N_SECONDS(5){
+  //   for(uint16_t i=0; i<samples; i++){
+  //     LOG(printf_P, PSTR("x[%d]=%5.1f "),i, vReal[i]);
+  //   }
+  //   LOG(println);LOG(println);
   // }
-  // //LOG(println, FFT.majorPeak());
 
-
-  for(uint8_t i=0; i<(samples>>1); i++){
+  int16_t idx=0;
+  for(uint16_t i=0; i<samples; i++){
     float idx_freq=step*(i+1);
-    int16_t idx=(log(idx_freq)-minFreq)*scale;
+    idx=(logf(idx_freq)-minFreq)*scale;
     idx=(idx<0?0:(idx>=(int16_t)size?size-1:(i<idx?i:idx)));
-
-    float tmp = (float)(20 * log10(vReal[i]));
-    arr[idx]=(tmp<0?0:tmp+arr[idx])/2.0; // усредняем
+    arr[idx]+=(vReal[i]<0.0 ? 0.0 : vReal[i]);
   }
-  float maxVal=0; // ищем максимум
-  for(uint8_t i=0;i<size;i++)
+
+  // придушить ВЧ
+  if(signalFrequency<(samplingFrequency>>1))
+    arr[size-1]/=10.0;
+  else if(signalFrequency<(samplingFrequency>>2))
+    arr[size-1]/=20.0;
+  
+  float maxVal=0; // ищем максимум и усредняем с предыдущим измерением
+  for(uint16_t i=0;i<size;i++){
+    arr[i]=(arr[i]+prevdata[i])/2.0; // усредняем c предыдущим
     maxVal=max(maxVal,arr[i]);
+  }
 
   // EVERY_N_SECONDS(1){
-  //   for(uint8_t i=0; i<(samples>>1); i++){
-  //     float idx_freq=(((float)samplingFrequency/samples)*(i+1));
-  //     uint8_t idx=(log(idx_freq)-minFreq)*scale;
-  //     idx=(idx>=size?0:idx);
-  //     LOG(printf_P, PSTR("%7.1f:%d "),idx_freq, idx);
+  //   for(uint16_t i=0;i<size;i++){
+  //     LOG(printf_P, PSTR("x[%d]=%5.1f "),i, arr[i]);
   //   }
   //   LOG(println);
   // }
