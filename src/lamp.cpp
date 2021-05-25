@@ -1111,6 +1111,10 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     lampState.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
 #endif
 
+#ifdef ENCODER
+ exitSettings();
+#endif
+
   if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :

@@ -358,7 +358,7 @@ public:
 
     void periodicTimeHandle(bool force=false);
 
-    #ifdef TM1637_CLOCK
+#ifdef TM1637_CLOCK
     void settm24 (bool flag) {flags.tm24 = flag;}
     void settmZero (bool flag) {flags.tmZero = flag;}
     bool isTm24() {return flags.tm24;}
@@ -366,7 +366,7 @@ public:
     void setTmBright(uint8_t val) {tmBright = val;}
     uint8_t getBrightOn() { return tmBright>>4; }
     uint8_t getBrightOff() { return tmBright&0x0F; }
-    #endif
+#endif
 
     void startAlarm(char *value = nullptr);
     void stopAlarm();

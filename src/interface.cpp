@@ -2152,23 +2152,6 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 
 #endif
 
-#ifdef TM1637_CLOCK
-// void set_tmbright(Interface *interf, JsonObject *data){
-//     if (!data) return;
-//     int tmbright = (*data)[FPSTR(TCONST_00D8)];
-//     SETPARAM(FPSTR(TCONST_00D8), set_tmbright(tmbright));
-// }
-// void set_tmbrightOff(Interface *interf, JsonObject *data){
-//     if (!data) return;
-//     int tmbrightOff = (*data)[FPSTR(TCONST_00D9)];
-//     SETPARAM(FPSTR(TCONST_00D9), set_tmbrightOff(tmbrightOff));
-// }
-// void set_tm24(Interface *interf, JsonObject *data){
-//     if (!data) return;
-//     bool tm24 = (*data)[FPSTR(TCONST_00D9)];
-//     SETPARAM(FPSTR(TCONST_00D9), set_tm24(tm24));
-// }
-#endif
 
 void section_effects_frame(Interface *interf, JsonObject *data){
     recreateoptionsTask(true); // only cancel task

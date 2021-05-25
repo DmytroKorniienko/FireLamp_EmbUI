@@ -67,6 +67,17 @@ static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кноп�
 #define ENC_STRING_DELAY 30
 #endif
 
+#ifndef ENC_STRING_EFFNUM_DELAY
+#define ENC_STRING_EFFNUM_DELAY 17
+#endif
+
+#ifndef ENC_STRING_COLOR
+#define ENC_STRING_COLOR CRGB::Orange
+#endif
+
+#ifndef VERTGAUGE_COLOR
+#define VERTGAUGE_COLOR 10
+#endif
 
 void callEncTick ();
 void IRAM_ATTR isrEnc();
@@ -81,10 +92,12 @@ void encSetBri(int val);
 void encSetEffect(int val);
 void encSetDynCtrl(int val);
 void encDisplay(uint16_t value, String type = "");
+void encDisplay(float value);
 void encDisplay(String str);
 void resetTimers();
 void exitSettings();
-void encSendString(String str, CRGB color, bool force = false, uint8_t delay = ENC_STRING_DELAY);
+void encSendString(String str, CRGB color, bool force = true, uint8_t delay = ENC_STRING_DELAY);
+void encSendStringNumEff(String str, CRGB color);
 bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
