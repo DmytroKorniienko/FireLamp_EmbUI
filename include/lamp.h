@@ -450,9 +450,11 @@ extern LEDFader *fader;
 class LEDFader : public Task {
     LAMP *lmp;
     uint8_t _brt, _brtincrement;
+    bool iscancel = false; // cancel task flag
     std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
     LEDFader() = delete; 
 public:
+    void setCancel() { iscancel = true; }
     LEDFader(Scheduler* aS, LAMP *_l, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback)
         : Task((unsigned long)FADE_STEPTIME,
         (abs(_targetbrightness - _l->getBrightness()) > FADE_MININCREMENT * _duration / FADE_STEPTIME) ? (long)(_duration / FADE_STEPTIME) : (long)(abs(_targetbrightness - _l->getBrightness())/FADE_MININCREMENT) + 1,
@@ -461,12 +463,16 @@ public:
         false,
         nullptr,
         [this, _targetbrightness](){
-            lmp->brightness(_targetbrightness);
-            if(_cb) _cb();
-            _cb=nullptr;
+            if(!iscancel)
+                lmp->brightness(_targetbrightness);
             TASK_RECYCLE;
             fader = nullptr;
             LOG(printf_P, PSTR("Fading to %d done\n"), _targetbrightness);
+            iscancel = false; 
+            // callback at the end!!!
+            if(_cb)
+                _cb();
+            _cb=nullptr;
         })
     {
         this->_cb = callback;

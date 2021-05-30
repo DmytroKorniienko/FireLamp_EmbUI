@@ -1147,7 +1147,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     }
     LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
-    if (fade && flags.ONflag) {
+    if (fade && flags.ONflag && !fader) {
       fadelight(this, FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
@@ -1383,7 +1383,9 @@ LEDFader *fader = nullptr;
  * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
  */
 void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void()> callback){
-    if(fader)
+    if(fader){
+      fader->setCancel(); // отменяем установку итоговой яркости
       fader->cancel();
+    }
     fader = new LEDFader(&ts, lamp,_targetbrightness, _duration, callback);
 }
