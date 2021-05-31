@@ -5879,14 +5879,14 @@ void EffectCell::cell(CRGB *leds) {
 // !++ Тут лучше все оставить как есть, пускай в теле эффекта скорость пересчитывает
 String EffectCell::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speed = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt(); 
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  effId = _scale ? _scale : random(_val->getMin().toInt(), _val->getMax().toInt()+1)+1;
+  else if(_val->getId()==3) {
+    _scale = EffectCalc::setDynCtrl(_val).toInt();
+    effId = _scale ? _scale : random(_val->getMin().toInt(), _val->getMax().toInt()+1)+1;
+  } else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 bool EffectCell::run(CRGB *leds, EffectWorker *opt){
-  
   if (_scale == 0) {
     EVERY_N_SECONDS(60) {
       effId ++;
