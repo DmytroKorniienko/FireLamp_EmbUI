@@ -1118,15 +1118,18 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :
+        fade = (!fader) && fade;
         effects.setSelected(effects.getNext());
         break;
     case EFFSWITCH::SW_NEXT_DEMO :
         effects.setSelected(effects.getByCnt(1));
         break;
     case EFFSWITCH::SW_PREV :
+        fade = (!fader) && fade;
         effects.setSelected(effects.getPrev());
         break;
     case EFFSWITCH::SW_SPECIFIC :
+        //fade = (!fader) && fade;
         effects.setSelected(effects.getBy(effnb));
         break;
     case EFFSWITCH::SW_RND :
@@ -1147,7 +1150,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     }
     LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
-    if (fade && flags.ONflag && !fader) {
+    if (fade && flags.ONflag) {
       fadelight(this, FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
@@ -1383,9 +1386,8 @@ LEDFader *fader = nullptr;
  * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
  */
 void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void()> callback){
-    if(fader){
-      fader->setCancel(); // отменяем установку итоговой яркости
-      fader->cancel();
+    while(fader){
+      fader->skipBrightness(); // отмена предыдущего фейдера
     }
     fader = new LEDFader(&ts, lamp,_targetbrightness, _duration, callback);
 }
