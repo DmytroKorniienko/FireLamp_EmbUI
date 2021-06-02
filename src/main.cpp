@@ -90,20 +90,28 @@ void setup() {
 #endif
 
 #ifdef ESP_USE_BUTTON
+#ifdef SHOWSYSCONFIG
     myLamp.setbPin(embui.param(F("PINB")).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
     if (!myButtons->loadConfig()) {
       default_buttons();
       myButtons->saveConfig();
     }
+#else
+    myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
+#endif
 #endif
 
     myLamp.events.setEventCallback(event_worker);
 
 #ifdef MP3PLAYER
+#ifdef SHOWSYSCONFIG
     int rxpin = embui.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : embui.param(FPSTR(TCONST_009B)).toInt();
     int txpin = embui.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : embui.param(FPSTR(TCONST_009C)).toInt();
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
+#else
+    mp3 = new MP3PLAYERDEVICE(MP3_RX_PIN, MP3_TX_PIN); //rxpin, txpin
+#endif
 #endif
 
 #ifdef ESP8266
