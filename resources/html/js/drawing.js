@@ -80,19 +80,30 @@ function custom_hook(tid, d, id){
 		elem.style.backgroundColor = elemColor;
 	      }
 	    }
-	    var data = {}; data[draw_ctrl.ctrl+"_fill"]=draw_ctrl.selcolor; 
+	    var data = {}; data[draw_ctrl.ctrl+"_fill"]=draw_ctrl.selcolor;
+      
 	    ws.send_post(data);
 	}
+  else if(tid==id+"-d"){
+    for(var i=0; i<draw_ctrl.height; i++){
+      for(var j=0; j<draw_ctrl.width; j++){
+        elem = document.getElementById("c"+i+"_"+j);
+         elem.style.backgroundColor = "";
+      }
+    }
+    var data = {drawing_ctrl_fill: ""};
+    ws.send_post(data);
+  }
 }
 
 function sendpost(obj_id){
     id_num = obj_id.substring(1);
  
-    //находим индекс разделителя
+    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     var ind_ = id_num.indexOf('_');
-    //определяем номер строки ячейки
+    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     var n_row = id_num.substring(0, ind_);   
-    //определяем номер столбца ячейки
+    //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     var n_col = id_num.substring(ind_ + 1);
     
     var color = draw_ctrl.color;

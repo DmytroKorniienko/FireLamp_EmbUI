@@ -421,6 +421,7 @@ static const char TINTF_0D5[] PROGMEM = "Яскравість (0 - виключ�
 static const char TINTF_0D6[] PROGMEM = "Яскравість з викл. лампою (0 - виключити)";
 static const char TINTF_0D7[] PROGMEM = "24х годинний формат";
 static const char TINTF_0D8[] PROGMEM = "Ведучий 0";
+static const char TINTF_0D9[] PROGMEM = "Очистити";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";
