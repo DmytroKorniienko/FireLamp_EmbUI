@@ -451,6 +451,18 @@ private:
 
     Task *tConfigSave = nullptr;       // динамическая таска, задержки при сохранении текущего конфига эффекта в файл
 
+    void fsinforenew(){
+#ifdef ESP8266
+        FSInfo fs_info;
+        LittleFS.info(fs_info);
+        if(lampstate)
+        lampstate->fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
+#endif
+#ifdef ESP32
+        if(lampstate)
+        lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
+#endif
+    }
 
     /**
      * создает и инициализирует экземпляр класса выбранного эффекта

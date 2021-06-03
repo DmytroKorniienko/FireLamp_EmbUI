@@ -692,28 +692,20 @@ void EffectWorker::autoSaveConfig(bool force) {
         if(tConfigSave)
           tConfigSave->cancel();
         saveeffconfig(curEff);
+        fsinforenew();
         LOG(printf_P,PSTR("Force save effect config: %d\n"), curEff);
     } else {
         if(!tConfigSave){ // task for delayed config autosave
           tConfigSave = new Task(CFG_AUTOSAVE_TIMEOUT, TASK_ONCE, [this](){
             saveeffconfig(curEff);
+            fsinforenew();
             LOG(printf_P,PSTR("Autosave effect config: %d\n"), curEff);
           }, &ts, false, nullptr, [this](){TASK_RECYCLE; tConfigSave=nullptr;});
           tConfigSave->enableDelayed();
-        } else
+        } else {
           tConfigSave->restartDelayed();
-          return;
+        }
     }
-#ifdef ESP8266
-    FSInfo fs_info;
-    LittleFS.info(fs_info);
-    if(lampstate)
-      lampstate->fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
-#endif
-#ifdef ESP32
-    if(lampstate)
-      lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
-#endif
 }
 
 // конструктор копий эффектов

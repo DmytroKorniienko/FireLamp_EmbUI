@@ -1486,7 +1486,7 @@ class EffectSmokeballs: public EffectCalc {
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
-	const bool glitch = abs(WIDTH-HEIGHT) >= minDim/4;
+	const bool glitch = abs((int)WIDTH-(int)HEIGHT) >= minDim/4;
 	const byte density = 50;
     uint8_t Scale = 6;
     uint8_t _scale = 1;

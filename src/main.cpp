@@ -82,9 +82,8 @@ void setup() {
 
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-    myLamp.events.loadConfig();
+    myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
     myLamp.lamp_init(embui.param(F("CLmt")).toInt());
-
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif

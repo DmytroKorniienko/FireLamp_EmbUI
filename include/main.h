@@ -38,6 +38,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef __MAIN_H_
 #define __MAIN_H_
 
+#if __cplusplus >= 201703L
+#define register // keyword 'register' is banned with c++17
+#endif
+
 #include <Arduino.h>
 #include "config.h"
 #include "EmbUI.h"
