@@ -1194,6 +1194,8 @@ void block_drawing(Interface *interf, JsonObject *data){
     param[FPSTR(TCONST_00CD)] = WIDTH;
     param[FPSTR(TCONST_00CC)] = HEIGHT;
     param[FPSTR(TCONST_00CB)] = FPSTR(TINTF_0CF);
+    param[FPSTR(TCONST_00DC)] = FPSTR(TINTF_0D9);
+
 
     interf->checkbox(FPSTR(TCONST_00C4), myLamp.isDrawOn()? "1" : "0", FPSTR(TINTF_0CE), true);
     interf->custom(String(FPSTR(TCONST_00C9)),String(FPSTR(TCONST_00C8)),embui.param(FPSTR(TCONST_0036)),String(FPSTR(TINTF_0D0)), param);
@@ -1215,6 +1217,10 @@ void set_drawing(Interface *interf, JsonObject *data){
             remote_action(RA_FILLMATRIX, value.c_str(), NULL);
         }
     }
+}
+void set_clear(Interface *interf, JsonObject *data){
+    if (!data) return;
+    remote_action(RA_FILLMATRIX, "#000000", NULL);
 }
 
 void block_lamptext(Interface *interf, JsonObject *data){
@@ -2470,6 +2476,7 @@ void create_parameters(){
 
     embui.section_handle_add(FPSTR(TCONST_00BA), set_text_config);
     embui.section_handle_add(FPSTR(TCONST_00CA), set_drawing);
+    embui.section_handle_add(FPSTR(TCONST_00DC), set_clear);
     embui.section_handle_add(FPSTR(TCONST_00C4), set_drawflag);
 
     // меняю обработчики для страницы настроек :)

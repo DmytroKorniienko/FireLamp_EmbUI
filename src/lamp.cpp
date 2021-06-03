@@ -43,7 +43,11 @@ extern LAMP myLamp; // Объект лампы
 
 void LAMP::lamp_init(const uint16_t curlimit)
 {
+#ifdef SHOWSYSCONFIG
   setcurLimit(curlimit);
+#else
+  setcurLimit(CURRENT_LIMIT);
+#endif 
   // Такую коррекцию стоит оставить, с ней можно получить хотя бы более менее жёлтый цвет. Иначе он всегда зеленит (коррекцию нашел на просторах, люди рекомендуют)
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalPixelString);

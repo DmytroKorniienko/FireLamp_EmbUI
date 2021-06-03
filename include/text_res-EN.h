@@ -421,6 +421,7 @@ static const char TINTF_0D5[] PROGMEM = "Brightness (0 - OFF)";
 static const char TINTF_0D6[] PROGMEM = "Brightness with OFF lamp (0 - OFF)";
 static const char TINTF_0D7[] PROGMEM = "24 hour format";
 static const char TINTF_0D8[] PROGMEM = "Leading 0";
+static const char TINTF_0D9[] PROGMEM = "Clear";
 
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";

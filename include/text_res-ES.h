@@ -422,6 +422,7 @@ static const char TINTF_0D5[] PROGMEM = "Brillo (0 - OFF)";
 static const char TINTF_0D6[] PROGMEM = "Brillo con OFF lámpara (0 - OFF)";
 static const char TINTF_0D7[] PROGMEM = "Formato de 24 horas";
 static const char TINTF_0D8[] PROGMEM = "Líder 0";
+static const char TINTF_0D9[] PROGMEM = "Claro";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";

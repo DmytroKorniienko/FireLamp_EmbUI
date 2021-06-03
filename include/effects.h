@@ -1786,7 +1786,7 @@ private:
     float sparksFade[sparksNum];
     uint8_t gPos[2];
 
-    bool centerRun = false;
+    bool centerRun = true;
     byte period = 10;
     byte _x = WIDTH/2;
     byte _y = HEIGHT/2;

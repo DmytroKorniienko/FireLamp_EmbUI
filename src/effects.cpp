@@ -4136,7 +4136,7 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   CRGB color;
   for (uint8_t x = 0; x < minDimLocal; x++) {
     for (uint8_t y = 0; y < minDimLocal; y++) {
-      color = (x ^ y ^ flip) < count ? ColorFromPalette(RainbowColors_p, ((x ^ y) << rand) + generation) : CRGB::Black;
+      color = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
       if (x < WIDTH and y < HEIGHT) EffectMath::setPixel(x, y, color);
       if (x + minDimLocal < WIDTH and y < HEIGHT) EffectMath::setPixel(x + minDimLocal, y, color);
       if (y + minDimLocal < HEIGHT and x < WIDTH) EffectMath::setPixel(x, y + minDimLocal, color);
@@ -7208,7 +7208,7 @@ void EffectBengalL::load() {
   for (byte i = 0; i < sparksNum; i++) {
     regen(i);
   }
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*EffectCalc::speedfactor, 1*EffectCalc::speedfactor);
+  //speedFactor = EffectMath::fmap(speed, 1, 255, 0.1, 1)*EffectCalc::speedfactor;
 }
 
 //!++
@@ -7245,13 +7245,6 @@ void EffectBengalL::regen(byte id) {
 }
 
 
-// void EffectBengalL::setspd(const byte _spd)
-// {
-//   EffectCalc::setspd(_spd); // дернем базовый, где будет пересчет палитры
-//   speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*EffectCalc::speedfactor, 1*EffectCalc::speedfactor);
-// }
-
-
 bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, beatsin8(5, 20, 100));
   if (centerRun) {
@@ -7284,7 +7277,7 @@ void EffectBalls::load() {
   randomSeed(millis());
   palettesload();
 
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15*EffectCalc::speedfactor, 0.5*EffectCalc::speedfactor);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5) * EffectCalc::speedfactor;
 
   for (byte i = 0; i < ballsAmount; i++) {
     radius[i] = EffectMath::randomf(0.5, radiusMax);
@@ -7305,11 +7298,14 @@ String EffectBalls::setDynCtrl(UIControl*_val){
 }
 
 void EffectBalls::fill_circle(float cx, float cy, float radius, CRGB col) {
-  radius -= 0.5;
-  for (int y = -radius; y <= radius; y++) {
-    for (int x = -radius; x <= radius; x++) {
+  uint8_t rad = radius;
+  for (float y = -radius; y <= radius; y += fabs(y) < rad ? 1 : 0.1) {
+    for (float x = -radius; x <= radius; x += fabs(x) < rad ? 1 : 0.1) {
       if (x * x + y * y <= radius * radius)
-        EffectMath::drawPixelXYF(cx + x, cy + y, col);
+        // if (fabs(x) < rad and fabs(y) < rad)
+          EffectMath::drawPixelXYF(cx + x, cy + y, col, 0);
+        // else 
+          // EffectMath::drawPixelXY(cx + x, cy + y, col);
     }
   }
 }
