@@ -92,13 +92,13 @@ void setup() {
 #ifdef SHOWSYSCONFIG
     myLamp.setbPin(embui.param(F("PINB")).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
+#else
+    myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
+#endif
     if (!myButtons->loadConfig()) {
       default_buttons();
       myButtons->saveConfig();
     }
-#else
-    myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
-#endif
 #endif
 
     myLamp.events.setEventCallback(event_worker);

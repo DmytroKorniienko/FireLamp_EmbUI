@@ -83,7 +83,7 @@ struct EVENT {
     uint8_t stopat;
     time_t unixtime;    // timestamp для события в локальной часовой зоне
     EVENT_TYPE event;
-    char *message;
+    char *message = nullptr;
     EVENT *next = nullptr;
     EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
     EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
@@ -232,7 +232,7 @@ public:
     EVENT_MANAGER() {}
     ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
 
-    void addEvent(const EVENT&event);
+    EVENT *addEvent(const EVENT&event);
     void delEvent(const EVENT&event);
     bool isEnumerated(const EVENT&event); // проверка того что эвент в списке
 
