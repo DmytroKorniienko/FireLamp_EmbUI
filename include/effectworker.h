@@ -159,7 +159,15 @@ public:
     const String &getMax() {return max;}
     const String &getStep() {return step;}
 
-    void setVal(const String &_val) {if(getType()==CONTROL_TYPE::RANGE) val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt()); else val=_val;}
+    void setVal(const String &_val) {
+        switch(getType()&0x0F){
+            case CONTROL_TYPE::RANGE:
+            case CONTROL_TYPE::CHECKBOX:
+                val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt());
+            default:
+                val=_val;
+        }
+    }
 };
 
 
