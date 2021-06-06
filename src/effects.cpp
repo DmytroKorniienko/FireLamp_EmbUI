@@ -755,7 +755,8 @@ bool EffectDNA2::run(CRGB *ledarr, EffectWorker *opt){
     
     if ((i + ms / 8) & 3) mydrawLine(x / 2, x1 / 2, i, color, dots, 1);    
   }
-  EffectMath::nightMode(leds);
+  // EffectMath::nightMode(leds);
+  EffectMath::gammaCorrection();
   EffectMath::blur2d(64);
   return true;
 }
@@ -8181,7 +8182,6 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   counter += (float)_speed * SPEED_ADJ;
-  EffectMath::nightMode(leds);
   return true;
 }
 

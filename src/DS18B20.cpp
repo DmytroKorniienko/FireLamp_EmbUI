@@ -43,6 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "enc.h"
 #endif
 
+
 MicroDS18B20 dallas(DS18B20_PIN);
 
 bool canBeDisplayed;
@@ -50,6 +51,10 @@ bool canBeDisplayed;
 bool& canDisplayTemp() {return canBeDisplayed;};
 
 void ds_setup() {
+#if CURRENT_LIMIT_STEP > 0 && CURRENT_LIMIT == 0
+  #undef CURRENT_LIMIT
+  #define CURRENT_LIMIT (NUM_LEDS * 60U)
+#endif
 #if COOLER_PIN >= 0
   pinMode(COOLER_PIN, OUTPUT);
 #endif
@@ -71,9 +76,10 @@ int16_t getTemp() {
   return currentTemp;
 }
 
-#if COOLER_PIN >= 0
+
 // преобразуем температуру в скорость
 void tempToSpeed(int16_t& currentTemp) {
+#if COOLER_PIN >= 0
 #if COOLER_PIN_TYPE
   uint16_t fanSpeed = 0;
 #endif
@@ -97,18 +103,18 @@ void tempToSpeed(int16_t& currentTemp) {
       LOG(printf_P, PSTR("DS18B20: Fan desactivated. \n"));
     }
   #endif
+  #endif
 }
-#endif
+
 
 void ds_loop() { 
-#ifdef ENCODER
+#if defined(ENCODER) && SW == DS18B20_PIN
   if (!digitalRead(SW)) return; // если кнопка энкодера нажата, пропускаем этот loop
 #endif
   int16_t curTemp = getTemp();
   if (canDisplayTemp()) ds_display(curTemp);
-  #if COOLER_PIN >= 0
+
   tempToSpeed(curTemp);
-  #endif
 
   if (myLamp.isLampOn() && CURRENT_LIMIT_STEP > 0U) {
     static uint8_t delayCounter = 0;

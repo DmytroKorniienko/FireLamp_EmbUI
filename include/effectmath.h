@@ -132,6 +132,7 @@ public:
   static void confetti(byte density);
   static void addGlitter(uint8_t chanceOfGlitter = 127);
   static void nightMode(CRGB *leds);
+  static void gammaCorrection();
 
 /*
   static CRGB& piXY(CRGB *leds, byte x, byte y);

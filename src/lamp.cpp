@@ -43,15 +43,11 @@ extern LAMP myLamp; // Объект лампы
 
 void LAMP::lamp_init(const uint16_t curlimit)
 {
-#ifdef SHOWSYSCONFIG
   setcurLimit(curlimit);
-#else
-  setcurLimit(CURRENT_LIMIT);
-#endif 
-  // Такую коррекцию стоит оставить, с ней можно получить хотя бы более менее жёлтый цвет. Иначе он всегда зеленит (коррекцию нашел на просторах, люди рекомендуют)
+
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalPixelString);
-  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(getUnsafeLedsArray(), NUM_LEDS)/*.setCorrection(0xFFE08C)*/; // цветокоррекция нафиг не нужна, проверяется на минимальной яркости в белой лампе
+  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(getUnsafeLedsArray(), NUM_LEDS);
 
   brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
   if (curlimit > 0){
@@ -462,14 +458,16 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 //   digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 // #endif
 
-  if (curLimit > 0){
 #ifdef DS18B20
-    // восстанавливаем значение тока после включения. Так как значение 0 не работает в ограничители тока по перегреву, 
+#ifdef SHOWSYSCONFIG
+    // восстанавливаем значение тока после включения. Так как значение 0 не работает в ограничителе тока по перегреву, 
     // то если ограничение тока установлено в 0, устанвливаем вместо него рассчетный максимум в 15.36А на 256 диодов (бред конечно, но нужно же хоть какое-то значение больше 0).
-    setcurLimit(!embui.param(FPSTR(TCONST_0098)).toInt() ? ((float)NUM_LEDS/256 * 15360) : embui.param(FPSTR(TCONST_0098)).toInt());
+    setcurLimit(embui.param(FPSTR(TCONST_0098)).toInt() == 0 ? (NUM_LEDS * 60) : embui.param(FPSTR(TCONST_0098)).toInt());
+#else
+    setcurLimit(CURRENT_LIMIT == 0U ? (NUM_LEDS * 60) : CURRENT_LIMIT);
+#endif
 #endif
     FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
-  }
 }
 
 void LAMP::startAlarm(char *value){

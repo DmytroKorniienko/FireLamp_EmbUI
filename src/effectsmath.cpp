@@ -299,6 +299,20 @@ void EffectMath::confetti(byte density) {
         if (RGBweight(leds, idx) < 32) leds[idx] = random(32, 16777216);
 }
 
+void EffectMath::gammaCorrection()
+{ //gamma correction function
+  byte r, g, b;
+  for (uint16_t i = 0; i < NUM_LEDS; i++)
+  {
+    r = leds[i].r;
+    g = leds[i].g;
+    b = leds[i].b;
+    leds[i].r = pgm_read_byte(gamma_exp + r);
+    leds[i].g = pgm_read_byte(gamma_exp + g);
+    leds[i].b = pgm_read_byte(gamma_exp + b);
+  }
+}
+
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;

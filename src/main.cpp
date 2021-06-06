@@ -83,7 +83,16 @@ void setup() {
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
+    
+#ifdef DS18B20
+  ds_setup();
+#endif
+
+#ifdef SHOWSYSCONFIG
     myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+#else
+    myLamp.lamp_init(CURRENT_LIMIT);
+#endif
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
@@ -125,10 +134,6 @@ void setup() {
 #ifdef TM1637_CLOCK
   tm_setup();
 #endif 
-
-#ifdef DS18B20
-  ds_setup();
-#endif
 
 #ifdef ENCODER
   enc_setup();
