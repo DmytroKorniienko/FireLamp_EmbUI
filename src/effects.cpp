@@ -4093,9 +4093,9 @@ bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
 
   for (float x = 0.; x < oscHV; x += div) {
     if (speed < 128)
-      EffectMath::drawLineF(y[0], x, y[1], /*(x + div) >= oscHV ? oscHV - 1 : */(x + div), color);
+      EffectMath::drawLineF(y[0], x, y[1], (x + div), color);
     else
-      EffectMath::drawLineF(x, y[0], /*(x + div) >= oscHV ? oscHV - 1 : */(x + div), y[1], color);
+      EffectMath::drawLineF(x, y[0], (x + div), y[1], color);
 
     y[0] = y[1];
     y[1] = EffectMath::fmap(
@@ -4104,7 +4104,7 @@ bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
                           pointer * 2. - gain,
                           0., 
                           oscilLimit - 1);
-    delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024.0f * div));
+    delayMicroseconds((uint16_t)(1024.0 * div));
 
   }
 

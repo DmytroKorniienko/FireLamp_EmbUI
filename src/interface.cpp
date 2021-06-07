@@ -169,11 +169,9 @@ void block_menu(Interface *interf, JsonObject *data){
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));   //  Эффекты
     interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));   //  Вывод текста
     interf->option(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));   //  Рисование
+    interf->option(FPSTR(TCONST_005C), FPSTR(TINTF_011));   //  События
     interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));   //  настройки
-#ifdef SHOWSYSCONFIG
-    if(myLamp.isShowSysMenu())
-        interf->option(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
-#endif
+
     interf->json_section_end();
 }
 
@@ -735,9 +733,10 @@ void block_main_flags(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_001A), String(myLamp.isLampOn()), FPSTR(TINTF_00E), true);
     interf->checkbox(FPSTR(TCONST_001B), String(myLamp.getMode() == MODE_DEMO), FPSTR(TINTF_00F), true);
     interf->checkbox(FPSTR(TCONST_001C), String(myLamp.IsGlobalBrightness()), FPSTR(TINTF_010), true);
+#ifndef MOOT
     interf->checkbox(FPSTR(TCONST_001D), String(myLamp.IsEventsHandled()), FPSTR(TINTF_011), true);
     interf->checkbox(FPSTR(TCONST_00C4), String(myLamp.isDrawOn()), FPSTR(TINTF_0CE), true);
-
+#endif
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_001E), myLamp.isMicOnOff()? "1" : "0", FPSTR(TINTF_012), true);
 #endif
@@ -1871,12 +1870,15 @@ void show_event_conf(Interface *interf, JsonObject *data){
             interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
             interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
             interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
+#ifndef MOOT
             interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
             interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
             interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
+            interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
+#endif
             interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
             interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
-            interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
+
 #ifdef AUX_PIN
             interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
             interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
@@ -2217,13 +2219,17 @@ if (!interf) return;
     interf->button(FPSTR(TCONST_009F), FPSTR(TINTF_099));
 #endif
 
-    interf->button(FPSTR(TCONST_005C), FPSTR(TINTF_011));
 #ifdef ESP_USE_BUTTON
     interf->button(FPSTR(TCONST_0076), FPSTR(TINTF_013));
 #endif
     interf->button(FPSTR(TCONST_007A), FPSTR(TINTF_082));
-
+#ifndef MOOT
     block_lamp_config(interf, data);
+#endif
+#ifdef SHOWSYSCONFIG
+    if(myLamp.isShowSysMenu())
+        interf->button(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
+#endif
 }
 
 void section_main_frame(Interface *interf, JsonObject *data){
