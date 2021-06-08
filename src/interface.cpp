@@ -1708,7 +1708,7 @@ void block_settings_event(Interface *interf, JsonObject *data){
     interf->button(FPSTR(TCONST_005D), FPSTR(TINTF_05D));
 
     interf->spacer();
-    interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
+    interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
 
     interf->json_section_end();
 }
@@ -2223,13 +2223,14 @@ if (!interf) return;
     interf->button(FPSTR(TCONST_0076), FPSTR(TINTF_013));
 #endif
     interf->button(FPSTR(TCONST_007A), FPSTR(TINTF_082));
-#ifndef MOOT
-    block_lamp_config(interf, data);
-#endif
 #ifdef SHOWSYSCONFIG
     if(myLamp.isShowSysMenu())
         interf->button(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
 #endif
+#ifndef MOOT
+    block_lamp_config(interf, data);
+#endif
+
 }
 
 void section_main_frame(Interface *interf, JsonObject *data){
@@ -2276,7 +2277,7 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->button_submit(FPSTR(TCONST_0099), FPSTR(TINTF_008), FPSTR(P_GRAY));
 
         interf->spacer();
-        interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
+        interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
     interf->json_section_end();
     
     interf->json_frame_flush();
