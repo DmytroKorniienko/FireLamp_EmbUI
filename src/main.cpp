@@ -132,7 +132,7 @@ void setup() {
   //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
 
 #ifdef TM1637_CLOCK
-  tm_setup();
+  tm1637.tm_setup();
 #endif 
 
 #ifdef ENCODER
@@ -172,7 +172,7 @@ void loop() {
 
 #ifdef TM1637_CLOCK
     EVERY_N_SECONDS(1) {
-        tm_loop();
+        tm1637.tm_loop();
     }
 #endif
 #ifdef DS18B20

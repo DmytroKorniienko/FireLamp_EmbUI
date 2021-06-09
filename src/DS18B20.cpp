@@ -38,7 +38,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #ifdef DS18B20
 #include "DS18B20.h"
+#ifdef TM1637_CLOCK
 #include "tm.h"
+#endif
 #ifdef ENCODR
 #include "enc.h"
 #endif
@@ -136,9 +138,9 @@ void ds_loop() {
 
 void ds_display(int16_t value) { 
 #ifdef TM1637_CLOCK
-  getSetDelay() = TM_TIME_DELAY;
+  tm1637.getSetDelay() = TM_TIME_DELAY;
   String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("%")));    // "%" - для отображения "о" вверху, "*" - для отображения "с" вверху
-  tmDisplay(tmp, true, false, (value < -9 || value > 99) ? 0 : (value < 10 ? 2 : 1));
+  tm1637.display(tmp, true, false, (value < -9 || value > 99) ? 0 : (value < 10 ? 2 : 1));
 #endif
 }
 
