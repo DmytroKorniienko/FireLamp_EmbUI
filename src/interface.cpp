@@ -1807,7 +1807,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
             }
             break;
         default:
-            event.message = (char*)((*data)[FPSTR(TCONST_0035)].as<char*>());
+            event.message = (char*)((*data)[FPSTR(TCONST_0035)].as<const char*>());
             break;
     }
 
@@ -1900,8 +1900,8 @@ void show_event_conf(Interface *interf, JsonObject *data){
                 String buf = cur_edit_event->message;
                 buf.replace("'","\"");
                 DeserializationError err = deserializeJson(doc,buf);
-                int alarmP = !err && doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : myLamp.getAlarmP();
-                int alarmT = !err && doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : myLamp.getAlarmT();
+                int alarmP = !err && doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)].as<uint8_t>() : myLamp.getAlarmP();
+                int alarmT = !err && doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)].as<uint8_t>() : myLamp.getAlarmT();
                 String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
 
                 interf->spacer(FPSTR(TINTF_0BA));
@@ -2606,6 +2606,17 @@ void sync_parameters(){
         CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
 
 #ifdef MP3PLAYER
+Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nullptr, [tmp](){
+    if(!mp3->ready){
+        LOG(println, F("DFPlayer not ready yet..."));
+        ts.getCurrentTask()->restartDelayed(500);
+        return;
+    }
+    
+    DynamicJsonDocument doc(1024);
+    //https://arduinojson.org/v6/api/jsondocument/
+    //JsonDocument::to<T>() clears the document and converts it to the specified type. Don’t confuse this function with JsonDocument::as<T>() that returns a reference only if the requested type matches the one in the document.
+    JsonObject obj = doc.to<JsonObject>();
     //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
     obj[FPSTR(TCONST_00A3)] = tmp.playTime;
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? "1" : "0";
@@ -2625,7 +2636,9 @@ void sync_parameters(){
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
     CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
-
+    TASK_RECYCLE;
+});
+t->enableDelayed();
 #endif
 
 #ifdef AUX_PIN
