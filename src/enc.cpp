@@ -38,7 +38,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #ifdef ENCODER
 #include "enc.h"
+#ifdef TM1637_CLOCK
 #include "tm.h"
+#endif
 #include "interface.h"
 #include "effects.h"
 #include "ui.h"
@@ -70,7 +72,7 @@ void encLoop() {
   if (inSettings) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     resetTimers();
 #ifdef TM1637_CLOCK
-    getSetDelay() = TM_TIME_DELAY;
+    tm1637.getSetDelay() = TM_TIME_DELAY;
 #endif
     EVERY_N_SECONDS(10) {
       loops++;
@@ -349,14 +351,14 @@ void myClicks() {
     if (myLamp.isLampOn()) {
       remote_action(RA::RA_OFF, NULL);
 #ifdef TM1637_CLOCK
-      getSetDelay() = 1;
-      tmDisplay(String(F("Off")), true, false, 1);  // Выводим 
+      tm1637.getSetDelay() = 1;
+      tm1637.display(String(F("Off")), true, false, 1);  // Выводим 
 #endif
     } else {
       remote_action(RA::RA_ON, NULL);
 #ifdef TM1637_CLOCK
-      getSetDelay() = 1;
-      tmDisplay(String(F("On")), true, false, 2);  // Выводим 
+      tm1637.getSetDelay() = 1;
+      tm1637.display(String(F("On")), true, false, 2);  // Выводим 
 #endif
     }
     break;
@@ -509,25 +511,25 @@ void encSetDynCtrl(int val) {
 
 void encDisplay(uint16_t value, String type) {
 #ifdef TM1637_CLOCK
-  getSetDelay() = TM_TIME_DELAY;
-  tmDisplay(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
-  tmDisplay(type);
+  tm1637.getSetDelay() = TM_TIME_DELAY;
+  tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
+  tm1637.display(type);
 #endif
 }
 
 void encDisplay(float value) {
 #ifdef TM1637_CLOCK
-  getSetDelay() = TM_TIME_DELAY;
+  tm1637.getSetDelay() = TM_TIME_DELAY;
   tm1637.clearScreen();
-  tmDisplay(value, false, true); //, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
+  tm1637.display(value, false, true); //, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
 #endif
 }
 
 void encDisplay(String str) {
 #ifdef TM1637_CLOCK
-  getSetDelay() = TM_TIME_DELAY;
+  tm1637.getSetDelay() = TM_TIME_DELAY;
   tm1637.clearScreen();
-  tmDisplay(str);
+  tm1637.display(str);
 #endif
 }
 
