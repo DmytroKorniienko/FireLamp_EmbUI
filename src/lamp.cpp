@@ -215,7 +215,7 @@ void LAMP::alarmWorker(){
 
 #ifdef MP3PLAYER
       mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // запуск звука будильника
-      if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->alarm){
+      if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
         mp3->setAlarm(true);
         mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
       }
@@ -241,7 +241,7 @@ void LAMP::alarmWorker(){
         } else {
 #ifdef PRINT_ALARM_TIME
 #ifdef MP3PLAYER
-          if(mp3->alarm) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
+          if(mp3->isAlarm()) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
 #endif
             sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif

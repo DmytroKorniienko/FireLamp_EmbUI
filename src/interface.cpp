@@ -1663,6 +1663,7 @@ void show_settings_time(Interface *interf, JsonObject *data){
 void set_settings_time(Interface *interf, JsonObject *data){
     BasicUI::set_settings_time(interf, data);
     myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
+    section_settings_frame(interf, data);
 }
 
 void block_settings_update(Interface *interf, JsonObject *data){
@@ -2607,7 +2608,7 @@ void sync_parameters(){
 
 #ifdef MP3PLAYER
 Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nullptr, [tmp](){
-    if(!mp3->ready){
+    if(!mp3->isReady()){
         LOG(println, F("DFPlayer not ready yet..."));
         ts.getCurrentTask()->restartDelayed(500);
         return;
