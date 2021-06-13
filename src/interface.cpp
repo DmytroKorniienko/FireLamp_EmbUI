@@ -88,33 +88,51 @@ void recreateoptionsTask(bool isCancelOnly=false){
 }
 
 bool check_recovery_state(bool isSet){
-    return false; // оключено до выяснения... какого-то хрена не работает :(
-    if(LittleFS.begin()){
-        String eff=embui.param(FPSTR(TCONST_0016));
-        if(isSet) {
-            File r = LittleFS.open(String(F("/recovery.chk")), "r"); // read
-            String data = r.readString();
-            LOG(printf_P, PSTR("prev check_recovery_state = %s\n"), data.c_str());
-            if(data.startsWith(F("start"))){
-                // похоже бутлуп, т.к. до конца инициализации не дошли...
-                r.close();
-                return true; // все плохо
-            } else {
-                r.close();
-                File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
-                w.print(F("start - "));
-                w.println(eff); // пишу номер эффекта
-                w.close();
-                return false; // все хорошо
-            }
-        } else {
-            File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
-            w.print(F("end - "));
-            w.println(eff); // пишу номер эффекта
-            w.close();
+    //return false; // оключено до выяснения... какого-то хрена не работает :(
+    uint32_t chk;
+    ESP.rtcUserMemoryRead(0,&chk,sizeof(chk));
+    if(isSet && (chk&0xFF00)==0xDB00){
+        uint16_t data = chk&0x00FF;
+        data++;
+        chk=0xDB00|data;
+        LOG(printf_P, PSTR("Reboot count=%d\n"), data);
+        ESP.rtcUserMemoryWrite(0, &chk, sizeof(chk));
+        if(data>3)
+            return true; // все плохо, три перезагрузки...
+        else
             return false; // все хорошо
-        }
+    } else {
+        chk=0xDB00; // сбрасываем цикл перезагрузок
+        ESP.rtcUserMemoryWrite(0, &chk, sizeof(chk));
     }
+    return false;
+
+    // if(LittleFS.begin()){
+    //     String eff=embui.param(FPSTR(TCONST_0016));
+    //     if(isSet) {
+    //         File r = LittleFS.open(String(F("/recovery.chk")), "r"); // read
+    //         String data = r.readString();
+    //         LOG(printf_P, PSTR("prev check_recovery_state = %s\n"), data.c_str());
+    //         if(data.startsWith(F("start"))){
+    //             // похоже бутлуп, т.к. до конца инициализации не дошли...
+    //             r.close();
+    //             return true; // все плохо
+    //         } else {
+    //             r.close();
+    //             File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
+    //             w.print(F("start - "));
+    //             w.println(eff); // пишу номер эффекта
+    //             w.close();
+    //             return false; // все хорошо
+    //         }
+    //     } else {
+    //         File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
+    //         w.print(F("end - "));
+    //         w.println(eff); // пишу номер эффекта
+    //         w.close();
+    //         return false; // все хорошо
+    //     }
+    // }
 }
 
 void resetAutoTimers(bool isEffects=false) // сброс таймера демо и настройка автосохранений
@@ -2552,7 +2570,7 @@ void sync_parameters(){
 
     if(check_recovery_state(true)){
         LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(FPSTR(TCONST_0016))).c_str());
-        embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был ребут, сбрасываем эффект
+        embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был циклический ребут, сбрасываем эффект
     }
 
     myLamp.setmqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
