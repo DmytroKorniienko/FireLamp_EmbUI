@@ -85,8 +85,11 @@ public:
 class EffectMetaBalls : public EffectCalc {
 private:
 	float speedFactor;
+	const float hormap = (256 / WIDTH);
+    const float vermap = (256 / HEIGHT);
+	uint8_t distances(byte x0, byte y0, byte x1, byte y1);
 	String setDynCtrl(UIControl*_val) override;
-
+    void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -104,7 +107,7 @@ private:
 	float e_s3_size;
 	
 	String setDynCtrl(UIControl*_val) override;
-
+    
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1486,7 +1489,7 @@ class EffectSmokeballs: public EffectCalc {
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
-	const bool glitch = abs(WIDTH-HEIGHT) >= minDim/4;
+	const bool glitch = abs((int)WIDTH-(int)HEIGHT) >= minDim/4;
 	const byte density = 50;
     uint8_t Scale = 6;
     uint8_t _scale = 1;
@@ -1786,7 +1789,7 @@ private:
     float sparksFade[sparksNum];
     uint8_t gPos[2];
 
-    bool centerRun = false;
+    bool centerRun = true;
     byte period = 10;
     byte _x = WIDTH/2;
     byte _y = HEIGHT/2;

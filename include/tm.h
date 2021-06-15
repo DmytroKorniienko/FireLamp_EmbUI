@@ -44,21 +44,29 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 #include "config.h"
 #include "enc.h"
-
 #ifndef TM_TIME_DELAY
   #define TM_TIME_DELAY 3U
 #endif
 
+class TMCLOCK : public TM1637 {
+public:
+  TMCLOCK(uint8_t clkPin=TM_CLK_PIN, uint8_t dataPin=TM_DIO_PIN) : TM1637 (clkPin, dataPin) {};
+  uint8_t& getSetDelay();  // Задержка, для отображения с других плагинов
+  void tm_setup();
+  void tm_loop();
+private:
+  String splittedIp[5] = {};
+  bool showPoints;
+  uint8_t tmDelayTime;
+  #if TM_SHOW_BANNER
+  bool bannerShowed;
+  void showBanner();
+  #endif
+  void switchShowPoints(){showPoints=!showPoints;};
+  void splitIp(String str, String dlm, String dest[]);  // Функция разделителя по указателю
+  String formatIp(String inArr[], String dlm);    // Функция форматирования
+};
 
-static TM1637 tm1637(TM_CLK_PIN, TM_DIO_PIN);
-
-
-extern void tm_setup();
-extern void tm_loop();
-extern void tm_setted();  // Проверка, установлено ли время
-extern void splitIp(String str, String dlm, String dest[]);  // Функция разделителя по указателю
-extern String formatIp(String inArr[], String dlm);    // Функция форматирования
-uint8_t& getSetDelay();
-
+extern TMCLOCK tm1637;
 #endif
 #endif

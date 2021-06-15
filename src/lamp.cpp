@@ -44,10 +44,10 @@ extern LAMP myLamp; // Объект лампы
 void LAMP::lamp_init(const uint16_t curlimit)
 {
   setcurLimit(curlimit);
-  // Такую коррекцию стоит оставить, с ней можно получить хотя бы более менее жёлтый цвет. Иначе он всегда зеленит (коррекцию нашел на просторах, люди рекомендуют)
+
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalPixelString);
-  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(getUnsafeLedsArray(), NUM_LEDS)/*.setCorrection(0xFFE08C)*/; // цветокоррекция нафиг не нужна, проверяется на минимальной яркости в белой лампе
+  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(getUnsafeLedsArray(), NUM_LEDS);
 
   brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
   if (curlimit > 0){
@@ -215,7 +215,7 @@ void LAMP::alarmWorker(){
 
 #ifdef MP3PLAYER
       mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // запуск звука будильника
-      if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->alarm){
+      if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
         mp3->setAlarm(true);
         mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
       }
@@ -241,7 +241,7 @@ void LAMP::alarmWorker(){
         } else {
 #ifdef PRINT_ALARM_TIME
 #ifdef MP3PLAYER
-          if(mp3->alarm) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
+          if(mp3->isAlarm()) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
 #endif
             sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
@@ -397,6 +397,7 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       flags.dRand = false;
       flags.isShowSysMenu = false;
       flags.isOnMP3 = false;
+      flags.isBtn = false;
       flags.showName = false;
       flags.playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
       flags.playName = false; // воспроизводить имя?
@@ -406,6 +407,8 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       flags.playMP3 = false;
       flags.limitAlarmVolume = false;
       flags.isDraw = false;
+      flags.tm24 = true;
+      flags.tmZero = false;
 
 #ifdef VERTGAUGE
       gauge_time = millis();
@@ -455,14 +458,16 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
 //   digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 // #endif
 
-  if (curLimit > 0){
 #ifdef DS18B20
-    // восстанавливаем значение тока после включения. Так как значение 0 не работает в ограничители тока по перегреву, 
+#ifdef SHOWSYSCONFIG
+    // восстанавливаем значение тока после включения. Так как значение 0 не работает в ограничителе тока по перегреву, 
     // то если ограничение тока установлено в 0, устанвливаем вместо него рассчетный максимум в 15.36А на 256 диодов (бред конечно, но нужно же хоть какое-то значение больше 0).
-    setcurLimit(!embui.param(FPSTR(TCONST_0098)).toInt() ? ((float)NUM_LEDS/256 * 15360) : embui.param(FPSTR(TCONST_0098)).toInt());
+    setcurLimit(embui.param(FPSTR(TCONST_0098)).toInt() == 0 ? (NUM_LEDS * 60) : embui.param(FPSTR(TCONST_0098)).toInt());
+#else
+    setcurLimit(CURRENT_LIMIT == 0U ? (NUM_LEDS * 60) : CURRENT_LIMIT);
+#endif
 #endif
     FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
-  }
 }
 
 void LAMP::startAlarm(char *value){
@@ -602,6 +607,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
 
   if (!text || !strlen(text))
   {
+    offset = (flags.MIRR_V ? 0 : WIDTH);
     return true;
   }
 
@@ -754,15 +760,15 @@ uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // �
   return 0;
 }
 
-void LAMP::sendString(const char* text, const CRGB &letterColor){
-  if (!isLampOn()){
+void LAMP::sendString(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue){
+  if (!isLampOn() && forcePrint){
       disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
       setBrightness(OFF_BRIGHTNESS, false, false); // выводить будем минимальной яркостью в OFF_BRIGHTNESS пункта
-      sendStringToLamp(text, letterColor, true);
+      sendStringToLamp(text, letterColor, forcePrint, clearQueue);
   } else {
-      sendStringToLamp(text, letterColor);
+      sendStringToLamp(text, letterColor, forcePrint, clearQueue);
   }
 }
 
@@ -781,7 +787,14 @@ String &LAMP::prepareText(String &source){
   return source;  
 }
 
-void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
+void LAMP::sendStringToLampDirect(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
+{
+    String storage = text;
+    prepareText(storage);
+    doPrintStringToLamp(storage.c_str(), letterColor, textOffset, fixedPos); // отправляем
+}
+
+void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
 {
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
   if(textOffset==-128) textOffset=this->txtOffset;
@@ -816,6 +829,15 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         return; // на выход
     }
   } else { // текст не пустой
+    if(clearQueue){
+      LOG(println, F("Clear message queue"));
+      if(docArrMessages){ // очистить очередь, освободить память
+          delete docArrMessages;
+          docArrMessages = nullptr;
+      }
+      lampState.isStringPrinting = false; // сбросить текущий вывод строки
+    }
+
     if(!lampState.isStringPrinting){ // ничего сейчас не печатается
       String storage = text;
       prepareText(storage);
@@ -837,8 +859,13 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 
       for (size_t i = 0; i < arr.size(); i++)
       {
-        if((arr[i])[F("s")]=text){
-          LOG(println, F("Duplicated string"));
+        if((arr[i])[F("s")]==text
+          && (arr[i])[F("c")]==((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b
+          && (arr[i])[F("o")]==textOffset
+          && (arr[i])[F("f")]==fixedPos
+        ){
+          LOG(println, F("Duplicate string skipped"));
+          //LOG(println, (*docArrMessages).as<String>());
           return;
         }
       }
@@ -849,12 +876,12 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       var[F("o")]=textOffset;
       var[F("f")]=fixedPos;
 
-      LOG(print, F("Array: "));
-      LOG(println, (*docArrMessages).as<String>());
-
       String tmp; // Тут шаманство, чтобы не ломало JSON
       serializeJson((*docArrMessages), tmp);
       deserializeJson((*docArrMessages), tmp);
+
+      LOG(print, F("Array: "));
+      LOG(println, (*docArrMessages).as<String>());
     }
   }
 }
@@ -863,6 +890,11 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
 {
   static String toPrint;
   static CRGB _letterColor;
+
+  if(!lampState.isStringPrinting){
+    toPrint.clear();
+    fillStringManual(nullptr, CRGB::Black);
+  }
 
   lampState.isStringPrinting = true;
   int8_t offs=(textOffset==-128?txtOffset:textOffset);
@@ -1081,18 +1113,25 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     lampState.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
 #endif
 
+#ifdef ENCODER
+ exitSettings();
+#endif
+
   if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :
+        fade = (!fader) && fade;
         effects.setSelected(effects.getNext());
         break;
     case EFFSWITCH::SW_NEXT_DEMO :
         effects.setSelected(effects.getByCnt(1));
         break;
     case EFFSWITCH::SW_PREV :
+        fade = (!fader) && fade;
         effects.setSelected(effects.getPrev());
         break;
     case EFFSWITCH::SW_SPECIFIC :
+        //fade = (!fader) && fade;
         effects.setSelected(effects.getBy(effnb));
         break;
     case EFFSWITCH::SW_RND :
@@ -1264,19 +1303,19 @@ void LAMP::warningHelper(){
       case 1: {
         EffectMath::fillAll(warningTask->getWarn_color());
         if (!isPrintingNow())
-          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       case 2: {
         EffectMath::fillAll(warningTask->getWarn_color());
         if (!isPrintingNow())
-          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), -warningTask->getWarn_color(), true, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), -warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       case 3: {
         if (!isPrintingNow())
-          //sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, -128, xPos);
-          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, -128, xPos);
+          //sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, false, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       default: break;
@@ -1349,7 +1388,8 @@ LEDFader *fader = nullptr;
  * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
  */
 void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void()> callback){
-    if(fader)
-      fader->cancel();
+    while(fader){
+      fader->skipBrightness(); // отмена предыдущего фейдера
+    }
     fader = new LEDFader(&ts, lamp,_targetbrightness, _duration, callback);
 }

@@ -59,11 +59,30 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кнопкой <A, B, KEY>
 
+#ifndef EXIT_TIMEOUT
+#define EXIT_TIMEOUT 3U
+#endif
+
+#ifndef ENC_STRING_DELAY
+#define ENC_STRING_DELAY 30
+#endif
+
+#ifndef ENC_STRING_EFFNUM_DELAY
+#define ENC_STRING_EFFNUM_DELAY 17
+#endif
+
+#ifndef ENC_STRING_COLOR
+#define ENC_STRING_COLOR CRGB::Orange
+#endif
+
+#ifndef VERTGAUGE_COLOR
+#define VERTGAUGE_COLOR 10
+#endif
 
 void callEncTick ();
 void IRAM_ATTR isrEnc();
-void inter();
-void noInter();
+void interrupt();
+void noInterrupt();
 
 void isTurn();
 void isClick();
@@ -71,10 +90,24 @@ void isHolded();
 //void myStep();
 void encSetBri(int val);
 void encSetEffect(int val);
-void display(int16_t value, String type = "", uint8_t bri = TM_BRIGHTNESS);
-void display(String str, uint8_t bri = TM_BRIGHTNESS);
+void encSetDynCtrl(int val);
+void encDisplay(uint16_t value, String type = "");
+void encDisplay(float value);
+void encDisplay(String str);
+void resetTimers();
+void exitSettings();
+void encSendString(String str, CRGB color, bool force = true, uint8_t delay = ENC_STRING_DELAY);
+void encSendStringNumEff(String str, CRGB color);
+bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
 extern void encLoop();
+
+void toggleDemo();
+void toggleGBright();
+void toggleMic();
+void toggleAUX();
+void sendTime();
+void sendIP();
 #endif
 #endif

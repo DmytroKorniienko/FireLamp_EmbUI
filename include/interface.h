@@ -25,12 +25,12 @@ typedef enum _remote_action {
     RA_EFF_NEXT,
     RA_EFF_PREV,
     RA_EFF_RAND,
-    RA_BRIGHT,
     RA_BRIGHT_NF,
-    RA_SPEED,
-    RA_SCALE,
-    RA_EXTRA,
+    RA_CONTROL,
     RA_MIC,
+#ifdef MIC_EFFECTS
+    RA_MICONOFF,
+#endif
     RA_EFFECT,
     RA_SEND_TEXT,
     RA_SEND_TIME,
@@ -55,8 +55,8 @@ void default_buttons();
 void section_main_frame(Interface *interf, JsonObject *data);
 void section_effects_frame(Interface *interf, JsonObject *data);
 void section_text_frame(Interface *interf, JsonObject *data);
-// функция перенакрывает таковую из фреймворка и добавляет свои кнопки в меню "Настройки"
-//void user_settings_frame(Interface *interf, JsonObject *data);
+// реализация настроек тут своя, отличная от фреймворка
+void section_settings_frame(Interface *interf, JsonObject *data);
 void pubCallback(Interface *interf);
 void set_onflag(Interface *interf, JsonObject *data);
 void save_lamp_flags();

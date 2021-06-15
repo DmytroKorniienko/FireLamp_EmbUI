@@ -82,16 +82,28 @@ void setup() {
 
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-    myLamp.events.loadConfig();
-    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+    myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
+    
+#ifdef DS18B20
+  ds_setup();
+#endif
 
+#ifdef SHOWSYSCONFIG
+    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+#else
+    myLamp.lamp_init(CURRENT_LIMIT);
+#endif
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
 
 #ifdef ESP_USE_BUTTON
+#ifdef SHOWSYSCONFIG
     myLamp.setbPin(embui.param(F("PINB")).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
+#else
+    myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
+#endif
     if (!myButtons->loadConfig()) {
       default_buttons();
       myButtons->saveConfig();
@@ -101,9 +113,13 @@ void setup() {
     myLamp.events.setEventCallback(event_worker);
 
 #ifdef MP3PLAYER
+#ifdef SHOWSYSCONFIG
     int rxpin = embui.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : embui.param(FPSTR(TCONST_009B)).toInt();
     int txpin = embui.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : embui.param(FPSTR(TCONST_009C)).toInt();
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
+#else
+    mp3 = new MP3PLAYERDEVICE(MP3_RX_PIN, MP3_TX_PIN); //rxpin, txpin
+#endif
 #endif
 
 #ifdef ESP8266
@@ -116,12 +132,8 @@ void setup() {
   //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
 
 #ifdef TM1637_CLOCK
-  tm_setup();
+  tm1637.tm_setup();
 #endif 
-
-#ifdef DS18B20
-  ds_setup();
-#endif
 
 #ifdef ENCODER
   enc_setup();
@@ -160,7 +172,7 @@ void loop() {
 
 #ifdef TM1637_CLOCK
     EVERY_N_SECONDS(1) {
-        tm_loop();
+        tm1637.tm_loop();
     }
 #endif
 #ifdef DS18B20

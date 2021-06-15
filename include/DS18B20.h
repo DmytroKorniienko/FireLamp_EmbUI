@@ -38,6 +38,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef _DS18B20_H
 #define _DS18B20_H
 
+#ifdef DS18B20
+
 #include "misc.h"
 #include "main.h"
 #include "config.h"
@@ -49,10 +51,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 void ds_setup();
 void ds_loop();
 int16_t getTemp();
-#if COOLER_PIN >= 0
 void tempToSpeed(int16_t& currentTemp);
-#endif
-void ds_display(uint16_t value);
+bool& canDisplayTemp();
+void ds_display(int16_t value);
 
- 
+#endif 
 #endif

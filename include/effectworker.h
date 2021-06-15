@@ -159,7 +159,17 @@ public:
     const String &getMax() {return max;}
     const String &getStep() {return step;}
 
-    void setVal(const String &_val) {if(getType()==CONTROL_TYPE::RANGE) val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt()); else val=_val;}
+    void setVal(const String &_val) {
+        switch(getType()&0x0F){
+            case CONTROL_TYPE::RANGE:
+            case CONTROL_TYPE::CHECKBOX:
+                val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt());
+                break;
+            default:
+                val=_val;
+                break;
+        }
+    }
 };
 
 
@@ -279,15 +289,15 @@ protected:
     bool isActive() {return active;}
     void setActive(bool flag) {active=flag;}
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
-    byte brightness;
-    byte speed;
-    byte scale;
+    byte brightness=1;
+    byte speed=1;
+    byte scale=1;
     float speedfactor=1.0;      // коэффициент скорости эффекта
 
-    uint8_t palettescale;       // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
-    float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-    uint8_t palettepos;         // позиция в массиве указателей паллитр
-    uint8_t paletteIdx;         // индекс палитры переданный с UI
+    uint8_t palettescale=1.0;     // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
+    float ptPallete=1.0;          // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    uint8_t palettepos=0;         // позиция в массиве указателей паллитр
+    uint8_t paletteIdx=0;         // индекс палитры переданный с UI
 
     /** флаг, включает использование палитр в эффекте.
      *  влияет на:
@@ -296,7 +306,7 @@ protected:
      */
     bool usepalettes=false;
     std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
-    TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
+    TProgmemRGBPalette16 const *curPalette = &RainbowColors_p;     /**< указатель на текущую палитру */
 
     const String &getCtrlVal(int idx) {
         //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
@@ -451,6 +461,18 @@ private:
 
     Task *tConfigSave = nullptr;       // динамическая таска, задержки при сохранении текущего конфига эффекта в файл
 
+    void fsinforenew(){
+#ifdef ESP8266
+        FSInfo fs_info;
+        LittleFS.info(fs_info);
+        if(lampstate)
+        lampstate->fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
+#endif
+#ifdef ESP32
+        if(lampstate)
+        lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
+#endif
+    }
 
     /**
      * создает и инициализирует экземпляр класса выбранного эффекта
@@ -523,15 +545,6 @@ public:
             CONTROL_TYPE::RANGE,                    // type
             id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088))           // name
         ));
-        // selcontrols.add(new UIControl(
-        //     id,                                     // id
-        //     CONTROL_TYPE::RANGE,                    // type
-        //     id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088)),           // name
-        //     String(127),                            // value
-        //     String(1),                              // min
-        //     String(255),                            // max
-        //     String(1)                               // step
-        // ));
       }
       selcontrols = controls;
     }
@@ -639,6 +652,16 @@ public:
     bool validByList(int val);
     // получить реальный номер эффекта по номеру элемента списка (для плагинов)
     uint16_t realEffNumdByList(uint16_t val) { return effects[val]->eff_nb; }
+    // получить индекс эффекта по номеру (для плагинов)
+    uint16_t effIndexByList(uint16_t val) { 
+        uint16_t found = 0;
+        for (uint16_t i = 0; i < effects.size(); i++) {
+            if (effects[i]->eff_nb == val ) {
+                found = i;
+            } 
+        }
+        return found;
+    }
     // получить флаг canBeSelected по номеру элемента списка (для плагинов)
     bool effCanBeSelected(uint16_t val) { if (val < effects.size())return effects[val]->canBeSelected(); return false; }
 

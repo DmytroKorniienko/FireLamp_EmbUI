@@ -38,6 +38,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef __MAIN_H_
 #define __MAIN_H_
 
+#if __cplusplus >= 201703L
+#define register // keyword 'register' is banned with c++17
+#endif
+
 #include <Arduino.h>
 #include "config.h"
 #include "EmbUI.h"
@@ -71,6 +75,6 @@ void sendData();
 void create_parameters();
 void sync_parameters();
 void event_worker(const EVENT *);
-//ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
+bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
 
 #endif

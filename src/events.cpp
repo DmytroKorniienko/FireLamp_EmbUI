@@ -65,7 +65,7 @@ void EVENT_MANAGER::check_event(EVENT *event)
     }
 }
 
-void EVENT_MANAGER::addEvent(const EVENT&event)
+EVENT *EVENT_MANAGER::addEvent(const EVENT&event)
 {
     EVENT *next=root;
     EVENT *new_event = new EVENT(event);
@@ -82,6 +82,7 @@ void EVENT_MANAGER::addEvent(const EVENT&event)
     else {
         root = new_event;
     }
+    return new_event;
 }
 
 void EVENT_MANAGER::delEvent(const EVENT&event) {
@@ -187,7 +188,6 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             LOG(println, filename);
             return;
         }
-
         JsonArray arr = doc.as<JsonArray>();
         EVENT event;
         for (size_t i=0; i<arr.size(); i++) {
@@ -197,10 +197,10 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
             event.repeat = item[F("rp")].as<int>();
             event.stopat = item[F("sa")].as<int>();
-            String tmpStr = item[F("msg")].as<String>();
-            event.message = (char *)tmpStr.c_str();
-            addEvent(event);
-            LOG(printf_P, PSTR("[%u - %ld - %u - %u - %u - %s]\n"), event.raw_data, event.unixtime, event.event, event.repeat, event.stopat, event.message);
+            event.message = (char *)item[F("msg")].as<const char *>();
+            EVENT *new_event = addEvent(event);
+            //LOG(printf_P, PSTR("[%u - %ld - %u - %u - %u - %s]\n"), new_event->raw_data, new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat, new_event->message);
+            LOG(printf_P, PSTR("[%u - %ld - %u - %u - %u - ]\n"), new_event->raw_data, new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat);
         }
 
         LOG(println, F("Events config loaded"));

@@ -550,16 +550,21 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           String min = item.containsKey(F("min")) && id>2 ? item[F("min")].as<String>() : String(1);
           String max = item.containsKey(F("max")) && id>2 ? item[F("max")].as<String>() : String(255);
           String step = item.containsKey(F("step")) && id>2 ?  item[F("step")].as<String>() : String(1);
-          CONTROL_TYPE type = item.containsKey(F("type")) && (id>2 || (id<=2 && (item[F("type")].as<CONTROL_TYPE>() & 0x0F)==CONTROL_TYPE::RANGE)) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE;
+          CONTROL_TYPE type = item[F("type")].as<CONTROL_TYPE>();
+          type = ((type & 0x0F)!=CONTROL_TYPE::RANGE) && id<3 ? CONTROL_TYPE::RANGE : type;
+          min = ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "0" : min;
+          max = ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "1" : max;
+          step = ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "1" : step;
           controls.add(new UIControl(
               id,             // id
               type,           // type
               name,           // name
               val,            // value
-              (type==CONTROL_TYPE::CHECKBOX) ? "0" : min,            // min
-              (type==CONTROL_TYPE::CHECKBOX) ? "1" : max,            // max
+              min,            // min
+              max,            // max
               step            // step
           ));
+          //LOG(printf_P,PSTR("%d %d %s %s %s %s %s\n"), id, type, name.c_str(), val.c_str(), min.c_str(), max.c_str(), step.c_str());
       }
   }
   doc.clear();
@@ -692,28 +697,20 @@ void EffectWorker::autoSaveConfig(bool force) {
         if(tConfigSave)
           tConfigSave->cancel();
         saveeffconfig(curEff);
+        fsinforenew();
         LOG(printf_P,PSTR("Force save effect config: %d\n"), curEff);
     } else {
         if(!tConfigSave){ // task for delayed config autosave
           tConfigSave = new Task(CFG_AUTOSAVE_TIMEOUT, TASK_ONCE, [this](){
             saveeffconfig(curEff);
+            fsinforenew();
             LOG(printf_P,PSTR("Autosave effect config: %d\n"), curEff);
           }, &ts, false, nullptr, [this](){TASK_RECYCLE; tConfigSave=nullptr;});
           tConfigSave->enableDelayed();
-        } else
+        } else {
           tConfigSave->restartDelayed();
-          return;
+        }
     }
-#ifdef ESP8266
-    FSInfo fs_info;
-    LittleFS.info(fs_info);
-    if(lampstate)
-      lampstate->fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
-#endif
-#ifdef ESP32
-    if(lampstate)
-      lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
-#endif
 }
 
 // конструктор копий эффектов

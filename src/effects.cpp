@@ -755,7 +755,8 @@ bool EffectDNA2::run(CRGB *ledarr, EffectWorker *opt){
     
     if ((i + ms / 8) & 3) mydrawLine(x / 2, x1 / 2, i, color, dots, 1);    
   }
-  EffectMath::nightMode(leds);
+  // EffectMath::nightMode(leds);
+  EffectMath::gammaCorrection();
   EffectMath::blur2d(64);
   return true;
 }
@@ -1233,44 +1234,52 @@ String EffectMetaBalls::setDynCtrl(UIControl*_val){
   return String();
 }
 
+uint8_t EffectMetaBalls::distances(byte x0, byte y0, byte x1, byte y1) {
+  uint8_t dx = fabs(x1 - x0);
+  uint8_t dy = fabs(y1 - y0);
+  uint8_t dist = 2 * EffectMath::sqrt((dx * dx) + (dy * dy));
+  return dist;
+}
+
+void EffectMetaBalls::load(){
+palettesload();
+}
+
 bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
 {
-  // get some 2 random moving points
-  uint8_t x2 = inoise8(millis() * speedFactor, 25355, 685 ) / WIDTH;
-  uint8_t y2 = inoise8(millis() * speedFactor, 355, 11685 ) / HEIGHT;
+  // get some 3 random moving points
+  long t = millis() * speedfactor;
+  // get some 3 random moving points
+  //uint8_t x1 = beatsin8(23, 0, LED_COLS - 1);//V1
+  //uint8_t y1 = beatsin8(28, 0, LED_ROWS - 1);
 
-  uint8_t x3 = inoise8(millis() * speedFactor, 55355, 6685 ) / WIDTH;
-  uint8_t y3 = inoise8(millis() * speedFactor, 25355, 22685 ) / HEIGHT;
-
-  // and one Lissajou function
-  uint8_t x1 = beatsin8(23 * speedFactor, 0, 15);
-  uint8_t y1 = beatsin8(28 * speedFactor, 0, 15);
-
+  uint8_t x1 = inoise8(t, 12355, 85) / hormap;// V2
+  uint8_t y1 = inoise8(t, 5, 685) / vermap;
+  
+  uint8_t x2 = inoise8(t, 25355, 685) / hormap;
+  uint8_t y2 = inoise8(t, 355, 11685) / vermap;
+  
+  uint8_t x3 = inoise8(t, 55355, 6685) / hormap;
+  uint8_t y3 = inoise8(t, 25355, 22685) / vermap;
+  
   for (uint8_t y = 0; y < HEIGHT; y++) {
     for (uint8_t x = 0; x < WIDTH; x++) {
-
+      
       // calculate distances of the 3 points from actual pixel
       // and add them together with weightening
-      uint8_t  dx =  fabs(x - x1);
-      uint8_t  dy =  fabs(y - y1);
-      uint8_t dist = 2 * EffectMath::sqrt((dx * dx) + (dy * dy));
-
-      dx =  fabs(x - x2);
-      dy =  fabs(y - y2);
-      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
-
-      dx =  fabs(x - x3);
-      dy =  fabs(y - y3);
-      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
-
+      
+      uint8_t dist = distances(x1, y1, x, y);
+      dist += distances(x2, y2, x, y);
+      dist += distances(x3, y3, x, y);
+      
       // inverse result
-      byte color = scale*4 / (dist==0?1:dist);
-
+      byte color = scale * 4 / (dist == 0 ? 1 : dist);
+      
       // map color between thresholds
       if (color > 0 and color < 60) {
-        EffectMath::drawPixelXY(x, y, CHSV(color * 9, 255, 255));
+        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, color * 9));
       } else {
-        EffectMath::drawPixelXY(x, y, CHSV(0, 255, 255));
+        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, 0));
       }
       // show the 3 points, too
       EffectMath::drawPixelXY(x1, y1, CRGB(255, 255, 255));
@@ -1280,7 +1289,6 @@ bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
   }
   return true;
 }
-
 // ***** Эффект "Спираль"     ****
 /*
  * Aurora: https://github.com/pixelmatix/aurora
@@ -2945,17 +2953,17 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
       String tmp = embui.timeProcessor.getFormattedShortTime();
       if(HEIGHT>=16){
         int16_t xPos = speed!=254 ? random(LET_WIDTH*2,WIDTH) : (WIDTH+LET_WIDTH*2)/2;
-        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, HEIGHT-LET_HEIGHT, xPos);
-        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, (int8_t)HEIGHT-(int8_t)(LET_HEIGHT*2), xPos);
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, false, (int8_t)HEIGHT-(int8_t)(LET_HEIGHT*2), xPos);
       } else if(WIDTH>=21){ // требуется минимум 5*4+1 символов
         int16_t xPos = speed!=254 ? random(LET_WIDTH*2+1,WIDTH) : (WIDTH+LET_WIDTH*2+1)/2;
-        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, HEIGHT-LET_HEIGHT, xPos);
-        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));
+        myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 64), false, false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : 127), false, false, HEIGHT-LET_HEIGHT, xPos-(LET_WIDTH*2+1));
       } else {
         //int16_t xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
         int16_t xPos = speed!=254 ? random(LET_WIDTH*2,WIDTH) : (WIDTH+LET_WIDTH*2)/2;
         isMinute=!isMinute;
-        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : isMinute ? 64 : 127), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(isMinute?tmp.substring(3,5).c_str():tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, speed!=254 ? random8() : isMinute ? 64 : 127), false, false, HEIGHT-LET_HEIGHT, xPos);
       }
     }
   } else {
@@ -2979,16 +2987,16 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
     String tmp = embui.timeProcessor.getFormattedShortTime();
     uint8_t shift = beatsin8(speed/5, -1, 1);
     if(HEIGHT>=16){
-      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
-      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, false, HEIGHT-(LET_HEIGHT*2)+shift, xPos);
     } else if(WIDTH>=21){
-      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos+(LET_WIDTH*2+1));
-      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(tmp.substring(0,2).c_str(), hColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos+(LET_WIDTH*2+1));
+      myLamp.sendStringToLamp(tmp.substring(3,5).c_str(), mColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos);
     } else if(WIDTH>=10){
-      myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), hColor[0], false, HEIGHT-LET_HEIGHT+shift, xPos);
+      myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), hColor[0], false, false, HEIGHT-LET_HEIGHT+shift, xPos);
     } else {
         xPos = random(LET_WIDTH*2,WIDTH); // вывод часов/минут попеременно...
-        myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, (int)color_idx%16), false, HEIGHT-LET_HEIGHT, xPos);
+        myLamp.sendStringToLamp(isMinute ? tmp.substring(3,5).c_str() : tmp.substring(0,2).c_str(), ColorFromPalette(*curPalette, (int)color_idx%16), false, false, HEIGHT-LET_HEIGHT, xPos);
         color_idx=color_idx+(speed/256.0);
     }
     curTimePos=curTimePos+(0.23*(speed/255.0))*(timeShiftDir?-1:1); // смещаем
@@ -3063,6 +3071,9 @@ bool EffectPicasso::picassoRoutine(CRGB *leds, EffectWorker *param){
       break;
     case 3:
       EffectMath::drawCircleF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
+      break;
+	case 4:
+      EffectMath::drawSquareF(fabs(p1->position_x - p2->position_x), fabs(p1->position_y - p2->position_y), fabs(p1->position_x - p1->position_y), p1->color);
       break;
     }
   }
@@ -4089,9 +4100,9 @@ bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
 
   for (float x = 0.; x < oscHV; x += div) {
     if (speed < 128)
-      EffectMath::drawLineF(y[0], x, y[1], /*(x + div) >= oscHV ? oscHV - 1 : */(x + div), color);
+      EffectMath::drawLineF(y[0], x, y[1], (x + div), color);
     else
-      EffectMath::drawLineF(x, y[0], /*(x + div) >= oscHV ? oscHV - 1 : */(x + div), y[1], color);
+      EffectMath::drawLineF(x, y[0], (x + div), y[1], color);
 
     y[0] = y[1];
     y[1] = EffectMath::fmap(
@@ -4100,7 +4111,7 @@ bool EffectOsc::run(CRGB *leds, EffectWorker *param) {
                           pointer * 2. - gain,
                           0., 
                           oscilLimit - 1);
-    delayMicroseconds((uint16_t)(/*(isMicOn()? 1024U : 1568U)*/1024.0f * div));
+    delayMicroseconds((uint16_t)(1024.0 * div));
 
   }
 
@@ -4133,7 +4144,7 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   CRGB color;
   for (uint8_t x = 0; x < minDimLocal; x++) {
     for (uint8_t y = 0; y < minDimLocal; y++) {
-      color = (x ^ y ^ flip) < count ? ColorFromPalette(RainbowColors_p, ((x ^ y) << rand) + generation) : CRGB::Black;
+      color = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << rand) + generation) : CRGB::Black;
       if (x < WIDTH and y < HEIGHT) EffectMath::setPixel(x, y, color);
       if (x + minDimLocal < WIDTH and y < HEIGHT) EffectMath::setPixel(x + minDimLocal, y, color);
       if (y + minDimLocal < HEIGHT and x < WIDTH) EffectMath::setPixel(x, y + minDimLocal, color);
@@ -5876,14 +5887,14 @@ void EffectCell::cell(CRGB *leds) {
 // !++ Тут лучше все оставить как есть, пускай в теле эффекта скорость пересчитывает
 String EffectCell::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speed = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt(); 
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  effId = _scale ? _scale : random(_val->getMin().toInt(), _val->getMax().toInt()+1)+1;
+  else if(_val->getId()==3) {
+    _scale = EffectCalc::setDynCtrl(_val).toInt();
+    effId = _scale ? _scale : random(_val->getMin().toInt(), _val->getMax().toInt()+1)+1;
+  } else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 bool EffectCell::run(CRGB *leds, EffectWorker *opt){
-  
   if (_scale == 0) {
     EVERY_N_SECONDS(60) {
       effId ++;
@@ -7205,7 +7216,7 @@ void EffectBengalL::load() {
   for (byte i = 0; i < sparksNum; i++) {
     regen(i);
   }
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*EffectCalc::speedfactor, 1*EffectCalc::speedfactor);
+  //speedFactor = EffectMath::fmap(speed, 1, 255, 0.1, 1)*EffectCalc::speedfactor;
 }
 
 //!++
@@ -7242,13 +7253,6 @@ void EffectBengalL::regen(byte id) {
 }
 
 
-// void EffectBengalL::setspd(const byte _spd)
-// {
-//   EffectCalc::setspd(_spd); // дернем базовый, где будет пересчет палитры
-//   speedFactor = EffectMath::fmap(speed, 1, 255, 0.1*EffectCalc::speedfactor, 1*EffectCalc::speedfactor);
-// }
-
-
 bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, beatsin8(5, 20, 100));
   if (centerRun) {
@@ -7281,7 +7285,7 @@ void EffectBalls::load() {
   randomSeed(millis());
   palettesload();
 
-  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15*EffectCalc::speedfactor, 0.5*EffectCalc::speedfactor);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5) * EffectCalc::speedfactor;
 
   for (byte i = 0; i < ballsAmount; i++) {
     radius[i] = EffectMath::randomf(0.5, radiusMax);
@@ -7302,11 +7306,14 @@ String EffectBalls::setDynCtrl(UIControl*_val){
 }
 
 void EffectBalls::fill_circle(float cx, float cy, float radius, CRGB col) {
-  radius -= 0.5;
-  for (int y = -radius; y <= radius; y++) {
-    for (int x = -radius; x <= radius; x++) {
+  uint8_t rad = radius;
+  for (float y = -radius; y <= radius; y += fabs(y) < rad ? 1 : 0.1) {
+    for (float x = -radius; x <= radius; x += fabs(x) < rad ? 1 : 0.1) {
       if (x * x + y * y <= radius * radius)
-        EffectMath::drawPixelXYF(cx + x, cy + y, col);
+        // if (fabs(x) < rad and fabs(y) < rad)
+          EffectMath::drawPixelXYF(cx + x, cy + y, col, 0);
+        // else 
+          // EffectMath::drawPixelXY(cx + x, cy + y, col);
     }
   }
 }
@@ -8182,7 +8189,6 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   counter += (float)_speed * SPEED_ADJ;
-  EffectMath::nightMode(leds);
   return true;
 }
 
@@ -8239,8 +8245,8 @@ void EffectVU::load() {
 
   //memset(oldBarHeights,0,sizeof(oldBarHeights));
   for(uint16_t i = 0; i < WIDTH; i++) {
-    oldBarHeights[i] = 0.;
-    bandValues[i] = 0.;
+    oldBarHeights[i] = 0.0;
+    bandValues[i] = 0.0;
   }
 
 }

@@ -60,7 +60,7 @@ private:
   float scale = 1.27; // 400 как средняя точка у меня, но надо будет калибравать для каждого случая отдельно калибровкой :)
   float noise = 0; // заполняется калибровкой, это уровень шума микрофона
   double signalFrequency = 700;
-  double samplingFrequency = SAMPLING_FREQ; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500 если чтение через analogRead(MIC_PIN);
+  uint32_t samplingFrequency = SAMPLING_FREQ; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500 если чтение через analogRead(MIC_PIN);
 
   const unsigned int sampling_period_us = round(1000000*(1.0/samplingFrequency));
   const uint8_t amplitude = 100;

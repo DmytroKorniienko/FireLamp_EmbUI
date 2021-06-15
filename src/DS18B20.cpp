@@ -38,17 +38,31 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 #ifdef DS18B20
 #include "DS18B20.h"
+#ifdef TM1637_CLOCK
 #include "tm.h"
+#endif
+#ifdef ENCODR
+#include "enc.h"
+#endif
+
 
 MicroDS18B20 dallas(DS18B20_PIN);
 
+bool canBeDisplayed;
+
+bool& canDisplayTemp() {return canBeDisplayed;};
 
 void ds_setup() {
+#if CURRENT_LIMIT_STEP > 0 && CURRENT_LIMIT == 0
+  #undef CURRENT_LIMIT
+  #define CURRENT_LIMIT (NUM_LEDS * 60U)
+#endif
 #if COOLER_PIN >= 0
   pinMode(COOLER_PIN, OUTPUT);
 #endif
   dallas.requestTemp();
   LOG(printf_P, PSTR("DS18b20 was initialized.\n")); 
+  canBeDisplayed = true;
 }
 
 int16_t getTemp() {
@@ -64,9 +78,10 @@ int16_t getTemp() {
   return currentTemp;
 }
 
-#if COOLER_PIN >= 0
+
 // преобразуем температуру в скорость
 void tempToSpeed(int16_t& currentTemp) {
+#if COOLER_PIN >= 0
 #if COOLER_PIN_TYPE
   uint16_t fanSpeed = 0;
 #endif
@@ -90,15 +105,18 @@ void tempToSpeed(int16_t& currentTemp) {
       LOG(printf_P, PSTR("DS18B20: Fan desactivated. \n"));
     }
   #endif
+  #endif
 }
-#endif
+
 
 void ds_loop() { 
+#if defined(ENCODER) && SW == DS18B20_PIN
+  if (!digitalRead(SW)) return; // если кнопка энкодера нажата, пропускаем этот loop
+#endif
   int16_t curTemp = getTemp();
-  ds_display(curTemp); 
-  #if COOLER_PIN >= 0
+  if (canDisplayTemp()) ds_display(curTemp);
+
   tempToSpeed(curTemp);
-  #endif
 
   if (myLamp.isLampOn() && CURRENT_LIMIT_STEP > 0U) {
     static uint8_t delayCounter = 0;
@@ -118,15 +136,11 @@ void ds_loop() {
   }
 }
 
-void ds_display(uint16_t value) { 
+void ds_display(int16_t value) { 
 #ifdef TM1637_CLOCK
-  getSetDelay() = TM_TIME_DELAY;
-
-  String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("C")));
-  tm1637.setBrightness(TM_BRIGHTNESS);
-  //tm1637.clearScreen();
-  tm1637.display("");  // это не ошибка, без этой строки выводит почему-то температуру только один раз, потом никогда.
-  tm1637.display(tmp, true, false, (value < -9 || value > 99) ? 0 : 1); 
+  tm1637.getSetDelay() = TM_TIME_DELAY;
+  String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("%")));    // "%" - для отображения "о" вверху, "*" - для отображения "с" вверху
+  tm1637.display(tmp, true, false, (value < -9 || value > 99) ? 0 : (value < 10 ? 2 : 1));
 #endif
 }
 

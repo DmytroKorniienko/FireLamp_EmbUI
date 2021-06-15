@@ -112,8 +112,8 @@ struct {
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
-    bool reserved1:1;
-    bool reserved2:1;
+    bool tm24:1;   // 24х часовой формат
+    bool tmZero:1;  // ведущий 0
     bool limitAlarmVolume:1; // ограничивать громкость будильника
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
@@ -128,7 +128,7 @@ struct {
     uint8_t MP3eq:3; // вид эквалайзера
     bool isShowSysMenu:1; // показывать ли системное меню
     bool isOnMP3:1; // включен ли плеер?
-    bool reserved3:1;
+    bool isBtn:1; // включена ли кнопка?
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
     uint8_t alarmSound:3; // звук будильника ALARM_SOUND_TYPE
@@ -152,7 +152,7 @@ private:
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
-    int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
+    //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
     uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
@@ -182,7 +182,9 @@ private:
     uint8_t BFade; // затенение фона под текстом
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
-
+#ifdef TM1637_CLOCK
+    uint8_t tmBright; // яркость дисплея при вкл - старшие 4 бита и яркость дисплея при выкл - младшие 4 бита
+#endif
     DynamicJsonDocument *docArrMessages = nullptr; // массив сообщений для вывода на лампу
 
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
@@ -286,23 +288,24 @@ public:
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
-    int getmqtt_int() {return mqtt_int;}
+    //int getmqtt_int() {return mqtt_int;}
     void setmqtt_int(int val=DEFAULT_MQTTPUB_INTERVAL) {
-        mqtt_int = val;
+        //mqtt_int = val;
         if(tmqtt_pub)
             tmqtt_pub->cancel(); // cancel & delete
 
         extern void sendData();
-        if (mqtt_int){
-            tmqtt_pub = new Task(mqtt_int * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
+        if(val){
+            tmqtt_pub = new Task(val * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
         }
     }
 
     LAMPMODE getMode() {return mode;}
     void setMode(LAMPMODE _mode) {mode=_mode;}
 
-    void sendString(const char* text, const CRGB &letterColor);
-    void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
+    void sendString(const char* text, const CRGB &letterColor, bool forcePrint = true, bool clearQueue = false);
+    void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
+    void sendStringToLampDirect(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool isPrintingNow() { return lampState.isStringPrinting; }
     LAMP();
 
@@ -320,6 +323,7 @@ public:
     bool isDebugOn() {return flags.isDebug;}
     bool isDrawOn() {return flags.isDraw;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
+    void setButton(bool flag) {flags.isBtn=flag;}
     void setDrawBuff(bool flag) {
         flags.isDraw=flag;
         if(!flag){
@@ -341,6 +345,7 @@ public:
     void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; matrixflags.MIRR_V = flag; FastLED.clear();}}
     void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; matrixflags.MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
+    uint32_t getTextMovingSpeed() {return tmStringStepTime.getInterval();}
     void setTextOffset(uint8_t val) { txtOffset=val;}
 
     void setPlayTime(uint8_t val) {flags.playTime = val;}
@@ -352,6 +357,16 @@ public:
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 
     void periodicTimeHandle(bool force=false);
+
+#ifdef TM1637_CLOCK
+    void settm24 (bool flag) {flags.tm24 = flag;}
+    void settmZero (bool flag) {flags.tmZero = flag;}
+    bool isTm24() {return flags.tm24;}
+    bool isTmZero() {return flags.tmZero;}
+    void setTmBright(uint8_t val) {tmBright = val;}
+    uint8_t getBrightOn() { return tmBright>>4; }
+    uint8_t getBrightOff() { return tmBright&0x0F; }
+#endif
 
     void startAlarm(char *value = nullptr);
     void stopAlarm();
@@ -435,9 +450,19 @@ extern LEDFader *fader;
 class LEDFader : public Task {
     LAMP *lmp;
     uint8_t _brt, _brtincrement;
+    bool isSkipBrightness = false;
     std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
     LEDFader() = delete; 
 public:
+    void skipBrightness() { 
+        isSkipBrightness = true;
+        LOG(println,F("Fading canceled"));
+        fader = nullptr;
+        if(_cb)
+            _cb();
+        _cb = nullptr;
+        this->cancel();        
+    }
     LEDFader(Scheduler* aS, LAMP *_l, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback)
         : Task((unsigned long)FADE_STEPTIME,
         (abs(_targetbrightness - _l->getBrightness()) > FADE_MININCREMENT * _duration / FADE_STEPTIME) ? (long)(_duration / FADE_STEPTIME) : (long)(abs(_targetbrightness - _l->getBrightness())/FADE_MININCREMENT) + 1,
@@ -446,12 +471,15 @@ public:
         false,
         nullptr,
         [this, _targetbrightness](){
-            lmp->brightness(_targetbrightness);
-            if(_cb) _cb();
-            _cb=nullptr;
+            if(!isSkipBrightness){
+                lmp->brightness(_targetbrightness);
+                LOG(printf_P, PSTR("Fading to %d done\n"), _targetbrightness);
+            }
             TASK_RECYCLE;
             fader = nullptr;
-            LOG(printf_P, PSTR("Fading to %d done\n"), _targetbrightness);
+            if(_cb)
+                _cb();
+            _cb = nullptr;
         })
     {
         this->_cb = callback;
