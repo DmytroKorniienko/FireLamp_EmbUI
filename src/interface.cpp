@@ -79,12 +79,13 @@ void recreateoptionsTask(bool isCancelOnly=false){
         optionsTask->cancel();
     if(delayedOptionTask)
         delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
-    optionsTask = new Task(INDEX_BUILD_DELAY * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
-        TASK_RECYCLE;
-        optionsTask=nullptr;
-    });
-    if(!isCancelOnly)
+    if(!isCancelOnly){
+        optionsTask = new Task(INDEX_BUILD_DELAY * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
+            TASK_RECYCLE;
+            optionsTask=nullptr;
+        });
         optionsTask->enableDelayed();
+    }
 }
 
 bool check_recovery_state(bool isSet){
@@ -266,11 +267,13 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             300,
             TASK_ONCE, [effect](){
                                 myLamp.effects.copyEffect(effect); // копируем текущий
-                                myLamp.effects.makeIndexFileFromList(); // создаем индекс по файлам ФС и на выход
+                                myLamp.effects.makeIndexFileFromList(); // создаем индекс по списку и на выход
                                 recreateoptionsTask();
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
+        section_main_frame(interf, data);
+        return;
     //} else if (act == FPSTR(TCONST_000A)) {
     } else if (act == FPSTR(TCONST_00B0) || act == FPSTR(TCONST_00B1)) {
         uint16_t tmpEffnb = effect->eff_nb;
@@ -294,8 +297,6 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                                    TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
-            section_main_frame(interf, data);
-            return;
         } else {
             Task *_t = new Task(
                 300,
@@ -340,7 +341,27 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
 
     interf->json_section_main(FPSTR(TCONST_000F), FPSTR(TINTF_009));
     confEff = myLamp.effects.getSelectedListElement();
-    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true);
+    //interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true);
+
+    bool firsttime = false;
+    File *slowlist = nullptr;
+    if(!LittleFS.exists(F("/fquicklist.json"))){
+        slowlist = new fs::File;
+        *slowlist = LittleFS.open(F("/tmpqlist.tmp"), "w");
+        slowlist->print('[');
+        firsttime = true;
+    } else {
+        // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
+        interf->json_frame_custom(F("xload"));
+        interf->json_section_content();
+        interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true, false, LittleFS.exists(F("/fslowlist.json")) ? F("/fslowlist.json") : F("/fquicklist.json"));
+        interf->json_section_end();
+        block_effects_config_param(interf, nullptr);
+        interf->spacer();
+        interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
+        interf->json_section_end();
+        return;
+    }
 
     uint32_t timest = millis();
     if(fast){
@@ -351,12 +372,12 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         EffectListElem *eff = nullptr;
         MIC_SYMB;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
-            effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
-            interf->option(String(eff->eff_nb),
-                String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
-                String(effname) + 
-                MIC_SYMBOL
-            );
+            effname = String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) + String(FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb])) + MIC_SYMBOL;
+            if(slowlist){
+                slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+                firsttime = false;
+            }
+            //interf->option(String(eff->eff_nb), effname);
             #ifdef ESP8266
             ESP.wdtFeed();
             #elif defined ESP32
@@ -364,6 +385,12 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             #endif
         }
         //interf->option(String(0),"");
+        if(slowlist){
+            slowlist->print(']');
+            slowlist->close();
+            LittleFS.rename(F("/tmpqlist.tmp"),F("/fquicklist.json"));
+            delete (fs::FS *)slowlist;
+        }
     } else {
         EffectListElem *eff = nullptr;
         LOG(println,F("DBG1: using slow Names generation"));
@@ -371,22 +398,33 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         MIC_SYMB;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
-            interf->option(String(eff->eff_nb),
-                String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) +
-                String(effname) + 
-                MIC_SYMBOL
-            );
+            effname = String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) + String(FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb])) + MIC_SYMBOL;
+            if(slowlist){
+                slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+                firsttime = false;
+            }
+            //interf->option(String(eff->eff_nb), effname);
             #ifdef ESP8266
             ESP.wdtFeed();
             #elif defined ESP32
             delay(1);
             #endif
         }
+        if(slowlist){
+            slowlist->print(']');
+            slowlist->close();
+            LittleFS.rename(F("/tmpqlist.tmp"),F("/fquicklist.json"));
+            delete (fs::FS *)slowlist;
+        }
     }
     //interf->option(String(0),"");
-    interf->json_section_end();
+    //interf->json_section_end();
     LOG(printf_P,PSTR("DBG1: generating Names list took %ld ms\n"), millis() - timest);
-
+    // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
+    interf->json_frame_custom(F("xload"));
+    interf->json_section_content();
+    interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true, false, F("/fquicklist.json"));
+    interf->json_section_end();
     block_effects_config_param(interf, nullptr);
 
     interf->spacer();
@@ -400,24 +438,48 @@ void delayedcall_show_effects(){
     LOG(println, F("=== GENERATE EffLIst for GUI ==="));
     uint16_t effnb = confEff?(int)confEff->eff_nb:myLamp.effects.getSelected(); // если confEff не NULL, то мы в конфирурировании, иначе в основном режиме
     
-    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 2048) : nullptr;
-    if (!interf) return;
+    Interface *interf = nullptr;
+    // interf = embui.ws.count()? new Interface(&embui, &embui.ws, 2048) : nullptr;
+    // if (!interf) return;
 
     if(delayedOptionTask)
         delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
 
-    interf->json_frame_interface();
-    interf->json_section_content();
-    interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
+    // interf->json_frame_interface();
+    // interf->json_section_content();
+    // interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true); // не выводить метку
 
     EffectListElem **peff = new (EffectListElem *); // выделяем память под укзатель на указатель
-    //LOG(print,(uint32_t)peff); LOG(print," "); LOG(println,(uint32_t)*peff);
     *peff = nullptr; // чистим содержимое
+    File *slowlist = nullptr;
+    if(!LittleFS.exists(confEff?F("/fslowlist.json"):F("/slowlist.json"))){
+        slowlist = new fs::File;
+        *slowlist = LittleFS.open(F("/tmplist.tmp"), "w");
+    } else {
+        // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
+        Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 512) : nullptr;
+        interf->json_frame_custom(F("xload"));
+        interf->json_section_content();
+        interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true, confEff?F("/fslowlist.json"):F("/slowlist.json"));
+        interf->json_section_end();
+        interf->json_frame_flush();
+        delete interf;
+        interf = nullptr;
+        return;
+    }
+    //LOG(print,(uint32_t)peff); LOG(print," "); LOG(println,(uint32_t)*peff);
+
     delayedOptionTask = new Task(300, TASK_FOREVER,
         // loop
-        [interf, peff](){
+        [interf, peff, slowlist](){
             EffectListElem *&eff = *peff; // здесь ссылка на указатель, т.к. нам нужно менять значение :)
             //LOG(print,(uint32_t)peff); LOG(print," "); LOG(println,(uint32_t)*peff);
+            bool firsttime = false;
+            if(eff == nullptr && slowlist){
+                slowlist->print('[');
+                firsttime = true;
+            }
+
             String effname((char *)0);
             MIC_SYMB;
             size_t cnt = 5; // генерим по 5 элементов
@@ -428,25 +490,39 @@ void delayedcall_show_effects(){
                     myLamp.effects.loadeffname(effname, eff->eff_nb);
                     LOG(println, effname);
                     if(confEff || eff->eff_nb || (!eff->eff_nb && eff->canBeSelected())){ // если в конфигурировании или не 0 или 0 эффект и он может быть выбран
-                        interf->option(String(eff->eff_nb),
-                            (!confEff ? EFF_NUMBER : String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". "))) +
+                        String name =                             (!confEff ? EFF_NUMBER : String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". "))) +
                             effname +
-                            MIC_SYMBOL
-                        );
+                            MIC_SYMBOL;
+                        if(slowlist){
+                            slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", name.c_str(), String(eff->eff_nb).c_str());
+                            firsttime = false;
+                        }
+                        //interf->option(String(eff->eff_nb), name);
                     }
                 } else {
                     // тут перебрали все элементы и готовы к завершению
                     EffectListElem * first_eff=myLamp.effects.getFirstEffect();
-                    if(!confEff && first_eff && !first_eff->canBeSelected()) // если мы не в конфигурировании эффектов и первый не может быть выбран, то пустой будет добавлен в конец
-                        interf->option(String(0),"");
-                    interf->json_section_end();
-                    interf->json_section_end();
-                    interf->json_frame_flush();
+                    if(!confEff && first_eff && !first_eff->canBeSelected()){ // если мы не в конфигурировании эффектов и первый не может быть выбран, то пустой будет добавлен в конец
+                        //interf->option(String(0),"");
+                        if(slowlist){
+                            slowlist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
+                        }
+                    }
+                    // interf->json_section_end();
+                    // interf->json_section_end();
+                    // interf->json_frame_flush();
 
-                    // восстановить позицию, если переключение произошло во время генерации списка
-                    interf->json_frame_value();
-                    interf->value(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), confEff?confEff->eff_nb:myLamp.effects.getSelected(), false);
-                    interf->json_frame_flush();
+                    if(slowlist){
+                        slowlist->print(']');
+                        slowlist->close();
+                        LittleFS.rename(F("/tmplist.tmp"),confEff?F("/fslowlist.json"):F("/slowlist.json"));
+                        delete (fs::FS *)slowlist;
+                    }
+
+                    // // восстановить позицию, если переключение произошло во время генерации списка
+                    // interf->json_frame_value();
+                    // interf->value(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), confEff?confEff->eff_nb:myLamp.effects.getSelected(), false);
+                    // interf->json_frame_flush();
 
                     Task *_t = &ts.currentTask();
                     _t->disable();
@@ -473,7 +549,8 @@ void show_effects_config(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_effects_config(interf, data);
     interf->json_frame_flush();
-    recreateoptionsTask();
+    if(!LittleFS.exists(F("/fslowlist.json")))
+        recreateoptionsTask();
 #else
     if (!interf) return;
     interf->json_frame_interface();
@@ -807,6 +884,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     confEff = NULL; // т.к. не в конфигурировании, то сбросить данное значение
 
     if (!interf) return;
+
     interf->json_section_main(FPSTR(TCONST_0000), FPSTR(TINTF_000));
 
     interf->json_section_line(FPSTR(TCONST_0019));
@@ -819,7 +897,26 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     interf->button(FPSTR(TCONST_0023), FPSTR(TINTF_016), FPSTR(TCONST_0025));
     interf->json_section_end();
 
-    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true);
+    bool firsttime = false;
+    File *slowlist = nullptr;
+    if(!LittleFS.exists(F("/quicklist.json"))){
+        slowlist = new fs::File;
+        *slowlist = LittleFS.open(F("/tmpqlist.tmp"), "w");
+        slowlist->print('[');
+        firsttime = true;
+    } else {
+        // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
+        interf->json_frame_custom(F("xload"));
+        interf->json_section_content();
+        interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, false, LittleFS.exists(F("/slowlist.json")) ? F("/slowlist.json") : F("/quicklist.json"));
+        interf->json_section_end();
+        block_effects_param(interf, data);
+        interf->button(FPSTR(TCONST_000F), FPSTR(TINTF_009));
+        interf->json_section_end();
+        return;
+    }
+
+    //interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true);
     LOG(printf_P,PSTR("Создаю список эффектов (%d):\n"),myLamp.effects.getModeAmount());
     EffectListElem *eff = nullptr;
 
@@ -835,12 +932,12 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         bool numList = myLamp.getLampSettings().numInList;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
-                effname = FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]);
-                interf->option(String(eff->eff_nb),
-                    EFF_NUMBER + 
-                    String(effname) + 
-                    MIC_SYMBOL                    
-                );
+                effname = EFF_NUMBER + FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]) + MIC_SYMBOL;
+                if(slowlist){
+                    slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+                    firsttime = false;
+                }
+                //interf->option(String(eff->eff_nb), effname);
                 #ifdef ESP8266
                 ESP.wdtFeed();
                 #elif defined ESP32
@@ -850,8 +947,18 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 isEmptyHidden=true;
             }
         }
-        if(isEmptyHidden)
-            interf->option(String(0),"");
+        if(isEmptyHidden){
+            //interf->option(String(0),"");
+            if(slowlist){
+                slowlist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
+            }
+        }
+        if(slowlist){
+            slowlist->print(']');
+            slowlist->close();
+            LittleFS.rename(F("/tmpqlist.tmp"),F("/quicklist.json"));
+            delete (fs::FS *)slowlist;
+        }
     } else {
         LOG(println,F("DBG2: using slow Names generation"));
         bool isEmptyHidden=false;
@@ -861,11 +968,12 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
                 myLamp.effects.loadeffname(effname, eff->eff_nb);
-                interf->option(String(eff->eff_nb), 
-                    EFF_NUMBER + 
-                    String(effname) + 
-                    MIC_SYMBOL                    
-                );
+                effname = EFF_NUMBER + effname + MIC_SYMBOL;
+                if(slowlist){
+                    slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+                    firsttime = false;
+                }
+                //interf->option(String(eff->eff_nb), effname);
                 #ifdef ESP8266
                 ESP.wdtFeed();
                 #elif defined ESP32
@@ -875,9 +983,22 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
                 isEmptyHidden=true;
             }
         }
-        if(isEmptyHidden)
-            interf->option(String(0),"");
+        if(isEmptyHidden){
+            //interf->option(String(0),"");
+            if(slowlist){
+                slowlist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
+            }
+        }
+        if(slowlist){
+            slowlist->print(']');
+            slowlist->close();
+            LittleFS.rename(F("/tmpqlist.tmp"),F("/quicklist.json"));
+            delete (fs::FS *)slowlist;
+        }
     }
+    interf->json_frame_custom(F("xload"));
+    interf->json_section_content();
+    interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, false, F("/quicklist.json"));
     interf->json_section_end();
     LOG(printf_P,PSTR("DBG2: generating Names list took %ld ms\n"), millis() - timest);
 

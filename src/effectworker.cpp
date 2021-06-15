@@ -827,6 +827,9 @@ void EffectWorker::makeIndexFileFromList(const char *folder)
 {
   File indexFile;
 
+  LittleFS.remove(F("/quicklist.json"));
+  LittleFS.remove(F("/slowlist.json"));
+
   openIndexFile(indexFile, folder);
   effectsReSort(SORT_TYPE::ST_IDX); // сброс сортировки перед записью
 
@@ -847,6 +850,11 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   File indexFile;
   String sourcedir;
   makeIndexFile(tofolder); // создать дефолтный набор прежде всего
+
+  LittleFS.remove(F("/fquicklist.json"));
+  LittleFS.remove(F("/fslowlist.json"));
+  LittleFS.remove(F("/quicklist.json"));
+  LittleFS.remove(F("/slowlist.json"));
 
   if (fromfolder) {
       sourcedir.concat(F("/"));
