@@ -1234,44 +1234,45 @@ String EffectMetaBalls::setDynCtrl(UIControl*_val){
   return String();
 }
 
+void EffectMetaBalls::load(){
+palettesload();}
+
 bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
 {
-  // get some 2 random moving points
-  uint8_t x2 = inoise8(millis() * speedFactor, 25355, 685 ) / WIDTH;
-  uint8_t y2 = inoise8(millis() * speedFactor, 355, 11685 ) / HEIGHT;
+  // get some 3 random moving points
+  long t = millis() * speedfactor;
+  // get some 3 random moving points
+  uint8_t x1 = beatsin8(23 * speedfactor, 0, WIDTH - 1);//V1
+  uint8_t y1 = beatsin8(28 * speedfactor, 0, HEIGHT - 1);
 
-  uint8_t x3 = inoise8(millis() * speedFactor, 55355, 6685 ) / WIDTH;
-  uint8_t y3 = inoise8(millis() * speedFactor, 25355, 22685 ) / HEIGHT;
+  //uint8_t x1 = inoise8(t, 12355, 85) / hormap;// V2
+  //uint8_t y1 = inoise8(t, 5, 685) / vermap;
 
-  // and one Lissajou function
-  uint8_t x1 = beatsin8(23 * speedFactor, 0, 15);
-  uint8_t y1 = beatsin8(28 * speedFactor, 0, 15);
+  uint8_t x2 = inoise8(t, 25355, 685) / hormap;
+  uint8_t y2 = inoise8(t, 355, 11685) / vermap;
+
+  uint8_t x3 = inoise8(t, 55355, 6685) / hormap;
+  uint8_t y3 = inoise8(t, 25355, 22685) / vermap;
 
   for (uint8_t y = 0; y < HEIGHT; y++) {
     for (uint8_t x = 0; x < WIDTH; x++) {
 
       // calculate distances of the 3 points from actual pixel
       // and add them together with weightening
-      uint8_t  dx =  fabs(x - x1);
-      uint8_t  dy =  fabs(y - y1);
-      uint8_t dist = 2 * EffectMath::sqrt((dx * dx) + (dy * dy));
+      uint8_t dist = 2 * EffectMath::distance(x1,y1,x,y);
 
-      dx =  fabs(x - x2);
-      dy =  fabs(y - y2);
-      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
+      dist += 2 * EffectMath::distance(x2,y2,x,y);
 
-      dx =  fabs(x - x3);
-      dy =  fabs(y - y3);
-      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
+      dist += 2 * EffectMath::distance(x1,y1,x,y);
 
       // inverse result
       byte color = scale*4 / (dist==0?1:dist);
 
       // map color between thresholds
       if (color > 0 and color < 60) {
-        EffectMath::drawPixelXY(x, y, CHSV(color * 9, 255, 255));
+        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, color * 9));
       } else {
-        EffectMath::drawPixelXY(x, y, CHSV(0, 255, 255));
+        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, 0));
       }
       // show the 3 points, too
       EffectMath::drawPixelXY(x1, y1, CRGB(255, 255, 255));
