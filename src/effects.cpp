@@ -1942,9 +1942,9 @@ void EffectTwinkles::load(){
 
 void EffectTwinkles::setup()
 {
-  //tnum = scale; // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
+  //randomSeed(millis());
   for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
-    if (random8(tnum) == 0) {                                // чем ниже tnum, тем чаще будут заполняться элементы лампы
+    if (random(0,255) < tnum) {                                // чем ниже tnum, тем чаще будут заполняться элементы лампы
       ledsbuff[idx].r = random8();                           // оттенок пикселя
       ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1); // скорость и направление (нарастает 1-4 или угасает 5-8)
       ledsbuff[idx].b = random8();                           // яркость
@@ -1956,18 +1956,12 @@ void EffectTwinkles::setup()
 
 // !++
 String EffectTwinkles::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = ((float)TWINKLES_MULTIPLIER * (float)EffectCalc::setDynCtrl(_val).toInt() / 380.0)*EffectCalc::speedfactor;
-  else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 63, 1); setup(); } // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 8);//((float)TWINKLES_MULTIPLIER * (float)EffectCalc::setDynCtrl(_val).toInt() / 380.0);
+  else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 5, 132); setup(); } 
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-// void EffectTwinkles::setscl(const byte _scl)
-// {
-//   EffectCalc::setscl(_scl); // дернем базовый, где будет пересчет палитры
-//   tnum = map(scale, 1, 255, 63, 1); // получим внутренний коэф., ptPallete-palettescale == от меньшего к большему, palettescale - от большего к меньшему
-//   setup();
-// }
 
 bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
   return twinklesRoutine(*&ledarr, &*opt);
@@ -1983,12 +1977,12 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
   {
     if (ledsbuff[idx].b == 0)
     {
-      if (random8(tnum) == 0 && thue > 0)
-      {                                                    // если пиксель ещё не горит, зажигаем каждый ХЗй
-        ledsbuff[idx].r = random8();                       // оттенок пикселя
-        ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS + 1); // скорость и направление (нарастает 1-4, но не угасает 5-8)
-        ledsbuff[idx].b = ledsbuff[idx].g;                 // яркость
-        thue--;                                            // уменьшаем количество погасших пикселей
+      if (random(0,255) < tnum && thue > 0)
+      {                                                         // если пиксель ещё не горит, зажигаем каждый ХЗй
+        ledsbuff[idx].r = random8();                            // оттенок пикселя
+        ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1);  // скорость и направление (нарастает 1-4, но не угасает 5-8)
+        ledsbuff[idx].b = ledsbuff[idx].g;                      // яркость
+        thue--;                                                 // уменьшаем количество погасших пикселей
       }
     }
     else if (ledsbuff[idx].g <= TWINKLES_SPEEDS)
@@ -4180,6 +4174,7 @@ DEFINE_GRADIENT_PALETTE( pit ) {
 // !++
 String EffectNoise::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 2, 16 );
+  else if(_val->getId()==4) type = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -4241,7 +4236,8 @@ bool EffectNoise::run(CRGB *leds, EffectWorker *param) {
 
   //make it looking nice
   if (palettepos != 4) {
-    EffectMath::nightMode(*&leds);
+    if (type) EffectMath::nightMode(*&leds);
+    else EffectMath::gammaCorrection();
     EffectMath::blur2d(32);
   } else EffectMath::blur2d(48);
   //and show it!
@@ -5428,7 +5424,7 @@ void EffectFire2020::regenNoise() {
   }
   for (uint8_t j = 0; j < HEIGHT; j++)
   {
-    colorfade[j] = abs8(j - (EffectMath::getmaxHeightIndex())) * 255 / (EffectMath::getmaxHeightIndex()); // init colorfade table
+    colorfade[j] = abs(j - (EffectMath::getmaxHeightIndex())) * 255 / (EffectMath::getmaxHeightIndex()); // init colorfade table
     if (random8() < 100)
     {
       noises[random8(EffectMath::getmaxWidthIndex())*WIDTH+j] = qadd8(noises[j], random(156, 255)); // 196, 255
@@ -6573,14 +6569,17 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }
 
-//------------ Эффект "Дождь с ветром" 
+//------------ Эффект "Шторм" 
 // (с) kostyamat 1.12.2020
 // !++
 String EffectWrain::setDynCtrl(UIControl*_val)
 {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, .75) * EffectCalc::speedfactor;
+  if(_val->getId()==1) {
+    speed = EffectCalc::setDynCtrl(_val).toInt();
+    speedFactor = EffectMath::fmap(speed, 1, 255, 0.125, .75) * EffectCalc::speedfactor;
+  }
   else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) { uint8_t val = EffectCalc::setDynCtrl(_val).toInt(); white = (val == 1); randColor = (val == 0); }
+  else if(_val->getId()==4) { uint8_t val = EffectCalc::setDynCtrl(_val).toInt(); white = (val == FASTLED_PALETTS_COUNT); randColor = (val == 0); }
   else if(_val->getId()==5) clouds = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==6) storm = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==7) type = EffectCalc::setDynCtrl(_val).toInt();
@@ -6589,18 +6588,18 @@ String EffectWrain::setDynCtrl(UIControl*_val)
 }
 
 void EffectWrain::reload() {
+  randomSeed(millis());
   for (byte i = 0; i < counts; i++) {
     dotPosX[i] = EffectMath::randomf(0, WIDTH); // Разбрасываем капли по ширине
     dotPosY[i] = EffectMath::randomf(0, HEIGHT);  // и по высоте
     dotColor[i] = random(0, 9) * 31;              // цвет капли
     dotAccel[i] = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
-    dotBri[i] = random(128, 255);
+    dotBri[i] = random(170, 255);
   }
 }
 
 void EffectWrain::load() {
   palettesload();
-  randomSeed(millis());
   reload();
 }
 
@@ -6684,8 +6683,8 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
 
     // Рисуем тучку и молнию
   if (clouds) {
-    if (randColor) curPalette = palettes.at(6);  // устанавливаем палитру RainbowColors_p
-    if (white) curPalette = palettes.at(17);     // WaterfallColors_p
+    if (randColor) curPalette = palettes.at(0);  // устанавливаем палитру RainbowColors_p
+    if (white) curPalette = palettes.at(FASTLED_PALETTS_COUNT-1);     // WaterfallColors_p
     if (storm) _flash = Lightning(200);
     Clouds((storm ? _flash : false));
   } else if (storm) {

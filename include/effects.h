@@ -1017,6 +1017,7 @@ private:
     uint32_t scale_y[NUM_LAYERS];
     uint8_t  noise[NUM_LAYERS][WIDTH][HEIGHT];
 	uint8_t speedFactor;
+    bool type = false;
 
 	String setDynCtrl(UIControl*_val) override;
 
@@ -1611,7 +1612,7 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//------------ Эффект "Дождь с ветром" 
+//------------ Эффект "Шторм" 
 // (с) kostyamat 1.12.2020
 #define counts  (WIDTH*3)
 
