@@ -85,8 +85,10 @@ public:
 class EffectMetaBalls : public EffectCalc {
 private:
 	float speedFactor;
+	const float hormap = (256 / WIDTH);
+    const float vermap = (256 / HEIGHT);
 	String setDynCtrl(UIControl*_val) override;
-
+    void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
