@@ -1219,17 +1219,15 @@ bool EffectSinusoid3::run(CRGB *leds, EffectWorker *param) {
 }
 
 /*
-  Metaballs proof of concept by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
-  ...very rough 8bit math here...
-  read more about the concept of isosurfaces and metaballs:
-  https://www.gamedev.net/articles/programming/graphics/exploring-metaballs-and-isosurfaces-in-2d-r2556
+ ***** METABALLS / МЕТАСФЕРЫ *****
+Metaballs proof of concept by Stefan Petrick 
+https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
 */
 
-// ***** METABALLS / МЕТАСФЕРЫ *****
-// v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
 // !++
 String EffectMetaBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 2);
+  else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -1240,10 +1238,10 @@ palettesload();}
 bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
 {
   // get some 3 random moving points
-  long t = millis() * speedfactor;
+  unsigned long t = millis() * speedFactor;
   // get some 3 random moving points
-  uint8_t x1 = beatsin8(23 * speedfactor, 0, WIDTH - 1);//V1
-  uint8_t y1 = beatsin8(28 * speedfactor, 0, HEIGHT - 1);
+  uint8_t x1 = beatsin88(23 * 256 * speedFactor, 0, WIDTH - 1);//V1
+  uint8_t y1 = beatsin88(28 * 256 * speedFactor, 0, HEIGHT - 1);
 
   //uint8_t x1 = inoise8(t, 12355, 85) / hormap;// V2
   //uint8_t y1 = inoise8(t, 5, 685) / vermap;
@@ -1259,11 +1257,19 @@ bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
 
       // calculate distances of the 3 points from actual pixel
       // and add them together with weightening
-      uint8_t dist = 2 * EffectMath::distance(x1,y1,x,y);
+      // calculate distances of the 3 points from actual pixel
+      // and add them together with weightening
+      uint8_t  dx =  abs(x - x1);
+      uint8_t  dy =  abs(y - y1);
+      uint8_t dist = 2 * EffectMath::sqrt((dx * dx) + (dy * dy));
 
-      dist += 2 * EffectMath::distance(x2,y2,x,y);
+      dx =  abs(x - x2);
+      dy =  abs(y - y2);
+      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
 
-      dist += 2 * EffectMath::distance(x1,y1,x,y);
+      dx =  abs(x - x3);
+      dy =  abs(y - y3);
+      dist += EffectMath::sqrt((dx * dx) + (dy * dy));
 
       // inverse result
       byte color = scale*4 / (dist==0?1:dist);

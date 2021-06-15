@@ -75,13 +75,10 @@ public:
 };
 
 /*
-  Metaballs proof of concept by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
-  ...very rough 8bit math here...
-  read more about the concept of isosurfaces and metaballs:
-  https://www.gamedev.net/articles/programming/graphics/exploring-metaballs-and-isosurfaces-in-2d-r2556
+ ***** METABALLS / МЕТАСФЕРЫ *****
+Metaballs proof of concept by Stefan Petrick 
+https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
 */
-// ***** METABALLS / МЕТАСФЕРЫ *****
-// v1.7.0 - Updating for GuverLamp v1.7 by PalPalych 12.03.2020
 class EffectMetaBalls : public EffectCalc {
 private:
 	float speedFactor;
