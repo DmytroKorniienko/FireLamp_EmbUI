@@ -101,6 +101,8 @@ private:
 	const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2);
 	float e_s3_speed;
 	float e_s3_size;
+	uint8_t _scale;
+	uint8_t type;
 	
 	String setDynCtrl(UIControl*_val) override;
 
