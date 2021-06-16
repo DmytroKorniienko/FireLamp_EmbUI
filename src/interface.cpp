@@ -90,21 +90,29 @@ void recreateoptionsTask(bool isCancelOnly=false){
 
 bool check_recovery_state(bool isSet){
     //return false; // оключено до выяснения... какого-то хрена не работает :(
+#ifndef ESP8266
+    static RTC_DATA_ATTR uint32_t chk;
+#else
     uint32_t chk;
     ESP.rtcUserMemoryRead(0,&chk,sizeof(chk));
+#endif
     if(isSet && (chk&0xFF00)==0xDB00){
         uint16_t data = chk&0x00FF;
         data++;
         chk=0xDB00|data;
         LOG(printf_P, PSTR("Reboot count=%d\n"), data);
+#ifdef ESP8266
         ESP.rtcUserMemoryWrite(0, &chk, sizeof(chk));
+#endif
         if(data>3)
             return true; // все плохо, три перезагрузки...
         else
             return false; // все хорошо
     } else {
         chk=0xDB00; // сбрасываем цикл перезагрузок
+#ifdef ESP8266
         ESP.rtcUserMemoryWrite(0, &chk, sizeof(chk));
+#endif
     }
     return false;
 

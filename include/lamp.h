@@ -252,11 +252,14 @@ public:
         lampState.isMicOn = val;
         if(effects.getEn()==EFF_NONE) return;
         LList<UIControl*>&controls = effects.getControls();
+        UIControl *c7 = nullptr;
         if(val){
             for(int i=3; i<controls.size(); i++) {
                 if(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1){
                     if(effects.worker) effects.worker->setDynCtrl(controls[i]);
                     found=true;
+                } else if(controls[i]->getId()==7) {
+                    c7 = controls[i];
                 }
             }
         } 
@@ -264,6 +267,9 @@ public:
             UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", "0", "1", "1");
             if(effects.worker) effects.worker->setDynCtrl(ctrl);
             delete ctrl;
+            if(c7){ // был найден 7 контрол, но не микрофон
+                if(effects.worker) effects.worker->setDynCtrl(c7);
+            }
         }
     }
     

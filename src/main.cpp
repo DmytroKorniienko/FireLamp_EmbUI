@@ -150,7 +150,33 @@ void loop() {
     embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
+#ifdef ESP8266
+    // тестирование rtc
+    static uint32_t timeBase = system_get_rtc_time();
+    static uint64_t timeAcc = 0;
+    
+    EVERY_N_SECONDS(1){
+        uint32_t rtcT2 = system_get_rtc_time();
+        uint32_t cal2 = system_rtc_clock_cali_proc();
+        timeAcc += (((uint64)rtcT2 - timeBase) * (((uint64)cal2 * 1000) >> 12));
+        timeBase = rtcT2;
 
+        LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), system_get_time(), system_get_rtc_time(), timeAcc, (timeAcc / 1000000) / 1000);
+    }
+
+    // // esp32
+    // time_t now()
+    // {
+    //     struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };   /* btw settimeofday() is helpfull here too*/
+    //     // uint64_t sec, us;
+    //     uint32_t sec, us;
+    //     gettimeofday(&tv, NULL); 
+    //     (sec) = tv.tv_sec;  
+    //     (us) = tv.tv_usec; 
+    //     return sec;
+    // }
+
+#endif
 // // тестирование стабильности
 // EVERY_N_MILLIS(20) {
 //     Task *t = new Task(10, TASK_ONCE, [](){
