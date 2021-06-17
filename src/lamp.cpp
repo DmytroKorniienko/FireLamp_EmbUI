@@ -130,7 +130,7 @@ void LAMP::handle()
 
 #ifdef LAMP_DEBUG
     // fps counter
-    LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
+    LOG(printf_P, PSTR("Eff:%d, FPS: %u, FastLED FPS: %u\n"), effects.getEn(), avgfps, FastLED.getFPS());
 #ifdef ESP8266
     LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), lampState.freeHeap, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
 #else
