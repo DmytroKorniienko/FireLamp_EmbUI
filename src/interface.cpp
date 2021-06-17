@@ -2451,11 +2451,8 @@ void set_sys_settings(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_009C));
 #endif
     SETPARAM(FPSTR(TCONST_0098));
-    myLamp.sendString(String(FPSTR(TINTF_096)).c_str(), CRGB::Red);
-
-    new Task(TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr, [](){ embui.autosave(true); });
-
-    new Task(5 * TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr,  [](){ LOG(println, F("Rebooting...")); delay(100); ESP.restart(); });
+    myLamp.sendString(String(FPSTR(TINTF_096)).c_str(), CRGB::Red, true);
+    new Task(TASK_SECOND, TASK_ONCE, nullptr, &ts, true, nullptr, [](){ embui.autosave(true); LOG(println, F("Rebooting...")); remote_action(RA::RA_REBOOT,NULL, NULL); });
 
     section_effects_frame(interf,data);
 }
