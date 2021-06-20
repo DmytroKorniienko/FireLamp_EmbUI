@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
@@ -70,7 +70,7 @@ static const char TEFF_021[] PROGMEM = "Шторм";
 static const char TEFF_022[] PROGMEM = "Фея";
 static const char TEFF_023[] PROGMEM = "Источник";
 static const char TEFF_024[] PROGMEM = "Прыгающие мячики";
-static const char TEFF_025[] PROGMEM = "Синусоид 3";
+static const char TEFF_025[] PROGMEM = "Синусоид";
 static const char TEFF_026[] PROGMEM = "Метасферы";
 static const char TEFF_027[] PROGMEM = "Спираль";
 static const char TEFF_028[] PROGMEM = "Кометы, Парящие Огни +";
