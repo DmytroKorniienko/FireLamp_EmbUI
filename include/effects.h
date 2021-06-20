@@ -375,6 +375,7 @@ private:
 
     uint8_t ihue;
     bool colorLoop;
+	bool blurIm;
     float _speed;             // speed is set dynamically once we've started up
     float _scale;             // scale is set dynamically once we've started up
     float x;

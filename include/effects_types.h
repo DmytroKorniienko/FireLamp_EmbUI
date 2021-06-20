@@ -324,7 +324,7 @@ EFF_WRAIN,                                    // Шторм
 EFF_FAIRY,                                    // Фея
 EFF_FOUNT,                                    // Источник
 EFF_BBALS,                                    // Прыгающие мячики
-EFF_SINUSOID3,                                // Синусоид 3
+EFF_SINUSOID3,                                // Синусоид
 EFF_METABALLS,                                // Метасферы
 EFF_SPIRO,                                    // Спираль
 EFF_COMET,                                    // Кометы, Парящие огни +
@@ -417,7 +417,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  0, 6, 6, 4, 4, 5, 3, 3, 1, 5, 3, 6, 5, 3, 5, 8, // 0-15
+  0, 6, 6, 4, 4, 5, 3, 3, 1, 5, 3, 6, 5, 3, 5, 10, // 0-15
   1, 5, 3, 7, 3, 7, 5, 2, 1, 5, 5, 7, 7, 2, 1, 5, // 16-31
   5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 1, 1, 3, // 32 - 47
   1, 6, 6, 6, 2, 7, 5, 4, 1, 5, 6, 3, 1, 5, 7, 6, // 48 - 63
@@ -520,7 +520,7 @@ static const char E_DNA[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_DNA2[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F3 "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}";
 static const char E_SNOW[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":\"1\",\"max\":3,\"name\":\"" DFTINTF_0F5 "\"}]}";
 static const char E_SMOKBALLS[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
-static const char E_PALMICUI[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0FB "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_PALMICUI[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0FB "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}, {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E6 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_COLORS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":32,\"val\":\"2\",\"max\":3,\"name\":\"" DFTINTF_0E3 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_TLAND[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":25,\"min\":0,\"max\":35,\"name\":\"" DFTINTF_0D2 "\"},  {\"id\":4,\"val\":160,\"min\":0,\"name\":\"" DFTINTF_101 "\"},  {\"id\":5,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_113 "\"},  {\"id\":6,\"max\":4,\"name\":\"" DFTINTF_114 "\"}]}";
 static const char E_FLYING[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":128,\"name\":\"" DFTINTF_0DE "\"},  {\"id\":4,\"val\":7,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_107 "\"}]}";

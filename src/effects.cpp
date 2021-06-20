@@ -1020,7 +1020,7 @@ void Effect3DNoise::fillNoiseLED()
       }
       // brighten up, as the color palette itself often contains the
       // light/dark dynamic range desired
-      if ( bri > 127 && colorLoop)
+      if ( bri > 127 && blurIm)
       {
         bri = 255;
       }
@@ -1059,8 +1059,9 @@ void Effect3DNoise::load(){
 String Effect3DNoise::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
-  else if(_val->getId()==4) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  else if(_val->getId()==4) blurIm = EffectCalc::setDynCtrl(_val).toInt();
+   else if(_val->getId()==5) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
+   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   fillnoise8();
   return String();
 }
@@ -1226,7 +1227,7 @@ switch (type) {
           cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
           v = 127 * (((float)(0.001 * time_shift * e_s3_speed)) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.g = ~v;
-		      EffectMath::drawPixelXY(x, y, color);
+		  EffectMath::drawPixelXY(x, y, color);
         }
       }
       break;
