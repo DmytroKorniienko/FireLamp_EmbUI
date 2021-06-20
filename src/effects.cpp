@@ -8571,3 +8571,53 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
   }
 }
 #endif
+
+// ----------- Эффект "Огонь 2021"
+// https://editor.soulmatelights.com/gallery/546-fire
+// (c) Stepko 17.06.21
+void EffectFire2021::load() {
+  palettesload();    // подгружаем палитры
+}
+
+void EffectFire2021::palettesload(){
+  // собираем свой набор палитр для эффекта
+  palettes.reserve(NUMPALETTES);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&NormalFire2_p);
+  palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&NormalFire3_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&MagmaColor_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p); 
+  palettes.push_back(&WaterfallColors_p);
+
+  usepalettes = true; // включаем флаг палитр
+  scale2pallete();    // выставляем текущую палитру
+}
+
+
+// !++
+String EffectFire2021::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 10, 100);
+  else if(_val->getId()==3) _scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, 32, 132);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
+  t += speedFactor;
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+     
+      int16_t bri= inoise8(x * _scale, (y * _scale) - t) - (y * (256 / WIDTH));
+      byte col = bri;
+       if (bri< 0) bri= 0; if(bri!= 0) bri= 256 - (bri* 0.2);
+      nblend(EffectMath::getPixel(x, y), ColorFromPalette(*curPalette, col, bri), speedFactor);}
+  }
+  return true;
+}
+

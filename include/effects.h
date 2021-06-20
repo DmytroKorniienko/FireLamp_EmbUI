@@ -2234,6 +2234,24 @@ public:
     void load() override;
 };
 #endif
+
+// ----------- Эффект "Огонь 2021"
+// https://editor.soulmatelights.com/gallery/546-fire
+// (c) Stepko 17.06.21
+class EffectFire2021 : public EffectCalc {
+private:
+    byte _pal = 8;
+    byte _scale = 32;
+	byte speedFactor;
+    uint32_t t;
+
+    String setDynCtrl(UIControl*_val) override;
+    void palettesload() override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 #endif
