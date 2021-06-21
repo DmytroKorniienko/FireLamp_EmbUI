@@ -187,6 +187,15 @@ void loop() {
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
 
+    // static uint32_t cnt = 0;
+    // static unsigned long cur_ms = millis();
+    // if(millis()>cur_ms+1000){
+    //     Serial.printf("cnt=%u, fps=%d\n", cnt, FastLED.getFPS());
+    //     cnt=0;
+    //     cur_ms = millis();
+    // }
+    // cnt++;
+
 // #if defined(ESP8266)
 //     // тестирование rtc
 //     EVERY_N_SECONDS(1){

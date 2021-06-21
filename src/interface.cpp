@@ -1260,7 +1260,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         String str = String(F("CFG:")) + name;
         myLamp.sendString(str.c_str(), CRGB::Red);
 
-        Task *_t = new Task(3*TASK_SECOND, TASK_ONCE, [](){ sync_parameters(); TASK_RECYCLE; }, &ts, false);
+        Task *_t = new Task(3*TASK_SECOND, TASK_ONCE, [](){ myLamp.effects.makeIndexFileFromFS(); sync_parameters(); TASK_RECYCLE; }, &ts, false);
         _t->enableDelayed();
 
     } else { // создание

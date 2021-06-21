@@ -1274,7 +1274,8 @@ switch (type) {
           EffectMath::drawPixelXY(x, y, color);
         }
       }
-break;}
+      break;
+  }
   return true;
 }
 
