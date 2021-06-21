@@ -352,11 +352,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
     //interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true);
 
     bool firsttime = false;
-    File *slowlist = nullptr;
+    File *fquiklist = nullptr;
     if(!LittleFS.exists(F("/fquicklist.json"))){
-        slowlist = new fs::File;
-        *slowlist = LittleFS.open(F("/tmpqlist.tmp"), "w");
-        slowlist->print('[');
+        fquiklist = new fs::File;
+        *fquiklist = LittleFS.open(F("/tmpqlist.tmp"), "w");
+        fquiklist->print('[');
         firsttime = true;
     } else {
         // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
@@ -381,8 +381,8 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         MIC_SYMB;
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             effname = String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) + String(FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb])) + MIC_SYMBOL;
-            if(slowlist){
-                slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+            if(fquiklist){
+                fquiklist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
                 firsttime = false;
             }
             //interf->option(String(eff->eff_nb), effname);
@@ -393,11 +393,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             #endif
         }
         //interf->option(String(0),"");
-        if(slowlist){
-            slowlist->print(']');
-            slowlist->close();
+        if(fquiklist){
+            fquiklist->print(']');
+            fquiklist->close();
             LittleFS.rename(F("/tmpqlist.tmp"),F("/fquicklist.json"));
-            delete (fs::FS *)slowlist;
+            delete (fs::FS *)fquiklist;
         }
     } else {
         EffectListElem *eff = nullptr;
@@ -407,8 +407,8 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             myLamp.effects.loadeffname(effname, eff->eff_nb);
             effname = String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". ")) + String(FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb])) + MIC_SYMBOL;
-            if(slowlist){
-                slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+            if(fquiklist){
+                fquiklist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
                 firsttime = false;
             }
             //interf->option(String(eff->eff_nb), effname);
@@ -418,11 +418,11 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
             delay(1);
             #endif
         }
-        if(slowlist){
-            slowlist->print(']');
-            slowlist->close();
+        if(fquiklist){
+            fquiklist->print(']');
+            fquiklist->close();
             LittleFS.rename(F("/tmpqlist.tmp"),F("/fquicklist.json"));
-            delete (fs::FS *)slowlist;
+            delete (fs::FS *)fquiklist;
         }
     }
     //interf->option(String(0),"");
@@ -906,21 +906,24 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     interf->json_section_end();
 
     bool firsttime = false;
-    File *slowlist = nullptr;
+    File *quicklist = nullptr;
     if(!LittleFS.exists(F("/quicklist.json"))){
-        slowlist = new fs::File;
-        *slowlist = LittleFS.open(F("/tmpqlist.tmp"), "w");
-        slowlist->print('[');
+        quicklist = new fs::File;
+        *quicklist = LittleFS.open(F("/tmpqlist.tmp"), "w");
+        quicklist->print('[');
         firsttime = true;
     } else {
         // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
+        bool isSlowExist = LittleFS.exists(F("/slowlist.json"));
         interf->json_frame_custom(F("xload"));
         interf->json_section_content();
-        interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, false, LittleFS.exists(F("/slowlist.json")) ? F("/slowlist.json") : F("/quicklist.json"));
+        interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, false, isSlowExist ? F("/slowlist.json") : F("/quicklist.json"));
         interf->json_section_end();
         block_effects_param(interf, data);
         interf->button(FPSTR(TCONST_000F), FPSTR(TINTF_009));
         interf->json_section_end();
+        if(!isSlowExist)
+            recreateoptionsTask();
         return;
     }
 
@@ -941,8 +944,8 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         while ((eff = myLamp.effects.getNextEffect(eff)) != nullptr) {
             if (eff->canBeSelected()) {
                 effname = EFF_NUMBER + FPSTR(T_EFFNAMEID[(uint8_t)eff->eff_nb]) + MIC_SYMBOL;
-                if(slowlist){
-                    slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+                if(quicklist){
+                    quicklist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
                     firsttime = false;
                 }
                 //interf->option(String(eff->eff_nb), effname);
@@ -957,15 +960,15 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         }
         if(isEmptyHidden){
             //interf->option(String(0),"");
-            if(slowlist){
-                slowlist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
+            if(quicklist){
+                quicklist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
             }
         }
-        if(slowlist){
-            slowlist->print(']');
-            slowlist->close();
+        if(quicklist){
+            quicklist->print(']');
+            quicklist->close();
             LittleFS.rename(F("/tmpqlist.tmp"),F("/quicklist.json"));
-            delete (fs::FS *)slowlist;
+            delete (fs::FS *)quicklist;
         }
     } else {
         LOG(println,F("DBG2: using slow Names generation"));
@@ -977,8 +980,8 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
             if (eff->canBeSelected()) {
                 myLamp.effects.loadeffname(effname, eff->eff_nb);
                 effname = EFF_NUMBER + effname + MIC_SYMBOL;
-                if(slowlist){
-                    slowlist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
+                if(quicklist){
+                    quicklist->printf_P(PSTR("%s{\"label\":\"%s\",\"value\":\"%s\"}"), firsttime?"":",", effname.c_str(), String(eff->eff_nb).c_str());
                     firsttime = false;
                 }
                 //interf->option(String(eff->eff_nb), effname);
@@ -993,15 +996,15 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         }
         if(isEmptyHidden){
             //interf->option(String(0),"");
-            if(slowlist){
-                slowlist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
+            if(quicklist){
+                quicklist->printf_P(PSTR(",{\"label\":\"\",\"value\":\"0\"}"));
             }
         }
-        if(slowlist){
-            slowlist->print(']');
-            slowlist->close();
+        if(quicklist){
+            quicklist->print(']');
+            quicklist->close();
             LittleFS.rename(F("/tmpqlist.tmp"),F("/quicklist.json"));
-            delete (fs::FS *)slowlist;
+            delete (fs::FS *)quicklist;
         }
     }
     interf->json_frame_custom(F("xload"));
