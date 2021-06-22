@@ -1504,7 +1504,7 @@ class EffectCell: public EffectCalc {
     void cell(CRGB *leds);
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
-
+    void vals(CRGB *leds);
     void RGBPattern(CRGB *leds);
 
   public:

@@ -5955,10 +5955,10 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   if (_scale == 0) {
     EVERY_N_SECONDS(60) {
       effId ++;
-      if (effId == 7)
+      if (effId == 8)
         effId = 1;
     }
-  } else effId = constrain(_scale, 1, 6);
+  } else effId = constrain(_scale, 1, 7);
 
   switch (effId)
   {
@@ -5974,12 +5974,17 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
     spider(leds);
     break;
   case 6:
+    vals(leds);
+    break;
+  case 7:
     RGBPattern(leds);
     break;
-
   default:
     break;
   }
+  // EVERY_N_SECONDS(20) {
+    // Serial.println(FastLED.getFPS());
+  // }
   return true;
 }
 
@@ -6017,36 +6022,24 @@ void EffectCell::spider(CRGB *leds) {
   }
 }
 
-static const uint8_t exp_gamma[256] PROGMEM = {
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   1,
-    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
-    1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,
-    4,   4,   4,   4,   4,   5,   5,   5,   5,   5,   6,   6,   6,   7,   7,
-    7,   7,   8,   8,   8,   9,   9,   9,   10,  10,  10,  11,  11,  12,  12,
-    12,  13,  13,  14,  14,  14,  15,  15,  16,  16,  17,  17,  18,  18,  19,
-    19,  20,  20,  21,  21,  22,  23,  23,  24,  24,  25,  26,  26,  27,  28,
-    28,  29,  30,  30,  31,  32,  32,  33,  34,  35,  35,  36,  37,  38,  39,
-    39,  40,  41,  42,  43,  44,  44,  45,  46,  47,  48,  49,  50,  51,  52,
-    53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,  66,  67,
-    68,  70,  71,  72,  73,  74,  75,  77,  78,  79,  80,  82,  83,  84,  85,
-    87,  89,  91,  92,  93,  95,  96,  98,  99,  100, 101, 102, 105, 106, 108,
-    109, 111, 112, 114, 115, 117, 118, 120, 121, 123, 125, 126, 128, 130, 131,
-    133, 135, 136, 138, 140, 142, 143, 145, 147, 149, 151, 152, 154, 156, 158,
-    160, 162, 164, 165, 167, 169, 171, 173, 175, 177, 179, 181, 183, 185, 187,
-    190, 192, 194, 196, 198, 200, 202, 204, 207, 209, 211, 213, 216, 218, 220,
-    222, 225, 227, 229, 232, 234, 236, 239, 241, 244, 246, 249, 251, 253, 254,
-    255
-};
-
 void EffectCell::RGBPattern(CRGB *leds) {
    a +=  map(speed, 1, 255, 1, 16); //3-63
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
       uint16_t index = getPixelNumber(x, y);
-      EffectMath::getLed(index).b = pgm_read_byte(&exp_gamma[sin8((x - 8) * cos8((y + 20) * 4) / 4 + a)]);
-      EffectMath::getLed(index).g = pgm_read_byte(&exp_gamma[(sin8(x * 16 + a / 3) + cos8(y * 8 + a / 2)) / 2]);
-      EffectMath::getLed(index).r = pgm_read_byte(&exp_gamma[sin8(cos8(x * 8 + a / 3) + sin8(y * 8 + a / 4) + a)]);
+      EffectMath::getLed(index).b = pgm_read_byte(&gamma_exp[sin8((x - 8) * cos8((y + 20) * 4) / 4 + a)]);
+      EffectMath::getLed(index).g = pgm_read_byte(&gamma_exp[(sin8(x * 16 + a / 3) + cos8(y * 8 + a / 2)) / 2]);
+      EffectMath::getLed(index).r = pgm_read_byte(&gamma_exp[sin8(cos8(x * 8 + a / 3) + sin8(y * 8 + a / 4) + a)]);
     }
+  }
+}
+
+void EffectCell::vals(CRGB *leds) {
+  speedFactor = map(speed, 1, 255, 100, 512) * speedfactor;
+  fadeToBlackBy(leds, NUM_LEDS, 128);
+  a += 1;
+  for (byte i = 0; i < 12; i++) {
+    EffectMath::drawLineF((float)beatsin88((10 + i) * speedFactor, 0, (WIDTH - 1) * 2, i * i) / 2, (float)beatsin88((12 - i) * speedFactor, 0, (HEIGHT - 1) * 2, i * 5) / 2, (float)beatsin88((8 + i) * speedFactor, 0, (WIDTH - 1) * 2, i * 20) / 2, (float)beatsin88((14 - i) * speedFactor, 0, (HEIGHT - 1) * 2, i * 5) / 2, CHSV(21 * i + (byte)a * i, 255, 255));
   }
 }
 
