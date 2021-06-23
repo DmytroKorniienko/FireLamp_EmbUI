@@ -320,17 +320,15 @@ class EffectDNA2 : public EffectCalc {
 protected:
     const uint8_t freq = 6;
     byte hue = 0;
-    uint32_t ms;
+    uint16_t ms;
     uint8_t speeds;
     bool rotate = true;
     bool dots = true;
 
 private:
-    void mydrawLine(byte x, byte x1, byte y, CRGB& color, bool dot, bool grad);
     String setDynCtrl(UIControl*_val) override;
 
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

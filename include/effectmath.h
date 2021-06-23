@@ -101,10 +101,12 @@ private:
 public:
   static const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
   static const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
+  static const uint16_t maxHeightIndex = (int16_t)HEIGHT-1;
+  static const uint16_t maxWidthIndex = (int16_t)WIDTH-1;
   static uint16_t getmaxDim() {return maxDim;}
   static uint16_t getminDim() {return minDim;}
-  static int16_t getmaxWidthIndex() {return (int16_t)WIDTH-1;}
-  static int16_t getmaxHeightIndex() {return (int16_t)HEIGHT-1;}
+  static int16_t getmaxWidthIndex() {return maxWidthIndex;}
+  static int16_t getmaxHeightIndex() {return maxHeightIndex;}
 
   static void blur1d( CRGB* leds, uint16_t numLeds, fract8 blur_amount);
   static void blur2d( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount);
@@ -115,9 +117,8 @@ public:
 
   // для работы с буфером
   static uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H); // получить номер пикселя в буфере по координатам
-  static void setPixel(uint16_t x, uint16_t y, const CRGB &pixel);
+  
   static CRGB &getPixel(uint16_t x, uint16_t y);
-
   static uint8_t mapsincos8(bool map, uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255);
   static void MoveFractionalNoise(bool scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift = 0);
   static void fadePixel(uint8_t i, uint8_t j, uint8_t step);
@@ -148,15 +149,6 @@ public:
     static void fillAll(const CRGB &color); 
     
     static void drawPixelXY(int16_t x, int16_t y, const CRGB &color); // функция отрисовки точки по координатам X Y
-    /* 
-    Функция отрисовки точки по координатам X, Y
-    По умолчанию leds[idx] = color
-    opt == 1: leds[idx] += color
-    opt == 2: leds[idx] -= color
-    opt == 3: leds[idx] *= color
-    opt == 4: leds[idx] /= color
-    */
-    static void drawPixelXY(uint16_t x, uint16_t y, const CRGB &color, byte opt); 
     static void wu_pixel(uint32_t x, uint32_t y, CRGB col);
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel=50);
@@ -176,22 +168,7 @@ public:
     static void dimAll(uint8_t value);
     static CRGB &getLed(uint16_t idx);
     static void blur2d(uint8_t val);
-    /** Функция отрисовки точки 
-    По умолчанию leds[idx] = color
-    opt == 1: leds[idx] += color
-    opt == 2: leds[idx] -= color
-    opt == 3: leds[idx] *= color
-    opt == 4: leds[idx] /= color */
-    static CRGB *setLed(uint16_t idx, CHSV val, byte opt);
-    /** Функция отрисовки точки 
-    По умолчанию leds[idx] = color
-    opt == 1: leds[idx] += color
-    opt == 2: leds[idx] -= color
-    opt == 3: leds[idx] *= color
-    opt == 4: leds[idx] /= color */
-    static CRGB *setLed(uint16_t idx, CRGB val, byte opt);
-    static CRGB *setLed(uint16_t idx, CHSV val);
-    static CRGB *setLed(uint16_t idx, CRGB val);
+
     /** аналог ардуино функции map(), но только для float
    */
     static double fmap(const double x, const double in_min, const double in_max, const double out_min, const double out_max){

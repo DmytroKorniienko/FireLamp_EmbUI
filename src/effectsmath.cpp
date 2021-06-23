@@ -335,55 +335,6 @@ void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // фун�
   getPixel(x,y) = color;
 }
 
-void EffectMath::drawPixelXY(uint16_t x, uint16_t y, const CRGB &color, byte opt) // функция отрисовки точки по координатам X Y
-{
-#if  SEGMENTS > 1
-  uint32_t thisPixel = getPixelNumber(x, y) * SEGMENTS;
-  for (uint16_t i = 0; i < SEGMENTS; i++)
-  {
-    getLed[thisPixel + i] = color;
-  switch (opt) {
-  case 1:
-    getLed[thisPixel + i] += color;
-    break;
-  case 2:
-    getLed[thisPixel + i] -= color;
-    break;
-  case 3:
-    getLed[thisPixel + i] *= color;
-    break;
-  case 4:
-    getLed[thisPixel + i] /= color;
-    break;
-  default:
-    getLed[thisPixel + i] = color;
-    break;
-  }
-  }
-#else
-  switch (opt) {
-  case 0:
-    getPixel(x,y) = color;
-    break;
-  case 1:
-    getPixel(x,y) += color;
-    break;
-  case 2:
-    getPixel(x,y) -= color;
-    break;
-  case 3:
-    getPixel(x,y) *= color;
-    break;
-  case 4:
-    getPixel(x,y) /= color;
-    break;
-  default:
-    getPixel(x,y) = color;
-    break;
-  }
-#endif
-}
-
 void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
   // extract the fractional parts and derive their inverses
   uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
@@ -680,80 +631,6 @@ CRGB &EffectMath::getLed(uint16_t idx) {
   }
 }
 
-CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { 
-  if(idx<NUM_LEDS){
-    leds[idx] = val;
-    return &leds[idx];
-  } else {
-    return &overrun;
-  }
-}
-
-CRGB *EffectMath::setLed(uint16_t idx, CRGB val) {
-  if(idx<NUM_LEDS){
-    leds[idx] = val;
-    return &leds[idx];
-  } else {
-    return &overrun;
-  }
-}
-
-CRGB *EffectMath::setLed(uint16_t idx, CHSV val, byte opt) { 
-  if (idx < NUM_LEDS) {
-    CRGB tempVal = val;
-    switch (opt) {
-    case 0:
-      leds[idx] = tempVal;
-      break;
-    case 1:
-      leds[idx] += tempVal;
-      break;
-    case 2:
-      leds[idx] -= tempVal;
-      break;
-    case 3:
-      leds[idx] *= tempVal;
-      break;
-    case 4:
-      leds[idx] /= tempVal;
-      break;
-    default:
-      leds[idx] = tempVal;
-      break;
-    }
-    return &leds[idx];
-  } else {
-    return &overrun;
-  }
-}
-
-CRGB *EffectMath::setLed(uint16_t idx, CRGB val, byte opt) {
-  if (idx < NUM_LEDS) {
-    switch (opt) {
-    case 0:
-      leds[idx] = val;
-      break;
-    case 1:
-      leds[idx] += val;
-      break;
-    case 2:
-      leds[idx] -= val;
-      break;
-    case 3:
-      leds[idx] *= val;
-      break;
-    case 4:
-      leds[idx] /= val;
-      break;
-    default:
-      leds[idx] = val;
-      break;
-    }
-    return &leds[idx];
-  } else {
-    return &overrun;
-  }
-}
 
 uint32_t EffectMath::getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
 {
@@ -770,13 +647,6 @@ uint32_t EffectMath::getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint
       return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
   }
 
-}
-
-void EffectMath::setPixel(uint16_t x, uint16_t y, const CRGB &pixel){
-  // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
-  if (y > getmaxHeightIndex() || x > getmaxWidthIndex()) overrun = pixel;
-  else
-  leds[getPixelNumber(x,y)] = pixel;
 }
 
 CRGB &EffectMath::getPixel(uint16_t x, uint16_t y){
