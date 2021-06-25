@@ -276,7 +276,8 @@ void MP3PLAYERDEVICE::playName(uint16_t effnb)
   playFolder(2, effnb%256);
 }
 
-void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
+void MP3PLAYERDEVICE::StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol){
+  volume(vol);
   Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this, val](){
     tAlarm = val;
     ReStartAlarmSound(val);

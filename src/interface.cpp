@@ -2515,7 +2515,7 @@ bool notfound_handle(AsyncWebServerRequest *request, const String& req)
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
-    embui.var_create(FPSTR(TCONST_0094), String(0)); // Дефолтный набор флагов // myLamp.getLampFlags()
+    embui.var_create(FPSTR(TCONST_0094), String(myLamp.getLampFlags())); // Дефолтный набор флагов
     embui.var_create(FPSTR(TCONST_0016), F("1"));   // "effListMain"
     embui.var_create(FPSTR(TCONST_004A), String(DEFAULT_MQTTPUB_INTERVAL)); // "m_tupd" интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 

@@ -219,8 +219,7 @@ void LAMP::alarmWorker(){
         mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // наростание громкости
       else if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
         mp3->setAlarm(true);
-        //mp3->RestoreVolume(); // восстановить уровень громкости
-        mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
+        mp3->StartAlarmSoundAtVol(curAlarm.type, mp3->getVolume()); // запуск звука будильника
       }
 #endif
       
@@ -400,7 +399,7 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       flags.dRand = false;
       flags.isShowSysMenu = false;
       flags.isOnMP3 = false;
-      flags.isBtn = false;
+      flags.isBtn = true;
       flags.showName = false;
       flags.playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
       flags.playName = false; // воспроизводить имя?
@@ -492,7 +491,7 @@ void LAMP::startAlarm(char *value){
 #ifdef MP3PLAYER
   if(curAlarm.isStartSnd){
     mp3->setAlarm(true);
-    mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
+    mp3->StartAlarmSoundAtVol(curAlarm.type, 1); // запуск звука будильника c минимальной громкости
   } else {
     mp3->setAlarm(false); // здесь будет стоп музыки
   }
@@ -514,8 +513,12 @@ void LAMP::stopAlarm(){
   setBrightness(getNormalizedLampBrightness(), false, false);
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
-  mp3->setAlarm(false); delay(200);
-  mp3->RestoreVolume(); // восстановить уровень громкости
+  mp3->setAlarm(false);
+  Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
+    mp3->RestoreVolume(); // восстановить уровень громкости
+    TASK_RECYCLE;
+  });
+  _t->enableDelayed();
   curAlarm.clear(); // очистить сообщение выводимое на лампу в будильнике
 #endif
 
