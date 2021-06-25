@@ -214,9 +214,12 @@ void LAMP::alarmWorker(){
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
-      mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // запуск звука будильника
-      if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
+      //LOG(println, dawnPosition);
+      if(curAlarm.isStartSnd)
+        mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // наростание громкости
+      else if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
         mp3->setAlarm(true);
+        //mp3->RestoreVolume(); // восстановить уровень громкости
         mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
       }
 #endif
@@ -490,6 +493,8 @@ void LAMP::startAlarm(char *value){
   if(curAlarm.isStartSnd){
     mp3->setAlarm(true);
     mp3->StartAlarmSound(curAlarm.type); // запуск звука будильника
+  } else {
+    mp3->setAlarm(false); // здесь будет стоп музыки
   }
 #endif
 
@@ -509,8 +514,8 @@ void LAMP::stopAlarm(){
   setBrightness(getNormalizedLampBrightness(), false, false);
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
-  mp3->StopAndRestoreVolume(); // восстановить уровень громкости
-  mp3->setAlarm(false);
+  mp3->setAlarm(false); delay(200);
+  mp3->RestoreVolume(); // восстановить уровень громкости
   curAlarm.clear(); // очистить сообщение выводимое на лампу в будильнике
 #endif
 

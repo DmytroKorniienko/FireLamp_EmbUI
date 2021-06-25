@@ -94,18 +94,18 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
     void playName(uint16_t effnb);
-    void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
+    void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); LOG(printf_P, PSTR("DFplayer: Set volume: %d\n"), cur_volume); }
     uint8_t getVolume() { return cur_volume; }
-    void setTempVolume(uint8_t vol) { volume(vol); }
+    void setTempVolume(uint8_t vol) { volume(vol); LOG(printf_P, PSTR("DFplayer: Set temp volume: %d\n"), vol); }
     void setMP3count(uint16_t cnt) {mp3filescount = cnt;} // кол-во файлов в папке MP3
     uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
     void setPlayEffect(bool flag) {effectmode = flag;}
-    void setAlarm(bool flag) {alarm = flag;}
+    void setAlarm(bool flag) {alarm = flag; stop();}
     void StartAlarmSound(ALARM_SOUND_TYPE val);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);
-    void StopAndRestoreVolume() { stop(); delay(200); volume(cur_volume); }
+    void RestoreVolume() { setVolume(cur_volume); }
     void setCurEffect(uint16_t effnb) { prev_effnb=cur_effnb; cur_effnb = effnb%256; }
     void handle();
 };
