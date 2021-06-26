@@ -2162,7 +2162,7 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
   
   float n = 0;
   for (float i = 0.0; i < (_scale <=4 ? WIDTH : HEIGHT); i+= 0.5) {
-    n = (float)quadwave8(i * 4 + waveTheta) / (256.0 / ((float)(_scale <=4 ? WIDTH : HEIGHT) -1));
+    n = (float)quadwave8(i * 4 + waveTheta) / (256.0 / ((float)(_scale <=4 ? HEIGHT : WIDTH) -1));
     switch (_scale) {
       case 1: // одна волна горизонтально, справа на лево 
         EffectMath::drawPixelXYF(i, n, ColorFromPalette(*curPalette, whue + i));
