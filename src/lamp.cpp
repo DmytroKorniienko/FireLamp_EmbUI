@@ -154,7 +154,6 @@ void LAMP::handle()
 
   // отложенное включение/выключение
   if(lampState.isOffAfterText && !lampState.isStringPrinting) {
-    lampState.isOffAfterText = false;
     changePower(false);
     remote_action(RA::RA_OFF, NULL);
   }
@@ -438,12 +437,14 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     if(mode == LAMPMODE::MODE_DEMO)
       demoTimer(T_ENABLE);
   } else  {
-    if(flags.isFaderON)
+    if(flags.isFaderON && !lampState.isOffAfterText)
       fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
     else {
       brightness(0);
       effectsTimer(SCHEDULER::T_DISABLE);
     }
+    lampState.isOffAfterText = false;
+    lampState.isStringPrinting = false;
     demoTimer(T_DISABLE);     // гасим Демо-таймер
   }
 
