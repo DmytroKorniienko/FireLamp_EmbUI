@@ -639,10 +639,10 @@ void block_effects_param(Interface *interf, JsonObject *data){
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
                     if(isinterf) interf->range(
                         ctrlId
-                        ,value
-                        ,controls[i]->getMin().toInt()
-                        ,controls[i]->getMax().toInt()
-                        ,controls[i]->getStep().toInt()
+                        ,String(value)
+                        ,controls[i]->getMin()
+                        ,controls[i]->getMax()
+                        ,controls[i]->getStep()
                         , ctrlName
                         , true);
                     if(controls[i]->getId()<3)
@@ -866,7 +866,7 @@ void block_main_flags(Interface *interf, JsonObject *data){
     }
     //interf->button("time", FPSTR(TINTF_016), FPSTR(TCONST_0025));    
     interf->json_section_end();
-    interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), true);
+    interf->range(String(FPSTR(TCONST_00A2)), String(1), String(30), String(1), String(FPSTR(TINTF_09B)), true);
 #endif
     interf->json_section_end();
 }
@@ -1300,9 +1300,9 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_00B9), FPSTR(TINTF_002));
         interf->json_section_begin(FPSTR(TCONST_00BA));
             interf->spacer(FPSTR(TINTF_001));
-                interf->range(FPSTR(TCONST_0051), 10, 100, 5, FPSTR(TINTF_044));
-                interf->range(FPSTR(TCONST_0052), -1, (int)(HEIGHT>6?HEIGHT:6)-6, 1, FPSTR(TINTF_045));
-                interf->range(FPSTR(TCONST_00C3), 0, 255, 1, FPSTR(TINTF_0CA));
+                interf->range(FPSTR(TCONST_0051), String(10), String(100), String(5), FPSTR(TINTF_044));
+                interf->range(FPSTR(TCONST_0052), String(-1), String((int)(HEIGHT>6?HEIGHT:6)-6), String(1), FPSTR(TINTF_045));
+                interf->range(FPSTR(TCONST_00C3), String(0), String(255), String(1), FPSTR(TINTF_0CA));
                 
             interf->spacer(FPSTR(TINTF_04E));
                 interf->number(FPSTR(TCONST_0054), FPSTR(TINTF_04F));
@@ -1425,7 +1425,7 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_00A1), FPSTR(TINTF_099));
 
     interf->checkbox(FPSTR(TCONST_009D), myLamp.isONMP3()? "1" : "0", FPSTR(TINTF_099), true);
-    interf->range(FPSTR(TCONST_00A2), 1, 30, 1, FPSTR(TINTF_09B), true);
+    interf->range(FPSTR(TCONST_00A2), String(1), String(30), String(1), FPSTR(TINTF_09B), true);
     
     interf->json_section_begin(FPSTR(TCONST_00A0));
     interf->spacer(FPSTR(TINTF_0B1));
@@ -1465,7 +1465,7 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->option(String(DFPLAYER_EQ_BASS), FPSTR(TINTF_0AE));
     interf->json_section_end();
     
-    interf->number(FPSTR(TCONST_00A9), mp3->getMP3count(), FPSTR(TINTF_0B0), false);
+    interf->number(String(FPSTR(TCONST_00A9)), String(mp3->getMP3count()), String(FPSTR(TINTF_0B0)));
     //SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
 
     interf->button_submit(FPSTR(TCONST_00A0), FPSTR(TINTF_008), FPSTR(P_GRAY));
@@ -1516,9 +1516,9 @@ void block_settings_mic(Interface *interf, JsonObject *data){
 
     interf->json_section_begin(FPSTR(TCONST_0038));
     if (!myLamp.isMicCalibration()) {
-        interf->number(FPSTR(TCONST_0039), (float)(round(myLamp.getLampState().getMicScale() * 100) / 100), FPSTR(TINTF_022), 0.01);
-        interf->number(FPSTR(TCONST_003A), (float)(round(myLamp.getLampState().getMicNoise() * 100) / 100), FPSTR(TINTF_023), 0.01);
-        interf->range(FPSTR(TCONST_003B), (int)myLamp.getLampState().getMicNoiseRdcLevel(), 0, 4, 1, FPSTR(TINTF_024), false);
+        interf->number(String(FPSTR(TCONST_0039)), String((float)(round(myLamp.getLampState().getMicScale() * 100) / 100)), String(FPSTR(TINTF_022)), String(0.01), String(0), String(0));
+        interf->number(String(FPSTR(TCONST_003A)), String((float)(round(myLamp.getLampState().getMicNoise() * 100) / 100)), String(FPSTR(TINTF_023)), String(0.01), String(0), String(0));
+        interf->range(String(FPSTR(TCONST_003B)), String((int)myLamp.getLampState().getMicNoiseRdcLevel()), String(0), String(4), String(1), String(FPSTR(TINTF_024)), false);
 
         interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(P_GRAY));
         interf->json_section_end();
@@ -1667,9 +1667,9 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->checkbox(FPSTR(TCONST_008E), myLamp.getLampSettings().isEffClearing ? "1" : "0", FPSTR(TINTF_083), false);
     interf->checkbox(FPSTR(TCONST_004F), myLamp.getLampSettings().dRand ? "1" : "0", FPSTR(TINTF_03E), false);
     interf->checkbox(FPSTR(TCONST_009E), myLamp.getLampSettings().showName ? "1" : "0", FPSTR(TINTF_09A), false);
-    interf->range(FPSTR(TCONST_0026), 30, 250, 5, FPSTR(TINTF_03F));
+    interf->range(FPSTR(TCONST_0026), String(30), String(250), String(5), FPSTR(TINTF_03F));
     float sf = embui.param(FPSTR(TCONST_0053)).toFloat();
-    interf->range(FPSTR(TCONST_0053), sf, 0.25, 4.0, 0.25, FPSTR(TINTF_0D3), false);
+    interf->range(String(FPSTR(TCONST_0053)), String(sf), String(0.25), String(4.0), String(0.25), String(FPSTR(TINTF_0D3)), false);
     interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? "1" : "0", FPSTR(TINTF_090), false); // нумерация в списке эффектов
 #ifdef MIC_EFFECTS
     interf->checkbox(FPSTR(TCONST_0091), myLamp.getLampSettings().effHasMic ? "1" : "0", FPSTR(TINTF_091), false); // значек микрофона в списке эффектов
@@ -1695,8 +1695,8 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->range(FPSTR(TCONST_00D9), myLamp.getBrightOff(), 0, 7, 1, FPSTR(TINTF_0D6), false);
 #endif
     interf->spacer(FPSTR(TINTF_0BA));
-    interf->range(FPSTR(TCONST_00BB), myLamp.getAlarmP(), 1, 15, 1, FPSTR(TINTF_0BB), false);
-    interf->range(FPSTR(TCONST_00BC), myLamp.getAlarmT(), 1, 15, 1, FPSTR(TINTF_0BC), false);
+    interf->range(FPSTR(TCONST_00BB), String(myLamp.getAlarmP()), String(1), String(15), String(1), FPSTR(TINTF_0BB), false);
+    interf->range(FPSTR(TCONST_00BC), String(myLamp.getAlarmT()), String(1), String(15), String(1), FPSTR(TINTF_0BC), false);
 
     interf->button_submit(FPSTR(TCONST_004B), FPSTR(TINTF_008), FPSTR(P_GRAY));
 
@@ -2041,8 +2041,8 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), FPSTR(TINTF_06D));
     interf->json_section_end();
     interf->json_section_line();
-        interf->number(FPSTR(TCONST_0069), cur_edit_event->repeat, FPSTR(TINTF_06E));
-        interf->number(FPSTR(TCONST_006A), cur_edit_event->stopat, FPSTR(TINTF_06F));
+        interf->number(FPSTR(TCONST_0069), String(cur_edit_event->repeat), FPSTR(TINTF_06E));
+        interf->number(FPSTR(TCONST_006A), String(cur_edit_event->stopat), FPSTR(TINTF_06F));
     interf->json_section_end();
 
     switch(cur_edit_event->event){
@@ -2058,8 +2058,8 @@ void show_event_conf(Interface *interf, JsonObject *data){
                 interf->spacer(FPSTR(TINTF_0BA));
                 interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
                 interf->json_section_line();
-                    interf->range(FPSTR(TCONST_00BB), alarmP, 1, 15, 1, FPSTR(TINTF_0BB), false);
-                    interf->range(FPSTR(TCONST_00BC), alarmT, 1, 15, 1, FPSTR(TINTF_0BC), false);
+                    interf->range(FPSTR(TCONST_00BB), String(alarmP), String(1), String(15), String(1), FPSTR(TINTF_0BB), false);
+                    interf->range(FPSTR(TCONST_00BC), String(alarmT), String(1), String(15), String(1), FPSTR(TINTF_0BC), false);
                 interf->json_section_end();
 #ifdef MP3PLAYER
                 String limitAlarmVolume = !err && doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)] : String(myLamp.getLampSettings().limitAlarmVolume ? "1" : "0");
@@ -2237,8 +2237,8 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     interf->checkbox(FPSTR(TCONST_0070), (btn? btn->flags.on : 0)? "1" : "0", FPSTR(TINTF_07C), false);
     interf->checkbox(FPSTR(TCONST_0071), (btn? btn->flags.hold : 0)? "1" : "0", FPSTR(TINTF_07D), false);
-    interf->number(FPSTR(TCONST_0073), (btn? btn->flags.click : 0), FPSTR(TINTF_07E), 0, 7);
-    interf->checkbox(FPSTR(TCONST_0072), (btn? btn->flags.onetime&1 : 0)? "1" : "0", FPSTR(TINTF_07F), false);
+    interf->number(String(FPSTR(TCONST_0073)), String(btn? btn->flags.click : 0), String(FPSTR(TINTF_07E)), String(1), String(0), String(7));
+    interf->checkbox(String(FPSTR(TCONST_0072)), String((btn? btn->flags.onetime&1 : 0)? "1" : "0"), FPSTR(TINTF_07F), false);
 
     if (btn) {
         interf->hidden(FPSTR(TCONST_002E), "1");
@@ -2411,15 +2411,15 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->spacer(FPSTR(TINTF_092)); // заголовок
         interf->json_section_line(FPSTR(TINTF_092)); // расположить в одной линии
 #ifdef ESP_USE_BUTTON
-            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),1,0,16);
+            interf->number(FPSTR(TCONST_0097),FPSTR(TINTF_094),String(1),String(0),String(16));
 #endif
 #ifdef MP3PLAYER
-            interf->number(FPSTR(TCONST_009B),FPSTR(TINTF_097),1,0,16);
-            interf->number(FPSTR(TCONST_009C),FPSTR(TINTF_098),1,0,16);
+            interf->number(FPSTR(TCONST_009B),FPSTR(TINTF_097),String(1),String(0),String(16));
+            interf->number(FPSTR(TCONST_009C),FPSTR(TINTF_098),String(1),String(0),String(16));
 #endif
         interf->json_section_end(); // конец контейнера
         interf->spacer();
-        interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),100,0,16000);
+        interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),String(100),String(0),String(16000));
 
         //interf->json_section_main(FPSTR(TCONST_005F), "");
         interf->frame2(FPSTR(TCONST_005F), FPSTR(TCONST_005F));

@@ -163,6 +163,25 @@
 		{{#if html == "iframe2"}}
 			<div class="frame"><iframe id="{{id}}" name="{{id}}" src="{{value}}" class="iframe">iframe does not supported</iframe></div>
 		{{/if}}
+		{{#if html == "custom" && type == "div"}}
+		<!-- Custom div element, on create 'div' calls user js-function with a name passed in {{value}} parameter
+			params: id - becomes div ID and name
+			param.class - becomes css class selector
+			value - becomes js-function name to call
+			label - becomes span "comment" element
+		-->
+			<span class="comment">{{label}}</span>
+			<div id="{{id}}" name="{{id}}" class="{{param.class}}"><img src onerror='{{value}}("{{id}}")'></div>
+		{{/if}}
+		{{#if html == "custom" && type == "txt"}}
+		<!-- Custom div with text content,
+			params: id - becomes internal div ID
+			value - becomes plain text in div
+			label - becomes div css class selector
+			param.* - reserved
+		-->
+			<div class="{{label}}"><div id="{{id}}">{{value}}</div></div>
+		{{/if}}
 		{{#if html == "custom" && type == "drawing"}}
 		<!-- This is custom drawing control -->
 			<div class="pure-u-sm-1-3 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">
