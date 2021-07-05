@@ -1586,20 +1586,32 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
 // формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
+
+    Task *_t = new Task(
+        500,
+        TASK_ONCE, [interf](){
+            BasicUI::set_scan_wifi(interf, nullptr);
+            TASK_RECYCLE; },
+        &ts, false);
+    _t->enableDelayed();
+
     interf->json_section_main(FPSTR(TCONST_003D), FPSTR(TINTF_028));
     // форма настроек Wi-Fi
 
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
-    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
+    interf->json_section_line();
+    //interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
     interf->select_edit(FPSTR(TCONST_0040), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
+    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
+    interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
-    interf->json_section_line();
-    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN));
+    //interf->json_section_line();
+    //interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
     interf->json_section_end();
-    interf->json_section_end();
+    //interf->json_section_end();
 
     interf->json_section_hidden(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_02F));
     //interf->text(FPSTR(P_APhostname), FPSTR(TINTF_02B));

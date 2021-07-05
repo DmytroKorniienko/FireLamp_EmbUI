@@ -101,7 +101,7 @@
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "button"}}
-			<div id="{{id}}" {{#if2 color}}style="background-color: {{color}}"{{/if2}} class="pure-u-1 pure-button pure-button-primary mr"
+			<div id="{{id}}" class="pure-u-1 pure-button pure-button-primary mr" {{#if2 top_margine!=10 || color}}style="{{/if2}} {{#if2 top_margine!=10}} margin-top: {{top_margine}}px !important;{{/if2}} {{#if2 color}} background-color: {{color}};{{/if2}} {{#if2 top_margine!=10 || color}}"{{/if2}}
 				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}
 				{{#if2 !submit}}{{onevent "click", "on_change", id}}{{/if2}}
 			>
