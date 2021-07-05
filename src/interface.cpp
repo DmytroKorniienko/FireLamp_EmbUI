@@ -1592,9 +1592,13 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
     interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
-    interf->text(FPSTR(TCONST_0040), WiFi.SSID(), FPSTR(TINTF_02C), false);
+    interf->select_edit(FPSTR(TCONST_0040), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
+    interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
+    interf->json_section_line();
+    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
+    interf->json_section_end();
     interf->json_section_end();
 
     interf->json_section_hidden(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_02F));
@@ -1656,6 +1660,10 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     section_settings_frame(interf, data);
 }
 
+void set_scan_wifi(Interface *interf, JsonObject *data){
+    BasicUI::set_scan_wifi(interf, data);
+};
+
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_004B), FPSTR(TINTF_002));
@@ -1689,10 +1697,10 @@ void block_settings_other(Interface *interf, JsonObject *data){
 #endif
 #ifdef TM1637_CLOCK
     interf->spacer(FPSTR(TINTF_0D4));
-    interf->checkbox(FPSTR(TCONST_00DA), myLamp.getLampSettings().tm24 ? "1" : "0", FPSTR(TINTF_0D7), false);
-    interf->checkbox(FPSTR(TCONST_00DB), myLamp.getLampSettings().tmZero ? "1" : "0", FPSTR(TINTF_0D8), false);
-    interf->range(FPSTR(TCONST_00D8), myLamp.getBrightOn(), 0, 7, 1, FPSTR(TINTF_0D5), false);
-    interf->range(FPSTR(TCONST_00D9), myLamp.getBrightOff(), 0, 7, 1, FPSTR(TINTF_0D6), false);
+    interf->checkbox(FPSTR(TCONST_00DA), myLamp.getLampSettings().tm24 ? String("1") : String("0"), FPSTR(TINTF_0D7), false);
+    interf->checkbox(FPSTR(TCONST_00DB), myLamp.getLampSettings().tmZero ? String("1") : String("0"), FPSTR(TINTF_0D8), false);
+    interf->range(FPSTR(TCONST_00D8), String(myLamp.getBrightOn()), String(0), String(7), String(1), FPSTR(TINTF_0D5), false);
+    interf->range(FPSTR(TCONST_00D9), String(myLamp.getBrightOff()), String(0), String(7), String(1), FPSTR(TINTF_0D6), false);
 #endif
     interf->spacer(FPSTR(TINTF_0BA));
     interf->range(FPSTR(TCONST_00BB), String(myLamp.getAlarmP()), String(1), String(15), String(1), FPSTR(TINTF_0BB), false);
@@ -2654,6 +2662,8 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
     embui.section_handle_remove(FPSTR(T_SET_MQTT));
     embui.section_handle_add(FPSTR(T_SET_MQTT), set_settings_mqtt);
+
+    embui.section_handle_add(FPSTR(TCONST_00DD), set_scan_wifi);         // обработка сканирования WiFi
 
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);

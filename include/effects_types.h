@@ -289,6 +289,7 @@ static const char TCONST_00D9[] PROGMEM = "tmBrightOff";
 static const char TCONST_00DA[] PROGMEM = "tm24";
 static const char TCONST_00DB[] PROGMEM = "tmZero";
 static const char TCONST_00DC[] PROGMEM = "drawClear";
+static const char TCONST_00DD[] PROGMEM = "scan";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка

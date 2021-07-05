@@ -127,13 +127,18 @@
 		{{/if}}
 		{{#if html == "select"}}
 			<span>{{label}}</span>
-			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-1"
+			{{#if2 editable}}<div class="select-editable">{{/if2}}
+			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-1" {{#if2 editable}} onchange="this.nextElementSibling.value=this.value"{{/if2}}
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			>
 			{{#block}}
 				<option value="{{value}}" {{#if2 value == _this.value}}selected{{/if2}}>{{label}}</option>
 			{{/block}}
 			</select>
+			{{#if2 editable}}
+			<input type="text" id="{{id}}" name="{{id}}" value="{{value}}">
+		</div>
+			{{/if2}}
 		{{/if}}
 		{{#if type == "checkbox"}}
 			<div class="switch-block">
