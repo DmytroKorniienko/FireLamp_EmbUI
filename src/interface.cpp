@@ -362,7 +362,7 @@ void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
         // формируем и отправляем кадр с запросом подгрузки внешнего ресурса
         interf->json_frame_custom(F("xload"));
         interf->json_section_content();
-        interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true, false, LittleFS.exists(F("/fslowlist.json")) ? F("/fslowlist.json") : F("/fquicklist.json"));
+        interf->select(FPSTR(TCONST_0010), String((int)confEff->eff_nb), String(FPSTR(TINTF_00A)), true, false, String(LittleFS.exists(F("/fslowlist.json")) ? F("/fslowlist.json") : F("/fquicklist.json"))+'?'+myLamp.effects.getlistsuffix());
         interf->json_section_end();
         block_effects_config_param(interf, nullptr);
         interf->spacer();
@@ -468,7 +468,7 @@ void delayedcall_show_effects(){
         Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 512) : nullptr;
         interf->json_frame_custom(F("xload"));
         interf->json_section_content();
-        interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true, confEff?F("/fslowlist.json"):F("/slowlist.json"));
+        interf->select(confEff?FPSTR(TCONST_0010):FPSTR(TCONST_0016), String(effnb), String(FPSTR(TINTF_00A)), true, true, String(confEff?F("/fslowlist.json"):F("/slowlist.json"))+'?'+myLamp.effects.getlistsuffix());
         interf->json_section_end();
         interf->json_frame_flush();
         delete interf;
@@ -917,7 +917,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
         bool isSlowExist = LittleFS.exists(F("/slowlist.json"));
         interf->json_frame_custom(F("xload"));
         interf->json_section_content();
-        interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, false, isSlowExist ? F("/slowlist.json") : F("/quicklist.json"));
+        interf->select(FPSTR(TCONST_0016), String(myLamp.effects.getSelected()), String(FPSTR(TINTF_00A)), true, false, String(isSlowExist ? F("/slowlist.json") : F("/quicklist.json"))+'?'+myLamp.effects.getlistsuffix());
         interf->json_section_end();
         block_effects_param(interf, data);
         interf->button(FPSTR(TCONST_000F), FPSTR(TINTF_009));
@@ -2782,7 +2782,10 @@ void sync_parameters(){
 Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nullptr, [tmp](){
     if(!mp3->isReady()){
         LOG(println, F("DFPlayer not ready yet..."));
-        ts.getCurrentTask()->restartDelayed(500);
+        if(millis()<10000)
+            ts.getCurrentTask()->restartDelayed(TASK_SECOND);
+        else
+            TASK_RECYCLE;
         return;
     }
     

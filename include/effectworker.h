@@ -444,6 +444,7 @@ public:
 
 class EffectWorker {
 private:
+    time_t listsuffix = 0; // суффикс использемый для обновления списков
     LAMPSTATE *lampstate; // ссылка на состояние лампы
     SORT_TYPE effSort; // порядок сортировки в UI
 
@@ -528,6 +529,8 @@ private:
 
 
 public:
+    time_t getlistsuffix() {return listsuffix ? listsuffix : (listsuffix=micros());}
+    void setlistsuffix(time_t val) {listsuffix=val;}
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
     void initDefault(const char *folder = NULL); // пусть вызывается позже и явно
     ~EffectWorker() { clearEffectList(); clearControlsList(); }
