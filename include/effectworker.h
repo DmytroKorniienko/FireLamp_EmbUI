@@ -462,6 +462,7 @@ private:
 
     Task *tConfigSave = nullptr;       // динамическая таска, задержки при сохранении текущего конфига эффекта в файл
 
+    void removeLists(); // уделение списков из ФС
     void fsinforenew(){
 #ifdef ESP8266
         FSInfo fs_info;
