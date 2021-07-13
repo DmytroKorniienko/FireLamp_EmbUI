@@ -36,14 +36,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "main.h"
+#include <SPIFFSEditor.h>
 #include "buttons.h"
 #ifdef USE_FTP
   #include "ftpSrv.h"
 #endif
+#ifdef TM1637_CLOCK
+  #include "tm.h"
+#endif
+
+#ifdef ENCODER
+  #include "enc.h"
+#endif
 
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
-Ticker _isrHelper;       // планировщик для обработки прерываний
 #ifdef ESP_USE_BUTTON
 Buttons *myButtons;
 #endif
@@ -51,6 +58,7 @@ Buttons *myButtons;
 #ifdef MP3PLAYER
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
+
 
 void setup() {
     //Serial.begin(115200);
@@ -68,36 +76,50 @@ void setup() {
 #endif
 
     // EmbUI
-    //create_parameters(); // теперь это weak метод EmbUI, вызывается внутри фреймворка на стадии begin чтобы слить конфиг на флеше с дефолтовыми перменными
-    //embui.timeProcessor.attach_callback(std::bind(&LAMP::setIsEventsHandled, &myLamp, myLamp.IsEventsHandled())); // только после синка будет понятно включены ли события
     embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
-    embui.mqtt(embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
-    
+    //embui.mqtt(embui.param(F("m_pref")), embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+    embui.mqtt(mqttCallback, true);
+
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-    myLamp.events.loadConfig();
-    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+    myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
+    
+#ifdef DS18B20
+  ds_setup();
+#endif
 
+#ifdef SHOWSYSCONFIG
+    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+#else
+    myLamp.lamp_init(CURRENT_LIMIT);
+#endif
 #ifdef USE_FTP
     ftp_setup(); // запуск ftp-сервера
 #endif
 
 #ifdef ESP_USE_BUTTON
+#ifdef SHOWSYSCONFIG
     myLamp.setbPin(embui.param(F("PINB")).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
+#else
+    myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
+#endif
     if (!myButtons->loadConfig()) {
       default_buttons();
       myButtons->saveConfig();
     }
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getPressTransitionType());  // цепляем прерывание на кнопку
 #endif
 
     myLamp.events.setEventCallback(event_worker);
 
 #ifdef MP3PLAYER
+#ifdef SHOWSYSCONFIG
     int rxpin = embui.param(FPSTR(TCONST_009B)).isEmpty() ? MP3_RX_PIN : embui.param(FPSTR(TCONST_009B)).toInt();
     int txpin = embui.param(FPSTR(TCONST_009C)).isEmpty() ? MP3_TX_PIN : embui.param(FPSTR(TCONST_009C)).toInt();
     mp3 = new MP3PLAYERDEVICE(rxpin, txpin); //rxpin, txpin
+#else
+    mp3 = new MP3PLAYERDEVICE(MP3_RX_PIN, MP3_TX_PIN); //rxpin, txpin
+#endif
 #endif
 
 #ifdef ESP8266
@@ -107,20 +129,118 @@ void setup() {
 #endif
   sync_parameters();        // падение есп32 не воспоизводится, kDn
 
+  //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
+
+#ifdef TM1637_CLOCK
+  tm1637.tm_setup();
+#endif 
+
+#ifdef ENCODER
+  enc_setup();
+#endif
+
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
 #endif
     LOG(println, F("setup() done"));
 }   // End setup()
 
+// typedef struct {
+//   uint64 timeAcc;
+//   uint32 timeBase;
+//   uint32 storage;
+// } RTC_DATA;
+
+// unsigned long _RTC_Worker(unsigned long _storage=0){
+// #ifdef ESP8266
+//     RTC_DATA rtcTime;
+//     uint32 rtc_time = system_get_rtc_time();
+//     if(rtc_time<500000){
+//         rtcTime.timeBase = rtc_time;
+//         rtcTime.timeAcc = 0;
+//         rtcTime.storage = 0;
+//         //LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), rtc_time, rtcTime.timeBase, rtcTime.timeAcc, (rtcTime.timeAcc / 1000000) / 1000);
+//         //ESP.rtcUserMemoryWrite(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
+//         system_rtc_mem_write(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
+//     } else {
+//         //ESP.rtcUserMemoryRead(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
+//         system_rtc_mem_read(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
+//         rtc_time = system_get_rtc_time();
+//         uint32_t cal = system_rtc_clock_cali_proc();
+//         rtcTime.timeAcc += ((uint64)(rtc_time - rtcTime.timeBase) * (((uint64)cal * 1000) >> 12));
+//         //LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), rtc_time, rtcTime.timeBase, rtcTime.timeAcc, (rtcTime.timeAcc / 1000000) / 1000);
+//         rtcTime.timeBase = rtc_time;
+//         if(_storage)
+//             rtcTime.storage = _storage;
+//         //ESP.rtcUserMemoryWrite(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
+//         system_rtc_mem_write(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
+//     }
+//     LOG(printf_P, PSTR("TIME: RTC time = %d sec\n"), (uint32)(rtcTime.timeAcc / 1000000) / 1000);
+//     return rtcTime.storage+(rtcTime.timeAcc / 1000000) / 1000;
+// #else
+//     return 0;
+// #endif
+// }
+
 void loop() {
     embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
-    // эта функция будет слать периодическую информацию, но позже, когда до этого руки дойдут
-    sendData(); // цикл отправки данных по MQTT
+
+    // static uint32_t cnt = 0;
+    // static unsigned long cur_ms = millis();
+    // if(millis()>cur_ms+1000){
+    //     Serial.printf("cnt=%u, fps=%d\n", cnt, FastLED.getFPS());
+    //     cnt=0;
+    //     cur_ms = millis();
+    // }
+    // cnt++;
+
+// #if defined(ESP8266)
+//     // тестирование rtc
+//     EVERY_N_SECONDS(1){
+//         _RTC_Worker();
+//     }
+//     // // esp32
+//     // time_t now()
+//     // {
+//     //     struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };   /* btw settimeofday() is helpfull here too*/
+//     //     // uint64_t sec, us;
+//     //     uint32_t sec, us;
+//     //     gettimeofday(&tv, NULL); 
+//     //     (sec) = tv.tv_sec;  
+//     //     (us) = tv.tv_usec; 
+//     //     return sec;
+//     // }
+// #endif
+// // тестирование стабильности
+// EVERY_N_MILLIS(20) {
+//     Task *t = new Task(10, TASK_ONCE, [](){
+//         Task *task = ts.getCurrentTask();
+//         //TASK_RECYCLE;
+//         delete task;
+//     }, &ts, false
+//     );
+//     t->enableDelayed();
+// }
+
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
+#endif
+
+#ifdef ENCODER
+    encLoop(); // цикл обработки событий энкодера. Эта функция будет отправлять в УИ изменения, только тогда, когда подошло время ее loop
+#endif
+
+#ifdef TM1637_CLOCK
+    EVERY_N_SECONDS(1) {
+        tm1637.tm_loop();
+    }
+#endif
+#ifdef DS18B20
+    EVERY_N_MILLIS(1000*DS18B_READ_DELAY + 25) {
+        ds_loop();
+    }
 #endif
 }
 
@@ -134,59 +254,26 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
         String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
         embui.publish(sendtopic, effcfg, true); // отправляем обратно в MQTT в топик embui/pub/
     } else if(sendtopic==FPSTR(TCONST_00AD)){
-        sendData(true);
+        sendData();
     }
   }
 }
 
-// нужно подчистить эту функцию, печатать инфо можно более аккуратным способом
-ICACHE_FLASH_ATTR void sendData(bool force){
-    static unsigned long i;
-
-    if((i + (myLamp.getmqtt_int() * 1000) > millis() || myLamp.getmqtt_int() == 0) && !force) return; // если не пришло время, или интервал = 0 - выходим из функции
-    i = millis();
-    // всё, что ниже будет выполняться через интервалы
+// Periodic MQTT publishing
+void sendData(){
 
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
-    LOG(println, F("sendData :"));
+    LOG(println, F("send MQTT Data :"));
     DynamicJsonDocument obj(256);
     //JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
-    obj[FPSTR(TCONST_0002)] = String(ESP.getFreeHeap());
+    obj[FPSTR(TCONST_0002)] = String(myLamp.getLampState().freeHeap);
     obj[FPSTR(TCONST_008F)] = String(millis()/1000);
-    obj[FPSTR(TCONST_00CE)] = String(WiFi.RSSI());
+    obj[FPSTR(TCONST_00CE)] = String(myLamp.getLampState().rssi);
     String sendtopic=FPSTR(TCONST_008B);
     sendtopic+=FPSTR(TCONST_00AD);
     String out;
     serializeJson(obj, out);
     LOG(println, out);
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
-    obj.clear(); obj.garbageCollect();
-
-    // // также отправим конфиг текущего эффекта
-    // sendtopic=String(FPSTR(TCONST_008B))+String(FPSTR(TCONST_00AE));
-    // String effcfg = myLamp.effects.getfseffconfig(myLamp.effects.getCurrent());
-    // embui.publish(sendtopic, effcfg, true);
 }
-
-#ifdef ESP_USE_BUTTON
-/*
- * Используем обертку и тикер ибо:
- * 1) убираем функции с ICACHE из класса лампы
- * 2) Тикер не может дернуть нестатический метод класса
- */
-ICACHE_FLASH_ATTR void buttonhelper(bool state){
-  embui.autoSaveReset();
-  myButtons->buttonPress(state);
-}
-
-/*
- *  Button pin interrupt handler
- */
-ICACHE_RAM_ATTR void buttonpinisr(){
-    detachInterrupt(myLamp.getbPin());
-    _isrHelper.once_ms(0, buttonhelper, myButtons->getpinTransition());   // вместо флага используем тикер :)
-    myButtons->setpinTransition(!myButtons->getpinTransition());
-    attachInterrupt(digitalPinToInterrupt(myLamp.getbPin()), buttonpinisr, myButtons->getpinTransition() ? myButtons->getPressTransitionType() : myButtons->getReleaseTransitionType());  // меням прерывание
-}
-#endif

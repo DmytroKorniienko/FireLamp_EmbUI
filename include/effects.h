@@ -42,26 +42,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectworker.h"
 #include "effectmath.h"
 
+const byte maxDim = max(WIDTH, HEIGHT);
+const byte minDim = min(WIDTH, HEIGHT);
+const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
+const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
 
-#ifdef MIC_EFFECTS
-class EffectFreq : public EffectCalc {
-private:
-    uint8_t type=1;
-    int8_t peakX[2][WIDTH];
-    float samp_freq;
-    double last_freq = 0;
-    uint8_t last_min_peak, last_max_peak;
-    float x[WIDTH+1];
-    float maxVal;
-    uint8_t freqDiv = 2U-scale/128; //1...2
-
-    bool freqAnalyseRoutine(CRGB *leds, EffectWorker *param);
-    void load() override;
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    String setDynCtrl(UIControl*_val) override;
-};
-#endif
 
 //-------------- Специально обученный пустой эффект :)
 class EffectNone : public EffectCalc {
@@ -89,17 +74,37 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+/*
+ ***** METABALLS / МЕТАСФЕРЫ *****
+Metaballs proof of concept by Stefan Petrick 
+https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
+*/
 class EffectMetaBalls : public EffectCalc {
 private:
-    bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
-
+	float speedFactor;
+	const float hormap = (256 / WIDTH);
+    const float vermap = (256 / HEIGHT);
+	String setDynCtrl(UIControl*_val) override;
+    void load() override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ***** SINUSOID3 / СИНУСОИД3 *****
+/*
+  Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
+*/
 class EffectSinusoid3 : public EffectCalc {
 private:
-    bool sinusoid3Routine(CRGB *leds, EffectWorker *param);
+	const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
+	const uint8_t semiWidthMajor =  WIDTH / 2  + (WIDTH % 2);
+	float e_s3_speed;
+	float e_s3_size;
+	uint8_t _scale;
+	uint8_t type;
+	
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -119,18 +124,18 @@ private:
     float bballsPos[bballsMaxNUM_BALLS] ;               // The integer position of the dot on the strip (LED index)
     float bballsHi = 0.0;                               // An array of heights
     float bballsVImpact[bballsMaxNUM_BALLS] ;           // As time goes on the impact velocity will change, so make an array to store those values
-    float bballsTCycle = 0.0;                           // The time since the last time the ball struck the ground
+    uint32_t bballsTCycle = 0;                        // The time since the last time the ball struck the ground
     float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
     long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
     float bballsShift[bballsMaxNUM_BALLS];
+    float hue;
     bool halo = false;                                  // ореол
     uint8_t _scale=1;
+    uint16_t _speed;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);
-    String setDynCtrl(UIControl*_val) override;
-    // void setscl(const byte _scl) override; // перегрузка для масштаба
-    //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
     void load() override;
+	String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -138,7 +143,12 @@ public:
 // ------------- Эффект "Пейнтбол" -------------
 class EffectLightBalls : public EffectCalc {
 private:
-    bool lightBallsRoutine(CRGB *leds, EffectWorker *param);
+	#define BORDERTHICKNESS       (1U)   // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
+	const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
+	const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
+	float speedFactor;
+	
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -148,16 +158,14 @@ public:
 class EffectPulse : public EffectCalc {
 private:
     uint8_t pulse_hue;
-    uint8_t pulse_step = 0;
+    float pulse_step = 0;
     uint8_t centerX = random8(WIDTH - 5U) + 3U;
     uint8_t centerY = random8(HEIGHT - 5U) + 3U;
     uint8_t currentRadius = 4;
-    uint8_t _pulse_hue = 0;
+    float _pulse_hue = 0;
     uint8_t _pulse_hueall = 0;
-
-
-    bool pulseRoutine(CRGB *leds, EffectWorker *param);
-
+    float speedFactor;
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -166,12 +174,14 @@ public:
 class EffectBall : public EffectCalc {
 private:
     uint8_t ballSize;
-    CHSV ballColor;
+    CRGB ballColor;
     float vectorB[2U];
     float coordB[2U];
+	bool flag[2] = {true, true};
+	float speedFactor;
 
-    bool ballRoutine(CRGB *leds, EffectWorker *param);
-
+	String setDynCtrl(UIControl*_val);
+	
 public:
     void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -186,6 +196,7 @@ private:
     float coord[_AMOUNT][2U];
     int16_t ballColors[_AMOUNT];
     byte light[_AMOUNT];
+    float speedFactor;
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
 
 public:
@@ -197,9 +208,11 @@ public:
 class EffectRainbow : public EffectCalc {
 private:
     float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
+    float twirlFactor;
+    float micCoef;
 
     bool rainbowHorVertRoutine(bool isVertical);
-    bool rainbowDiagonalRoutine(CRGB *leds, EffectWorker *param);
+    bool rainbowDiagonalRoutine();
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -212,7 +225,7 @@ private:
     uint8_t modeColor;
 
     bool colorsRoutine(CRGB *leds, EffectWorker *param);
-    void setscl(const byte _scl) override;
+    //void setscl(const byte _scl) override;
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -222,8 +235,9 @@ public:
 // ------ Эффект "Белая Лампа"
 class EffectWhiteColorStripe : public EffectCalc {
 private:
+    uint8_t shift=0;
     bool whiteColorStripeRoutine(CRGB *leds, EffectWorker *param);
-
+    String setDynCtrl(UIControl*_val) override;
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -278,7 +292,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- светлячки -------------
+// ------------- класс Светлячки -------------
+// нужен для некоторых эффектов
 class EffectLighters : public EffectCalc {
 protected:
     uint8_t cnt = 1;
@@ -288,11 +303,32 @@ protected:
     uint8_t lightersColor[LIGHTERS_AM];
     float lightersPos[2U][LIGHTERS_AM];
     byte light[LIGHTERS_AM];
+    float speedFactor;
 private:
-    bool lightersRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------- "ДНК Вариант" -------------
+//Yaroslaw Turbin 08.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
+//updated & adopted by kostyamat
+class EffectDNA2 : public EffectCalc {
+protected:
+    const uint8_t freq = 6;
+    byte hue = 0;
+    uint16_t ms;
+    uint8_t speeds;
+    bool rotate = true;
+    bool dots = true;
+
+private:
+    String setDynCtrl(UIControl*_val) override;
+
+public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -302,10 +338,11 @@ private:
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
     uint8_t _scale = 1;
     byte gluk = 1;
-    uint8_t hue;
+    uint8_t hue, _hue;
     bool randColor = false;
     bool white = false;
     float count;
+    float speedFactor;
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
@@ -319,6 +356,7 @@ private:
     uint8_t effId = 1;
     bool isNew = true;
     float fade;
+    float speedFactor;
     bool snowStormStarfallRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 
@@ -335,6 +373,7 @@ private:
 
     uint8_t ihue;
     bool colorLoop;
+	bool blurIm;
     float _speed;             // speed is set dynamically once we've started up
     float _scale;             // scale is set dynamically once we've started up
     float x;
@@ -352,18 +391,25 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
+// ***** Эффект "Спираль"     ****
+/*
+ * Aurora: https://github.com/pixelmatix/aurora
+ * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
+ * Copyright (c) 2014 Jason Coon
+ * Неполная адаптация SottNick
+ */
 class EffectSpiro : public EffectCalc {
 private:
-  const uint8_t spiroradiusx = WIDTH / 4;
-  const uint8_t spiroradiusy = HEIGHT / 4;
+  const uint8_t spiroradiusx = WIDTH /4; //((!WIDTH & 1) ? (WIDTH -1) : WIDTH) / 4;
+  const uint8_t spiroradiusy = HEIGHT /4;//(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 4;
 
-  const uint8_t spirocenterX = WIDTH / 2;
-  const uint8_t spirocenterY = HEIGHT / 2;
+  const uint8_t spirocenterX = WIDTH /2; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
+  const uint8_t spirocenterY = HEIGHT /2; //(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 2;
 
   const uint8_t spirominx = spirocenterX - spiroradiusx;
-  const uint8_t spiromaxx = spirocenterX + spiroradiusx;// + 1;
+  const uint8_t spiromaxx = spirocenterX + spiroradiusx - (WIDTH%2 == 0 ? 1:0);// + 1;
   const uint8_t spirominy = spirocenterY - spiroradiusy;
-  const uint8_t spiromaxy = spirocenterY + spiroradiusy; // + 1;
+  const uint8_t spiromaxy = spirocenterY + spiroradiusy - (HEIGHT%2 == 0 ? 1:0); // + 1;
 
   bool spiroincrement = false;
   bool spirohandledChange = false;
@@ -372,8 +418,9 @@ private:
   float spirotheta1 = 0;
   float spirotheta2 = 0;
   uint8_t internalCnt = 0;
+  float speedFactor;
 
-  bool spiroRoutine(CRGB *leds, EffectWorker *param);
+  String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -386,6 +433,7 @@ class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
     uint8_t fadelvl=1;
+	float speedFactor;
     
     String setDynCtrl(UIControl*_val) override;
 public:
@@ -400,14 +448,14 @@ private:
   Boid boids[AVAILABLE_BOID_COUNT];
   Boid predator;
   PVector wind;
-  float speedfactor;
+  float speedFactor;
 
   bool predatorPresent;
   float hueoffset;
 
   bool flockRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
-  void setspd(const byte _spd) override;
+  //void setspd(const byte _spd) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -475,14 +523,15 @@ public:
 // https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
 class EffectDrift : public EffectCalc {
 private:
-  uint8_t dri_phase;
-  float _dri_speed;
-  uint8_t _dri_delta;
-  byte driftType = 0;
+	const byte maxDim_steps = 256 / max(WIDTH, HEIGHT);
+	uint8_t dri_phase;
+	float _dri_speed;
+	uint8_t _dri_delta;
+	byte driftType = 0;
 
-  String setDynCtrl(UIControl*_val) override;
-  bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
-  bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
+	String setDynCtrl(UIControl*_val) override;
+	bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
+	bool incrementalDriftRoutine2(CRGB *leds, EffectWorker *param);
 
 public:
     void load() override;
@@ -496,8 +545,10 @@ private:
   uint8_t thue = 0U;
   uint8_t tnum;
   CRGB ledsbuff[NUM_LEDS];
+  float speedFactor;
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
-  void setscl(const byte _scl) override;
+  String setDynCtrl(UIControl*_val) override;
+  //void setscl(const byte _scl) override;
 public:
     void load() override;
     void setup();
@@ -509,6 +560,7 @@ private:
   float whue;
   float waveTheta;
   uint8_t _scale=1;
+  float speedFactor;
   bool wavesRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
 public:
@@ -519,43 +571,19 @@ public:
 // ============= RADAR / РАДАР ===============
 // Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternRadar.h
 // Copyright(c) 2014 Jason Coon
-// v1.0 - Updating for GuverLamp v1.7 by Palpalych 14.04.2020
-// v1.1 - +dither, +smoothing
 class EffectRadar : public EffectCalc {
 private:
-  float eff_offset;        // глобальная переменная для работы эффектов (обычно применяется для циклического пересчета hue, количества кадров и др...)
-  float eff_theta;         // глобальная переменная угла для работы эффектов
-  bool subPix = false;
-  byte hue;
-  bool radarRoutine(CRGB *leds, EffectWorker *param);
-  String setDynCtrl(UIControl*_val) override;
+    float eff_offset; 
+    float eff_theta;  // глобальная переменная угла для работы эффектов
+    bool subPix = false;
+    byte hue;
+    const float width_adj_f = (float)(WIDTH < HEIGHT ? (HEIGHT - WIDTH) / 2. : 0);
+    const float height_adj_f= (float)(HEIGHT < WIDTH ? (WIDTH - HEIGHT) / 2. : 0);
+    bool radarRoutine(CRGB *leds, EffectWorker *param);
+    String setDynCtrl(UIControl *_val) override;
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ------------------------------ ЭФФЕКТ ДЫМ ----------------------
-class EffectMStreamSmoke : public EffectCalc {
-private:
-  uint8_t smokeHue = 0U;
-  int fillType;
-  float xSmokePos;
-  float xSmokePos2;
-  uint8_t eNs_noisesmooth;
-  uint8_t rhue;
-  uint32_t e_x[NUM_LAYERS];
-  uint32_t e_y[NUM_LAYERS];
-  uint32_t e_z[NUM_LAYERS];
-  uint32_t e_scaleX[NUM_LAYERS];
-  uint32_t e_scaleY[NUM_LAYERS];
-  uint8_t noise3d[NUM_LAYERS][WIDTH][HEIGHT];
-
-  void FillNoise(int8_t layer);     // TODO: join with Comet's
-  bool multipleStreamSmokeRoutine(CRGB *leds, EffectWorker *param);
-  String setDynCtrl(UIControl*_val) override;
-
-public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -573,7 +601,6 @@ private:
   uint8_t fire18heat[NUM_LEDS];
   uint8_t noise3dx[NUM_LAYERS2][WIDTH][HEIGHT];
 
-  bool fire2018Routine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -632,7 +659,7 @@ private:
   void cube2dmoveCols(uint8_t moveItem, bool movedirection);
   void cube2dmoveRows(uint8_t moveItem, bool movedirection);
   String setDynCtrl(UIControl*_val) override;
-  void setscl(const byte _scl) override;
+  //void setscl(const byte _scl) override;
 
 public:
     void load() override;
@@ -652,15 +679,19 @@ class EffectPicasso : public EffectCalc {
         int8_t hue_step = 0;
     } Particle;
 private:
+    uint8_t effId=0;
     uint8_t pidx = 0;
     Particle particles[20];
     unsigned numParticles = 0;
+	float speedFactor;
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
+    /*
     bool picassoRoutine2(CRGB *leds, EffectWorker *param);
     bool picassoRoutine3(CRGB *leds, EffectWorker *param);
-    bool picassoRoutine4(CRGB *leds, EffectWorker *param);
+    */
+    bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
     GradientPaletteList *palettes;
 public:
     EffectPicasso() {
@@ -709,20 +740,22 @@ class EffectLeapers : public EffectCalc {
     typedef struct Leaper{
         float x, y;
         float xd, yd;
-        CHSV color;
+        byte color;
     } Leaper;
 private:
     Leaper leapers[20];
     unsigned numParticles = 0;
     uint8_t _rv;
+	uint8_t num;
+	float speedFactor;
     void generate(bool reset = false);
     void restart_leaper(Leaper * l);
     void move_leaper(Leaper * l);
-    //void wu_pixel(uint32_t x, uint32_t y, CRGB col);
-    bool leapersRoutine(CRGB *leds, EffectWorker *param);
+	String setDynCtrl(UIControl*_val) override;
 public:
+	void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    String setDynCtrl(UIControl*_val) override;
+
 };
 
 // ------ Эффект "Лавовая Лампа"
@@ -751,6 +784,7 @@ private:
     unsigned numParticles = 0;
     unsigned physic_on = 1;
     unsigned filter = 0;
+	float speedFactor;
     void generate(bool reset = false);
     void position();
     void physic();
@@ -796,7 +830,10 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ----------- Эффект "Вихри" адаптация SottNick
+// ------- Эффект "Вихри"
+// Based on Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
+// Copyright(c) 2014 Jason Coon
+//адаптация SottNick
 class EffectWhirl : public EffectCalc {
 private:
     float ff_x;
@@ -805,12 +842,13 @@ private:
     float hue;
     Boid boids[AVAILABLE_BOID_COUNT];
     uint8_t micPick = 0;
+	float speedFactor;
 
     const uint8_t ff_speed = 1; // чем выше этот параметр, тем короче переходы (градиенты) между цветами. 1 - это самое красивое
     const uint8_t ff_scale = 26; // чем больше этот параметр, тем больше "языков пламени" или как-то так. 26 - это норм
 
     bool whirlRoutine(CRGB *leds, EffectWorker *param);
-
+    String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -832,15 +870,18 @@ private:
     uint16_t y;
     uint16_t z;
     byte ledbuff[WIDTH*2 * HEIGHT*2];
-    uint16_t xsin;
-    uint16_t ysin;
+#define amountDrops ((HEIGHT + WIDTH) / 6)
+    const uint8_t maxRadius = WIDTH + HEIGHT;
+    uint8_t posX[amountDrops];
+    uint8_t posY[amountDrops];
+    float radius[amountDrops];
     uint8_t satur;
     uint8_t glare = 0;
     uint8_t iconIdx = 0;
+	float speedFactor;
 
-    void nGlare(CRGB *leds);
-    void nPatterns();
-    bool aquariumRoutine(CRGB *leds, EffectWorker *param);
+    void nGlare(uint8_t bri);
+    void nDrops(uint8_t bri);
     void fillNoiseLED(CRGB *leds);
 
 public:
@@ -865,13 +906,14 @@ private:
     uint8_t points[STARS_NUM] ;                       // количество углов в звезде
     unsigned int delay[STARS_NUM] ;                   // задержка пуска звезды относительно счётчика
     float counter = 0;                                // счетчик для реализации смещений, наростания и т.д.
-    uint8_t csum = 0;
+	float speedFactor;
+	float _speed;
     bool setup = true;
     uint8_t micPick = 0;
     const uint8_t spirocenterX = WIDTH / 2;
     const uint8_t spirocenterY = HEIGHT / 2;
-    bool starRoutine(CRGB *leds, EffectWorker *param);
     void drawStar(float xlocl, float ylocl, float biggy, float little, int16_t points, float dangle, uint8_t koler);
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -908,7 +950,11 @@ public:
 // https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
 class EffectPacific : public EffectCalc {
 private:
-    bool pacificRoutine(CRGB *leds, EffectWorker *param);
+	uint32_t speedFactor;
+	void pacifica_one_layer(const TProgmemRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff);
+	void pacifica_deepen_colors();
+	void pacifica_add_whitecaps();
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     //void load() override;
@@ -923,12 +969,10 @@ private:
     byte oscHV;
     byte oscilLimit;
     float pointer;
-    const float _scaler = 3.3 / 1024;
     CRGB color;
-    bool oscRoutine(CRGB *leds, EffectWorker *param);
     float div;
     byte gain;
-    double y[2] = {0., 0.};
+    float y[2] = {0., 0.};
     String setDynCtrl(UIControl*_val) override;
     
 
@@ -943,12 +987,13 @@ public:
 class EffectMunch : public EffectCalc {
 private:
     byte count = 0;
-    byte dir = 1;
+    int8_t dir = 1;
     byte flip = 0;
     byte generation = 0;
     byte mic[2];
     byte rand;
     bool flag = false;
+    uint8_t minDimLocal = maxDim > 32 ? 32 : 16;
 
     String setDynCtrl(UIControl*_val) override;
     bool munchRoutine(CRGB *leds, EffectWorker *param);
@@ -971,17 +1016,10 @@ private:
     uint32_t scale_x[NUM_LAYERS];
     uint32_t scale_y[NUM_LAYERS];
     uint8_t  noise[NUM_LAYERS][WIDTH][HEIGHT];
+	uint8_t speedFactor;
+    bool type = false;
 
-    bool noiseRoutine(CRGB *leds, EffectWorker *param);
-    void adjust_gamma(CRGB *leds)
-    {
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-            leds[i].r = dim8_video(leds[i].r);
-            leds[i].g = dim8_video(leds[i].g);
-            leds[i].b = dim8_video(leds[i].b);
-        }
-    }
+	String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1008,12 +1046,11 @@ private:
     uint8_t cnt;
     bool wings = false;
     bool isColored = true;
+	float speedFactor;
+	String setDynCtrl(UIControl*_val) override;
 
-    bool butterflyRoutine(CRGB *leds, EffectWorker *param);
-    void load() override;
 public:
-    //void load() override;
-    virtual String setDynCtrl(UIControl*_val) override;
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1025,10 +1062,7 @@ private:
     uint16_t sLastMillis = 0;
     uint16_t sHue16 = 0;
 
-    bool shadowsRoutine(CRGB *leds, EffectWorker *param);
-
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1041,7 +1075,8 @@ private:
     int8_t patternIdx = -1;
     int8_t lineIdx = 0;
     bool _subpixel = false;
-    uint8_t _speed = 1, _scale = 1;
+    bool _sinMove = false;
+    int8_t _speed = 1, _scale = 1;
     bool dir = false;
     byte csum = 0;
     byte _bri = 255U;
@@ -1093,19 +1128,16 @@ private:
     byte arrow_play_mode_count[6];      // Сколько раз проигрывать полностью каждый режим если вариант 0 - текущий счетчик
     byte arrow_play_mode_count_orig[6]; // Сколько раз проигрывать полностью каждый режим если вариант 0 - исходные настройки
     uint8_t _scale;
-    float speedfactor;
-    bool subpixel;
-    float prevVal[2];
+    float speedFactor;
     void arrowSetupForMode(byte mode, bool change);
     void arrowSetup_mode1();
     void arrowSetup_mode2();
     //void arrowSetup_mode3(;)
     void arrowSetup_mode4();
 
-    bool arrowsRoutine(CRGB *leds, EffectWorker *param);
-    void load() override;
     String setDynCtrl(UIControl*_val) override;
 public:
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1116,14 +1148,14 @@ private:
     uint8_t lastSecond = 99;
     uint16_t speedy;// speed is set dynamically once we've started up
     uint16_t _scale;
-
     byte beat1, beat2 = 0;
     byte balls = 4;
-
     void balls_timer();
     void blur(CRGB *leds);
     bool nballsRoutine(CRGB *leds, EffectWorker *param);
+
     String setDynCtrl(UIControl*_val) override;
+
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1147,8 +1179,6 @@ private:
     Boid boids[count];
     PVector location;   // Location
     String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override;
-    void setspd(const byte _spd) override;
     void setup();
 
 
@@ -1161,7 +1191,6 @@ private:
         force *= strength;                                  // Get force vector --> magnitude * direction
         return force;
     }
-    bool attractRoutine(CRGB *leds, EffectWorker *param);
 
 public:
     EffectAttract() {
@@ -1182,8 +1211,6 @@ private:
     int snakeCount;
     bool subPix = false;
     bool onecolor = false;
-
-    void load() override;
     enum Direction
 {
   UP,
@@ -1225,9 +1252,9 @@ struct Snake
     }
   };
 
-  void shuffleDown(float speedFactor, bool subpix)
+  void shuffleDown(float speedy, bool subpix)
   {
-    internal_counter+=speedFactor*internal_speedf;
+    internal_counter+=speedy*internal_speedf;
 
     if(internal_counter>1.0){
         for (byte i = (byte)SNAKE_LENGTH - 1; i > 0; i--)
@@ -1254,9 +1281,9 @@ struct Snake
     }
   }
 
-  void move(float speedfactor)
+  void move(float speedy)
   {
-    float inc = speedfactor*internal_speedf;
+    float inc = speedy*internal_speedf;
 
     switch (direction)
     {
@@ -1275,14 +1302,13 @@ struct Snake
     }
   }
 
-  void draw(CRGB colors[SNAKE_LENGTH], float speedfactor, int snakenb, bool subpix, bool isDebug=false);
+  void draw(CRGB colors[SNAKE_LENGTH], int snakenb, bool subpix, bool isDebug=false);
 };
 
     Snake snakes[MAX_SNAKES];
-    bool snakeRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 public:
-    //void load();
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1303,6 +1329,7 @@ class EffectNexus: public EffectCalc {
     uint8_t _scale = 1;
     bool randColor = false;
     float windProgress;
+	float speedFactor;
     
 
     void reload();
@@ -1325,9 +1352,9 @@ private:
     float angle = 1.;
     float  counter = 0.;
     CHSV color;
+	float speedFactor;
 
-    bool flowerRoutine(CRGB *leds, EffectWorker *param);
-    //String setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1345,11 +1372,9 @@ private:
     uint8_t speeds = 30;
     bool rotate = false;
 
-    bool DNARoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
 
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1360,13 +1385,14 @@ public:
 // переделака на субпиксель и доработки - kostyamat
 class EffectFire2020 : public EffectCalc {
 private:
-    #define NOISE_HEIGHT  (LED_ROWS * 3U)
-    uint16_t noises[LED_COLS * NOISE_HEIGHT];   //precalculated noise table
-    byte colorfade[LED_ROWS];                   //simple colorfade table for speedup
+    #define NOISE_HEIGHT  (HEIGHT * 3U)
+    uint16_t noises[WIDTH * NOISE_HEIGHT];   //precalculated noise table
+    byte colorfade[HEIGHT];                   //simple colorfade table for speedup
     float a = 0;
     byte _pal = 8;
     byte _scale = 60;
-    bool fire2020Routine(CRGB *leds, EffectWorker *param);
+	float speedFactor;
+
     String setDynCtrl(UIControl*_val) override;
     //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
@@ -1393,12 +1419,9 @@ private:
     //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
     uint8_t snakeColor[MAX_SNAKES];          // тут будет начальный цвет червяка
     uint8_t snakeDirect[MAX_SNAKES];         //тут будет направление червяка
-    byte csum = 0;
+	float speedFactor;
 
-    bool testRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl*_val) override;
-    void setscl(const byte _scl) override; // перегрузка для масштаба
-    //void setspd(const byte _spd) override; // перегрузка для скорости
     void regen();
 
 public:
@@ -1415,7 +1438,7 @@ private:
     bool blurred = false;
     bool revCol = false;
     //bool tiltDirec;
-    float speedfactor;
+    float speedFactor;
     float center = (float)WIDTH / 2.;
 
     typedef struct
@@ -1428,7 +1451,7 @@ private:
 
     void restart_rocket(uint8_t r);
     void reload();
-    bool popcornRoutine(CRGB *leds, EffectWorker *param);
+
     String setDynCtrl(UIControl*_val) override;
     //void setscl(const byte _scl) override; // перегрузка для масштаба
 
@@ -1447,7 +1470,7 @@ class EffectSmokeballs: public EffectCalc {
     uint16_t pos[WAVES_AMOUNT];
     float sSpeed[WAVES_AMOUNT];
     uint8_t maxMin[WAVES_AMOUNT];
-    float speedfactor;
+    float speedFactor;
     uint8_t waveColors[WAVES_AMOUNT];
     void shiftUp();
     void regen();
@@ -1460,19 +1483,27 @@ class EffectSmokeballs: public EffectCalc {
 // ----------- Эффект "Ёлки-Палки"
 // "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
+// RGBPattern (c) ldir https://editor.soulmatelights.com/gallery/810-rgb-pattern1
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
+	const bool glitch = abs((int)WIDTH-(int)HEIGHT) >= minDim/4;
+	const byte density = 50;
     uint8_t Scale = 6;
     uint8_t _scale = 1;
     int16_t offsetX = 0;
     int16_t offsetY = 0;
-    float x[WIDTH];
+    float x;
     uint8_t effId = 1;
     uint8_t hue;
+    int16_t a;
+
+	float speedFactor;
     void cell(CRGB *leds);
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
+    void vals(CRGB *leds);
+    void RGBPattern(CRGB *leds);
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -1494,6 +1525,7 @@ class EffectF_lying: public EffectCalc {
     byte hue = 0;
     uint8_t _blur = 1;
     void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
+	float speedFactor;
     String setDynCtrl(UIControl*_val);
 #ifdef BIGMATRIX
     const float deviator = 2.;
@@ -1524,7 +1556,6 @@ class EffectTLand: public EffectCalc {
     String setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void load() override;
 };
 
 // -------- "LDIRKO Ленд"
@@ -1581,7 +1612,7 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//------------ Эффект "Дождь с ветром" 
+//------------ Эффект "Шторм" 
 // (с) kostyamat 1.12.2020
 #define counts  (WIDTH*3)
 
@@ -1603,6 +1634,7 @@ class EffectWrain: public EffectCalc {
     bool _flash;
     bool randColor = false;
     float windProgress;
+	float speedFactor;
     uint8_t *_noise = (uint8_t *)malloc(WIDTH * cloudHeight);
     uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);  
     uint32_t timer = 0;
@@ -1619,19 +1651,26 @@ class EffectWrain: public EffectCalc {
 };
 
 // ------------- Эффект "Цветные драже"
-#define MAXDOTS 16
+//Simple sand automata
+//fastled 16x16 matrix demo https://editor.soulmatelights.com/gallery/560-sand-automata-16x16
+//Yaroslaw Turbin 14.12.2020
+//https://vk.com/ldirko
+//https://www.reddit.com/user/ldirko/
 class EffectPile : public EffectCalc {
 private:
-  struct dot {float x; float y; uint8_t hue;};
-  struct dot dots[MAXDOTS];
-  float widthPos[WIDTH];
-  bool done = true;
-  float speedfactor = 0.0f;
-  float internal_counter = 0.0f;
+    bool behavior;
+    byte density;
+    byte sc;
+    void randomdot();
+    void updatesand();
+    void randomdel();
+    void falldown();
+  String setDynCtrl(UIControl*_val) override;
+  
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    bool clearrows(bool clear=true);
+    
 };
 
 //-------- по мотивам Эффектов Particle System -------------------------
@@ -1641,7 +1680,7 @@ public:
 //при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
 //ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
 
-// ============= ЭФФЕКТ ФЕЯ ===============
+// ============= ЭФФЕКТ Фея/Источник ===============
 // (c) SottNick
 
 #define trackingOBJECT_MAX_COUNT    (WIDTH * 3)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -1670,13 +1709,15 @@ private:
     float speedFactor;
     byte type = false;
     byte blur;
+    uint8_t _video = 255;
+    uint8_t gain;
 
-    void particlesUpdate2(uint8_t i);
+    void particlesUpdate(uint8_t i);
     void fairyEmit(uint8_t i);
     void fountEmit(uint8_t i);
     bool fairy(CRGB *leds);
     void fount(CRGB *leds);
-    void setscl(const byte _scl) override; // перегрузка для масштаба
+    //void setscl(const byte _scl) override; // перегрузка для масштаба
     String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -1687,10 +1728,14 @@ public:
 // ---------- Эффект "Бульбулятор"
 // "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
 // адаптация и переделка - kostyamat
-#define NUMBER_OF_CIRCLES (NUM_LEDS / 32U)
+#define NUMBER_OF_CIRCLES (NUM_LEDS / 16U)
 class EffectCircles : public EffectCalc {
 private:
     byte color;
+    byte count;
+    float speedFactor;
+    byte _video = 255;
+    byte gain;
     class Circle
     {
     public:
@@ -1701,13 +1746,13 @@ private:
         float bpm = random(0, 255);
 
         void move() {
-            centerX = random(0, LED_COLS-1);
-            centerY = random(0, LED_ROWS-1);
+            centerX = random(0, WIDTH-1);
+            centerY = random(0, HEIGHT-1);
         }
         
         void reset() {
-            centerX = random(0, LED_COLS-1);
-            centerY = random(0, LED_ROWS-1);
+            centerX = random(0, WIDTH-1);
+            centerY = random(0, HEIGHT-1);
             hue = random(0, 255);
         }
 
@@ -1720,6 +1765,7 @@ private:
     Circle circles[NUMBER_OF_CIRCLES] = {};
 
     void drawCircle(CRGB *leds, Circle circle);
+    String setDynCtrl(UIControl*_val) override;
 
 public:
     void load() override;
@@ -1741,7 +1787,7 @@ private:
     float sparksFade[sparksNum];
     uint8_t gPos[2];
 
-    bool centerRun = false;
+    bool centerRun = true;
     byte period = 10;
     byte _x = WIDTH/2;
     byte _y = HEIGHT/2;
@@ -1749,7 +1795,6 @@ private:
 
     void regen(byte id);
     void phisics(byte id);
-    void setspd(const byte _spd) override;
     String setDynCtrl(UIControl*_val) override;
 
 
@@ -1776,8 +1821,8 @@ private:
 
     float speedFactor;
     void fill_circle(float cx, float cy, float radius, CRGB col);
-    void setspd(const byte _spd) override;
-    //String setDynCtrl(UIControl*_val) override;
+    //void setspd(const byte _spd) override;
+    String setDynCtrl(UIControl*_val) override;
 
 
 public:
@@ -1805,7 +1850,7 @@ private:
     bool track = random8(0,2);  // будет ли трек игрока
     uint8_t buttons;
 
-    timerMinim gameTimer = 200;         // Таймер скорости игр
+    unsigned long timer = millis(), gameTimer = 200;         // Таймер скорости игр
 
     void newGameMaze();
     void buttonsTickMaze();
@@ -1823,8 +1868,8 @@ private:
         return false;
     }
 
-    //String setDynCtrl(UIControl*_val) override;
-    void setspd(const byte _spd) override; // перегрузка для скорости
+    String setDynCtrl(UIControl*_val) override;
+    //void setspd(const byte _spd) override; // перегрузка для скорости
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 
@@ -1862,9 +1907,11 @@ private:
     byte pal;
     uint16_t _scale;
     byte flag;
+	byte _speed;
 
-    void setscl(const byte _scl) override;
-    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
+    //void setscl(const byte _scl) override;
+    String setDynCtrl(UIControl*_val) override;
+    void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
     void palettesload() override;
 
 public:
@@ -1872,7 +1919,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// --------- Эффект "Гонщик"
+// --------- Эффект "Космо-Гонщик"
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 class EffectRacer: public EffectCalc {
 private:
@@ -1894,13 +1941,315 @@ private:
 
     void aimChange();
     void drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color);
-    void setspd(const byte _spd) override;
+    //void setspd(const byte _spd) override;
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------  Эффект "Дым"
+// https://wokwi.com/arduino/projects/286246948457939464
+// (c) ldir + sutaburosu
+class EffectSmoker: public EffectCalc {
+private:
+    float timer;
+    byte bump[NUM_LEDS];
+    byte sat;
+	float speedFactor;
+
+    void generatebump ();
+    void Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty);
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ----------------- Эффект "Магма"
+// (c) Сотнег (SottNick) 2021
+// адаптация и доводка до ума - kostyamat
+class EffectMagma: public EffectCalc {
+private:
+    //uint16_t ff_x;
+    float ff_y, ff_z;                         // большие счётчики
+    //control magma bursts
+    const byte deltaValue = 6U; // 2-12 
+    const byte deltaHue = 8U; // высота языков пламени должна уменьшаться не так быстро, как ширина
+    const float Gravity = 0.1;
+    uint8_t step, ObjectNUM = WIDTH; 
+    uint8_t shiftHue[HEIGHT];
+    float trackingObjectPosX[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectPosY[enlargedOBJECT_MAX_COUNT];
+    uint8_t trackingObjectHue[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectSpeedX[enlargedOBJECT_MAX_COUNT];
+    float trackingObjectShift[enlargedOBJECT_MAX_COUNT];
+    float speedFactor;
+
+    void palettesload();
+    void regen();
+    void LeapersMove_leaper(uint8_t l);
+    void LeapersRestart_leaper(uint8_t l);
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ------------- Эффект "Флаги"
+// (c) Stepko + kostyamat
+// 17.03.21
+// https://editor.soulmatelights.com/gallery/739-flags
+class EffectFlags: public EffectCalc {
+private:
+    const float DEVIATOR = 512. / WIDTH;
+    float counter;
+    uint8_t flag = 0;
+    uint8_t _flag;
+    uint8_t count;
+    uint8_t _speed; // 1 - 16
+    const uint8_t CHANGE_FLAG = 30; // >= 10 Autochange
+
+    uint8_t thisVal;
+    uint8_t thisMax;
+
+    //Germany
+    void germany(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (j < thisMax - HEIGHT / 4) ? CHSV(68, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 255, thisVal)
+            : CHSV(0, 0, thisVal / 2.5);
+        }
+    }
+
+    //Ukraine
+    void ukraine(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (j < thisMax) ? CHSV(50, 255, thisVal) : CHSV(150, 255, thisVal);
+        }
+    }
+
+    //Belarus
+    void belarus(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (j < thisMax - HEIGHT / 4) ? CHSV(0, 224, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 0, thisVal)
+            : CHSV(0, 224, thisVal);
+        }
+    }
+
+    //Russia
+    void russia(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (j < thisMax - HEIGHT / 4) ? CHSV(0, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(150, 255, thisVal)
+            : CHSV(0, 0, thisVal);
+        }
+    }
+
+    //Poland
+    void poland(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (j < thisMax + 1) ? CHSV(248, 214, (float)thisVal * 0.83) : CHSV(25, 3, (float)thisVal * 0.91);
+        }
+    }
+
+    //The USA
+    void usa(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) +=
+            ((i <= WIDTH / 2) && (j + thisMax > HEIGHT - 1 + HEIGHT / 16)) ? 
+            ((i % 2 && ((int)j - HEIGHT / 16 + thisMax) % 2) ? 
+            CHSV(160, 0, thisVal) : CHSV(160, 255, thisVal)) 
+            : ((j + 1 + thisMax) % 6 < 3 ? CHSV(0, 0, thisVal) : CHSV(0, 255, thisVal));
+        }
+    }
+
+    //Italy
+    void italy(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (i < WIDTH / 3) ? CHSV(90, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
+            : CHSV(0, 255, thisVal);
+        }
+    }
+
+    //France
+    void france(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (i < WIDTH / 3) ? CHSV(160, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
+            : CHSV(0, 255, thisVal);
+        }
+    }
+
+    //UK
+    void uk(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (
+                (
+                    (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -2) && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2))
+                )
+                    ||
+                (
+                    (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ( (((int)WIDTH - 1 - i - ((int)j + thisMax - (int)(HEIGHT * 2 - WIDTH) / 2) > -2) && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) )
+                )
+            || 
+            (WIDTH / 2 - i == 0) || (WIDTH / 2 - 1 - i == 0) 
+            || 
+            ((HEIGHT - (j + thisMax)) == 0) || ((HEIGHT - 1 - (j + thisMax)) == 0)) ? 
+            CHSV(0, 255, thisVal) 
+            : 
+            (((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -4) 
+            && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) 
+            || 
+            (((int)WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -4) 
+            && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) 
+            || (WIDTH / 2 + 1 - i == 0) || (WIDTH / 2 - 2 - i == 0) 
+            || (HEIGHT + 1 - (j + thisMax) == 0) || (HEIGHT - 2 - (int)(j + thisMax) == 0)) ? 
+            CHSV(0, 0, thisVal)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  : CHSV(150, 255, thisVal);
+        }
+    }
+
+    //Spain
+    void spain(uint8_t i)
+    {
+        for (uint8_t j = 0; j < HEIGHT; j++)
+        {
+            EffectMath::getPixel(i, j) += 
+            (j < thisMax - HEIGHT / 3) ? 
+            CHSV(250, 224, (float)thisVal * 0.68) : (j < thisMax + HEIGHT / 3) ? CHSV(64, 255, (float)thisVal * 0.98)
+            : CHSV(250, 224, (float)thisVal * 0.68);
+        }
+    }
+
+
+    void changeFlags();
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load () override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// --------------------- Эффект "Звездный Десант"
+// Starship Troopers https://editor.soulmatelights.com/gallery/839-starship-troopers
+// Based on (c) stepko`s codes https://editor.soulmatelights.com/gallery/639-space-ships
+// reworked (c) kostyamat (subpixel, shift speed control, etc) 08.04.2021
+class EffectStarShips: public EffectCalc {
+private:
+    byte _scale = 8;
+    const byte DIR_CHARGE = 2; // Chance to change direction 1-5
+    uint16_t chance = 4096;
+
+    byte dir = 3;
+    byte _dir;
+    byte count = 0;
+    uint8_t _fade;
+
+	float speedFactor;
+
+    void draw(float x, float y, CRGB color);
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
+#ifdef MIC_EFFECTS
+/* -------------- эффект "VU-meter"
+    (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
+    reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
+    adopted for FireLamp_jeeUI by kostyamat, kDn
+    reworked and updated (c) kostyamat 24.04.2021
+*/
+class EffectVU: public EffectCalc {
+private:
+    CRGBPalette16 gradPal[5] = { 
+    purple_gp,    rainbowsherbet_gp, 
+    redyellow_gp, Colorfull_gp, es_ocean_breeze_068_gp
+    };
+    uint8_t NUM_BANDS = WIDTH;
+    uint8_t BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
+    uint8_t calcArray = 1; // уменьшение частоты пересчета массива
+    uint8_t colorTimer = 0;
+    const uint8_t colorDev = 256/TOP;
+    // Sampling and FFT stuff
+    float peak[WIDTH];              // The length of these arrays must be >= NUM_BANDS
+    float oldBarHeights[WIDTH];
+    float bandValues[WIDTH];
+
+    float samp_freq;
+    double last_freq = 0;
+    uint8_t last_min_peak, last_max_peak;
+    float maxVal;
+    float threshold;
+    byte tickCounter;
+    byte colorType;
+
+    float amplitude = 1.0;
+    int effId = 0;
+    bool type = false;
+    bool colorShifting = false;
+    const float speedFactorVertical = (float)HEIGHT / 16;
+    bool averaging = true;
+
+    String setDynCtrl(UIControl*_val) override;
+    void horizontalColoredBars(uint8_t band, float barHeight, uint8_t type = 0, uint8_t colorShift = 0);
+    void paletteBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift = 0);
+    void verticalColoredBars(uint8_t band, float barHeight, uint8_t type = 0, uint8_t colorShift = 0);
+    void centerBars(uint8_t band, float barHeight, CRGBPalette16& palette, uint8_t colorShift = 0);
+    void whitePeak(uint8_t band);
+    void outrunPeak(uint8_t band, CRGBPalette16& palette, uint8_t colorShift = 0);
+    void waterfall(uint8_t band, uint8_t barHeight);
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    void load() override;
+};
+#endif
+
+// ----------- Эффект "Огонь 2021"
+// https://editor.soulmatelights.com/gallery/546-fire
+// (c) Stepko 17.06.21
+class EffectFire2021 : public EffectCalc {
+private:
+    byte _pal = 8;
+    byte _scale = 32;
+	byte speedFactor;
+    uint32_t t;
+
+    String setDynCtrl(UIControl*_val) override;
+    void palettesload() override;
 
 public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 // --------- конец секции эффектов
-
 
 #endif

@@ -36,16 +36,18 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "main.h"
+#include "effectmath.h"
+#include "fontHEX.h"
 
 extern LAMP myLamp; // Объект лампы
 
 void LAMP::lamp_init(const uint16_t curlimit)
 {
   setcurLimit(curlimit);
-  // Такую коррекцию стоит оставить, с ней можно получить хотя бы более менее жёлтый цвет. Иначе он всегда зеленит (коррекцию нашел на просторах, люди рекомендуют)
+
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
   //FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalPixelString);
-  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection(0xFFE08C)*/; // цветокоррекция нафиг не нужна, проверяется на минимальной яркости в белой лампе
+  FastLED.addLeds<WS2812B, LAMP_PIN, COLOR_ORDER>(getUnsafeLedsArray(), NUM_LEDS);
 
   brightness(0, false);                          // начинаем с полностью потушеной матрицы 1-й яркости
   if (curlimit > 0){
@@ -111,51 +113,53 @@ void LAMP::handle()
   }
 #endif
 
-// Deprecated
-// #if defined(LAMP_DEBUG) && DEBUG_TELNET_OUTPUT
-//   handleTelnetClient();
-// #endif
-
   // все что ниже, будет выполняться раз в 0.999 секундy
   static unsigned long wait_handlers;
   if (wait_handlers + 999U > millis())
       return;
   wait_handlers = millis();
-#ifdef LAMP_DEBUG
+
   EVERY_N_SECONDS(15){
-    // fps counter
-    LOG(printf_P, PSTR("Eff:%d FPS: %u\n"), effects.getEn(), avgfps);
-
+    lampState.freeHeap = ESP.getFreeHeap();
 #ifdef ESP8266
-    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), ESP.getFreeHeap(), ESP.getHeapFragmentation(), embui.timeProcessor.getFormattedShortTime().c_str());
+    lampState.HeapFragmentation = ESP.getHeapFragmentation();
+#else
+    lampState.HeapFragmentation = 0;
 #endif
+    lampState.rssi = WiFi.RSSI();
 
-#ifdef ESP32
-    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), ESP.getFreeHeap(), embui.timeProcessor.getFormattedShortTime().c_str());
+#ifdef LAMP_DEBUG
+    // fps counter
+    LOG(printf_P, PSTR("Eff:%d, FPS: %u, FastLED FPS: %u\n"), effects.getEn(), avgfps, FastLED.getFPS());
+#ifdef ESP8266
+    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), lampState.freeHeap, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
+#else
+    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), lampState.freeHeap, embui.timeProcessor.getFormattedShortTime().c_str());
 #endif
-
+#endif
   }
+#ifdef LAMP_DEBUG
   avgfps = (avgfps+fps) / 2;
-  fps = 0; // сброс FPS раз в секунду
 #endif
+  fps = 0; // сброс FPS раз в секунду
+
 
   // будильник обрабатываем раз в секунду
   alarmWorker();
 
-  if(iflags.isEffectsDisabledUntilText && !iflags.isStringPrinting) {
+  if(lampState.isEffectsDisabledUntilText && !lampState.isStringPrinting) {
     setBrightness(0,false,false); // напечатали, можно гасить матрицу :)
-    iflags.isEffectsDisabledUntilText = false;
+    lampState.isEffectsDisabledUntilText = false;
   }
 
   // отложенное включение/выключение
-  if(iflags.isOffAfterText && !iflags.isStringPrinting) {
-    iflags.isOffAfterText = false;
+  if(lampState.isOffAfterText && !lampState.isStringPrinting) {
     changePower(false);
+    remote_action(RA::RA_OFF, NULL);
   }
 
   newYearMessageHandle();
-  periodicTimeHandle();
-  ConfigSaveCheck(); // для взведенного таймера автосохранения настроек
+  //ConfigSaveCheck(); // для взведенного таймера автосохранения настроек
 
 #ifdef OTA
   otaManager.HandleOtaUpdate();                       // ожидание и обработка команды на обновление прошивки по воздуху
@@ -176,19 +180,19 @@ void LAMP::alarmWorker(){
     static time_t startmillis;
     
     if (mode != LAMPMODE::MODE_ALARMCLOCK){
-      iflags.dawnFlag = false;
+      lampState.dawnFlag = false;
       return;
     }
 
     // проверка рассвета, первый вход в функцию
-    if (!iflags.dawnFlag){
+    if (!lampState.dawnFlag){
       startmillis = millis();
       memset(dawnColorMinus,0,sizeof(dawnColorMinus));
       dawnCounter = 0;
       FastLED.clear();
       brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...getAlarmP()*60 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...curAlarm.alarmP*60 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
         map(dawnPosition, 0, 255, 255, 170),
@@ -196,7 +200,7 @@ void LAMP::alarmWorker(){
       );
     }
 
-    if (((millis() - startmillis) / 1000 > (((uint32_t)(getAlarmP()) + getAlarmT()) * 60UL+30U))) {
+    if (((millis() - startmillis) / 1000 > (((uint32_t)(curAlarm.alarmP) + curAlarm.alarmT) * 60UL+30U))) {
       // рассвет закончился
       stopAlarm();
       return;
@@ -205,11 +209,17 @@ void LAMP::alarmWorker(){
     // проверка рассвета
     EVERY_N_SECONDS(10){
       // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,getAlarmP()*60,0,255); // 0...300 секунд приведенные к 0...255
+      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...300 секунд приведенные к 0...255
       dawnPosition = constrain(dawnPosition, 0, 255);
 
 #ifdef MP3PLAYER
-      mp3->setTempVolume(map(dawnPosition,0,255,1,(flags.limitAlarmVolume ? mp3->getVolume() : 30))); // запуск звука будильника
+      //LOG(println, dawnPosition);
+      if(curAlarm.isStartSnd)
+        mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // наростание громкости
+      else if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
+        mp3->setAlarm(true);
+        mp3->StartAlarmSoundAtVol(curAlarm.type, mp3->getVolume()); // запуск звука будильника
+      }
 #endif
       
       dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
@@ -227,44 +237,37 @@ void LAMP::alarmWorker(){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-        if(getAlarmMessage()!=nullptr && getAlarmMessage()[0])
-          sendStringToLamp(getAlarmMessage(), letterColor, true);
-        else {
+        if(!curAlarm.msg.isEmpty()) {
+            sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
+        } else {
 #ifdef PRINT_ALARM_TIME
-          sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
+#ifdef MP3PLAYER
+          if(mp3->isAlarm()) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
+#endif
+            sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
         }
       }
     }
 
     for (uint16_t i = 0U; i < NUM_LEDS; i++) {
-        leds[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
+        getUnsafeLedsArray()[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
     }
-    iflags.dawnFlag = true;
+    lampState.dawnFlag = true;
 }
 
 void LAMP::effectsTick(){
-  /*
-   * Здесь имеет место странная специфика тикера,
-   * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
-   * функция все равно будет запущена в loop(), она просто ждет своей очереди
-   */
-  _begin = millis();
+  uint32_t _begin = millis();
 
-  if (_effectsTicker.active() && !isAlarm()) { // && !isWarning()
-    //if(millis()<5000) return; // затычка до выяснения
-    if(!iflags.isEffectsDisabledUntilText){
+  if (effects.worker && (flags.ONflag || fader) && !isAlarm()) {
+    if(!lampState.isEffectsDisabledUntilText){
       if (!ledsbuff.empty()) {
-        std::copy( ledsbuff.begin(), ledsbuff.end(), leds );
-        if(!iflags.isStringPrinting){ // чистить буфер только если не выводится строка, иначе держать его
-          ledsbuff.resize(0);
-          ledsbuff.shrink_to_fit();
-        }
+        std::copy( ledsbuff.begin(), ledsbuff.end(), getUnsafeLedsArray() );
       }
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
       if(effects.worker ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
         ledsbuff.resize(NUM_LEDS);
-        std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+        std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
       }
     }
   }
@@ -275,7 +278,7 @@ void LAMP::effectsTick(){
       mi = drawbuff[i].r > drawbuff[i].g ? drawbuff[i].r : drawbuff[i].g;
       mi = mi > drawbuff[i].b ? mi : drawbuff[i].b;
       if(mi>=5) {
-        leds[i] = drawbuff[i];
+        getUnsafeLedsArray()[i] = drawbuff[i];
       } else if(mi && mi<5) {
         EffectMath::setLedsNscale8(i, map(mi,1,4,128,10)); // 5 градаций прозрачности, где 0 - полностью прозрачный
       }
@@ -283,10 +286,10 @@ void LAMP::effectsTick(){
   }
 
   if(isWarning()) {
-    warning2Helper(); // вывод предупреждения
+    warningHelper(); // вывод предупреждения
   }
 
-  if (isAlarm() || iflags.isStringPrinting) { // isWarning() || 
+  if (isAlarm() || lampState.isStringPrinting) { // isWarning() || 
     doPrintStringToLamp(); // обработчик печати строки
   }
 
@@ -294,20 +297,18 @@ void LAMP::effectsTick(){
   GaugeMix();
 #endif
 
-  if (isWarning() || isAlarm() || iflags.isEffectsDisabledUntilText || (effects.worker ? effects.worker->status() : 1) || iflags.isStringPrinting) {
+  if (isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || fader || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
-#ifdef ESP8266
-    _effectsTicker.once_ms_scheduled(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
-#elif defined ESP32
-    _effectsTicker.once_ms(LED_SHOW_DELAY, std::bind(&LAMP::frameShow, this, _begin));
-#endif
+    effectsTimer(T_FRAME_ENABLE, _begin);
+
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
-#ifdef ESP8266
-    _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
-#elif defined ESP32
-    _effectsTicker.once_ms(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
-#endif
+    effectsTimer(T_ENABLE);
+  }
+  
+  if(!lampState.isStringPrinting && !flags.ONflag && !fader){ // чистить буфер только если не выводится строка, иначе держать его
+    ledsbuff.resize(0);
+    ledsbuff.shrink_to_fit();
   }
 }
 
@@ -316,25 +317,16 @@ void LAMP::effectsTick(){
  * и перезапуск эффект-процессора
  */
 void LAMP::frameShow(const uint32_t ticktime){
-  /*
-   * Здесь имеет место странная специфика тикера,
-   * если где-то в коде сделали детач, но таймер уже успел к тому времени "выстрелить"
-   * функция все равно будет запущена в loop(), она просто ждет своей очереди
-   */
+  if ( !fader && !isLampOn() && !isAlarm() ) return;
+
   FastLED.show();
-  if (!_effectsTicker.active() || (!_brt && !isLampOn() && !isAlarm()) ) return;
 
   // откладываем пересчет эффекта на время для желаемого FPS, либо
   // на минимальный интервал в следующем loop()
   int32_t delay = (ticktime + EFFECTS_RUN_TIMER) - millis();
   if (delay < LED_SHOW_DELAY || !(effects.worker ? effects.worker->status() : 1)) delay = LED_SHOW_DELAY;
 
-#ifdef ESP8266
-  _effectsTicker.once_ms_scheduled(delay, std::bind(&LAMP::effectsTick, this));
-#elif defined ESP32
-  _effectsTicker.once_ms(delay, std::bind(&LAMP::effectsTick, this));
-#endif
-
+  effectsTimer(T_ENABLE, delay);
   ++fps;
 }
 
@@ -350,7 +342,7 @@ void LAMP::frameShow(const uint32_t ticktime){
       if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
 #if (VERTGAUGE==1)
-      byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+/*      byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
       for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
         for (byte y = 0; y < HEIGHT ; y++) {
           if (ind > y)
@@ -358,6 +350,10 @@ void LAMP::frameShow(const uint32_t ticktime){
           else
             EffectMath::drawPixelXY(x, y,  0);
         }
+      }*/
+      for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
+        EffectMath::drawLine(x, 0, x, HEIGHT, 0);
+        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), CHSV(gauge_hue, 255, 255));
       }
 #else
       byte ind = (byte)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
@@ -373,19 +369,19 @@ void LAMP::frameShow(const uint32_t ticktime){
     }
 #endif
 
-LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0), _fadeTicker(), _reservedTicker()
+LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef OTA
-    , otaManager((void (*)(CRGB, uint32_t, uint16_t))(&showWarning))
+    , otaManager()
 #endif
     , effects(&lampState)
     {
-      iflags.isStringPrinting = false; // печатается ли прямо сейчас строка?
-      iflags.isEffectsDisabledUntilText = false;
-      iflags.isOffAfterText = false;
-      iflags.dawnFlag = false; // флаг устанавливается будильником "рассвет"
+      lampState.isStringPrinting = false; // печатается ли прямо сейчас строка?
+      lampState.isEffectsDisabledUntilText = false;
+      lampState.isOffAfterText = false;
+      lampState.dawnFlag = false; // флаг устанавливается будильником "рассвет"
 //#ifdef MIC_EFFECTS
-      iflags.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
-      iflags.micAnalyseDivider = 1; // анализ каждый раз
+      lampState.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
+      lampState.micAnalyseDivider = 1; // анализ каждый раз
 //#endif
 
       flags.MIRR_V = false; // отзрекаливание по V
@@ -402,6 +398,7 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.dRand = false;
       flags.isShowSysMenu = false;
       flags.isOnMP3 = false;
+      flags.isBtn = true;
       flags.showName = false;
       flags.playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
       flags.playName = false; // воспроизводить имя?
@@ -411,15 +408,15 @@ LAMP::LAMP() : docArrMessages(512), tmConfigSaveTime(0), tmStringStepTime(DEFAUL
       flags.playMP3 = false;
       flags.limitAlarmVolume = false;
       flags.isDraw = false;
-
-      _brt =0;
-      _steps = 0;
-      _brtincrement = 0;
+      flags.tm24 = true;
+      flags.tmZero = false;
 
 #ifdef VERTGAUGE
       gauge_time = millis();
 #endif
       lampState.flags = 0; // сборосить все флаги состояния
+      lampState.speedfactor = 1.0; // дефолтное значение
+      lampState.brightness = 127;
       //lamp_init(); // инициализация и настройка лампы (убрано, будет настройка снаружи)
     }
 
@@ -440,28 +437,65 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     if(mode == LAMPMODE::MODE_DEMO)
       demoTimer(T_ENABLE);
   } else  {
-    fadelight(0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE));  // гасим эффект-процессор
+    if(flags.isFaderON && !lampState.isOffAfterText)
+      fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
+    else {
+      brightness(0);
+      effectsTimer(SCHEDULER::T_DISABLE);
+    }
+    lampState.isOffAfterText = false;
+    lampState.isStringPrinting = false;
     demoTimer(T_DISABLE);     // гасим Демо-таймер
   }
 
+  Task *_t = new Task(flags.isFaderON && !flags.ONflag ? 5*TASK_SECOND : 50, TASK_ONCE, // для выключения - отложенное переключение мосфета 5 секунд
+    [this](){
 #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
   digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
 #endif
+    TASK_RECYCLE; },
+    &ts, false);
+  _t->enableDelayed();
 
-  if (curLimit > 0){
+// #if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)          // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
+//   digitalWrite(MOSFET_PIN, (flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL));
+// #endif
+
+#ifdef DS18B20
+#ifdef SHOWSYSCONFIG
+    // восстанавливаем значение тока после включения. Так как значение 0 не работает в ограничителе тока по перегреву, 
+    // то если ограничение тока установлено в 0, устанвливаем вместо него рассчетный максимум в 15.36А на 256 диодов (бред конечно, но нужно же хоть какое-то значение больше 0).
+    setcurLimit(embui.param(FPSTR(TCONST_0098)).toInt() == 0 ? (NUM_LEDS * 60) : embui.param(FPSTR(TCONST_0098)).toInt());
+#else
+    setcurLimit(CURRENT_LIMIT == 0U ? (NUM_LEDS * 60) : CURRENT_LIMIT);
+#endif
+#endif
     FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
-  }
 }
 
 void LAMP::startAlarm(char *value){
+  DynamicJsonDocument doc(1024);
+  String buf = value;
+  buf.replace("'","\"");
+  deserializeJson(doc,buf);
+  curAlarm.alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : getAlarmP();
+  curAlarm.alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : getAlarmT();
+  curAlarm.msg = doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : String("");
+  curAlarm.isLimitVol = doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)].as<String>()=="1" : getLampSettings().limitAlarmVolume;
+  curAlarm.isStartSnd = doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)].as<String>()=="1" : true;
+  curAlarm.type = (ALARM_SOUND_TYPE)(doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)].as<uint8_t>() : getLampSettings().alarmSound);
+
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   demoTimer(T_DISABLE);     // гасим Демо-таймер
   effectsTimer(T_ENABLE);
 #ifdef MP3PLAYER
-  mp3->setAlarm(true);
-  mp3->StartAlarmSound((ALARM_SOUND_TYPE)myLamp.getLampSettings().alarmSound); // запуск звука будильника
-  setAlarmMessage(value);
+  if(curAlarm.isStartSnd){
+    mp3->setAlarm(true);
+    mp3->StartAlarmSoundAtVol(curAlarm.type, 1); // запуск звука будильника c минимальной громкости
+  } else {
+    mp3->setAlarm(false); // здесь будет стоп музыки
+  }
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -474,15 +508,19 @@ void LAMP::startAlarm(char *value){
 }
 
 void LAMP::stopAlarm(){
-  iflags.dawnFlag = false;
+  lampState.dawnFlag = false;
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
 
-  myLamp.setBrightness(myLamp.getNormalizedLampBrightness(), false, false);
+  setBrightness(getNormalizedLampBrightness(), false, false);
   mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
 #ifdef MP3PLAYER
-  mp3->StopAndRestoreVolume(); // восстановить уровень громкости
   mp3->setAlarm(false);
-  setAlarmMessage(); // очистить сообщение выводимое на лампу в будильнике
+  Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
+    mp3->RestoreVolume(); // восстановить уровень громкости
+    TASK_RECYCLE;
+  });
+  _t->enableDelayed();
+  curAlarm.clear(); // очистить сообщение выводимое на лампу в будильнике
 #endif
 
 #if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
@@ -509,20 +547,23 @@ void LAMP::stopAlarm(){
 void LAMP::startDemoMode(byte tmout)
 {
   LOG(println,F("Demo mode"));
-  demoTimer(T_ENABLE, tmout);
   if(mode == LAMPMODE::MODE_DEMO) return;
   
   storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   mode = LAMPMODE::MODE_DEMO;
-  randomSeed(millis());
-  remote_action(RA::RA_DEMO_NEXT, NULL);
-  myLamp.sendStringToLamp(String(PSTR("- Demo ON -")).c_str(), CRGB::Green);
+  if(isLampOn()){
+    randomSeed(millis());
+    remote_action(RA::RA_DEMO_NEXT, NULL);
+    demoTimer(T_ENABLE, tmout);
+  }
+  sendString(String(PSTR("- Demo ON -")).c_str(), CRGB::Green, false);
 }
 
 void LAMP::storeEffect()
 {
   storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   storedBright = getLampBrightness();
+  lampState.isMicOn = false;
   LOG(printf_P, PSTR("Store: %d,%d\n"),storedEffect,storedBright);
 }
 
@@ -531,21 +572,21 @@ void LAMP::restoreStored()
   LOG(printf_P, PSTR("Restore: %d,%d\n"),storedEffect,storedBright);
   if(storedBright)
     setLampBrightness(storedBright);
+  lampState.isMicOn = flags.isMicOn;
   if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
-      remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL);
-      //effects.directMoveBy(storedEffect);
-    }));
+    Task *_t = new Task(3 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL); TASK_RECYCLE; }, &ts, false);
+    _t->enableDelayed();
   } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    _reservedTicker.once(3,std::bind([this]{ // отсрочка возврата на 3 секунды, чтобы фейдер завершил работу
-      remote_action(RA::RA_EFF_RAND, NULL);
-    }));
+    Task *_t = new Task(3 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFF_RAND, NULL); TASK_RECYCLE; }, &ts, false);
+    _t->enableDelayed();
   }
 }
 
-void LAMP::startNormalMode()
+void LAMP::startNormalMode(bool forceOff)
 {
   LOG(println,F("Normal mode"));
+  if(forceOff)
+    flags.ONflag=false;
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
   restoreStored();
@@ -560,7 +601,7 @@ void LAMP::startOTAUpdate()
   effects.directMoveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();
   changePower(true);
-  sendStringToLamp(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
+  sendString(String(PSTR("- OTA UPDATE ON -")).c_str(), CRGB::Green);
   otaManager.startOtaUpdate();
 }
 #endif
@@ -577,6 +618,7 @@ bool LAMP::fillStringManual(const char* text,  const CRGB &letterColor, bool sto
 
   if (!text || !strlen(text))
   {
+    offset = (flags.MIRR_V ? 0 : WIDTH);
     return true;
   }
 
@@ -669,12 +711,14 @@ void LAMP::drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CR
           if(!isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
           else
-            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            //EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && lampState.warnType==2) ? 0 : (isWarning() && lampState.warnType==1) ? 255 : getBFade());
+            EffectMath::getPixel(offset + i, txtOffset + j).fadeToBlackBy((isWarning() && lampState.warnType==2) ? 0 : (isWarning() && lampState.warnType==1) ? 255 : getBFade());
         } else {
           if(isInverse)
             EffectMath::drawPixelXY(offset + i, txtOffset + j, letterColor);
           else
-            EffectMath::setLedsfadeToBlackBy(this->getPixelNumber(offset + i, txtOffset + j), (isWarning() && iflags.warnType==2) ? 0 : (isWarning() && iflags.warnType==1) ? 255 : getBFade());
+            //EffectMath::setLedsfadeToBlackBy(getPixelNumber(offset + i, txtOffset + j), (isWarning() && lampState.warnType==2) ? 0 : (isWarning() && lampState.warnType==1) ? 255 : getBFade());
+            EffectMath::getPixel(offset + i, txtOffset + j).fadeToBlackBy((isWarning() && lampState.warnType==2) ? 0 : (isWarning() && lampState.warnType==1) ? 255 : getBFade());
         }
       }
     }
@@ -727,46 +771,88 @@ uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // �
   return 0;
 }
 
-void LAMP::sendString(const char* text, const CRGB &letterColor){
-  if (!isLampOn()){
+void LAMP::sendString(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue){
+  if (!isLampOn() && forcePrint){
       disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
-      setBrightness(2, false, false); // выводить будем минимальной яркостью в 2 пункта
-      sendStringToLamp(text, letterColor, true);
+      setBrightness(OFF_BRIGHTNESS, false, false); // выводить будем минимальной яркостью в OFF_BRIGHTNESS пункта
+      sendStringToLamp(text, letterColor, forcePrint, clearQueue);
   } else {
-      sendStringToLamp(text, letterColor);
+      sendStringToLamp(text, letterColor, forcePrint, clearQueue);
   }
 }
 
-void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, int8_t textOffset, int16_t fixedPos)
+String &LAMP::prepareText(String &source){
+  source.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
+  source.replace(F("%IP"), WiFi.localIP().toString());
+  source.replace(F("%EN"), effects.getEffectName());
+  const tm *tm = localtime(embui.timeProcessor.now());
+  char buffer[11]; //"xx.xx.xxxx"
+  sprintf_P(buffer,PSTR("%02d.%02d.%04d"),tm->tm_mday,tm->tm_mon+1,tm->tm_year+TM_BASE_YEAR);
+  source.replace(F("%DT"), buffer);
+#ifdef LAMP_DEBUG  
+  if(!source.isEmpty() && effects.getCurrent()!=EFF_ENUM::EFF_TIME && !isWarning()) // спам эффекта часы и предупреждений убираем костыльным способом :)
+    LOG(println, source.c_str()); // вывести в лог строку, которая после преобразований получилась
+#endif
+  return source;  
+}
+
+void LAMP::sendStringToLampDirect(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
+{
+    String storage = text;
+    prepareText(storage);
+    doPrintStringToLamp(storage.c_str(), letterColor, textOffset, fixedPos); // отправляем
+}
+
+void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
 {
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
   if(textOffset==-128) textOffset=this->txtOffset;
 
   if(text==nullptr){ // текст пустой
-    if(!iflags.isStringPrinting){ // ничего сейчас не печатается
-      if(docArrMessages.isNull()){ // массив пустой
+    if(!lampState.isStringPrinting){ // ничего сейчас не печатается
+      if(!docArrMessages){ // массив пустой
         return; // на выход
       }
       else { // есть что печатать
-        JsonArray arr = docArrMessages.as<JsonArray>(); // используем имеющийся
+        JsonArray arr = (*docArrMessages).as<JsonArray>(); // используем имеющийся
         JsonObject var=arr[0]; // извлекаем очередной
-        doPrintStringToLamp(var[F("s")], (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
+        if(!var.isNull()){
+          String storage = var[F("s")];
+          prepareText(storage);
+          doPrintStringToLamp(storage.c_str(), (var[F("c")].as<unsigned long>()), (var[F("o")].as<int>()), (var[F("f")].as<int>())); // отправляем
 #ifdef MP3PLAYER
-        String tmpStr = var[F("s")];
-        if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-          mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
+          String tmpStr = var[F("s")];
+          if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
+            mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
-        arr.remove(0); // удаляем отправленный
+        }
+        if(arr.size()>0)
+          arr.remove(0); // удаляем отправленный
+        if(!arr.size()){ // очередь опустела, освобождаем массив
+          delete docArrMessages;
+          docArrMessages = nullptr;
+        }
       }
     } else {
         // текст на входе пустой, идет печать
         return; // на выход
     }
   } else { // текст не пустой
-    if(!iflags.isStringPrinting){ // ничего сейчас не печатается
-      doPrintStringToLamp(text, letterColor, textOffset, fixedPos); // отправляем
+    if(clearQueue){
+      LOG(println, F("Clear message queue"));
+      if(docArrMessages){ // очистить очередь, освободить память
+          delete docArrMessages;
+          docArrMessages = nullptr;
+      }
+      lampState.isStringPrinting = false; // сбросить текущий вывод строки
+    }
+
+    if(!lampState.isStringPrinting){ // ничего сейчас не печатается
+      String storage = text;
+      prepareText(storage);
+      doPrintStringToLamp(storage.c_str(), letterColor, textOffset, fixedPos); // отправляем
 #ifdef MP3PLAYER
       String tmpStr = text;
       if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
@@ -775,10 +861,25 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
 
-      if(!docArrMessages.isNull())
-        arr = docArrMessages.as<JsonArray>(); // используем имеющийся
-      else
-        arr = docArrMessages.to<JsonArray>(); // создаем новый
+      if(docArrMessages){
+        arr = (*docArrMessages).as<JsonArray>(); // используем имеющийся
+      } else {
+        docArrMessages = new DynamicJsonDocument(512);
+        arr = (*docArrMessages).to<JsonArray>(); // создаем новый
+      }
+
+      for (size_t i = 0; i < arr.size(); i++)
+      {
+        if((arr[i])[F("s")]==text
+          && (arr[i])[F("c")]==((unsigned long)letterColor.r<<16)+((unsigned long)letterColor.g<<8)+(unsigned long)letterColor.b
+          && (arr[i])[F("o")]==textOffset
+          && (arr[i])[F("f")]==fixedPos
+        ){
+          LOG(println, F("Duplicate string skipped"));
+          //LOG(println, (*docArrMessages).as<String>());
+          return;
+        }
+      }
 
       JsonObject var = arr.createNestedObject();
       var[F("s")]=text;
@@ -786,11 +887,12 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
       var[F("o")]=textOffset;
       var[F("f")]=fixedPos;
 
-      LOG(println, docArrMessages.as<String>());
-
       String tmp; // Тут шаманство, чтобы не ломало JSON
-      serializeJson(docArrMessages, tmp);
-      deserializeJson(docArrMessages, tmp);
+      serializeJson((*docArrMessages), tmp);
+      deserializeJson((*docArrMessages), tmp);
+
+      LOG(print, F("Array: "));
+      LOG(println, (*docArrMessages).as<String>());
     }
   }
 }
@@ -800,36 +902,38 @@ void LAMP::doPrintStringToLamp(const char* text,  const CRGB &letterColor, const
   static String toPrint;
   static CRGB _letterColor;
 
-  iflags.isStringPrinting = true;
+  if(!lampState.isStringPrinting){
+    toPrint.clear();
+    fillStringManual(nullptr, CRGB::Black);
+  }
+
+  lampState.isStringPrinting = true;
   int8_t offs=(textOffset==-128?txtOffset:textOffset);
 
   if(text!=nullptr && text[0]!='\0'){
     toPrint.concat(text);
-    toPrint.replace(F("%TM"), embui.timeProcessor.getFormattedShortTime());
-    toPrint.replace(F("%IP"), WiFi.localIP().toString());
-    toPrint.replace(F("%EN"), effects.getEffectName());
     _letterColor = letterColor;
   }
 
   if(toPrint.length()==0) {
-    iflags.isStringPrinting = false;
+    lampState.isStringPrinting = false;
     return; // нечего печатать
   } else {
-    iflags.isStringPrinting = true;
+    lampState.isStringPrinting = true;
   }
 
   if(tmStringStepTime.isReadyManual()){
-    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs) && (!isWarning() || (isWarning() && fixedPos))){ // смещаем
+    if(!fillStringManual(toPrint.c_str(), _letterColor, false, isAlarm() || (isWarning() && lampState.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs) && (!isWarning() || (isWarning() && fixedPos))){ // смещаем
       tmStringStepTime.reset();
     }
     else {
-      iflags.isStringPrinting = false;
+      lampState.isStringPrinting = false;
       toPrint.clear(); // все напечатали
       sendStringToLamp(); // получаем новую порцию
     }
   } else {
     if((!isWarning() || (isWarning() && fixedPos)))
-      fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm() || (isWarning() && iflags.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
+      fillStringManual(toPrint.c_str(), _letterColor, true, isAlarm() || (isWarning() && lampState.warnType<2), fixedPos, (fixedPos? 0 : LET_SPACE), offs);
   }
 }
 
@@ -843,11 +947,11 @@ void LAMP::newYearMessageHandle()
     time_t calc = NEWYEAR_UNIXDATETIME - embui.timeProcessor.getUnixTime();
 
     if(calc<0) {
-      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+1900);
+      sprintf_P(strMessage, NY_MDG_STRING2, localtime(embui.timeProcessor.now())->tm_year+TM_BASE_YEAR);
     } else if(calc<300){
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
-      byte calcT=calc/(60*60); // минуты
+      uint16_t calcT=calc/(60*60); // минуты
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
@@ -859,7 +963,7 @@ void LAMP::newYearMessageHandle()
       }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else if(calc/(60*60)<60){
-	    byte calcT=calc/(60*60); // часы
+	    uint16_t calcT=calc/(60*60); // часы
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
@@ -871,7 +975,7 @@ void LAMP::newYearMessageHandle()
       }
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else {
-      byte calcT=calc/(60*60*24); // дни
+      uint16_t calcT=calc/(60*60*24); // дни
       byte calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcT>=11 && calcT<=20)
@@ -890,11 +994,11 @@ void LAMP::newYearMessageHandle()
   }
 }
 
-
-void LAMP::periodicTimeHandle()
+// при вызове - вывозит на лампу текущее время
+void LAMP::periodicTimeHandle(bool force)
 {
   const tm* t = localtime(embui.timeProcessor.now());
-  if(t->tm_sec || enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW)
+  if(t->tm_sec && !force)
     return;
 
   LOG(printf_P, PSTR("periodicTimeHandle: %02d:%02d:%02d\n"), t->tm_hour,t->tm_min,t->tm_sec);
@@ -902,41 +1006,15 @@ void LAMP::periodicTimeHandle()
   time_t tm = t->tm_hour * 60 + t->tm_min;
   String time = String(F("%TM"));
 
-  if(enPeriodicTimePrint!=PERIODICTIME::PT_EVERY_60 && enPeriodicTimePrint<=PERIODICTIME::PT_NOT_SHOW && !(tm%60)){
-    sendStringToLamp(time.c_str(), CRGB::Red);
-    return;
+  CRGB color;
+  if(!(tm%60)){
+    color = CRGB::Red;
+  } else if(!(tm%30)){
+    color = CRGB::Green;
+  } else {
+    color =  CRGB::Blue;
   }
-
-  switch (enPeriodicTimePrint)
-  {
-    case PERIODICTIME::PT_EVERY_1:
-      if(tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_5:
-      if(!(tm%5) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_10:
-      if(!(tm%10) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_15:
-      if(!(tm%15) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_30:
-      if(!(tm%30) && tm%60)
-        sendStringToLamp(time.c_str(), CRGB::Blue);
-      break;
-    case PERIODICTIME::PT_EVERY_60:
-      if(!(tm%60))
-        sendStringToLamp(time.c_str(), CRGB::Red);
-      break;
-
-    default:
-      break;
-  }
+  sendStringToLamp(time.c_str(), color);
 }
 
 #ifdef MIC_EFFECTS
@@ -945,22 +1023,23 @@ void LAMP::micHandler()
   static uint8_t counter=0;
   if(effects.getEn()==EFF_ENUM::EFF_NONE)
     return;
-  if(mw==nullptr && !iflags.isCalibrationRequest){ // обычный режим
-    mw = new MICWORKER(mic_scale,mic_noise);
+  if(mw==nullptr && !lampState.isCalibrationRequest && lampState.micAnalyseDivider){ // обычный режим
+    mw = new MICWORKER(lampState.mic_scale,lampState.mic_noise,!counter);
     if(!mw) {
       mw=nullptr;
       return; // не удалось выделить память, на выход
     }
     //delete mw; mw = nullptr; return;
     
-    samp_freq = mw->process(noise_reduce); // возвращаемое значение - частота семплирования
-    last_min_peak = mw->getMinPeak();
-    last_max_peak = mw->getMaxPeak();
+    lampState.samp_freq = mw->process(lampState.noise_reduce); // возвращаемое значение - частота семплирования
+    lampState.last_min_peak = mw->getMinPeak();
+    lampState.last_max_peak = mw->getMaxPeak();
+    lampState.cur_val = mw->getCurVal();
 
     if(!counter) // раз на N измерений берем частоту, т.к. это требует обсчетов
-      last_freq = mw->analyse(); // возвращаемое значение - частота главной гармоники
-    if(iflags.micAnalyseDivider)
-      counter = (counter+1)%(0x01<<(iflags.micAnalyseDivider-1)); // как часто выполнять анализ
+      lampState.last_freq = mw->analyse(); // возвращаемое значение - частота главной гармоники
+    if(lampState.micAnalyseDivider)
+      counter = (counter+1)%(0x01<<(lampState.micAnalyseDivider-1)); // как часто выполнять анализ
     else
       counter = 1; // при micAnalyseDivider == 0 - отключено
 
@@ -972,7 +1051,7 @@ void LAMP::micHandler()
     //mw->debug();
     delete mw;
     mw = nullptr;
-  } else if(iflags.isCalibrationRequest) {
+  } else if(lampState.isCalibrationRequest) {
     if(mw==nullptr){ // калибровка начало
       mw = new MICWORKER();
       mw->calibrate();
@@ -980,9 +1059,9 @@ void LAMP::micHandler()
       mw->calibrate();
     }
     if(!mw->isCaliblation()){ // калибровка конец
-      mic_noise = mw->getNoise();
-      mic_scale = mw->getScale();
-      iflags.isCalibrationRequest = false; // завершили
+      lampState.mic_noise = mw->getNoise();
+      lampState.mic_scale = mw->getScale();
+      lampState.isCalibrationRequest = false; // завершили
       delete mw;
       mw = nullptr;
 
@@ -991,36 +1070,6 @@ void LAMP::micHandler()
   }
 }
 #endif
-
-void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback) {
-    LOG(printf, PSTR("Fading to: %d\n"), _targetbrightness);
-    _fadeTicker.detach();
-
-    uint8_t _maxsteps = _duration / FADE_STEPTIME;
-    _brt = getBrightness();
-    uint8_t _brtdiff = abs(_targetbrightness - _brt);
-
-    if (_brtdiff > FADE_MININCREMENT * _maxsteps) {
-        _steps = _maxsteps;
-    } else {
-        _steps = _brtdiff/FADE_MININCREMENT;
-    }
-
-    if (_steps < 3) {
-        brightness(_targetbrightness);
-#ifdef ESP8266
-        if (callback != nullptr) _fadeTicker.once_ms_scheduled(0, callback);
-#elif defined ESP32
-        if (callback != nullptr) _fadeTicker.once_ms(0, callback);
-#endif
-        return;
-    }
-
-    _brtincrement = (_targetbrightness - _brt) / _steps;
-
-    //_SPTO(Serial.printf_P, F_fadeinfo, _brt, _targetbrightness, _steps, _brtincrement)); _SPLN("");
-    _fadeTicker.attach_ms(FADE_STEPTIME, std::bind(&LAMP::fader, this, _targetbrightness, callback));
-}
 
 /*
  * Change global brightness with or without fade effect
@@ -1032,7 +1081,7 @@ void LAMP::fadelight(const uint8_t _targetbrightness, const uint32_t _duration, 
 void LAMP::setBrightness(const uint8_t _brt, const bool fade, const bool natural){
     LOG(printf_P, PSTR("Set brightness: %u\n"), _brt);
     if (fade) {
-        fadelight(_brt);
+        fadelight(this, _brt);
     } else {
         brightness(_brt, natural);
     }
@@ -1065,52 +1114,35 @@ void LAMP::brightness(const uint8_t _brt, bool natural){
 }
 
 /*
- * Fade light callback
- * @param uint8_t _tgtbrt - last step brightness
- */
-void LAMP::fader(const uint8_t _tgtbrt, std::function<void(void)> callback){
-  --_steps;
-  if (! _steps) {   // on last step
-      if (callback != nullptr) {
-#ifdef ESP8266
-        _fadeTicker.once_ms_scheduled(0, callback);
-#elif defined ESP32
-        _fadeTicker.once_ms(0, callback);
-#endif
-      } else { _fadeTicker.detach(); }
-      _brt = _tgtbrt;
-  } else {
-      _brt += _brtincrement;
-  }
-
-  brightness(_brt);
-}
-
-/*
  * переключатель эффектов для других методов,
  * может использовать фейдер, выбирать случайный эффект для демо
  * @param EFFSWITCH action - вид переключения (пред, след, случ.)
  * @param fade - переключаться через фейдер или сразу
  */
 void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) {
-  LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb);
-
 #ifdef MIC_EFFECTS
-    setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
+    lampState.setMicAnalyseDivider(1); // восстановить делитель, при любой активности (поскольку эффекты могут его перенастраивать под себя)
+#endif
+
+#ifdef ENCODER
+ exitSettings();
 #endif
 
   if (!skip) {
     switch (action) {
     case EFFSWITCH::SW_NEXT :
+        fade = (!fader) && fade;
         effects.setSelected(effects.getNext());
         break;
     case EFFSWITCH::SW_NEXT_DEMO :
         effects.setSelected(effects.getByCnt(1));
         break;
     case EFFSWITCH::SW_PREV :
+        fade = (!fader) && fade;
         effects.setSelected(effects.getPrev());
         break;
     case EFFSWITCH::SW_SPECIFIC :
+        //fade = (!fader) && fade;
         effects.setSelected(effects.getBy(effnb));
         break;
     case EFFSWITCH::SW_RND :
@@ -1119,21 +1151,24 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     case EFFSWITCH::SW_WHITE_HI:
         storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
-        myLamp.setMode(LAMPMODE::MODE_WHITELAMP);
+        setMode(LAMPMODE::MODE_WHITELAMP);
         break;
     case EFFSWITCH::SW_WHITE_LO:
         storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
-        myLamp.setMode(LAMPMODE::MODE_WHITELAMP);
+        setMode(LAMPMODE::MODE_WHITELAMP);
         break;
     default:
         return;
     }
+    LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
     if (fade && flags.ONflag) {
-      fadelight(FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      fadelight(this, FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
+  } else {
+    LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effnb ? effnb : effects.getSelected());
   }
 
   //LOG(printf_P,PSTR(">>>>>>>>>>>isEffClearing==%d\n"),isEffClearing);
@@ -1149,7 +1184,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   bool isPlayName = (isShowName && flags.playName && !flags.playMP3 && effects.getEn()>0);
 #endif
   if(isShowName){
-    myLamp.sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
+    sendStringToLamp(String(F("%EN")).c_str(), CRGB::Green);
 #ifdef MP3PLAYER
     if(isPlayName && mp3!=nullptr && mp3->isOn()) // воспроизведение 
       mp3->playName(effects.getEn());
@@ -1161,6 +1196,8 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     LOG(printf_P, PSTR("playEffect soundfile:%s, effect:%d, delayed:%d\n"), effects.getSoundfile().c_str(), effects.getEn(), (flags.playName && !flags.playMP3));
     if(!flags.playMP3 || (flags.playEffect && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND)) // для mp3-плеера есть отдельное управление
       mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
+  } else {
+    mp3->setCurEffect(effects.getEn());
   }
 #endif
 
@@ -1180,10 +1217,10 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(effects.worker && flags.ONflag && !iflags.isEffectsDisabledUntilText){
+  if(effects.worker && flags.ONflag && !lampState.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
-      ledsbuff.resize(NUM_LEDS);
-      std::copy(leds, leds + NUM_LEDS, ledsbuff.begin());
+    ledsbuff.resize(NUM_LEDS);
+    std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin()); // сохранить кадр в буфер
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
@@ -1193,22 +1230,27 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
 void LAMP::demoTimer(SCHEDULER action, byte tmout){
-//  LOG.printf_P(PSTR("demoTimer: %u\n"), action);
   switch (action)
   {
   case SCHEDULER::T_DISABLE :
-    _demoTicker.detach();
+    if(demoTask){
+      demoTask->cancel();
+    }
     break;
   case SCHEDULER::T_ENABLE :
-#ifdef ESP8266
-    _demoTicker.attach_scheduled(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
-#elif defined ESP32
-    _demoTicker.attach(tmout, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL));
-#endif
+    if(tmout){
+      if(demoTask){
+        demoTask->cancel();
+      }
+      demoTask = new Task(tmout * TASK_SECOND, TASK_FOREVER, std::bind(&remote_action, RA::RA_DEMO_NEXT, NULL), &ts, false, nullptr, [this](){TASK_RECYCLE; demoTask = nullptr;});
+      demoTask->enableDelayed();
+    }
     break;
   case SCHEDULER::T_RESET :
-    if (isAlarm()) stopAlarm(); // тут же сбросим и будильник
-    if (_demoTicker.active() ) demoTimer(T_ENABLE);
+    if (isAlarm())
+      stopAlarm(); // тут же сбросим и будильник
+    if (mode==MODE_DEMO && demoTask)
+      demoTask->restartDelayed();
     break;
   default:
     return;
@@ -1219,22 +1261,36 @@ void LAMP::demoTimer(SCHEDULER action, byte tmout){
  * включает/выключает таймер обработки эффектов
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
-void LAMP::effectsTimer(SCHEDULER action) {
+void LAMP::effectsTimer(SCHEDULER action, uint32_t _begin) {
 //  LOG.printf_P(PSTR("effectsTimer: %u\n"), action);
   switch (action)
   {
   case SCHEDULER::T_DISABLE :
-    _effectsTicker.detach();
+    if(effectsTask){
+      effectsTask->cancel();
+      embui.taskRecycle(effectsTask);
+      effectsTask = nullptr;
+    }
     break;
   case SCHEDULER::T_ENABLE :
-#ifdef ESP8266
-    _effectsTicker.once_ms_scheduled(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
-#elif defined ESP32
-    _effectsTicker.once_ms(EFFECTS_RUN_TIMER, std::bind(&LAMP::effectsTick, this));
-#endif
+    if(!effectsTask){
+      effectsTask = new Task(_begin?_begin:EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();}, &ts, false);
+    } else {
+      effectsTask->set(_begin?_begin:EFFECTS_RUN_TIMER, TASK_ONCE, [this](){effectsTick();});
+    }
+    effectsTask->restartDelayed();
+    break;
+  case SCHEDULER::T_FRAME_ENABLE :
+    if(!effectsTask){
+      effectsTask = new Task(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);}, &ts, false);
+    } else {
+      effectsTask->set(LED_SHOW_DELAY, TASK_ONCE, [this, _begin](){frameShow(_begin);});
+    }
+    effectsTask->restartDelayed();
     break;
   case SCHEDULER::T_RESET :
-    if (_effectsTicker.active() ) effectsTimer(T_ENABLE);
+    if (effectsTask)
+      effectsTask->restartDelayed();
     break;
   default:
     return;
@@ -1242,73 +1298,35 @@ void LAMP::effectsTimer(SCHEDULER action) {
 }
 
 //-----------------------------
-// ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; блокирующий код!) -------------
-void LAMP::showWarning(
-  const CRGB &color,                                        /* цвет вспышки                                                 */
-  uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
-  uint16_t blinkHalfPeriod)                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
-{
-  uint32_t blinkTimer = millis();
-  enum BlinkState { OFF = 0, ON = 1 } blinkState = BlinkState::OFF;
-  myLamp.fadelight(myLamp.getLampBrightness());    // установка яркости для предупреждения
-  FastLED.clear();
-  delay(2);
-  FastLED.show();
 
-  for (uint16_t i = 0U; i < NUM_LEDS; i++)                  // установка цвета всех диодов в WARNING_COLOR
-  {
-    EffectMath::setLed(i, color);
-  }
-
-  uint32_t startTime = millis();
-  while (millis() - startTime <= (duration + 5))            // блокировка дальнейшего выполнения циклом на время отображения предупреждения
-  {
-    if (millis() - blinkTimer >= blinkHalfPeriod)           // переключение вспышка/темнота
-    {
-      blinkTimer = millis();
-      blinkState = (BlinkState)!blinkState;
-      myLamp.brightness(blinkState == BlinkState::OFF ? 0 : myLamp.getLampBrightness());
-      delay(1);
-      FastLED.show();
-    }
-    delay(50);
-  }
-
-  FastLED.clear();
-  myLamp.fadelight(myLamp.isLampOn() ? myLamp.getLampBrightness() : 0);  // установка яркости, которая была выставлена до вызова предупреждения
-  delay(1);
-  FastLED.show();
-  // наверное это не актуально
-  //myLamp.setLoading();                                       // принудительное отображение текущего эффекта (того, что был активен перед предупреждением)
-}
-//-----------------------------
 // ------------- мигающий цвет (не эффект! используется для отображения краткосрочного предупреждения; неблокирующий код, рисует поверх эффекта!) -------------
+void LAMP::warningHelper(){
+  if(lampState.isWarning) {
+    if(!warningTask)
+      return;
+    String msg = warningTask->getData();
 
-void LAMP::warning2Helper(){
-  if(iflags.isWarning) {
-    switch(iflags.warnType){
-      case 0: EffectMath::fillAll(warn_color); break;
+    uint16_t cnt = warningTask->getWarn_duration()/(warningTask->getWarn_blinkHalfPeriod()*2);
+    uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;    
+    switch(lampState.warnType){
+      case 0: EffectMath::fillAll(warningTask->getWarn_color());
+        break;
       case 1: {
-        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
-        EffectMath::fillAll(warn_color);
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        EffectMath::fillAll(warningTask->getWarn_color());
+        if (!isPrintingNow())
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       case 2: {
-        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
-        EffectMath::fillAll(warn_color);
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), -warn_color, true, -128, xPos);
+        EffectMath::fillAll(warningTask->getWarn_color());
+        if (!isPrintingNow())
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), -warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       case 3: {
-        uint16_t cnt = warn_duration/(warn_blinkHalfPeriod*2);
-        uint8_t xPos = (WIDTH+LET_WIDTH*(cnt>99?3:cnt>9?2:1))/2;
-        if (!myLamp.isPrintingNow())
-          myLamp.sendStringToLamp(String(cnt).c_str(), warn_color, true, -128, xPos);
+        if (!isPrintingNow())
+          //sendStringToLamp(String(cnt).c_str(), cnt%2?warn_color:-warn_color, true, false, -128, xPos);
+          sendStringToLamp(msg.isEmpty() ? String(cnt).c_str() : msg.c_str(), warningTask->getWarn_color(), true, false, -128, xPos);
         break;
       }
       default: break;
@@ -1316,39 +1334,73 @@ void LAMP::warning2Helper(){
   }
 }
 
-void LAMP::showWarning2(
+void LAMP::showWarning(
   const CRGB &color,                                        /* цвет вспышки                                                 */
   uint32_t duration,                                        /* продолжительность отображения предупреждения (общее время)   */
   uint16_t blinkHalfPeriod,                                 /* продолжительность одной вспышки в миллисекундах (полупериод) */
   uint8_t warnType,                                         /* тип предупреждения 0...3                                     */
-  bool forcerestart)                                        /* перезапускать, если пришло повторное событие предупреждения  */
+  bool forcerestart,                                        /* перезапускать, если пришло повторное событие предупреждения  */
+  const char *msg)                                          /* сообщение для вывода на матрицу                              */
 {
-  if(forcerestart || !_warningTicker.active()){
+  CRGB warn_color = CRGB::Black;
+  uint32_t warn_duration = 1000;
+  uint16_t warn_blinkHalfPeriod = 500;
+
+  if(warningTask && !forcerestart){ // вытянуть данные из предыдущего таска, если таск существует и не перезапуск
+    warn_color = warningTask->getWarn_color();
+    warn_duration = warningTask->getWarn_duration();
+    warn_blinkHalfPeriod = warningTask->getWarn_blinkHalfPeriod();
+  }
+
+  if(forcerestart || !warningTask){ // перезапуск или таск не существует - инициализация из параметров
     warn_color = color;
     warn_duration = duration;
     warn_blinkHalfPeriod = blinkHalfPeriod;
-    iflags.isWarning = true;
-    iflags.warnType = warnType;
+    lampState.isWarning = true;
+    lampState.warnType = warnType;
   }
 
-  if(!forcerestart && warnType!=3)
-    iflags.isWarning=!iflags.isWarning;
+  if(!forcerestart && warnType<2)
+    lampState.isWarning=!lampState.isWarning;
   if(warn_duration>warn_blinkHalfPeriod)
     warn_duration-=warn_blinkHalfPeriod;
   else
     warn_duration=0;
   if(warn_duration){
-    if(_warningTicker.active())
-      _warningTicker.detach();
-#ifdef ESP8266
-    _warningTicker.once_ms_scheduled(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
-#elif defined ESP32
-    _warningTicker.once_ms(blinkHalfPeriod, std::bind(&LAMP::showWarning2, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)iflags.warnType, !iflags.isWarning));
-#endif
+    if(warningTask){
+      warningTask->cancel();
+    }
 
+    warningTask = new WarningTask(warn_color, warn_duration, warn_blinkHalfPeriod, msg, blinkHalfPeriod, TASK_ONCE
+    //, std::bind(&LAMP::showWarning, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)lampState.warnType, !lampState.isWarning, msg)
+    ,[this](){
+      WarningTask *cur = (WarningTask *)ts.getCurrentTask();
+      showWarning(cur->getWarn_color(),cur->getWarn_duration(),cur->getWarn_blinkHalfPeriod(),(uint8_t)lampState.warnType, !lampState.isWarning, cur->getData());
+    }
+    , &ts, false, nullptr, [](){TASK_RECYCLE;});
+    warningTask->enableDelayed();
   }
   else {
-    iflags.isWarning = false;
-    _warningTicker.detach();
+    lampState.isWarning = false;
+    if(warningTask)
+      warningTask->cancel();
+    warningTask = nullptr;
   }
+}
+
+// Fader object
+LEDFader *fader = nullptr;
+/**
+ * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
+ * @param LAMP *lamp - lamp instance
+ * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
+ *                                   function applied internaly for natiral dimming
+ * @param uint32_t _duration - fade effect duraion, ms
+ * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
+ */
+void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void()> callback){
+    while(fader){
+      fader->skipBrightness(); // отмена предыдущего фейдера
+    }
+    fader = new LEDFader(&ts, lamp,_targetbrightness, _duration, callback);
 }

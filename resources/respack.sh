@@ -1,11 +1,35 @@
 #!/bin/sh
 
+USAGE="Usage: `basename $0` [-h] [-t embuitag] args"
+
 # etag file
 tags=etags.txt
 # embui branch/tag name to fetch
 embuitag="dev"
 
 refresh_styles=0
+
+
+# parse cmd options
+while getopts ht: OPT; do
+    case "$OPT" in
+        h)
+            echo $USAGE
+            exit 0
+            ;;
+        t)
+            echo "EmbUI tag is set to: $OPTARG"
+            embuitag=$OPTARG
+            ;;
+        \?)
+            # getopts issues an error message
+            echo $USAGE >&2
+            exit 1
+            ;;
+    esac
+done
+
+
 
 [ -f $tags ] || touch $tags
 
@@ -71,8 +95,8 @@ fi
 [ ! -f ../data/favicon.ico.gz ] || [ html/favicon.ico -nt ../data/favicon.ico.gz ] &&  gzip -9k html/favicon.ico && mv -f html/favicon.ico.gz ../data/
 
 cp -u html/.exclude.files ../data/
-cp -u html/events_config.json ../data/
-cp -u html/buttons_config.json ../data/
+#cp -u html/events_config.json ../data/
+#cp -u html/buttons_config.json ../data/
 
 ###
 # обновляем ace-editor в data/extras folder

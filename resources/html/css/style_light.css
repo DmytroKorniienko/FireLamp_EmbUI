@@ -19,9 +19,9 @@ FireLamp_JeeUI overrides for EmbUI Styles
 	-ms-user-select:none;
 	user-select:none;
 	-webkit-box-sizing:border-box;
-	box-sizing:border-box
+	box-sizing:border-box;
 	font-size: 100%;
-	padding: .5em 1em;
+	padding: .4375em  1em;
 	color: rgb(255, 255, 255);
 	border: 1px solid #ccccccd9;
 	background-color: #0078e7;
@@ -45,7 +45,7 @@ FireLamp_JeeUI overrides for EmbUI Styles
 .pure-form input[type=week],
 .pure-form select,
 .pure-form textarea{
-	padding: 0em 1em;
+	padding: .375em 1em;
 	display: inline-block;
 	border: 1px #777;
 	-webkit-box-shadow: inset 5px 7px 9px #777;
@@ -54,13 +54,7 @@ FireLamp_JeeUI overrides for EmbUI Styles
 	vertical-align: middle;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
-	height: 28px;
 	background-color: #d6e2f4;
-}
-.pure-form select{
-	height:2.25em;
-	border:1px solid #ccc;
-	background-color: #ffffff69;
 }
 .pure-form-stacked input[type=color],
 .pure-form-stacked input[type=date],
@@ -81,5 +75,10 @@ FireLamp_JeeUI overrides for EmbUI Styles
 .pure-form-stacked select,
 .pure-form-stacked textarea{
 	display:block;
-	margin: 1.5em 0 1.5em 0;
+}
+
+.select-editable input{
+	font-family:sans-serif;
+	font-weight: bold;
+	font-style: italic;
 }

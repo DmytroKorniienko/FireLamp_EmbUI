@@ -1,4 +1,6 @@
-#pragma once
+//#pragma once
+#ifndef __INTERFACE_H
+#define __INTERFACE_H
 
 typedef enum _remote_action {
     RA_UNKNOWN,
@@ -23,12 +25,12 @@ typedef enum _remote_action {
     RA_EFF_NEXT,
     RA_EFF_PREV,
     RA_EFF_RAND,
-    RA_BRIGHT,
     RA_BRIGHT_NF,
-    RA_SPEED,
-    RA_SCALE,
-    RA_EXTRA,
+    RA_CONTROL,
     RA_MIC,
+#ifdef MIC_EFFECTS
+    RA_MICONOFF,
+#endif
     RA_EFFECT,
     RA_SEND_TEXT,
     RA_SEND_TIME,
@@ -42,17 +44,44 @@ typedef enum _remote_action {
     RA_FILLMATRIX
 } RA;
 
-void section_main_frame(Interface *interf, JsonObject *data);
-void section_effects_frame(Interface *interf, JsonObject *data);
-void section_text_frame(Interface *interf, JsonObject *data);
-void section_settings_frame(Interface *interf, JsonObject *data);
-void pubCallback(Interface *interf);
-void save_lamp_flags();
-
 void remote_action(RA action, ...);
 String httpCallback(const String &param, const String &value, bool isset);
 #ifdef ESP_USE_BUTTON
 void default_buttons();
 #endif
 
+// ---------------------
+
+void section_main_frame(Interface *interf, JsonObject *data);
+void section_effects_frame(Interface *interf, JsonObject *data);
+void section_text_frame(Interface *interf, JsonObject *data);
+// реализация настроек тут своя, отличная от фреймворка
+void section_settings_frame(Interface *interf, JsonObject *data);
+void pubCallback(Interface *interf);
+void set_onflag(Interface *interf, JsonObject *data);
+void save_lamp_flags();
+
 uint8_t uploadProgress(size_t len, size_t total);
+
+void delayedcall_show_effects();
+
+// Вывод значка микрофона в списке эффектов
+#ifdef MIC_EFFECTS
+    #define MIC_SYMBOL (micSymb ? (pgm_read_byte(T_EFFVER + (uint8_t)eff->eff_nb) % 2 == 0 ? " \U0001F399" : "") : "")
+    #define MIC_SYMB bool micSymb = myLamp.getLampSettings().effHasMic
+#else
+    #define MIC_SYMBOL ""
+    #define MIC_SYMB
+#endif
+
+// Вывод номеров эффектов в списке, в WebUI
+//#define EFF_NUMBER (numList ? (String(eff->eff_nb) + ". ") : "")
+#define EFF_NUMBER   (numList ? (eff->eff_nb <= 255 ? (String(eff->eff_nb) + ". ") : (String((byte)(eff->eff_nb & 0xFF)) + "." + String((byte)(eff->eff_nb >> 8) - 1U) + ". ")) : "")
+
+#ifdef DELAYED_EFFECTS
+ #define INDEX_BUILD_DELAY 5
+#else
+ #define INDEX_BUILD_DELAY 1
+#endif
+
+#endif

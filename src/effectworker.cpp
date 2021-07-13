@@ -120,8 +120,8 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SNOWSTORMSTARFALL :
     worker = std::unique_ptr<EffectStarFall>(new EffectStarFall());
     break;
-  case EFF_ENUM::EFF_LIGHTERS :
-    worker = std::unique_ptr<EffectLighters>(new EffectLighters());
+  case EFF_ENUM::EFF_DNA2 :
+    worker = std::unique_ptr<EffectDNA2>(new EffectDNA2());
     break;
   case EFF_ENUM::EFF_3DNOISE :
     worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());
@@ -172,9 +172,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_BALLS :
     worker = std::unique_ptr<EffectBalls>(new EffectBalls());
     break;
-  case EFF_ENUM::EFF_SMOKE :
-    worker = std::unique_ptr<EffectMStreamSmoke>(new EffectMStreamSmoke());
-    break;
   case EFF_ENUM::EFF_FIRE2018 :
     worker = std::unique_ptr<EffectFire2018>(new EffectFire2018());
     break;
@@ -188,10 +185,14 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
   case EFF_ENUM::EFF_PICASSO :
-  case EFF_ENUM::EFF_PICASSO2 :
-  case EFF_ENUM::EFF_PICASSO3 :
   case EFF_ENUM::EFF_PICASSO4 :
     worker = std::unique_ptr<EffectPicasso>(new EffectPicasso());
+    break;
+  case EFF_ENUM::EFF_STARSHIPS :
+    worker = std::unique_ptr<EffectStarShips>(new EffectStarShips());
+    break;
+  case EFF_ENUM::EFF_FLAGS :
+    worker = std::unique_ptr<EffectFlags>(new EffectFlags());
     break;
   case EFF_ENUM::EFF_LEAPERS :
     worker = std::unique_ptr<EffectLeapers>(new EffectLeapers());
@@ -265,12 +266,21 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_RACER :
     worker = std::unique_ptr<EffectRacer>(new EffectRacer());
     break;
+   case EFF_ENUM::EFF_SMOKER :
+    worker = std::unique_ptr<EffectSmoker>(new EffectSmoker());
+    break;
+   case EFF_ENUM::EFF_MAGMA :
+    worker = std::unique_ptr<EffectMagma>(new EffectMagma());
+    break;
+   case EFF_ENUM::EFF_FIRE2021 :
+    worker = std::unique_ptr<EffectFire2021>(new EffectFire2021());
+    break;
 #ifdef MIC_EFFECTS
+  case EFF_ENUM::EFF_VU :
+    worker = std::unique_ptr<EffectVU>(new EffectVU());
+    break;
   case EFF_ENUM::EFF_OSC :
     worker = std::unique_ptr<EffectOsc>(new EffectOsc());
-    break;
-  case EFF_ENUM::EFF_FREQ :
-    worker = std::unique_ptr<EffectFreq>(new EffectFreq());
     break;
 #endif
 
@@ -380,6 +390,7 @@ void EffectWorker::initDefault(const char *folder)
 void EffectWorker::removeConfig(const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
+  LOG(printf_P,PSTR("Remove from FS: %s\n"), filename.c_str());
   LittleFS.remove(filename); // удаляем файл
 }
 
@@ -436,8 +447,6 @@ void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const cha
   if (ok && doc[F("name")]){
     _effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
   } else if(!ok) {
-    // LittleFS.remove(filename);
-    // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
     _effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
   }
 #endif
@@ -544,7 +553,11 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
           String min = item.containsKey(F("min")) && id>2 ? item[F("min")].as<String>() : String(1);
           String max = item.containsKey(F("max")) && id>2 ? item[F("max")].as<String>() : String(255);
           String step = item.containsKey(F("step")) && id>2 ?  item[F("step")].as<String>() : String(1);
-          CONTROL_TYPE type = item.containsKey(F("type")) && (id>2 || (id<=2 && (item[F("type")].as<CONTROL_TYPE>() & 0x0F)==CONTROL_TYPE::RANGE)) ? item[F("type")].as<CONTROL_TYPE>() : CONTROL_TYPE::RANGE;
+          CONTROL_TYPE type = item[F("type")].as<CONTROL_TYPE>();
+          type = ((type & 0x0F)!=CONTROL_TYPE::RANGE) && id<3 ? CONTROL_TYPE::RANGE : type;
+          min = ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "0" : min;
+          max = ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "1" : max;
+          step = ((type & 0x0F)==CONTROL_TYPE::CHECKBOX) ? "1" : step;
           controls.add(new UIControl(
               id,             // id
               type,           // type
@@ -554,6 +567,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
               max,            // max
               step            // step
           ));
+          //LOG(printf_P,PSTR("%d %d %s %s %s %s %s\n"), id, type, name.c_str(), val.c_str(), min.c_str(), max.c_str(), step.c_str());
       }
   }
   doc.clear();
@@ -602,11 +616,6 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
   
   File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
   if (configFile){
-    /*
-    WriteBufferingStream buff(configFile, FILEIO_BUFFSIZE);
-    buff.write(cfg.c_str());
-    buff.flush();
-    */
     configFile.print(cfg.c_str());
     configFile.close();
   }
@@ -657,7 +666,9 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
 void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
   if(millis()<10000) return; // в первые десять секунд после рестарта запрещаем запись
-
+  if(tConfigSave)
+    tConfigSave->cancel(); // если оказались здесь, и есть отложенная задача сохранения конфига, то отменить ее
+  
   File configFile;
   String filename = geteffectpathname(nb,folder);
   configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
@@ -674,28 +685,35 @@ void EffectWorker::chckdefconfigs(const char *folder){
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
       continue;
 #ifndef MIC_EFFECTS
-    if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
+    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
 
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
       savedefaulteffconfig(i, cfgfilename);
-      //yield();
     }
   }
 }
 
-bool EffectWorker::autoSaveConfig(bool force, bool reset) {
-  static unsigned long i; // getConfigSaveTimeout()
-  if((i + (CFG_AUTOSAVE_TIMEOUT - 1000) > millis() || reset) && !force){  // если не пришло время - выходим из функции и сбрасываем счетчик (ожидаем бездействия в 30 секунд относительно последней записи)
-      i = millis();
-      return false;
-  }
-  LOG(printf_P,PSTR("Сохраняется конфигурация эффекта: %d\n"),curEff);
-  saveeffconfig(curEff);
-  //saveConfig();
-  i = millis();
-  return true; // сохранились
+void EffectWorker::autoSaveConfig(bool force) {
+    if (force){
+        if(tConfigSave)
+          tConfigSave->cancel();
+        saveeffconfig(curEff);
+        fsinforenew();
+        LOG(printf_P,PSTR("Force save effect config: %d\n"), curEff);
+    } else {
+        if(!tConfigSave){ // task for delayed config autosave
+          tConfigSave = new Task(CFG_AUTOSAVE_TIMEOUT, TASK_ONCE, [this](){
+            saveeffconfig(curEff);
+            fsinforenew();
+            LOG(printf_P,PSTR("Autosave effect config: %d\n"), curEff);
+          }, &ts, false, nullptr, [this](){TASK_RECYCLE; tConfigSave=nullptr;});
+          tConfigSave->enableDelayed();
+        } else {
+          tConfigSave->restartDelayed();
+        }
+    }
 }
 
 // конструктор копий эффектов
@@ -789,7 +807,7 @@ void EffectWorker::makeIndexFile(const char *folder)
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
 #ifndef MIC_EFFECTS
-    if(i>=254) continue; // пропускаем осциллограф и анализатор, если отключен микрофон
+    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
 
     eff = getEffect(i);
@@ -808,9 +826,19 @@ void EffectWorker::makeIndexFile(const char *folder)
 
 }
 
+void EffectWorker::removeLists(){
+  LittleFS.remove(F("/fquicklist.json"));
+  LittleFS.remove(F("/fslowlist.json"));
+  LittleFS.remove(F("/quicklist.json"));
+  LittleFS.remove(F("/slowlist.json"));
+  listsuffix = time(NULL);
+}
+
 void EffectWorker::makeIndexFileFromList(const char *folder)
 {
   File indexFile;
+
+  removeLists();
 
   openIndexFile(indexFile, folder);
   effectsReSort(SORT_TYPE::ST_IDX); // сброс сортировки перед записью
@@ -832,6 +860,8 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   File indexFile;
   String sourcedir;
   makeIndexFile(tofolder); // создать дефолтный набор прежде всего
+
+  removeLists();
 
   if (fromfolder) {
       sourcedir.concat(F("/"));
@@ -1135,31 +1165,23 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   effect=_eff;
   lampstate = _lampstate;
 
-  if(lampstate!=nullptr) isMicActive = lampstate->isMicOn;
+  isMicActive = isMicOnState();
   for(int i=0; i<controls->size(); i++){
-    switch(i){
-      case 0:
-        if(isRandDemo()){
-          brightness = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
-        } else
-          brightness = (*controls)[i]->getVal().toInt();
-        break;
-      case 1:
-        if(isRandDemo()){
-          speed = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
-        } else
-          speed = (*controls)[i]->getVal().toInt();
-        break;
-      case 2:
-        if(isRandDemo()){
-          scale = random((*controls)[i]->getMin().toInt(),(*controls)[i]->getMax().toInt()+1);
-        } else
-          scale = (*controls)[i]->getVal().toInt();
-        break;
-      default:
-        setDynCtrl((*controls)[i]);
-        break;
-    }
+    setDynCtrl((*controls)[i]);
+    // switch(i){
+    //   case 0:
+    //     setbrt((*controls)[i]->getVal().toInt());
+    //     break;
+    //   case 1:
+    //     setspd((*controls)[i]->getVal().toInt());
+    //     break;
+    //   case 2:
+    //     setscl((*controls)[i]->getVal().toInt());
+    //     break;
+    //   default:
+    //     setDynCtrl((*controls)[i]);
+    //     break;
+    // }
   }
 
   active=true;
@@ -1195,53 +1217,54 @@ bool EffectCalc::dryrun(float n, uint8_t delay){
  */
 bool EffectCalc::status(){return active;}
 
-/**
- * setbrt - установка яркости для воркера
- */
-void EffectCalc::setbrt(const byte _brt){
-  if(isRandDemo()){
-    brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
-  } else
-    brightness = _brt;
-  //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
-  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-  if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
-    paletteIdx = brightness;
-  }
-}
+// /**
+//  * setbrt - установка яркости для воркера
+//  */
+// void EffectCalc::setbrt(const byte _brt){
+//   if(isRandDemo()){
+//     brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
+//   } else
+//     brightness = _brt;
+//   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
+//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+//   if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
+//     palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
+//     paletteIdx = brightness;
+//   }
+// }
 
-/**
- * setspd - установка скорости для воркера
- */
-void EffectCalc::setspd(const byte _spd){
-  if(isRandDemo()){
-    speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
-  } else
-    speed = _spd;
-  //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
-  // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-  if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
-    palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
-    paletteIdx = speed;
-  }
-}
+// /**
+//  * setspd - установка скорости для воркера
+//  */
+// void EffectCalc::setspd(const byte _spd){
+//   if(isRandDemo()){
+//     speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
+//   } else
+//     speed = _spd;
+//   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
+//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
+//   if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
+//     palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
+//     paletteIdx = speed;
+//   }
+//   speedfactor = lampstate->speedfactor*SPEED_ADJ;
+// }
 
-/**
- * setscl - установка шкалы для воркера
- */
-void EffectCalc::setscl(byte _scl){
-  //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
-  if(isRandDemo()){
-    scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
-  } else
-    scale = _scl;
-  // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
-  if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
-    palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
-    paletteIdx = scale;
-  }
-}
+// /**
+//  * setscl - установка шкалы для воркера
+//  */
+// void EffectCalc::setscl(byte _scl){
+//   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
+//   if(isRandDemo()){
+//     scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
+//   } else
+//     scale = _scl;
+//   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
+//   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
+//     palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
+//     paletteIdx = scale;
+//   }
+// }
 
 /**
  * setDynCtrl - была смена динамического контрола, idx=3+
@@ -1249,29 +1272,36 @@ void EffectCalc::setscl(byte _scl){
  * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
  */
 String EffectCalc::setDynCtrl(UIControl*_val){
-  if(!_val) return String();
+  if(!_val)
+    return String();
   String ret_val = _val->getVal();
-
+  //LOG(printf_P, PSTR("ctrlVal=%s\n"), ret_val.c_str());
   if (usepalettes && _val->getName().startsWith(FPSTR(TINTF_084))==1){ // Начинается с Палитра
     if(isRandDemo()){
       paletteIdx = random(_val->getMin().toInt(),_val->getMax().toInt()+1);
     } else
-      paletteIdx = _val->getVal().toInt();
+      paletteIdx = ret_val.toInt();
     palettemap(palettes, paletteIdx, _val->getMin().toInt(), _val->getMax().toInt());
     isCtrlPallete = true;
   }
 
-  if(_val->getName().startsWith(FPSTR(TINTF_020))==1 && _val->getId()==7){ // Начинается с микрофон и имеет 7 id
-    isMicActive = (_val->getVal().toInt() && lampstate!=nullptr && lampstate->isMicOn) ? true : false;
+  if(_val->getId()==7 && _val->getName().startsWith(FPSTR(TINTF_020))==1){ // Начинается с микрофон и имеет 7 id
+    isMicActive = (ret_val.toInt() && isMicOnState()) ? true : false;
 #ifdef MIC_EFFECTS
-    myLamp.setMicAnalyseDivider(isMicActive);
+    if(lampstate!=nullptr)
+      lampstate->setMicAnalyseDivider(isMicActive);
 #endif
   } else {
     if(isRandDemo()){ // для режима рандомного ДЕМО, если это не микрофон - то вернуть рандомное значение в пределах диапазона значений
-      ret_val = random(_val->getMin().toInt(), _val->getMax().toInt()+1);
-    } else {
-      ret_val = _val->getVal().toInt();
+      ret_val = String(random(_val->getMin().toInt(), _val->getMax().toInt()+1));
     }
+  }
+
+  switch(_val->getId()){
+    case 0: brightness = getBrightness(); break; // яркость всегда как есть, без рандома, но с учетом глобальности :) //LOG(printf_P,PSTR("brightness=%d\n"), brightness);
+    case 1: speed = ret_val.toInt(); speedfactor = getSpeedFactor()*SPEED_ADJ; break; // LOG(printf_P,PSTR("speed=%d, speedfactor=%2.2f\n"), speed, speedfactor);
+    case 2: scale = ret_val.toInt(); break;
+    default: break;
   }
 
   return ret_val;
@@ -1297,11 +1327,11 @@ void EffectCalc::palettesload(){
   palettes.push_back(&AlcoholFireColors_p);
   palettes.push_back(&RubidiumFireColors_p);
   palettes.push_back(&PotassiumFireColors_p);
-  palettes.push_back(&WaterfallColors_p);
   palettes.push_back(&AutumnColors_p);
   palettes.push_back(&AcidColors_p);
   palettes.push_back(&StepkosColors_p);
-  palettes.push_back(&HolyLightsColors_p/*OrangeColors_p NeonColors_p*/);
+  palettes.push_back(&HolyLightsColors_p);
+  palettes.push_back(&WaterfallColors_p);
 
   usepalettes = true; // активируем "авто-переключатель" палитр при изменении scale/R
   scale2pallete();    // выставляем текущую палитру
@@ -1337,10 +1367,10 @@ void EffectCalc::scale2pallete(){
     return;
 
   LOG(println, F("Reset all controls"));
-  setbrt((*ctrls)[0]->getVal().toInt());
-  setspd((*ctrls)[1]->getVal().toInt());
-  setscl((*ctrls)[2]->getVal().toInt());
-  for(int i=3;i<ctrls->size();i++){
+  // setbrt((*ctrls)[0]->getVal().toInt());
+  // setspd((*ctrls)[1]->getVal().toInt());
+  // setscl((*ctrls)[2]->getVal().toInt());
+  for(int i=0;i<ctrls->size();i++){
     setDynCtrl((*ctrls)[i]);
   }
 }

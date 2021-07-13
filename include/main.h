@@ -38,12 +38,18 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef __MAIN_H_
 #define __MAIN_H_
 
+#if __cplusplus >= 201703L
+#define register // keyword 'register' is banned with c++17
+#endif
+
 #include <Arduino.h>
-#include <SPIFFSEditor.h>
 #include "config.h"
 #include "EmbUI.h"
 #include "lamp.h"
 #include "buttons.h"
+
+// TaskScheduler
+extern Scheduler ts;
 
 // глобальные переменные для работы с ними в программе
 extern LAMP myLamp; // Объект лампы
@@ -55,13 +61,20 @@ extern GButton touch;
 #include "mp3player.h"
 extern MP3PLAYERDEVICE *mp3;
 #endif
+#ifdef DS18B20
+#include "DS18B20.h"
+#endif
+
+#ifdef ENCODER
+#include "enc.h"
+#endif
 
 void mqttCallback(const String &topic, const String &payload);
-void  sendData(bool force=false);
+void sendData();
 
 void create_parameters();
 void sync_parameters();
 void event_worker(const EVENT *);
-ICACHE_RAM_ATTR void buttonpinisr();    // обработчик прерываний пина кнопки
+bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
 
 #endif

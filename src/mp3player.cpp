@@ -46,25 +46,31 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   LOG(println);
   LOG(println, F("DFRobot DFPlayer Mini"));
   LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
-  delay(DFPALYER_START_DELAY);
-  uint8_t retry_cnt=0;
+  // cur_volume при инициализации используется как счетчик попыток :), так делать не хорошо, но экономим память
+  Task *_t = new Task(DFPALYER_START_DELAY, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
+    if(!begin(mp3player) && cur_volume++<=5){
+        LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d...\n"), cur_volume);
+        ts.getCurrentTask()->restartDelayed(MP3_SERIAL_TIMEOUT);
+        return;
+    }
 
-  while(!begin(mp3player) && retry_cnt++<=5){ //Use softwareSerial to communicate with mp3.
-    LOG(printf_P, PSTR("DFPlayer: Unable to begin: %d...\n"), retry_cnt);
-    delay(MP3_SERIAL_TIMEOUT);
-  }
-  if (retry_cnt>=5 && !begin(mp3player)) {
-    LOG(println, F("1.Please recheck the connection!"));
-    LOG(println, F("2.Please insert the SD card!"));
-    ready = false;
-    return;
-  }
-  ready = true;
-
-  LOG(println, F("DFPlayer Mini online."));
-  outputDevice(DFPLAYER_DEVICE_SD);
-  periodicCall.attach_scheduled(1.21, std::bind(&MP3PLAYERDEVICE::handle, this)); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
-  volume(5);  // start volume
+    if (cur_volume>=5 && !begin(mp3player)) {
+      LOG(println, F("1.Please recheck the connection!"));
+      LOG(println, F("2.Please insert the SD card!"));
+      ready = false;
+      return;
+    }
+    ready = true;
+    LOG(println, F("DFPlayer Mini online."));
+    outputDevice(DFPLAYER_DEVICE_SD);
+    Task *_t = new Task(200, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
+      volume(5);  // start volume
+      TASK_RECYCLE;
+    });
+    _t->enableDelayed();
+    TASK_RECYCLE;
+  });
+  _t->enableDelayed();
 }
 
 void MP3PLAYERDEVICE::restartSound()
@@ -73,21 +79,25 @@ void MP3PLAYERDEVICE::restartSound()
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
   if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение, попытка фикса https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-312#post-75394
-    delayedCall.once(0.2,std::bind([this](){
-      if(isOn() || (ready && alarm)){
-        if(alarm){
-          ReStartAlarmSound(tAlarm);
-        } else if(!mp3mode && effectmode){
-          if(cur_effnb>0)
-            playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
-        } else if(mp3mode) {
-          cur_effnb++;
-          if(cur_effnb>mp3filescount)
-            cur_effnb=1;
-          playMp3Folder(cur_effnb);
-        }
-      }
-    }));
+    Task *_t = new Task(
+        200,
+        TASK_ONCE, [this](){
+          if(isOn() || (ready && alarm)){
+            if(alarm){
+              ReStartAlarmSound(tAlarm);
+            } else if(!mp3mode && effectmode){
+              if(cur_effnb>0)
+                playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
+            } else if(mp3mode) {
+              cur_effnb++;
+              if(cur_effnb>mp3filescount)
+                cur_effnb=1;
+              playMp3Folder(cur_effnb);
+            }
+          }
+        TASK_RECYCLE; },
+        &ts, false);
+    _t->enableDelayed();
   }
 }
 
@@ -150,8 +160,13 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           if(restartTimeout+10000<millis()){ // c момента инициализации таймаута прошло более 10 секунд, избавляюсь от зацикливания попыток
             restartTimeout=millis();
             restartSound(); // тут будет отложенный запуск через 0.2 секунды
-            delay(300);
-            delayedCall.once_scheduled(2.5, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // повторное воспроизведение минут через 1.5 секунды
+            Task *_t = new Task(
+                2.5 * TASK_SECOND + 300,
+                TASK_ONCE, [this](){
+                  playAdvertise(nextAdv);
+                TASK_RECYCLE; },
+                &ts, false);
+            _t->enableDelayed();
           }
           break;
         default:
@@ -181,11 +196,23 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
     {
       playAdvertise(3000+hours);
       nextAdv = minutes+3100;
-      delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playAdvertise, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
+      Task *_t = new Task(
+          2.25 * TASK_SECOND,
+          TASK_ONCE, [this](){
+            playAdvertise(nextAdv);
+          TASK_RECYCLE; },
+          &ts, false);
+      _t->enableDelayed();
     } else {
       playLargeFolder(0x00, 3000+hours);
       nextAdv = minutes+3100;
-      delayedCall.once_scheduled(2.25, std::bind(&MP3PLAYERDEVICE::playFolder0, this, nextAdv)); // воспроизведение минут через 2.25 секунды после произношения часов
+      Task *_t = new Task(
+          2.25 * TASK_SECOND,
+          TASK_ONCE, [this](){
+            playAdvertise(nextAdv);
+          TASK_RECYCLE; },
+          &ts, false);
+      _t->enableDelayed();
       restartTimeout = millis();
     }
   } else if(tst==TIME_SOUND_TYPE::TS_VER2){
@@ -211,7 +238,7 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool 
 {
   isplayname = false;
   soundfile = _soundfile;
-  int folder = _soundfile.substring(1,_soundfile.lastIndexOf('\\')-1).toInt();
+  int folder = _soundfile.substring(0,_soundfile.lastIndexOf('\\')).toInt();
   int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
   LOG(printf_P, PSTR("soundfile:%s, folder:%d, filenb:%d, effnb:%d\n"), soundfile.c_str(), folder, filenb, effnb%256);
   if(!mp3mode){
@@ -249,11 +276,14 @@ void MP3PLAYERDEVICE::playName(uint16_t effnb)
   playFolder(2, effnb%256);
 }
 
-void MP3PLAYERDEVICE::StartAlarmSound(ALARM_SOUND_TYPE val){
-  volume(0);
-  delay(100);
-  tAlarm = val;
-  ReStartAlarmSound(val);
+void MP3PLAYERDEVICE::StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol){
+  volume(vol);
+  Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this, val](){
+    tAlarm = val;
+    ReStartAlarmSound(val);
+    TASK_RECYCLE;
+  });
+  _t->enableDelayed();
 }
 
 void MP3PLAYERDEVICE::ReStartAlarmSound(ALARM_SOUND_TYPE val){

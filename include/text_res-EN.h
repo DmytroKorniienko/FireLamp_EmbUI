@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
@@ -37,6 +37,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #ifndef __TEXT_RES_H
 #define __TEXT_RES_H
+#include <Arduino.h>
 
 // Здесь строковые константы общего назначения, включая константы из интерфейса, что позволит локализировать при необходимости
 // Ничего иного в данном файле не предполагается
@@ -52,7 +53,7 @@ static const char TEFF_004[] PROGMEM = "Confetti";
 static const char TEFF_005[] PROGMEM = "M&M`s";
 static const char TEFF_006[] PROGMEM = "Blizzard, Meteor Shower, Meteors";
 static const char TEFF_007[] PROGMEM = "New Matrix";
-static const char TEFF_008[] PROGMEM = "Fireflies";
+static const char TEFF_008[] PROGMEM = "DNA Variant";
 static const char TEFF_009[] PROGMEM = "Fireflies with a trace";
 static const char TEFF_010[] PROGMEM = "Wandering cube";
 static const char TEFF_011[] PROGMEM = "Pulse";
@@ -69,7 +70,7 @@ static const char TEFF_021[] PROGMEM = "Storm";
 static const char TEFF_022[] PROGMEM = "Fairy";
 static const char TEFF_023[] PROGMEM = "Fount";
 static const char TEFF_024[] PROGMEM = "Bouncing balls";
-static const char TEFF_025[] PROGMEM = "Sinusoid 3";
+static const char TEFF_025[] PROGMEM = "Sinusoid";
 static const char TEFF_026[] PROGMEM = "Metasphere";
 static const char TEFF_027[] PROGMEM = "Spiral";
 static const char TEFF_028[] PROGMEM = "Comets, Soaring Fires +";
@@ -89,10 +90,10 @@ static const char TEFF_041[] PROGMEM = "DNA";
 static const char TEFF_042[] PROGMEM = "Fire 2018";
 static const char TEFF_043[] PROGMEM = "Combination lock";
 static const char TEFF_044[] PROGMEM = "Cube 2D";
-static const char TEFF_045[] PROGMEM = "Smoke";
+static const char TEFF_045[] PROGMEM = "Magma (Test)";
 static const char TEFF_046[] PROGMEM = "Picasso";
-static const char TEFF_047[] PROGMEM = "Picasso 2";
-static const char TEFF_048[] PROGMEM = "Picasso 3";
+static const char TEFF_047[] PROGMEM = "Starship Troopers";
+static const char TEFF_048[] PROGMEM = "Flags";
 static const char TEFF_049[] PROGMEM = "Jumpers";
 static const char TEFF_050[] PROGMEM = "Vortexes";
 static const char TEFF_051[] PROGMEM = "Stars";
@@ -117,8 +118,10 @@ static const char TEFF_069[] PROGMEM = "Snakes Island";
 static const char TEFF_070[] PROGMEM = "Children's Dreams";
 static const char TEFF_071[] PROGMEM = "Metasphares";
 static const char TEFF_072[] PROGMEM = "Lava lamp";
-static const char TEFF_073[] PROGMEM = "Racer";
-static const char TEFF_253[] PROGMEM = "Clock";
+static const char TEFF_073[] PROGMEM = "Space Racer";
+static const char TEFF_074[] PROGMEM = "Smoke" ;
+static const char TEFF_075[] PROGMEM = "Fire 2021";
+static const char TEFF_250[] PROGMEM = "Clock";
 static const char TEFF_254[] PROGMEM = "Frequency Analyzer";
 static const char TEFF_255[] PROGMEM = "Oscilloscope";
 
@@ -155,7 +158,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_0E9 "Mass"
 #define DFTINTF_0EA "Speed ​​(Vertical)"
 #define DFTINTF_0EB "Speed ​​(Horizontal)"
-#define DFTINTF_0EC "Pattern (1: random)"
+#define DFTINTF_0EC "Pattern (0: random)"
 #define DFTINTF_0ED "Shading"
 #define DFTINTF_0EE "Energy"
 #define DFTINTF_0EF "Density"
@@ -196,6 +199,9 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_113 "Color 2 (0: cyclical)"
 #define DFTINTF_114 "Quality/Speed"
 #define DFTINTF_115 "Blur (1-4 with wind)"
+#define DFTINTF_116 "Sin function moving"
+#define DFTINTF_117 "Direction (0: cyclical)"
+#define DFTINTF_118 "Signal threshold"
 
 /** набор строк с текстовыми константами интерфейса
  */
@@ -269,7 +275,7 @@ static const char TINTF_042[] PROGMEM = "Copies at the end of the list";
 static const char TINTF_043[] PROGMEM = "Sort by index";
 static const char TINTF_044[] PROGMEM = "Text scrolling delay";
 static const char TINTF_045[] PROGMEM = "Offset of text output";
-static const char TINTF_046[] PROGMEM = "Periodic time show";
+static const char TINTF_046[] PROGMEM = "";
 static const char TINTF_047[] PROGMEM = "Don`t show";
 static const char TINTF_048[] PROGMEM = "Every hour";
 static const char TINTF_049[] PROGMEM = "Every half hour";
@@ -280,9 +286,9 @@ static const char TINTF_04D[] PROGMEM = "Every minute";
 static const char TINTF_04E[] PROGMEM = "New Year greeting";
 static const char TINTF_04F[] PROGMEM = "Show period, minutes (0 - do not output)";
 static const char TINTF_050[] PROGMEM = "New Year's Date/Time at format YYYY-MM-DDThh:mm";
-static const char TINTF_051[] PROGMEM = "Time";
-static const char TINTF_052[] PROGMEM = "TZset rules for zone/seasonal time accounting (e.g. 'GMT0BST,M3.5.0/1,M10.5.0' for Europe/London). You can get the required line <a href=\"https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h\">here</a>";
-static const char TINTF_053[] PROGMEM = "TimeZone rule (it is recommended to set!)";
+static const char TINTF_051[] PROGMEM = "Date / Time / Time Zone";
+static const char TINTF_052[] PROGMEM = "TimeZone shift/daylight saving rules applied automatically, no need to adjust manually.";
+static const char TINTF_053[] PROGMEM = "Time zone";
 static const char TINTF_054[] PROGMEM = "Spare NTP server (optional)";
 static const char TINTF_055[] PROGMEM = "Date/Time, YYYY-MM-DDThh:mm:ss (without internet connection, if empty - from device)";
 static const char TINTF_056[] PROGMEM = "Firmware update";
@@ -379,7 +385,7 @@ static const char TINTF_0B0[] PROGMEM = "Number of files in MP3 folder";
 static const char TINTF_0B1[] PROGMEM = "Voice-over modes";
 static const char TINTF_0B2[] PROGMEM = "Folder\\the number of the sound file (examples: MP3\\17, 5\\19)";
 static const char TINTF_0B3[] PROGMEM = "Limit Alarm volume";
-static const char TINTF_0B4[] PROGMEM = "Remove from FS";
+static const char TINTF_0B4[] PROGMEM = "Default";
 static const char TINTF_0B5[] PROGMEM = "Remove from the list";
 static const char TINTF_0B6[] PROGMEM = "Disabled";
 static const char TINTF_0B7[] PROGMEM = "Option 1";
@@ -408,6 +414,17 @@ static const char TINTF_0CD[] PROGMEM = "minute";
 static const char TINTF_0CE[] PROGMEM = "Drawing";
 static const char TINTF_0CF[] PROGMEM = "Fill";
 static const char TINTF_0D0[] PROGMEM = DFTINTF_0D0;
+static const char TINTF_0D1[] PROGMEM = "Sound from begin";
+static const char TINTF_0D2[] PROGMEM = "Limit volume";
+static const char TINTF_0D3[] PROGMEM = "Speed factor (1.0 as default)";
+static const char TINTF_0D4[] PROGMEM = "Display settings";
+static const char TINTF_0D5[] PROGMEM = "Brightness (0 - OFF)";
+static const char TINTF_0D6[] PROGMEM = "Brightness with OFF lamp (0 - OFF)";
+static const char TINTF_0D7[] PROGMEM = "24 hour format";
+static const char TINTF_0D8[] PROGMEM = "Leading 0";
+static const char TINTF_0D9[] PROGMEM = "Clear";
+static const char TINTF_0DA[] PROGMEM = "Scan";
+
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Happy new %d year!";

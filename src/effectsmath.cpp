@@ -40,21 +40,140 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#include "main.h"
 extern LAMP myLamp; // Объект лампы
 
-
 // Общий набор мат. функций и примитивов для обсчета эффектов
 
+namespace EffectMath_PRIVATE {
+    MATRIXFLAGS matrixflags;
+    CRGB leds[NUM_LEDS]; // основной буфер вывода изображения
+    CRGB overrun;
+    
+    CRGB *getUnsafeLedsArray(){return leds;}
 
-// для работы FastLed (blur2d)
-uint16_t XY(uint8_t x, uint8_t y)
-{
-#ifdef ROTATED_MATRIX
-  return myLamp.getPixelNumber(y,x); // повернутое на 90 градусов
-#else
-  return myLamp.getPixelNumber(x,y); // обычное подключение
-#endif
+    // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
+    uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
+    {
+    #ifndef XY_EXTERN
+        // хак с макроподстановкой, пусть живет пока
+        #define MIRR_H matrixflags.MIRR_H
+        #define MIRR_V matrixflags.MIRR_V
+        
+        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X);
+        }
+        else                                                      // если нечётная строка
+        {
+            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1);
+        }
+    
+        #undef MIRR_H
+        #undef MIRR_V
+    #else
+        uint16_t i = (y * WIDTH) + x;
+        uint16_t j = pgm_read_dword(&XYTable[i]);
+        return j;
+    #endif
+    }
 }
 
+using namespace EffectMath_PRIVATE;
+
+// используется встроенный блер, так что необходимости в данной функции более нет, отключено
+uint16_t XY(uint8_t x, uint8_t y) {return 0;}
+// // для работы FastLed (blur2d)
+// uint16_t XY(uint8_t x, uint8_t y)
+// {
+// #ifdef ROTATED_MATRIX
+//   return getPixelNumber(y,x); // повернутое на 90 градусов
+// #else
+//   return getPixelNumber(x,y); // обычное подключение
+// #endif
+// }
+
 //--------------------------------------
+// blur1d: one-dimensional blur filter. Spreads light to 2 line neighbors.
+// blur2d: two-dimensional blur filter. Spreads light to 8 XY neighbors.
+//
+//           0 = no spread at all
+//          64 = moderate spreading
+//         172 = maximum smooth, even spreading
+//
+//         173..255 = wider spreading, but increasing flicker
+//
+//         Total light is NOT entirely conserved, so many repeated
+//         calls to 'blur' will also result in the light fading,
+//         eventually all the way to black; this is by design so that
+//         it can be used to (slowly) clear the LEDs to black.
+void EffectMath::blur1d( CRGB* leds, uint16_t numLeds, fract8 blur_amount)
+{
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    CRGB carryover = CRGB::Black;
+    for( uint16_t i = 0; i < numLeds; ++i) {
+        CRGB cur = leds[i];
+        CRGB part = cur;
+        part.nscale8( seep);
+        cur.nscale8( keep);
+        cur += carryover;
+        if( i) leds[i-1] += part;
+        leds[i] = cur;
+        carryover = part;
+    }
+}
+
+void EffectMath::blur2d( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount)
+{
+    blurRows(leds, width, height, blur_amount);
+    blurColumns(leds, width, height, blur_amount);
+}
+
+// blurRows: perform a blur1d on every row of a rectangular matrix
+void EffectMath::blurRows( CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount)
+{
+/*    for( uint8_t row = 0; row < height; ++row) {
+        CRGB* rowbase = leds + (row * width);
+        blur1d( rowbase, width, blur_amount);
+    }
+*/
+    // blur rows same as columns, for irregular matrix
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    for( uint8_t row = 0; row < height; row++) {
+        CRGB carryover = CRGB::Black;
+        for( uint8_t i = 0; i < width; i++) {
+            CRGB cur = leds[getPixelNumber(i,row)];
+            CRGB part = cur;
+            part.nscale8( seep);
+            cur.nscale8( keep);
+            cur += carryover;
+            if( i) leds[getPixelNumber(i-1,row)] += part;
+            leds[getPixelNumber(i,row)] = cur;
+            carryover = part;
+        }
+    }
+}
+
+// blurColumns: perform a blur1d on each column of a rectangular matrix
+void EffectMath::blurColumns(CRGB* leds, uint8_t width, uint8_t height, fract8 blur_amount)
+{
+    // blur columns
+    uint8_t keep = 255 - blur_amount;
+    uint8_t seep = blur_amount >> 1;
+    for( uint8_t col = 0; col < width; ++col) {
+        CRGB carryover = CRGB::Black;
+        for( uint8_t i = 0; i < height; ++i) {
+            CRGB cur = leds[getPixelNumber(col,i)];
+            CRGB part = cur;
+            part.nscale8( seep);
+            cur.nscale8( keep);
+            cur += carryover;
+            if( i) leds[getPixelNumber(col,i-1)] += part;
+            leds[getPixelNumber(col,i)] = cur;
+            carryover = part;
+        }
+    }
+} 
+
 // ******** общие мат. функции переиспользуются в другом эффекте
 uint8_t EffectMath::mapsincos8(bool map, uint8_t theta, uint8_t lowest, uint8_t highest) {
   uint8_t beat = map ? sin8(theta) : cos8(theta);
@@ -64,7 +183,7 @@ uint8_t EffectMath::mapsincos8(bool map, uint8_t theta, uint8_t lowest, uint8_t 
 void EffectMath::MoveFractionalNoise(bool _scale, const uint8_t noise3d[][WIDTH][HEIGHT], int8_t amplitude, float shift) {
   uint8_t zD;
   uint8_t zF;
-  CRGB *leds = myLamp.getUnsafeLedsArray(); // unsafe
+  CRGB *leds = getUnsafeLedsArray(); // unsafe
   CRGB ledsbuff[NUM_LEDS];
   uint16_t _side_a = _scale ? HEIGHT : WIDTH;
   uint16_t _side_b = _scale ? WIDTH : HEIGHT;
@@ -83,14 +202,14 @@ void EffectMath::MoveFractionalNoise(bool _scale, const uint8_t noise3d[][WIDTH]
         }
         CRGB PixelA = CRGB::Black  ;
         if ((zD >= 0) && (zD < _side_b))
-          PixelA = _scale ? EffectMath::getLed(myLamp.getPixelNumber(zD%WIDTH, a%HEIGHT)) : EffectMath::getLed(myLamp.getPixelNumber(a%WIDTH, zD%HEIGHT));
+          PixelA = _scale ? EffectMath::getPixel(zD%WIDTH, a%HEIGHT) : EffectMath::getPixel(a%WIDTH, zD%HEIGHT);
 
         CRGB PixelB = CRGB::Black ;
         if ((zF >= 0) && (zF < _side_b))
-          PixelB = _scale ? EffectMath::getLed(myLamp.getPixelNumber(zF%WIDTH, a%HEIGHT)) : EffectMath::getLed(myLamp.getPixelNumber(a%WIDTH, zF%HEIGHT));
+          PixelB = _scale ? EffectMath::getPixel(zF%WIDTH, a%HEIGHT) : EffectMath::getPixel(a%WIDTH, zF%HEIGHT);
         uint16_t x = _scale ? b : a;
         uint16_t y = _scale ? a : b;
-        ledsbuff[myLamp.getPixelNumber(x%WIDTH, y%HEIGHT)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
+        ledsbuff[getPixelNumber(x%WIDTH, y%HEIGHT)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
       }
     }
   memcpy(leds, ledsbuff, sizeof(CRGB)* NUM_LEDS);
@@ -106,17 +225,14 @@ uint8_t EffectMath::ceil8(const uint8_t a, const uint8_t b){
 // новый фейдер
 void EffectMath::fadePixel(uint8_t i, uint8_t j, uint8_t step)
 {
-    int32_t pixelNum = myLamp.getPixelNumber(i, j);
-    if (EffectMath::getPixColor(pixelNum) == 0U) return;
-
-    CRGB led = EffectMath::getLed(pixelNum);
-    if (led.r >= 30U ||
-        led.g >= 30U ||
-        led.b >= 30U){
-        EffectMath::setLedsfadeToBlackBy(pixelNum,step);
+    CRGB &led = EffectMath::getPixel(i,j);
+    if (!led) return; // см. приведение к bool для CRGB, это как раз тест на 0
+    
+    if (led.r >= 30U || led.g >= 30U || led.b >= 30U){
+        led.fadeToBlackBy(step);
     }
     else{
-        EffectMath::setLed(pixelNum, 0U);
+        EffectMath::drawPixelXY(i, j, 0U);
     }
 }
 
@@ -152,34 +268,57 @@ CRGB EffectMath::makeDarker( const CRGB& color, fract8 howMuchDarker )
 
 /* kostyamat добавил
  функция возвращает рандомное значение float между min и max 
- с шагом 1/4095 */
+ с шагом 1/1024 */
 float EffectMath::randomf(float min, float max)
 {
-  return fmap((float)random16(4095), 0.0, 4095.0, min, max);
+  return fmap(random(1024), 0, 1023, min, max);
 }
 
 /* kostyamat добавил
  функция возвращает true, если float
- ~ целое (первая цифра после запятой == 0) */
+ ~= целое (первая цифра после запятой == 0) */
 bool EffectMath::isInteger(float val) {
     float val1;
     val1 = val - (int)val;
-    if ((int)(val1 * 10) != 0)
-        return false;
-    else
+    if ((int)(val1 * 10) == 0)
         return true;
+    else
+        return false;
 }
 
 // Функция создает вспышки в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
 void EffectMath::addGlitter(uint8_t chanceOfGlitter){
-  if ( random8() < chanceOfGlitter) myLamp.getUnsafeLedsArray()[random16(NUM_LEDS)] += CRGB::Gray;
+  if ( random8() < chanceOfGlitter) leds[random16(NUM_LEDS)] += CRGB::Gray;
+}
+
+// Функция создает разноцветные конфетти в разных местах матрицы, параметр 0-255. Чем меньше, тем чаще.
+void EffectMath::confetti(byte density) {
+    uint16_t idx = random16(NUM_LEDS);
+    for (byte i=0; i < NUM_LEDS/256; i++)
+      if ( random8() < density)
+        if (RGBweight(leds, idx) < 32) leds[idx] = random(32, 16777216);
+}
+
+void EffectMath::gammaCorrection()
+{ //gamma correction function
+  byte r, g, b;
+  for (uint16_t i = 0; i < NUM_LEDS; i++)
+  {
+    r = leds[i].r;
+    g = leds[i].g;
+    b = leds[i].b;
+    leds[i].r = pgm_read_byte(gamma_exp + r);
+    leds[i].g = pgm_read_byte(gamma_exp + g);
+    leds[i].b = pgm_read_byte(gamma_exp + b);
+  }
 }
 
 uint32_t EffectMath::getPixColor(uint32_t thisSegm) // функция получения цвета пикселя по его номеру
 {
   uint32_t thisPixel = thisSegm * SEGMENTS;
-  if (thisPixel > NUM_LEDS - 1) return 0;
-  return (((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].r << 16) | ((uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].g << 8 ) | (uint32_t)myLamp.getUnsafeLedsArray()[thisPixel].b);
+  if (thisPixel < NUM_LEDS ) 
+    return (((uint32_t)leds[thisPixel].r << 16) | ((uint32_t)leds[thisPixel].g << 8 ) | (uint32_t)leds[thisPixel].b);
+  else return (((uint32_t)overrun.r << 16) | ((uint32_t)overrun.g << 8 ) | (uint32_t)overrun.b);
 }
 
 // Заливает матрицу выбраным цветом
@@ -187,18 +326,13 @@ void EffectMath::fillAll(const CRGB &color)
 {
   for (int32_t i = 0; i < NUM_LEDS; i++)
   {
-    myLamp.getUnsafeLedsArray()[i] = color;
+    leds[i] = color;
   }
 }
 
 void EffectMath::drawPixelXY(int16_t x, int16_t y, const CRGB &color) // функция отрисовки точки по координатам X Y
 {
-  if (x < 0 || x > (int16_t)(WIDTH - 1) || y < 0 || y > (int16_t)(HEIGHT - 1)) return;
-  uint32_t thisPixel = myLamp.getPixelNumber((uint16_t)x, (uint16_t)y) * SEGMENTS;
-  for (uint16_t i = 0; i < SEGMENTS; i++)
-  {
-    myLamp.getUnsafeLedsArray()[thisPixel + i] = color;
-  }
+  getPixel(x,y) = color;
 }
 
 void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_pixel procedure by reddit u/sutaburosu
@@ -211,7 +345,7 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     uint16_t xn = (x >> 8) + (i & 1); uint16_t yn = (y >> 8) + ((i >> 1) & 1);
-    CRGB clr = EffectMath::getPixColorXY(xn, yn);
+    CRGB clr = getLed(getPixelNumber(xn, yn));
     clr.r = qadd8(clr.r, (col.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (col.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (col.b * wu[i]) >> 8);
@@ -223,7 +357,7 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
 
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
 {
-  if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
@@ -234,29 +368,21 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-    CRGB clr = EffectMath::getPixColorXY(xn, yn);
+    // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается, 
+    // что все ЛЕД в одном сегменте одинакового цвета, и достаточно получить цвет любого из них.
+    CRGB clr = getLed(getPixelNumber(xn, yn)); //EffectMath::getPixColorXY(xn, yn);
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-
-    // if(xn<(int)WIDTH-1 && yn<(int)HEIGHT-1 && yn>0 && xn>0){
-    //   clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    //   clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    //   clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    // } else if((yn==0 || yn==HEIGHT-1 || xn==0) && xx<127) {
-    //   clr.r = qadd8(clr.r, (color.r * 64) >> 8);
-    //   clr.g = qadd8(clr.g, (color.g * 64) >> 8);
-    //   clr.b = qadd8(clr.b, (color.b * 64) >> 8);
-    // }
     if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(xn, yn, clr);
   }
   #undef WU_WEIGHT
 }
 
-void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t darklevel)
+void EffectMath::drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t darklevel)
 {
-  if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  if (x<-1.0 || y<-1 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -264,25 +390,19 @@ void EffectMath::drawPixelXYF_X(float x, uint16_t y, const CRGB &color, uint8_t 
   uint8_t wu[2] = {ix, xx};
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
-      int16_t xn = x + (i & 1);
-      CRGB clr = EffectMath::getPixColorXY(xn, y);
-      if(xn>0 && xn<(int)WIDTH-1){
-        clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-        clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-        clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-      } else if(xn==0 || xn==(int)WIDTH-1) {
-        clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-        clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-        clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-      }
+    int16_t xn = x + (i & 1);
+    CRGB clr = getLed(getPixelNumber(xn, y));
+    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
     if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(xn, y, clr);
   }
 }
 
-void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t darklevel)
+void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel)
 {
-  if (x<0 || y<0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
@@ -290,17 +410,11 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
   uint8_t wu[2] = {iy, yy};
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
-      int16_t yn = y + (i & 1);
-      CRGB clr = EffectMath::getPixColorXY(x, yn);
-      if(yn>0 && yn<(int)HEIGHT-1){
-        clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-        clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-        clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-      } else if(yn==0 || yn==(int)HEIGHT-1) {
-        clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-        clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-        clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-      }
+    int16_t yn = y + (i & 1);
+    CRGB clr = getLed(getPixelNumber(x, yn));
+    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
     if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
     else EffectMath::drawPixelXY(x, yn, clr);
   }
@@ -308,8 +422,6 @@ void EffectMath::drawPixelXYF_Y(uint16_t x, float y, const CRGB &color, uint8_t 
 
 CRGB EffectMath::getPixColorXYF(float x, float y)
 {
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return CRGB::Black;
-
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
@@ -333,9 +445,9 @@ CRGB EffectMath::getPixColorXYF(float x, float y)
   #undef WU_WEIGHT
 }
 
-CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
+CRGB EffectMath::getPixColorXYF_X(float x, int16_t y)
 {
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return CRGB::Black;
+  if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
@@ -357,9 +469,9 @@ CRGB EffectMath::getPixColorXYF_X(float x, uint16_t y)
   return clr;
 }
 
-CRGB EffectMath::getPixColorXYF_Y(uint16_t x, float y)
+CRGB EffectMath::getPixColorXYF_Y(int16_t x, float y)
 {
-  if (x<0 || y<0 || x>((float)WIDTH-1) || y>((float)HEIGHT-1)) return CRGB::Black;
+  if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return CRGB::Black;
 
   // extract the fractional parts and derive their inverses
   uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
@@ -430,6 +542,13 @@ void EffectMath::drawLineF(float x1, float y1, float x2, float y2, const CRGB &c
   }
 }
 
+void EffectMath::drawSquareF(float x, float y, float leg, CRGB color) {
+  EffectMath::drawLineF(x+leg,y+leg,x+leg,y-leg,color);
+  EffectMath::drawLineF(x+leg,y-leg,x-leg,y-leg,color);
+  EffectMath::drawLineF(x-leg,y-leg,x-leg,y+leg,color);
+  EffectMath::drawLineF(x-leg,y+leg,x+leg,y+leg,color);
+}
+
 void EffectMath::drawCircle(int x0, int y0, int radius, const CRGB &color){
   int a = radius, b = 0;
   int radiusError = 1 - a;
@@ -458,33 +577,6 @@ void EffectMath::drawCircle(int x0, int y0, int radius, const CRGB &color){
     }
   }
 }
-
-/*void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color){
-  float x = 0., y = radius, error = 0.;
-  float delta = .25 - 2. * radius;
-
-  while (y >= 0) {
-    drawPixelXYF(x0 + x, y0 + y, color);
-    drawPixelXYF(x0 + x, y0 - y, color);
-    drawPixelXYF(x0 - x, y0 + y, color);
-    drawPixelXYF(x0 - x, y0 - y, color);
-    error = 2. * (delta + y) - 1.;
-    if (delta < 0. && error <= 0.) {
-      ++x;
-      delta += 2. * x + 1.;
-      continue;
-    }
-    error = 2. * (delta - x) - 1.;
-    if (delta > 0. && error > 0.) {
-      --y;
-      delta += 1. - 2. * y;
-      continue;
-    }
-    ++x;
-    delta += 2. * (x - y);
-    --y;
-  }
-}*/
 
 void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color, float step){
   float a = radius, b = 0.;
@@ -520,16 +612,173 @@ void EffectMath::nightMode(CRGB *leds)
 {
     for (uint16_t i = 0; i < NUM_LEDS; i++)
     {
-        myLamp.getUnsafeLedsArray()[i].r = dim8_video(myLamp.getUnsafeLedsArray()[i].r);
-        myLamp.getUnsafeLedsArray()[i].g = dim8_video(myLamp.getUnsafeLedsArray()[i].g);
-        myLamp.getUnsafeLedsArray()[i].b = dim8_video(myLamp.getUnsafeLedsArray()[i].b);
+        leds[i].r = dim8_lin(leds[i].r); //dim8_video
+        leds[i].g = dim8_lin(leds[i].g);
+        leds[i].b = dim8_lin(leds[i].b);
     }
 }
-uint32_t EffectMath::getPixColorXY(uint16_t x, uint16_t y) { return getPixColor( myLamp.getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
-void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { myLamp.getUnsafeLedsArray()[idx].fadeToBlackBy(val); }
-void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { myLamp.getUnsafeLedsArray()[idx].nscale8(val); }
-void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) { myLamp.getUnsafeLedsArray()[i].nscale8(value); } }
-CRGB EffectMath::getLed(uint16_t idx) { return myLamp.getUnsafeLedsArray()[idx]; }
-void EffectMath::blur2d(uint8_t val) {::blur2d(myLamp.getUnsafeLedsArray(),WIDTH,HEIGHT,val);}
-CRGB *EffectMath::setLed(uint16_t idx, CHSV val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
-CRGB *EffectMath::setLed(uint16_t idx, CRGB val) { myLamp.getUnsafeLedsArray()[idx] = val; return &myLamp.getUnsafeLedsArray()[idx]; }
+uint32_t EffectMath::getPixColorXY(int16_t x, int16_t y) { return getPixColor( getPixelNumber(x, y)); } // функция получения цвета пикселя в матрице по его координатам
+//void EffectMath::setLedsfadeToBlackBy(uint16_t idx, uint8_t val) { leds[idx].fadeToBlackBy(val); }
+void EffectMath::setLedsNscale8(uint16_t idx, uint8_t val) { leds[idx].nscale8(val); }
+void EffectMath::dimAll(uint8_t value) { for (uint16_t i = 0; i < NUM_LEDS; i++) {leds[i].nscale8(value); } }
+void EffectMath::blur2d(uint8_t val) {EffectMath::blur2d(leds,WIDTH,HEIGHT,val);}
+
+CRGB &EffectMath::getLed(uint16_t idx) { 
+  if(idx<NUM_LEDS){
+    return leds[idx];
+  } else {
+    return overrun;
+  }
+}
+
+
+uint32_t EffectMath::getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
+{
+
+  uint16_t _THIS_Y = y;
+  uint16_t _THIS_X = x;
+  
+  if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
+  {
+      return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X);
+  }
+  else                                                      // если нечётная строка
+  {
+      return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1);
+  }
+
+}
+
+CRGB &EffectMath::getPixel(uint16_t x, uint16_t y){
+  // Все, что не попадает в диапазон WIDTH x HEIGHT отправляем в "невидимый" светодиод.
+  if (y > getmaxHeightIndex() || x > getmaxWidthIndex())
+      return overrun;
+  return leds[getPixelNumber(x,y)];
+}
+
+float EffectMath::sqrt(float x){
+  union{
+      int i;
+      float x;
+  } u;
+
+  u.x = x;
+  // u.i = (1<<29) + (u.i >> 1) - (1<<22);
+  // u.i = 0x20000000 + (u.i >> 1) - 0x400000;
+  u.i = (u.i >> 1) + 0x1FC00000;
+  return u.x;
+}
+
+float EffectMath::tan2pi_fast(float x) {
+  float y = (1 - x*x);
+  return x * (((-0.000221184 * y + 0.0024971104) * y - 0.02301937096) * y + 0.3182994604 + 1.2732402998 / y);
+  //float y = (1 - x*x);
+  //return x * (-0.0187108 * y + 0.31583526 + 1.27365776 / y);
+}
+
+float EffectMath::atan2_fast(float y, float x)
+{
+  //http://pubs.opengroup.org/onlinepubs/009695399/functions/atan2.html
+  //Volkan SALMA
+
+  const float ONEQTR_PI = PI / 4.0;
+  const float THRQTR_PI = 3.0 * PI / 4.0;
+  float r, angle;
+  float abs_y = fabs(y) + 1e-10f;      // kludge to prevent 0/0 condition
+  if ( x < 0.0f )
+  {
+      r = (x + abs_y) / (abs_y - x);
+      angle = THRQTR_PI;
+  }
+  else
+  {
+      r = (x - abs_y) / (x + abs_y);
+      angle = ONEQTR_PI;
+  }
+  angle += (0.1963f * r * r - 0.9817f) * r;
+  if ( y < 0.0f )
+      return( -angle );     // negate if in quad III or IV
+  else
+      return( angle );
+}
+
+float EffectMath::atan_fast(float x){
+  /*
+  A fast look-up method with enough accuracy
+  */
+  if (x > 0) {
+      if (x <= 1) {
+      int index = round(x * 100);
+      return LUT[index];
+      } else {
+      float re_x = 1 / x;
+      int index = round(re_x * 100);
+      return (M_PI_2 - LUT[index]);
+      }
+  } else {
+      if (x >= -1) {
+      float abs_x = -x;
+      int index = round(abs_x * 100);
+      return -(LUT[index]);
+      } else {
+      float re_x = 1 / (-x);
+      int index = round(re_x * 100);
+      return (LUT[index] - M_PI_2);
+      }
+  }
+}
+
+float EffectMath::mapcurve(const float x, const float in_min, const float in_max, const float out_min, const float out_max, float (*curve)(float,float,float,float)){
+  if (x <= in_min) return out_min;
+  if (x >= in_max) return out_max;
+  return curve((x - in_min), out_min, (out_max - out_min), (in_max - in_min));
+}
+
+float EffectMath::InOutQuad(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t + b;
+  --t;
+  return -c / 2 * (t * (t - 2) - 1) + b;
+}
+
+float EffectMath::InOutCubic(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t * t + b;
+  t -= 2;
+  return c / 2 * (t * t * t + 2) + b;
+}
+
+float EffectMath::InOutQuart(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t * t * t + b;
+  t -= 2;
+  return -c / 2 * (t * t * t * t - 2) + b;
+}
+
+float EffectMath::OutQuint(float t, float b, float c, float d) {
+  t = t / d - 1;
+  return c * (t * t * t * t * t + 1) + b;
+}
+
+float EffectMath::InOutQuint(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return  c / 2 * t * t * t * t * t + b;
+  t -= 2;
+  return c / 2 * (t * t * t * t * t + 2) + b;
+}
+
+float EffectMath::InOutExpo(float t, float b, float c, float d) {
+  if (t==0) return b;
+  if (t==d) return b + c;
+  t /= d / 2;
+  if (t < 1) return c/2 * powf(2, 10 * (t - 1)) + b;
+  --t;
+  return c/2 * (-powf(2, -10 * t) + 2) + b;
+}
+
+float EffectMath::InOutCirc(float t, float b, float c, float d) {
+  t /= d / 2;
+  if (t < 1) return -c/2 * (sqrt(1 - t*t) - 1) + b;
+  t -= 2;
+  return c/2 * (sqrt(1 - t*t) + 1) + b;
+}

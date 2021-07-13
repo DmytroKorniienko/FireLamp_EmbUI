@@ -35,7 +35,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef __EFFECTWORKER_H
+#define __EFFECTWORKER_H
 
 #include <Arduino.h>
 #include "LList.h"
@@ -53,15 +54,68 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "effects_types.h"
 
+#ifdef MIC_EFFECTS
+#include "micFFT.h"
+#endif
+
+#include "ts.h"
+// TaskScheduler - Let the runner object be a global, single instance shared between object files.
+extern Scheduler ts;
+
 typedef struct {
     union {
-        uint16_t flags;
+        uint32_t flags;
         struct {
             bool isMicOn:1;
             bool isDebug:1;
             bool isRandDemo:1;
+
+            bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
+            bool isStringPrinting:1; // печатается ли прямо сейчас строка?
+            bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
+            bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
+            uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
+            bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
+            bool isWarning:1; // выводится ли индикация предупреждения
+            uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
         };
     };
+    float speedfactor;
+    uint8_t brightness;
+
+#ifdef MIC_EFFECTS
+    float mic_noise = 0.0; // уровень шума в ед.
+    float mic_scale = 1.0; // коэф. смещения
+    float last_freq = 0.0; // последняя измеренная часота
+    float samp_freq = 0.0; // часота семплирования
+    float cur_val = 0.0;   // текущее значение
+    uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
+    uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
+    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
+
+    float getCurVal() {return cur_val;}
+    void setMicAnalyseDivider(uint8_t val) {micAnalyseDivider = val&3;}
+    float getMicScale() {return mic_scale;}
+    void setMicScale(float scale) {mic_scale = scale;}
+    float getMicNoise() {return mic_noise;}
+    void setMicNoise(float noise) {mic_noise = noise;}
+    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
+    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return noise_reduce;}
+    uint8_t getMicMaxPeak() {return isMicOn?last_max_peak:0;}
+    uint8_t getMicMapMaxPeak() {return isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
+    float getMicFreq() {return isMicOn?last_freq:0;}
+    uint8_t getMicMapFreq() {
+        float minFreq=(log((float)(SAMPLING_FREQ>>1)/MICWORKER::samples));
+        float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
+        return (uint8_t)(isMicOn?(log(last_freq)-minFreq)*scale:0);
+    }
+#endif
+
+    uint32_t freeHeap;
+    uint8_t HeapFragmentation;
+    int32_t rssi;
+    uint32_t fsfreespace;
+
 } LAMPSTATE;
 
 typedef union {
@@ -105,7 +159,17 @@ public:
     const String &getMax() {return max;}
     const String &getStep() {return step;}
 
-    void setVal(const String &_val) {val=_val;}
+    void setVal(const String &_val) {
+        switch(getType()&0x0F){
+            case CONTROL_TYPE::RANGE:
+            case CONTROL_TYPE::CHECKBOX:
+                val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt());
+                break;
+            default:
+                val=_val;
+                break;
+        }
+    }
 };
 
 
@@ -201,31 +265,48 @@ private:
     bool active = false;          /**< работает ли воркер и был ли обсчет кадров с момента последнего вызова, пока нужно чтобы пропускать холостые кадры */
     bool isCtrlPallete = false; // признак наличия контрола палитры
     bool isMicActive = false; // признак включенного микрофона
+    bool isMicOnState() {return lampstate!=nullptr ? lampstate->isMicOn : false;}
 protected:
     EFF_ENUM effect;        /**< энумератор эффекта */
     bool isDebug() {return lampstate!=nullptr ? lampstate->isDebug : false;}
     bool isRandDemo() {return lampstate!=nullptr ? lampstate->isRandDemo : false;}
+    float getSpeedFactor() {return lampstate!=nullptr ? lampstate->speedfactor : 1.0;}
+    float getBrightness() {return lampstate!=nullptr ? lampstate->brightness : 127;}
+
+#ifdef MIC_EFFECTS
+    void setMicAnalyseDivider(uint8_t val) {if(lampstate!=nullptr) lampstate->micAnalyseDivider = val&3;}
+    uint8_t getMicMapMaxPeak() {return lampstate!=nullptr ? lampstate->getMicMapMaxPeak() : 0;}
+    uint8_t getMicMapFreq() {return lampstate!=nullptr ? lampstate->getMicMapFreq() : 0;}
+    uint8_t getMicMaxPeak() {return lampstate!=nullptr ? lampstate->getMicMaxPeak() : 0;}
+    
+    float getCurVal() {return lampstate!=nullptr ? lampstate->getCurVal() : 0;}
+    float getMicFreq() {return lampstate!=nullptr ? lampstate->getMicFreq() : 0;}
+    float getMicScale() {return lampstate!=nullptr ? lampstate->getMicScale() : 0;}
+    float getMicNoise() {return lampstate!=nullptr ? lampstate->getMicNoise() : 0;}
+    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return lampstate!=nullptr ? lampstate->getMicNoiseRdcLevel() : MIC_NOISE_REDUCE_LEVEL::NR_NONE;}
+    
+#endif
     bool isActive() {return active;}
     void setActive(bool flag) {active=flag;}
     uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
-    byte brightness;
-    byte speed;
-    byte scale;
+    byte brightness=1;
+    byte speed=1;
+    byte scale=1;
+    float speedfactor=1.0;      // коэффициент скорости эффекта
 
-    uint8_t palettescale;       // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
-    float ptPallete;            // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
-    uint8_t palettepos;         // позиция в массиве указателей паллитр
-    uint8_t paletteIdx;         // индекс палитры переданный с UI
+    uint8_t palettescale=1.0;     // внутренний масштаб для палитр, т.е. при 22 палитрах на нее будет приходится около 11 пунктов, при 8 палитрах - около 31 пункта
+    float ptPallete=1.0;          // сколько пунктов приходится на одну палитру; 255.1 - диапазон ползунка, не включая 255, т.к. растягиваем только нужное :)
+    uint8_t palettepos=0;         // позиция в массиве указателей паллитр
+    uint8_t paletteIdx=0;         // индекс палитры переданный с UI
 
     /** флаг, включает использование палитр в эффекте.
      *  влияет на:
      *  - подгрузку дефолтовых палитр при init()
      *  - переключение палитры при изменении ползунка "шкалы"
-     *  -  проверку R?
      */
     bool usepalettes=false;
     std::vector<PGMPalette*> palettes;          /**< набор используемых палитр (пустой)*/
-    TProgmemRGBPalette16 const *curPalette = nullptr;     /**< указатель на текущую палитру */
+    TProgmemRGBPalette16 const *curPalette = &RainbowColors_p;     /**< указатель на текущую палитру */
 
     const String &getCtrlVal(int idx) {
         //return (idx<ctrls->size() && idx>=0) ? (*ctrls)[idx]->getVal() : dummy;
@@ -311,20 +392,20 @@ public:
     ///
 
 
-    /**
-     * setBrt - установка яркости для воркера
-     */
-    virtual void setbrt(const byte _brt);
+    // /**
+    //  * setBrt - установка яркости для воркера
+    //  */
+    // virtual void setbrt(const byte _brt);
 
-    /**
-     * setSpd - установка скорости для воркера
-     */
-    virtual void setspd(const byte _spd);
+    // /**
+    //  * setSpd - установка скорости для воркера
+    //  */
+    // virtual void setspd(const byte _spd);
 
-    /**
-     * setBrt - установка шкалы для воркера
-     */
-    virtual void setscl(const byte _scl);
+    // /**
+    //  * setBrt - установка шкалы для воркера
+    //  */
+    // virtual void setscl(const byte _scl);
 
     /**
      * setDynCtrl - обработка для динамических контролов idx=3+
@@ -361,14 +442,11 @@ public:
     //virtual ~EffectCalc(){ LOG(println,PSTR("DEGUG: Effect was destroyed\n")); } // отладка, можно будет затем закомментировать
 };
 
-
-
-
 class EffectWorker {
 private:
+    time_t listsuffix = 0; // суффикс использемый для обновления списков
     LAMPSTATE *lampstate; // ссылка на состояние лампы
     SORT_TYPE effSort; // порядок сортировки в UI
-    const uint8_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
 
     uint16_t curEff = (uint16_t)EFF_NONE;     ///< энумератор текущего эффекта
     uint16_t selEff = (uint16_t)EFF_NONE;     ///< энумератор выбранного эффекта (для отложенного перехода)
@@ -381,6 +459,22 @@ private:
     LList<EffectListElem*> effects; // список эффектов с флагами из индекса
     LList<UIControl*> controls; // список контроллов текущего эффекта
     LList<UIControl*> selcontrols; // список контроллов выбранного эффекта (пока еще идет фейдер)
+
+    Task *tConfigSave = nullptr;       // динамическая таска, задержки при сохранении текущего конфига эффекта в файл
+
+    void removeLists(); // уделение списков из ФС
+    void fsinforenew(){
+#ifdef ESP8266
+        FSInfo fs_info;
+        LittleFS.info(fs_info);
+        if(lampstate)
+        lampstate->fsfreespace = fs_info.totalBytes-fs_info.usedBytes;
+#endif
+#ifdef ESP32
+        if(lampstate)
+        lampstate->fsfreespace = LittleFS.totalBytes() - LittleFS.usedBytes();
+#endif
+    }
 
     /**
      * создает и инициализирует экземпляр класса выбранного эффекта
@@ -436,6 +530,8 @@ private:
 
 
 public:
+    time_t getlistsuffix() {return listsuffix ? listsuffix : (listsuffix=micros());}
+    void setlistsuffix(time_t val) {listsuffix=val;}
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
     void initDefault(const char *folder = NULL); // пусть вызывается позже и явно
     ~EffectWorker() { clearEffectList(); clearControlsList(); }
@@ -445,13 +541,7 @@ public:
     // дефолтный конструктор
     EffectWorker(LAMPSTATE *_lampstate) : effects(), controls(), selcontrols() {
       lampstate = _lampstate;
-    /*
       // нельзя вызывать литлфс.бегин из конструктора, т.к. инстанс этого объекта есть в лампе, который декларируется до setup()
-      if (!LittleFS.begin()){
-          //LOG(println, F("ERROR: Can't mount filesystem!"));
-          return;
-      }
-    */
 
       for(int8_t id=0;id<3;id++){
         controls.add(new UIControl(
@@ -459,19 +549,9 @@ public:
             CONTROL_TYPE::RANGE,                    // type
             id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088))           // name
         ));
-        // selcontrols.add(new UIControl(
-        //     id,                                     // id
-        //     CONTROL_TYPE::RANGE,                    // type
-        //     id==0 ? String(FPSTR(TINTF_00D)) : id==1 ? String(FPSTR(TINTF_087)) : String(FPSTR(TINTF_088)),           // name
-        //     String(127),                            // value
-        //     String(1),                              // min
-        //     String(255),                            // max
-        //     String(1)                               // step
-        // ));
       }
-      //workerset(EFF_NONE);
       selcontrols = controls;
-    } // initDefault(); убрал из конструктора, т.к. крайне неудобно становится отлаживать..
+    }
 
     // тип сортировки
     void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
@@ -489,8 +569,11 @@ public:
     // конструктор текущего эффекта, для fast=true вычитываетсяч только имя
     EffectWorker(const EffectListElem* eff, bool fast=false);
 
-    // отложенная запись конфига текущего эффекта
-    bool autoSaveConfig(bool force=false, bool reset=false);
+    /**
+     *  отложенная запись конфига текущего эффекта, каждый вызов перезапускает счетчик
+     *  force - сохраняет без задержки, таймер отключается
+     */
+    void autoSaveConfig(bool force=false);
     // удалить конфиг переданного эффекта
     void removeConfig(const uint16_t nb, const char *folder=NULL);
     // пересоздает индекс с текущего списка эффектов
@@ -501,6 +584,7 @@ public:
     byte getModeAmount() {return effects.size();}
 
     const String &getEffectName() {return effectName;}
+
     void setEffectName(const String &name, EffectListElem*to) // если текущий, то просто пишем имя, если другой - создаем экземпляр, пишем, удаляем
         {
             if(to->eff_nb==curEff){
@@ -518,8 +602,18 @@ public:
         }
 
     const String &getSoundfile() {return soundfile;}
-    void setSoundfile(const String &_soundfile, EffectListElem*to) // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
-        {if(to->eff_nb==curEff) soundfile=_soundfile; else {EffectWorker *tmp=new EffectWorker(to); tmp->curEff=to->eff_nb; tmp->selEff=to->eff_nb; tmp->setSoundfile(_soundfile,to); tmp->saveeffconfig(to->eff_nb); delete tmp;} }
+
+    // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
+    void setSoundfile(const String &_soundfile, EffectListElem*to){
+        if(to->eff_nb==curEff) soundfile=_soundfile;
+        else {EffectWorker *tmp=new EffectWorker(to);
+        tmp->curEff=to->eff_nb;
+        tmp->selEff=to->eff_nb;
+        tmp->setSoundfile(_soundfile,to);
+        tmp->saveeffconfig(to->eff_nb);
+        delete tmp;}
+    }
+
     const String &getOriginalName() {return originalName;}
 
     /**
@@ -559,6 +653,22 @@ public:
     void moveByCnt(byte cnt){ uint16_t eff = getByCnt(cnt); directMoveBy(eff); }
     // получить номер эффекта смещенного на количество шагов (для DEMO)
     uint16_t getByCnt(byte cnt);
+    bool validByList(int val);
+    // получить реальный номер эффекта по номеру элемента списка (для плагинов)
+    uint16_t realEffNumdByList(uint16_t val) { return effects[val]->eff_nb; }
+    // получить индекс эффекта по номеру (для плагинов)
+    uint16_t effIndexByList(uint16_t val) { 
+        uint16_t found = 0;
+        for (uint16_t i = 0; i < effects.size(); i++) {
+            if (effects[i]->eff_nb == val ) {
+                found = i;
+            } 
+        }
+        return found;
+    }
+    // получить флаг canBeSelected по номеру элемента списка (для плагинов)
+    bool effCanBeSelected(uint16_t val) { if (val < effects.size())return effects[val]->canBeSelected(); return false; }
+
     // перейти на указанный в обход нормального переключения, использовать только понимая что это (нужно для начальной инициализации и переключений выключенной лампы)
     void directMoveBy(uint16_t select);
     // вернуть первый элемент списка
@@ -582,3 +692,6 @@ public:
     // удалить эффект
     void deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
 };
+
+#endif
+

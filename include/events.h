@@ -38,6 +38,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #pragma once
 #include "misc.h"
 #include "timeProcessor.h"
+#include "ArduinoJson.h"
 
 #define EVENT_TSTAMP_LENGTH 17  // для строки вида "YYYY-MM-DDThh:mm"
 
@@ -82,7 +83,7 @@ struct EVENT {
     uint8_t stopat;
     time_t unixtime;    // timestamp для события в локальной часовой зоне
     EVENT_TYPE event;
-    char *message;
+    char *message = nullptr;
     EVENT *next = nullptr;
     EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
     EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
@@ -172,7 +173,7 @@ struct EVENT {
             t_raw_data >>= 1;
         }
 
-        if(message[0]){     // время тут никто и не копирует, а усекается текст
+        if(message && message[0]){     // время тут никто и не копирует, а усекается текст
             uint8_t UTFNsymbols = 0; // кол-во симоволов UTF-8 уже скопированных
             uint8_t i = 0;
             char tmpBuf[EVENT_TSTAMP_LENGTH];
@@ -218,14 +219,22 @@ private:
     void(*cb_func)(const EVENT *) = nullptr; // функция обратного вызова
 
     void check_event(EVENT *event);
+    /**
+     *  метод загружает и пробует десериализовать джейсон из файла в предоставленный документ,
+     *  возвращает true если загрузка и десериализация прошла успешно
+     *  @param doc - DynamicJsonDocument куда будет загружен джейсон
+     *  @param jsonfile - файл, для загрузки
+    **/
+    bool deserializeFile(DynamicJsonDocument& doc, const char* filepath);
+    void clear_events();
 
 public:
     EVENT_MANAGER() {}
     ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
 
-    void addEvent(const EVENT&event);
-    
+    EVENT *addEvent(const EVENT&event);
     void delEvent(const EVENT&event);
+    bool isEnumerated(const EVENT&event); // проверка того что эвент в списке
 
     void setEventCallback(void(*func)(const EVENT *))
     {

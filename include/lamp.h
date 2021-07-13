@@ -45,6 +45,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "events.h"
 #include "../../include/LList.h"
 #include "interface.h"
+#include "extra_tasks.h"
 
 #ifdef XY_EXTERN
 #include "XY.h"
@@ -52,6 +53,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #ifdef MIC_EFFECTS
 #include "micFFT.h"
+#endif
+
+#ifndef DEFAULT_MQTTPUB_INTERVAL
+    #define DEFAULT_MQTTPUB_INTERVAL 30
 #endif
 
 typedef enum _LAMPMODE {
@@ -79,6 +84,7 @@ typedef enum _EFFSWITCH {
 typedef enum _SCHEDULER {
     T_DISABLE = 0,    // Выкл
     T_ENABLE,         // Вкл
+    T_FRAME_ENABLE,   // Вкл
     T_RESET,          // сброс
 } SCHEDULER;
 
@@ -96,16 +102,6 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
-typedef enum _PERIODICTIME {
-  PT_NOT_SHOW = 1,
-  PT_EVERY_60,
-  PT_EVERY_30,
-  PT_EVERY_15,
-  PT_EVERY_10,
-  PT_EVERY_5,
-  PT_EVERY_1,
-} PERIODICTIME;
-
 //#pragma pack(push,2)
 typedef union {
 struct {
@@ -116,8 +112,8 @@ struct {
     bool ONflag:1; // флаг включения/выключения
     bool isFaderON:1; // признак того, что фейдер используется для эффектов
     bool isGlobalBrightness:1; // признак использования глобальной яркости для всех режимов
-    bool reserved1:1;
-    bool reserved2:1;
+    bool tm24:1;   // 24х часовой формат
+    bool tmZero:1;  // ведущий 0
     bool limitAlarmVolume:1; // ограничивать громкость будильника
     bool isEventsHandled:1; // глобальный признак обработки событий
     bool isEffClearing:1; // признак очистки эффектов при переходе с одного на другой
@@ -132,7 +128,7 @@ struct {
     uint8_t MP3eq:3; // вид эквалайзера
     bool isShowSysMenu:1; // показывать ли системное меню
     bool isOnMP3:1; // включен ли плеер?
-    bool reserved3:1;
+    bool isBtn:1; // включена ли кнопка?
     bool playName:1; // воспроизводить имя?
     bool playEffect:1; // воспроизводить эффект?
     uint8_t alarmSound:3; // звук будильника ALARM_SOUND_TYPE
@@ -144,28 +140,10 @@ uint32_t lampflags; // набор битов для конфига
 } LAMPFLAGS;
 //#pragma pack(pop)
 
-// тут флаги, которые не нужно сохранять в конфиг
-//#pragma pack(push,2)
-typedef union {
-struct {
-    bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
-    bool isStringPrinting:1; // печатается ли прямо сейчас строка?
-    bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
-    bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
-    uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
-    bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
-    bool isWarning:1; // выводится ли индикация предупреждения
-    uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
-};
-uint32_t lampflags; // набор битов для конфига
-} INTERNALFLAGS;
-//#pragma pack(pop)
-
-
 class LAMP {
+    friend class LEDFader;
 private:
     LAMPFLAGS flags;
-    INTERNALFLAGS iflags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
     byte txtOffset = 0; // смещение текста относительно края матрицы
@@ -174,57 +152,51 @@ private:
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
-    int mqtt_int;
+    //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
     uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
-
-    const uint16_t maxDim = ((WIDTH>HEIGHT)?WIDTH:HEIGHT);
-    const uint16_t minDim = ((WIDTH<HEIGHT)?WIDTH:HEIGHT);
 
     LAMPMODE mode = MODE_NORMAL; // текущий режим
     LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
     uint8_t storedBright;
 
-    PERIODICTIME enPeriodicTimePrint; // режим периодического вывода времени
+    typedef struct {
+        uint8_t alarmP;
+        uint8_t alarmT;
+        String msg;
+        bool isStartSnd;
+        bool isLimitVol;
+        ALARM_SOUND_TYPE type;
+
+        void clear() { alarmP = 5; alarmT = 5; msg=""; isStartSnd = true; isLimitVol = true; type = ALARM_SOUND_TYPE::AT_RANDOM; }
+    } ALARM_DATA;
+    
+    ALARM_DATA curAlarm;
 
 #ifdef MIC_EFFECTS
     MICWORKER *mw = nullptr;
-    float mic_noise = 0.0; // уровень шума в ед.
-    float mic_scale = 1.0; // коэф. смещения
-    float last_freq = 0.0; // последняя измеренная часота
-    float samp_freq = 0.0; // часота семплирования
-    uint8_t last_max_peak = 0; // последнее максимальное амплитудное значение (по модулю)
-    uint8_t last_min_peak = 0; // последнее минимальное амплитудное значение (по модулю)
-    MIC_NOISE_REDUCE_LEVEL noise_reduce = MIC_NOISE_REDUCE_LEVEL::NR_NONE; // уровень шумодава
     void micHandler();
 #endif
 
     uint8_t BFade; // затенение фона под текстом
 
     uint8_t alarmPT; // время будильника рассвет - старшие 4 бита и свечения после рассвета - младшие 4 бита
-    String alarmMessage; // Cообщение будильника рассвет, если задано
+#ifdef TM1637_CLOCK
+    uint8_t tmBright; // яркость дисплея при вкл - старшие 4 бита и яркость дисплея при выкл - младшие 4 бита
+#endif
+    DynamicJsonDocument *docArrMessages = nullptr; // массив сообщений для вывода на лампу
 
-    DynamicJsonDocument docArrMessages; // массив сообщений для вывода на лампу
-
-    timerMinim tmConfigSaveTime;    // таймер для автосохранения
     timerMinim tmStringStepTime;    // шаг смещения строки, в мс
     timerMinim tmNewYearMessage;    // период вывода новогоднего сообщения
 
     time_t NEWYEAR_UNIXDATETIME=1609459200U;    // дата/время в UNIX формате, см. https://www.cy-pr.com/tools/time/ , 1609459200 => Fri, 01 Jan 2021 00:00:00 GMT
 
-    // async fader and brightness control vars and methods
-    uint8_t _brt, _steps;
-    int8_t _brtincrement;
-
-    Ticker _fadeTicker;             // планировщик асинхронного фейдера
-    Ticker _demoTicker;             // планировщик Смены эффектов в ДЕМО
-    Ticker _reservedTicker;         // планировщик вспомогательный
-    Ticker _effectsTicker;          // планировщик обработки эффектов
-    Ticker _warningTicker;          // планировщик обработки эффектов
-    uint32_t _begin = 0;
+    Task *demoTask = nullptr;    // динамический планировщик Смены эффектов в ДЕМО
+    Task *effectsTask;           // динамический планировщик обработки эффектов
+    WarningTask *warningTask = nullptr; // динамический планировщик переключалки флага lampState.isWarning
+    Task *tmqtt_pub = nullptr;   // динамический планировщик публикации через mqtt
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
-    void fader(const uint8_t _tgtbrt, std::function<void(void)> callback=nullptr);          // обработчик затуания, вызывается планировщиком в цикле
 
     void effectsTick(); // обработчик эффектов
 
@@ -236,17 +208,11 @@ private:
     byte gauge_hue = 0;
     void GaugeMix();
 #endif
-    void ConfigSaveCheck(){ if(tmConfigSaveTime.isReady()) { if(effects.autoSaveConfig()) tmConfigSaveTime.setInterval(0); } }
 
 #ifdef OTA
     OtaManager otaManager;
 #endif
-    static void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod); // Блокирующая мигалка
-
-    CRGB warn_color;
-    uint32_t warn_duration;
-    uint16_t warn_blinkHalfPeriod;
-
+    String &prepareText(String &source);
     void doPrintStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, const int8_t textOffset = -128, const int16_t fixedPos = 0);
     bool fillStringManual(const char* text,  const CRGB &letterColor, bool stopText = false, bool isInverse = false, int32_t pos = 0, int8_t letSpace = LET_SPACE, int8_t txtOffset = TEXT_OFFSET, int8_t letWidth = LET_WIDTH, int8_t letHeight = LET_HEIGHT); // -2147483648
     void drawLetter(uint8_t bcount, uint16_t letter, int16_t offset,  const CRGB &letterColor, uint8_t letSpace, int8_t txtOffset, bool isInverse, int8_t letWidth, int8_t letHeight, uint8_t flSymb=0);
@@ -259,10 +225,9 @@ private:
      * и перезапуск эффект-процессора
      */
     void frameShow(const uint32_t ticktime);
-
 public:
-    void showWarning2(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true); // Неблокирующая мигалка
-    void warning2Helper();
+    void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true, const char *msg = nullptr); // Неблокирующая мигалка
+    void warningHelper();
 
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
@@ -274,86 +239,97 @@ public:
     uint8_t getbPin() {return bPin;}
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
+    LAMPSTATE &getLampState() {return lampState;}
+    LList<UIControl*>&getEffControls() { LList<UIControl*>&controls = effects.getControls(); return controls; }
+
 #ifdef MIC_EFFECTS
-    void setMicCalibration() {iflags.isCalibrationRequest = true;}
-    bool isMicCalibration() {return iflags.isCalibrationRequest;}
-    float getMicScale() {return mic_scale;}
-    void setMicScale(float scale) {mic_scale = scale;}
-    float getMicNoise() {return mic_noise;}
-    void setMicNoise(float noise) {mic_noise = noise;}
-    void setMicNoiseRdcLevel(MIC_NOISE_REDUCE_LEVEL lvl) {noise_reduce = lvl;}
-    MIC_NOISE_REDUCE_LEVEL getMicNoiseRdcLevel() {return noise_reduce;}
-    uint8_t getMicMaxPeak() {return flags.isMicOn?last_max_peak:0;}
-    uint8_t getMicMapMaxPeak() {return flags.isMicOn?((last_max_peak>(uint8_t)mic_noise)?(last_max_peak-(uint8_t)mic_noise)*2:1):0;}
-    float getMicFreq() {return flags.isMicOn?last_freq:0;}
-    uint8_t getMicMapFreq() {
-        float minFreq=(log((float)(SAMPLING_FREQ>>1)/MICWORKER::samples));
-        float scale = 255.0 / (log((float)HIGH_MAP_FREQ) - minFreq); 
-        return (uint8_t)(flags.isMicOn?(log(last_freq)-minFreq)*scale:0);
-    }
+    void setMicCalibration() {lampState.isCalibrationRequest = true;}
+    bool isMicCalibration() {return lampState.isCalibrationRequest;}
+
     void setMicOnOff(bool val) {
         bool found=false;
         flags.isMicOn = val;
         lampState.isMicOn = val;
         if(effects.getEn()==EFF_NONE) return;
         LList<UIControl*>&controls = effects.getControls();
+        UIControl *c7 = nullptr;
         if(val){
             for(int i=3; i<controls.size(); i++) {
-                if(controls[i]->getId()==7){
-                    effects.worker->setDynCtrl(controls[i]);
+                if(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1){
+                    if(effects.worker) effects.worker->setDynCtrl(controls[i]);
                     found=true;
+                } else if(controls[i]->getId()==7) {
+                    c7 = controls[i];
                 }
             }
         } 
         if(!val || !found){
-            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", String(""), String(""), String(""));
-            effects.worker->setDynCtrl(ctrl);
+            UIControl *ctrl = new UIControl(7,(CONTROL_TYPE)18,String(FPSTR(TINTF_020)), val ? "1" : "0", "0", "1", "1");
+            if(effects.worker) effects.worker->setDynCtrl(ctrl);
             delete ctrl;
+            if(c7){ // был найден 7 контрол, но не микрофон
+                if(effects.worker) effects.worker->setDynCtrl(c7);
+            }
         }
     }
+    
     bool isMicOnOff() {return flags.isMicOn;}
-    void setMicAnalyseDivider(uint8_t val) {iflags.micAnalyseDivider = val&3;}
 #endif
 
 #ifdef VERTGAUGE
     void GaugeShow(unsigned val, unsigned max, byte hue = 10);
 #endif
 
+    void setSpeedFactor(float val) {
+        lampState.speedfactor = val;
+        if(effects.worker) effects.worker->setDynCtrl(effects.getControls()[1]);
+    }
+
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     byte getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
     byte getNormalizedLampBrightness() { return (byte)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
-    void setLampBrightness(byte brg) { if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
+    void setLampBrightness(byte brg) { lampState.brightness=brg; if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
     void setGlobalBrightness(byte brg) {globalBrightness = brg;}
-    void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val;}
+    void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val; if(effects.worker) { lampState.brightness=getLampBrightness(); effects.worker->setDynCtrl(effects.getControls()[0]);} }
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
-    bool isWarning() {return iflags.isWarning;}
-    int getmqtt_int() {return mqtt_int;}
-    void semqtt_int(int val) {mqtt_int = val;}
+    bool isWarning() {return lampState.isWarning;}
+    //int getmqtt_int() {return mqtt_int;}
+    void setmqtt_int(int val=DEFAULT_MQTTPUB_INTERVAL) {
+        //mqtt_int = val;
+        if(tmqtt_pub)
+            tmqtt_pub->cancel(); // cancel & delete
+
+        extern void sendData();
+        if(val){
+            tmqtt_pub = new Task(val * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
+        }
+    }
 
     LAMPMODE getMode() {return mode;}
     void setMode(LAMPMODE _mode) {mode=_mode;}
 
-    void sendString(const char* text, const CRGB &letterColor);
-    void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
-    bool isPrintingNow() { return iflags.isStringPrinting; }
+    void sendString(const char* text, const CRGB &letterColor, bool forcePrint = true, bool clearQueue = false);
+    void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
+    void sendStringToLampDirect(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);
+    bool isPrintingNow() { return lampState.isStringPrinting; }
     LAMP();
 
     void handle();          // главная функция обработки эффектов
 
-    void DelayedAutoEffectConfigSave(int in){ tmConfigSaveTime.setInterval(in); tmConfigSaveTime.reset(); effects.autoSaveConfig(false,true); }
     void setFaderFlag(bool flag) {flags.isFaderON = flag;}
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
     bool getClearingFlag() {return flags.isEffClearing;}
-    void disableEffectsUntilText() {iflags.isEffectsDisabledUntilText = true; FastLED.clear();}
-    void setOffAfterText() {iflags.isOffAfterText = true;}
+    void disableEffectsUntilText() {lampState.isEffectsDisabledUntilText = true; FastLED.clear();}
+    void setOffAfterText() {lampState.isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
     bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);
     bool isLampOn() {return flags.ONflag;}
     bool isDebugOn() {return flags.isDebug;}
     bool isDrawOn() {return flags.isDraw;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
+    void setButton(bool flag) {flags.isBtn=flag;}
     void setDrawBuff(bool flag) {
         flags.isDraw=flag;
         if(!flag){
@@ -372,11 +348,11 @@ public:
     void setONMP3(bool flag) {flags.isOnMP3=flag;}
     bool isShowSysMenu() {return flags.isShowSysMenu;}
     void setIsShowSysMenu(bool flag) {flags.isShowSysMenu=flag;}
-    void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; FastLED.clear();}}
-    void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; FastLED.clear();}}
+    void setMIRR_V(bool flag) {if (flag!=flags.MIRR_V) { flags.MIRR_V = flag; matrixflags.MIRR_V = flag; FastLED.clear();}}
+    void setMIRR_H(bool flag) {if (flag!=flags.MIRR_H) { flags.MIRR_H = flag; matrixflags.MIRR_H = flag; FastLED.clear();}}
     void setTextMovingSpeed(uint8_t val) {tmStringStepTime.setInterval(val);}
+    uint32_t getTextMovingSpeed() {return tmStringStepTime.getInterval();}
     void setTextOffset(uint8_t val) { txtOffset=val;}
-    void setPeriodicTimePrint(PERIODICTIME val) { enPeriodicTimePrint = val; }
 
     void setPlayTime(uint8_t val) {flags.playTime = val;}
     void setPlayName(bool flag) {flags.playName = flag;}
@@ -386,14 +362,22 @@ public:
     void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 
-    void periodicTimeHandle();
+    void periodicTimeHandle(bool force=false);
+
+#ifdef TM1637_CLOCK
+    void settm24 (bool flag) {flags.tm24 = flag;}
+    void settmZero (bool flag) {flags.tmZero = flag;}
+    bool isTm24() {return flags.tm24;}
+    bool isTmZero() {return flags.tmZero;}
+    void setTmBright(uint8_t val) {tmBright = val;}
+    uint8_t getBrightOn() { return tmBright>>4; }
+    uint8_t getBrightOff() { return tmBright&0x0F; }
+#endif
 
     void startAlarm(char *value = nullptr);
-    void setAlarmMessage(char *value = nullptr) {if(value) alarmMessage = value; else alarmMessage.clear();}
-    const char *getAlarmMessage() { return alarmMessage.c_str();}
     void stopAlarm();
     void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
-    void startNormalMode();
+    void startNormalMode(bool forceOff=false);
     void restoreStored();
     void storeEffect();
 #ifdef OTA
@@ -414,65 +398,12 @@ public:
     uint8_t getAlarmT() { return alarmPT&0x0F; }
 
     // ---------- служебные функции -------------
-    uint16_t getmaxDim() {return maxDim;}
-    uint16_t getminDim() {return minDim;}
 
     void changePower(); // плавное включение/выключение
     void changePower(bool);
 
-    CRGB *getUnsafeLedsArray(){return leds;}
-
-    // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
-        uint32_t getPixelNumber(uint16_t x, uint16_t y) // получить номер пикселя в ленте по координатам
-    {
-    #ifndef XY_EXTERN
-        // хак с макроподстановкой, пусть живет пока
-        #define MIRR_H flags.MIRR_H
-        #define MIRR_V flags.MIRR_V
-        
-        if ((THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-        {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + THIS_X)%NUM_LEDS;
-        }
-        else                                                      // если нечётная строка
-        {
-            return ((uint32_t)THIS_Y * SEGMENTS * _WIDTH + _WIDTH - THIS_X - 1)%NUM_LEDS;
-        }
-    
-        #undef MIRR_H
-        #undef MIRR_V
-    #else
-        // any out of bounds address maps to the first hidden pixel
-        if ( (x >= WIDTH) || (y >= HEIGHT) ) {
-            return (LAST_VISIBLE_LED + 1);
-        }
-        uint16_t i = (y * WIDTH) + x;
-        uint16_t j = pgm_read_dword(&XYTable[i]);
-        return j;
-    #endif
-    }
-
-    // для работы с буфером
-    uint32_t getPixelNumberBuff(uint16_t x, uint16_t y, uint8_t W , uint8_t H) // получить номер пикселя в буфере по координатам
-    {
-        uint16_t NL = W*H;
-
-        uint16_t _THIS_Y = y;
-        uint16_t _THIS_X = x;
-        
-        if ((_THIS_Y % 2 == 0) || MATRIX_TYPE)                     // если чётная строка
-        {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + _THIS_X)%NL;
-        }
-        else                                                      // если нечётная строка
-        {
-            return ((uint32_t)_THIS_Y * SEGMENTS * W + W - _THIS_X - 1)%NL;
-        }
-    
-    }
-
-    /*
-     * Change global brightness with or without fade effect
+    /**
+     * @brief - Change global brightness with or without fade effect
      * fade applied in non-blocking way
      * FastLED dim8 function applied internaly for natural brightness controll
      * @param uint8_t _tgtbrt - target brigtness level 0-255
@@ -481,26 +412,15 @@ public:
      */
     void setBrightness(const uint8_t _tgtbrt, const bool fade=false, const bool natural=true);
 
-    /*
-     * Get current brightness
+    /**
+     * @brief - Get current brightness
      * FastLED brighten8 function applied internaly for natural brightness compensation
      * @param bool natural - return compensated or absolute brightness
      */
     uint8_t getBrightness(const bool natural=true);
 
-    /*
-     * Non-blocking light fader, uses system ticker to globaly fade FastLED brighness
-     * within specified duration
-     * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
-     *                                   function applied internaly for natiral dimming
-     * @param uint32_t _duration - fade effect duraion, ms
-     * @param callback  -  callback-функция, которая будет выполнена после окончания затухания (без блокировки)
-     */
-    void fadelight(const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
-
-
-    /*
-     * переключатель эффектов для других методов,
+    /**
+     * @brief - переключатель эффектов для других методов,
      * может использовать фейдер, выбирать случайный эффект для демо
      * @param EFFSWITCH action - вид переключения (пред, след, случ.)
      * @param fade - переключаться через фейдер или сразу
@@ -511,24 +431,85 @@ public:
 
     /*
      * включает/выключает "демо"-таймер
-     * @param TICKER action - enable/disable/reset
+     * @param SCHEDULER action - enable/disable/reset
      */
     void demoTimer(SCHEDULER action, byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
 
     /*
      * включает/выключает "эффект"-таймер
-     * @param TICKER action - enable/disable/reset
+     * @param SCHEDULER action - enable/disable/reset
      */
-    void effectsTimer(SCHEDULER action);
+    void effectsTimer(SCHEDULER action, uint32_t _begin = 0);
 
 
     ~LAMP() {}
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
-    CRGB leds[NUM_LEDS]; // основной буфер вывода изображения
     std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
     std::vector<CRGB> drawbuff; // буфер для рисования
 };
 
+// Fader object
+class LEDFader;
+extern LEDFader *fader;
+class LEDFader : public Task {
+    LAMP *lmp;
+    uint8_t _brt, _brtincrement;
+    bool isSkipBrightness = false;
+    std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
+    LEDFader() = delete; 
+public:
+    void skipBrightness() { 
+        isSkipBrightness = true;
+        LOG(println,F("Fading canceled"));
+        fader = nullptr;
+        if(_cb)
+            _cb();
+        _cb = nullptr;
+        this->cancel();        
+    }
+    LEDFader(Scheduler* aS, LAMP *_l, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void(void)> callback)
+        : Task((unsigned long)FADE_STEPTIME,
+        (abs(_targetbrightness - _l->getBrightness()) > FADE_MININCREMENT * _duration / FADE_STEPTIME) ? (long)(_duration / FADE_STEPTIME) : (long)(abs(_targetbrightness - _l->getBrightness())/FADE_MININCREMENT) + 1,
+        [this](){_brt += _brtincrement; lmp->brightness(_brt);},
+        aS,
+        false,
+        nullptr,
+        [this, _targetbrightness](){
+            if(!isSkipBrightness){
+                lmp->brightness(_targetbrightness);
+                LOG(printf_P, PSTR("Fading to %d done\n"), _targetbrightness);
+            }
+            TASK_RECYCLE;
+            fader = nullptr;
+            if(_cb)
+                _cb();
+            _cb = nullptr;
+        })
+    {
+        this->_cb = callback;
+        this->lmp = _l;
+        this->restart();
+
+        this->_brt = lmp->getBrightness();
+        int _steps = (abs(_targetbrightness - _brt) > FADE_MININCREMENT * _duration / FADE_STEPTIME) ? (long)(_duration / FADE_STEPTIME) : (long)(abs(_targetbrightness - _brt)/FADE_MININCREMENT);
+        if (_steps < 3) {
+            this->cancel();
+            return;
+        }
+        _brtincrement = (_targetbrightness - _brt) / _steps;
+        LOG(printf_P, PSTR("Fading to: %d\n"), _targetbrightness);
+    }
+};
+
+/**
+ * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
+ * @param LAMP *lamp - lamp instance
+ * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
+ *                                   function applied internaly for natiral dimming
+ * @param uint32_t _duration - fade effect duraion, ms
+ * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
+ */
+void fadelight(LAMP *lamp, const uint8_t _targetbrightness=0, const uint32_t _duration=FADE_TIME, std::function<void()> callback=nullptr);
 #endif

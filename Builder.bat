@@ -46,7 +46,7 @@ Echo  *------------------------------------------#------------------------------
 Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      *
 Echo  #------------------------------------------#-----------------------------------------#
 Echo.
-Set /p choice="Your choice (Ваш выбор): "
+Set /p choice="Your choice (Ваш выбор): " 
 
 
 if "%choice%"=="1" (
@@ -58,7 +58,9 @@ if "%choice%"=="2" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" lib update
 )
 if "%choice%"=="3" call update-DEV-from-Git.cmd 3
-if "%choice%"=="4" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160)
+if "%choice%"=="4" (
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160
+)
 if "%choice%"=="5" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266)
 if "%choice%"=="6" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp32)
 if "%choice%"=="7" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266@160)

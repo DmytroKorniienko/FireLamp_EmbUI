@@ -25,6 +25,7 @@ const char *btn_get_desc(BA action){
 	return PSTR("");
 }
 
+Task *tReverseTimeout = nullptr; // задержка переключения направления
 bool Button::activate(btnflags& flg, bool reverse){
 		uint8_t newval;
 		RA ract = RA_UNKNOWN;
@@ -33,30 +34,48 @@ bool Button::activate(btnflags& flg, bool reverse){
 		switch (action) {
 			case BA_BRIGHT:
 				newval = constrain(myLamp.getLampBrightness() + (myLamp.getLampBrightness() / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
+				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
+					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); },
+									&ts, false, nullptr, [](){TASK_RECYCLE; tReverseTimeout = nullptr;}
+							);
+					tReverseTimeout->enableDelayed();
+				} 
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 10);
 #endif
-				remote_action(RA::RA_BRIGHT_NF, String(newval).c_str(), NULL);
+				remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(newval).c_str(), NULL);
 				return true;
 			case BA_SPEED: {
 				byte speed = (myLamp.effects.getControls()[1]->getVal()).toInt();
 				newval = constrain( speed + (speed / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
+				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
+					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); },
+									&ts, false, nullptr, [](){TASK_RECYCLE; tReverseTimeout = nullptr;}
+							);
+					tReverseTimeout->enableDelayed();
+				}
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 100);
 #endif
-				remote_action(RA::RA_SPEED, String(newval).c_str(), NULL);
+				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"1").c_str(), String(newval).c_str(), NULL);
 				return true;
 			}
 			case BA_SCALE: {
 				byte scale = (myLamp.effects.getControls()[2]->getVal()).toInt();
 				newval = constrain(scale + (scale / 25 + 1) * (flags.direction * 2 - 1), 1 , 255);
-				if (newval == 1 || newval == 255) flags.direction = !flags.direction;
+				if ((newval == 1 || newval == 255) && tReverseTimeout==nullptr){
+					tReverseTimeout = new Task(2 * TASK_SECOND, TASK_ONCE,
+									[this](){ flags.direction = !flags.direction; LOG(println,F("reverse")); },
+									&ts, false, nullptr, [](){TASK_RECYCLE; tReverseTimeout = nullptr;}
+							);
+					tReverseTimeout->enableDelayed();
+				}
 #ifdef VERTGAUGE
 				myLamp.GaugeShow(newval, 255, 150);
 #endif
-				remote_action(RA::RA_SCALE, String(newval).c_str(), NULL);
+				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"2").c_str(), String(newval).c_str(), NULL);
 				return true;
 			}
 			case BA_ON: ract = RA_ON; break;
@@ -72,8 +91,8 @@ bool Button::activate(btnflags& flg, bool reverse){
 			case BA_EFF_PREV: ract = RA_EFF_PREV; break;
 			case BA_SEND_TIME: ract = RA_SEND_TIME; break;
 			case BA_SEND_IP: ract = RA_SEND_IP; break;
-			case BA_WHITE_HI: ract = RA_WHITE_HI; break;
-			case BA_WHITE_LO: ract = RA_WHITE_LO; break;
+			case BA_WHITE_HI: flags.direction=true; ract = RA_WHITE_HI; break;
+			case BA_WHITE_LO: flags.direction=false; ract = RA_WHITE_LO; break;
 			case BA_WIFI_REC: ract = RA_WIFI_REC; break;
 			case BA_EFFECT: ract = RA_EFFECT; break;
 			default:;
@@ -108,7 +127,7 @@ String Button::getName(){
 		return buffer;
 };
 
-Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), holdtm(NUMHOLD_TIME), touch(_pin, _pullmode, _state){
+Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), touch(_pin, _pullmode, _state){
 	pin = _pin;
 	pullmode = _pullmode;
 	state = _state;
@@ -116,6 +135,7 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), ho
 	holded = false;
 	buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
 	pinTransition = true;
+	onoffLampState = myLamp.isLampOn();
 
 	clicks = 0;
 
@@ -131,76 +151,64 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), ho
 	touch.setTimeout(BUTTON_TIMEOUT);
 	touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
 	touch.resetStates();
-#ifdef ESP8266
-	_buttonTicker.attach_scheduled(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
-#elif defined ESP32
-	_buttonTicker.attach(1, std::bind(&Buttons::buttonTick, this));   // "ленивый" опрос 1 раз в сек
-#endif
-}
 
-/*
- * buttonPress - управление планировщиком опроса кнопки
- * оберка нужна т.к. touch.tick() нельзя положить в ICACHE_RAM
- * по наступлению прерывания "нажато" врубаем опрос событий кнопки не реже чем BUTTON_STEP_TIMEOUT/2 чтобы отловить "удержание"
- *
- * т.к. гайвербаттон не умеет работать чисто по событиям, при "отпускании" продолжаем дергать обработчик раз в секунду,
- * чтобы не он забыл зачем живет :)
- */
-void Buttons::buttonPress(bool state){
-	if (!buttonEnabled) {
-		// события кнопки не обрабатываются, если она заблокирована
-		_buttonTicker.detach();
-		return;
-	}
-
-	LOG(printf_P, PSTR("Button %s: %lu\n"), state ? PSTR("press") : PSTR("release"), millis());
-	buttonTick();   // обрабатываем текущее нажатие вне очереди
-#ifdef ESP8266
-	_buttonTicker.attach_ms_scheduled(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
-#elif defined ESP32
-	_buttonTicker.attach_ms(state ? BUTTON_STEP_TIMEOUT/2 : 1000, std::bind(&Buttons::buttonTick, this));
-#endif
+	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
+	isrEnable();
 }
 
 void Buttons::buttonTick(){
 	if (!buttonEnabled) return;
-	
-	static bool startLampState = myLamp.isLampOn();
-	
+
 	touch.tick();
 	bool reverse = false;
 
 	if ((holding = touch.isHolded())) {
-		if (holdtm.isReady()) {
-			holded = true;
-			clicks = touch.getHoldClicks();
-			startLampState = myLamp.isLampOn(); // получить начальный статус
+		// начало удержания кнопки
+		byte tstclicks = touch.getHoldClicks();
+		if(!tClicksClear || (tstclicks && tstclicks!=clicks)) // нажатия после удержания не сбрасываем!!! они сбросятся по tClicksClear или по смене кол-ва нажатий до удержания
+			clicks=tstclicks;
+		if(!tClicksClear){
+			tClicksClear = new Task(NUMHOLD_TIME, TASK_ONCE, [this](){ holded = true; clicks=0; }, &ts, false, nullptr, [this](){TASK_RECYCLE; tClicksClear=nullptr;});
+			tClicksClear->enableDelayed();
 		}
+		onoffLampState = myLamp.isLampOn(); // получить статус на начало удержания
 		reverse = true;
+		if(tReverseTimeout){ // сброс реверса, если он включен
+			LOG(println,F("reverce canceled"));
+			tReverseTimeout->cancel();
+		}
+		LOG(printf_P, PSTR("start hold - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 	} else if ((holding = touch.isStep())) {
-		holdtm.reset();
+		// кнопка удерживается
+		if(tClicksClear)
+			tClicksClear->restartDelayed(); // отсрочиваем сброс нажатий
 	} else if (!touch.hasClicks() || !(clicks = touch.getClicks())) {
 		if( (!touch.isHold() && holded) )	{ // кнопку уже не трогают
-			LOG(println,F("Сброс состояния кнопки после окончания действий"));
+			LOG(println,F("Сброс состояния кнопки после окончания удержания"));
 			resetStates();
-			startLampState = myLamp.isLampOn();
+			onoffLampState = myLamp.isLampOn(); // сменить статус после удержания
+			LOG(printf_P, PSTR("reset - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 			for (int i = 0; i < buttons.size(); i++) {
 				buttons[i]->flags.onetime&=1;
 			}
+			isrEnable(); // переключение на ленивый опрос
 		}
+		// здесь баг, этот выход часто перехватывает "одиночные" нажатия и превращает их в "клик"
 		return;
 	}
-	LOG(printf_P, PSTR("buttonEnabled=%d, startLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, startLampState, holding, holded, clicks, reverse);
+	
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
 		myLamp.stopAlarm();
 		return;
 	}
 
-	if(!holding)
-		startLampState=myLamp.isLampOn();
-
-	Button btn(startLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
+	if(!holding){
+		onoffLampState=myLamp.isLampOn(); // обновить статус, если не удерживается и это однократное нажатие
+		LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
+	}
+	
+	Button btn(onoffLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
 			//if(buttons[i]->action==1) continue; // отладка, отключить действие увеличения яркости
@@ -209,13 +217,18 @@ void Buttons::buttonTick(){
 				// действие не подразумевает повтора
 				if(buttons[i]->flags.onetime && touch.isHold()){ // в процессе удержания
 					buttons[i]->flags.onetime|=3; // установить старший бит сработавшего действия
-				} else {
-					touch.resetStates();
-					startLampState = myLamp.isLampOn();
 				}
 			}
 			// break; // Не выходим после первого найденного совпадения. Можем делать макросы из нажатий
 		}
+	}
+
+	// Здесь уже все отработало, и кнопка точно не удерживается
+	if(!holding){
+		LOG(println,F("Сброс состояния кнопки"));
+		resetStates();
+		onoffLampState = myLamp.isLampOn(); // обновить статус по итогу работы
+		isrEnable();
 	}
 }
 
@@ -291,6 +304,35 @@ void Buttons::saveConfig(const char *cfg){
 		configFile.print("]");
 		configFile.flush();
 		configFile.close();
+	}
+}
+
+void IRAM_ATTR Buttons::isrPress() {
+  detachInterrupt(pin);
+	if(tButton)
+		tButton->cancel();
+	tButton = new Task(20, TASK_FOREVER, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;}); // переключение в режим удержания кнопки
+}
+
+void Buttons::isrEnable(){
+	LOG(println,F("Button switch to isr"));
+	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode==LOW_PULL ? RISING : FALLING );
+	if(tButton)
+		tButton->cancel();
+	tButton = new Task(TASK_SECOND, 5, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;});	// "ленивый" опрос 1 раз в сек в течение 5 секунд
+}
+
+void Buttons::setButtonOn(bool flag) {
+	buttonEnabled = flag;
+	resetStates();
+	if (flag){
+		LOG(println,F("Button watch enabled"));
+		isrEnable();
+	} else {
+	  detachInterrupt(pin);
+		if(tButton)
+			tButton->cancel();
+		LOG(println,F("Button watch disabled"));
 	}
 }
 

@@ -60,14 +60,15 @@ private:
   float scale = 1.27; // 400 как средняя точка у меня, но надо будет калибравать для каждого случая отдельно калибровкой :)
   float noise = 0; // заполняется калибровкой, это уровень шума микрофона
   double signalFrequency = 700;
-  double samplingFrequency = SAMPLING_FREQ; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500 если чтение через analogRead(MIC_PIN);
+  uint32_t samplingFrequency = SAMPLING_FREQ; // частота семплирования для esp8266 (без разгонов) скорее всего не может быть выше 9500 если чтение через analogRead(MIC_PIN);
 
   const unsigned int sampling_period_us = round(1000000*(1.0/samplingFrequency));
   const uint8_t amplitude = 100;
   float *vReal = nullptr;
   float *vImag = nullptr;
-  uint8_t minPeak = 0.0;
-  uint8_t maxPeak = 0.0;
+  uint8_t minPeak = 0;
+  uint8_t maxPeak = 0;
+  float curVal = 0.0;
   ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
   void PrintVector(float *vData, uint16_t bufferSize, uint8_t scaleType);
   void read_data();
@@ -78,10 +79,16 @@ public:
 #else
   static const uint16_t samples=64U;     //This value MUST ALWAYS be a power of 2
 #endif
-  MICWORKER(float scale = 1.28, float noise = 0) {
-    this->vReal = new float[samples]; this->vImag = new float[samples]; this->scale=scale; this->noise=noise;
+  MICWORKER(float scale = 1.28, float noise = 0, bool withAnalyse=true) {
+    this->vReal = new float[samples];
+    if(withAnalyse)
+      this->vImag = new float[samples];
+    else
+      this->vImag = nullptr;
+    this->scale=scale;
+    this->noise=noise;
   }
-  ~MICWORKER() { delete [] vReal; delete [] vImag; }
+  ~MICWORKER() { if(vReal) delete [] vReal; if(vImag) delete [] vImag; }
   bool isCaliblation() {return _isCaliblation;}
   void calibrate();
   double process(MIC_NOISE_REDUCE_LEVEL level=MIC_NOISE_REDUCE_LEVEL::NR_NONE);
@@ -89,9 +96,10 @@ public:
   float getScale() {return scale;}
   float getNoise() {return noise;}
   float getFreq() {return signalFrequency;}
+  float getCurVal() {return curVal;}
   uint8_t getMinPeak() {return minPeak;}
   uint8_t getMaxPeak() {return maxPeak;}
-  float fillSizeScaledArray(float *arr, size_t size);
+  float fillSizeScaledArray(float *arr, size_t size, bool bound=true);
 };
 
 #endif

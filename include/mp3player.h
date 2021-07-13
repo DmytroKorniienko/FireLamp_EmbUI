@@ -54,6 +54,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       };
       uint32_t flags;
     };
+    Task *tPeriodic = nullptr; // периодический опрос плеера
     uint8_t cur_volume = 0;
     uint16_t mp3filescount = 255; // кол-во файлов в каталоге MP3
     uint16_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
@@ -61,8 +62,6 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t prev_effnb=0; // предыдущий эффект
     ALARM_SOUND_TYPE tAlarm;
     SoftwareSerial mp3player;
-    Ticker delayedCall;
-    Ticker periodicCall;
     String soundfile; // хранилище пути/имени
     unsigned long restartTimeout = millis(); // таймаут воспроизведения имени эффекта
     void printSatusDetail();
@@ -74,24 +73,40 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t getCurPlayingNb() {return prev_effnb;} // вернуть предыдущий для смещения
     void setupplayer(uint16_t effnb, const String &_soundfile) {soundfile = _soundfile; cur_effnb=effnb;};
     bool isReady() {return ready;}
+    bool isAlarm() {return alarm;}
     bool isOn() {return on && ready;}
     bool isMP3Mode() {return mp3mode;}
-    void setIsOn(bool val, bool forcePlay=true) {on = val; if(!on) stop(); else if(forcePlay && (effectmode || mp3mode)) playEffect(cur_effnb, soundfile);}
+    void setIsOn(bool val, bool forcePlay=true) {
+      on = val;
+      if(!on)
+        stop();
+      else if(forcePlay && (effectmode || mp3mode))
+        playEffect(cur_effnb, soundfile);
+
+      if(tPeriodic)
+        tPeriodic->cancel();
+      
+      if(on){
+        tPeriodic = new Task(1.21 * TASK_SECOND, TASK_FOREVER, std::bind(&MP3PLAYERDEVICE::handle,this), &ts, false, nullptr, [this](){TASK_RECYCLE; tPeriodic = nullptr;}); // "ленивый" опрос - раз в 1.21 сек (стараюсь избежать пересеченией с произнесением времени)
+        tPeriodic->enableDelayed();
+      }
+    }
     void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
     void playName(uint16_t effnb);
-    void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); }
+    void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); LOG(printf_P, PSTR("DFplayer: Set volume: %d\n"), cur_volume); }
     uint8_t getVolume() { return cur_volume; }
-    void setTempVolume(uint8_t vol) { volume(vol); }
+    void setTempVolume(uint8_t vol) { volume(vol); LOG(printf_P, PSTR("DFplayer: Set temp volume: %d\n"), vol); }
     void setMP3count(uint16_t cnt) {mp3filescount = cnt;} // кол-во файлов в папке MP3
     uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
     void setPlayEffect(bool flag) {effectmode = flag;}
-    void setAlarm(bool flag) {alarm = flag;}
-    void StartAlarmSound(ALARM_SOUND_TYPE val);
+    void setAlarm(bool flag) {alarm = flag; stop();}
+    void StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);
-    void StopAndRestoreVolume() { stop(); delay(200); volume(cur_volume); }
+    void RestoreVolume() { setVolume(cur_volume); }
+    void setCurEffect(uint16_t effnb) { prev_effnb=cur_effnb; cur_effnb = effnb%256; }
     void handle();
 };
 #endif

@@ -56,9 +56,9 @@
 			</div>
 			<div>
 				<span class="menu-title">Theme:</span><span class="menu-value">
-					<a href="#" onclick="setDynCSS('css/style.css');">[C]</a> 
-					<a href="#" onclick="setDynCSS('css/style_light.css');">[L]</a>
-					<a href="#" onclick="setDynCSS('css/style_dark.css');">[D]</a>
+					<button class="pure-menu-selected" onclick="setDynCSS('css/style.css');">C</button>
+					<button class="pure-menu-selected" onclick="setDynCSS('css/style_light.css');">L</button>
+					<button class="pure-menu-selected" onclick="setDynCSS('css/style_dark.css');">D</button>
 				</span>
 			</div>
 		</div>
@@ -101,7 +101,7 @@
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "button"}}
-			<div id="{{id}}" {{#if2 color}}style="background-color: {{color}}"{{/if2}} class="pure-u-1 pure-button pure-button-primary mr"
+			<div id="{{id}}" class="pure-u-1 pure-button pure-button-primary mr" {{#if2 top_margine!=10 || color}}style="{{/if2}} {{#if2 top_margine!=10}} margin-top: {{top_margine}}px !important;{{/if2}} {{#if2 color}} background-color: {{color}};{{/if2}} {{#if2 top_margine!=10 || color}}"{{/if2}}
 				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}
 				{{#if2 !submit}}{{onevent "click", "on_change", id}}{{/if2}}
 			>
@@ -127,13 +127,18 @@
 		{{/if}}
 		{{#if html == "select"}}
 			<span>{{label}}</span>
-			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-1"
+			{{#if2 editable}}<div class="select-editable">{{/if2}}
+			<select id="{{id}}" name="{{id}}" value="{{value}}" class="pure-u-1" {{#if2 editable}} onchange="this.nextElementSibling.value=this.value"{{/if2}}
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}
 			>
 			{{#block}}
 				<option value="{{value}}" {{#if2 value == _this.value}}selected{{/if2}}>{{label}}</option>
 			{{/block}}
 			</select>
+			{{#if2 editable}}
+			<input type="text" id="{{id}}" name="{{id}}" value="{{value}}">
+		</div>
+			{{/if2}}
 		{{/if}}
 		{{#if type == "checkbox"}}
 			<div class="switch-block">
@@ -163,17 +168,40 @@
 		{{#if html == "iframe2"}}
 			<div class="frame"><iframe id="{{id}}" name="{{id}}" src="{{value}}" class="iframe">iframe does not supported</iframe></div>
 		{{/if}}
+		{{#if html == "custom" && type == "div"}}
+		<!-- Custom div element, on create 'div' calls user js-function with a name passed in {{value}} parameter
+			params: id - becomes div ID and name
+			param.class - becomes css class selector
+			value - becomes js-function name to call
+			label - becomes span "comment" element
+		-->
+			<span class="comment">{{label}}</span>
+			<div id="{{id}}" name="{{id}}" class="{{param.class}}"><img src onerror='{{value}}("{{id}}")'></div>
+		{{/if}}
+		{{#if html == "custom" && type == "txt"}}
+		<!-- Custom div with text content,
+			params: id - becomes internal div ID
+			value - becomes plain text in div
+			label - becomes div css class selector
+			param.* - reserved
+		-->
+			<div class="{{label}}"><div id="{{id}}">{{value}}</div></div>
+		{{/if}}
 		{{#if html == "custom" && type == "drawing"}}
 		<!-- This is custom drawing control -->
-			<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">
+			<div class="pure-u-sm-1-3 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">
 				<span>{{label}}</span><span id="{{id}}-val"> ({{value}})</span>
-				<input type="color" id="{{id}}-c" class="pure-u-1" value="{{value}}" style="height: 35px; margin-top: 15px" {{onevent "input", "on_input", id}}>
+				<input type="color" id="{{id}}-c" class="pure-u-1" value="{{value}}" style="height: 35px; margin-top: 10px" {{onevent "input", "on_input", id}}>
 			</div>
-			<div class="pure-u-sm-1-2 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">
+			<div class="pure-u-sm-1-3 {{#if2 _this.block.length > 2}}pure-u-md-1-3{{/if2}} {{#if2 _this.block.length > 3}}pure-u-lg-1-4{{/if2}} {{#if2 _this.block.length > 4}}pure-u-xl-1-5{{/if2}}">
 				<span>&nbsp;</span>
 				<div id="{{id}}-b" {{#if2 color}}style="background-color: {{param.bcolor}}"{{/if2}} class="pure-u-1 pure-button pure-button-primary mr" {{onevent "click", "on_change", id}}>{{param.blabel}}</div>
 			</div>
-			<div>
+			<div class="pure-u-sm-1-3">
+				<span>&nbsp;</span>
+			<div id="{{id}}-d" {{#if2 color}}style="background-color: {{param.bcolor}}"{{/if2}} class="pure-u-1 pure-button pure-button-primary mr" {{onevent "click", "on_change", id}}>{{param.drawClear}}</div>
+			</div>
+						<div>
 				<table id="{{id}}-tbl" class="draw_ctrl"></table> <img src onerror='init_draw("{{id}}", {{param.width}}, {{param.height}})'">
 			</div>
 		<!-- This is custom drawing control -->

@@ -68,8 +68,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define DISABLE_LED_BUILTIN                                 // Отключить встроенный в плату светодиод, если нужно чтобы светил - закомментировать строку
 typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
-#ifndef LANG
-#define LANG                  "text_res-RUS.h"                  // Языковой файл по дефолту
+#ifndef LANG_FILE
+#define LANG_FILE                  "text_res-RUS.h"           // Языковой файл по дефолту
 #endif
 
 #ifndef MIC_PIN
@@ -110,9 +110,9 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifdef MP3PLAYER
-#ifdef ESP32
- #error ESP32 with DfPlayer is not (yet) supported due to softwareserial dependency (to be fixed)
-#endif
+// #ifdef ESP32
+//  #error ESP32 with DfPlayer is not (yet) supported due to softwareserial dependency (to be fixed)
+// #endif
 #ifndef MP3_TX_PIN
 #define MP3_TX_PIN            (D5)                         // TX mp3 player RX (D5)
 #endif
@@ -128,23 +128,20 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #endif
 
 #ifndef LAMP_PIN
-//#define LAMP_PIN              (2U)                          // пин ленты                (D4)
-#ifdef ESP8266
 #define LAMP_PIN              (D3)                          // пин ленты                (D3)
-#endif
 #endif
 
 #ifndef BTN_PIN
-#define BTN_PIN               (4U)                          // пин кнопки               (D2)
+#define BTN_PIN               (D1)                          // пин кнопки               (D1)
 //#define BTN_PIN               (0U)                          // пин кнопки "FLASH" NodeMCU (ОТЛАДКА!!!) , подтяжка должна быть PULL_MODE=HIGH_PULL
 #endif
-
+/*
 #ifndef MOSFET_PIN
-#define MOSFET_PIN            (5U)                          // пин MOSFET транзистора   (D1) - может быть использован для управления питанием матрицы/ленты
-#endif
-#ifndef ALARM_PIN
-#define ALARM_PIN             (16U)                         // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
-#endif
+#define MOSFET_PIN            (D2)                          // пин MOSFET транзистора   (D2) - может быть использован для управления питанием матрицы/ленты
+#endif*/
+/*#ifndef ALARM_PIN                                        
+#define ALARM_PIN             (D8)                         // пин состояния будильника (D0) - может быть использован для управления каким-либо внешним устройством на время работы будильника
+#endif*/
 #ifndef MOSFET_LEVEL
 #define MOSFET_LEVEL          (HIGH)                        // логический уровень, в который будет установлен пин MOSFET_PIN, когда матрица включена - HIGH или LOW
 #endif
@@ -189,6 +186,11 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #ifndef BRIGHTNESS
 #define BRIGHTNESS            (255U)                        // стандартная максимальная яркость (0-255)
 #endif
+
+#ifndef OFF_BRIGHTNESS
+#define OFF_BRIGHTNESS          (2U)                        // яркость вывода текста в случае выключенной лампы
+#endif
+
 #ifndef CURRENT_LIMIT
 #define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 #endif
@@ -208,6 +210,10 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 #ifndef MAX_FPS
 #define MAX_FPS               (60U)                         // Максимальное число обсчитываемых и выводимых кадров в секунду
+#endif
+
+#ifndef SPEED_ADJ
+#define SPEED_ADJ (float)NUM_LEDS/256                         // Поправка скорости риал-тайм эффектов относительно размеров метрицы.
 #endif
 
 #define EFFECTS_RUN_TIMER   (uint16_t)(1000 / MAX_FPS)     // период обработки эффектов - при 10 это 10мс, т.е. 1000/10 = 100 раз в секунду, при 20 = 50 раз в секунду, желательно использовать диапазон 10...40
@@ -331,6 +337,21 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define THIS_Y y
 #pragma message "Wrong matrix parameters! Set to default"
 
+#endif
+
+#ifdef TM1637
+#ifndef TM_CLK_PIN
+  #define TM_CLK_PIN D0 
+#endif
+#ifndef TM_DIO_PIN
+  #define TM_DIO_PIN D7
+#endif
+#ifndef TM_BRIGHTNESS
+  #define TM_BRIGHTNESS 7U //яркость дисплея, 0..7
+#endif
+#ifndef TM_SHOW_BANNER
+  #define TM_SHOW_BANNER 0
+#endif
 #endif
 
 #endif
