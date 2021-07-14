@@ -140,7 +140,11 @@ void setup() {
 #endif
 
 #if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
+#ifdef ESP8266
     digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
+#else
+    digitalWrite(LED_BUILTIN, LOW); // "душим" светодиод nodeMCU32
+#endif
 #endif
     LOG(println, F("setup() done"));
 }   // End setup()

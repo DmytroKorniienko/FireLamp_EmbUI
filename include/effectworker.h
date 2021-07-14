@@ -177,45 +177,45 @@ public:
 class EffectListElem{
 private:
     uint8_t ms = micros()|0xFF; // момент создания элемента, для сортировки в порядке следования (естественно, что байта мало, но экономим память)
-#ifdef CASHED_EFFECTS_NAMES
-    String name;
-    void initName(uint16_t nb) {
-        uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
-        String filename;
-        char buffer[5];
-        filename.concat(F("/eff/"));
-        sprintf_P(buffer,PSTR("%04x"), swapnb);
-        filename.concat(buffer);
-        filename.concat(F(".json"));
+// #ifdef CASHED_EFFECTS_NAMES
+//     String name;
+//     void initName(uint16_t nb) {
+//         uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
+//         String filename;
+//         char buffer[5];
+//         filename.concat(F("/eff/"));
+//         sprintf_P(buffer,PSTR("%04x"), swapnb);
+//         filename.concat(buffer);
+//         filename.concat(F(".json"));
 
-        DynamicJsonDocument doc(2048);
-        bool ok = false;
+//         DynamicJsonDocument doc(2048);
+//         bool ok = false;
 
-        File jfile = LittleFS.open(filename.c_str(), "r");
-        DeserializationError error;
-        if (jfile){
-            error = deserializeJson(doc, jfile);
-            jfile.close();
-        } else {
-            ok = false;
-        }
+//         File jfile = LittleFS.open(filename.c_str(), "r");
+//         DeserializationError error;
+//         if (jfile){
+//             error = deserializeJson(doc, jfile);
+//             jfile.close();
+//         } else {
+//             ok = false;
+//         }
 
-        if (error) {
-            LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filename.c_str());
-            LOG(println, error.code());
-            ok = false;
-        }
-        ok = true;
+//         if (error) {
+//             LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filename.c_str());
+//             LOG(println, error.code());
+//             ok = false;
+//         }
+//         ok = true;
 
-        if (ok && doc[F("name")]){
-            name = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
-        } else if(!ok) {
-            // LittleFS.remove(filename);
-            // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
-            name = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
-        }
-    }
-#endif
+//         if (ok && doc[F("name")]){
+//             name = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
+//         } else if(!ok) {
+//             // LittleFS.remove(filename);
+//             // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
+//             name = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
+//         }
+//     }
+// #endif
 public:
     uint16_t eff_nb; // номер эффекта, для копий наращиваем старший байт
     EFFFLAGS flags; // флаги эффекта
@@ -223,17 +223,17 @@ public:
     EffectListElem(uint16_t nb, uint8_t mask){
         eff_nb = nb;
         flags.mask = mask;
-#ifdef CASHED_EFFECTS_NAMES
-        initName(nb);
-#endif
+// #ifdef CASHED_EFFECTS_NAMES
+//         initName(nb);
+// #endif
     }
 
     EffectListElem(const EffectListElem *base){
         eff_nb = ((((base->eff_nb >> 8) + 1 ) << 8 ) | (base->eff_nb&0xFF)); // в старшем байте увеличиваем значение на 1
         flags = base->flags;
-#ifdef CASHED_EFFECTS_NAMES
-        initName(base->eff_nb);
-#endif
+// #ifdef CASHED_EFFECTS_NAMES
+//         initName(base->eff_nb);
+// #endif
     }
 
     bool canBeSelected(){ return flags.canBeSelected; }
@@ -241,10 +241,10 @@ public:
     bool isFavorite(){ return flags.isFavorite; }
     void isFavorite(bool val){ flags.isFavorite = val; }
     uint8_t getMS(){ return ms; }
-#ifdef CASHED_EFFECTS_NAMES
-    String& getName() {return name;}
-    void setName(const String& _name) {name = _name;}
-#endif
+// #ifdef CASHED_EFFECTS_NAMES
+//     String& getName() {return name;}
+//     void setName(const String& _name) {name = _name;}
+// #endif
 };
 
 

@@ -342,9 +342,9 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         effect->canBeSelected((*data)[FPSTR(TCONST_0006)] == "1");
         effect->isFavorite((*data)[FPSTR(TCONST_0007)] == "1");
         myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], effect);
-#ifdef CASHED_EFFECTS_NAMES
-        effect->setName((*data)[FPSTR(TCONST_0092)]);
-#endif
+// #ifdef CASHED_EFFECTS_NAMES
+//         effect->setName((*data)[FPSTR(TCONST_0092)]);
+// #endif
         myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
     }
 
@@ -559,14 +559,14 @@ void show_effects_config(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_effects_config(interf, data);
     interf->json_frame_flush();
-    if(!LittleFS.exists(F("/fslowlist.json")))
-        recreateoptionsTask();
 #else
     if (!interf) return;
     interf->json_frame_interface();
     block_effects_config(interf, data, false);
     interf->json_frame_flush();
 #endif
+    if(!LittleFS.exists(F("/fslowlist.json")))
+        recreateoptionsTask();
 }
 
 void set_effects_config_list(Interface *interf, JsonObject *data){
