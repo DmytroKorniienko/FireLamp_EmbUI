@@ -1599,8 +1599,8 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
+    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
     interf->json_section_line();
-    //interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
     interf->select_edit(FPSTR(TCONST_0040), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
     interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
@@ -1614,8 +1614,8 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
     interf->json_section_hidden(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_02F));
     //interf->text(FPSTR(P_APhostname), FPSTR(TINTF_02B));
-    interf->text(FPSTR(P_APhostname), embui.param(FPSTR(P_hostname)), String(FPSTR(TINTF_02B)));
     interf->spacer(FPSTR(TINTF_031));
+    interf->text(FPSTR(P_APhostname), embui.param(FPSTR(P_hostname)), String(FPSTR(TINTF_02B)));
     interf->comment(FPSTR(TINTF_032));
     interf->checkbox(FPSTR(P_APonly), FPSTR(TINTF_033));
     interf->password(FPSTR(TCONST_0044), FPSTR(TINTF_034));
