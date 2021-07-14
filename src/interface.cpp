@@ -519,6 +519,9 @@ void delayedcall_show_effects(){
                     if(slowlist){
                         slowlist->print(']');
                         slowlist->close();
+#ifdef ESP32
+                        delay(500);
+#endif
                         LittleFS.rename(F("/tmplist.tmp"),confEff?F("/fslowlist.json"):F("/slowlist.json"));
                         delete (fs::FS *)slowlist;
                     }
