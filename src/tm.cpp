@@ -67,8 +67,14 @@ void TMCLOCK::tm_loop() {
   if (!bannerShowed) return;
   #endif
 
+
   if (getSetDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу с другиг плагинов
     getSetDelay()--;
+    return;
+  }
+
+  if(ipShow) {      // Пропускаем все, если выводится IP
+    showIp();
     return;
   }
 
@@ -103,6 +109,18 @@ void TMCLOCK::showBanner(){
   if (l == 20) bannerShowed = 1;
 }
 #endif
+
+
+void TMCLOCK::showIp(){
+  if (embui.sysData.wifi_sta) {
+    String ip = (String) "IP." + (String) WiFi.localIP().toString();
+    splitIp(ip, ".", splittedIp);
+    display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+  }
+  else if (!embui.sysData.wifi_sta) display("__AP_192_168___4___1")->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
+  ipShow--;
+}
+
 
 // | FUNC - Split IP
 // |----------

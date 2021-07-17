@@ -54,10 +54,14 @@ public:
   uint8_t& getSetDelay();  // Задержка, для отображения с других плагинов
   void tm_setup();
   void tm_loop();
+  void showIp();
+  uint8_t getIpShow() {return ipShow;}
+  void setIpShow()  {ipShow = 17;}
 private:
   String splittedIp[5] = {};
   bool showPoints;
   uint8_t tmDelayTime;
+  uint8_t ipShow;
   #if TM_SHOW_BANNER
   bool bannerShowed;
   void showBanner();

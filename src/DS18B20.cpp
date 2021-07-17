@@ -138,6 +138,7 @@ void ds_loop() {
 
 void ds_display(int16_t value) { 
 #ifdef TM1637_CLOCK
+  if (tm1637.getIpShow()) return;   // Не выводим температуру, пока выводится IP
   tm1637.getSetDelay() = TM_TIME_DELAY;
   String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("%")));    // "%" - для отображения "о" вверху, "*" - для отображения "с" вверху
   tm1637.display(tmp, true, false, (value < -9 || value > 99) ? 0 : (value < 10 ? 2 : 1));

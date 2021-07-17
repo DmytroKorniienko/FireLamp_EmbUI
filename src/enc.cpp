@@ -598,6 +598,9 @@ void sendTime() {
 
 void sendIP() {
   remote_action(RA::RA_SEND_IP, NULL);
+  #ifdef TM1637_CLOCK
+  tm1637.setIpShow();
+  #endif
 }
 
 #endif

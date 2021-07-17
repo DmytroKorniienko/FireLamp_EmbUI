@@ -3269,6 +3269,9 @@ void remote_action(RA action, ...){
 
         case RA::RA_SEND_IP:
             myLamp.sendString(WiFi.localIP().toString().c_str(), CRGB::White);
+#ifdef TM1637_CLOCK
+            tm1637.setIpShow();
+#endif
             break;
         case RA::RA_SEND_TIME:
             myLamp.periodicTimeHandle(true);
