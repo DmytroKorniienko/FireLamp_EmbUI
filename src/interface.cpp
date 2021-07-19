@@ -80,6 +80,7 @@ void recreateoptionsTask(bool isCancelOnly=false){
     if(delayedOptionTask)
         delayedOptionTask->cancel(); // отмена предыдущей задачи, если была запущена
     if(!isCancelOnly){
+        embui.autosave();
         optionsTask = new Task(INDEX_BUILD_DELAY * TASK_SECOND, TASK_ONCE, delayedcall_show_effects, &ts, false, nullptr, [](){
             TASK_RECYCLE;
             optionsTask=nullptr;
@@ -1779,13 +1780,17 @@ void set_settings_other(Interface *interf, JsonObject *data){
             if(isRecreate){
                 myLamp.effects.setEffSortType(st);
                 myLamp.setNumInList(isNumInList);
+    #ifdef MIC_EFFECTS
                 myLamp.setEffHasMic(isEffHasMic);
+    #endif
                 myLamp.effects.removeLists();
                 recreateoptionsTask();
             }
         }
         myLamp.setNumInList(isNumInList);
+    #ifdef MIC_EFFECTS
         myLamp.setEffHasMic(isEffHasMic);
+    #endif
         SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
