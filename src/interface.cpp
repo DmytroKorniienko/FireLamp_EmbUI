@@ -267,7 +267,12 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     recreateoptionsTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
-    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
+    SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
+    if(myLamp.effects.getEffSortType()!=st){
+        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
+        myLamp.effects.removeLists();
+        recreateoptionsTask();
+    }
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
@@ -1755,15 +1760,39 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == "1");
         myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == "1");
         myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == "1");
-        myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == "1");
+
+        bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
+    #ifdef MIC_EFFECTS
+        bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
+    #endif
+        SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
+
+        if(myLamp.getLampState().isInitCompleted){
+            LOG(printf_P, PSTR("Settings: call removeLists()\n"));
+            bool isRecreate = false;
+            isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
+    #ifdef MIC_EFFECTS
+            isRecreate = (myLamp.getLampSettings().effHasMic!=isEffHasMic) || isRecreate;
+    #endif
+            isRecreate = (myLamp.effects.getEffSortType()!=st) || isRecreate;
+
+            if(isRecreate){
+                myLamp.effects.setEffSortType(st);
+                myLamp.setNumInList(isNumInList);
+                myLamp.setEffHasMic(isEffHasMic);
+                myLamp.effects.removeLists();
+                recreateoptionsTask();
+            }
+        }
+        myLamp.setNumInList(isNumInList);
+        myLamp.setEffHasMic(isEffHasMic);
+        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
-        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
+
         float sf = (*data)[FPSTR(TCONST_0053)];
         SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor(sf));
-    #ifdef MIC_EFFECTS
-        myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == "1");
-    #endif
+
         myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == "1");
 
     #ifdef TM1637_CLOCK
@@ -1790,7 +1819,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
     _t->enableDelayed();
 
     //BasicUI::section_settings_frame(interf, data);
-    section_settings_frame(interf, data);
+    if(interf)
+        section_settings_frame(interf, data);
 }
 
 // страницу-форму настроек времени строим методом фреймворка (ломает переводы, возвращено обратно)
@@ -2908,6 +2938,11 @@ t->enableDelayed();
     //--------------- начальная инициализация состояния
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
+    Task *_t = new Task(TASK_SECOND, TASK_ONCE, [](){ // откладыаем задачу на 1 секунду, т.к. выше есть тоже отложенные инициализации, см. set_settings_other()
+        myLamp.getLampState().isInitCompleted = true; // ставим признак того, что инициализация уже завершилась, больше его не менять и должен быть в самом конце sync_parameters() !!!
+        TASK_RECYCLE;
+    }, &ts, false);
+    _t->enableDelayed();
     LOG(println, F("sync_parameters() done"));
 }
 
