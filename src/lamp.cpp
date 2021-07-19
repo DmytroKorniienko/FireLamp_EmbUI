@@ -375,6 +375,7 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #endif
     , effects(&lampState)
     {
+      lampState.isInitCompleted = false; // завершилась ли инициализация лампы
       lampState.isStringPrinting = false; // печатается ли прямо сейчас строка?
       lampState.isEffectsDisabledUntilText = false;
       lampState.isOffAfterText = false;

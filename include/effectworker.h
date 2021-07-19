@@ -66,6 +66,7 @@ typedef struct {
     union {
         uint32_t flags;
         struct {
+            bool isInitCompleted:1; // завершилась ли инициализация лампы
             bool isMicOn:1;
             bool isDebug:1;
             bool isRandDemo:1;

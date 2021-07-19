@@ -1762,29 +1762,30 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == "1");
 
         bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
-        myLamp.setNumInList(isNumInList);
     #ifdef MIC_EFFECTS
         bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
-        myLamp.setEffHasMic(isEffHasMic);
     #endif
+        SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
 
-        if(!data->containsKey(FPSTR(TCONST_00DE))){
+        if(myLamp.getLampState().isInitCompleted){
             bool isRecreate = false;
             isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
     #ifdef MIC_EFFECTS
             isRecreate = (myLamp.getLampSettings().effHasMic!=isEffHasMic) || isRecreate;
     #endif
-            SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
-            if(myLamp.effects.getEffSortType()!=st){
-                SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
-                isRecreate = true;
-            }
+            isRecreate = (myLamp.effects.getEffSortType()!=st) || isRecreate;
 
             if(isRecreate){
+                myLamp.effects.setEffSortType(st);
+                myLamp.setNumInList(isNumInList);
+                myLamp.setEffHasMic(isEffHasMic);
                 myLamp.effects.removeLists();
                 recreateoptionsTask();
             }
         }
+        myLamp.setNumInList(isNumInList);
+        myLamp.setEffHasMic(isEffHasMic);
+        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
 
@@ -2898,7 +2899,6 @@ t->enableDelayed();
 
     obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
 
-    obj[FPSTR(TCONST_00DE)] = "1"; // признак начальной синхронизации
     set_settings_other(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
@@ -2936,6 +2936,7 @@ t->enableDelayed();
     //--------------- начальная инициализация состояния
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
+    myLamp.getLampState().isInitCompleted = true; // ставим признак того, что инициализация уже завершилась, больше его не менять и должен быть в самом конце sync_parameters() !!!
     LOG(println, F("sync_parameters() done"));
 }
 
