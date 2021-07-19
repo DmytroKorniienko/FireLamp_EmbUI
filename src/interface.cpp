@@ -267,7 +267,12 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     recreateoptionsTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
-    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
+    SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
+    if(myLamp.effects.getEffSortType()!=st){
+        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
+        myLamp.effects.removeLists();
+        recreateoptionsTask();
+    }
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
@@ -1755,15 +1760,37 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == "1");
         myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == "1");
         myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == "1");
-        myLamp.setNumInList((*data)[FPSTR(TCONST_0090)] == "1");
+
+        bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
+        myLamp.setNumInList(isNumInList);
+    #ifdef MIC_EFFECTS
+        bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
+        myLamp.setEffHasMic(isEffHasMic);
+    #endif
+
+        if(!data->containsKey(FPSTR(TCONST_00DE))){
+            bool isRecreate = false;
+            isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
+    #ifdef MIC_EFFECTS
+            isRecreate = (myLamp.getLampSettings().effHasMic!=isEffHasMic) || isRecreate;
+    #endif
+            SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
+            if(myLamp.effects.getEffSortType()!=st){
+                SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
+                isRecreate = true;
+            }
+
+            if(isRecreate){
+                myLamp.effects.removeLists();
+                recreateoptionsTask();
+            }
+        }
 
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
-        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType((*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>()));
+
         float sf = (*data)[FPSTR(TCONST_0053)];
         SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor(sf));
-    #ifdef MIC_EFFECTS
-        myLamp.setEffHasMic((*data)[FPSTR(TCONST_0091)] == "1");
-    #endif
+
         myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == "1");
 
     #ifdef TM1637_CLOCK
@@ -2871,6 +2898,7 @@ t->enableDelayed();
 
     obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
 
+    obj[FPSTR(TCONST_00DE)] = "1"; // признак начальной синхронизации
     set_settings_other(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 

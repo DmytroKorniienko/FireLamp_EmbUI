@@ -462,7 +462,6 @@ private:
 
     Task *tConfigSave = nullptr;       // динамическая таска, задержки при сохранении текущего конфига эффекта в файл
 
-    void removeLists(); // уделение списков из ФС
     void fsinforenew(){
 #ifdef ESP8266
         FSInfo fs_info;
@@ -530,6 +529,7 @@ private:
 
 
 public:
+    void removeLists(); // уделение списков из ФС
     time_t getlistsuffix() {return listsuffix ? listsuffix : (listsuffix=micros());}
     void setlistsuffix(time_t val) {listsuffix=val;}
     std::unique_ptr<EffectCalc> worker = nullptr;           ///< указатель-класс обработчик текущего эффекта
@@ -555,6 +555,7 @@ public:
 
     // тип сортировки
     void setEffSortType(SORT_TYPE type) {if(effSort != type) { effectsReSort(type); } effSort = type;}
+    SORT_TYPE getEffSortType() {return effSort;}
 
     // Получить конфиг текущего эффекта
     String geteffconfig(uint16_t nb, uint8_t replaceBright = 0);
