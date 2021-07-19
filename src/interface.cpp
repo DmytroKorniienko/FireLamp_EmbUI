@@ -1768,6 +1768,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
         SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
 
         if(myLamp.getLampState().isInitCompleted){
+            LOG(printf_P, PSTR("Settings: call removeLists()\n"));
             bool isRecreate = false;
             isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
     #ifdef MIC_EFFECTS
@@ -1818,7 +1819,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
     _t->enableDelayed();
 
     //BasicUI::section_settings_frame(interf, data);
-    section_settings_frame(interf, data);
+    if(interf)
+        section_settings_frame(interf, data);
 }
 
 // страницу-форму настроек времени строим методом фреймворка (ломает переводы, возвращено обратно)
@@ -2936,7 +2938,11 @@ t->enableDelayed();
     //--------------- начальная инициализация состояния
 
     check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
-    myLamp.getLampState().isInitCompleted = true; // ставим признак того, что инициализация уже завершилась, больше его не менять и должен быть в самом конце sync_parameters() !!!
+    Task *_t = new Task(TASK_SECOND, TASK_ONCE, [](){ // откладыаем задачу на 1 секунду, т.к. выше есть тоже отложенные инициализации, см. set_settings_other()
+        myLamp.getLampState().isInitCompleted = true; // ставим признак того, что инициализация уже завершилась, больше его не менять и должен быть в самом конце sync_parameters() !!!
+        TASK_RECYCLE;
+    }, &ts, false);
+    _t->enableDelayed();
     LOG(println, F("sync_parameters() done"));
 }
 
