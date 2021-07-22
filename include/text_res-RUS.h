@@ -264,7 +264,7 @@ static const char TINTF_036[] PROGMEM = "MQTT host";
 static const char TINTF_037[] PROGMEM = "MQTT port";
 static const char TINTF_038[] PROGMEM = "User";
 static const char TINTF_039[] PROGMEM = "Интервал mqtt, сек";
-static const char TINTF_03A[] PROGMEM = "Connect";
+static const char TINTF_03A[] PROGMEM = "Подключение";
 static const char TINTF_03B[] PROGMEM = "Отзеркаливание H";
 static const char TINTF_03C[] PROGMEM = "Отзеркаливание V";
 static const char TINTF_03D[] PROGMEM = "Плавное переключение эффектов";
@@ -335,7 +335,11 @@ static const char TINTF_07D[] PROGMEM = "Удержание";
 static const char TINTF_07E[] PROGMEM = "Нажатия";
 static const char TINTF_07F[] PROGMEM = "Однократно";
 static const char TINTF_080[] PROGMEM = "Огненная лампа";
+#ifdef EMBUI_USE_FTP
+static const char TINTF_081[] PROGMEM = "WiFi, MQTT & FTP";
+#else
 static const char TINTF_081[] PROGMEM = "WiFi & MQTT";
+#endif
 static const char TINTF_082[] PROGMEM = "Другие";
 static const char TINTF_083[] PROGMEM = "Очищать лампу при смене эффектов";
 static const char TINTF_084[] PROGMEM = DFTINTF_084;
@@ -425,6 +429,7 @@ static const char TINTF_0D7[] PROGMEM = "24х часовой формат";
 static const char TINTF_0D8[] PROGMEM = "Ведущий 0";
 static const char TINTF_0D9[] PROGMEM = "Очистить";
 static const char TINTF_0DA[] PROGMEM = "Сканировать";
+static const char TINTF_0DB[] PROGMEM = "FTP";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";

@@ -116,33 +116,6 @@ bool check_recovery_state(bool isSet){
 #endif
     }
     return false;
-
-    // if(LittleFS.begin()){
-    //     String eff=embui.param(FPSTR(TCONST_0016));
-    //     if(isSet) {
-    //         File r = LittleFS.open(String(F("/recovery.chk")), "r"); // read
-    //         String data = r.readString();
-    //         LOG(printf_P, PSTR("prev check_recovery_state = %s\n"), data.c_str());
-    //         if(data.startsWith(F("start"))){
-    //             // похоже бутлуп, т.к. до конца инициализации не дошли...
-    //             r.close();
-    //             return true; // все плохо
-    //         } else {
-    //             r.close();
-    //             File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
-    //             w.print(F("start - "));
-    //             w.println(eff); // пишу номер эффекта
-    //             w.close();
-    //             return false; // все хорошо
-    //         }
-    //     } else {
-    //         File w = LittleFS.open(String(F("/recovery.chk")), "w"); // write
-    //         w.print(F("end - "));
-    //         w.println(eff); // пишу номер эффекта
-    //         w.close();
-    //         return false; // все хорошо
-    //     }
-    // }
 }
 
 void resetAutoTimers(bool isEffects=false) // сброс таймера демо и настройка автосохранений
@@ -1603,7 +1576,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
         &ts, false);
     _t->enableDelayed();
 
-    interf->json_section_main(FPSTR(TCONST_003D), FPSTR(TINTF_028));
+    interf->json_section_main(FPSTR(TCONST_003D), FPSTR(TINTF_081));
     // форма настроек Wi-Fi
 
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
@@ -1636,11 +1609,20 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->text(FPSTR(P_m_host), FPSTR(TINTF_036));
     interf->number(FPSTR(P_m_port), FPSTR(TINTF_037));
     interf->text(FPSTR(P_m_user), FPSTR(TINTF_038));
-    interf->text(FPSTR(P_m_pass), FPSTR(TINTF_02D));
+    interf->password(FPSTR(P_m_pass), FPSTR(TINTF_02D));
     interf->text(FPSTR(TCONST_007B), FPSTR(TINTF_08C));
     interf->number(FPSTR(TCONST_004A), FPSTR(TINTF_039));
     interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(P_GRAY));
     interf->json_section_end();
+
+#ifdef EMBUI_USE_FTP
+    // форма настроек FTP
+    interf->json_section_hidden(FPSTR(T_SET_FTP), FPSTR(TINTF_0DB));
+    interf->text(FPSTR(P_ftpuser), FPSTR(TINTF_038));
+    interf->password(FPSTR(P_ftppass), FPSTR(TINTF_02D));
+    interf->button_submit(FPSTR(T_SET_FTP), FPSTR(TINTF_008), FPSTR(P_GRAY));
+    interf->json_section_end();
+#endif
 
     interf->spacer();
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
@@ -1678,6 +1660,14 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     int interval = (*data)[FPSTR(TCONST_004A)];
     LOG(print, F("New MQTT interval: ")); LOG(println, interval);
     myLamp.setmqtt_int(interval);
+    section_settings_frame(interf, data);
+}
+
+// настройка ftp
+void set_ftp(Interface *interf, JsonObject *data){
+    if (!data) return;
+
+    BasicUI::set_ftp(interf, data);
     section_settings_frame(interf, data);
 }
 
@@ -2712,6 +2702,8 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
     embui.section_handle_remove(FPSTR(T_SET_MQTT));
     embui.section_handle_add(FPSTR(T_SET_MQTT), set_settings_mqtt);
+    embui.section_handle_remove(FPSTR(T_SET_FTP));
+    embui.section_handle_add(FPSTR(T_SET_FTP), set_ftp);
 
     embui.section_handle_add(FPSTR(TCONST_00DD), set_scan_wifi);         // обработка сканирования WiFi
 

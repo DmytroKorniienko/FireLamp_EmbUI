@@ -149,84 +149,11 @@ void setup() {
     LOG(println, F("setup() done"));
 }   // End setup()
 
-// typedef struct {
-//   uint64 timeAcc;
-//   uint32 timeBase;
-//   uint32 storage;
-// } RTC_DATA;
-
-// unsigned long _RTC_Worker(unsigned long _storage=0){
-// #ifdef ESP8266
-//     RTC_DATA rtcTime;
-//     uint32 rtc_time = system_get_rtc_time();
-//     if(rtc_time<500000){
-//         rtcTime.timeBase = rtc_time;
-//         rtcTime.timeAcc = 0;
-//         rtcTime.storage = 0;
-//         //LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), rtc_time, rtcTime.timeBase, rtcTime.timeAcc, (rtcTime.timeAcc / 1000000) / 1000);
-//         //ESP.rtcUserMemoryWrite(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
-//         system_rtc_mem_write(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
-//     } else {
-//         //ESP.rtcUserMemoryRead(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
-//         system_rtc_mem_read(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
-//         rtc_time = system_get_rtc_time();
-//         uint32_t cal = system_rtc_clock_cali_proc();
-//         rtcTime.timeAcc += ((uint64)(rtc_time - rtcTime.timeBase) * (((uint64)cal * 1000) >> 12));
-//         //LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), rtc_time, rtcTime.timeBase, rtcTime.timeAcc, (rtcTime.timeAcc / 1000000) / 1000);
-//         rtcTime.timeBase = rtc_time;
-//         if(_storage)
-//             rtcTime.storage = _storage;
-//         //ESP.rtcUserMemoryWrite(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
-//         system_rtc_mem_write(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
-//     }
-//     LOG(printf_P, PSTR("TIME: RTC time = %d sec\n"), (uint32)(rtcTime.timeAcc / 1000000) / 1000);
-//     return rtcTime.storage+(rtcTime.timeAcc / 1000000) / 1000;
-// #else
-//     return 0;
-// #endif
-// }
 
 void loop() {
     embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
-
-    // static uint32_t cnt = 0;
-    // static unsigned long cur_ms = millis();
-    // if(millis()>cur_ms+1000){
-    //     Serial.printf("cnt=%u, fps=%d\n", cnt, FastLED.getFPS());
-    //     cnt=0;
-    //     cur_ms = millis();
-    // }
-    // cnt++;
-
-// #if defined(ESP8266)
-//     // тестирование rtc
-//     EVERY_N_SECONDS(1){
-//         _RTC_Worker();
-//     }
-//     // // esp32
-//     // time_t now()
-//     // {
-//     //     struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };   /* btw settimeofday() is helpfull here too*/
-//     //     // uint64_t sec, us;
-//     //     uint32_t sec, us;
-//     //     gettimeofday(&tv, NULL); 
-//     //     (sec) = tv.tv_sec;  
-//     //     (us) = tv.tv_usec; 
-//     //     return sec;
-//     // }
-// #endif
-// // тестирование стабильности
-// EVERY_N_MILLIS(20) {
-//     Task *t = new Task(10, TASK_ONCE, [](){
-//         Task *task = ts.getCurrentTask();
-//         //TASK_RECYCLE;
-//         delete task;
-//     }, &ts, false
-//     );
-//     t->enableDelayed();
-// }
 
 #ifdef USE_FTP
     ftp_loop(); // цикл обработки событий фтп-сервера
@@ -265,7 +192,6 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
 
 // Periodic MQTT publishing
 void sendData(){
-
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
     LOG(println, F("send MQTT Data :"));
     DynamicJsonDocument obj(256);

@@ -334,7 +334,11 @@ static const char TINTF_07D[] PROGMEM = "Hold";
 static const char TINTF_07E[] PROGMEM = "Press";
 static const char TINTF_07F[] PROGMEM = "Singly";
 static const char TINTF_080[] PROGMEM = "Fire Lamp";
+#ifdef EMBUI_USE_FTP
+static const char TINTF_081[] PROGMEM = "WiFi, MQTT & FTP";
+#else
 static const char TINTF_081[] PROGMEM = "WiFi & MQTT";
+#endif
 static const char TINTF_082[] PROGMEM = "Other";
 static const char TINTF_083[] PROGMEM = "Clean the lamp when switching effects";
 static const char TINTF_084[] PROGMEM = DFTINTF_084;
@@ -424,7 +428,7 @@ static const char TINTF_0D7[] PROGMEM = "24 hour format";
 static const char TINTF_0D8[] PROGMEM = "Leading 0";
 static const char TINTF_0D9[] PROGMEM = "Clear";
 static const char TINTF_0DA[] PROGMEM = "Scan";
-
+static const char TINTF_0DB[] PROGMEM = "FTP";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Happy new %d year!";
