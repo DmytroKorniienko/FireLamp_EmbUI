@@ -1617,10 +1617,15 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
 #ifdef EMBUI_USE_FTP
     // форма настроек FTP
-    interf->json_section_hidden(FPSTR(T_SET_FTP), FPSTR(TINTF_0DB));
-    interf->text(FPSTR(P_ftpuser), FPSTR(TINTF_038));
-    interf->password(FPSTR(P_ftppass), FPSTR(TINTF_02D));
-    interf->button_submit(FPSTR(T_SET_FTP), FPSTR(TINTF_008), FPSTR(P_GRAY));
+    interf->json_section_hidden("H", FPSTR(TINTF_0DB));
+        interf->json_section_begin("C", "");
+            interf->checkbox(FPSTR(T_CHK_FTP), String(embui.cfgData.isftp), FPSTR(TINTF_0DB), true);
+        interf->json_section_end();
+        interf->json_section_begin(FPSTR(T_SET_FTP), "");
+            interf->text(FPSTR(P_ftpuser), FPSTR(TINTF_038));
+            interf->password(FPSTR(P_ftppass), FPSTR(TINTF_02D));
+            interf->button_submit(FPSTR(T_SET_FTP), FPSTR(TINTF_008), FPSTR(P_GRAY));
+        interf->json_section_end();
     interf->json_section_end();
 #endif
 
@@ -2389,24 +2394,43 @@ void section_settings_frame(Interface *interf, JsonObject *data){
     // Страница "Настройки"
     if (!interf) return;
     recreateoptionsTask(true); // only cancel task
-///*
     interf->json_frame_interface(FPSTR(TINTF_080));
 
     interf->json_section_main(FPSTR(T_SETTINGS), FPSTR(TINTF_002));
-
+#ifdef OPTIONS_PASSWORD
+    if(!myLamp.getLampState().isOptPass){
+        interf->json_section_line(TCONST_0093);
+            interf->password(FPSTR(TCONST_00B8), FPSTR(TINTF_02D));
+            interf->button_submit(FPSTR(TCONST_0093), FPSTR(TINTF_01F), "", 19);
+        interf->json_section_end();
+    } else {
+        interf->button(FPSTR(T_SH_TIME), FPSTR(TINTF_051));
+        interf->button(FPSTR(T_SH_NETW), FPSTR(TINTF_081));
+        user_settings_frame(interf, data);
+        interf->spacer();
+        block_settings_update(interf, data);
+    }
+#else
     interf->button(FPSTR(T_SH_TIME), FPSTR(TINTF_051));
     interf->button(FPSTR(T_SH_NETW), FPSTR(TINTF_081));
-//*/
     user_settings_frame(interf, data);
-
-    // закрытие и отправка кадра выполняется методом из фреймворка (ломает переводы, возвращено обратно)
-///*
     interf->spacer();
     block_settings_update(interf, data);
-
+#endif
     interf->json_section_end();
     interf->json_frame_flush();
-//*/
+}
+
+void set_opt_pass(Interface *interf, JsonObject *data){
+    if(!data) return;
+
+    if((*data)[FPSTR(TCONST_00B8)]==OPTIONS_PASSWORD){
+        LOG(println, F("Options unlocked for 10 minutes"));
+        myLamp.getLampState().isOptPass = true;
+        Task *_t = new Task(TASK_MINUTE*10, TASK_ONCE, [](){ myLamp.getLampState().isOptPass = false; TASK_RECYCLE; }, &ts); // через 10 минут отключаем
+        _t->enableDelayed();
+        section_settings_frame(interf, nullptr);
+    }
 }
 
 void user_settings_frame(Interface *interf, JsonObject *data){
@@ -2709,6 +2733,8 @@ void create_parameters(){
 
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
+
+    embui.section_handle_add(FPSTR(TCONST_0093), set_opt_pass);
 
 #ifdef MIC_EFFECTS
     embui.section_handle_add(FPSTR(TCONST_0079), show_settings_mic);

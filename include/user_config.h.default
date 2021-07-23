@@ -65,7 +65,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef EMBUI_USE_FTP                                       // если включен FTP на уровне фреймворка, то не используем тот что на уровне лампы
 //#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
 #endif
-#define OTA                                                 // Обновление по ОТА
+//#define OTA                                                 // Обновление по ОТА (устарело и не желательно к использованию, лучше использовать обновление по HTTP из WebUI)
+
+//#define OPTIONS_PASSWORD F("password")			    // если задано, то настройки будут закрыты паролем
 
 
 //------------------------------ Подключаемое дополнительное оборудование

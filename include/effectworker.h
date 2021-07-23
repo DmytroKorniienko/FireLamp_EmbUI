@@ -67,6 +67,7 @@ typedef struct {
         uint32_t flags;
         struct {
             bool isInitCompleted:1; // завершилась ли инициализация лампы
+            bool isOptPass:1;       // введен ли пароль для опций
             bool isMicOn:1;
             bool isDebug:1;
             bool isRandDemo:1;
@@ -75,9 +76,9 @@ typedef struct {
             bool isStringPrinting:1; // печатается ли прямо сейчас строка?
             bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
             bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
-            uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
             bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
             bool isWarning:1; // выводится ли индикация предупреждения
+            uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
             uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
         };
     };
