@@ -108,6 +108,11 @@
 				{{label}}
 			</div>
 		{{/if}}
+		{{#if html == "img"}}
+		<div class = "image">
+			<img src = {{value}}>
+		</div>
+		{{/if}}
 		{{#if html == "textarea"}}
 			<textarea class="pure-u-1" maxlength="255" id="{{id}}" name="{{id}}"
 				{{#if2 directly}}{{onevent "change", "on_change", id}}{{/if2}}

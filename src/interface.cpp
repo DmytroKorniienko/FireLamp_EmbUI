@@ -1635,6 +1635,31 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
+// Выводим только WiFi для первого входа, если контроллер не подключен к внешней AP
+void block_only_wifi(Interface *interf, JsonObject *data) {
+    if (!interf) return;
+
+    Task *_t = new Task(
+        500,
+        TASK_ONCE, [interf](){
+            BasicUI::set_scan_wifi(interf, nullptr);
+            TASK_RECYCLE; },
+        &ts, false);
+    _t->enableDelayed();
+
+    interf->json_section_main(FPSTR(TCONST_003E), FPSTR(TINTF_029));
+    interf->spacer(FPSTR(TINTF_02A));
+    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
+    interf->json_section_line();
+    interf->select_edit(FPSTR(TCONST_0040), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
+    interf->json_section_end();
+    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
+    interf->json_section_end();
+    interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
+    interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
+    interf->json_section_end();
+}
+
 void show_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface();
@@ -1683,7 +1708,7 @@ void set_scan_wifi(Interface *interf, JsonObject *data){
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_004B), FPSTR(TINTF_002));
-
+    
     interf->spacer(FPSTR(TINTF_030));
     interf->checkbox(FPSTR(TCONST_004C), myLamp.getLampSettings().MIRR_H ? "1" : "0", FPSTR(TINTF_03B), false);
     interf->checkbox(FPSTR(TCONST_004D), myLamp.getLampSettings().MIRR_V ? "1" : "0", FPSTR(TINTF_03C), false);
@@ -2421,6 +2446,7 @@ void section_settings_frame(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 
+#ifdef OPTIONS_PASSWORD
 void set_opt_pass(Interface *interf, JsonObject *data){
     if(!data) return;
 
@@ -2432,6 +2458,7 @@ void set_opt_pass(Interface *interf, JsonObject *data){
         section_settings_frame(interf, nullptr);
     }
 }
+#endif  // OPTIONS_PASSWORD
 
 void user_settings_frame(Interface *interf, JsonObject *data){
 if (!interf) return;
@@ -2468,7 +2495,9 @@ void section_main_frame(Interface *interf, JsonObject *data){
 
     if(!embui.sysData.wifi_sta && embui.param(FPSTR(P_APonly))=="0"){
         // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
-        BasicUI::block_settings_netw(interf, data);
+        interf->json_frame_interface();
+        block_only_wifi(interf, data);
+        interf->json_frame_flush();
     }
 }
 
@@ -2734,7 +2763,9 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
 
+    #ifdef OPTIONS_PASSWORD
     embui.section_handle_add(FPSTR(TCONST_0093), set_opt_pass);
+    #endif // OPTIONS_PASSWORD
 
 #ifdef MIC_EFFECTS
     embui.section_handle_add(FPSTR(TCONST_0079), show_settings_mic);
