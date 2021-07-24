@@ -5,7 +5,7 @@ USAGE="Usage: `basename $0` [-h] [-t embuitag] args"
 # etag file
 tags=etags.txt
 # embui branch/tag name to fetch
-embuitag="image"
+embuitag="dev"
 
 refresh_styles=0
 
@@ -52,7 +52,7 @@ echo "Preparing resources for FireLamp FS image into ../data/ dir"
 mkdir -p ../data/css ../data/js ../data/extras ../data/login
 
 # собираем скрипты и стили из репозитория EmbUI (используется dev ветка, при формировании выпусков пути нужно изменить)
-if freshtag https://github.com/Lumenjer/EmbUI/raw/$embuitag/resources/data.zip ; then
+if freshtag https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip ; then
     refresh_styles=1
     echo "EmbUI resources requires updating"
 else
@@ -70,7 +70,7 @@ if [ $refresh_styles -eq 1 ] ; then
 
     echo "refreshing embui css files..."
 
-    curl -sL https://github.com/Lumenjer/EmbUI/raw/$embuitag/resources/data.zip > embui.zip
+    curl -sL https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip > embui.zip
     # т.к. неизвестно что изменилось во фреймворке, скрипты или цсски, обновляем всё
     unzip -o -d ../data/ embui.zip "css/*" "js/*"
 

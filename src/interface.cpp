@@ -1570,8 +1570,8 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
     Task *_t = new Task(
         500,
-        TASK_ONCE, [interf](){
-            BasicUI::set_scan_wifi(interf, nullptr);
+        TASK_ONCE, [](){
+            CALL_INTF_EMPTY(BasicUI::set_scan_wifi);
             TASK_RECYCLE; },
         &ts, false);
     _t->enableDelayed();
@@ -1637,15 +1637,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
 // Выводим только WiFi для первого входа, если контроллер не подключен к внешней AP
 void block_only_wifi(Interface *interf, JsonObject *data) {
-    if (!interf) return;
-
-    Task *_t = new Task(
-        500,
-        TASK_ONCE, [interf](){
-            BasicUI::set_scan_wifi(interf, nullptr);
-            TASK_RECYCLE; },
-        &ts, false);
-    _t->enableDelayed();
+    BasicUI::set_scan_wifi(interf, nullptr);
 
     interf->json_section_main(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
