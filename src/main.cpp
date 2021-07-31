@@ -49,6 +49,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
   #include "enc.h"
 #endif
 
+#ifdef RTC
+  #include "rtc.h"
+#endif
+
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
 #ifdef ESP_USE_BUTTON
@@ -83,9 +87,12 @@ void setup() {
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
-    
+#ifdef RTC
+    rtc.init();
+#endif
+
 #ifdef DS18B20
-  ds_setup();
+    ds_setup();
 #endif
 
 #ifdef SHOWSYSCONFIG
@@ -161,6 +168,12 @@ void loop() {
 
 #ifdef ENCODER
     encLoop(); // цикл обработки событий энкодера. Эта функция будет отправлять в УИ изменения, только тогда, когда подошло время ее loop
+#endif
+
+#ifdef RTC
+    EVERY_N_HOURS(RTC_SYNC_PERIOD) {
+        rtc.updateRtcTime();
+    }
 #endif
 
 #ifdef TM1637_CLOCK
