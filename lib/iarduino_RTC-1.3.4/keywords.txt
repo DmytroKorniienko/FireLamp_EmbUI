@@ -1,0 +1,30 @@
+#	####################################################
+#	СИНТАКСИЧЕСКАЯ РАСКРАСКА ДЛЯ БИБИЛИОТЕКИ:
+#	iarduino_RTC
+#	####################################################
+#	ТИПЫ ДАННЫХ:							   (KEYWORD1)
+	iarduino_RTC	KEYWORD1
+#	####################################################
+#	МЕТОДЫ И ФУНКЦИИ:						   (KEYWORD2)
+	begin	KEYWORD2
+	settime	KEYWORD2
+	gettime	KEYWORD2
+	settimeUnix	KEYWORD2
+	gettimeUnix	KEYWORD2
+	blinktime	KEYWORD2
+	period	KEYWORD2
+	seconds	KEYWORD2
+	minutes	KEYWORD2
+	hours	KEYWORD2
+	Hours	KEYWORD2
+	midday	KEYWORD2
+	day	KEYWORD2
+	weekday	KEYWORD2
+	month	KEYWORD2
+	year	KEYWORD2
+	Unix	KEYWORD2
+#	####################################################
+#	КОНСТАНТЫ:								   (LITERAL1)
+	RTC_DS1302	LITERAL1
+	RTC_DS1307	LITERAL1
+	RTC_DS3231	LITERAL1

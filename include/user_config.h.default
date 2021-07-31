@@ -137,9 +137,22 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 
 #ifdef TM1637_CLOCK
-  #define TM_CLK_PIN D4                                     // Работает не на всех пинах. Лучше использовать рекомендованый
-  #define TM_DIO_PIN D7                                     // Работает не на всех пинах. Лучше использовать рекомендованый
-//  #define TM_SHOW_BANNER 1                                  // 1 - показывать IP при загрузке, 0 - нет 
+  #define TM_CLK_PIN          (D4)                          // Работает не на всех пинах. Лучше использовать рекомендованый
+  #define TM_DIO_PIN          (D7)                          // Работает не на всех пинах. Лучше использовать рекомендованый
+ #define TM_SHOW_BANNER 0                                   // 1 - показывать IP при загрузке, 0 - нет 
+#endif
+
+#ifdef RTC
+  #define RTC_MODULE          (2U)                          // Поддерживаются модули DS1302 = (1U),  DS1307 = (2U), DS3231 = (3U)
+  #define RTC_SYNC_PERIOD     (24U)                         // Период синхронизации RTC c ntp (часы)
+  #if RTC_MODULE > (1U)                                     // Если выбран модуль с I2C (DS1307 или DS3231)
+    #ifdef TM1637_CLOCK                                     // Если есть дисплей TM1637, то можем использовать его пины для RTC (но RTC модуль работает не на всех пинах)
+      #define pin_SW_SDA        (TM_CLK_PIN)                // Пин SDA RTC модуля подключаем к CLK пину дисплея
+      #define pin_SW_SCL        (TM_DIO_PIN)                // Пин SCL RTC модуля подключаем к DIO пину дисплея
+    #else                                                   // Пины подбирать экспериментальным путем, точно работает на D2 и D4
+      #define pin_SW_SDA        (D2)                        // Назначаем вывод для работы в качестве линии SDA программной шины I2C.
+      #define pin_SW_SCL        (D4)                        // Назначаем вывод для работы в качестве линии SCL программной шины I2C.
+    #endif
 #endif
 
 #ifdef MP3PLAYER
