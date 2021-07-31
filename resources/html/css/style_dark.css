@@ -76,9 +76,15 @@ FireLamp_JeeUI overrides for EmbUI Styles
 .pure-form-stacked textarea{
 	display:block;
 }
-
 .select-editable input{
 	font-family:sans-serif;
 	font-weight: bold;
 	font-style: italic;
+}
+body {
+  background-color: #333;
+  background-image: url('wp_dark.svg'), url('wp_dark.webp');
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
