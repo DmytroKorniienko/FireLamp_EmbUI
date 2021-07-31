@@ -2521,7 +2521,7 @@ void section_sys_settings_frame(Interface *interf, JsonObject *data){
         interf->number(FPSTR(TCONST_0098),FPSTR(TINTF_095),String(100),String(0),String(16000));
 
         //interf->json_section_main(FPSTR(TCONST_005F), "");
-        interf->frame2(FPSTR(TCONST_005F), FPSTR(TCONST_005F));
+        //interf->frame2(FPSTR(TCONST_005F), FPSTR(TCONST_005F));
         //interf->json_section_end();
 
         interf->button_submit(FPSTR(TCONST_0099), FPSTR(TINTF_008), FPSTR(P_GRAY));
