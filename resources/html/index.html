@@ -110,7 +110,7 @@
 		{{/if}}
 		{{#if html == "img"}}
 		<div class = "image">
-			<img src = {{value}}>
+			<img id="{{id}}" src = {{value}}>
 		</div>
 		{{/if}}
 		{{#if html == "textarea"}}
@@ -167,11 +167,13 @@
 			>
 		{{/if}}
 		{{#if html != "select" && block}}{{>tmpl_section _this}}{{/if}}
-		{{#if html == "iframe"}}
-			<div class="frame">{{value}}</div>
+		{{#if html == "raw_html"}}
+			{{value}}
 		{{/if}}
-		{{#if html == "iframe2"}}
-			<div class="frame"><iframe id="{{id}}" name="{{id}}" src="{{value}}" class="iframe">iframe does not supported</iframe></div>
+		{{#if html == "iframe"}}
+			<div class="fframe_wrapper">
+				<iframe id="{{id}}" name="{{id}}" src="{{value}}" frameborder="0" allowfullscreen class="fframe">iframe does not supported</iframe>
+			</div>
 		{{/if}}
 		{{#if html == "custom" && type == "div"}}
 		<!-- Custom div element, on create 'div' calls user js-function with a name passed in {{value}} parameter
