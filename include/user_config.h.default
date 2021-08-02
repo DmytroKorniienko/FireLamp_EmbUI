@@ -62,10 +62,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define MOOT                                                // Раскомментировать, если не нужен пункт настроек "Конфиги", 
                                                               // а так же изменение состояния произвольных пинов и загрузка конфигов в "События"
 #define DISABLE_LED_BUILTIN                                 // Отключить встроенный в плату светодиод, если нужно чтобы светил - закомментировать строку
-#ifndef EMBUI_USE_FTP                                       // если включен FTP на уровне фреймворка, то не используем тот что на уровне лампы
-//#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
-#endif
 //#define OTA                                                 // Обновление по ОТА (устарело и не желательно к использованию, лучше использовать обновление по HTTP из WebUI)
+//#define USE_FTP                                             // доступ к LittleFS по FTP (на уровне лампы, см. также EMBUI_USE_FTP - уровень фреймворка), логин/пароль: esp8266
 
 //#define OPTIONS_PASSWORD F("password")			    // если задано, то настройки будут закрыты паролем
 
@@ -77,6 +75,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define TM1637_CLOCK                                        // Использовать 7-ми сегментный LED-индикатор TM1637
 //#define DS18B20                                             // Использовать датчик температуры DS18b20 для управления вентилятором охлаждения матрицы
 //#define ENCODER                                             // Использовать Энкодер
+//#define RTC                                                 // Включить использование внешнего модуля RTC
 //------------------------------ 
 
 
@@ -134,7 +133,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define FAST_ADC_READ                                        // микрофон, использовать полный диапазон звуковых частот, если закомментировано, то будет до 5кГц, но сэкономит память и проще обсчитать...
 #define SAMPLING_FREQ         (18000U*2U)
 #endif
-
 
 #ifdef TM1637_CLOCK
   #define TM_CLK_PIN          (D4)                          // Работает не на всех пинах. Лучше использовать рекомендованый
