@@ -1,3 +1,4 @@
+#ifdef RTC
 #include "rtc.h"
 #include "tm.h"
 
@@ -38,3 +39,4 @@ void Rtc::updateRtcTime() {
 #endif
     }
 }
+#endif
