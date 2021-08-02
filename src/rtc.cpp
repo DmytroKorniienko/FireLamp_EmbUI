@@ -1,5 +1,5 @@
-#ifdef RTC
 #include "rtc.h"
+#ifdef RTC
 #include "tm.h"
 
 Rtc rtc;

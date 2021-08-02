@@ -72,6 +72,36 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define LANG_FILE                  "text_res-RUS.h"           // Языковой файл по дефолту
 #endif
 
+#ifdef EMBUI_USE_FTP                                       // если включен FTP на уровне фреймворка, то не используем тот что на уровне лампы
+#undef USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
+#endif
+
+#ifdef RTC
+  #ifndef RTC_MODULE
+  #define RTC_MODULE          (2U)                          // Поддерживаются модули DS1302 = (1U),  DS1307 = (2U), DS3231 = (3U)
+  #endif
+  #ifndef RTC_SYNC_PERIOD
+  #define RTC_SYNC_PERIOD     (24U)                         // Период синхронизации RTC c ntp (часы)
+  #endif
+  #if RTC_MODULE > (1U)                                     // Если выбран модуль с I2C (DS1307 или DS3231)
+    #ifdef TM1637_CLOCK                                     // Если есть дисплей TM1637, то можем использовать его пины для RTC (но RTC модуль работает не на всех пинах)
+      #ifndef pin_SW_SDA
+      #define pin_SW_SDA        (TM_CLK_PIN)                // Пин SDA RTC модуля подключаем к CLK пину дисплея
+      #endif
+      #ifndef pin_SW_SCL
+      #define pin_SW_SCL        (TM_DIO_PIN)                // Пин SCL RTC модуля подключаем к DIO пину дисплея
+      #endif
+    #else                                                   // Пины подбирать экспериментальным путем, точно работает на D2 и D4
+      #ifndef pin_SW_SDA
+      #define pin_SW_SDA        (D2)                        // Назначаем вывод для работы в качестве линии SDA программной шины I2C.
+      #endif
+      #ifndef pin_SW_SCL
+      #define pin_SW_SCL        (D4)                        // Назначаем вывод для работы в качестве линии SCL программной шины I2C.
+      #endif
+    #endif
+  #endif
+#endif
+
 #ifndef MIC_PIN
 #ifdef ESP8266
 #define MIC_PIN               (A0)                          // ESP8266 Analog Pin ADC0 = A0

@@ -153,6 +153,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
       #define pin_SW_SDA        (D2)                        // Назначаем вывод для работы в качестве линии SDA программной шины I2C.
       #define pin_SW_SCL        (D4)                        // Назначаем вывод для работы в качестве линии SCL программной шины I2C.
     #endif
+  #endif
 #endif
 
 #ifdef MP3PLAYER
