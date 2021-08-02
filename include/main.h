@@ -43,10 +43,27 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 #include <Arduino.h>
+#include <SPIFFSEditor.h>
+
 #include "config.h"
 #include "EmbUI.h"
 #include "lamp.h"
 #include "buttons.h"
+
+#ifdef USE_FTP
+  #include "ftpSrv.h"
+#endif
+#ifdef TM1637_CLOCK
+  #include "tm.h"
+#endif
+
+#ifdef ENCODER
+  #include "enc.h"
+#endif
+
+#ifdef RTC
+  #include "rtc.h"
+#endif
 
 // TaskScheduler
 extern Scheduler ts;

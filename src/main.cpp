@@ -36,22 +36,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 */
 
 #include "main.h"
-#include <SPIFFSEditor.h>
-#include "buttons.h"
-#ifdef USE_FTP
-  #include "ftpSrv.h"
-#endif
-#ifdef TM1637_CLOCK
-  #include "tm.h"
-#endif
-
-#ifdef ENCODER
-  #include "enc.h"
-#endif
-
-#ifdef RTC
-  #include "rtc.h"
-#endif
 
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
@@ -62,7 +46,6 @@ Buttons *myButtons;
 #ifdef MP3PLAYER
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
-
 
 void setup() {
     //Serial.begin(115200);
