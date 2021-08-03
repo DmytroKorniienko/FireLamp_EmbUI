@@ -152,6 +152,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
       #define pin_SW_SCL        (D4)                        // Назначаем вывод для работы в качестве линии SCL программной шины I2C.
     #endif
   #endif
+  #if RTC_MODULE == (1U)                                    // Если выбран модуль DS1302.
+    #define pin_RST             (D8)                        // Назначаем вывод RST.
+    #define pin_DAT             (D3)                        // Назначаем вывод DAT.
+    #define pin_CLK             (D4)                        // Назначаем вывод CLK.
+  #endif
 #endif
 
 #ifdef MP3PLAYER

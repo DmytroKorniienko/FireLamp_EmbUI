@@ -99,6 +99,17 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
       #define pin_SW_SCL        (D4)                        // Назначаем вывод для работы в качестве линии SCL программной шины I2C.
       #endif
     #endif
+    #if RTC_MODULE == (1U)                                    // Если выбран модуль DS1302.
+      #ifndef pin_RST
+      #define pin_RST             (D8)                        // Назначаем вывод RST.
+      #endif
+      #ifndef pin_DAT
+      #define pin_DAT             (D3)                        // Назначаем вывод DAT.
+      #endif
+      #ifndef pin_DAT
+      #define pin_CLK             (D4)                        // Назначаем вывод CLK.
+      #endif
+    #endif
   #endif
 #endif
 
