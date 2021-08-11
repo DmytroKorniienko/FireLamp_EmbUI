@@ -88,3 +88,9 @@ body {
   background-repeat: no-repeat;
   background-size: cover;
 }
+.button__text {
+  vertical-align: super;
+}
+.button--loading {
+  padding: 0 !important;
+}

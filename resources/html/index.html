@@ -97,7 +97,7 @@
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "const"}}
-			<div class="pure-u-1 pure-button mr">{{label}}</div>
+		<div class="pure-u-1 pure-button mr{{#if2 loading}} button--loading{{/if2}}" {{#if2 top_margine!=10 || color}}style="{{/if2}} {{#if2 top_margine!=10}} margin-top: {{top_margine}}px !important;{{/if2}} {{#if2 color}} background-color: {{color}};{{/if2}} {{#if2 top_margine!=10 || color}}"{{/if2}} ><span class="button__text">{{label}}</span></div>
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "button"}}

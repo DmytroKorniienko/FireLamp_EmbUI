@@ -87,3 +87,9 @@ body {
   background-attachment: fixed;
   background-size: cover;
 }
+.button__text {
+	vertical-align: super;
+  }
+.button--loading {
+padding: 0 !important;
+}
