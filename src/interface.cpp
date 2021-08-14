@@ -1583,7 +1583,7 @@ void scan_complete(int n){
         if(ssid.isEmpty())
             interf->option("", ""); // at the end of list
         interf->json_section_end();
-        interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 20);
+        interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21);
         interf->json_section_end();
         interf->json_frame_flush();
 
@@ -1609,7 +1609,7 @@ LOG(println,"Here");
         LOG(printf_P, PSTR("UI WiFi: WiFi scan starting\n"));
         interf->json_frame_custom("xload");
         interf->json_section_content();
-        interf->constant(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), true, FPSTR(P_GREEN), 20);
+        interf->constant(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), true, FPSTR(P_GREEN), 21);
         interf->json_section_end();
         interf->json_frame_flush();
 
@@ -1641,7 +1641,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_line(FPSTR(T_LOAD_WIFI));
     interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
-    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 20); // отступ
+    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
     interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
@@ -1696,7 +1696,7 @@ void block_only_wifi(Interface *interf, JsonObject *data) {
     interf->json_section_line();
     interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
-    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 20); // отступ
+    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
     interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
