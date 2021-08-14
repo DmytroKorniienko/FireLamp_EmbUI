@@ -132,7 +132,7 @@ static const char TCONST_003C[] PROGMEM = "mic_cal";
 static const char TCONST_003D[] PROGMEM = "settings_wifi";
 static const char TCONST_003E[] PROGMEM = "set_wifi";
 static const char TCONST_003F[] PROGMEM = "hostname";
-static const char TCONST_0040[] PROGMEM = "wcssid";
+static const char TCONST_0040[] PROGMEM = "";
 static const char TCONST_0041[] PROGMEM = "wcpass";
 static const char TCONST_0042[] PROGMEM = "set_wifiAP";
 static const char TCONST_0043[] PROGMEM = "APonly";
@@ -289,8 +289,8 @@ static const char TCONST_00D9[] PROGMEM = "tmBrightOff";
 static const char TCONST_00DA[] PROGMEM = "tm24";
 static const char TCONST_00DB[] PROGMEM = "tmZero";
 static const char TCONST_00DC[] PROGMEM = "drawClear";
-static const char TCONST_00DD[] PROGMEM = "scan";
-static const char TCONST_00DE[] PROGMEM = "loading_wifi";
+static const char TCONST_00DD[] PROGMEM = "";
+static const char TCONST_00DE[] PROGMEM = "";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка

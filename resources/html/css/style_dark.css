@@ -7,8 +7,8 @@ FireLamp_JeeUI overrides for EmbUI Styles
 	font-style: italic;
 }
 .pure-button{
-	display:inline-block;
-	line-height:normal;
+	/* display:inline-block; */
+	/* line-height:normal; */
 	white-space:nowrap;
 	vertical-align:middle;
 	text-align:center;

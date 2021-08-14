@@ -1567,17 +1567,70 @@ void set_settings_mic_calib(Interface *interf, JsonObject *data){
 }
 #endif
 
+// после завершения сканирования обновляем список WiFi
+void scan_complete(int n){
+    Interface *interf = EmbUI::GetInstance()->ws.count()? new Interface(EmbUI::GetInstance(), &EmbUI::GetInstance()->ws) : nullptr;
+    LOG(printf_P, PSTR("UI WiFi: Scan complete %d networks found\n"), n);
+    if(interf){
+        interf->json_frame_interface();
+        interf->json_section_line(FPSTR(T_LOAD_WIFI));
+        String ssid = WiFi.SSID();
+        interf->select_edit(FPSTR(P_WCSSID), ssid, String(FPSTR(TINTF_02C)));
+        for (int i = 0; i < WiFi.scanComplete(); i++) {
+            interf->option(WiFi.SSID(i), WiFi.SSID(i));
+            LOG(printf_P, PSTR("UI WiFi: WiFi Net %s\n"), WiFi.SSID(i).c_str());
+        }
+        if(ssid.isEmpty())
+            interf->option("", ""); // at the end of list
+        interf->json_section_end();
+        interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 20);
+        interf->json_section_end();
+        interf->json_frame_flush();
+
+        delete interf;
+    }
+    Task *_t = new Task(
+        TASK_SECOND,
+        TASK_ONCE, [](){
+            if (WiFi.scanComplete() >= 0) {
+                EmbUI::GetInstance()->sysData.isWiFiScanning = false;
+                WiFi.scanDelete();
+                LOG(printf_P, PSTR("UI WiFi: Scan List deleted\n"));
+            }
+        },
+        &ts, false);
+    _t->enableDelayed();
+}
+
+void set_scan_wifi(Interface *interf, JsonObject *data){
+    if (!interf) return;
+LOG(println,"Here");
+    if (WiFi.scanComplete() == -2) {
+        LOG(printf_P, PSTR("UI WiFi: WiFi scan starting\n"));
+        interf->json_frame_custom("xload");
+        interf->json_section_content();
+        interf->constant(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), true, FPSTR(P_GREEN), 20);
+        interf->json_section_end();
+        interf->json_frame_flush();
+
+        Task *t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [](){
+            EmbUI::GetInstance()->sysData.isWiFiScanning = true;
+            #ifdef ESP8266
+            WiFi.scanNetworksAsync(scan_complete);     // Сканируем с коллбеком, по завершению скана запустится scan_complete()
+            #endif
+            #ifdef ESP32
+            EmbUI::GetInstance()->setWiFiScanCB(&scan_complete);
+            WiFi.scanNetworks(true);         // У ESP нет метода с коллбеком, поэтому просто сканируем
+            #endif
+            TASK_RECYCLE;
+        });
+        t->enableDelayed();
+    }
+};
+
 // формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
-
-    Task *_t = new Task(
-        500,
-        TASK_ONCE, [](){
-            CALL_INTF_EMPTY(BasicUI::set_scan_wifi);
-            TASK_RECYCLE; },
-        &ts, false);
-    _t->enableDelayed();
 
     interf->json_section_main(FPSTR(TCONST_003D), FPSTR(TINTF_081));
     // форма настроек Wi-Fi
@@ -1585,17 +1638,14 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
     interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
-    interf->json_section_line(FPSTR(TCONST_00DE));
-    interf->select_edit(FPSTR(TCONST_0040), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
+    interf->json_section_line(FPSTR(T_LOAD_WIFI));
+    interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
-    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
+    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 20); // отступ
     interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
-    //interf->json_section_line();
-    //interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
     interf->json_section_end();
-    //interf->json_section_end();
 
     interf->json_section_hidden(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_02F));
     //interf->text(FPSTR(P_APhostname), FPSTR(TINTF_02B));
@@ -1640,15 +1690,13 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 
 // Выводим только WiFi для первого входа, если контроллер не подключен к внешней AP
 void block_only_wifi(Interface *interf, JsonObject *data) {
-    BasicUI::set_scan_wifi(interf, nullptr);
-
     interf->json_section_main(FPSTR(TCONST_003E), FPSTR(TINTF_029));
     interf->spacer(FPSTR(TINTF_02A));
     interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
     interf->json_section_line();
-    interf->select_edit(FPSTR(TCONST_0040), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
+    interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
-    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
+    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 20); // отступ
     interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
@@ -1660,6 +1708,10 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_frame_interface();
     block_settings_wifi(interf, data);
     interf->json_frame_flush();
+    if(!EmbUI::GetInstance()->sysData.isWiFiScanning){ // автосканирование при входе в настройки
+        EmbUI::GetInstance()->sysData.isWiFiScanning = true;
+        set_scan_wifi(interf, data);
+    }
 }
 
 // настройка подключения WiFi в режиме AP
@@ -1697,10 +1749,6 @@ void set_ftp(Interface *interf, JsonObject *data){
     section_settings_frame(interf, data);
 }
 #endif
-
-void set_scan_wifi(Interface *interf, JsonObject *data){
-    BasicUI::set_scan_wifi(interf, data);
-};
 
 void block_settings_other(Interface *interf, JsonObject *data){
     if (!interf) return;
@@ -2498,6 +2546,10 @@ void section_main_frame(Interface *interf, JsonObject *data){
         interf->json_frame_interface();
         block_only_wifi(interf, data);
         interf->json_frame_flush();
+        if(!EmbUI::GetInstance()->sysData.isWiFiScanning){ // автосканирование при входе в настройки
+            EmbUI::GetInstance()->sysData.isWiFiScanning = true;
+            set_scan_wifi(interf, data);
+        }
     }
 }
 
@@ -2760,7 +2812,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(T_SET_FTP), set_ftp);
 #endif
 
-    embui.section_handle_add(FPSTR(TCONST_00DD), set_scan_wifi);         // обработка сканирования WiFi
+    embui.section_handle_add(FPSTR(T_SET_SCAN), set_scan_wifi);         // обработка сканирования WiFi
 
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
     embui.section_handle_add(FPSTR(TCONST_004B), set_settings_other);
