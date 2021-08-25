@@ -1910,7 +1910,7 @@ void show_settings_time(Interface *interf, JsonObject *data){
     interf->text(FPSTR(P_userntp), FPSTR(TINTF_054));
     // manual date and time setup
     interf->comment(FPSTR(TINTF_055));
-    interf->text(FPSTR(P_DTIME), "", "", false);
+    interf->datetime(FPSTR(P_DTIME), "", true);
     interf->hidden(FPSTR(P_DEVICEDATETIME),""); // скрытое поле для получения времени с устройства
     interf->button_submit(FPSTR(T_SET_TIME), FPSTR(TINTF_008), FPSTR(P_GRAY));
 
@@ -2164,7 +2164,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
             interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
             interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
         interf->json_section_end();
-        interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), FPSTR(TINTF_06D));
+        interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), String(FPSTR(TINTF_06D)));
     interf->json_section_end();
     interf->json_section_line();
         interf->number(FPSTR(TCONST_0069), String(cur_edit_event->repeat), FPSTR(TINTF_06E));

@@ -154,9 +154,7 @@ void loop() {
 #endif
 
 #ifdef RTC
-    EVERY_N_HOURS(RTC_SYNC_PERIOD) {
-        rtc.updateRtcTime();
-    }
+    rtc.updateRtcTime();
 #endif
 
 #ifdef TM1637_CLOCK
