@@ -1462,7 +1462,7 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
 }
 
 void show_settings_mp3(Interface *interf, JsonObject *data){
-    if (!interf) return;
+    if (!interf || !mp3->isReady()) return;
     interf->json_frame_interface();
     block_settings_mp3(interf, data);
     interf->json_frame_flush();
@@ -2922,11 +2922,10 @@ void sync_parameters(){
 Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nullptr, [tmp](){
     if(!mp3->isReady()){
         LOG(println, F("DFPlayer not ready yet..."));
-        if(millis()<10000)
-            ts.getCurrentTask()->restartDelayed(TASK_SECOND);
-        else
-            TASK_RECYCLE;
-        return;
+        if(millis()<10000){
+            ts.getCurrentTask()->restartDelayed(TASK_SECOND*2);
+            return;
+        }
     }
     
     DynamicJsonDocument doc(1024);
