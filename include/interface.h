@@ -28,6 +28,11 @@ typedef enum _remote_action {
     RA_BRIGHT_NF,
     RA_CONTROL,
     RA_MIC,
+#ifdef MP3PLAYER
+    RA_MP3_PREV,
+    RA_MP3_NEXT,
+    RA_MP3_SOUND,
+#endif
 #ifdef MIC_EFFECTS
     RA_MICONOFF,
 #endif

@@ -291,6 +291,7 @@ static const char TCONST_00DB[] PROGMEM = "tmZero";
 static const char TCONST_00DC[] PROGMEM = "drawClear";
 static const char TCONST_00DD[] PROGMEM = "";
 static const char TCONST_00DE[] PROGMEM = "";
+static const char TCONST_00DF[] PROGMEM = "mp3_sound";
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка

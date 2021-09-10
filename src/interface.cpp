@@ -1691,12 +1691,13 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
 // Выводим только WiFi для первого входа, если контроллер не подключен к внешней AP
 void block_only_wifi(Interface *interf, JsonObject *data) {
     interf->json_section_main(FPSTR(TCONST_003E), FPSTR(TINTF_029));
+    
     interf->spacer(FPSTR(TINTF_02A));
     interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
-    interf->json_section_line();
+    interf->json_section_line(FPSTR(T_LOAD_WIFI));
     interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
     interf->json_section_end();
-    interf->button(FPSTR(TCONST_00DD), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
+    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
     interf->json_section_end();
     interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
     interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
@@ -3270,6 +3271,20 @@ void remote_action(RA action, ...){
             obj[FPSTR(TCONST_00D5)] = true;
             set_effects_dynCtrl(nullptr, &obj);
             break;
+#ifdef MP3PLAYER
+        case RA::RA_MP3_PREV:
+            if(!myLamp.isONMP3()) return;
+            mp3->playEffect(mp3->getCurPlayingNb()-(int)value,"");
+            break;
+        case RA::RA_MP3_NEXT:
+            if(!myLamp.isONMP3()) return;
+            mp3->playEffect(mp3->getCurPlayingNb()+(int)value,"");
+            break;
+        case RA::RA_MP3_SOUND:
+            if(!myLamp.isONMP3()) return;
+            mp3->playEffect((int)value,"");
+            break;
+#endif
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
             CALL_INTF_OBJ(show_settings_mic);
@@ -3467,6 +3482,16 @@ String httpCallback(const String &param, const String &value, bool isset){
         //     { result = myLamp.effects.getControls()[1]->getVal(); }
         // else if (param == FPSTR(TCONST_0014))
         //     { result = myLamp.effects.getControls()[2]->getVal(); }
+#ifdef MP3PLAYER
+        else if (param == FPSTR(TCONST_009D)) 
+            { result = myLamp.isONMP3() ? "1" : "0"; }
+        else if (param == FPSTR(TCONST_00DF)) 
+            { result = String(mp3->getCurPlayingNb()); }
+#endif
+#ifdef MIC_EFFECTS
+        else if (param == FPSTR(TCONST_001E)) 
+            { result = myLamp.isMicOnOff() ? "1" : "0"; }
+#endif
         else if (param == FPSTR(TCONST_0082))
             { result = String(myLamp.effects.getCurrent());  }
         else if (param == FPSTR(TCONST_00B7))
@@ -3621,6 +3646,14 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00B7)) action = RA_WARNING;
         else if (param == FPSTR(TCONST_00C5)) action = RA_DRAW;
         else if (param == FPSTR(TCONST_00C7)) action = RA_FILLMATRIX;
+#ifdef MP3PLAYER
+        else if (param == FPSTR(TCONST_00BE)) action = RA_MP3_PREV;
+        else if (param == FPSTR(TCONST_00BF)) action = RA_MP3_NEXT;
+        else if (param == FPSTR(TCONST_00DF)) action = RA_MP3_SOUND;
+#endif
+#ifdef MIC_EFFECTS
+        else if (param == FPSTR(TCONST_001E)) action = RA_MICONOFF;
+#endif
         //else if (param.startsWith(FPSTR(TCONST_0015))) { action = RA_CONTROL; remote_action(action, param.c_str(), value.c_str(), NULL); return result; }
         else if (param == FPSTR(TCONST_00AE)) {
             return httpCallback(param, "", false); // set пока не реализована
