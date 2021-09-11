@@ -3487,6 +3487,8 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = myLamp.isONMP3() ? "1" : "0"; }
         else if (param == FPSTR(TCONST_00DF)) 
             { result = String(mp3->getCurPlayingNb()); }
+        else if (param == FPSTR(TCONST_00BE)) { action = RA_MP3_PREV; remote_action(action, "1", NULL); }
+        else if (param == FPSTR(TCONST_00BF)) { action = RA_MP3_NEXT; remote_action(action, "1", NULL); }
 #endif
 #ifdef MIC_EFFECTS
         else if (param == FPSTR(TCONST_001E)) 
