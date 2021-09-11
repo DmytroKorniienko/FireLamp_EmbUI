@@ -32,6 +32,7 @@ typedef enum _remote_action {
     RA_MP3_PREV,
     RA_MP3_NEXT,
     RA_MP3_SOUND,
+    RA_MP3ONOFF,
 #endif
 #ifdef MIC_EFFECTS
     RA_MICONOFF,

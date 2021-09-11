@@ -3284,6 +3284,9 @@ void remote_action(RA action, ...){
             if(!myLamp.isONMP3()) return;
             mp3->playEffect((int)value,"");
             break;
+        case RA::RA_MP3ONOFF:
+            CALL_INTF(FPSTR(TCONST_009D), value, set_mp3flag);
+            break;
 #endif
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
@@ -3635,9 +3638,6 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_0081)) { action = (value!="0" ? RA_OFF : RA_ON); }
         else if (param == FPSTR(TCONST_00AA)) action = RA_DEMO;
         else if (param == FPSTR(TCONST_0035)) action = RA_SEND_TEXT;
-        // else if (param == FPSTR(TCONST_0012)) action = RA_BRIGHT;
-        // else if (param == FPSTR(TCONST_0013)) action = RA_SPEED;
-        // else if (param == FPSTR(TCONST_0014)) action = RA_SCALE;
         else if (param == FPSTR(TCONST_0082)) action = RA_EFFECT;
         else if (param == FPSTR(TCONST_0083)) action = RA_EFF_NEXT;
         else if (param == FPSTR(TCONST_0084)) action = RA_EFF_PREV;
@@ -3652,6 +3652,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (param == FPSTR(TCONST_00BE)) action = RA_MP3_PREV;
         else if (param == FPSTR(TCONST_00BF)) action = RA_MP3_NEXT;
         else if (param == FPSTR(TCONST_00DF)) action = RA_MP3_SOUND;
+        else if (param == FPSTR(TCONST_009D)) action = RA_MP3ONOFF;
 #endif
 #ifdef MIC_EFFECTS
         else if (param == FPSTR(TCONST_001E)) action = RA_MICONOFF;
