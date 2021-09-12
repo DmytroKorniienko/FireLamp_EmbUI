@@ -4108,7 +4108,11 @@ bool EffectPacific::run(CRGB *leds, EffectWorker *param)
 //----- Эффект "Осциллограф" (c) kostyamat
 // !++
 String EffectOsc::setDynCtrl(UIControl*_val) {
+#ifdef ESP32
+  pointer = 4096/(getMicScale()*2);
+#else
   pointer = 1024/(getMicScale()*2);
+#endif
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
     if (speed <= 127) {
