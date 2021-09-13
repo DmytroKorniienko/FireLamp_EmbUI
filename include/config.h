@@ -285,9 +285,6 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 
 // настройки времени
-//#ifndef TZONE
-//#define TZONE                 ("AUTO")
-//#endif
 #ifndef HTTPTIME_SYNC_INTERVAL
  #define HTTPTIME_SYNC_INTERVAL    (4)                           // интервал синхронизации времени по http, час
 #endif
