@@ -1880,20 +1880,24 @@ bool EffectSwirl::swirlRoutine(CRGB *leds, EffectWorker *param)
 #endif
 
   // Use two out-of-sync sine waves
-  uint8_t i = beatsin8(27 * ((float)speed / 100.0) + 5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
-  uint8_t j = beatsin8(41 * ((float)speed / 100.0) + 5, e_swi_BORDER, WIDTH - e_swi_BORDER);
+  uint8_t xi = beatsin8(27 * ((float)speed / 100.0) + 5, e_swi_BORDER, WIDTH - e_swi_BORDER); // borderWidth
+  uint8_t xj = beatsin8(41 * ((float)speed / 100.0) + 5, e_swi_BORDER, WIDTH - e_swi_BORDER);
+  uint8_t yi = beatsin8(27 * ((float)speed / 100.0) + 5, e_swi_BORDER, HEIGHT - e_swi_BORDER); // borderWidth
+  uint8_t yj = beatsin8(41 * ((float)speed / 100.0) + 5, e_swi_BORDER, HEIGHT - e_swi_BORDER);
   // Also calculate some reflections
-  uint8_t ni = EffectMath::getmaxWidthIndex() -i;
-  uint8_t nj = EffectMath::getmaxWidthIndex() -j;
+  uint8_t nxi = EffectMath::getmaxWidthIndex() - xi;
+  uint8_t nyi = EffectMath::getmaxHeightIndex() -yi;
+  uint8_t nxj = EffectMath::getmaxWidthIndex() - xj;
+  uint8_t nyj = EffectMath::getmaxHeightIndex() - yj;
 
   // The color of each point shifts over time, each at a different speed.
   uint16_t ms = millis();
-  EffectMath::drawPixelXY(i, j, CRGB(EffectMath::getPixColorXY(i, j)) + ColorFromPalette(*curPalette, ms / 11));
-  EffectMath::drawPixelXY(j, i, CRGB(EffectMath::getPixColorXY(j, i)) + ColorFromPalette(*curPalette, ms / 13));
-  EffectMath::drawPixelXY(ni, nj, CRGB(EffectMath::getPixColorXY(ni, nj)) + ColorFromPalette(*curPalette, ms / 17));
-  EffectMath::drawPixelXY(nj, ni, CRGB(EffectMath::getPixColorXY(nj, ni)) + ColorFromPalette(*curPalette, ms / 29));
-  EffectMath::drawPixelXY(i, nj, CRGB(EffectMath::getPixColorXY(i, nj)) + ColorFromPalette(*curPalette, ms / 37));
-  EffectMath::drawPixelXY(ni, j, CRGB(EffectMath::getPixColorXY(ni, j)) + ColorFromPalette(*curPalette, ms / 41));
+  EffectMath::drawPixelXY(xi, yj, CRGB(EffectMath::getPixColorXY(xi, yj)) + ColorFromPalette(*curPalette, ms / 11));
+  EffectMath::drawPixelXY(xj, yi, CRGB(EffectMath::getPixColorXY(xj, yi)) + ColorFromPalette(*curPalette, ms / 13));
+  EffectMath::drawPixelXY(nxi, nyj, CRGB(EffectMath::getPixColorXY(nxi, nyj)) + ColorFromPalette(*curPalette, ms / 17));
+  EffectMath::drawPixelXY(nxj, nyi, CRGB(EffectMath::getPixColorXY(nxj, nyi)) + ColorFromPalette(*curPalette, ms / 29));
+  EffectMath::drawPixelXY(xi, nyj, CRGB(EffectMath::getPixColorXY(xi, nyj)) + ColorFromPalette(*curPalette, ms / 37));
+  EffectMath::drawPixelXY(nxi, yj, CRGB(EffectMath::getPixColorXY(nxi, yj)) + ColorFromPalette(*curPalette, ms / 41));
 
   return true;
 }
@@ -4611,8 +4615,8 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
     xsin += _speedX;
     ysin += _speedY;
   } else {
-    xsin = beatsin8(5, 0, abs(_scale)*3); // for X and Y texture move
-    ysin = beatsin8(6, 0, abs(_speed)*3); // for X and Y texture move
+    xsin = float(beatsin16(5, 0, abs(_scale)*30)) /10; // for X and Y texture move
+    ysin = float(beatsin16(6, 0, abs(_speed)*30))/10; // for X and Y texture move
   }
   int8_t chkIdx = patternIdx;
   if (_sc == 0) {
@@ -5511,7 +5515,7 @@ bool EffectFire2020::run(CRGB *leds, EffectWorker *param) {
 
     }
   }
-  blurRows(leds, WIDTH, HEIGHT, 15);
+  EffectMath::blurRows(leds, WIDTH, HEIGHT, 15);
   a+= speedFactor; // как-то раньше не догадался так сделать. Мда...
   return true;
 }
