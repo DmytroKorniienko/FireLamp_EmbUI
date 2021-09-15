@@ -1500,8 +1500,8 @@ void block_settings_mic(Interface *interf, JsonObject *data){
 
     interf->json_section_begin(FPSTR(TCONST_0038));
     if (!myLamp.isMicCalibration()) {
-        interf->number(String(FPSTR(TCONST_0039)), String((float)(round(myLamp.getLampState().getMicScale() * 100) / 100)), String(FPSTR(TINTF_022)), String(0.01), String(0), String(0));
-        interf->number(String(FPSTR(TCONST_003A)), String((float)(round(myLamp.getLampState().getMicNoise() * 100) / 100)), String(FPSTR(TINTF_023)), String(0.01), String(0), String(0));
+        interf->number(String(FPSTR(TCONST_0039)), String((float)(round(myLamp.getLampState().getMicScale() * 100) / 100)), String(FPSTR(TINTF_022)), String(0.01), String(0), String(2));
+        interf->number(String(FPSTR(TCONST_003A)), String((float)(round(myLamp.getLampState().getMicNoise() * 100) / 100)), String(FPSTR(TINTF_023)), String(0.01), String(0), String(32));
         interf->range(String(FPSTR(TCONST_003B)), String((int)myLamp.getLampState().getMicNoiseRdcLevel()), String(0), String(4), String(1), String(FPSTR(TINTF_024)), false);
 
         interf->button_submit(FPSTR(TCONST_0038), FPSTR(TINTF_008), FPSTR(P_GRAY));
@@ -2473,7 +2473,7 @@ void section_settings_frame(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(T_SETTINGS), FPSTR(TINTF_002));
 #ifdef OPTIONS_PASSWORD
     if(!myLamp.getLampState().isOptPass){
-        interf->json_section_line(TCONST_0093);
+        interf->json_section_line(FPSTR(TCONST_0093));
             interf->password(FPSTR(TCONST_00B8), FPSTR(TINTF_02D));
             interf->button_submit(FPSTR(TCONST_0093), FPSTR(TINTF_01F), "", 19);
         interf->json_section_end();
