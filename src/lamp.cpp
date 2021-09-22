@@ -331,12 +331,11 @@ void LAMP::frameShow(const uint32_t ticktime){
 }
 
 #ifdef VERTGAUGE
-    void LAMP::GaugeShow(unsigned val, unsigned max, byte hue, byte sat) {
+    void LAMP::GaugeShow(unsigned val, unsigned max, byte hue) {
       gauge_time = millis();
       gauge_val = val;
       gauge_max = max;
       gauge_hue = hue;
-      gauge_sat = sat;
     }
 
     void LAMP::GaugeMix() {
@@ -354,7 +353,7 @@ void LAMP::frameShow(const uint32_t ticktime){
       }*/
       for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
         EffectMath::drawLine(x, 0, x, HEIGHT, 0);
-        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), CHSV(gauge_hue, gauge_sat, 255));
+        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), (gauge_hue ? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)));
       }
 #else
       byte ind = (byte)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);

@@ -90,8 +90,6 @@ bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
 extern void encLoop();
-CRGB getEncGaugeColor();
-void setEncGaugeColor(const CRGB color);
 uint8_t getEncTxtDelay();
 void setEncTxtDelay(const uint8_t speed);
 CRGB getEncTxtColor();

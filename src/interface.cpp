@@ -2263,6 +2263,12 @@ void set_eventlist(Interface *interf, JsonObject *data){
         set_event_conf(interf, data); //через какую-то хитрую жопу отработает :)
     }
 }
+#ifdef VERTGAUGE
+void set_gaugeflag(Interface *interf, JsonObject *data){
+    if (!data) return;
+    myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
+}
+#endif
 
 #ifdef ESP_USE_BUTTON
 void block_settings_butt(Interface *interf, JsonObject *data){
@@ -2270,6 +2276,9 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_006D), FPSTR(TINTF_013));
 
     interf->checkbox(FPSTR(TCONST_001F), myButtons->isButtonOn()? "1" : "0", FPSTR(TINTF_07B), true);
+    #ifdef VERTGAUGE
+    interf->checkbox(FPSTR(TCONST_003F), myLamp.getLampSettings().isGaugeOn ? String("1") : String("0"), FPSTR(TINTF_0DD), true);
+    #endif
 
     interf->json_section_begin(FPSTR(TCONST_006E));
     interf->select(FPSTR(TCONST_006F), String(0), String(FPSTR(TINTF_07A)), false);
@@ -2302,7 +2311,6 @@ void show_settings_butt(Interface *interf, JsonObject *data){
 
 void set_butt_conf(Interface *interf, JsonObject *data){
     if (!data) return;
-
     Button *btn = nullptr;
     bool on = ((*data)[FPSTR(TCONST_0070)] == "1");
     bool hold = ((*data)[FPSTR(TCONST_0071)] == "1");
@@ -2409,7 +2417,9 @@ void set_btnflag(Interface *interf, JsonObject *data){
 void block_settings_enc(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_000C), FPSTR(TINTF_0DC));
+    #ifdef VERTGAUGE
     interf->checkbox(FPSTR(TCONST_003F), myLamp.getLampSettings().isGaugeOn ? String("1") : String("0"), FPSTR(TINTF_0DD), false);
+    #endif
     interf->color(FPSTR(TCONST_0040), FPSTR(TINTF_0DE));
     interf->color(FPSTR(TCONST_0042), FPSTR(TINTF_0DF));
     interf->range(FPSTR(TCONST_0043), String(getEncTxtDelay()), String(0), String(100), String(1), String(FPSTR(TINTF_044)), false);
@@ -2426,11 +2436,13 @@ void show_settings_enc(Interface *interf, JsonObject *data){
 }
 void set_settings_enc(Interface *interf, JsonObject *data){
     if (!data) return;
-    myLamp.setEncGauge((*data)[FPSTR(TCONST_003F)] == "1");
+    #ifdef VERTGAUGE
+    myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
     SETPARAM(FPSTR(TCONST_0040));
     String tmpStr = (*data)[FPSTR(TCONST_0040)];
     tmpStr.replace(F("#"), F("0x"));
-    setEncGaugeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
+    myLamp.setGaugeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
+    #endif
     SETPARAM(FPSTR(TCONST_0042));
     String tmpStr2 = (*data)[FPSTR(TCONST_0042)];
     tmpStr2.replace(F("#"), F("0x"));
@@ -2777,10 +2789,12 @@ void create_parameters(){
     embui.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
 #endif
 #ifdef ENCODER
-    embui.var_create(FPSTR(TCONST_003F), F("1"));         // Вкл\Выкл шкалы
-    embui.var_create(FPSTR(TCONST_0040), F("#FF2A00"));  // Дефолтный цвет шкалы
     embui.var_create(FPSTR(TCONST_0042), F("#FFA500"));  // Дефолтный цвет текста (Orange)
     embui.var_create(FPSTR(TCONST_0043), F("40"));        // Задержка прокрутки текста
+#endif
+#ifdef VERTGAUGE
+    embui.var_create(FPSTR(TCONST_003F), F("1"));         // Вкл\Выкл шкалы
+    embui.var_create(FPSTR(TCONST_0040), F("#FF2A00"));  // Дефолтный цвет шкалы
 #endif
 #ifdef MP3PLAYER
     embui.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
@@ -2896,6 +2910,9 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
+#endif
+#ifdef VERTGAUGE
+    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugeflag);
 #endif
 
 #ifdef LAMP_DEBUG
@@ -3031,11 +3048,13 @@ t->enableDelayed();
     // doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 #ifdef ENCODER
-    obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
-    obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
     obj[FPSTR(TCONST_0043)] = embui.param(FPSTR(TCONST_0043));
     set_settings_enc(nullptr, &obj);
+#endif
+#ifdef VERTGAUGE
+    obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
+    obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
 #endif
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
@@ -3205,7 +3224,7 @@ uint8_t uploadProgress(size_t len, size_t total){
         CALL_INTF_OBJ(show_progress);
     }
 #ifdef VERTGAUGE
-    myLamp.GaugeShow(len, total, 100);
+    if (myLamp.getLampSettings().isGaugeOn) myLamp.GaugeShow(len, total, 100);
 #endif
     return progress;
 }

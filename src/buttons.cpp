@@ -42,7 +42,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 					tReverseTimeout->enableDelayed();
 				} 
 #ifdef VERTGAUGE
-				myLamp.GaugeShow(newval, 255, 10);
+				if (myLamp.isGauge()) myLamp.GaugeShow(newval, 255, 10);
 #endif
 				remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(newval).c_str(), NULL);
 				return true;
@@ -57,7 +57,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 					tReverseTimeout->enableDelayed();
 				}
 #ifdef VERTGAUGE
-				myLamp.GaugeShow(newval, 255, 100);
+				if (myLamp.isGauge()) myLamp.GaugeShow(newval, 255, 100);
 #endif
 				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"1").c_str(), String(newval).c_str(), NULL);
 				return true;
@@ -73,7 +73,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 					tReverseTimeout->enableDelayed();
 				}
 #ifdef VERTGAUGE
-				myLamp.GaugeShow(newval, 255, 150);
+				if (myLamp.isGauge()) myLamp.GaugeShow(newval, 255, 150);
 #endif
 				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"2").c_str(), String(newval).c_str(), NULL);
 				return true;

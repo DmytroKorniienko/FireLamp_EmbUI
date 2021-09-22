@@ -239,7 +239,7 @@ private:
     unsigned gauge_val = 0;
     unsigned gauge_max = 0;
     byte gauge_hue = 0;
-    byte gauge_sat = 255;
+    CRGB gauge_color = 0;
     void GaugeMix();
 #endif
 
@@ -311,10 +311,8 @@ public:
 #endif
 
 #ifdef VERTGAUGE
-    void GaugeShow(unsigned val, unsigned max, byte hue = 10, byte sat = 255);
-    void GaugeShow(unsigned val, unsigned max, CRGB color){
-         GaugeShow(val, max, rgb2hsv_approximate(color).h, rgb2hsv_approximate(color).s);
-    }
+    void GaugeShow(unsigned val, unsigned max, byte hue = 0);
+    void setGaugeColor(CRGB color) { gauge_color = color;}
 #endif
 
     void setSpeedFactor(float val) {
@@ -414,9 +412,9 @@ public:
     void setTempDisp(bool flag) {flags.isTempOn = flag;}
     #endif
 #endif
-#ifdef ENCODER
-    bool isEncGauge() {return flags.isGaugeOn;}
-    void setEncGauge(bool flag) {flags.isGaugeOn = flag;}
+#ifdef VERTGAUGE
+    bool isGauge() {return flags.isGaugeOn;}
+    void setGauge(bool flag) {flags.isGaugeOn = flag;}
 #endif
     void startAlarm(char *value = nullptr);
     void stopAlarm();

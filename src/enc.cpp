@@ -55,14 +55,10 @@ bool done;                  // true == все отложенные до enc_loop
 bool inSettings;            // флаг - мы в настройках эффекта
 uint8_t speed, fade;
 
-CRGB gaugeColor = 0xFF2A00;
 uint8_t txtDelay = 40U;
 CRGB txtColor = CRGB::Orange;
 
-
 //Task encTask(100 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
-
-
 
 void callEncTick () {
   enc.tick();
@@ -442,7 +438,9 @@ void encSetBri(int val) {
   }
   currAction = 1;
   anyValue = constrain(anyValue + val, 1, 255);
-  if (myLamp.isEncGauge()) myLamp.GaugeShow(anyValue, 255, gaugeColor);
+#ifdef VERTGAUGE
+  if (myLamp.isGauge()) myLamp.GaugeShow(anyValue, 255);
+#endif
   encDisplay(anyValue, String(F("b.")));
 }
 
@@ -503,7 +501,9 @@ void encSetDynCtrl(int val) {
     myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val, 0, 1)));
   
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
-  else if (myLamp.isEncGauge()) myLamp.GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt(), gaugeColor);
+#ifdef VERTGAUGE
+  else if (myLamp.isGauge()) myLamp.GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
+#endif
   encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
   interrupt();
 }
@@ -604,8 +604,6 @@ void sendIP() {
 }
 
 
-CRGB getEncGaugeColor(){ return gaugeColor;}
-void setEncGaugeColor(const CRGB color){ gaugeColor = color;}
 uint8_t getEncTxtDelay(){ return txtDelay;}
 void setEncTxtDelay(const uint8_t speed){ txtDelay = speed;}
 CRGB getEncTxtColor(){ return txtColor;}
