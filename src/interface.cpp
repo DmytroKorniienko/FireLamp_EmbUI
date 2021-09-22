@@ -276,12 +276,37 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     recreateoptionsTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
+    bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
+#ifdef MIC_EFFECTS
+    bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
+#endif
     SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
-    if(myLamp.effects.getEffSortType()!=st){
-        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
-        myLamp.effects.removeLists();
-        recreateoptionsTask();
+
+    if(myLamp.getLampState().isInitCompleted){
+        LOG(printf_P, PSTR("Settings: call removeLists()\n"));
+        bool isRecreate = false;
+        isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
+#ifdef MIC_EFFECTS
+        isRecreate = (myLamp.getLampSettings().effHasMic!=isEffHasMic) || isRecreate;
+#endif
+        isRecreate = (myLamp.effects.getEffSortType()!=st) || isRecreate;
+
+        if(isRecreate){
+            myLamp.effects.setEffSortType(st);
+            myLamp.setNumInList(isNumInList);
+#ifdef MIC_EFFECTS
+            myLamp.setEffHasMic(isEffHasMic);
+#endif
+            myLamp.effects.removeLists();
+            recreateoptionsTask();
+        }
     }
+    myLamp.setNumInList(isNumInList);
+#ifdef MIC_EFFECTS
+    myLamp.setEffHasMic(isEffHasMic);
+#endif
+    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
+
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
@@ -1849,37 +1874,6 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == "1");
         myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == "1");
 
-        bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
-    #ifdef MIC_EFFECTS
-        bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
-    #endif
-        SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
-
-        if(myLamp.getLampState().isInitCompleted){
-            LOG(printf_P, PSTR("Settings: call removeLists()\n"));
-            bool isRecreate = false;
-            isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
-    #ifdef MIC_EFFECTS
-            isRecreate = (myLamp.getLampSettings().effHasMic!=isEffHasMic) || isRecreate;
-    #endif
-            isRecreate = (myLamp.effects.getEffSortType()!=st) || isRecreate;
-
-            if(isRecreate){
-                myLamp.effects.setEffSortType(st);
-                myLamp.setNumInList(isNumInList);
-    #ifdef MIC_EFFECTS
-                myLamp.setEffHasMic(isEffHasMic);
-    #endif
-                myLamp.effects.removeLists();
-                recreateoptionsTask();
-            }
-        }
-        myLamp.setNumInList(isNumInList);
-    #ifdef MIC_EFFECTS
-        myLamp.setEffHasMic(isEffHasMic);
-    #endif
-        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
-
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
 
         float sf = (*data)[FPSTR(TCONST_0053)];
@@ -2727,7 +2721,7 @@ bool notfound_handle(AsyncWebServerRequest *request, const String& req)
 void create_parameters(){
     LOG(println, F("Создание дефолтных параметров"));
     // создаем дефолтные параметры для нашего проекта
-    embui.var_create(FPSTR(TCONST_0094), String(ulltos(myLamp.getLampFlags()))); // Дефолтный набор флагов
+    embui.var_create(FPSTR(TCONST_0094), ulltos(myLamp.getLampFlags())); // Дефолтный набор флагов
     embui.var_create(FPSTR(TCONST_0016), F("1"));   // "effListMain"
     embui.var_create(FPSTR(TCONST_004A), String(DEFAULT_MQTTPUB_INTERVAL)); // "m_tupd" интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 
