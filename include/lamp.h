@@ -103,7 +103,7 @@ typedef enum _SCHEDULER {
 #define LED_SHOW_DELAY 1
 
 //#pragma pack(push,2)
-typedef union {
+typedef union _LAMPFLAGS {
 struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     bool MIRR_V:1; // отзрекаливание по V
@@ -135,8 +135,41 @@ struct {
     bool playMP3:1; // режим mp3-плеера
     uint8_t playTime:3; // воспроизводить время?
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
+    //--------16 штук граница-------------------
+    bool isGaugeOn:1;
+    bool isTempOn:1;
 };
-uint32_t lampflags; // набор битов для конфига
+uint64_t lampflags; // набор битов для конфига
+_LAMPFLAGS(){
+    MIRR_V = false; // отзрекаливание по V
+    MIRR_H = false; // отзрекаливание по H
+    ONflag = false; // флаг включения/выключения
+    isDebug = false; // флаг отладки
+    isFaderON = true; // признак того, что используется фейдер для смены эффектов
+    isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
+    isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
+    isEventsHandled = true;
+    isMicOn = true; // глобальное испльзование микрофона
+    numInList = false;
+    effHasMic = false;
+    dRand = false;
+    isShowSysMenu = false;
+    isOnMP3 = false;
+    isBtn = true;
+    showName = false;
+    playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
+    playName = false; // воспроизводить имя?
+    playEffect = false; // воспроизводить эффект?
+    alarmSound = ALARM_SOUND_TYPE::AT_NONE;
+    MP3eq = 0;
+    playMP3 = false;
+    limitAlarmVolume = false;
+    isDraw = false;
+    tm24 = true;
+    tmZero = false;
+    isGaugeOn = true;
+    isTempOn = true;
+}
 } LAMPFLAGS;
 //#pragma pack(pop)
 
@@ -206,6 +239,7 @@ private:
     unsigned gauge_val = 0;
     unsigned gauge_max = 0;
     byte gauge_hue = 0;
+    byte gauge_sat = 255;
     void GaugeMix();
 #endif
 
@@ -232,7 +266,7 @@ public:
     void lamp_init(const uint16_t curlimit);       // первичная инициализация Лампы
     EffectWorker effects; // объект реализующий доступ к эффектам
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
-    uint32_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
+    uint64_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
     const LAMPFLAGS &getLampSettings() {return flags;} // возвращает упакованные флаги лампы
     //void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
     void setbPin(uint8_t val) {bPin = val;}
@@ -277,7 +311,10 @@ public:
 #endif
 
 #ifdef VERTGAUGE
-    void GaugeShow(unsigned val, unsigned max, byte hue = 10);
+    void GaugeShow(unsigned val, unsigned max, byte hue = 10, byte sat = 255);
+    void GaugeShow(unsigned val, unsigned max, CRGB color){
+         GaugeShow(val, max, rgb2hsv_approximate(color).h, rgb2hsv_approximate(color).s);
+    }
 #endif
 
     void setSpeedFactor(float val) {
@@ -372,8 +409,15 @@ public:
     void setTmBright(uint8_t val) {tmBright = val;}
     uint8_t getBrightOn() { return tmBright>>4; }
     uint8_t getBrightOff() { return tmBright&0x0F; }
+    #ifdef DS18B20
+    bool isTempDisp() {return flags.isTempOn;}
+    void setTempDisp(bool flag) {flags.isTempOn = flag;}
+    #endif
 #endif
-
+#ifdef ENCODER
+    bool isEncGauge() {return flags.isGaugeOn;}
+    void setEncGauge(bool flag) {flags.isGaugeOn = flag;}
+#endif
     void startAlarm(char *value = nullptr);
     void stopAlarm();
     void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI

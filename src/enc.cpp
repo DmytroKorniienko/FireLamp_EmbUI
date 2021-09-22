@@ -55,6 +55,10 @@ bool done;                  // true == все отложенные до enc_loop
 bool inSettings;            // флаг - мы в настройках эффекта
 uint8_t speed, fade;
 
+CRGB gaugeColor = 0xFF2A00;
+uint8_t txtDelay = 40U;
+CRGB txtColor = CRGB::Orange;
+
 
 //Task encTask(100 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
@@ -80,7 +84,7 @@ void encLoop() {
         exitSettings();
         return;
       }
-      encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), ENC_STRING_COLOR, false); 
+      encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, false, txtDelay); 
     }
   }
 #ifdef DS18B20
@@ -120,7 +124,7 @@ void encLoop() {
       static bool printed = false;
       if (valRepiteChk == currEffNum) {
         if (!printed) {
-          encSendStringNumEff(currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U)), ENC_STRING_COLOR);
+          encSendStringNumEff(currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U)), txtColor);
           printed = true;
         }
       } 
@@ -134,7 +138,7 @@ void encLoop() {
       LOG(printf_P, PSTR("Enc: New effect number: %d\n"), currEffNum);
       myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
       remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
-      encSendString(String(FPSTR(TINTF_00A)) + ": " + (currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U))), ENC_STRING_COLOR);
+      encSendString(String(FPSTR(TINTF_00A)) + ": " + (currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U))), txtColor, true, txtDelay);
       done = true;
       currAction = 0;
     }
@@ -245,7 +249,7 @@ void isClick() {
       if (validControl(myLamp.getEffControls()[currDynCtrl]->getType())) break;
     }
     encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(FPSTR(".")));
-    encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), ENC_STRING_COLOR);  
+    encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, true, txtDelay);  
   }
   interrupt();
 }
@@ -305,9 +309,9 @@ void isHolded() {
     currEffNum = myLamp.effects.getCurrent();
     LOG(printf_P, PSTR("Enc: Effect number: %d controls amount %d\n"), currEffNum, myLamp.getEffControls().size());
 #endif
-    encSendString(String(FPSTR(TINTF_01A)), CRGB::Green);
+    encSendString(String(FPSTR(TINTF_01A)), CRGB::Green, true, txtDelay);
     encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(currDynCtrl) + String(F(".")));
-    encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), ENC_STRING_COLOR, false);
+    encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, false, txtDelay);
   } else {
       exitSettings();
   }
@@ -325,7 +329,7 @@ void exitSettings() {
   anyValue = 0;
   inSettings = false;
   encDisplay(String(F("done")));
-  encSendString(String(FPSTR(TINTF_00B)), CRGB::Red);
+  encSendString(String(FPSTR(TINTF_00B)), CRGB::Red, true, txtDelay);
   myLamp.effects.autoSaveConfig(true);
 #ifdef DS18B20
   canDisplayTemp() = true;
@@ -438,9 +442,7 @@ void encSetBri(int val) {
   }
   currAction = 1;
   anyValue = constrain(anyValue + val, 1, 255);
-#ifdef VERTGAUGE
-  myLamp.GaugeShow(anyValue, 255, VERTGAUGE_COLOR);
-#endif
+  if (myLamp.isEncGauge()) myLamp.GaugeShow(anyValue, 255, gaugeColor);
   encDisplay(anyValue, String(F("b.")));
 }
 
@@ -500,10 +502,8 @@ void encSetDynCtrl(int val) {
   else // если чекбокс
     myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val, 0, 1)));
   
-  if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), ENC_STRING_COLOR); 
-#ifdef VERTGAUGE
-  else myLamp.GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt(), VERTGAUGE_COLOR);
-#endif
+  if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
+  else if (myLamp.isEncGauge()) myLamp.GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt(), gaugeColor);
   encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
   interrupt();
 }
@@ -567,7 +567,7 @@ void encSendStringNumEff(String str, CRGB color) {
 void toggleDemo() {
   if (myLamp.getMode() == MODE_DEMO) {
     remote_action(RA::RA_DEMO, "0", NULL); 
-    encSendString(String(F("Demo OFF")), ENC_STRING_COLOR);
+    encSendString(String(F("Demo OFF")), txtColor, true, txtDelay);
   }
   else 
     remote_action(RA::RA_DEMO, "1", NULL);
@@ -575,20 +575,20 @@ void toggleDemo() {
 
 void toggleGBright() {
   remote_action(RA::RA_GLOBAL_BRIGHT, myLamp.IsGlobalBrightness() ? "0" : "1", NULL);
-  encSendString(String(FPSTR(TINTF_00C)) + String(myLamp.IsGlobalBrightness() ? F(": ON") : F(": OFF")), ENC_STRING_COLOR);
+  encSendString(String(FPSTR(TINTF_00C)) + String(myLamp.IsGlobalBrightness() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
 }
 
 void toggleMic() {
 #ifdef MIC_EFFECTS
   remote_action(RA::RA_MICONOFF, myLamp.isMicOnOff() ? "0" : "1", NULL);
-  encSendString(String(FPSTR(TINTF_021)) + String(myLamp.isMicOnOff() ? F(": ON") : F(": OFF")), ENC_STRING_COLOR);
+  encSendString(String(FPSTR(TINTF_021)) + String(myLamp.isMicOnOff() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
 #endif
 }
 
 void toggleAUX() {
 #ifdef AUX_PIN
   remote_action(RA::RA_AUX_TOGLE, NULL);
-  encSendString(String(FPSTR(TCONST_000E)) + String(digitalRead(AUX_PIN) == AUX_LEVEL ? F(": ON") : F(": OFF")), ENC_STRING_COLOR, true);
+  encSendString(String(FPSTR(TCONST_000E)) + String(digitalRead(AUX_PIN) == AUX_LEVEL ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
 #endif
 }
 
@@ -602,5 +602,13 @@ void sendIP() {
   tm1637.setIpShow();
   #endif
 }
+
+
+CRGB getEncGaugeColor(){ return gaugeColor;}
+void setEncGaugeColor(const CRGB color){ gaugeColor = color;}
+uint8_t getEncTxtDelay(){ return txtDelay;}
+void setEncTxtDelay(const uint8_t speed){ txtDelay = speed;}
+CRGB getEncTxtColor(){ return txtColor;}
+void setEncTxtColor(const CRGB color){ txtColor = color;}
 
 #endif

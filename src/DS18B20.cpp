@@ -114,7 +114,7 @@ void ds_loop() {
   if (!digitalRead(SW)) return; // если кнопка энкодера нажата, пропускаем этот loop
 #endif
   int16_t curTemp = getTemp();
-  if (canDisplayTemp()) ds_display(curTemp);
+  if (canDisplayTemp() && myLamp.isTempDisp()) ds_display(curTemp);
 
   tempToSpeed(curTemp);
 

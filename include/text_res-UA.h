@@ -429,6 +429,11 @@ static const char TINTF_0D8[] PROGMEM = "Ведучий 0";
 static const char TINTF_0D9[] PROGMEM = "Очистити";
 static const char TINTF_0DA[] PROGMEM = "Сканувати";
 static const char TINTF_0DB[] PROGMEM = "FTP";
+static const char TINTF_0DC[] PROGMEM = "Управління";
+static const char TINTF_0DD[] PROGMEM = "Верт. шкала";
+static const char TINTF_0DE[] PROGMEM = "Колір шкали";
+static const char TINTF_0DF[] PROGMEM = "Колір тексту";
+static const char TINTF_0E0[] PROGMEM = "Показувати температуру";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";

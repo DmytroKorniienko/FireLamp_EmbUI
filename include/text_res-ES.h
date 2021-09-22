@@ -430,6 +430,11 @@ static const char TINTF_0D8[] PROGMEM = "Líder 0";
 static const char TINTF_0D9[] PROGMEM = "Claro";
 static const char TINTF_0DA[] PROGMEM = "Escanear";
 static const char TINTF_0DB[] PROGMEM = "FTP";
+static const char TINTF_0DC[] PROGMEM = "Control";
+static const char TINTF_0DD[] PROGMEM = "Escala vertical";
+static const char TINTF_0DE[] PROGMEM = "Escala color";
+static const char TINTF_0DF[] PROGMEM = "Texto color";
+static const char TINTF_0E0[] PROGMEM = "Mostrar temperatura";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";

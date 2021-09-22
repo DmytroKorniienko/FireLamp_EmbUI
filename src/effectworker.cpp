@@ -827,10 +827,10 @@ void EffectWorker::makeIndexFile(const char *folder)
 }
 
 void EffectWorker::removeLists(){
-  LittleFS.remove(F("/fquicklist.json"));
-  LittleFS.remove(F("/fslowlist.json"));
-  LittleFS.remove(F("/quicklist.json"));
-  LittleFS.remove(F("/slowlist.json"));
+  LittleFS.remove(FPSTR(TCONST_0082));
+  LittleFS.remove(FPSTR(TCONST_0083));
+  LittleFS.remove(FPSTR(TCONST_0086));
+  LittleFS.remove(FPSTR(TCONST_0084));
   listsuffix = time(NULL);
 }
 

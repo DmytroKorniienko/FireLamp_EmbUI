@@ -331,11 +331,12 @@ void LAMP::frameShow(const uint32_t ticktime){
 }
 
 #ifdef VERTGAUGE
-    void LAMP::GaugeShow(unsigned val, unsigned max, byte hue) {
+    void LAMP::GaugeShow(unsigned val, unsigned max, byte hue, byte sat) {
       gauge_time = millis();
       gauge_val = val;
       gauge_max = max;
       gauge_hue = hue;
+      gauge_sat = sat;
     }
 
     void LAMP::GaugeMix() {
@@ -353,7 +354,7 @@ void LAMP::frameShow(const uint32_t ticktime){
       }*/
       for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
         EffectMath::drawLine(x, 0, x, HEIGHT, 0);
-        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), CHSV(gauge_hue, 255, 255));
+        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), CHSV(gauge_hue, gauge_sat, 255));
       }
 #else
       byte ind = (byte)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
@@ -385,33 +386,6 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       lampState.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       lampState.micAnalyseDivider = 1; // анализ каждый раз
 //#endif
-
-      flags.MIRR_V = false; // отзрекаливание по V
-      flags.MIRR_H = false; // отзрекаливание по H
-      flags.ONflag = false; // флаг включения/выключения
-      flags.isDebug = false; // флаг отладки
-      flags.isFaderON = true; // признак того, что используется фейдер для смены эффектов
-      flags.isEffClearing = false; // нужно ли очищать эффекты при переходах с одного на другой
-      flags.isGlobalBrightness = false; // признак использования глобальной яркости для всех режимов
-      flags.isEventsHandled = true;
-      flags.isMicOn = true; // глобальное испльзование микрофона
-      flags.numInList = false;
-      flags.effHasMic = false;
-      flags.dRand = false;
-      flags.isShowSysMenu = false;
-      flags.isOnMP3 = false;
-      flags.isBtn = true;
-      flags.showName = false;
-      flags.playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
-      flags.playName = false; // воспроизводить имя?
-      flags.playEffect = false; // воспроизводить эффект?
-      flags.alarmSound = ALARM_SOUND_TYPE::AT_NONE;
-      flags.MP3eq = 0;
-      flags.playMP3 = false;
-      flags.limitAlarmVolume = false;
-      flags.isDraw = false;
-      flags.tm24 = true;
-      flags.tmZero = false;
 
 #ifdef VERTGAUGE
       gauge_time = millis();

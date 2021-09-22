@@ -50,7 +50,7 @@ MP3PLAYERDEVICE *mp3 = nullptr;
 void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
-    
+
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
@@ -67,7 +67,7 @@ void setup() {
     //embui.mqtt(embui.param(F("m_pref")), embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
     embui.mqtt(mqttCallback, true);
 
-    myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
+    myLamp.effects.setEffSortType((SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
 #ifdef RTC
@@ -79,7 +79,7 @@ void setup() {
 #endif
 
 #ifdef SHOWSYSCONFIG
-    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+    myLamp.lamp_init(embui.param(FPSTR(TCONST_0098)).toInt());
 #else
     myLamp.lamp_init(CURRENT_LIMIT);
 #endif
@@ -89,7 +89,7 @@ void setup() {
 
 #ifdef ESP_USE_BUTTON
 #ifdef SHOWSYSCONFIG
-    myLamp.setbPin(embui.param(F("PINB")).toInt());
+    myLamp.setbPin(embui.param(FPSTR(TCONST_0097)).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
 #else
     myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
