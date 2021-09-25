@@ -182,7 +182,16 @@ void pubCallback(Interface *interf){
     if (!interf) return;
     interf->json_frame_value();
     interf->value(FPSTR(TCONST_0001), embui.timeProcessor.getFormattedShortTime(), true);
+#if !defined(ESP32) || !defined(BOARD_HAS_PSRAM)    
     interf->value(FPSTR(TCONST_0002), String(myLamp.getLampState().freeHeap), true);
+#else
+    if(psramFound()){
+        interf->value(FPSTR(TCONST_0002), String(ESP.getFreeHeap())+" / "+String(ESP.getFreePsram()), true);
+        LOG(printf_P, PSTR("Free PSRAM: %d\n"), ESP.getFreePsram());
+    } else {
+        interf->value(FPSTR(TCONST_0002), String(myLamp.getLampState().freeHeap), true);
+    }
+#endif
     char fuptime[16];
     uint32_t tm = millis()/1000;
     sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,(tm/3600)%24,(tm/60)%60,tm%60);
@@ -2953,9 +2962,9 @@ void sync_parameters(){
     LAMPFLAGS tmp;
     tmp.lampflags = stoull(syslampFlags); //atol(embui.param(FPSTR(TCONST_0094)).c_str());
 //#ifndef ESP32
-//    LOG(printf_P, PSTR("tmp.lampflags=%u (%s)\n"), tmp.lampflags, syslampFlags.c_str());
+//    LOG(printf_P, PSTR("tmp.lampflags=%llu (%s)\n"), tmp.lampflags, syslampFlags.c_str());
 //#endif
-    LOG(printf_P, PSTR("tmp.lampflags=%u\n"), tmp.lampflags);
+    LOG(printf_P, PSTR("tmp.lampflags=%llu\n"), tmp.lampflags);
 
     obj[FPSTR(TCONST_00C4)] = tmp.isDraw ? "1" : "0";
     set_drawflag(nullptr, &obj);

@@ -51,6 +51,11 @@ void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
 
+    LOG(printf_P, PSTR("\n\nsetup: free heap  : %d\n"), ESP.getFreeHeap());
+#ifdef ESP32
+    LOG(printf_P, PSTR("setup: free PSRAM  : %d\n"), ESP.getFreePsram()); // 4194252
+#endif
+
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
@@ -117,6 +122,7 @@ void setup() {
 #else
   embui.server.addHandler(new SPIFFSEditor(LittleFS, F("esp32"), F("esp32")));
 #endif
+
   sync_parameters();        // падение есп32 не воспоизводится, kDn
 
   //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5

@@ -331,7 +331,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 }
 
 #ifdef VERTGAUGE
-    void LAMP::GaugeShow(unsigned val, unsigned max, byte hue) {
+    void LAMP::GaugeShow(unsigned val, unsigned max, uint8_t hue) {
       gauge_time = millis();
       gauge_val = val;
       gauge_max = max;
@@ -342,23 +342,23 @@ void LAMP::frameShow(const uint32_t ticktime){
       if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
 #if (VERTGAUGE==1)
-/*      byte ind = (byte)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
-      for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
-        for (byte y = 0; y < HEIGHT ; y++) {
+/*      uint8_t ind = (uint8_t)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+      for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
+        for (uint8_t y = 0; y < HEIGHT ; y++) {
           if (ind > y)
             EffectMath::drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
           else
             EffectMath::drawPixelXY(x, y,  0);
         }
       }*/
-      for (byte x = 0; x <= xCol * (xStep - 1); x += xStep) {
+      for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
         EffectMath::drawLine(x, 0, x, HEIGHT, 0);
         EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), (gauge_hue ? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)));
       }
 #else
-      byte ind = (byte)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
-      for (byte y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
-        for (byte x = 0; x < WIDTH ; x++) {
+      uint8_t ind = (uint8_t)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
+      for (uint8_t y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
+        for (uint8_t x = 0; x < WIDTH ; x++) {
           if (ind > x)
             EffectMath::drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
           else
@@ -519,7 +519,7 @@ void LAMP::stopAlarm(){
 /*
  * запускаем режим "ДЕМО"
  */
-void LAMP::startDemoMode(byte tmout)
+void LAMP::startDemoMode(uint8_t tmout)
 {
   LOG(println,F("Demo mode"));
   if(mode == LAMPMODE::MODE_DEMO) return;
@@ -927,7 +927,7 @@ void LAMP::newYearMessageHandle()
       sprintf_P(strMessage, NY_MDG_STRING1, (int)calc, String(FPSTR(TINTF_0C1)).c_str());
     } else if(calc/60<60){
       uint16_t calcT=calc/(60*60); // минуты
-      byte calcN=calcT%10; // остаток от деления на 10
+      uint8_t calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
         str = FPSTR(TINTF_0CC); // минуты
@@ -939,7 +939,7 @@ void LAMP::newYearMessageHandle()
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else if(calc/(60*60)<60){
 	    uint16_t calcT=calc/(60*60); // часы
-      byte calcN=calcT%10; // остаток от деления на 10
+      uint8_t calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcN>=2 && calcN<=4) {
         str = FPSTR(TINTF_0C7); // часа
@@ -951,7 +951,7 @@ void LAMP::newYearMessageHandle()
       sprintf_P(strMessage, NY_MDG_STRING1, calcT, str.c_str());
     } else {
       uint16_t calcT=calc/(60*60*24); // дни
-      byte calcN=calcT%10; // остаток от деления на 10
+      uint8_t calcN=calcT%10; // остаток от деления на 10
       String str;
       if(calcT>=11 && calcT<=20)
         str = FPSTR(TINTF_0C4);
@@ -1139,7 +1139,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
     if (fade && flags.ONflag) {
-      fadelight(this, FADE_MINCHANGEBRT, FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      fadelight(this, min(FADE_MINCHANGEBRT, (unsigned int)myLamp.getLampBrightness()), FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
   } else {
@@ -1204,7 +1204,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
  * включает/выключает режим "демо"
  * @param SCHEDULER enable/disable/reset - вкл/выкл/сброс
  */
-void LAMP::demoTimer(SCHEDULER action, byte tmout){
+void LAMP::demoTimer(SCHEDULER action, uint8_t tmout){
   switch (action)
   {
   case SCHEDULER::T_DISABLE :
@@ -1377,5 +1377,5 @@ void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _dura
     while(fader){
       fader->skipBrightness(); // отмена предыдущего фейдера
     }
-    fader = new LEDFader(&ts, lamp,_targetbrightness, _duration, callback);
+    fader = (new LEDFader(&ts, lamp,_targetbrightness, _duration, callback))->getInstance();
 }

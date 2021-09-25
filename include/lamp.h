@@ -179,8 +179,8 @@ private:
     LAMPFLAGS flags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
-    byte txtOffset = 0; // смещение текста относительно края матрицы
-    byte globalBrightness = 127; // глобальная яркость, пока что будет использоваться для демо-режимов
+    uint8_t txtOffset = 0; // смещение текста относительно края матрицы
+    uint8_t globalBrightness = 127; // глобальная яркость, пока что будет использоваться для демо-режимов
     uint8_t fps = 0;        // fps counter
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
@@ -234,11 +234,11 @@ private:
     void effectsTick(); // обработчик эффектов
 
 #ifdef VERTGAUGE
-    byte xStep; byte xCol; byte yStep; byte yCol; // для индикатора
+    uint8_t xStep; uint8_t xCol; uint8_t yStep; uint8_t yCol; // для индикатора
     unsigned long gauge_time = 0;
     unsigned gauge_val = 0;
     unsigned gauge_max = 0;
-    byte gauge_hue = 0;
+    uint8_t gauge_hue = 0;
     CRGB gauge_color = 0;
     void GaugeMix();
 #endif
@@ -311,7 +311,7 @@ public:
 #endif
 
 #ifdef VERTGAUGE
-    void GaugeShow(unsigned val, unsigned max, byte hue = 0);
+    void GaugeShow(unsigned val, unsigned max, uint8_t hue = 0);
     void setGaugeColor(CRGB color) { gauge_color = color;}
 #endif
 
@@ -321,10 +321,10 @@ public:
     }
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
-    byte getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
-    byte getNormalizedLampBrightness() { return (byte)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
-    void setLampBrightness(byte brg) { lampState.brightness=brg; if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
-    void setGlobalBrightness(byte brg) {globalBrightness = brg;}
+    uint8_t getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
+    uint8_t getNormalizedLampBrightness() { return (uint8_t)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
+    void setLampBrightness(uint8_t brg) { lampState.brightness=brg; if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
+    void setGlobalBrightness(uint8_t brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val; if(effects.worker) { lampState.brightness=getLampBrightness(); effects.worker->setDynCtrl(effects.getControls()[0]);} }
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
@@ -418,7 +418,7 @@ public:
 #endif
     void startAlarm(char *value = nullptr);
     void stopAlarm();
-    void startDemoMode(byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
+    void startDemoMode(uint8_t tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
     void startNormalMode(bool forceOff=false);
     void restoreStored();
     void storeEffect();
@@ -475,7 +475,7 @@ public:
      * включает/выключает "демо"-таймер
      * @param SCHEDULER action - enable/disable/reset
      */
-    void demoTimer(SCHEDULER action, byte tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
+    void demoTimer(SCHEDULER action, uint8_t tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
 
     /*
      * включает/выключает "эффект"-таймер
@@ -499,9 +499,11 @@ class LEDFader : public Task {
     LAMP *lmp;
     uint8_t _brt, _brtincrement;
     bool isSkipBrightness = false;
+    LEDFader *f = nullptr;
     std::function<void(void)> _cb = nullptr;    // callback func to call upon completition
     LEDFader() = delete; 
 public:
+    inline LEDFader *getInstance() {return f;}
     void skipBrightness() { 
         isSkipBrightness = true;
         LOG(println,F("Fading canceled"));
@@ -540,9 +542,11 @@ public:
             this->cancel();
             return;
         }
+        f = this;
         _brtincrement = (_targetbrightness - _brt) / _steps;
         LOG(printf_P, PSTR("Fading to: %d\n"), _targetbrightness);
     }
+    //~LEDFader() {LOG(println, F("Fader destructor"));}
 };
 
 /**
