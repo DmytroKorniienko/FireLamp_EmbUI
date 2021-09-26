@@ -2800,11 +2800,12 @@ void create_parameters(){
 #ifdef ENCODER
     embui.var_create(FPSTR(TCONST_0042), F("#FFA500"));  // Дефолтный цвет текста (Orange)
     embui.var_create(FPSTR(TCONST_0043), F("40"));        // Задержка прокрутки текста
-#endif
 #ifdef VERTGAUGE
     embui.var_create(FPSTR(TCONST_003F), F("1"));         // Вкл\Выкл шкалы
     embui.var_create(FPSTR(TCONST_0040), F("#FF2A00"));  // Дефолтный цвет шкалы
 #endif
+#endif
+
 #ifdef MP3PLAYER
     embui.var_create(FPSTR(TCONST_009B), String(MP3_RX_PIN)); // Пин RX плеера
     embui.var_create(FPSTR(TCONST_009C), String(MP3_TX_PIN)); // Пин TX плеера
@@ -2920,9 +2921,6 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
 #endif
-#ifdef VERTGAUGE
-    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugeflag);
-#endif
 
 #ifdef LAMP_DEBUG
     embui.section_handle_add(FPSTR(TCONST_0095), set_debugflag);
@@ -2942,6 +2940,9 @@ void create_parameters(){
 #ifdef ENCODER
     embui.section_handle_add(FPSTR(TCONST_0008), show_settings_enc);
     embui.section_handle_add(FPSTR(TCONST_000C), set_settings_enc);
+#ifdef VERTGAUGE
+    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugeflag);
+#endif
 #endif
 }
 
@@ -3052,18 +3053,18 @@ t->enableDelayed();
     myLamp.setClearingFlag(tmp.isEffClearing);
 
 #ifdef ESP_USE_BUTTON
-    // obj[FPSTR(TCONST_001F)] = tmp.isBtn ? "1" : "0";
-    // CALL_INTF_OBJ(set_btnflag);
-    // doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+    obj[FPSTR(TCONST_001F)] = tmp.isBtn ? "1" : "0";
+    CALL_INTF_OBJ(set_btnflag);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 #ifdef ENCODER
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
     obj[FPSTR(TCONST_0043)] = embui.param(FPSTR(TCONST_0043));
     set_settings_enc(nullptr, &obj);
-#endif
 #ifdef VERTGAUGE
     obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
     obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
+#endif
 #endif
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
@@ -3735,8 +3736,8 @@ String httpCallback(const String &param, const String &value, bool isset){
         return result;
     } else {
         LOG(println, F("SET"));
-        if (upperParam == FPSTR(CMD_TCONST_0000)) { action = (value!="0" ? RA_ON : RA_OFF); }
-        else if (upperParam == FPSTR(CMD_TCONST_0001)) { action = (value!="0" ? RA_OFF : RA_ON); }
+        if (upperParam == FPSTR(CMD_TCONST_0000)) { action = (value!="0" ? RA_ON : RA_OFF); remote_action(action, NULL, NULL); return result; }
+        else if (upperParam == FPSTR(CMD_TCONST_0001)) { action = (value!="0" ? RA_OFF : RA_ON); remote_action(action, NULL, NULL); return result; }
         else if (upperParam == FPSTR(CMD_TCONST_0003)) action = RA_DEMO;
         else if (upperParam == FPSTR(CMD_TCONST_001A)) action = RA_SEND_TEXT;
         else if (upperParam == FPSTR(CMD_TCONST_0009)) action = RA_EFFECT;
