@@ -1649,7 +1649,7 @@ void scan_complete(int n){
         if(ssid.isEmpty())
             interf->option("", ""); // at the end of list
         interf->json_section_end();
-        interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21);
+        interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 22);
         interf->json_section_end();
         interf->json_frame_flush();
 
@@ -1670,12 +1670,12 @@ void scan_complete(int n){
 
 void set_scan_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
-LOG(println,"Here");
+
     if (WiFi.scanComplete() == -2) {
         LOG(printf_P, PSTR("UI WiFi: WiFi scan starting\n"));
         interf->json_frame_custom(FPSTR(T_XLOAD));
         interf->json_section_content();
-        interf->constant(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), true, FPSTR(P_GREEN), 21);
+        interf->constant(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), true, FPSTR(P_GREEN), 22);
         interf->json_section_end();
         interf->json_frame_flush();
 
@@ -1694,33 +1694,39 @@ LOG(println,"Here");
     }
 };
 
+// Блок настроек WiFi
+void block_only_wifi(Interface *interf, JsonObject *data) {
+    interf->spacer(FPSTR(TINTF_031));
+    interf->select(String(FPSTR(P_WIFIMODE)), embui.param(FPSTR(P_WIFIMODE)), String(FPSTR(TINTF_033)));
+        interf->option("0", FPSTR(TINTF_029));
+        interf->option("1", FPSTR(TINTF_02F));
+        interf->option("2", FPSTR(TINTF_046));
+    interf->json_section_end();
+
+    interf->comment(FPSTR(TINTF_032));
+
+    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
+    interf->password(FPSTR(P_APpwd), FPSTR(TINTF_034));
+
+    interf->spacer(FPSTR(TINTF_02A));
+    interf->json_section_line(FPSTR(T_LOAD_WIFI));
+    interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
+    interf->json_section_end();
+    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 22); // отступ
+    interf->json_section_end();
+    interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
+    interf->button_submit(FPSTR(T_SET_WIFI), FPSTR(TINTF_02E), FPSTR(P_GRAY));
+}
+
 // формирование интерфейса настроек WiFi/MQTT
 void block_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
 
     interf->json_section_main(FPSTR(TCONST_003D), FPSTR(TINTF_081));
+
     // форма настроек Wi-Fi
-
-    interf->json_section_hidden(FPSTR(TCONST_003E), FPSTR(TINTF_029));
-    interf->spacer(FPSTR(TINTF_02A));
-    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
-    interf->json_section_line(FPSTR(T_LOAD_WIFI));
-    interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
-    interf->json_section_end();
-    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
-    interf->json_section_end();
-    interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
-    interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
-    interf->json_section_end();
-
-    interf->json_section_hidden(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_02F));
-    //interf->text(FPSTR(P_APhostname), FPSTR(TINTF_02B));
-    interf->spacer(FPSTR(TINTF_031));
-    interf->text(FPSTR(P_APhostname), embui.param(FPSTR(P_hostname)), String(FPSTR(TINTF_02B)));
-    interf->comment(FPSTR(TINTF_032));
-    interf->checkbox(FPSTR(P_APonly), FPSTR(TINTF_033));
-    interf->password(FPSTR(TCONST_0044), FPSTR(TINTF_034));
-    interf->button_submit(FPSTR(T_SET_WIFIAP), FPSTR(TINTF_008), FPSTR(P_GRAY));
+    interf->json_section_hidden(FPSTR(T_SET_WIFI), FPSTR(TINTF_028));
+        block_only_wifi(interf, data);
     interf->json_section_end();
 
     // форма настроек MQTT
@@ -1729,8 +1735,8 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->number(FPSTR(P_m_port), FPSTR(TINTF_037));
     interf->text(FPSTR(P_m_user), FPSTR(TINTF_038));
     interf->password(FPSTR(P_m_pass), FPSTR(TINTF_02D));
-    interf->text(FPSTR(TCONST_007B), FPSTR(TINTF_08C));
-    interf->number(FPSTR(TCONST_004A), FPSTR(TINTF_039));
+    interf->text(FPSTR(P_m_pref), FPSTR(TINTF_08C));
+    interf->number(FPSTR(P_m_tupd), FPSTR(TINTF_039));
     interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(P_GRAY));
     interf->json_section_end();
 
@@ -1754,22 +1760,6 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->json_section_end();
 }
 
-// Выводим только WiFi для первого входа, если контроллер не подключен к внешней AP
-void block_only_wifi(Interface *interf, JsonObject *data) {
-    interf->json_section_main(FPSTR(TCONST_003E), FPSTR(TINTF_029));
-    
-    interf->spacer(FPSTR(TINTF_02A));
-    interf->text(FPSTR(P_hostname), FPSTR(TINTF_02B));
-    interf->json_section_line(FPSTR(T_LOAD_WIFI));
-    interf->select_edit(FPSTR(P_WCSSID), String(WiFi.SSID()), String(FPSTR(TINTF_02C)));
-    interf->json_section_end();
-    interf->button(FPSTR(T_SET_SCAN), FPSTR(TINTF_0DA), FPSTR(P_GREEN), 21); // отступ
-    interf->json_section_end();
-    interf->password(FPSTR(TCONST_0041), FPSTR(TINTF_02D));
-    interf->button_submit(FPSTR(TCONST_003E), FPSTR(TINTF_02E), FPSTR(P_GRAY));
-    interf->json_section_end();
-}
-
 void show_settings_wifi(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_frame_interface();
@@ -1781,15 +1771,7 @@ void show_settings_wifi(Interface *interf, JsonObject *data){
     }
 }
 
-// настройка подключения WiFi в режиме AP
-void set_settings_wifiAP(Interface *interf, JsonObject *data){
-    if (!data) return;
-
-    BasicUI::set_settings_wifiAP(interf, data);
-    section_settings_frame(interf, data);
-}
-
-// настройка подключения WiFi в режиме клиента
+// настройка подключения WiFi
 void set_settings_wifi(Interface *interf, JsonObject *data){
     if (!data) return;
 
@@ -1801,7 +1783,7 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
     BasicUI::set_settings_mqtt(interf,data);
     embui.mqttReconnect();
-    int interval = (*data)[FPSTR(TCONST_004A)];
+    int interval = (*data)[FPSTR(P_m_tupd)];
     LOG(print, F("New MQTT interval: ")); LOG(println, interval);
     myLamp.setmqtt_int(interval);
     section_settings_frame(interf, data);
@@ -2615,10 +2597,12 @@ void section_main_frame(Interface *interf, JsonObject *data){
 
     interf->json_frame_flush();
 
-    if(!embui.sysData.wifi_sta && embui.param(FPSTR(P_APonly))=="0"){
+    if(!embui.sysData.wifi_sta && embui.param(FPSTR(P_WIFIMODE))=="0"){
         // форсируем выбор вкладки настройки WiFi если контроллер не подключен к внешней AP
         interf->json_frame_interface();
-        block_only_wifi(interf, data);
+            interf->json_section_main(FPSTR(T_SET_WIFI), FPSTR(TINTF_028));
+            block_only_wifi(interf, data);
+            interf->json_section_end();
         interf->json_frame_flush();
         if(!EmbUI::GetInstance()->sysData.isWiFiScanning){ // автосканирование при входе в настройки
             EmbUI::GetInstance()->sysData.isWiFiScanning = true;
@@ -2744,19 +2728,19 @@ void create_parameters(){
     // создаем дефолтные параметры для нашего проекта
     embui.var_create(FPSTR(TCONST_0094), ulltos(myLamp.getLampFlags())); // Дефолтный набор флагов
     embui.var_create(FPSTR(TCONST_0016), F("1"));   // "effListMain"
-    embui.var_create(FPSTR(TCONST_004A), String(DEFAULT_MQTTPUB_INTERVAL)); // "m_tupd" интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
+    embui.var_create(FPSTR(P_m_tupd), String(DEFAULT_MQTTPUB_INTERVAL)); // "m_tupd" интервал отправки данных по MQTT в секундах (параметр в энергонезависимой памяти)
 
     //WiFi
     embui.var_create(FPSTR(P_hostname), F(""));
-    embui.var_create(FPSTR(P_APonly),  "0");     // режим AP-only (только точка доступа), не трогать
-    embui.var_create(FPSTR(TCONST_0044), F(""));      // пароль внутренней точки доступа
+    embui.var_create(FPSTR(P_WIFIMODE), String("0"));       // STA/AP/AP+STA, STA by default
+    embui.var_create(FPSTR(P_APpwd), "");                   // пароль внутренней точки доступа
 
     // параметры подключения к MQTT
     embui.var_create(FPSTR(P_m_host), F("")); // Дефолтные настройки для MQTT
     embui.var_create(FPSTR(P_m_port), F("1883"));
     embui.var_create(FPSTR(P_m_user), F(""));
     embui.var_create(FPSTR(P_m_pass), F(""));
-    embui.var_create(FPSTR(TCONST_007B), embui.mc);  // m_pref == MAC по дефолту
+    embui.var_create(FPSTR(P_m_pref), embui.mc);  // m_pref == MAC по дефолту
     embui.var_create(FPSTR(TCONST_002A), F("cfg1.json")); // "fileName"
 
 #ifdef AUX_PIN
@@ -2884,8 +2868,7 @@ void create_parameters(){
 
     embui.section_handle_remove(FPSTR(T_SET_WIFI));
     embui.section_handle_add(FPSTR(T_SET_WIFI), set_settings_wifi);
-    embui.section_handle_remove(FPSTR(T_SET_WIFIAP));
-    embui.section_handle_add(FPSTR(T_SET_WIFIAP), set_settings_wifiAP);
+
     embui.section_handle_remove(FPSTR(T_SET_TIME));
     embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
     embui.section_handle_remove(FPSTR(T_SET_MQTT));
@@ -2957,7 +2940,7 @@ void sync_parameters(){
         embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был циклический ребут, сбрасываем эффект
     }
 
-    myLamp.setmqtt_int(embui.param(FPSTR(TCONST_004A)).toInt());
+    myLamp.setmqtt_int(embui.param(FPSTR(P_m_tupd)).toInt());
 
     String syslampFlags(embui.param(FPSTR(TCONST_0094)));
     LAMPFLAGS tmp;
@@ -3637,7 +3620,7 @@ String httpCallback(const String &param, const String &value, bool isset){
             String name = embui.param(FPSTR(P_hostname));
             String unique_id = embui.mc;
 
-            hass_discover[F("~")] = embui.id("embui/"); // embui.upperParam(FPSTR(TCONST_007B)) + F("/embui/") //String(F("homeassistant/light/"))+name;
+            hass_discover[F("~")] = embui.id("embui/"); // embui.upperParam(FPSTR(P_m_pref)) + F("/embui/") //String(F("homeassistant/light/"))+name;
             hass_discover[F("name")] = name;                // name
             hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
             hass_discover[F("avty_t")] = F("~pub/online");  // availability_topic
