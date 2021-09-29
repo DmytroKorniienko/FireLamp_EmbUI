@@ -2254,11 +2254,14 @@ void set_eventlist(Interface *interf, JsonObject *data){
         set_event_conf(interf, data); //через какую-то хитрую жопу отработает :)
     }
 }
-#ifdef VERTGAUGE
-void set_gaugeflag(Interface *interf, JsonObject *data){
-    if (!data) return;
-    myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
-}
+#ifdef ESP_USE_BUTTON
+    #ifdef VERTGAUGE
+    void set_gaugeflag(Interface *interf, JsonObject *data){
+        if (!data) return;
+        myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
+        save_lamp_flags();
+    }
+    #endif
 #endif
 
 #ifdef ESP_USE_BUTTON
@@ -2410,8 +2413,8 @@ void block_settings_enc(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_000C), FPSTR(TINTF_0DC));
     #ifdef VERTGAUGE
     interf->checkbox(FPSTR(TCONST_003F), myLamp.getLampSettings().isGaugeOn ? String("1") : String("0"), FPSTR(TINTF_0DD), false);
-    #endif
     interf->color(FPSTR(TCONST_0040), FPSTR(TINTF_0DE));
+    #endif
     interf->color(FPSTR(TCONST_0042), FPSTR(TINTF_0DF));
     interf->range(FPSTR(TCONST_0043), String(getEncTxtDelay()), String(0), String(100), String(1), String(FPSTR(TINTF_044)), false);
     interf->button_submit(FPSTR(TCONST_000C), FPSTR(TINTF_008), FPSTR(P_GRAY));
@@ -2429,6 +2432,7 @@ void set_settings_enc(Interface *interf, JsonObject *data){
     if (!data) return;
     #ifdef VERTGAUGE
     myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
+    save_lamp_flags();
     SETPARAM(FPSTR(TCONST_0040));
     String tmpStr = (*data)[FPSTR(TCONST_0040)];
     tmpStr.replace(F("#"), F("0x"));
@@ -2780,6 +2784,9 @@ void create_parameters(){
     // пины и системные настройки
 #ifdef ESP_USE_BUTTON
     embui.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
+    #ifdef VERTGAUGE
+    embui.var_create(FPSTR(TCONST_003F), F("1"));         // Вкл\Выкл шкалы
+    #endif
 #endif
 #ifdef ENCODER
     embui.var_create(FPSTR(TCONST_0042), F("#FFA500"));  // Дефолтный цвет текста (Orange)
@@ -2878,6 +2885,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(T_SET_FTP), set_ftp);
 #endif
 
+    embui.section_handle_remove(FPSTR(T_SET_SCAN));
     embui.section_handle_add(FPSTR(T_SET_SCAN), set_scan_wifi);         // обработка сканирования WiFi
 
     embui.section_handle_add(FPSTR(TCONST_007A), show_settings_other);
@@ -2903,6 +2911,9 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
+    #ifdef VERTGAUGE
+    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugeflag);
+    #endif
 #endif
 
 #ifdef LAMP_DEBUG
@@ -2923,9 +2934,6 @@ void create_parameters(){
 #ifdef ENCODER
     embui.section_handle_add(FPSTR(TCONST_0008), show_settings_enc);
     embui.section_handle_add(FPSTR(TCONST_000C), set_settings_enc);
-#ifdef VERTGAUGE
-    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugeflag);
-#endif
 #endif
 }
 
@@ -3039,15 +3047,19 @@ t->enableDelayed();
     obj[FPSTR(TCONST_001F)] = tmp.isBtn ? "1" : "0";
     CALL_INTF_OBJ(set_btnflag);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+    #ifdef VERTGAUGE
+    obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
+    CALL_INTF_OBJ(set_gaugeflag);
+    #endif
 #endif
 #ifdef ENCODER
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
     obj[FPSTR(TCONST_0043)] = embui.param(FPSTR(TCONST_0043));
-    set_settings_enc(nullptr, &obj);
-#ifdef VERTGAUGE
+    #ifdef VERTGAUGE
     obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
     obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
-#endif
+    #endif
+    set_settings_enc(nullptr, &obj);
 #endif
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
