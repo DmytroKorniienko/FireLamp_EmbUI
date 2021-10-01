@@ -60,7 +60,10 @@ typedef enum _EVENT_TYPE {
     AUX_TOGGLE              = 13,
 #endif
     SET_EFFECT              = 14,
-    SET_WARNING             = 15
+    SET_WARNING             = 15,
+    SET_GLOBAL_BRIGHT       = 16,
+    SET_WHITE_HI            = 17,
+    SET_WHITE_LO            = 18
 } EVENT_TYPE;
 
 static const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
@@ -152,6 +155,15 @@ struct EVENT {
             break;
         case EVENT_TYPE::SET_WARNING:
             buffer.concat(F("WARNING"));
+            break;
+        case EVENT_TYPE::SET_GLOBAL_BRIGHT:
+            buffer.concat(F("GLOBAL BR"));
+            break;
+        case EVENT_TYPE::SET_WHITE_HI:
+            buffer.concat(F("WHITE HI"));
+            break;
+        case EVENT_TYPE::SET_WHITE_LO:
+            buffer.concat(F("WHITE LO"));
             break;
         default:
             break;

@@ -315,7 +315,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     myLamp.setEffHasMic(isEffHasMic);
 #endif
     SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
-
+    save_lamp_flags();
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
@@ -2169,6 +2169,9 @@ void show_event_conf(Interface *interf, JsonObject *data){
 #endif
             interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
             interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
+            interf->option(String(EVENT_TYPE::SET_GLOBAL_BRIGHT), FPSTR(TINTF_00C));
+            interf->option(String(EVENT_TYPE::SET_WHITE_HI), PSTR("WHITE HI"));
+            interf->option(String(EVENT_TYPE::SET_WHITE_LO), PSTR("WHITE LO"));
         interf->json_section_end();
         interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), String(FPSTR(TINTF_06D)));
     interf->json_section_end();
@@ -3043,14 +3046,25 @@ t->enableDelayed();
 
     myLamp.setClearingFlag(tmp.isEffClearing);
 
+    obj[FPSTR(TCONST_0090)] = tmp.numInList ? "1" : "0";
+    myLamp.setNumInList(tmp.numInList);
+#ifdef MIC_EFFECTS
+    obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? "1" : "0";
+    myLamp.setEffHasMic(tmp.effHasMic);
+#endif
+    SORT_TYPE type = (SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt();
+    obj[FPSTR(TCONST_0050)] = type;
+    set_effects_config_param(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+
 #ifdef ESP_USE_BUTTON
     obj[FPSTR(TCONST_001F)] = tmp.isBtn ? "1" : "0";
     CALL_INTF_OBJ(set_btnflag);
-    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
     #ifdef VERTGAUGE
     obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
     CALL_INTF_OBJ(set_gaugeflag);
     #endif
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 #ifdef ENCODER
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
@@ -3060,6 +3074,7 @@ t->enableDelayed();
     obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
     #endif
     set_settings_enc(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
     obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
@@ -3078,10 +3093,8 @@ t->enableDelayed();
     obj[FPSTR(TCONST_008E)] = tmp.isEffClearing ? "1" : "0";
     obj[FPSTR(TCONST_004C)] = tmp.MIRR_H ? "1" : "0";
     obj[FPSTR(TCONST_004D)] = tmp.MIRR_V ? "1" : "0";
-    obj[FPSTR(TCONST_0090)] = tmp.numInList ? "1" : "0";
     obj[FPSTR(TCONST_004F)] = tmp.dRand ? "1" : "0";
     obj[FPSTR(TCONST_009E)] = tmp.showName ? "1" : "0";
-    obj[FPSTR(TCONST_0091)] = tmp.effHasMic ? "1" : "0";
     obj[FPSTR(TCONST_0096)] = tmp.isShowSysMenu ? "1" : "0";
 
 #ifdef TM1637_CLOCK
@@ -3098,9 +3111,6 @@ t->enableDelayed();
     uint8_t alarmPT = embui.param(FPSTR(TCONST_00BD)).toInt();
     obj[FPSTR(TCONST_00BB)] = alarmPT>>4;
     obj[FPSTR(TCONST_00BC)] = alarmPT&0x0F;
-
-    SORT_TYPE type = (SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt();
-    obj[FPSTR(TCONST_0050)] = type;
 
     obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
 
@@ -3200,6 +3210,9 @@ void event_worker(const EVENT *event){
     }
     case EVENT_TYPE::SET_EFFECT: action = RA_EFFECT; break;
     case EVENT_TYPE::SET_WARNING: action = RA_WARNING; break;
+    case EVENT_TYPE::SET_GLOBAL_BRIGHT: action = RA_GLOBAL_BRIGHT; break;
+    case EVENT_TYPE::SET_WHITE_HI: action = RA_WHITE_HI; break;
+    case EVENT_TYPE::SET_WHITE_LO: action = RA_WHITE_LO; break;
     default:;
     }
 
