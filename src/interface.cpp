@@ -3366,7 +3366,12 @@ void remote_action(RA action, ...){
             break;
         }
         case RA::RA_GLOBAL_BRIGHT:
-            CALL_INTF(FPSTR(TCONST_001C), value, set_gbrflag);
+            if (atoi(value) > 1){
+                myLamp.setGlobalBrightness(atoi(value));
+                CALL_INTF(FPSTR(TCONST_001C), F("1"), set_gbrflag);
+            }
+            else
+                CALL_INTF(FPSTR(TCONST_001C), value, set_gbrflag);
             break;
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
