@@ -1878,7 +1878,9 @@ void set_settings_other(Interface *interf, JsonObject *data){
         embui.var(FPSTR(TCONST_00D7), String(tmBri)); myLamp.setTmBright(tmBri);
         myLamp.settm24((*data)[FPSTR(TCONST_00DA)] == "1");
         myLamp.settmZero((*data)[FPSTR(TCONST_00DB)] == "1");
+    #ifdef DS18B20
         myLamp.setTempDisp((*data)[FPSTR(TCONST_002F)] == "1");
+    #endif
     #endif
 
         uint8_t alatmPT = ((*data)[FPSTR(TCONST_00BB)]).as<uint8_t>()<<4; // старшие 4 бита
@@ -3366,9 +3368,9 @@ void remote_action(RA action, ...){
             break;
         }
         case RA::RA_GLOBAL_BRIGHT:
-            if (atoi(value) > 1){
-                myLamp.setGlobalBrightness(atoi(value));
+            if (atoi(value) > 0){
                 CALL_INTF(FPSTR(TCONST_001C), F("1"), set_gbrflag);
+                return remote_action(RA_CONTROL, (String(FPSTR(TCONST_0015))+F("0")).c_str(), value, NULL);
             }
             else
                 CALL_INTF(FPSTR(TCONST_001C), value, set_gbrflag);
