@@ -121,6 +121,7 @@ static const char TEFF_072[] PROGMEM = "Лавова Лампа";
 static const char TEFF_073[] PROGMEM = "Космо-Рейсер";
 static const char TEFF_074[] PROGMEM = "Дим";
 static const char TEFF_075[] PROGMEM = "Вогонь 2021";
+static const char TEFF_076[] PROGMEM = "Test";
 static const char TEFF_250[] PROGMEM = "Годинник";
 static const char TEFF_254[] PROGMEM = "Частотний аналізатор";
 static const char TEFF_255[] PROGMEM = "Осцилограф";

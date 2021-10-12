@@ -121,6 +121,7 @@ static const char TEFF_072 [] PROGMEM = "Lámpara de lava";
 static const char TEFF_073 [] PROGMEM = "Corredor Espacial";
 static const char TEFF_074 [] PROGMEM = "Humo";
 static const char TEFF_075 [] PROGMEM = "Fuego 2021";
+static const char TEFF_076[] PROGMEM = "Test";
 static const char TEFF_250 [] PROGMEM = "Reloj";
 static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";

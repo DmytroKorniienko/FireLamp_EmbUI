@@ -2250,6 +2250,33 @@ public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+// ----------- Эффект "Тест"
+//Fire comets
+//https://editor.soulmatelights.com/gallery/1097-fire-comets
+//Yaroslaw Turbin 12-06-2021
+//https://twitter.com/ldir_ko
+//https://vk.com/ldirko
+//https://www.youtube.com/c/ldirldir
+//https://www.reddit.com/user/ldirko/
+// переделан под свои нужды by kostyamat 12.10.2021
+class EffectTest1: public EffectCalc {
+private:
+
+	float speedFactor;
+    byte buff[(WIDTH+2)*(HEIGHT+2)], bright = 255;
+    
+
+    String setDynCtrl(UIControl*_val) override;
+    void fadecenter();
+    uint16_t buffXY(uint8_t x, uint8_t y);
+    void toLeds();
+    void balls();
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 #endif

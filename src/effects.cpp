@@ -8604,3 +8604,77 @@ bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
+String EffectTest1::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 2.);
+  else if(_val->getId()==2) scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 128, 1);
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectTest1::run(CRGB *leds, EffectWorker *param)
+{
+  balls();
+  fadecenter();
+  toLeds();
+  return true;
+}
+
+uint16_t EffectTest1::buffXY(uint8_t x, uint8_t y)
+{
+  return (y * (WIDTH + 2) + x);
+}
+
+void EffectTest1::fadecenter()
+{
+  uint16_t sum;
+  for (uint8_t x = 1; x < WIDTH + 1; x++)
+  {
+    for (uint8_t y = 1; y < HEIGHT + 1; y++)
+    {
+
+      sum = buff[buffXY(x, y)];
+      sum += buff[buffXY(x + 1, y)];
+      sum += buff[buffXY(x - 1, y)];
+      sum += buff[buffXY(x, y + 1)];
+      sum += buff[buffXY(x, y - 1)];
+      sum /= 5;
+      buff[buffXY(x, y)] = sum;
+    }
+  }
+}
+
+void EffectTest1::balls()
+{
+  uint16_t x =  beatsin88(2560 * speedFactor, 1, WIDTH - 1);
+  uint16_t y =  beatsin88(3840 * speedFactor, 1, HEIGHT);
+  uint16_t x1 = beatsin88(2816 * speedFactor, 1, WIDTH - 1);
+  uint16_t y1 = beatsin88(2304 * speedFactor, 1, HEIGHT);
+  uint16_t x2 = beatsin88(3840 * speedFactor, 1, WIDTH - 1);
+  uint16_t y2 = beatsin88(2816 * speedFactor, 1, HEIGHT);
+
+  buff[buffXY(x, y)] = bright;
+  buff[buffXY(x + 1, y)] = bright;
+
+  buff[buffXY(x1, y1)] = bright;
+  buff[buffXY(x1 + 1, y1)] = bright;
+
+  buff[buffXY(x2, y2)] = bright;
+  buff[buffXY(x2 + 1, y2)] = bright;
+}
+
+void EffectTest1::toLeds()
+{
+  static uint8_t color;
+  uint16_t buffIndex = (WIDTH + 3);
+  color = !random8() ? random8() : color;
+  for (uint8_t y = 0; y < HEIGHT; y++)
+  {
+    for (uint8_t x = 0; x < WIDTH; x++)
+    {
+      uint16_t index = getPixelNumber(x, (HEIGHT - 1) - y);
+      nblend(leds[index], CHSV(color, buff[buffIndex], 255), scale);
+      buffIndex++;
+    }
+    buffIndex += 2;
+  }
+}
