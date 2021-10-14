@@ -815,7 +815,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     if (!data) return;
 
     // static unsigned long timeout = 0;
-    // if(timeout+100UL>millis()) return;
+    // if(timeout+110UL>millis()) return;
     // timeout = millis();
 
     // попытка повышения стабильности, отдаем управление браузеру как можно быстрее...
@@ -1350,7 +1350,7 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(TCONST_00B9), FPSTR(TINTF_002));
         interf->json_section_begin(FPSTR(TCONST_00BA));
             interf->spacer(FPSTR(TINTF_001));
-                interf->range(FPSTR(TCONST_0051), String(10), String(100), String(5), FPSTR(TINTF_044));
+                interf->range(FPSTR(TCONST_0051), String(110U-embui.param((FPSTR(TCONST_0051))).toInt()), String(10), String(100), String(5), String(FPSTR(TINTF_044)));
                 interf->range(FPSTR(TCONST_0052), String(-1), String((int)(HEIGHT>6?HEIGHT:6)-6), String(1), FPSTR(TINTF_045));
                 interf->range(FPSTR(TCONST_00C3), String(0), String(255), String(1), FPSTR(TINTF_0CA));
                 
@@ -1435,7 +1435,7 @@ void block_lamptext(Interface *interf, JsonObject *data){
 
 void set_text_config(Interface *interf, JsonObject *data){
     if (!data) return;
-
+    (*data)[FPSTR(TCONST_0051)]=JsonUInt(110U-(*data)[FPSTR(TCONST_0051)].as<int>());
     SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
@@ -2421,7 +2421,7 @@ void block_settings_enc(Interface *interf, JsonObject *data){
     interf->color(FPSTR(TCONST_0040), FPSTR(TINTF_0DE));
     #endif
     interf->color(FPSTR(TCONST_0042), FPSTR(TINTF_0DF));
-    interf->range(FPSTR(TCONST_0043), String(getEncTxtDelay()), String(0), String(100), String(1), String(FPSTR(TINTF_044)), false);
+    interf->range(FPSTR(TCONST_0043), String(110U-getEncTxtDelay()), String(10), String(100), String(5), String(FPSTR(TINTF_044)), false);
     interf->button_submit(FPSTR(TCONST_000C), FPSTR(TINTF_008), FPSTR(P_GRAY));
     interf->spacer();
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
@@ -2447,7 +2447,8 @@ void set_settings_enc(Interface *interf, JsonObject *data){
     String tmpStr2 = (*data)[FPSTR(TCONST_0042)];
     tmpStr2.replace(F("#"), F("0x"));
     setEncTxtColor((CRGB)strtol(tmpStr2.c_str(), NULL, 0));
-    SETPARAM(FPSTR(TCONST_0043), setEncTxtDelay((*data)[FPSTR(TCONST_0043)].as<int>()))
+    (*data)[FPSTR(TCONST_0043)]=JsonUInt(110U-(*data)[FPSTR(TCONST_0043)].as<int>());
+    SETPARAM(FPSTR(TCONST_0043), setEncTxtDelay((*data)[FPSTR(TCONST_0043)]))
     section_settings_frame(interf, data);
 }
 #endif  // ENCODER
@@ -3070,7 +3071,7 @@ t->enableDelayed();
 #endif
 #ifdef ENCODER
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
-    obj[FPSTR(TCONST_0043)] = embui.param(FPSTR(TCONST_0043));
+    obj[FPSTR(TCONST_0043)] = (110U - embui.param(FPSTR(TCONST_0043)).toInt());
     #ifdef VERTGAUGE
     obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
     obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
@@ -3079,7 +3080,7 @@ t->enableDelayed();
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
-    obj[FPSTR(TCONST_0051)] = embui.param(FPSTR(TCONST_0051));
+    obj[FPSTR(TCONST_0051)] = (110U - embui.param(FPSTR(TCONST_0051)).toInt());
     obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
     obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
     obj[FPSTR(TCONST_00C3)] = embui.param(FPSTR(TCONST_00C3));

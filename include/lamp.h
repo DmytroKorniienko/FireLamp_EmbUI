@@ -407,10 +407,10 @@ public:
     void setTmBright(uint8_t val) {tmBright = val;}
     uint8_t getBrightOn() { return tmBright>>4; }
     uint8_t getBrightOff() { return tmBright&0x0F; }
-    #ifdef DS18B20
-    bool isTempDisp() {return flags.isTempOn;}
-    void setTempDisp(bool flag) {flags.isTempOn = flag;}
-    #endif
+#endif
+#ifdef DS18B20
+bool isTempDisp() {return flags.isTempOn;}
+void setTempDisp(bool flag) {flags.isTempOn = flag;}
 #endif
 #ifdef VERTGAUGE
     bool isGauge() {return flags.isGaugeOn;}
