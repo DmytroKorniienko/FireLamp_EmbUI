@@ -197,6 +197,9 @@ void pubCallback(Interface *interf){
     sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,(tm/3600)%24,(tm/60)%60,tm%60);
     interf->value(FPSTR(TCONST_008F), String(fuptime), true);
     interf->value(FPSTR(TCONST_00C2), String(myLamp.getLampState().fsfreespace), true);
+#ifdef DS18B20
+    interf->value(FPSTR(TCONST_003E), String(getTemp())+F("°C"), true);
+#endif
     int32_t rssi = myLamp.getLampState().rssi;
     interf->value(FPSTR(TCONST_00CE), String(constrain(map(rssi, -85, -40, 0, 100),0,100)) + F("% (") + String(rssi) + F("dBm)"), true);
     interf->json_frame_flush();
@@ -1878,9 +1881,9 @@ void set_settings_other(Interface *interf, JsonObject *data){
         embui.var(FPSTR(TCONST_00D7), String(tmBri)); myLamp.setTmBright(tmBri);
         myLamp.settm24((*data)[FPSTR(TCONST_00DA)] == "1");
         myLamp.settmZero((*data)[FPSTR(TCONST_00DB)] == "1");
-    #ifdef DS18B20
+        #ifdef DS18B20
         myLamp.setTempDisp((*data)[FPSTR(TCONST_002F)] == "1");
-    #endif
+        #endif
     #endif
 
         uint8_t alatmPT = ((*data)[FPSTR(TCONST_00BB)]).as<uint8_t>()<<4; // старшие 4 бита
