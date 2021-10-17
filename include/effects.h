@@ -2278,10 +2278,11 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+#define CHANNEL_START 1
 class EffectARTNET: public EffectCalc {
 private:
     String setDynCtrl(UIControl*_val) override;
-    uint8_t universe = 0;  // 0 - 15
+    uint8_t universe = 1;  // 0 - 15
 
 public:
     

@@ -40,7 +40,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectmath.h"
 
 #ifdef USE_ARTNET
-    ArtnetWiFiReceiver artnet;
+  E131 e131;
 #endif
 
 // непустой дефолтный деструктор (если понадобится)
@@ -8684,7 +8684,7 @@ void EffectTest1::toLeds()
 }
 
 void EffectARTNET::load() {
-    artnet.begin();
+    e131.begin(E131_UNICAST, universe);
     myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
     // artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
 }
@@ -8696,7 +8696,25 @@ String EffectARTNET::setDynCtrl(UIControl*_val) {
 
 bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 {
-  artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
-  artnet.parse();  // check if artnet packet has come and execute callback
+    /* Parse a packet and update pixels */
+    if(e131.parsePacket()) {
+        if (e131.universe == universe) {
+            for (uint16_t i = 0; i < NUM_LEDS/2; i++) {
+                int j = i * 3 + (CHANNEL_START - 1);
+                leds[i] = CRGB( 
+                e131.data[j], 
+                e131.data[j+1], 
+                e131.data[j+2]);
+            }
+        } /*else if (e131.universe == universe + 1) {
+            for (uint16_t i = NUM_LEDS/2; i < NUM_LEDS; i++) {
+                int j = i * 3 + (CHANNEL_START - 1);
+                leds[i] = CRGB( 
+                e131.data[j], 
+                e131.data[j+1], 
+                e131.data[j+2]);
+            }         
+        }*/
+    }
   return true;
 }
