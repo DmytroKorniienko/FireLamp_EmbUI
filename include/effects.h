@@ -2277,6 +2277,17 @@ public:
     //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+class EffectARTNET: public EffectCalc {
+private:
+    String setDynCtrl(UIControl*_val) override;
+    uint8_t universe = 0;  // 0 - 15
+
+public:
+    
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 #endif

@@ -50,6 +50,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 #include "buttons.h"
 
+#ifdef USE_ARTNET
+  #include <ArtnetWiFi.h>
+#endif
+
 #ifdef USE_FTP
   #include "ftpSrv.h"
 #endif

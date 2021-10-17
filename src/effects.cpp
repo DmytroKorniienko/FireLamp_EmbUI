@@ -39,6 +39,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "patterns.h"
 #include "effectmath.h"
 
+#ifdef USE_ARTNET
+    ArtnetWiFiReceiver artnet;
+#endif
+
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
@@ -8677,4 +8681,22 @@ void EffectTest1::toLeds()
     }
     buffIndex += 2;
   }
+}
+
+void EffectARTNET::load() {
+    artnet.begin();
+    myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
+    // artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
+}
+
+String EffectARTNET::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
+{
+  artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
+  artnet.parse();  // check if artnet packet has come and execute callback
+  return true;
 }
