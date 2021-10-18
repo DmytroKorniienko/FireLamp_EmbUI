@@ -39,10 +39,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "patterns.h"
 #include "effectmath.h"
 
-#ifdef USE_ARTNET
-  E131 e131;
-#endif
-
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
@@ -8684,7 +8680,7 @@ void EffectTest1::toLeds()
 }
 
 void EffectARTNET::load() {
-    e131.begin(E131_MULTICAST, firstUniverse, universeSize);
+    e131.begin(E131_MULTICAST, firstUniverse, universeQt);
     myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
     // artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
 }
@@ -8698,18 +8694,14 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
     if(e131.parsePacket()) {
-      for (uint16_t i = 0; i < e131.universe == 2 ? 86 : 170; i++) {
-          int j = (i * 3 + (e131.universe -1)*170);
-          leds[i] = CRGB( 
+      for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
+          int j = (i * 3);
+          leds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
           e131.data[j], 
           e131.data[j+1], 
           e131.data[j+2]);
       }
-      // }
     }
-
-
-            // if (e131.universe == universe) {
 
   return true;
 }

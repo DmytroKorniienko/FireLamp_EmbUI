@@ -218,6 +218,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define OFF_BRIGHTNESS          (2U)                        // яркость вывода текста в случае выключенной лампы
 #define CURRENT_LIMIT         (2000U)                       // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
+#define USE_E131
+#define UNIVERSE_SIZE (170U)
+
 //#define XY_EXTERN                                           // Пользовательский мапинг нестандартных матриц, читать в файле ../include/XY.h и\или тут 
                                                             // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
                                                             // тут отчет пользователя 

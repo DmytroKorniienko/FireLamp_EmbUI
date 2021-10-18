@@ -41,6 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "color_palette.h"
 #include "effectworker.h"
 #include "effectmath.h"
+#include <E131.h>
 
 const byte maxDim = max(WIDTH, HEIGHT);
 const byte minDim = min(WIDTH, HEIGHT);
@@ -2281,9 +2282,10 @@ public:
 #define CHANNEL_START 1
 class EffectARTNET: public EffectCalc {
 private:
+    E131 e131;
     String setDynCtrl(UIControl*_val) override;
     uint8_t firstUniverse = 1;  // 0 - 15
-    uint8_t universeSize = NUM_LEDS / 170 + 1;  // 0 - 15
+    uint8_t universeQt = NUM_LEDS / UNIVERSE_SIZE + 1;  // 0 - 15
 
 public:
     

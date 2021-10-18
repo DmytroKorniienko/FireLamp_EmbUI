@@ -50,7 +50,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 #include "buttons.h"
 
-#ifdef USE_ARTNET
+#ifdef USE_E131
   #include <E131.h>
 #endif
 
