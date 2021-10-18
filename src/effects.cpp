@@ -8684,7 +8684,7 @@ void EffectTest1::toLeds()
 }
 
 void EffectARTNET::load() {
-    e131.begin(E131_MULTICAST, universe, universeSize);
+    e131.begin(E131_MULTICAST, firstUniverse, universeSize);
     myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
     // artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
 }
@@ -8698,9 +8698,18 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
     if(e131.parsePacket()) {
-      for(uint8_t i = universe; i < universeSize; i++){
-        
+      for (uint16_t i = 0; i < e131.universe == 2 ? 86 : 170; i++) {
+          int j = (i * 3 + (e131.universe -1)*170);
+          leds[i] = CRGB( 
+          e131.data[j], 
+          e131.data[j+1], 
+          e131.data[j+2]);
       }
+      // }
     }
+
+
+            // if (e131.universe == universe) {
+
   return true;
 }
