@@ -38,6 +38,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "lamp.h"
 #include "effectmath.h"
 //#include "main.h"
+#ifdef MATRIXx4
+  #include "matrix4.h"
+#endif
 extern LAMP myLamp; // Объект лампы
 
 // Общий набор мат. функций и примитивов для обсчета эффектов
@@ -52,7 +55,13 @@ namespace EffectMath_PRIVATE {
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
     uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
     {
-    #ifndef XY_EXTERN
+    #if defined(XY_EXTERN)
+        uint16_t i = (y * WIDTH) + x;
+        uint16_t j = pgm_read_dword(&XYTable[i]);
+        return j;
+    #elif defined(MATRIXx4)
+      return matrix4_XY(x, y);
+    #else
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H matrixflags.MIRR_H
         #define MIRR_V matrixflags.MIRR_V
@@ -68,10 +77,6 @@ namespace EffectMath_PRIVATE {
     
         #undef MIRR_H
         #undef MIRR_V
-    #else
-        uint16_t i = (y * WIDTH) + x;
-        uint16_t j = pgm_read_dword(&XYTable[i]);
-        return j;
     #endif
     }
 }

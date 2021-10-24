@@ -1807,8 +1807,10 @@ void block_settings_other(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_004B), FPSTR(TINTF_002));
     
     interf->spacer(FPSTR(TINTF_030));
+#if !defined(MATRIXx4) and !defined(XY_EXTERN)
     interf->checkbox(FPSTR(TCONST_004C), myLamp.getLampSettings().MIRR_H ? "1" : "0", FPSTR(TINTF_03B), false);
     interf->checkbox(FPSTR(TCONST_004D), myLamp.getLampSettings().MIRR_V ? "1" : "0", FPSTR(TINTF_03C), false);
+#endif
     interf->checkbox(FPSTR(TCONST_004E), myLamp.getLampSettings().isFaderON ? "1" : "0", FPSTR(TINTF_03D), false);
     interf->checkbox(FPSTR(TCONST_008E), myLamp.getLampSettings().isEffClearing ? "1" : "0", FPSTR(TINTF_083), false);
     interf->checkbox(FPSTR(TCONST_004F), myLamp.getLampSettings().dRand ? "1" : "0", FPSTR(TINTF_03E), false);

@@ -222,6 +222,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
                                                             // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
                                                             // тут отчет пользователя 
                                                             // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-72777
+
+//#define MATRIXx4                                            // Активировать, если ваша матрица состоит из 4-х одинаковых квадратных матриц размером 16х16 или 8х8 пикселей.
+                                                            // При этом, WIDTH и HEIGHT должны отвечать двухкратному размеру матриц, используеммых в панно. 
+                                                            // Пример: используются 4-ри матрицы размером 16х16, - WIDTH и HEIGHT долдны быть установлены в (32U)
+                                                            // Схема подключения тут https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-102618
 //------------------------------ 
 
 //------------------------------ Всякое разное
