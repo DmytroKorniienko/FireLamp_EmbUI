@@ -8690,16 +8690,31 @@ String EffectARTNET::setDynCtrl(UIControl*_val) {
   return String();
 }
 
+
+uint16_t EffectARTNET::getPixelNum(uint16_t x, uint16_t y) {
+  return y * WIDTH + x;
+}
+
 bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
     if(e131.parsePacket()) {
       for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
           int j = (i * 3);
-          leds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
+          bufLeds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
           e131.data[j], 
           e131.data[j+1], 
           e131.data[j+2]);
+      }
+      
+      for(uint8_t x = 0; x < WIDTH; x++) {
+        for (uint8_t y = 0; y < HEIGHT; y++) {
+          leds[getPixelNumber(x, y)] = bufLeds[getPixelNum(x, y)];
+        }
+      }
+    } else {
+      EVERY_N_SECONDS(10) {
+        myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
       }
     }
 
