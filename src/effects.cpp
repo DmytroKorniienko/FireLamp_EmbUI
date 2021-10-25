@@ -8678,3 +8678,51 @@ void EffectTest1::toLeds()
     buffIndex += 2;
   }
 }
+
+
+#ifdef USE_E131
+void EffectARTNET::load() {
+    e131.begin(E131_MULTICAST, firstUniverse, universeQt);
+    String tmp = String(F("Jinx! Univ:")) + String(universeQt) + String(F(" W:")) + String(WIDTH) + String(F(" H:")) + String(lineQt);
+    myLamp.sendStringToLamp(tmp.c_str(), CRGB::BlueViolet, false, true);
+    connectError = millis();
+}
+
+String EffectARTNET::setDynCtrl(UIControl*_val) {
+  EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+
+uint16_t EffectARTNET::getPixelNum(uint16_t x, uint16_t y) {
+  return (HEIGHT-1-y) * WIDTH + x;
+}
+
+bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
+{
+    /* Parse a packet and update pixels */
+    if(e131.parsePacket()) {
+      for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
+          int j = (i * 3);
+          bufLeds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
+          e131.data[j], 
+          e131.data[j+1], 
+          e131.data[j+2]);
+      }
+      
+      for(uint8_t x = 0; x < WIDTH; x++) {
+        for (uint8_t y = 0; y < HEIGHT; y++) {
+          EffectMath::getPixel(x, y) = bufLeds[getPixelNum(x, y)];
+        }
+      }
+      connectError = millis();
+    } else {
+      if (millis() - connectError >= 20000) {
+        myLamp.sendStringToLamp(String(F("Connection lost!")).c_str(), CRGB::Red, false, true);
+        connectError = millis();
+      }
+    }
+
+  return true;
+}
+#endif

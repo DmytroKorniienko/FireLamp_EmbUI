@@ -39,6 +39,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 
 
+
+
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
  */
@@ -278,6 +280,11 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_TEST1 :
     worker = std::unique_ptr<EffectTest1>(new EffectTest1());
     break;
+#ifdef USE_E131
+   case EFF_ENUM::EFF_ARTNET :
+    worker = std::unique_ptr<EffectARTNET>(new EffectARTNET());
+    break;
+#endif
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());

@@ -123,6 +123,7 @@ static const char TEFF_074[] PROGMEM = "Smoke" ;
 static const char TEFF_075[] PROGMEM = "Fire 2021";
 static const char TEFF_076[] PROGMEM = "Test";
 static const char TEFF_250[] PROGMEM = "Clock";
+static const char TEFF_251[] PROGMEM = "E1.31 Receiver";
 static const char TEFF_254[] PROGMEM = "Frequency Analyzer";
 static const char TEFF_255[] PROGMEM = "Oscilloscope";
 

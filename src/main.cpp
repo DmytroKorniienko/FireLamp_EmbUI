@@ -47,6 +47,8 @@ Buttons *myButtons;
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
+
+
 void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
@@ -142,6 +144,7 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW); // "душим" светодиод nodeMCU32
 #endif
 #endif
+
     LOG(println, F("setup() done"));
 }   // End setup()
 
@@ -173,6 +176,7 @@ void loop() {
         ds_loop();
     }
 #endif
+
 }
 
 ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
