@@ -20,19 +20,30 @@
 #ifndef E131_H_
 #define E131_H_
 
-#include "Arduino.h"
 
 /* Network interface detection.  WiFi for ESP8266 and Ethernet for AVR */
-#ifdef ESP32
+#if defined(ARDUINO_ARCH_ESP32)
 #include <WiFi.h>
-#include <AsyncUDP.h>
-#elif defined (ESP8266)
-#include <ESPAsyncUDP.h>
+#include <WiFiUdp.h>
+#elif defined (ARDUINO_ARCH_ESP8266)
+#include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #else
 #error Platform not supported
 #endif
+
+#include <lwip/ip_addr.h>
+#include <lwip/igmp.h>
+#include <Arduino.h>
+
+#if LWIP_VERSION_MAJOR == 1
+typedef struct ip_addr ip4_addr_t;
+#endif
+
+#define _UDP WiFiUDP
+#define INT_ESP8266
+#define INT_WIFI
 
 /* Defaults */
 #define E131_DEFAULT_PORT 5568
@@ -174,21 +185,6 @@ class E131 {
             IPAddress gateway, IPAddress dns, uint8_t n = 1);
 #endif
 /****** END - ESP8266 ifdef block ******/
-
-/****** START - Ethernet ifdef block ******/
-#if defined (INT_ETHERNET)
-    /* Unicast Ethernet Initializers */
-    int begin(uint8_t *mac);
-    void begin(uint8_t *mac,
-            IPAddress ip, IPAddress netmask, IPAddress gateway, IPAddress dns);
-
-    /* Multicast Ethernet Initializers */
-    int beginMulticast(uint8_t *mac, uint16_t universe, uint8_t n = 1);
-    void beginMulticast(uint8_t *mac, uint16_t universe,
-            IPAddress ip, IPAddress netmask, IPAddress gateway,
-            IPAddress dns, uint8_t n = 1);
-#endif
-/****** END - Ethernet ifdef block ******/
 
     /* Diag functions */
     void dumpError(e131_error_t error);
