@@ -8681,8 +8681,9 @@ void EffectTest1::toLeds()
 
 void EffectARTNET::load() {
     e131.begin(E131_MULTICAST, firstUniverse, universeQt);
-    myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
-    // artnet.forward(universe, getUnsafeLedsArray(), NUM_LEDS);
+    String tmp = String(F("Jinx! W:")) + String(WIDTH) + String(F(" H:")) + String(lineQt);
+    myLamp.sendStringToLamp(tmp.c_str(), CRGB::BlueViolet, false, true);
+    connectError = millis();
 }
 
 String EffectARTNET::setDynCtrl(UIControl*_val) {
@@ -8692,7 +8693,7 @@ String EffectARTNET::setDynCtrl(UIControl*_val) {
 
 
 uint16_t EffectARTNET::getPixelNum(uint16_t x, uint16_t y) {
-  return y * WIDTH + x;
+  return (HEIGHT-1-y) * WIDTH + x;
 }
 
 bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
@@ -8709,12 +8710,14 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
       
       for(uint8_t x = 0; x < WIDTH; x++) {
         for (uint8_t y = 0; y < HEIGHT; y++) {
-          leds[getPixelNumber(x, y)] = bufLeds[getPixelNum(x, y)];
+          EffectMath::getPixel(x, y) = bufLeds[getPixelNum(x, y)];
         }
       }
+      connectError = millis();
     } else {
-      EVERY_N_SECONDS(10) {
-        myLamp.sendStringToLamp(String(F("Jinx!")).c_str(), CRGB::BlueViolet, false, false);
+      if (millis() - connectError >= 20000) {
+        myLamp.sendStringToLamp(String(F("Connection lost!")).c_str(), CRGB::Red, false, true);
+        connectError = millis();
       }
     }
 

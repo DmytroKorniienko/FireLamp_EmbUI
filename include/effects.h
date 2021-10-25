@@ -2279,17 +2279,17 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-#define CHANNEL_START 1
 class EffectARTNET: public EffectCalc {
 private:
     E131 e131;
     String setDynCtrl(UIControl*_val) override;
-    uint8_t firstUniverse = 1;  // 1 - 15
-    const uint8_t lineQt = 512 / (WIDTH * 3);
+    uint8_t firstUniverse = 1U;  // 1 - 15
+    const uint8_t lineQt = (512U / (WIDTH * 3));
     CRGB bufLeds[NUM_LEDS];
     const uint8_t universeQt = ceil((float)HEIGHT / lineQt);  // 1 - 15
     const uint8_t UNIVERSE_SIZE = WIDTH * lineQt;
     uint16_t getPixelNum(uint16_t x, uint16_t y);
+    uint32_t connectError = 0;
 
 public:
     

@@ -217,8 +217,9 @@ class E131 {
                     dumpError(error);
                 stats.packet_errors++;
             }
-        }
         return retval;
+        } else return 0;
+        
     }
 
     /* Packet validater */
