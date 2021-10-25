@@ -67,8 +67,11 @@ void E131::initMulticast(uint16_t universe, uint8_t n) {
                 & 0xff)));
         igmp_joingroup(&ifaddr, &multicast_addr);
     }
-
+#ifdef ESP8266
     udp.beginMulticast(WiFi.localIP(), udpAddress, (uint16_t)E131_DEFAULT_PORT);
+#else
+    udp.beginMulticast(udpAddress, (uint16_t)E131_DEFAULT_PORT);
+#endif
     if (Serial) {
         Serial.println(F("- Multicast Enabled"));
     }

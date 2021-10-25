@@ -22,10 +22,10 @@
 
 
 /* Network interface detection.  WiFi for ESP8266 and Ethernet for AVR */
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ESP32)
 #include <WiFi.h>
 #include <WiFiUdp.h>
-#elif defined (ARDUINO_ARCH_ESP8266)
+#elif defined (ESP8266)
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>

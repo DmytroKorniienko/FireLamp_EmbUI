@@ -41,7 +41,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "color_palette.h"
 #include "effectworker.h"
 #include "effectmath.h"
-#include <E131.h>
+
+#ifdef USE_E131
+    #include <E131.h>
+#endif
 
 const byte maxDim = max(WIDTH, HEIGHT);
 const byte minDim = min(WIDTH, HEIGHT);
@@ -2279,6 +2282,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+#ifdef USE_E131
 class EffectARTNET: public EffectCalc {
 private:
     E131 e131;
@@ -2297,5 +2301,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 // --------- конец секции эффектов
+#endif
 
 #endif

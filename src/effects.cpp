@@ -8679,9 +8679,11 @@ void EffectTest1::toLeds()
   }
 }
 
+
+#ifdef USE_E131
 void EffectARTNET::load() {
     e131.begin(E131_MULTICAST, firstUniverse, universeQt);
-    String tmp = String(F("Jinx! W:")) + String(WIDTH) + String(F(" H:")) + String(lineQt);
+    String tmp = String(F("Jinx! Univ:")) + String(universeQt) + String(F(" W:")) + String(WIDTH) + String(F(" H:")) + String(lineQt);
     myLamp.sendStringToLamp(tmp.c_str(), CRGB::BlueViolet, false, true);
     connectError = millis();
 }
@@ -8723,3 +8725,4 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 
   return true;
 }
+#endif
