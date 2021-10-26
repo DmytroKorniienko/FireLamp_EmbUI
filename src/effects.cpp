@@ -8701,15 +8701,18 @@ uint16_t EffectARTNET::getPixelNum(uint16_t x, uint16_t y) {
 bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
-    if(e131.parsePacket()) {
-      for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
-          int j = (i * 3);
-          bufLeds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
-          e131.data[j], 
-          e131.data[j+1], 
-          e131.data[j+2]);
+    uint16 check = e131.parsePacket();
+    if(check) {
+      while(check){
+        for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
+            int j = (i * 3);
+            bufLeds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
+            e131.data[j], 
+            e131.data[j+1], 
+            e131.data[j+2]);
+        }
+        check = e131.universe == universeQt ? false : e131.parsePacket();
       }
-      
       for(uint8_t x = 0; x < WIDTH; x++) {
         for (uint8_t y = 0; y < HEIGHT; y++) {
           EffectMath::getPixel(x, y) = bufLeds[getPixelNum(x, y)];
@@ -8721,6 +8724,7 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
         myLamp.sendStringToLamp(String(F("Connection lost!")).c_str(), CRGB::Red, false, true);
         connectError = millis();
       }
+      return false;
     }
 
   return true;
