@@ -686,6 +686,14 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   configFile.close();
 }
 
+#if !defined(MIC_EFFECTS) and !defined(USE_E131)
+    #define SKIP_EFF if (i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+#elif defined(USE_E131) and !defined(MIC_EFFECTS)
+    #define SKIP_EFF if (i>EFF_ENUM::EFF_ARTNET) continue;
+#else
+    #define SKIP_EFF 
+#endif
+
 /**
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
  *
@@ -694,9 +702,8 @@ void EffectWorker::chckdefconfigs(const char *folder){
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
       continue;
-#ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
-#endif
+
+    SKIP_EFF
 
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
@@ -816,9 +823,8 @@ void EffectWorker::makeIndexFile(const char *folder)
   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
-#ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
-#endif
+
+      SKIP_EFF
 
     eff = getEffect(i);
     if(eff)
