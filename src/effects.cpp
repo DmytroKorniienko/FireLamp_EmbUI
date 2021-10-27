@@ -8713,12 +8713,13 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
         }
         check = e131.universe == universeQt ? false : e131.parsePacket();
       }
+
+      connectError = millis();
       for(uint8_t x = 0; x < WIDTH; x++) {
         for (uint8_t y = 0; y < HEIGHT; y++) {
           EffectMath::getPixel(x, y) = bufLeds[getPixelNum(x, y)];
         }
       }
-      connectError = millis();
     } else {
       if (millis() - connectError >= 20000) {
         myLamp.sendStringToLamp(String(F("Connection lost!")).c_str(), CRGB::Red, false, true);

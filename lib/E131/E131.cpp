@@ -207,5 +207,8 @@ void E131::dumpError(e131_error_t error) {
         case ERROR_VECTOR_DMP:
             Serial.print(F("INVALID DMP VECTOR: 0x"));
             Serial.println(pwbuff->dmp_vector, HEX);
+            break;
+        default:
+            break;
     }
 }
