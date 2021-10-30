@@ -436,6 +436,7 @@ static const char TINTF_0DD[] PROGMEM = "Верт. шкала";
 static const char TINTF_0DE[] PROGMEM = "Колір шкали";
 static const char TINTF_0DF[] PROGMEM = "Колір тексту";
 static const char TINTF_0E0[] PROGMEM = "Показувати температуру";
+static const char TINTF_0E1[] PROGMEM = "Впевнені?";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";

@@ -1968,7 +1968,7 @@ void block_settings_update(Interface *interf, JsonObject *data){
 #endif
     interf->spacer(FPSTR(TINTF_059));
     interf->file(FPSTR(T_DO_OTAUPD), FPSTR(T_DO_OTAUPD), FPSTR(TINTF_05A));
-    interf->button(FPSTR(T_REBOOT), FPSTR(TINTF_096),!data?String(FPSTR(P_RED)):String(""));       // кнопка перехода в настройки времени
+    interf->button_confirm(FPSTR(T_REBOOT), FPSTR(TINTF_096), FPSTR(TINTF_0E1), !data?String(FPSTR(P_RED)):String(""));       // кнопка перехода в настройки времени
     interf->json_section_end();
 }
 

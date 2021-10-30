@@ -436,6 +436,7 @@ static const char TINTF_0DD[] PROGMEM = "Vert. gauge";
 static const char TINTF_0DE[] PROGMEM = "Gauge color";
 static const char TINTF_0DF[] PROGMEM = "Text color";
 static const char TINTF_0E0[] PROGMEM = "Show temperature";
+static const char TINTF_0E1[] PROGMEM = "Sure?";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Happy new %d year!";

@@ -437,6 +437,7 @@ static const char TINTF_0DD[] PROGMEM = "Escala vertical";
 static const char TINTF_0DE[] PROGMEM = "Escala color";
 static const char TINTF_0DF[] PROGMEM = "Texto color";
 static const char TINTF_0E0[] PROGMEM = "Mostrar temperatura";
+static const char TINTF_0E1[] PROGMEM = "¿Está seguro?";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";
