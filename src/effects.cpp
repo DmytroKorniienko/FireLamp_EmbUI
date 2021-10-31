@@ -8701,7 +8701,7 @@ uint16_t EffectARTNET::getPixelNum(uint16_t x, uint16_t y) {
 bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
-    uint16 check = e131.parsePacket();
+    uint16_t check = e131.parsePacket();
     if(check) {
       while(check){
         for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
