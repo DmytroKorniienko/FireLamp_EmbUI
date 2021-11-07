@@ -244,7 +244,8 @@ void LAMP::alarmWorker(){
 #ifdef MP3PLAYER
           if(mp3->isAlarm()) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
 #endif
-            sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
+            if(curAlarm.msg != "-") // отключение вывода по спец. символу "минус"
+              sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
         }
       }
