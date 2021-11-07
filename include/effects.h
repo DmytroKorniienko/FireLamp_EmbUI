@@ -2255,7 +2255,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Тест"
+// ----------- Эффект "Мираж"
 //Fire comets
 //https://editor.soulmatelights.com/gallery/1097-fire-comets
 //Yaroslaw Turbin 12-06-2021
@@ -2264,7 +2264,7 @@ public:
 //https://www.youtube.com/c/ldirldir
 //https://www.reddit.com/user/ldirko/
 // переделан под свои нужды by kostyamat 12.10.2021
-class EffectTest1: public EffectCalc {
+class EffectMirage: public EffectCalc {
 private:
 
 	float speedFactor;
@@ -2283,7 +2283,7 @@ public:
 };
 
 #ifdef USE_E131
-class EffectARTNET: public EffectCalc {
+class EffectE131: public EffectCalc {
 private:
     E131 e131;
     String setDynCtrl(UIControl*_val) override;
@@ -2294,6 +2294,9 @@ private:
     const uint8_t UNIVERSE_SIZE = WIDTH * lineQt;
     uint16_t getPixelNum(uint16_t x, uint16_t y);
     uint32_t connectError = 0;
+    uint8_t fade, s_speed;
+
+    void e131SendString(String str, CRGB color, bool force, uint8_t delay); 
 
 public:
     

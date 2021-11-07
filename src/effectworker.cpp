@@ -277,12 +277,12 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_FIRE2021 :
     worker = std::unique_ptr<EffectFire2021>(new EffectFire2021());
     break;
-   case EFF_ENUM::EFF_TEST1 :
-    worker = std::unique_ptr<EffectTest1>(new EffectTest1());
+   case EFF_ENUM::EFF_MIRAGE :
+    worker = std::unique_ptr<EffectMirage>(new EffectMirage());
     break;
 #ifdef USE_E131
-   case EFF_ENUM::EFF_ARTNET :
-    worker = std::unique_ptr<EffectARTNET>(new EffectARTNET());
+   case EFF_ENUM::EFF_E131 :
+    worker = std::unique_ptr<EffectE131>(new EffectE131());
     break;
 #endif
 #ifdef MIC_EFFECTS

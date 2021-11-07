@@ -90,7 +90,7 @@ static const char TEFF_041[] PROGMEM = "DNA";
 static const char TEFF_042[] PROGMEM = "Fire 2018";
 static const char TEFF_043[] PROGMEM = "Combination lock";
 static const char TEFF_044[] PROGMEM = "Cube 2D";
-static const char TEFF_045[] PROGMEM = "Magma (Test)";
+static const char TEFF_045[] PROGMEM = "Magma";
 static const char TEFF_046[] PROGMEM = "Picasso";
 static const char TEFF_047[] PROGMEM = "Starship Troopers";
 static const char TEFF_048[] PROGMEM = "Flags";
@@ -110,7 +110,7 @@ static const char TEFF_061[] PROGMEM = "Wild balls";
 static const char TEFF_062[] PROGMEM = "Attract";
 static const char TEFF_063[] PROGMEM = "Snakes";
 static const char TEFF_064[] PROGMEM = "Nexus";
-static const char TEFF_065[] PROGMEM = "Maze (Test)";
+static const char TEFF_065[] PROGMEM = "Maze";
 static const char TEFF_066[] PROGMEM = "Curly Colors";
 static const char TEFF_067[] PROGMEM = "Polar Lights";
 static const char TEFF_068[] PROGMEM = "Flowering";
@@ -121,7 +121,7 @@ static const char TEFF_072[] PROGMEM = "Lava lamp";
 static const char TEFF_073[] PROGMEM = "Space Racer";
 static const char TEFF_074[] PROGMEM = "Smoke" ;
 static const char TEFF_075[] PROGMEM = "Fire 2021";
-static const char TEFF_076[] PROGMEM = "Test";
+static const char TEFF_076[] PROGMEM = "Mirage";
 static const char TEFF_250[] PROGMEM = "Clock";
 static const char TEFF_251[] PROGMEM = "E1.31 Receiver";
 static const char TEFF_254[] PROGMEM = "Frequency Analyzer";
@@ -150,7 +150,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_0DF "Flutter"
 #define DFTINTF_0E0 "Night lamp"
 #define DFTINTF_0E1 "Rings"
-#define DFTINTF_0E2 "Glare (0: Off 1: Random)"
+#define DFTINTF_0E2 "Glare (0: Off)"
 #define DFTINTF_0E3 "Mode"
 #define DFTINTF_0E4 "Linear Velocity"
 #define DFTINTF_0E5 "Mode (1: random)"

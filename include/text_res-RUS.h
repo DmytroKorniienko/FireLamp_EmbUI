@@ -93,7 +93,7 @@ static const char TEFF_044[] PROGMEM = "Куб 2D";
 static const char TEFF_045[] PROGMEM = "Магма";
 static const char TEFF_046[] PROGMEM = "Пикассо";
 static const char TEFF_047[] PROGMEM = "Звездный Десант";
-static const char TEFF_048[] PROGMEM = "Флаги (Test)";
+static const char TEFF_048[] PROGMEM = "Флаги";
 static const char TEFF_049[] PROGMEM = "Прыгуны";
 static const char TEFF_050[] PROGMEM = "Вихри";
 static const char TEFF_051[] PROGMEM = "Звезды";
@@ -110,7 +110,7 @@ static const char TEFF_061[] PROGMEM = "Дикие шарики";
 static const char TEFF_062[] PROGMEM = "Притяжение";
 static const char TEFF_063[] PROGMEM = "Змейки";
 static const char TEFF_064[] PROGMEM = "Nexus"; 
-static const char TEFF_065[] PROGMEM = "Лабиринт (Тест)";
+static const char TEFF_065[] PROGMEM = "Лабиринт";
 static const char TEFF_066[] PROGMEM = "Вьющийся Цвет";
 static const char TEFF_067[] PROGMEM = "Северное Сияние";
 static const char TEFF_068[] PROGMEM = "Цветение";
@@ -121,7 +121,7 @@ static const char TEFF_072[] PROGMEM = "Лавовая лампа";
 static const char TEFF_073[] PROGMEM = "Космо-Гонщик";
 static const char TEFF_074[] PROGMEM = "Дым";
 static const char TEFF_075[] PROGMEM = "Огонь 2021";
-static const char TEFF_076[] PROGMEM = "Test";
+static const char TEFF_076[] PROGMEM = "Мираж";
 static const char TEFF_250[] PROGMEM = "Часы";
 static const char TEFF_251[] PROGMEM = "E1.31 Ресивер";
 static const char TEFF_254[] PROGMEM = "Частотный анализатор";
@@ -150,7 +150,7 @@ static const char TEFF_255[] PROGMEM = "Осциллограф";
 #define DFTINTF_0DF "Порхание"
 #define DFTINTF_0E0 "Ночник"
 #define DFTINTF_0E1 "Кольца"
-#define DFTINTF_0E2 "Блики (0:Откл. 1:Случ.)"
+#define DFTINTF_0E2 "Блики (0:Откл.)"
 #define DFTINTF_0E3 "Режим"
 #define DFTINTF_0E4 "Линейная скорость"
 #define DFTINTF_0E5 "Режим (1 = случайный)"

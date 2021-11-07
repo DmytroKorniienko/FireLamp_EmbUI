@@ -8604,14 +8604,24 @@ bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-String EffectTest1::setDynCtrl(UIControl*_val) {
+
+// ----------- Эффект "Мираж"
+//Fire comets
+//https://editor.soulmatelights.com/gallery/1097-fire-comets
+//Yaroslaw Turbin 12-06-2021
+//https://twitter.com/ldir_ko
+//https://vk.com/ldirko
+//https://www.youtube.com/c/ldirldir
+//https://www.reddit.com/user/ldirko/
+// переделан под свои нужды by kostyamat 12.10.2021
+String EffectMirage::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 2.);
   else if(_val->getId()==2) scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 128, 1);
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectTest1::run(CRGB *leds, EffectWorker *param)
+bool EffectMirage::run(CRGB *leds, EffectWorker *param)
 {
   balls();
   fadecenter();
@@ -8619,12 +8629,12 @@ bool EffectTest1::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-uint16_t EffectTest1::buffXY(uint8_t x, uint8_t y)
+uint16_t EffectMirage::buffXY(uint8_t x, uint8_t y)
 {
   return (y * (WIDTH + 2) + x);
 }
 
-void EffectTest1::fadecenter()
+void EffectMirage::fadecenter()
 {
   uint16_t sum;
   for (uint8_t x = 1; x < WIDTH + 1; x++)
@@ -8643,7 +8653,7 @@ void EffectTest1::fadecenter()
   }
 }
 
-void EffectTest1::balls()
+void EffectMirage::balls()
 {
   uint16_t x =  beatsin88(2560 * speedFactor, 1, WIDTH - 1);
   uint16_t y =  beatsin88(3840 * speedFactor, 1, HEIGHT);
@@ -8662,7 +8672,7 @@ void EffectTest1::balls()
   buff[buffXY(x2 + 1, y2)] = bright;
 }
 
-void EffectTest1::toLeds()
+void EffectMirage::toLeds()
 {
   static uint8_t color;
   uint16_t buffIndex = (WIDTH + 3);
@@ -8681,24 +8691,36 @@ void EffectTest1::toLeds()
 
 
 #ifdef USE_E131
-void EffectARTNET::load() {
+void EffectE131::load() {
     e131.begin(E131_MULTICAST, firstUniverse, universeQt);
-    String tmp = String(F("Jinx! Univ:")) + String(universeQt) + String(F(" W:")) + String(WIDTH) + String(F(" H:")) + String(lineQt);
-    myLamp.sendStringToLamp(tmp.c_str(), CRGB::BlueViolet, false, true);
+    FastLED.clear();
+    String tmp = String(F("Universes:")) + String(universeQt) + String(F(" X:")) + String(WIDTH) + String(F(" Y:")) + String(lineQt);
+    e131SendString(tmp, CRGB::BlueViolet, false, 35);
     connectError = millis();
 }
 
-String EffectARTNET::setDynCtrl(UIControl*_val) {
+  void EffectE131::e131SendString(String str, CRGB color, bool force, uint8_t delay) {
+      fade = myLamp.getBFade();
+      myLamp.setBFade(FADETOBLACKVALUE);
+      myLamp.setTextMovingSpeed(delay);
+      s_speed = myLamp.getTextMovingSpeed();
+      myLamp.sendStringToLamp(str.c_str(), color, false, force);
+      myLamp.setBFade(fade);
+      myLamp.setTextMovingSpeed(s_speed);
+
+  }
+
+String EffectE131::setDynCtrl(UIControl*_val) {
   EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 
-uint16_t EffectARTNET::getPixelNum(uint16_t x, uint16_t y) {
+uint16_t EffectE131::getPixelNum(uint16_t x, uint16_t y) {
   return (HEIGHT-1-y) * WIDTH + x;
 }
 
-bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
+bool EffectE131::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
     uint16_t check = e131.parsePacket();
@@ -8721,8 +8743,8 @@ bool EffectARTNET::run(CRGB *leds, EffectWorker *param)
         }
       }
     } else {
-      if (millis() - connectError >= 20000) {
-        myLamp.sendStringToLamp(String(F("Connection lost!")).c_str(), CRGB::Red, false, true);
+      if (millis() - connectError >= 15000) {
+        e131SendString(F("Connection lost!"), CRGB::Red, false, 35);
         connectError = millis();
       }
       return false;
