@@ -237,7 +237,7 @@ void LAMP::alarmWorker(){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
         hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-        if(!curAlarm.msg.isEmpty()) {
+        if(!curAlarm.msg.isEmpty() && curAlarm.msg != "-") {
             sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
         } else {
 #ifdef PRINT_ALARM_TIME
