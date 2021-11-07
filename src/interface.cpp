@@ -193,7 +193,7 @@ void pubCallback(Interface *interf){
     }
 #endif
     char fuptime[16];
-    uint32_t tm = millis()/1000;
+    uint32_t tm = embui.getUptime();
     sprintf_P(fuptime, PSTR("%u.%02u:%02u:%02u"),tm/86400,(tm/3600)%24,(tm/60)%60,tm%60);
     interf->value(FPSTR(TCONST_008F), String(fuptime), true);
     interf->value(FPSTR(TCONST_00C2), String(myLamp.getLampState().fsfreespace), true);

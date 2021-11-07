@@ -202,7 +202,7 @@ void sendData(){
     //JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
     obj[FPSTR(TCONST_0002)] = String(myLamp.getLampState().freeHeap);
-    obj[FPSTR(TCONST_008F)] = String(millis()/1000);
+    obj[FPSTR(TCONST_008F)] = String(embui.getUptime());
     obj[FPSTR(TCONST_00CE)] = String(myLamp.getLampState().rssi);
     String sendtopic=FPSTR(TCONST_008B);
     sendtopic+=FPSTR(TCONST_00AD);
