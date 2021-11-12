@@ -8723,10 +8723,11 @@ uint16_t EffectE131::getPixelNum(uint16_t x, uint16_t y) {
 bool EffectE131::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
+    universeQt = ceil((float)HEIGHT / lineQt);  // 1 - 15
     uint16_t check = e131.parsePacket();
     if(check) {
       while(check){
-        for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE : UNIVERSE_SIZE); i++) {
+        for (uint16_t i = 0; i < (e131.universe == universeQt ? NUM_LEDS - UNIVERSE_SIZE*(universeQt-1) : UNIVERSE_SIZE); i++) {
             int j = (i * 3);
             bufLeds[i+(e131.universe -1)*UNIVERSE_SIZE] = CRGB( 
             e131.data[j], 
