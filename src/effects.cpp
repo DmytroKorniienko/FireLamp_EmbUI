@@ -5913,8 +5913,8 @@ void EffectCell::cell(CRGB *leds) {
   speedFactor = EffectMath::fmap((float)speed, 1., 255., .33*EffectCalc::speedfactor, 3.*EffectCalc::speedfactor);
   offsetX = beatsin16(6. * speedFactor, -180, 180);
   offsetY = beatsin16(6. * speedFactor, -180, 180, 12000);
-  for (uint x = 0; x < WIDTH; x++) {
-    for (uint y = 0; y < HEIGHT; y++) {
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
       //int16_t index = myLamp.getPixelNumber(x, y);
       //if (index < 0) break;
 
@@ -8598,7 +8598,7 @@ bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
      
       int16_t bri= inoise8(x * _scale, (y * _scale) - t) - (y * (256 / WIDTH));
       byte col = bri;
-       if (bri< 0) bri= 0; if(bri!= 0) bri= 256 - (bri* 0.2);
+      if(bri<0){bri= 0;} if(bri!=0) {bri= 256 - (bri* 0.2);}
       nblend(EffectMath::getPixel(x, y), ColorFromPalette(*curPalette, col, bri), speedFactor);}
   }
   return true;

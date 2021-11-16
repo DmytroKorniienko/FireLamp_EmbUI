@@ -165,7 +165,7 @@ public:
         switch(getType()&0x0F){
             case CONTROL_TYPE::RANGE:
             case CONTROL_TYPE::CHECKBOX:
-                val=constrain(_val.toInt(),getMin().toInt(),getMax().toInt());
+                val=String(constrain(_val.toInt(),getMin().toInt(),getMax().toInt()));
                 break;
             default:
                 val=_val;

@@ -122,9 +122,9 @@ bool EVENT_MANAGER::isEnumerated(const EVENT&event) {
 
 void EVENT_MANAGER::events_handle()
 {
-  // пропускаем все ненулевые секунды
-  if(!TimeProcessor::seconds00())
-    return;
+    // пропускаем все ненулевые секунды
+    if(!TimeProcessor::seconds00())
+        return;
 
     EVENT *next = getNextEvent(nullptr);
     while (next!=nullptr)

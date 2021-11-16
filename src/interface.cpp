@@ -1146,10 +1146,14 @@ void set_demoflag(Interface *interf, JsonObject *data){
         case MODE_OTA:
         case MODE_ALARMCLOCK:
         case MODE_NORMAL:
-            if (newdemo) myLamp.startDemoMode(embui.param(FPSTR(TCONST_0026)).toInt()); break;
+            if(newdemo)
+                myLamp.startDemoMode(embui.param(FPSTR(TCONST_0026)).toInt());
+            break;
         case MODE_DEMO:
         case MODE_WHITELAMP:
-            if (!newdemo) myLamp.startNormalMode(); break;
+            if(!newdemo)
+                myLamp.startNormalMode();
+            break;
         default:;
     }
 #ifdef RESTORE_STATE
@@ -1438,8 +1442,8 @@ void block_lamptext(Interface *interf, JsonObject *data){
 
 void set_text_config(Interface *interf, JsonObject *data){
     if (!data) return;
-    (*data)[FPSTR(TCONST_0051)]=JsonUInt(110U-(*data)[FPSTR(TCONST_0051)].as<int>());
-    SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)]));
+    (*data)[FPSTR(TCONST_0051)]=String(110U-(*data)[FPSTR(TCONST_0051)].as<int>());
+    SETPARAM(FPSTR(TCONST_0051), myLamp.setTextMovingSpeed((*data)[FPSTR(TCONST_0051)].as<int>()));
     SETPARAM(FPSTR(TCONST_0052), myLamp.setTextOffset((*data)[FPSTR(TCONST_0052)]));
     SETPARAM(FPSTR(TCONST_0054), myLamp.setNYMessageTimer((*data)[FPSTR(TCONST_0054)]));
     SETPARAM(FPSTR(TCONST_00C3), myLamp.setBFade((*data)[FPSTR(TCONST_00C3)]));
@@ -3085,7 +3089,7 @@ t->enableDelayed();
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 
-    obj[FPSTR(TCONST_0051)] = (110U - embui.param(FPSTR(TCONST_0051)).toInt());
+    obj[FPSTR(TCONST_0051)] = String(110U - embui.param(FPSTR(TCONST_0051)).toInt());
     obj[FPSTR(TCONST_0052)] = embui.param(FPSTR(TCONST_0052));
     obj[FPSTR(TCONST_0054)] = embui.param(FPSTR(TCONST_0054));
     obj[FPSTR(TCONST_00C3)] = embui.param(FPSTR(TCONST_00C3));
