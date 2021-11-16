@@ -8723,7 +8723,6 @@ uint16_t EffectE131::getPixelNum(uint16_t x, uint16_t y) {
 bool EffectE131::run(CRGB *leds, EffectWorker *param)
 {
     /* Parse a packet and update pixels */
-    universeQt = ceil((float)HEIGHT / lineQt);  // 1 - 15
     uint16_t check = e131.parsePacket();
     if(check) {
       while(check){
