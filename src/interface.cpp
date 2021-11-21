@@ -3740,13 +3740,13 @@ String httpCallback(const String &param, const String &value, bool isset){
         }
         else if (upperParam == FPSTR(CMD_TCONST_0012))  {
             String effname((char *)0);
-            uint16_t effnum=String(value).toInt();
+            uint16_t effnum=myLamp.effects.getCurrent();
             myLamp.effects.loadeffname(effname, effnum);
             result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
         }
         else if (upperParam == FPSTR(CMD_TCONST_0013))  {
             String effname((char *)0);
-            uint16_t effnum=String(value).toInt();
+            uint16_t effnum=myLamp.effects.getCurrent();
             effname = FPSTR(T_EFFNAMEID[(uint8_t)effnum]);
             result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
         }
