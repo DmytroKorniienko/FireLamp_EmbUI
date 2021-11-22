@@ -86,13 +86,15 @@ extern MP3PLAYERDEVICE *mp3;
 #ifdef ENCODER
 #include "enc.h"
 #endif
-
+#ifdef EMBUI_USE_MQTT
 void mqttCallback(const String &topic, const String &payload);
+#endif
 void sendData();
 
 void create_parameters();
 void sync_parameters();
 void event_worker(const EVENT *);
 bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
+bool ws_action_handle(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
 #endif

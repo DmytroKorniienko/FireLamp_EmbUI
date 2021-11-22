@@ -14,7 +14,7 @@ This library is to simplify the validation and handling of E1.31 sACN (DMX over 
 #### Notes
 - Double-buffering of packet data is disabled on AVR architectures due to memory constraints.  Make sure to check the return value of ```parsePacket()``` as your buffer may be trashed if a bad packet made its way in.
 - Other architectures (i.e. ESP8266) double buffer the packets, so ```e131.data``` can always be considered pristine.  Double buffering can be disabled by defining ```NO_DOUBLE_BUFFER``` in ```E131.h```.
-- WiFi connection attempts will timeout after 10 seconds if a successful connection has not been established.  ```WIFI_CONNECT_TIMEOUT``` can be changed in ```E131.h```.
+- WiFi connection attempts will timeout after 10 seconds if a successful connection has not been established.  ```EMBUI_WIFI_CONNECT_TIMEOUT``` can be changed in ```E131.h```.
 
 #### Initializers
 These are to initialize the network stack and should be in the ```setup()``` function of your sketch.

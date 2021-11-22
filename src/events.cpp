@@ -3,11 +3,8 @@
 
 #ifdef ESP8266
  #include <LittleFS.h>
-#endif
-
-#ifdef ESP32
+#else
  #include <LITTLEFS.h>
- #define FORMAT_LITTLEFS_IF_FAILED true
  #define LittleFS LITTLEFS
 #endif
 

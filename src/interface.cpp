@@ -173,7 +173,7 @@ void AUX_toggle(bool key)
 #endif
 
 /**
- * @brief - callback function that is triggered every PUB_PERIOD seconds via EmbUI scheduler
+ * @brief - callback function that is triggered every EMBUI_PUB_PERIOD seconds via EmbUI scheduler
  * used to publish periodic updates to websocket clients, if any
  * 
  */
@@ -633,10 +633,12 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
     resetAutoTimers();
 }
 
+#ifdef EMBUI_USE_MQTT
 void publish_ctrls_vals()
 {
   embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(myLamp.effects.getCurrent()).toInt(), myLamp.getNormalizedLampBrightness()), true);
 }
+#endif
 
 void block_effects_param(Interface *interf, JsonObject *data){
     //if (!interf) return;
@@ -698,8 +700,10 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         ,controls[i]->getStep()
                         , ctrlName
                         , true);
+#ifdef EMBUI_USE_MQTT
                     if(controls[i]->getId()<3)
                         embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
+#endif
                 }
                 break;
             case CONTROL_TYPE::EDIT :
@@ -734,7 +738,9 @@ void block_effects_param(Interface *interf, JsonObject *data){
                 break;
         }
     }
+#ifdef EMBUI_USE_MQTT
     publish_ctrls_vals();
+#endif
     if(isinterf) interf->json_section_end();
 }
 
@@ -775,8 +781,10 @@ void set_effects_list(Interface *interf, JsonObject *data){
     }
 
     show_effects_param(interf, data);
+#ifdef EMBUI_USE_MQTT
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(CMD_TCONST_0009), String(eff->eff_nb), true);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(eff->eff_nb).toInt(), myLamp.getNormalizedLampBrightness()), true); // publish_ctrls_vals
+#endif
 }
 
 // этот метод меняет контролы БЕЗ синхронизации со внешними системами
@@ -845,8 +853,9 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             String tmp; serializeJson(*data,tmp);LOG(println, tmp);
 
             direct_set_effects_dynCtrl(data);
-
+#ifdef EMBUI_USE_MQTT
             publish_ctrls_vals();
+#endif
             // отправка данных в WebUI
             {
                 bool isLocalMic = false;
@@ -1109,9 +1118,11 @@ void set_onflag(Interface *interf, JsonObject *data){
                 _t->enableDelayed();
             }
 #endif
+#ifdef EMBUI_USE_MQTT
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), "1", true);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
+#endif
         } else {
             resetAutoTimers(); // автосохранение конфига будет отсчитываться от этого момента
             //myLamp.changePower(newpower);
@@ -1124,9 +1135,11 @@ void set_onflag(Interface *interf, JsonObject *data){
                 #ifdef RESTORE_STATE
                                 save_lamp_flags(); // злобный баг, забыть передернуть флаги здесь)))), не вздумать убрать!!! Отлавливал его кучу времени
                 #endif
+                #ifdef EMBUI_USE_MQTT
                                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), "0", true);
                                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
                                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
+                #endif
                                 TASK_RECYCLE; },
                                 &ts, false);
             _t->enableDelayed();
@@ -1160,8 +1173,10 @@ void set_demoflag(Interface *interf, JsonObject *data){
     embui.var(FPSTR(TCONST_001B), (*data)[FPSTR(TCONST_001B)]);
 #endif
     myLamp.setDRand(myLamp.getLampSettings().dRand);
+#ifdef EMBUI_USE_MQTT
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
+#endif
 }
 
 #ifdef OTA
@@ -1191,7 +1206,9 @@ void set_auxflag(Interface *interf, JsonObject *data){
 void set_gbrflag(Interface *interf, JsonObject *data){
     if (!data) return;
     myLamp.setIsGlobalBrightness((*data)[FPSTR(TCONST_001C)] == "1");
+#ifdef EMBUI_USE_MQTT
     embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_00B4)), String(myLamp.IsGlobalBrightness() ? "1" : "0"), true);
+#endif
     save_lamp_flags();
     if (myLamp.isLampOn()) {
         myLamp.setBrightness(myLamp.getNormalizedLampBrightness());
@@ -1454,7 +1471,7 @@ void set_text_config(Interface *interf, JsonObject *data){
     localtime_r(TimeProcessor::now(), tm);  // reset struct to local now()
 
     // set desired date
-    tm->tm_year = newYearTime.substring(0,4).toInt()-TM_BASE_YEAR;
+    tm->tm_year = newYearTime.substring(0,4).toInt()-EMBUI_TM_BASE_YEAR;
     tm->tm_mon  = newYearTime.substring(5,7).toInt()-1;
     tm->tm_mday = newYearTime.substring(8,10).toInt();
     tm->tm_hour = newYearTime.substring(11,13).toInt();
@@ -1736,6 +1753,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
         block_only_wifi(interf, data);
     interf->json_section_end();
 
+#ifdef EMBUI_USE_MQTT
     // форма настроек MQTT
     interf->json_section_hidden(FPSTR(TCONST_0045), FPSTR(TINTF_035));
     interf->text(FPSTR(P_m_host), FPSTR(TINTF_036));
@@ -1746,6 +1764,7 @@ void block_settings_wifi(Interface *interf, JsonObject *data){
     interf->number(FPSTR(P_m_tupd), FPSTR(TINTF_039));
     interf->button_submit(FPSTR(TCONST_0045), FPSTR(TINTF_03A), FPSTR(P_GRAY));
     interf->json_section_end();
+#endif
 
 #ifdef EMBUI_USE_FTP
     // форма настроек FTP
@@ -1786,6 +1805,7 @@ void set_settings_wifi(Interface *interf, JsonObject *data){
     section_settings_frame(interf, data);
 }
 
+#ifdef EMBUI_USE_MQTT
 void set_settings_mqtt(Interface *interf, JsonObject *data){
     if (!data) return;
     BasicUI::set_settings_mqtt(interf,data);
@@ -1795,6 +1815,7 @@ void set_settings_mqtt(Interface *interf, JsonObject *data){
     myLamp.setmqtt_int(interval);
     section_settings_frame(interf, data);
 }
+#endif
 
 #ifdef EMBUI_USE_FTP
 // настройка ftp
@@ -2071,7 +2092,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
     localtime_r(TimeProcessor::now(), tm);  // reset struct to local now()
 
     // set desired date
-    tm->tm_year=tmEvent.substring(0,4).toInt()-TM_BASE_YEAR;
+    tm->tm_year=tmEvent.substring(0,4).toInt()-EMBUI_TM_BASE_YEAR;
     tm->tm_mon = tmEvent.substring(5,7).toInt()-1;
     tm->tm_mday=tmEvent.substring(8,10).toInt();
     tm->tm_hour=tmEvent.substring(11,13).toInt();
@@ -2705,6 +2726,33 @@ void save_lamp_flags(){
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 }
 
+// кастомный обработчик, для реализации особой обработки событий сокетов
+bool ws_action_handle(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+    bool res = false; // false == EmbUI default action
+    switch(type){
+        case AwsEventType::WS_EVT_ERROR :
+            {
+                resetAutoTimers();
+                uint16_t effNum = myLamp.effects.getSelected();
+                myLamp.effects.directMoveBy(EFF_NONE);
+                myLamp.effects.removeConfig(effNum);
+                myLamp.effects.directMoveBy(effNum);
+                //remote_action(RA_EFFECT, String(effNum).c_str(), NULL);
+                String tmpStr=F("- ");
+                tmpStr+=effNum;
+                myLamp.sendString(tmpStr.c_str(), CRGB::Red);
+
+                res = true;
+                break;
+            }
+        default :
+            res = false; 
+            break;
+    }
+    return res;
+}
+
 // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
 bool notfound_handle(AsyncWebServerRequest *request, const String& req)
 {
@@ -2893,8 +2941,10 @@ void create_parameters(){
 
     embui.section_handle_remove(FPSTR(T_SET_TIME));
     embui.section_handle_add(FPSTR(T_SET_TIME), set_settings_time);
+#ifdef EMBUI_USE_MQTT
     embui.section_handle_remove(FPSTR(T_SET_MQTT));
     embui.section_handle_add(FPSTR(T_SET_MQTT), set_settings_mqtt);
+#endif
 #ifdef EMBUI_USE_FTP
     embui.section_handle_remove(FPSTR(T_SET_FTP));
     embui.section_handle_add(FPSTR(T_SET_FTP), set_ftp);
@@ -2963,7 +3013,9 @@ void sync_parameters(){
         embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был циклический ребут, сбрасываем эффект
     }
 
+#ifdef EMBUI_USE_MQTT
     myLamp.setmqtt_int(embui.param(FPSTR(P_m_tupd)).toInt());
+#endif
 
     String syslampFlags(embui.param(FPSTR(TCONST_0094)));
     LAMPFLAGS tmp;
@@ -3606,12 +3658,6 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = myLamp.IsGlobalBrightness() ? "1" : "0"; }
         else if (upperParam == FPSTR(CMD_TCONST_0003))
             { result = myLamp.getMode() == LAMPMODE::MODE_DEMO ? "1" : "0"; }
-        // else if (upperParam == FPSTR(TCONST_0012))
-        //     { result = String(myLamp.getLampBrightness()); }
-        // else if (upperParam == FPSTR(TCONST_0013))
-        //     { result = myLamp.effects.getControls()[1]->getVal(); }
-        // else if (upperParam == FPSTR(TCONST_0014))
-        //     { result = myLamp.effects.getControls()[2]->getVal(); }
 #ifdef MP3PLAYER
         else if (upperParam == FPSTR(CMD_TCONST_0004)) 
             { result = myLamp.isONMP3() ? "1" : "0"; }
@@ -3630,7 +3676,9 @@ String httpCallback(const String &param, const String &value, bool isset){
             { myLamp.showWarning(CRGB::Orange,5000,500); }
         else if (upperParam == FPSTR(CMD_TCONST_000B)) {
                 String result = myLamp.effects.geteffconfig(myLamp.effects.getCurrent(), myLamp.getNormalizedLampBrightness());
+#ifdef EMBUI_USE_MQTT
                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), result, true);
+#endif
                 return result;
             }
         else if (upperParam == FPSTR(CMD_TCONST_000C)) {
@@ -3638,68 +3686,12 @@ String httpCallback(const String &param, const String &value, bool isset){
             for(int i=0; i<controls.size();i++){
                 if(value == String(controls[i]->getId())){
                     result = String(F("[")) + controls[i]->getId() + String(F(",\"")) + (controls[i]->getId()==0 ? String(myLamp.getNormalizedLampBrightness()) : controls[i]->getVal()) + String(F("\"]"));
+#ifdef EMBUI_USE_MQTT
                     embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00D0), result, true);
+#endif
                     return result;
                 }
             }
-        }
-        // что-то случилось с сокетом... уйдем на другой эффект, отсрочим сохранение, удалим конфиг эффекта, вернемся
-        else if (param == F("sys_WS_EVT_ERROR"))  {         // TODO
-            resetAutoTimers();
-            uint16_t effNum = myLamp.effects.getSelected();
-            myLamp.effects.directMoveBy(EFF_NONE);
-            myLamp.effects.removeConfig(effNum);
-            myLamp.effects.directMoveBy(effNum);
-            //remote_action(RA_EFFECT, String(effNum).c_str(), NULL);
-            String tmpStr=F("- ");
-            tmpStr+=effNum;
-            myLamp.sendString(tmpStr.c_str(), CRGB::Red);
-            return result;
-        }
-        // реализация AUTODISCOVERY
-        else if (param == F("sys_AUTODISCOVERY"))  {        // TODO
-            DynamicJsonDocument hass_discover(1024);
-            String name = embui.param(FPSTR(P_hostname));
-            String unique_id = embui.mc;
-
-            hass_discover[F("~")] = embui.id("embui/"); // embui.upperParam(FPSTR(P_m_pref)) + F("/embui/") //String(F("homeassistant/light/"))+name;
-            hass_discover[F("name")] = name;                // name
-            hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
-            hass_discover[F("avty_t")] = F("~pub/online");  // availability_topic
-            hass_discover[F("pl_avail")] = F("true");       // payload_available
-            hass_discover[F("pl_not_avail")] = F("false");  // payload_not_available
-
-            hass_discover[F("cmd_t")] = F("~set/on");             // command_topic
-            hass_discover[F("stat_t")] = F("~pub/on");            // state_topic
-
-            hass_discover[F("bri_cmd_t")] = F("~set/bright");     // brightness_command_topic
-            hass_discover[F("bri_stat_t")] = F("~pub/bright");    // brightness_state_topic
-            hass_discover[F("bri_scl")] = 255;
-
-            hass_discover[F("clr_temp_cmd_t")] = F("~set/speed");     // speed as color temperature
-            hass_discover[F("clr_temp_stat_t")] = F("~pub/speed");    // speed as color temperature
-            hass_discover[F("min_mireds")] = 1;
-            hass_discover[F("max_mireds")] = 255;
-
-            hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level
-            hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
-            hass_discover[F("whit_val_scl")] = 255;
-
-            hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
-            hass_discover[F("fx_stat_t")] = F("~pub/eff_config");                              // effect_state_topic
-            hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");     // effect_template
-
-            hass_discover[F("json_attr_t")] = F("~pub/eff_config");                            // json_attributes_topic
-
-            // hass_discover[F("rgb_cmd_t")] = "~rgb/set";       // rgb_command_topic
-            // hass_discover[F("rgb_stat_t")] = "~rgb/status";   // rgb_state_topic
-
-            String hass_discover_str;
-            serializeJson(hass_discover, hass_discover_str);
-            hass_discover.clear();
-
-            embui.publishto(String(F("homeassistant/light/")) + name + F("/config"), hass_discover_str, true);
-            return hass_discover_str;
         }
         else if (upperParam == FPSTR(CMD_TCONST_000F))  {
             result = F("[");
@@ -3740,13 +3732,15 @@ String httpCallback(const String &param, const String &value, bool isset){
         }
         else if (upperParam == FPSTR(CMD_TCONST_0012))  {
             String effname((char *)0);
-            uint16_t effnum=myLamp.effects.getCurrent();
+            uint16_t effnum = String(value).toInt();
+            effnum = effnum ? effnum : myLamp.effects.getCurrent();
             myLamp.effects.loadeffname(effname, effnum);
             result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
         }
         else if (upperParam == FPSTR(CMD_TCONST_0013))  {
             String effname((char *)0);
-            uint16_t effnum=myLamp.effects.getCurrent();
+            uint16_t effnum = String(value).toInt();
+            effnum = effnum ? effnum : myLamp.effects.getCurrent();
             effname = FPSTR(T_EFFNAMEID[(uint8_t)effnum]);
             result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
         }
@@ -3756,8 +3750,9 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (upperParam == FPSTR(CMD_TCONST_0017)) { action = RA_REBOOT;  remote_action(action, value.c_str(), NULL); }
         else if (upperParam == FPSTR(CMD_TCONST_0018)) { result = myLamp.isAlarm() ? "1" : "0"; }
         else if (upperParam == FPSTR(CMD_TCONST_0019)) { char buf[32]; sprintf_P(buf, PSTR("[%d,%d]"), WIDTH, HEIGHT);  result = buf; }
-        
+#ifdef EMBUI_USE_MQTT        
         embui.publish(String(FPSTR(TCONST_008B)) + upperParam, result, true);
+#endif
         return result;
     } else {
         LOG(println, F("SET"));
@@ -3830,7 +3825,9 @@ String httpCallback(const String &param, const String &value, bool isset){
             uint16_t effnum=String(value).toInt();
             myLamp.effects.loadeffname(effname, effnum);
             result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
+#ifdef EMBUI_USE_MQTT
             embui.publish(String(FPSTR(TCONST_008B)) + upperParam, result, true);
+#endif
             return result;
         }
         else if (upperParam == FPSTR(CMD_TCONST_0013))  {
@@ -3838,7 +3835,9 @@ String httpCallback(const String &param, const String &value, bool isset){
             uint16_t effnum=String(value).toInt();
             effname = FPSTR(T_EFFNAMEID[(uint8_t)effnum]);
             result = String(F("["))+effnum+String(",\"")+effname+String("\"]");
+#ifdef EMBUI_USE_MQTT
             embui.publish(String(FPSTR(TCONST_008B)) + upperParam, result, true);
+#endif
             return result;
         }
 #ifdef OTA
@@ -3853,3 +3852,52 @@ String httpCallback(const String &param, const String &value, bool isset){
     }
     return result;
 }
+
+#ifdef EMBUI_USE_MQTT
+// реализация AUTODISCOVERY, доделать когда-нибудь, пока не используется
+String AUTODISCOVERY()
+{        // TODO
+    DynamicJsonDocument hass_discover(1024);
+    String name = embui.param(FPSTR(P_hostname));
+    String unique_id = embui.mc;
+
+    hass_discover[F("~")] = embui.id("embui/"); // embui.upperParam(FPSTR(P_m_pref)) + F("/embui/") //String(F("homeassistant/light/"))+name;
+    hass_discover[F("name")] = name;                // name
+    hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
+    hass_discover[F("avty_t")] = F("~pub/online");  // availability_topic
+    hass_discover[F("pl_avail")] = F("true");       // payload_available
+    hass_discover[F("pl_not_avail")] = F("false");  // payload_not_available
+
+    hass_discover[F("cmd_t")] = F("~set/on");             // command_topic
+    hass_discover[F("stat_t")] = F("~pub/on");            // state_topic
+
+    hass_discover[F("bri_cmd_t")] = F("~set/bright");     // brightness_command_topic
+    hass_discover[F("bri_stat_t")] = F("~pub/bright");    // brightness_state_topic
+    hass_discover[F("bri_scl")] = 255;
+
+    hass_discover[F("clr_temp_cmd_t")] = F("~set/speed");     // speed as color temperature
+    hass_discover[F("clr_temp_stat_t")] = F("~pub/speed");    // speed as color temperature
+    hass_discover[F("min_mireds")] = 1;
+    hass_discover[F("max_mireds")] = 255;
+
+    hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level
+    hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
+    hass_discover[F("whit_val_scl")] = 255;
+
+    hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
+    hass_discover[F("fx_stat_t")] = F("~pub/eff_config");                              // effect_state_topic
+    hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");     // effect_template
+
+    hass_discover[F("json_attr_t")] = F("~pub/eff_config");                            // json_attributes_topic
+
+    // hass_discover[F("rgb_cmd_t")] = "~rgb/set";       // rgb_command_topic
+    // hass_discover[F("rgb_stat_t")] = "~rgb/status";   // rgb_state_topic
+
+    String hass_discover_str;
+    serializeJson(hass_discover, hass_discover_str);
+    hass_discover.clear();
+
+    embui.publishto(String(F("homeassistant/light/")) + name + F("/config"), hass_discover_str, true);
+    return hass_discover_str;
+}
+#endif

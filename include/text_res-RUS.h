@@ -337,10 +337,14 @@ static const char TINTF_07D[] PROGMEM = "Удержание";
 static const char TINTF_07E[] PROGMEM = "Нажатия";
 static const char TINTF_07F[] PROGMEM = "Однократно";
 static const char TINTF_080[] PROGMEM = "Огненная лампа";
-#ifdef EMBUI_USE_FTP
+#if defined(EMBUI_USE_FTP) && defined(EMBUI_USE_MQTT)
 static const char TINTF_081[] PROGMEM = "WiFi, MQTT & FTP";
-#else
+#elif defined(EMBUI_USE_MQTT)
 static const char TINTF_081[] PROGMEM = "WiFi & MQTT";
+#elif defined(EMBUI_USE_FTP)
+static const char TINTF_081[] PROGMEM = "WiFi & FTP";
+#else
+static const char TINTF_081[] PROGMEM = "WiFi";
 #endif
 static const char TINTF_082[] PROGMEM = "Другие";
 static const char TINTF_083[] PROGMEM = "Очищать лампу при смене эффектов";

@@ -43,7 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "OTA.h"
 #include "events.h"
-#include "../../include/LList.h"
+#include "LList.h"
 #include "interface.h"
 #include "extra_tasks.h"
 
@@ -330,6 +330,8 @@ public:
     bool isAlarm() {return mode == MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
     //int getmqtt_int() {return mqtt_int;}
+
+#ifdef EMBUI_USE_MQTT
     void setmqtt_int(int val=DEFAULT_MQTTPUB_INTERVAL) {
         //mqtt_int = val;
         if(tmqtt_pub)
@@ -340,6 +342,7 @@ public:
             tmqtt_pub = new Task(val * TASK_SECOND, TASK_FOREVER, [this](){ if(embui.isMQTTconected()) sendData(); }, &ts, true, nullptr, [this](){TASK_RECYCLE; tmqtt_pub=nullptr;});
         }
     }
+#endif
 
     LAMPMODE getMode() {return mode;}
     void setMode(LAMPMODE _mode) {mode=_mode;}

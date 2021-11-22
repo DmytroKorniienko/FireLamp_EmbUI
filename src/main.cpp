@@ -61,19 +61,23 @@ void setup() {
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
-    embui.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
 
-#if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
+#ifdef EMBUI_USE_UDP
+    embui.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
+#endif
+
+#if defined(ESP8266) && defined(LED_BUILTIN_AUX)
     embui.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
-#elif defined(__DISABLE_BUTTON0)
+#else
     embui.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
 
     // EmbUI
     embui.begin(); // Инициализируем EmbUI фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
+#ifdef EMBUI_USE_MQTT
     //embui.mqtt(embui.param(F("m_pref")), embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
     embui.mqtt(mqttCallback, true);
-
+#endif
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
     myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
@@ -127,7 +131,7 @@ void setup() {
 
   sync_parameters();        // падение есп32 не воспоизводится, kDn
 
-  //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
+  //embui.setPubInterval(5);   // change periodic WebUI publish interval from EMBUI_PUB_PERIOD to 5
 
 #ifdef TM1637_CLOCK
   tm1637.tm_setup();
@@ -179,6 +183,7 @@ void loop() {
 
 }
 
+#ifdef EMBUI_USE_MQTT
 ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
   LOG(printf_P, PSTR("Message [%s - %s]\n"), topic.c_str() , payload.c_str());
   if(topic.startsWith(FPSTR(TCONST_00AC))){
@@ -193,6 +198,7 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
     }
   }
 }
+#endif
 
 // Periodic MQTT publishing
 void sendData(){
@@ -209,5 +215,7 @@ void sendData(){
     String out;
     serializeJson(obj, out);
     LOG(println, out);
+#ifdef EMBUI_USE_MQTT
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
+#endif
 }
