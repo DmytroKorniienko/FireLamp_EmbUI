@@ -182,8 +182,23 @@ void pubCallback(Interface *interf){
     if (!interf) return;
     interf->json_frame_value();
     interf->value(FPSTR(TCONST_0001), embui.timeProcessor.getFormattedShortTime(), true);
+
 #if !defined(ESP32) || !defined(BOARD_HAS_PSRAM)    
-    interf->value(FPSTR(TCONST_0002), String(myLamp.getLampState().freeHeap), true);
+    #ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+        uint32_t iram;
+        uint32_t dram;
+        {
+            HeapSelectIram ephemeral;
+            iram = ESP.getFreeHeap();
+        }
+        {
+            HeapSelectDram ephemeral;
+            dram = ESP.getFreeHeap();
+        }
+        interf->value(FPSTR(TCONST_0002), String(dram)+" / "+String(iram), true);
+    #else
+        interf->value(FPSTR(TCONST_0002), String(myLamp.getLampState().freeHeap), true);
+    #endif
 #else
     if(psramFound()){
         interf->value(FPSTR(TCONST_0002), String(ESP.getFreeHeap())+" / "+String(ESP.getFreePsram()), true);

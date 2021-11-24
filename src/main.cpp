@@ -34,7 +34,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    вместе с этой программой. Если это не так, см.
    <https://www.gnu.org/licenses/>.)
 */
-
 #include "main.h"
 
 // глобальные переменные для работы с ними в программе
@@ -47,13 +46,23 @@ Buttons *myButtons;
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
-
-
 void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
 
+#ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+    {
+        HeapSelectIram ephemeral;
+        LOG(printf_P, PSTR("\n\nIRAM ESP.getFreeHeap:  %u\n"), ESP.getFreeHeap());
+    }
+    {
+        HeapSelectDram ephemeral;
+        LOG(printf_P, PSTR("DRAM ESP.getFreeHeap:  %u\n"), ESP.getFreeHeap());
+    }
+#else
     LOG(printf_P, PSTR("\n\nsetup: free heap  : %d\n"), ESP.getFreeHeap());
+#endif
+
 #ifdef ESP32
     LOG(printf_P, PSTR("setup: free PSRAM  : %d\n"), ESP.getFreePsram()); // 4194252
 #endif
