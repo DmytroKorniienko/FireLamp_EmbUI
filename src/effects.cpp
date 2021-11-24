@@ -8085,7 +8085,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
   switch (dir) {
     case 0: // Up
       for (byte x = 0; x < WIDTH; x++) {
-		    if (!_dir and x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+		    if (!_dir and x > WIDTH/2 and random8(chance) == DIR_CHARGE) {count++; break;}
         for (float y = 0; y < HEIGHT; y+=speedFactor) {
           EffectMath::getPixel(x, y) = (((int)y == EffectMath::getmaxHeightIndex()) ? CRGB::Black : EffectMath::getPixel(x, y + 1));
         }
@@ -8093,7 +8093,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 1: // Up - Right 
       for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (byte y = 0; y < HEIGHT; y++) {
           EffectMath::getPixel(x, y) = ((y == EffectMath::getmaxHeightIndex() or (int)x == EffectMath::getmaxWidthIndex()) ? CRGB::Black : EffectMath::getPixel(x + 1, y + 1));
         }
@@ -8101,7 +8101,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 2: // Right
       for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
           EffectMath::getPixel(x, y) = (((int)x == EffectMath::getmaxWidthIndex()) ? CRGB::Black : EffectMath::getPixel(x + 1, y));
         }
@@ -8109,7 +8109,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 3: // Down - Right 
       for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
           EffectMath::getPixel(x, y) = (((int)x == EffectMath::getmaxWidthIndex() or y == 0) ? CRGB::Black : EffectMath::getPixel(x + 1, y - 1));
         }
@@ -8117,7 +8117,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 4: // Down
       for (byte x = 0; x < WIDTH; x++) {
-		    if (!_dir and x < WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+		    if (!_dir and x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (float y = EffectMath::getmaxHeightIndex(); y > 0; y-=speedFactor) {
           EffectMath::getPixel(x, y) = (((int)y == 0) ? CRGB::Black : EffectMath::getPixel(x, y - 1));
         }
@@ -8125,7 +8125,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 5: // Down - Left
       for (float x = EffectMath::getmaxWidthIndex(); x > 0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
           EffectMath::getPixel(x, y) = ((y == 0 or (int)x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y - 1));
         }
@@ -8133,7 +8133,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 6: // Left
       for (float x = EffectMath::getmaxWidthIndex(); x > 0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
           EffectMath::getPixel(x, y) = ((int)x == 0 ? CRGB::Black : EffectMath::getPixel(x - 1, y));
         }
@@ -8141,7 +8141,7 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
       break;
     case 7: // Up - Left 
       for (float x = WIDTH -1; x >0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) < DIR_CHARGE) {count++; break;}
+        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
         for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
           EffectMath::getPixel(x, y) = ((y == EffectMath::getmaxHeightIndex() or (int)x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y + 1));
         }
