@@ -443,7 +443,7 @@ public:
 
 class EffectWorker {
 private:
-    time_t listsuffix = 0; // суффикс использемый для обновления списков
+    time_t listsuffix = 0; // суффикс используемый для обновления списков
     LAMPSTATE *lampstate; // ссылка на состояние лампы
     SORT_TYPE effSort; // порядок сортировки в UI
 
@@ -577,7 +577,7 @@ public:
     // удалить конфиг переданного эффекта
     void removeConfig(const uint16_t nb, const char *folder=NULL);
     // пересоздает индекс с текущего списка эффектов
-    void makeIndexFileFromList(const char *folder = NULL);
+    void makeIndexFileFromList(const char *folder = NULL, bool forceRemove = true);
     // пересоздает индекс с конфигов в ФС
     void makeIndexFileFromFS(const char *fromfolder = NULL, const char *tofolder = NULL);
 

@@ -1364,7 +1364,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         embui.save(filename.c_str(), true);
 
         filename = String(FPSTR(TCONST_002C)) + name;
-        myLamp.effects.makeIndexFileFromList(filename.c_str());
+        myLamp.effects.makeIndexFileFromList(filename.c_str(), false);
 
         filename = String(FPSTR(TCONST_0032)) + name;
         myLamp.events.saveConfig(filename.c_str());

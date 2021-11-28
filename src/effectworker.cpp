@@ -852,11 +852,12 @@ void EffectWorker::removeLists(){
   listsuffix = time(NULL);
 }
 
-void EffectWorker::makeIndexFileFromList(const char *folder)
+void EffectWorker::makeIndexFileFromList(const char *folder, bool forceRemove)
 {
   File indexFile;
 
-  removeLists();
+  if(forceRemove)
+    removeLists();
 
   openIndexFile(indexFile, folder);
   effectsReSort(SORT_TYPE::ST_IDX); // сброс сортировки перед записью
