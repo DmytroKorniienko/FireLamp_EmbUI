@@ -689,7 +689,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
 #if !defined(MIC_EFFECTS) and !defined(USE_E131)
     #define SKIP_EFF if (i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #elif defined(USE_E131) and !defined(MIC_EFFECTS)
-    #define SKIP_EFF if (i>EFF_ENUM::EFF_ARTNET) continue;
+    #define SKIP_EFF if (i>EFF_ENUM::EFF_E131) continue;
 #elif !defined(USE_E131) and defined(MIC_EFFECTS)
     #define SKIP_EFF if (i==251) continue;
 #else
