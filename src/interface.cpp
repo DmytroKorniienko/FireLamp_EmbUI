@@ -228,7 +228,9 @@ void block_menu(Interface *interf, JsonObject *data){
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));   //  Эффекты
     interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));   //  Вывод текста
     interf->option(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));   //  Рисование
+#ifdef USE_STREAMING
     interf->option(FPSTR(TCONST_0044), FPSTR(TINTF_0E2));   //  Трансляция
+#endif
     interf->option(FPSTR(TCONST_005C), FPSTR(TINTF_011));   //  События
     interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));   //  настройки
 
@@ -2507,7 +2509,7 @@ void set_debugflag(Interface *interf, JsonObject *data){
 
 void set_drawflag(Interface *interf, JsonObject *data){
     if (!data) return;
-    myLamp.setDrawBuff((*data)[FPSTR(TCONST_00C4)] == "1");
+    myLamp.setDraw((*data)[FPSTR(TCONST_00C4)] == "1");
     save_lamp_flags();
 }
 

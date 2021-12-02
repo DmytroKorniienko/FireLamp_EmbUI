@@ -374,8 +374,18 @@ public:
     bool isDrawOn() {return flags.isDraw;}
     void setDebug(bool flag) {flags.isDebug=flag; lampState.isDebug=flag;}
     void setButton(bool flag) {flags.isBtn=flag;}
-    void setDrawBuff(bool flag) {
+    void setDraw(bool flag){
         flags.isDraw=flag;
+// #if defined(USE_STREAMING) && !defined(EXT_STREAM_BUFFER)
+//         if (flag && ledStream) {
+//             flags.isStream=false;
+//             remote_action();                // TODO: сделать нужный RA для стрима и рисования
+//         }
+// #endif
+        setDrawBuff(flag);
+    }
+    void setDrawBuff(bool flag) {
+        // flags.isDraw=flag;
         if(!flag){
             if (!drawbuff.empty()) {
                 drawbuff.resize(0);

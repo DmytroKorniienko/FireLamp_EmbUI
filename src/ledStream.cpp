@@ -90,6 +90,11 @@ Led_Stream::Led_Stream(const STREAM_TYPE type){
 #ifdef EXT_STREAM_BUFFER
     else
         myLamp.setStreamBuff(true);
+#else
+    else {
+        if(myLamp.isDrawOn()) myLamp.setDraw(false);   // TODO: переделать
+        myLamp.setDrawBuff(true);
+    }
 #endif
 }
 
@@ -105,6 +110,7 @@ void Led_Stream::handle() {
 void Led_Stream::fillBuff() {
     // if (clearTask) 
     //     clearTask->cancel();
+    // if (!myLamp.isLampOn()) return;
     if (myLamp.isDirect()){
         if (!isConnected)
             myLamp.effectsTimer(T_DISABLE);
@@ -153,6 +159,7 @@ void Led_Stream::fillBuff() {
 void Led_Stream::fillBuff(const String &str){
     // if (clearTask) 
     //     clearTask->cancel();
+    // if (!myLamp.isLampOn()) return;
     if (myLamp.isDirect()){
         if (!isConnected)
             myLamp.effectsTimer(T_DISABLE);
