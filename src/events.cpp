@@ -1,14 +1,6 @@
 
 #include "events.h"
 
-#ifdef ESP8266
- #include <LittleFS.h>
-#else
- #include <LITTLEFS.h>
- #define LittleFS LITTLEFS
-#endif
-
-
 void EVENT_MANAGER::check_event(EVENT *event)
 {
     if(!event->isEnabled || cb_func==nullptr) return;

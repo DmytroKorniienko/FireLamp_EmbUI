@@ -41,14 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <Arduino.h>
 #include "LList.h"
 #include <ArduinoJson.h>
-
-#ifdef ESP8266
- #include <LittleFS.h>
-#else
- #include <LITTLEFS.h>
- #define LittleFS LITTLEFS
-#endif
-
+#include "misc.h"
 #include "effects_types.h"
 
 #ifdef MIC_EFFECTS

@@ -39,6 +39,16 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define __MISC_H
 
 #include <Arduino.h>
+#include <vector>
+
+#ifdef ESP8266
+ #include <LittleFS.h>
+#else
+ #include <LITTLEFS.h>
+#if ARDUINO <= 10805
+ #define LittleFS LITTLEFS
+#endif
+#endif
 
 typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_SECOND, AT_THIRD, AT_FOURTH, AT_FIFTH, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников (8 вариантов максимум)
 typedef enum : uint8_t {TS_NONE=0, TS_VER1, TS_VER2} TIME_SOUND_TYPE; // виды озвучки времени (8 вариантов максимум)

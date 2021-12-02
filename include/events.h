@@ -35,7 +35,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
    <https://www.gnu.org/licenses/>.)
 */
 
-#pragma once
+#ifndef _EVENTS_H
+#define _EVENTS_H
+
 #include "misc.h"
 #include "timeProcessor.h"
 #include "ArduinoJson.h"
@@ -264,3 +266,5 @@ public:
     void loadConfig(const char *cfg = nullptr);
     void saveConfig(const char *cfg = nullptr);
 };
+
+#endif
