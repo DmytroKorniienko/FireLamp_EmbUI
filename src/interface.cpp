@@ -228,6 +228,7 @@ void block_menu(Interface *interf, JsonObject *data){
     interf->option(FPSTR(TCONST_0000), FPSTR(TINTF_000));   //  Эффекты
     interf->option(FPSTR(TCONST_0003), FPSTR(TINTF_001));   //  Вывод текста
     interf->option(FPSTR(TCONST_00C8), FPSTR(TINTF_0CE));   //  Рисование
+    interf->option(FPSTR(TCONST_0044), FPSTR(TINTF_0E2));   //  Трансляция
     interf->option(FPSTR(TCONST_005C), FPSTR(TINTF_011));   //  События
     interf->option(FPSTR(TCONST_0004), FPSTR(TINTF_002));   //  настройки
 
@@ -2568,7 +2569,128 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
     block_drawing(interf, data);
     interf->json_frame_flush();
 }
+#ifdef USE_STREAMING
 
+void set_soul(Interface *interf, JsonObject *data){
+    if (!data || !ledStream || ledStream->getStreamType() != SOUL_MATE) return;
+    // recreateoptionsTask(true); // only cancel task
+    String str = (*data)[FPSTR(TCONST_0048)].as<String>().c_str();
+    return ledStream->fillBuff(str);
+
+}
+
+void block_streaming(Interface *interf, JsonObject *data){
+    //Страница "Трансляция"
+    interf->json_section_main(FPSTR(TCONST_0044), FPSTR(TINTF_0E2));
+        interf->json_section_line();
+            interf->checkbox(FPSTR(TCONST_001A), String(myLamp.isLampOn()), FPSTR(TINTF_00E), true);
+            interf->checkbox(FPSTR(TCONST_0046), myLamp.isStreamOn() ? F("1") : F("0"), FPSTR(TINTF_0E2), true);
+            interf->checkbox(FPSTR(TCONST_0049), myLamp.isDirect() ? F("1") : F("0"), FPSTR(TINTF_0E6), true);
+            interf->checkbox(FPSTR(TCONST_004A), myLamp.isMapping() ? F("1") : F("0"), FPSTR(TINTF_0E7), true);
+        interf->json_section_end();
+        interf->select(FPSTR(TCONST_0047), embui.param(FPSTR(TCONST_0047)), (String)FPSTR(TINTF_0E3), true);
+            interf->option(String(E131), FPSTR(TINTF_0E4));
+            interf->option(String(SOUL_MATE), FPSTR(TINTF_0E5));
+        interf->json_section_end();
+        interf->range(FPSTR(TCONST_0012), (String)myLamp.getBrightness(), F("0"), F("255"), F("1"), (String)FPSTR(TINTF_00D), true);
+        if (embui.param(FPSTR(TCONST_0047)).toInt() == E131){
+            interf->range(FPSTR(TCONST_0077), embui.param(FPSTR(TCONST_0077)), F("1"), F("255"), F("1"), (String)FPSTR(TINTF_0E8), true);
+            interf->comment(String(F("Universes QT: ")) + String(ceil((float)HEIGHT / (512U / (WIDTH * 3))), 0U));
+            interf->comment(String(F("Настройки маппинга для Jinx можно посмотреть <a href=\"https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-454#post-103219\">ТУТ</a>")));
+        }
+    interf->json_section_end();
+}
+void section_streaming_frame(Interface *interf, JsonObject *data){
+    // Трансляция
+    if (!interf) return;
+    interf->json_frame_interface(FPSTR(TINTF_080));
+    block_streaming(interf, data);
+    interf->json_frame_flush();
+}
+
+void set_streaming(Interface *interf, JsonObject *data){
+    if (!data) return;
+    bool flag = (*data)[FPSTR(TCONST_0046)] == "1";
+    myLamp.setStream(flag);
+    LOG(printf_P, PSTR("Stream set %d \n"), flag);
+    if (flag) {
+        STREAM_TYPE type = (STREAM_TYPE)embui.param(FPSTR(TCONST_0047)).toInt();
+        if (ledStream) {
+            if (ledStream->getStreamType() != type){
+                Led_Stream::clearStreamObj();
+            }
+        }
+        Led_Stream::newStreamObj(type);
+    }
+    else {
+        Led_Stream::clearStreamObj();
+    }
+    save_lamp_flags();
+}
+
+void set_streaming_drirect(Interface *interf, JsonObject *data){
+    if (!data) return;
+    bool flag = (*data)[FPSTR(TCONST_0049)] == "1";
+    myLamp.setDirect(flag);
+    if (ledStream){
+        if (flag) {
+#ifdef EXT_STREAM_BUFFER
+            myLamp.setStreamBuff(false);
+#else
+            myLamp.clearDrawBuf();
+#endif
+            myLamp.effectsTimer(T_DISABLE);
+            FastLED.clear();
+            FastLED.show();
+        }
+        else {
+            myLamp.effectsTimer(T_ENABLE);
+#ifdef EXT_STREAM_BUFFER
+            myLamp.setStreamBuff(true);
+#else
+            if (!myLamp.isDrawOn())             // TODO: переделать с запоминанием старого стейта
+                myLamp.setDrawBuff(true);
+#endif
+        }
+    }
+    save_lamp_flags();
+}
+void set_streaming_mapping(Interface *interf, JsonObject *data){
+    if (!data) return;
+    myLamp.setMapping((*data)[FPSTR(TCONST_004A)] == "1");
+    save_lamp_flags();
+}
+void set_streaming_bright(Interface *interf, JsonObject *data){
+    if (!data) return;
+    remote_action(RA_CONTROL, (String(FPSTR(TCONST_0015))+F("0")).c_str(), String((*data)[FPSTR(TCONST_0012)].as<String>()).c_str(), NULL);
+}
+
+void set_streaming_type(Interface *interf, JsonObject *data){
+    if (!data) return;
+    SETPARAM(FPSTR(TCONST_0047));
+    STREAM_TYPE type = (STREAM_TYPE)(*data)[FPSTR(TCONST_0047)].as<int>();
+    LOG(printf_P, PSTR("Stream Type %d \n"), type);
+    if (myLamp.isStreamOn()) {
+        if (ledStream) {
+            if (ledStream->getStreamType() == type)
+                return;
+            Led_Stream::clearStreamObj();
+        }
+        Led_Stream::newStreamObj(type);
+    }
+    section_streaming_frame(interf, data);
+}
+
+void set_streaming_universe(Interface *interf, JsonObject *data){
+    if (!data) return;
+    SETPARAM(FPSTR(TCONST_0077));
+    if (ledStream) {
+        if (ledStream->getStreamType() == E131) {
+            Led_Stream::newStreamObj(E131);
+        }
+    }
+}
+#endif
 // Точка входа в настройки
 void user_settings_frame(Interface *interf, JsonObject *data);
 void section_settings_frame(Interface *interf, JsonObject *data){
@@ -2887,7 +3009,10 @@ void create_parameters(){
     // embui.var_create(FPSTR(TCONST_00D9), F("1"));    // Яркость при выкл
 #endif
     embui.var_create(FPSTR(TCONST_0098), String(CURRENT_LIMIT)); // Лимит по току
-
+#ifdef USE_STREAMING
+    embui.var_create(FPSTR(TCONST_0047), String(SOUL_MATE)); // Тип трансляции
+    embui.var_create(FPSTR(TCONST_0077), F("1")); // Universe для E1.31
+#endif
     // далее идут обработчики параметров
 
    /**
@@ -2930,6 +3055,16 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_000E), set_auxflag);
 #endif
     embui.section_handle_add(FPSTR(TCONST_00C8), section_drawing_frame);
+#ifdef USE_STREAMING    
+    embui.section_handle_add(FPSTR(TCONST_0044), section_streaming_frame);
+    embui.section_handle_add(FPSTR(TCONST_0048), set_soul);
+    embui.section_handle_add(FPSTR(TCONST_0046), set_streaming);
+    embui.section_handle_add(FPSTR(TCONST_0047), set_streaming_type);
+    embui.section_handle_add(FPSTR(TCONST_0049), set_streaming_drirect);
+    embui.section_handle_add(FPSTR(TCONST_004A), set_streaming_mapping);
+    embui.section_handle_add(FPSTR(TCONST_0077), set_streaming_universe);
+    embui.section_handle_add(FPSTR(TCONST_0012), set_streaming_bright);
+#endif
     embui.section_handle_add(FPSTR(TCONST_009A), section_sys_settings_frame);
     embui.section_handle_add(FPSTR(TCONST_0003), section_text_frame);
     embui.section_handle_add(FPSTR(TCONST_0034), set_lamp_textsend);
@@ -3167,6 +3302,29 @@ t->enableDelayed();
     
     set_text_config(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+
+#ifdef USE_STREAMING
+    obj[FPSTR(TCONST_0046)] = tmp.isStream ? "1" : "0";
+    set_streaming(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+
+    obj[FPSTR(TCONST_0049)] = tmp.isDirect ? "1" : "0";
+    set_streaming_drirect(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+
+    obj[FPSTR(TCONST_004A)] = tmp.isMapping ? "1" : "0";
+    set_streaming_mapping(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+
+    obj[FPSTR(TCONST_0047)] = embui.param(FPSTR(TCONST_0047));
+    set_streaming_type(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+
+    obj[FPSTR(TCONST_0077)] = embui.param(FPSTR(TCONST_0077));
+    set_streaming_universe(nullptr, &obj);
+    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+#endif
+
 
     obj[FPSTR(TCONST_004E)] = tmp.isFaderON ? "1" : "0";
     obj[FPSTR(TCONST_008E)] = tmp.isEffClearing ? "1" : "0";

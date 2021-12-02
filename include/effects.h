@@ -42,10 +42,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectworker.h"
 #include "effectmath.h"
 
-#ifdef USE_E131
-    #include <E131.h>
-#endif
-
 const byte maxDim = max(WIDTH, HEIGHT);
 const byte minDim = min(WIDTH, HEIGHT);
 const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
@@ -2282,28 +2278,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-#ifdef USE_E131
-class EffectE131: public EffectCalc {
-private:
-    E131 e131;
-    String setDynCtrl(UIControl*_val) override;
-    uint8_t firstUniverse = 1U;  // 1 - 15
-    const uint8_t lineQt = (512U / (WIDTH * 3));
-    CRGB bufLeds[NUM_LEDS];
-    const uint8_t universeQt = ceil((float)HEIGHT / lineQt);  // 1 - 15
-    const uint8_t UNIVERSE_SIZE = WIDTH * lineQt;
-    uint16_t getPixelNum(uint16_t x, uint16_t y);
-    uint32_t connectError = 0;
-    uint8_t fade, s_speed;
-
-    void e131SendString(String str, CRGB color, bool force, uint8_t delay); 
-
-public:
-    
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
 // --------- конец секции эффектов
-#endif
 
 #endif

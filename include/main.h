@@ -72,6 +72,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
   #include "rtc.h"
 #endif
 
+#ifdef USE_STREAMING
+  #include "ledStream.h"
+#endif
+
 // TaskScheduler
 extern Scheduler ts;
 

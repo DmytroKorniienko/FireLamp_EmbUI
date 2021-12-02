@@ -272,7 +272,20 @@ void LAMP::effectsTick(){
       }
     }
   }
-
+#if defined(USE_STREAMING) && defined(EXT_STREAM_BUFFER)
+    if(!streambuff.empty()){
+    uint8_t mi;
+    for(uint16_t i=0; i<streambuff.size() && i<NUM_LEDS; i++){
+      mi = streambuff[i].r > streambuff[i].g ? streambuff[i].r : streambuff[i].g;
+      mi = mi > streambuff[i].b ? mi : streambuff[i].b;
+      if(mi>=5) {
+        getUnsafeLedsArray()[i] = streambuff[i];
+      } else if(mi && mi<5) {
+        EffectMath::setLedsNscale8(i, map(mi,1,4,128,10)); // 5 градаций прозрачности, где 0 - полностью прозрачный
+      }
+    }
+  }
+#endif
   if(!drawbuff.empty()){
     uint8_t mi;
     for(uint16_t i=0; i<drawbuff.size() && i<NUM_LEDS; i++){
@@ -409,10 +422,18 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     mode = LAMPMODE::MODE_NORMAL;
 
   if (flag){
+#ifdef USE_STREAMING
+    if (flags.isStream)
+      Led_Stream::newStreamObj((STREAM_TYPE)embui.param(FPSTR(TCONST_0047)).toInt());
+    if(!flags.isDirect || !flags.isStream)
+#endif
     effectsTimer(T_ENABLE);
     if(mode == LAMPMODE::MODE_DEMO)
       demoTimer(T_ENABLE);
   } else  {
+#ifdef USE_STREAMING
+    Led_Stream::clearStreamObj();
+#endif
     if(flags.isFaderON && !lampState.isOffAfterText)
       fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
     else {
@@ -464,6 +485,9 @@ void LAMP::startAlarm(char *value){
   storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
   mode = LAMPMODE::MODE_ALARMCLOCK;
   demoTimer(T_DISABLE);     // гасим Демо-таймер
+#ifdef USE_STREAMING
+  if(!flags.isDirect || !flags.isStream)
+#endif
   effectsTimer(T_ENABLE);
 #ifdef MP3PLAYER
   if(curAlarm.isStartSnd){

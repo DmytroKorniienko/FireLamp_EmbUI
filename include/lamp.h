@@ -138,6 +138,9 @@ struct {
     //--------16 штук граница-------------------
     bool isGaugeOn:1;
     bool isTempOn:1;
+    bool isStream:1;
+    bool isDirect:1;
+    bool isMapping:1;
 };
 uint64_t lampflags; // набор битов для конфига
 _LAMPFLAGS(){
@@ -169,6 +172,9 @@ _LAMPFLAGS(){
     tmZero = false;
     isGaugeOn = true;
     isTempOn = true;
+    isStream = false;
+    isDirect = false;
+    isMapping = true;
 }
 } LAMPFLAGS;
 //#pragma pack(pop)
@@ -381,7 +387,34 @@ public:
         }
     }
     void writeDrawBuf(CRGB &color, uint16_t x, uint16_t y) { if(!drawbuff.empty()) { drawbuff[getPixelNumber(x,y)]=color; } }
+    void writeDrawBuf(CRGB &color, uint16_t num) { if(!drawbuff.empty()) { drawbuff[num]=color; } }
     void fillDrawBuf(CRGB &color) { for(uint16_t i=0; i<drawbuff.size(); i++) drawbuff[i]=color; }
+    void clearDrawBuf() { for(uint16_t i=0; i<drawbuff.size(); i++) drawbuff[i]=CRGB::Black; }
+#ifdef USE_STREAMING
+    bool isStreamOn() {return flags.isStream;}
+    bool isDirect() {return flags.isDirect;}
+    bool isMapping() {return flags.isMapping;}
+    void setStream(bool flag) {flags.isStream = flag;}
+    void setDirect(bool flag) {flags.isDirect = flag;}
+    void setMapping(bool flag) {flags.isMapping = flag;}
+#ifdef EXT_STREAM_BUFFER
+    void setStreamBuff(bool flag) {
+        if(!flag){
+            if (!streambuff.empty()) {
+                streambuff.resize(0);
+                streambuff.shrink_to_fit();
+            }
+        } else if(streambuff.empty()){
+            streambuff.resize(NUM_LEDS);
+            //for(uint16_t i=0; i<NUM_LEDS; i++) {drawbuff[i] = CHSV(random(0,255),0,255);} // тест :)
+        }
+    }
+    void writeStreamBuff(CRGB &color, uint16_t x, uint16_t y) { if(!streambuff.empty()) { streambuff[getPixelNumber(x,y)]=color; } }
+    void writeStreamBuff(CRGB &color, uint16_t num) { if(!streambuff.empty()) { streambuff[num]=color; } }
+    void fillStreamBuff(CRGB &color) { for(uint16_t i=0; i<streambuff.size(); i++) streambuff[i]=color; }
+    void clearStreamBuff() { for(uint16_t i=0; i<streambuff.size(); i++) streambuff[i]=CRGB::Black; }
+#endif
+#endif
     bool isONMP3() {return flags.isOnMP3;}
     void setONMP3(bool flag) {flags.isOnMP3=flag;}
     bool isShowSysMenu() {return flags.isShowSysMenu;}
@@ -493,6 +526,9 @@ private:
     LAMP& operator=(const LAMP&);  // noncopyable
     std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
     std::vector<CRGB> drawbuff; // буфер для рисования
+#if defined(USE_STREAMING) && defined(EXT_STREAM_BUFFER)
+    std::vector<CRGB> streambuff; // буфер для трансляции
+#endif
 };
 
 // Fader object

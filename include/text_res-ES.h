@@ -123,7 +123,6 @@ static const char TEFF_074 [] PROGMEM = "Humo";
 static const char TEFF_075 [] PROGMEM = "Fuego 2021";
 static const char TEFF_076 [] PROGMEM = "Espejismo";
 static const char TEFF_250 [] PROGMEM = "Reloj";
-static const char TEFF_251 [] PROGMEM = "E1.31 Receptor";
 static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 
@@ -442,6 +441,13 @@ static const char TINTF_0DE[] PROGMEM = "Escala color";
 static const char TINTF_0DF[] PROGMEM = "Texto color";
 static const char TINTF_0E0[] PROGMEM = "Mostrar temperatura";
 static const char TINTF_0E1[] PROGMEM = "¿Está seguro?";
+static const char TINTF_0E2[] PROGMEM = "Transmisión";
+static const char TINTF_0E3[] PROGMEM = "Modo";
+static const char TINTF_0E4[] PROGMEM = "E1.31";
+static const char TINTF_0E5[] PROGMEM = "SoulMate";
+static const char TINTF_0E6[] PROGMEM = "Efecto bloque";
+static const char TINTF_0E7[] PROGMEM = "Mapang";
+static const char TINTF_0E8[] PROGMEM = "Universo primero";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";

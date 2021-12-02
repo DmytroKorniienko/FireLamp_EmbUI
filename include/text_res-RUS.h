@@ -123,7 +123,6 @@ static const char TEFF_074[] PROGMEM = "Дым";
 static const char TEFF_075[] PROGMEM = "Огонь 2021";
 static const char TEFF_076[] PROGMEM = "Мираж";
 static const char TEFF_250[] PROGMEM = "Часы";
-static const char TEFF_251[] PROGMEM = "E1.31 Ресивер";
 static const char TEFF_254[] PROGMEM = "Частотный анализатор";
 static const char TEFF_255[] PROGMEM = "Осциллограф";
 
@@ -442,6 +441,13 @@ static const char TINTF_0DE[] PROGMEM = "Цвет шкалы";
 static const char TINTF_0DF[] PROGMEM = "Цвет текста";
 static const char TINTF_0E0[] PROGMEM = "Отображение температуры";
 static const char TINTF_0E1[] PROGMEM = "Уверены?";
+static const char TINTF_0E2[] PROGMEM = "Трансляция";
+static const char TINTF_0E3[] PROGMEM = "Режим";
+static const char TINTF_0E4[] PROGMEM = "E1.31";
+static const char TINTF_0E5[] PROGMEM = "SoulMate";
+static const char TINTF_0E6[] PROGMEM = "Блок.Эффект";
+static const char TINTF_0E7[] PROGMEM = "Разметка";
+static const char TINTF_0E8[] PROGMEM = "Начальный Universe";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового года осталось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "C новым %d годом!";
