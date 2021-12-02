@@ -189,7 +189,10 @@ void loop() {
         ds_loop();
     }
 #endif
-
+#ifdef USE_STREAMING
+    if (ledStream)
+        ledStream->handle();
+#endif
 }
 
 #ifdef EMBUI_USE_MQTT

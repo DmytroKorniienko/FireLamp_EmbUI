@@ -136,13 +136,13 @@ static const char TCONST_0040[] PROGMEM = "EncVGCol";
 static const char TCONST_0041[] PROGMEM = "wcpass";
 static const char TCONST_0042[] PROGMEM = "encTxtCol";
 static const char TCONST_0043[] PROGMEM = "encTxtDel";
-//static const char TCONST_0044[] PROGMEM = "APpwd";
+static const char TCONST_0044[] PROGMEM = "streaming";
 static const char TCONST_0045[] PROGMEM = "set_mqtt";
-// static const char TCONST_0046[] PROGMEM = "m_host";
-// static const char TCONST_0047[] PROGMEM = "m_port";
-// static const char TCONST_0048[] PROGMEM = "m_user";
-// static const char TCONST_0049[] PROGMEM = "m_pass";
-//static const char TCONST_004A[] PROGMEM = "m_tupd";
+static const char TCONST_0046[] PROGMEM = "isStreamOn";
+static const char TCONST_0047[] PROGMEM = "stream_type";
+static const char TCONST_0048[] PROGMEM = "soul";
+static const char TCONST_0049[] PROGMEM = "direct";
+static const char TCONST_004A[] PROGMEM = "mapping";
 static const char TCONST_004B[] PROGMEM = "set_other";
 static const char TCONST_004C[] PROGMEM = "MIRR_H";
 static const char TCONST_004D[] PROGMEM = "MIRR_V";
@@ -187,7 +187,7 @@ static const char TCONST_0073[] PROGMEM = "clicks";
 static const char TCONST_0074[] PROGMEM = "bactList";
 static const char TCONST_0075[] PROGMEM = "set_butt";
 static const char TCONST_0076[] PROGMEM = "show_butt";
-// static const char TCONST_0077[] PROGMEM = "show_time";
+static const char TCONST_0077[] PROGMEM = "Universe";
 // static const char TCONST_0078[] PROGMEM = "show_wifi";
 static const char TCONST_0079[] PROGMEM = "show_mic";
 static const char TCONST_007A[] PROGMEM = "show_other";
@@ -425,9 +425,6 @@ EFF_SMOKER,                                   // Дым
 EFF_FIRE2021,                                 // Огонь от Степко
 EFF_MIRAGE,                                   // Мираж
 EFF_TIME = (250U)                             // Часы (служебный, смещаем в конец)
-#ifdef USE_E131
-,EFF_E131 = (251U)
-#endif
 #ifdef MIC_EFFECTS
 ,EFF_VU = (254U)                              // Частотный анализатор (служебный, смещаем в конец)
 ,EFF_OSC = (255U)                             // Осциллограф
@@ -454,7 +451,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 192 - 207
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 208 - 223
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 224 - 39
-  TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_250, TEFF_251, TEFF_000, TEFF_000, TEFF_254, TEFF_255  // 240 - 255
+  TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_250, TEFF_000, TEFF_000, TEFF_000, TEFF_254, TEFF_255  // 240 - 255
 };
 
 /**

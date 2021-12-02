@@ -280,11 +280,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_MIRAGE :
     worker = std::unique_ptr<EffectMirage>(new EffectMirage());
     break;
-#ifdef USE_E131
-   case EFF_ENUM::EFF_E131 :
-    worker = std::unique_ptr<EffectE131>(new EffectE131());
-    break;
-#endif
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());
@@ -686,16 +681,6 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   configFile.close();
 }
 
-#if !defined(MIC_EFFECTS) and !defined(USE_E131)
-    #define SKIP_EFF if (i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
-#elif defined(USE_E131) and !defined(MIC_EFFECTS)
-    #define SKIP_EFF if (i>EFF_ENUM::EFF_ARTNET) continue;
-#elif !defined(USE_E131) and defined(MIC_EFFECTS)
-    #define SKIP_EFF if (i==251) continue;
-#else
-    #define SKIP_EFF 
-#endif
-
 /**
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
  *
@@ -705,7 +690,9 @@ void EffectWorker::chckdefconfigs(const char *folder){
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
       continue;
 
-    SKIP_EFF
+#ifndef MIC_EFFECTS
+    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+#endif
 
     String cfgfilename = geteffectpathname(i, folder);
     if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
@@ -826,7 +813,9 @@ void EffectWorker::makeIndexFile(const char *folder)
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
 
-      SKIP_EFF
+#ifndef MIC_EFFECTS
+    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+#endif
 
     eff = getEffect(i);
     if(eff)
