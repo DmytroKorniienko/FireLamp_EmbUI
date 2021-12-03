@@ -17,25 +17,34 @@ void handle();
 static void clearStreamObj();
 static void clearBuff();
 static void newStreamObj(STREAM_TYPE type);
-static uint16_t getPixelNum(uint16_t x, uint16_t y);
+static uint16_t getPixelNumE131(uint16_t x, uint16_t y);
 const uint16_t getUni(){return e131Universe;}
 void setUni(uint8_t uni){e131Universe = uni;}
 const uint8_t getUniCt(){return universeCount;}
 const uint8_t getLineQt(){return lineQt;}
+void sendConfig(uint32_t id);
 uint8_t *getLastSeqNum(){return e131LastSequenceNumber;}
 const uint16_t getPort(){return e131Port;}
 const uint16_t getDMXAddress(){return DMXAddress;}
 const STREAM_TYPE getStreamType(){return streamType;}
 void fillBuff();
-void fillBuff(const String &streamLeds);
+void fillBuff(const uint8_t *streamLeds);
+void clearWSbuff();
+static void handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, bool isArtnet);
+static void handleWSPacket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+// void onStreamEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 CRGB *getBuff(){
     return bufLeds;
 }
     STREAM_TYPE streamType = E131;
 private:
     ESPAsyncE131 *e131 = nullptr;
+    // AsyncWebSocket wsStream;
     uint8_t* e131LastSequenceNumber = nullptr;       // to detect packet loss (9)
     CRGB *bufLeds = nullptr;
+    uint8_t *wsBuff = nullptr;
+    uint16_t buffSize;
+    uint32_t id = 0;
     // settings
     uint16_t e131Universe = 1;                       // settings for E1.31 (sACN) protocol (only DMX_MODE_MULTIPLE_* can span over consequtive universes)
     uint16_t e131Port = 5568;                        // DMX in port. E1.31 default is 5568, Art-Net is 6454
@@ -44,7 +53,6 @@ private:
     bool e131SkipOutOfSequence = true;            // freeze instead of flickering
     //uint8_t lastSeq;
     // bool ready = false;
-    uint32_t connectError = false;
     // void handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, bool isArtnet);
     const uint8_t lineQt = (512U / (WIDTH * 3));
     const uint8_t universeCount = ceil((float)HEIGHT / lineQt);

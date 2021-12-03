@@ -2572,15 +2572,6 @@ void section_drawing_frame(Interface *interf, JsonObject *data){
     interf->json_frame_flush();
 }
 #ifdef USE_STREAMING
-
-void set_soul(Interface *interf, JsonObject *data){
-    if (!data || !ledStream || ledStream->getStreamType() != SOUL_MATE) return;
-    // recreateoptionsTask(true); // only cancel task
-    String str = (*data)[FPSTR(TCONST_0048)].as<String>().c_str();
-    return ledStream->fillBuff(str);
-
-}
-
 void block_streaming(Interface *interf, JsonObject *data){
     //Страница "Трансляция"
     interf->json_section_main(FPSTR(TCONST_0044), FPSTR(TINTF_0E2));
@@ -3059,7 +3050,6 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_00C8), section_drawing_frame);
 #ifdef USE_STREAMING    
     embui.section_handle_add(FPSTR(TCONST_0044), section_streaming_frame);
-    embui.section_handle_add(FPSTR(TCONST_0048), set_soul);
     embui.section_handle_add(FPSTR(TCONST_0046), set_streaming);
     embui.section_handle_add(FPSTR(TCONST_0047), set_streaming_type);
     embui.section_handle_add(FPSTR(TCONST_0049), set_streaming_drirect);
