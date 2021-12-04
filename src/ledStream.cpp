@@ -1,8 +1,7 @@
 #include "ledStream.h"
 #ifdef USE_STREAMING
-AsyncWebSocket wsStream("/stream");  // переделать
+AsyncWebSocket wsStream("/stream");  // TODO: переделать
 Led_Stream *ledStream = nullptr;
-// Task *clearTask = nullptr;           //  таска очищала буферы, если терялся коннект, переделал на handle(), который закинул в loop()
 
 uint16_t Led_Stream::getPixelNumE131(uint16_t x, uint16_t y) {
   return (HEIGHT-1-y) * WIDTH + x;
@@ -32,8 +31,8 @@ void Led_Stream::handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, b
         return;
     }
 
-    uint16_t previousUniverses = uni - ledStream->getUni();
-    uint16_t possibleLEDsInCurrentUniverse  = WIDTH * ledStream->getLineQt();
+    uint16_t lastUni = uni - ledStream->getUni();
+    uint16_t ledsPerUni  = WIDTH * ledStream->getLineQt();
 
     // if (ledStream->getLastSeqNum())
     //     if (seq < ledStream->getLastSeqNum()[uni - ledStream->getUni()]
@@ -45,22 +44,22 @@ void Led_Stream::handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, b
     //     }
     ledStream->getLastSeqNum()[uni-ledStream->getUni()] = seq;
 
-    if (previousUniverses == 0) {
+    if (lastUni == 0) {
         // first universe of this fixture
-        uint16_t count = min(possibleLEDsInCurrentUniverse, NUM_LEDS);
+        uint16_t count = min(ledsPerUni, NUM_LEDS);
         memcpy(ledStream->getBuff(),
             &e131_data[ledStream->getDMXAddress()],
             count * 3);
     } 
-    else if (previousUniverses > 0 && uni < (ledStream->getUni() + ledStream->getUniCt())) {
+    else if (lastUni > 0 && uni < (ledStream->getUni() + ledStream->getUniCt())) {
         // additional universe(s) of this fixture
-        uint16_t numberOfLEDsInPreviousUniverses = possibleLEDsInCurrentUniverse;     // first universe
-        if (previousUniverses > 1) {
-            numberOfLEDsInPreviousUniverses += possibleLEDsInCurrentUniverse * (previousUniverses - 1);  // extended universe(s) before current
+        uint16_t lastUniLedQt = ledsPerUni;     // first universe
+        if (lastUni > 1) {
+            lastUniLedQt += ledsPerUni * (lastUni - 1);  // extended universe(s) before current
         }
-        uint16_t remainingLeds = NUM_LEDS - numberOfLEDsInPreviousUniverses;
-        uint16_t count = min(possibleLEDsInCurrentUniverse, remainingLeds);
-        memcpy(&ledStream->getBuff()[numberOfLEDsInPreviousUniverses],
+        uint16_t remainingLeds = NUM_LEDS - lastUniLedQt;
+        uint16_t count = min(ledsPerUni, remainingLeds);
+        memcpy(&ledStream->getBuff()[lastUniLedQt],
             &e131_data[ledStream->getDMXAddress()],
             count * 3);
         if (uni == ledStream->getUniCt())
@@ -69,7 +68,7 @@ void Led_Stream::handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, b
 }
 
 void Led_Stream::handleWSPacket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
-    if(ws_action_handle(server, client, type, arg, data, len) || !ledStream) return;
+    if(!ledStream || ledStream->getStreamType() != SOUL_MATE) return;
 
     if(type == WS_EVT_CONNECT){
         // #if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED) && defined(EMBUI_USE_SECHEAP)
@@ -133,15 +132,16 @@ Led_Stream::Led_Stream(const STREAM_TYPE type){
     LOG(printf_P, PSTR("Stream ON, type %d \n"), (uint8_t)type);
     streamType = type;
     if (type == E131) {
-        e131Universe = embui.param(FPSTR(TCONST_0077)).toInt();
-        e131 = new ESPAsyncE131((e131_packet_callback_function)&handleE131Packet);
+        firstUni = embui.param(FPSTR(TCONST_0077)).toInt();
+        e131 = new ESPAsyncE131(&handleE131Packet);
         bufLeds = new CRGB[NUM_LEDS]{CRGB::Black};
-        e131LastSequenceNumber = new uint8_t[universeCount];
-        e131->begin(e131Multicast, e131Port, e131Universe, universeCount);
+        lastSeqNum = new uint8_t[uniQt];
+        e131->begin(multicast, e131Port, firstUni, uniQt);
     }
     else if (type == SOUL_MATE){
         wsStream.onEvent(handleWSPacket);
         embui.server.addHandler(&wsStream);
+        wsStream.enable(true);
     }
     if (myLamp.isDirect()){
         myLamp.effectsTimer(T_DISABLE);
@@ -159,6 +159,32 @@ Led_Stream::Led_Stream(const STREAM_TYPE type){
 #endif
 }
 
+Led_Stream::~Led_Stream(){
+    LOG(printf_P, PSTR("Stream OFF, Type %d \n"), streamType);
+    Led_Stream::clearBuff();
+    if (streamType == E131) {
+        delete[] lastSeqNum;
+        delete e131;
+        delete[] bufLeds;
+        lastSeqNum = nullptr;
+        e131 = nullptr;
+        bufLeds = nullptr;
+    }
+    else if (streamType == SOUL_MATE){
+    //     embui.server.removeHandler(&wsStream);
+        wsStream.enable(false);
+    //     if (wsStream){
+    //     delete wsStream;
+    //     wsStream = nullptr;
+    //     }
+    }
+    if (myLamp.isDirect())
+        myLamp.effectsTimer(T_ENABLE);
+#ifdef EXT_STREAM_BUFFER
+    else 
+        myLamp.setStreamBuff(false);
+#endif
+}
 
 void Led_Stream::handle() {
     if (isConnected && millis() - lastFrameTimer > TASK_SECOND) {
@@ -180,9 +206,6 @@ void Led_Stream::clearWSbuff(){
 }
 
 void Led_Stream::fillBuff() {
-    // if (clearTask) 
-    //     clearTask->cancel();
-    // if (!myLamp.isLampOn()) return;
     if (myLamp.isDirect()){
         if (!isConnected)
             myLamp.effectsTimer(T_DISABLE);
@@ -221,17 +244,9 @@ void Led_Stream::fillBuff() {
     }
     lastFrameTimer = millis();
     isConnected = true;
-    // clearTask = new Task(TASK_SECOND, TASK_ONCE, Led_Stream::clearBuff, &ts, false, nullptr, []{
-    //         TASK_RECYCLE;
-    //         clearTask = nullptr;
-    //     });
-    // clearTask->enableDelayed();
 }
 
 void Led_Stream::fillBuff(const uint8_t *col){
-    // if (clearTask) 
-    //     clearTask->cancel();
-    // if (!myLamp.isLampOn()) return;
     if (myLamp.isDirect()){
         if (!isConnected)
             myLamp.effectsTimer(T_DISABLE);
@@ -273,45 +288,12 @@ void Led_Stream::fillBuff(const uint8_t *col){
     }
     lastFrameTimer = millis();
     isConnected = true;
-//     clearTask = new Task(TASK_SECOND, TASK_ONCE, Led_Stream::clearBuff, &ts, false, nullptr, []{
-//             TASK_RECYCLE;
-//             clearTask = nullptr;
-//         });
-//     clearTask->enableDelayed();
 }
-
-Led_Stream::~Led_Stream(){
-    LOG(printf_P, PSTR("Stream OFF, Type %d \n"), streamType);
-    Led_Stream::clearBuff();
-    if (streamType == E131) {
-        delete[] e131LastSequenceNumber;
-        delete e131;
-        delete[] bufLeds;
-        e131LastSequenceNumber = nullptr;
-        e131 = nullptr;
-        bufLeds = nullptr;
-    }
-    // else if (streamType == SOUL_MATE){
-    //     embui.server.removeHandler(&wsStream);
-    //     wsStream.enable(false);
-    //     if (wsStream){
-    //     delete wsStream;
-    //     wsStream = nullptr;
-    //     }
-    // }
-    if (myLamp.isDirect())
-        myLamp.effectsTimer(T_ENABLE);
-#ifdef EXT_STREAM_BUFFER
-    else 
-        myLamp.setStreamBuff(false);
-#endif
-}
-
 
 void Led_Stream::sendConfig(uint32_t id){       // TODO: доработать
     StaticJsonDocument<EMBUI_IFACE_STA_JSON_SIZE> obj;
     obj[F("name")] = String(F("FireLamp-")) + String(embui.mc);
-    obj[F("version")] = FPSTR(PGversion);
+    // obj[F("version")] = FPSTR(PGversion);
     obj[F("version")] = F("2.5.0");
     obj[F("cols")] = String(HEIGHT);
     obj[F("rows")] = String(WIDTH);
