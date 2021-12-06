@@ -122,7 +122,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
       LOG(println, F("Card Online!"));
       setVolume(cur_volume); // в случае перетыкания карты или сборса плеера - восстановим громкость
       break;
-    case DFPlayerFeedBack:  // этот кейс добавлен для нормальной работы с некоторыми версиями DFPlayer
+    //case DFPlayerFeedBack:  // этот кейс добавлен для нормальной работы с некоторыми версиями DFPlayer - поправлено в библиотеке, требуется проверка
     case DFPlayerPlayFinished:
      {
         LOG(print, F("Number:"));
