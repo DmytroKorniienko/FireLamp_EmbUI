@@ -11,31 +11,30 @@ enum STREAM_TYPE {
 
 class Led_Stream{
 public:
-Led_Stream(const STREAM_TYPE type);
-~Led_Stream();
-void handle();
-static void clearStreamObj();
-static void clearBuff();
-static void newStreamObj(STREAM_TYPE type);
-static uint16_t getPixelNumE131(uint16_t x, uint16_t y);
-const uint16_t getUni(){return firstUni;}
-void setUni(uint8_t uni){firstUni = uni;}
-const uint8_t getUniCt(){return uniQt;}
-const uint8_t getLineQt(){return lineQt;}
-void sendConfig(uint32_t id);
-uint8_t *getLastSeqNum(){return lastSeqNum;}
-const uint16_t getPort(){return e131Port;}
-const uint16_t getDMXAddress(){return DMXAddress;}
-const STREAM_TYPE getStreamType(){return streamType;}
-void fillBuff();
-void fillBuff(const uint8_t *streamLeds);
-void clearWSbuff();
-static void handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, bool isArtnet);
-static void handleWSPacket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
-// void onStreamEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
-CRGB *getBuff(){
-    return bufLeds;
-}
+    Led_Stream(const STREAM_TYPE type);
+    ~Led_Stream();
+    void handle();
+    static void clearStreamObj();
+    static void clearBuff();
+    static void newStreamObj(STREAM_TYPE type);
+    static uint16_t getPixelNumE131(uint16_t x, uint16_t y);
+    const uint16_t getUni(){return firstUni;}
+    void setUni(uint8_t uni){firstUni = uni;}
+    const uint8_t getUniCt(){return uniQt;}
+    const uint8_t getLineQt(){return lineQt;}
+    void sendConfig(uint32_t id);
+    uint8_t *getLastSeqNum(){return lastSeqNum;}
+    const uint16_t getPort(){return e131Port;}
+    const uint16_t getDMXAddress(){return DMXAddress;}
+    const STREAM_TYPE getStreamType(){return streamType;}
+    void fillLeds(CRGB *ledsPtr, uint16_t ledsQt, uint16_t lastLed = 0);
+    void fillBuff();
+    void fillBuff(const uint8_t *streamLeds);
+    void clearWSbuff();
+    static void handleE131Packet(e131_packet_t* p, const IPAddress &clientIP, bool isArtnet);
+    static void handleWSPacket(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+    // void onStreamEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+    // CRGB *getBuff(){return bufLeds;}
     STREAM_TYPE streamType = E131;
 private:
     ESPAsyncE131 *e131 = nullptr;
