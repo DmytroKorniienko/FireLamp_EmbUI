@@ -2588,8 +2588,8 @@ void block_streaming(Interface *interf, JsonObject *data){
         interf->range(FPSTR(TCONST_0012), (String)myLamp.getBrightness(), F("0"), F("255"), F("1"), (String)FPSTR(TINTF_00D), true);
         if (embui.param(FPSTR(TCONST_0047)).toInt() == E131){
             interf->range(FPSTR(TCONST_0077), embui.param(FPSTR(TCONST_0077)), F("1"), F("255"), F("1"), (String)FPSTR(TINTF_0E8), true);
-            interf->comment(String(F("Universes QT: ")) + String(ceil((float)HEIGHT / (512U / (WIDTH * 3))), 0U));
-            interf->comment(String(F("Настройки маппинга для Jinx можно посмотреть <a href=\"https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-454#post-103219\">ТУТ</a>")));
+            interf->comment(String(F("Universes:")) + String(ceil((float)HEIGHT / (512U / (WIDTH * 3))), 0U) + String(F(";    X:")) + String(WIDTH) + String(F(";    Y:")) + String(512U / (WIDTH * 3)));
+            interf->comment(String(F("Как настроить разметку матрицы в Jinx! можно посмотреть <a href=\"https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-454#post-103219\">на форуме</a>")));
         }
     interf->json_section_end();
 }
