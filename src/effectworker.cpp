@@ -68,9 +68,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_PRIZMATA :
     worker = std::unique_ptr<EffectPrismata>(new EffectPrismata());
     break;
-  case EFF_ENUM::EFF_PILE :
-    worker = std::unique_ptr<EffectPile>(new EffectPile());
-    break;
   case EFF_ENUM::EFF_SPIRO :
     worker = std::unique_ptr<EffectSpiro>(new EffectSpiro());
     break;
@@ -85,9 +82,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     break;
   case EFF_ENUM::EFF_PAINTBALL :
     worker = std::unique_ptr<EffectLightBalls>(new EffectLightBalls());
-    break;
-  case EFF_ENUM::EFF_FIRE :
-    worker = std::unique_ptr<EffectFire2020>(new EffectFire2020());
     break;
   case EFF_ENUM::EFF_PULSE :
     worker = std::unique_ptr<EffectPulse>(new EffectPulse());
@@ -122,23 +116,14 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SNOWSTORMSTARFALL :
     worker = std::unique_ptr<EffectStarFall>(new EffectStarFall());
     break;
-  case EFF_ENUM::EFF_DNA2 :
-    worker = std::unique_ptr<EffectDNA2>(new EffectDNA2());
-    break;
   case EFF_ENUM::EFF_3DNOISE :
     worker = std::unique_ptr<Effect3DNoise>(new Effect3DNoise());
     break;
   case EFF_ENUM::EFF_CELL :
     worker = std::unique_ptr<EffectCell>(new EffectCell());
     break;
-  case EFF_ENUM::EFF_F_LYING :
-    worker = std::unique_ptr<EffectF_lying>(new EffectF_lying());
-    break;
   case EFF_ENUM::EFF_T_LEND :
     worker = std::unique_ptr<EffectTLand>(new EffectTLand());
-    break;
-  case EFF_ENUM::EFF_LDIRKO :
-    worker = std::unique_ptr<EffectLLand>(new EffectLLand());
     break;
   case EFF_ENUM::EFF_OSCIL :
     worker = std::unique_ptr<EffectOscilator>(new EffectOscilator());
@@ -182,9 +167,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     break;
   case EFF_ENUM::EFF_CUBE2 :
     worker = std::unique_ptr<EffectCube2d>(new EffectCube2d());
-    break;
-  case EFF_ENUM::EFF_DNA :
-    worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
   case EFF_ENUM::EFF_PICASSO :
   case EFF_ENUM::EFF_PICASSO4 :
@@ -255,9 +237,6 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
     break;
   case EFF_ENUM::EFF_POLARL :
     worker = std::unique_ptr<EffectPolarL>(new EffectPolarL());
-    break;
-  case EFF_ENUM::EFF_FLOWER :
-    worker = std::unique_ptr<EffectFlower>(new EffectFlower());
     break;
   case EFF_ENUM::EFF_TEST :
     worker = std::unique_ptr<EffectTest>(new EffectTest());

@@ -311,27 +311,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- "ДНК Вариант" -------------
-//Yaroslaw Turbin 08.12.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-//updated & adopted by kostyamat
-class EffectDNA2 : public EffectCalc {
-protected:
-    const uint8_t freq = 6;
-    byte hue = 0;
-    uint16_t ms;
-    uint8_t speeds;
-    bool rotate = true;
-    bool dots = true;
-
-private:
-    String setDynCtrl(UIControl*_val) override;
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
 // ------------- Эффект "New Матрица" ---------------
 class EffectMatrix : public EffectLighters {
 private:
@@ -1341,68 +1320,6 @@ class EffectNexus: public EffectCalc {
     void load() override;
 };
 
-
-// --------------  Эффект "Цветение"
-//Yaroslaw Turbin
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-class EffectFlower : public EffectCalc {
-private:
-    float c = 0.5;   //diameter
-    float angle = 1.;
-    float  counter = 0.;
-    CHSV color;
-	float speedFactor;
-
-    String setDynCtrl(UIControl*_val) override;
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ----------- Эфеект "ДНК"
-// Yaroslaw Turbin 04.09.2020
-// https://vk.com/ldirko
-// https://pastebin.com/jwvC1sNF
-// адаптация и доработки kostyamat
-class EffectDNA : public EffectCalc {
-private:
-    double freq = 3000;
-    float mn =255.0/13.8;
-    uint8_t speeds = 30;
-    bool rotate = false;
-
-    String setDynCtrl(UIControl*_val) override;
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ----------- Эффект "Огненная Лампа"
-// Yaroslaw Turbin, 22.06.2020 
-// https://vk.com/ldirko
-// https://pastebin.com/eKqe4zzA
-// переделака на субпиксель и доработки - kostyamat
-class EffectFire2020 : public EffectCalc {
-private:
-    #define NOISE_HEIGHT  (HEIGHT * 3U)
-    uint16_t noises[WIDTH * NOISE_HEIGHT];   //precalculated noise table
-    byte colorfade[HEIGHT];                   //simple colorfade table for speedup
-    float a = 0;
-    byte _pal = 8;
-    byte _scale = 60;
-	float speedFactor;
-
-    String setDynCtrl(UIControl*_val) override;
-    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
-    void palettesload() override;
-    void regenNoise();
-
-public:
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
 // ----------- Эфеект "Змеиный Остров"
 // (c) Сотнег
 // База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
@@ -1483,7 +1400,6 @@ class EffectSmokeballs: public EffectCalc {
 // ----------- Эффект "Ёлки-Палки"
 // "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
-// RGBPattern (c) ldir https://editor.soulmatelights.com/gallery/810-rgb-pattern1
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
@@ -1503,39 +1419,10 @@ class EffectCell: public EffectCalc {
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
     void vals(CRGB *leds);
-    void RGBPattern(CRGB *leds);
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     String setDynCtrl(UIControl*_val) override;
-};
-
-// ----------- Эффект "Геометрический Вальс"
-//F_lying 
-//Fastled 16x16 rgb led matrix demo
-//Yaroslaw Turbin, 27.10.2020 
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-
-//https://www.reddit.com/r/FastLED/comments/jj4oc9/new_fastled_matrix_example_f_lying_code_in
-//code for arduino: https://wokwi.com/arduino/projects/280541577702539789
-//                  https://wokwi.com/arduino/projects/280607115091902988
-class EffectF_lying: public EffectCalc {
-  private:
-    byte hue = 0;
-    uint8_t _blur = 1;
-    void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
-	float speedFactor;
-    String setDynCtrl(UIControl*_val);
-#ifdef BIGMATRIX
-    const float deviator = 2.;
-#else
-    const float deviator = 4;
-#endif
-    bool type = false;
-  public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void load() override;
 };
 
 // ---------- Эффект "Тикси Ленд"
@@ -1556,29 +1443,6 @@ class EffectTLand: public EffectCalc {
     String setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// -------- "LDIRKO Ленд"
-//simple playground for fasled
-//best use with 16x16 matrix and bigger
-//like tixy.land ))
-//...ldir... Yaroslaw Turbin, 18.11.2020 
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-class EffectLLand: public EffectCalc {
-  private:
-    const byte effects = 10; //how many effects
-    byte effnumber = 0; //start effect
-    uint8_t _scale = 1;
-    float t;
-    uint16_t code(byte x, byte y, uint16_t i, float t);
-    String setDynCtrl(UIControl*_val) override;
-    bool select = false;
-    bool randColor = false;
-    float hue = 0;
-  public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void load() override;
 };
 
 // ----------- Эффект "Осцилятор"
@@ -1648,29 +1512,6 @@ class EffectWrain: public EffectCalc {
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
-};
-
-// ------------- Эффект "Цветные драже"
-//Simple sand automata
-//fastled 16x16 matrix demo https://editor.soulmatelights.com/gallery/560-sand-automata-16x16
-//Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-class EffectPile : public EffectCalc {
-private:
-    bool behavior;
-    byte density;
-    byte sc;
-    void randomdot();
-    void updatesand();
-    void randomdel();
-    void falldown();
-  String setDynCtrl(UIControl*_val) override;
-  
-public:
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    
 };
 
 //-------- по мотивам Эффектов Particle System -------------------------
