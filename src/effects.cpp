@@ -7234,7 +7234,6 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
 // --------- Эффект "Северное Сияние"
 // (c) kostyamat 05.02.2021
 // идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
-// особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 void EffectPolarL::load() {
   adjastHeight = EffectMath::fmap((float)HEIGHT, 8, 32, 28, 12);
   adjScale = map((int)WIDTH, 8, 64, 310, 63);
@@ -7394,70 +7393,6 @@ void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t
     EffectMath::drawLineF(x + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
     EffectMath::drawLineF(x + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
 
-  }
-}
-
-// ------------  Эффект "Дым"
-// https://wokwi.com/arduino/projects/286246948457939464
-// (c) ldir + sutaburosu
-// adopted&updated by kostyamat
-// !++
-String EffectSmoker::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) {
-  speed = EffectCalc::setDynCtrl(_val).toInt();
-  speedFactor = EffectMath::fmap(speed, 1, 255, 1., 12.);}
-  else if(_val->getId()==2) EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==3) sat = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  return String();
-}
-
-bool EffectSmoker::run(CRGB *leds, EffectWorker *opt) {
-  timer += speedFactor;
-  int8_t lightX = 1 - (sin8(timer / 3) - 128) / 4; 
-  int8_t lightY = 1 - (sin8(timer / 2) - 128) / 4;
-
-  generatebump();
-  Bumpmap(leds, lightX, lightY);
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, 64);
-  return true;
-}
-
-void EffectSmoker::generatebump () {
-  uint16_t t = timer;
-  uint16_t index = 0;
-  for (uint8_t j = 0; j < HEIGHT; j++) {
-    for (uint8_t i = 0; i < WIDTH; i++) {
-			byte col;
-			uint16_t u, v; 
-			u = i * 32 + t / 4;
-			v = j * 32 - t / 5;
-			col = 76 + inoise8_raw(u, v, t);
-      bump[index++] = col;
-    }
-  }
-}
-
-void EffectSmoker::Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty) {
-
-  int yindex = WIDTH;
-  int8_t vly = lighty;
-
-  for (uint8_t y = 1; y < EffectMath::getmaxHeightIndex(); y++) {
-    ++vly;
-    int8_t vlx = lightx;
-    for (uint8_t x = 1; x < EffectMath::getmaxWidthIndex(); x++) {
-      ++vlx;
-      int8_t nx = bump[x + 1 + yindex] - bump[x - 1 + yindex];
-      int8_t ny = bump[x + yindex + WIDTH] - bump[x + yindex - WIDTH];
-
-      uint16_t sumsquare = (vlx - nx) * (vlx - nx) + (vly - ny) * (vly - ny);
-      byte col = 0;
-      if (sumsquare < 7225) // 7225 == (255 / 3)²
-        col = 255 - sqrt16(sumsquare) * 3;
-      nblend(EffectMath::getPixel(x, y), CHSV(scale, sat, col), 100);
-    }
-    yindex += WIDTH;
   }
 }
 
@@ -8117,89 +8052,4 @@ bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
       nblend(EffectMath::getPixel(x, y), ColorFromPalette(*curPalette, col, bri), speedFactor);}
   }
   return true;
-}
-
-
-// ----------- Эффект "Мираж"
-//Fire comets
-//https://editor.soulmatelights.com/gallery/1097-fire-comets
-//Yaroslaw Turbin 12-06-2021
-//https://twitter.com/ldir_ko
-//https://vk.com/ldirko
-//https://www.youtube.com/c/ldirldir
-//https://www.reddit.com/user/ldirko/
-// переделан под свои нужды by kostyamat 12.10.2021
-String EffectMirage::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 2.);
-  else if(_val->getId()==2) scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 128, 1);
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  return String();
-}
-
-bool EffectMirage::run(CRGB *leds, EffectWorker *param)
-{
-  balls();
-  fadecenter();
-  toLeds();
-  return true;
-}
-
-uint16_t EffectMirage::buffXY(uint8_t x, uint8_t y)
-{
-  return (y * (WIDTH + 2) + x);
-}
-
-void EffectMirage::fadecenter()
-{
-  uint16_t sum;
-  for (uint8_t x = 1; x < WIDTH + 1; x++)
-  {
-    for (uint8_t y = 1; y < HEIGHT + 1; y++)
-    {
-
-      sum = buff[buffXY(x, y)];
-      sum += buff[buffXY(x + 1, y)];
-      sum += buff[buffXY(x - 1, y)];
-      sum += buff[buffXY(x, y + 1)];
-      sum += buff[buffXY(x, y - 1)];
-      sum /= 5;
-      buff[buffXY(x, y)] = sum;
-    }
-  }
-}
-
-void EffectMirage::balls()
-{
-  uint16_t x =  beatsin88(2560 * speedFactor, 1, WIDTH - 1);
-  uint16_t y =  beatsin88(3840 * speedFactor, 1, HEIGHT);
-  uint16_t x1 = beatsin88(2816 * speedFactor, 1, WIDTH - 1);
-  uint16_t y1 = beatsin88(2304 * speedFactor, 1, HEIGHT);
-  uint16_t x2 = beatsin88(3840 * speedFactor, 1, WIDTH - 1);
-  uint16_t y2 = beatsin88(2816 * speedFactor, 1, HEIGHT);
-
-  buff[buffXY(x, y)] = bright;
-  buff[buffXY(x + 1, y)] = bright;
-
-  buff[buffXY(x1, y1)] = bright;
-  buff[buffXY(x1 + 1, y1)] = bright;
-
-  buff[buffXY(x2, y2)] = bright;
-  buff[buffXY(x2 + 1, y2)] = bright;
-}
-
-void EffectMirage::toLeds()
-{
-  static uint8_t color;
-  uint16_t buffIndex = (WIDTH + 3);
-  color = !random8() ? random8() : color;
-  for (uint8_t y = 0; y < HEIGHT; y++)
-  {
-    for (uint8_t x = 0; x < WIDTH; x++)
-    {
-      uint16_t index = getPixelNumber(x, (HEIGHT - 1) - y);
-      nblend(leds[index], CHSV(color, buff[buffIndex], 255), scale);
-      buffIndex++;
-    }
-    buffIndex += 2;
-  }
 }

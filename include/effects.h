@@ -1732,7 +1732,6 @@ public:
 // --------- Эффект "Северное Сияние"
 // (c) kostyamat 05.02.2021
 // идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
-// особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 
 // Палитры, специально созданные под этот эффект, огромная благодарность @Stepko
 static const TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM ={0x000000, 0x003300, 0x006600, 0x009900, 0x00cc00,0x00ff00, 0x33ff00, 0x66ff00, 0x99ff00,0xccff00, 0xffff00, 0xffcc00, 0xff9900, 0xff6600, 0xff3300, 0xff0000};
@@ -1787,24 +1786,6 @@ private:
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ------------  Эффект "Дым"
-// https://wokwi.com/arduino/projects/286246948457939464
-// (c) ldir + sutaburosu
-class EffectSmoker: public EffectCalc {
-private:
-    float timer;
-    byte bump[NUM_LEDS];
-    byte sat;
-	float speedFactor;
-
-    void generatebump ();
-    void Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty);
-    String setDynCtrl(UIControl*_val) override;
-
-public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -2089,33 +2070,6 @@ private:
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ----------- Эффект "Мираж"
-//Fire comets
-//https://editor.soulmatelights.com/gallery/1097-fire-comets
-//Yaroslaw Turbin 12-06-2021
-//https://twitter.com/ldir_ko
-//https://vk.com/ldirko
-//https://www.youtube.com/c/ldirldir
-//https://www.reddit.com/user/ldirko/
-// переделан под свои нужды by kostyamat 12.10.2021
-class EffectMirage: public EffectCalc {
-private:
-
-	float speedFactor;
-    byte buff[(WIDTH+2)*(HEIGHT+2)], bright = 255;
-    
-
-    String setDynCtrl(UIControl*_val) override;
-    void fadecenter();
-    uint16_t buffXY(uint8_t x, uint8_t y);
-    void toLeds();
-    void balls();
-
-public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

@@ -247,17 +247,11 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_RACER :
     worker = std::unique_ptr<EffectRacer>(new EffectRacer());
     break;
-   case EFF_ENUM::EFF_SMOKER :
-    worker = std::unique_ptr<EffectSmoker>(new EffectSmoker());
-    break;
    case EFF_ENUM::EFF_MAGMA :
     worker = std::unique_ptr<EffectMagma>(new EffectMagma());
     break;
    case EFF_ENUM::EFF_FIRE2021 :
     worker = std::unique_ptr<EffectFire2021>(new EffectFire2021());
-    break;
-   case EFF_ENUM::EFF_MIRAGE :
-    worker = std::unique_ptr<EffectMirage>(new EffectMirage());
     break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
