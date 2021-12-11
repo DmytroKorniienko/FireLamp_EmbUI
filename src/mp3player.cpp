@@ -194,7 +194,7 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
   int currentState = readState();
   LOG(printf_P,PSTR("readState()=%d\n"), currentState);
   if(tst==TIME_SOUND_TYPE::TS_VER1){
-    if(currentState == 513 || currentState == -1)
+    if(currentState == 513)// || currentState == -1)
     {
       playAdvertise(3000+hours);
       nextAdv = minutes+3100;
@@ -218,7 +218,7 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
       restartTimeout = millis();
     }
   } else if(tst==TIME_SOUND_TYPE::TS_VER2){
-    if(currentState == 513 || currentState == -1)
+    if(currentState == 513)// || currentState == -1)
     {
       playAdvertise(hours*100+minutes);
     } else {
@@ -228,6 +228,7 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
 }
 
 void MP3PLAYERDEVICE::playFolder0(int filenb) {
+  LOG(printf_P, PSTR("playLargeFolder filenb: %d\n"), filenb);
   playLargeFolder(0x00, filenb);
 }
 

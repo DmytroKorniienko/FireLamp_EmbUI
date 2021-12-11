@@ -77,8 +77,16 @@ void setup() {
 
 #if defined(ESP8266) && defined(LED_BUILTIN_AUX)
     embui.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
-#else
+#elif defined(LED_BUILTIN)
     embui.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
+#endif
+
+#if defined(LED_BUILTIN) && defined (DISABLE_LED_BUILTIN)
+#ifdef ESP8266
+    digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
+#elif defined(LED_BUILTIN)
+    digitalWrite(LED_BUILTIN, LOW); // "душим" светодиод nodeMCU32
+#endif
 #endif
 
     // EmbUI
@@ -148,14 +156,6 @@ void setup() {
 
 #ifdef ENCODER
   enc_setup();
-#endif
-
-#if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
-#ifdef ESP8266
-    digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
-#else
-    digitalWrite(LED_BUILTIN, LOW); // "душим" светодиод nodeMCU32
-#endif
 #endif
 
     LOG(println, F("setup() done"));
