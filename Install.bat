@@ -9,18 +9,18 @@ cls
 
 :m1
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                  Commands                *  (Russian)      Команды                 * 
+Echo  *                  Commands                *  (Russian)      ГЉГ®Г¬Г Г­Г¤Г»                 * 
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *             Install tools                *     Установка инструментов и среды      * 
-Echo  *  Install Python          (step 1) - (0)  *  Установить Python             (Шаг 1)  * 
-Echo  *  Install Platformio Core (step 2) - (1)  *  Установить PIO Core           (Шаг 2)  * 
-Echo  *  Install Git for Windows (step 3) - (2)  *  Установить Git                (Шаг 3)  * 
-Echo  *  Get firmware repository (step 4) - (3)  *  Получить репозиторий прошивки (Шаг 4)  *
+Echo  *             Install tools                *     Г“Г±ГІГ Г­Г®ГўГЄГ  ГЁГ­Г±ГІГ°ГіГ¬ГҐГ­ГІГ®Гў ГЁ Г±Г°ГҐГ¤Г»      * 
+Echo  *  Install Python          (step 1) - (0)  *  Г“Г±ГІГ Г­Г®ГўГЁГІГј Python             (ГГ ГЈ 1)  * 
+Echo  *  Install Platformio Core (step 2) - (1)  *  Г“Г±ГІГ Г­Г®ГўГЁГІГј PIO Core           (ГГ ГЈ 2)  * 
+Echo  *  Install Git for Windows (step 3) - (2)  *  Г“Г±ГІГ Г­Г®ГўГЁГІГј Git                (ГГ ГЈ 3)  * 
+Echo  *  Get firmware repository (step 4) - (3)  *  ГЏГ®Г«ГіГ·ГЁГІГј Г°ГҐГЇГ®Г§ГЁГІГ®Г°ГЁГ© ГЇГ°Г®ГёГЁГўГЄГЁ (ГГ ГЈ 4)  *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      * 
+Echo  *  Remove Platformio installation   - (R)  *  ГЏГ®Г«Г­Г®Г±ГІГјГѕ ГіГ¤Г Г«ГЁГІГј Platformio Г± ГЏГЉ      * 
 Echo  #------------------------------------------#-----------------------------------------#
 Echo.
-Set /p choice="Your choice (Ваш выбор): "
+Set /p choice="Your choice (Г‚Г Гё ГўГ»ГЎГ®Г°): "
 
 if "%choice%"=="0" (
 	if not exist "%systemdrive%\Program Files (x86)" (
@@ -65,7 +65,7 @@ if "%choice%"=="2" (
 )
 
 if "%choice%"=="3" (
-	Set /p diskInstal="Enter a drive letter C,D etc. (Введите букву диска C,D и т.п): "
+	Set /p diskInstal="Enter a drive letter C,D etc. (Г‚ГўГҐГ¤ГЁГІГҐ ГЎГіГЄГўГі Г¤ГЁГ±ГЄГ  C,D ГЁ ГІ.ГЇ): "
 	rem echo  test !%diskInstal!
 	if not exist "!diskInstal!:\" (
 		echo Disk letter is wrong!
@@ -77,7 +77,7 @@ if "%choice%"=="3" (
 		echo "Firmware repo wil be instaled on disk !diskInstal!:"
 		!diskInstal!:
 		if exist "!diskInstal!:\FireLamp_JeeUI" (rmdir /S /Q !diskInstal!:\FireLamp_JeeUI)
-		"%ProgramFiles%\Git\bin\git" clone https://github.com/DmytroKorniienko/FireLamp_JeeUI.git
+		"%ProgramFiles%\Git\bin\git" clone https://github.com/andy040670/FireLamp_JeeUI.git
 		start .\FireLamp_JeeUI
 	)
 )
