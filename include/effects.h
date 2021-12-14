@@ -2073,6 +2073,39 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// ----------- Эффект "Пятнашки"
+// https://editor.soulmatelights.com/gallery/1471-puzzles-subpixel
+// (c) Stepko 10.12.21
+class EffectPuzzles : public EffectCalc {
+private:
+    byte PSizeX = 4;
+    byte PSizeY = 4;
+    float Ecols = (WIDTH / PSizeX);
+    float Erows = (HEIGHT / PSizeY);
+    bool Ca = (WIDTH % PSizeX)? 1 : 0;
+    bool Ra = (HEIGHT % PSizeY)? 1 : 0;
+    uint8_t PCols = round(Ecols) + Ca;
+    uint8_t PRows = round(Erows) + Ra;
+    float speedFactor = 0.1;
+    std::vector<std::vector<uint8_t>> puzzle;
+    byte color;
+    byte z_dot[2];
+    byte step;
+    int8_t move[2];
+    float shift[2] = { 0, 0 };
+    bool XorY;
+
+
+    void draw_square(byte x1, byte y1, byte x2, byte y2, byte col);
+    void draw_squareF(float x1, float y1, float x2, float y2, byte col);
+    void regen();
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 #endif
