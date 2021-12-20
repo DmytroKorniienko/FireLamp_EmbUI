@@ -114,9 +114,12 @@ void MP3PLAYERDEVICE::printSatusDetail(){
       break;
     case DFPlayerCardInserted:
       LOG(println, F("Card Inserted!"));
+      ready = true;
+      setVolume(cur_volume); // в случае перетыкания карты или сборса плеера - восстановим громкость
       break;
     case DFPlayerCardRemoved:
       LOG(println, F("Card Removed!"));
+      ready = false;
       break;
     case DFPlayerCardOnline:
       LOG(println, F("Card Online!"));
@@ -125,7 +128,7 @@ void MP3PLAYERDEVICE::printSatusDetail(){
     //case DFPlayerFeedBack:  // этот кейс добавлен для нормальной работы с некоторыми версиями DFPlayer - поправлено в библиотеке, требуется проверка
     case DFPlayerPlayFinished:
      {
-        LOG(print, F("Number:"));
+        LOG(print, F("Number: "));
         LOG(print, value);
         LOG(println, F(" Play Finished!"));
         if(restartTimeout+5000<millis()){ // c момента инициализации таймаута прошло более 5 секунд (нужно чтобы не прерывало вывод времени в режиме без звука)
