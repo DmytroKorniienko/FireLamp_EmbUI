@@ -463,7 +463,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
 static const uint8_t T_EFFVER[] PROGMEM = {
   0, 6, 6, 4, 4, 1, 3, 3, 1, 5, 3, 6, 5, 3, 5, 10, // 0-15
   1, 1, 3, 7, 3, 7, 5, 2, 1, 5, 5, 7, 7, 2, 1, 5, // 16-31
-  5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 1, 1, 3, // 32 - 47
+  5, 5, 5, 3, 7, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
   1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 3, 1, 5, 7, 6, // 48 - 63
   5, 1, 1, 5, 4, 1, 7, 1, 3, 1, 0, 3, 0, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
@@ -559,8 +559,7 @@ static const char E_POPCORN[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_MBL[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0F4 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"}]}";
 static const char E_LIQLAM[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":17,\"name\":\"" DFTINTF_0F4 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"},  {\"id\":5,\"val\":0,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_105 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_106 "\"}]}";
 static const char E_F2012_MIC[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":64,\"max\":128,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"val\":6,\"max\":10,\"name\":\"" DFTINTF_084 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
-static const char E_DNA[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F3 "\"}]}";
-static const char E_DNA2[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F3 "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}";
+static const char E_DNA[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":1,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_088 "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}";
 static const char E_SNOW[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":\"1\",\"max\":3,\"name\":\"" DFTINTF_0F5 "\"}]}";
 static const char E_SMOKBALLS[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_PALMICUI[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0FB "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}, {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E6 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
@@ -593,7 +592,7 @@ static const char E_TEST2[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
  * не обязательно каждому эффекту лепить свой конфиг, можно ставить указатели на эффекты с похожими контролами
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
-  E_DEFUI, E_WHITE,   E_COLORS,   E_DEFMICUI, E_SPARCLES, E_4PAL, E_STARFAIL,   E_MATRIX, E_DNA2,      E_LIGHT2,    E_CUBE,   E_PULS,  E_4PAL,   E_NFIRE,    E_2,        E_PALMICUI, // 0-15
+  E_DEFUI, E_WHITE,   E_COLORS,   E_DEFMICUI, E_SPARCLES, E_4PAL, E_STARFAIL,   E_MATRIX, E_DNA,      E_LIGHT2,    E_CUBE,   E_PULS,  E_4PAL,   E_NFIRE,    E_2,        E_PALMICUI, // 0-15
   E_CELL,  E_PUZZLES, E_TLAND,    E_PUZZLES,  E_3PAL,     E_WRAIN, E_FAIRY,      E_FOUNT,  E_BBALLS,    E_SINUS,     E_4PAL,   E_3PAL,  E_COMET,  E_4PAL_MIC, E_PRIZMATA, E_FLOCK, // 16-31
   E_3PAL,  E_DRIFT,   E_POPCORN,  E_4PAL,     E_RADAR255, E_WAVES, E_F2012_MIC,  E_FAIRY,  E_4PAL,      E_DNA,       E_F2018,  E_CLOCK, E_CUBE2D, E_NFIRE,    E_PICAS,    E_SSHIPS, // 32 - 47
   E_FLAGS, E_LEAPERS, E_3PAL_MIC, E_3PAL_MIC, E_AQUARIUM, E_FWORK, E_2,          E_MUNCH,  E_CNOISE,    E_BUTTERFLY, E_SHAD,   E_PATT,  E_ARR,    E_NBAL,     E_ATTRACT,  E_SNAKE, // 48 - 63
