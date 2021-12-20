@@ -38,9 +38,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef _EVENTS_H
 #define _EVENTS_H
 
-#include "misc.h"
-#include "timeProcessor.h"
 #include "ArduinoJson.h"
+#include "timeProcessor.h"
+#include "misc.h"
+#include "LList.h"
 
 #define EVENT_TSTAMP_LENGTH 17  // для строки вида "YYYY-MM-DDThh:mm"
 
@@ -69,8 +70,16 @@ typedef enum _EVENT_TYPE {
 } EVENT_TYPE;
 
 static const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
-
-struct EVENT {
+class EVENT_MANAGER;
+class DEV_EVENT {
+    friend EVENT_MANAGER;
+private:
+    uint8_t repeat;
+    uint8_t stopat;
+    time_t unixtime;    // timestamp для события в локальной часовой зоне
+    EVENT_TYPE event;
+    String message;
+public:
     union {
         struct {
             bool isEnabled:1;
@@ -84,18 +93,24 @@ struct EVENT {
         };
         uint8_t raw_data;
     };
-    uint8_t repeat;
-    uint8_t stopat;
-    time_t unixtime;    // timestamp для события в локальной часовой зоне
-    EVENT_TYPE event;
-    char *message = nullptr;
-    EVENT *next = nullptr;
-    EVENT(const EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message; this->next = nullptr;}
-    EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message=nullptr; this->next = nullptr;}
-    const bool operator==(const EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
+    const EVENT_TYPE getEvent() {return event;}
+    void setEvent(EVENT_TYPE _event) {event = _event;}
+
+    const uint8_t getRepeat() {return repeat;}
+    void setRepeat(uint8_t _repeat) {repeat = _repeat;}
+    
+    const uint8_t getStopat() {return stopat;}
+    void setStopat(uint8_t _stopat) {stopat = _stopat;}
+    
+    void setUnixtime(uint8_t _unixtime) {unixtime = _unixtime;}
+    const String&getMessage() {return message;}
+    void setMessage(const String& _message) {message = _message;}
+    DEV_EVENT(const DEV_EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message;}
+    DEV_EVENT() {this->raw_data=0; this->isEnabled=true; this->repeat=0; this->stopat=0; this->unixtime=0; this->event=_EVENT_TYPE::ON; this->message = "";}
+    const bool operator==(const DEV_EVENT&event) {return (this->raw_data==event.raw_data && this->event==event.event && this->unixtime==event.unixtime);}
 
     String getDateTime() {
-        String tmpBuf((char *)0);
+        String tmpBuf;
         TimeProcessor::getDateTimeString(tmpBuf, unixtime);
         return tmpBuf;
     }
@@ -187,6 +202,16 @@ struct EVENT {
             t_raw_data >>= 1;
         }
 
+        if(message){
+            buffer.concat(F(","));
+            if(message.length()>5){
+                buffer.concat(message.substring(0,4)+"...");
+            } else {
+                buffer.concat(message);
+            }
+        }
+
+/*
         if(message && message[0]){     // время тут никто и не копирует, а усекается текст
             uint8_t UTFNsymbols = 0; // кол-во симоволов UTF-8 уже скопированных
             uint8_t i = 0;
@@ -220,7 +245,7 @@ struct EVENT {
             buffer.concat(F(","));
             buffer.concat(tmpBuf);
         }
-                
+*/                
         return buffer;
     }
 };
@@ -229,10 +254,11 @@ class EVENT_MANAGER {
 private:
     EVENT_MANAGER(const EVENT_MANAGER&);  // noncopyable
     EVENT_MANAGER& operator=(const EVENT_MANAGER&);  // noncopyable
-    EVENT *root = nullptr;
-    void(*cb_func)(const EVENT *) = nullptr; // функция обратного вызова
+    LList<DEV_EVENT *> *events = nullptr;
 
-    void check_event(EVENT *event);
+    void(*cb_func)(DEV_EVENT *) = nullptr; // функция обратного вызова
+
+    void check_event(DEV_EVENT *event);
     /**
      *  метод загружает и пробует десериализовать джейсон из файла в предоставленный документ,
      *  возвращает true если загрузка и десериализация прошла успешно
@@ -243,22 +269,24 @@ private:
     void clear_events();
 
 public:
-    EVENT_MANAGER() {}
-    ~EVENT_MANAGER() { EVENT *next=root; EVENT *tmp_next=root; while(next!=nullptr) { tmp_next=next->next; if(next->message) {free(next->message);} delete next; next=tmp_next;} }
+    EVENT_MANAGER() { events = new LList<DEV_EVENT *>; }
+    ~EVENT_MANAGER() { if(events) delete events; }
 
-    EVENT *addEvent(const EVENT&event);
-    void delEvent(const EVENT&event);
-    bool isEnumerated(const EVENT&event); // проверка того что эвент в списке
+    LList<DEV_EVENT *> *getEvents() {return events;}
+    
+    DEV_EVENT *addEvent(const DEV_EVENT&event);
+    void delEvent(const DEV_EVENT&event);
+    bool isEnumerated(const DEV_EVENT&event); // проверка того что эвент в списке
 
-    void setEventCallback(void(*func)(const EVENT *))
+    void setEventCallback(void(*func)(DEV_EVENT *))
     {
         cb_func = func;
     }
     
-    EVENT *getNextEvent(EVENT *next=nullptr)
-    {
-        if(next==nullptr) return root; else return next->next;
-    }
+    // DEV_EVENT *getNextEvent(DEV_EVENT *next=nullptr)
+    // {
+    //     //if(next==nullptr) return root; else return next->next;
+    // }
 
     void events_handle();
     

@@ -111,9 +111,6 @@ void setup() {
 #else
     myLamp.lamp_init(CURRENT_LIMIT);
 #endif
-#ifdef USE_FTP
-    ftp_setup(); // запуск ftp-сервера
-#endif
 
 #ifdef ESP_USE_BUTTON
 #ifdef SHOWSYSCONFIG
@@ -166,10 +163,6 @@ void loop() {
     embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
-
-#ifdef USE_FTP
-    ftp_loop(); // цикл обработки событий фтп-сервера
-#endif
 
 #ifdef ENCODER
     encLoop(); // цикл обработки событий энкодера. Эта функция будет отправлять в УИ изменения, только тогда, когда подошло время ее loop

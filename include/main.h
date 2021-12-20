@@ -43,6 +43,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 #include <Arduino.h>
+#include "EmbUI.h"
 
 #ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
 #include <umm_malloc/umm_malloc.h>
@@ -52,14 +53,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <SPIFFSEditor.h>
 
 #include "config.h"
-#include "EmbUI.h"
 #include "lamp.h"
 #include "buttons.h"
 
-
-#ifdef USE_FTP
-  #include "ftpSrv.h"
-#endif
 #ifdef TM1637_CLOCK
   #include "tm.h"
 #endif
@@ -103,7 +99,7 @@ void sendData();
 
 void create_parameters();
 void sync_parameters();
-void event_worker(const EVENT *);
+void event_worker(DEV_EVENT *);
 bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
 bool ws_action_handle(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 

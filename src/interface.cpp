@@ -40,6 +40,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "ui.h"
 #include "extra_tasks.h"
+#include "events.h"
 #ifdef TM1637_CLOCK
     #include "tm.h"				// Подключаем функции
     #ifdef DS18B20
@@ -74,7 +75,7 @@ Task *delayedOptionTask = nullptr; // текущая отложенная зад
 CtrlsTask *ctrlsTask = nullptr;       // планировщик контролов
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
-static EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
+static DEV_EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
 // ------------- глобальные переменные построения интерфейса
 } // namespace INTERFACE
 using namespace INTERFACE;
@@ -2021,12 +2022,13 @@ void block_settings_event(Interface *interf, JsonObject *data){
 
     interf->checkbox(FPSTR(TCONST_001D), myLamp.IsEventsHandled()? "1" : "0", FPSTR(TINTF_086), true);
 
-    int num = 1;
-    EVENT *next = nullptr;
     interf->json_section_begin(FPSTR(TCONST_005D));
     interf->select(FPSTR(TCONST_005E), String(0), String(FPSTR(TINTF_05B)), false);
-    while ((next = myLamp.events.getNextEvent(next)) != nullptr) {
-        interf->option(String(num), next->getName());
+
+    int num = 0;
+    LList<DEV_EVENT *> *events= myLamp.events.getEvents();
+    for(int i=0; i<events->size(); i++){
+        interf->option(String(num), (*events)[i]->getName());
         ++num;
     }
     interf->json_section_end();
@@ -2069,7 +2071,7 @@ void set_eventflag(Interface *interf, JsonObject *data){
 }
 
 void set_event_conf(Interface *interf, JsonObject *data){
-    EVENT event;
+    DEV_EVENT event;
     String act;
     if (!data) return;
 
@@ -2080,11 +2082,10 @@ void set_event_conf(Interface *interf, JsonObject *data){
     if(cur_edit_event){
         myLamp.events.delEvent(*cur_edit_event);
     } else if (data->containsKey(FPSTR(TCONST_005E))) {
-        EVENT *curr = nullptr;
-        int i = 1, num = (*data)[FPSTR(TCONST_005E)];
-        while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
-        if (!curr) return;
-        myLamp.events.delEvent(*curr);
+        int num = (*data)[FPSTR(TCONST_005E)];
+        LList<DEV_EVENT *> *events = myLamp.events.getEvents();
+        if(events->size()>num)
+            events->remove(num);
     }
 
     if (data->containsKey(FPSTR(TCONST_0060))) {
@@ -2100,9 +2101,9 @@ void set_event_conf(Interface *interf, JsonObject *data){
     event.d5 = ((*data)[FPSTR(TCONST_0065)] == "1");
     event.d6 = ((*data)[FPSTR(TCONST_0066)] == "1");
     event.d7 = ((*data)[FPSTR(TCONST_0067)] == "1");
-    event.event = (EVENT_TYPE)(*data)[FPSTR(TCONST_0068)].as<long>();
-    event.repeat = (*data)[FPSTR(TCONST_0069)];
-    event.stopat = (*data)[FPSTR(TCONST_006A)];
+    event.setEvent((EVENT_TYPE)(*data)[FPSTR(TCONST_0068)].as<long>());
+    event.setRepeat((*data)[FPSTR(TCONST_0069)]);
+    event.setStopat((*data)[FPSTR(TCONST_006A)]);
     String tmEvent = (*data)[FPSTR(TCONST_006B)];
 
     struct tm t;
@@ -2119,10 +2120,10 @@ void set_event_conf(Interface *interf, JsonObject *data){
 
     LOG(printf_P, PSTR("Set Event at %d %d %d %d %d\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min);
 
-    event.unixtime = mktime(tm);
+    event.setUnixtime(mktime(tm));
 
     String buf; // внешний буффер, т.к. добавление эвента ниже
-    switch(event.event){
+    switch(event.getEvent()){
         case EVENT_TYPE::ALARM: {
                 DynamicJsonDocument doc(1024);
                 doc[FPSTR(TCONST_00BB)] = (*data)[FPSTR(TCONST_00BB)];
@@ -2136,15 +2137,15 @@ void set_event_conf(Interface *interf, JsonObject *data){
 #endif
                 serializeJson(doc,buf);
                 buf.replace("\"","'");
-                event.message = (char *)buf.c_str(); // менять не будем, так что пойдет такое приведение типов
+                event.setMessage(buf);
+                myLamp.events.addEvent(event);
             }
             break;
         default:
-            event.message = (char*)((*data)[FPSTR(TCONST_0035)].as<const char*>());
+            event.setMessage((*data)[FPSTR(TCONST_0035)]);
+            myLamp.events.addEvent(event);
             break;
     }
-
-    myLamp.events.addEvent(event);
     myLamp.events.saveConfig();
     cur_edit_event = NULL;
     show_settings_event(interf, data);
@@ -2153,27 +2154,31 @@ void set_event_conf(Interface *interf, JsonObject *data){
 void show_event_conf(Interface *interf, JsonObject *data){
     String act;
     bool edit = false;
-    int i = 1, num = 0;
+    int num = 0;
     if (!interf || !data) return;
 
     LOG(print,F("event_conf=")); LOG(println, (*data)[FPSTR(TCONST_005D)].as<String>()); //  && data->containsKey(FPSTR(TCONST_005D))
 
     if (data->containsKey(FPSTR(TCONST_005E))) {
-        EVENT *curr = NULL;
+        DEV_EVENT *curr = NULL;
         num = (*data)[FPSTR(TCONST_005E)];
-        while ((curr = myLamp.events.getNextEvent(curr)) && i != num) ++i;
+
+        LList<DEV_EVENT *> *events = myLamp.events.getEvents();
+        if(events->size()>num)
+            curr = events->get(num);
+
         if (!curr) return;
         act = (*data)[FPSTR(TCONST_005D)].as<String>();
         cur_edit_event = curr;
         edit = true;
     } else if(cur_edit_event != NULL){
         if(data->containsKey(FPSTR(TCONST_0068)))
-            cur_edit_event->event = (*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>(); // меняем тип налету
+            cur_edit_event->setEvent((*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>()); // меняем тип налету
         if(myLamp.events.isEnumerated(*cur_edit_event))
             edit = true;
     } else {
         LOG(println, "Созданан пустой эвент!");
-        cur_edit_event = new EVENT();
+        cur_edit_event = new DEV_EVENT();
     }
 
     if (act == FPSTR(TCONST_00B6)) {
@@ -2198,7 +2203,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
     }
 
     interf->json_section_line();
-        interf->select(FPSTR(TCONST_0068), String(cur_edit_event->event), String(FPSTR(TINTF_05F)), true);
+        interf->select(FPSTR(TCONST_0068), String(cur_edit_event->getEvent()), String(FPSTR(TINTF_05F)), true);
             interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
             interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
             interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
@@ -2226,19 +2231,19 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), String(FPSTR(TINTF_06D)));
     interf->json_section_end();
     interf->json_section_line();
-        interf->number(FPSTR(TCONST_0069), String(cur_edit_event->repeat), FPSTR(TINTF_06E));
-        interf->number(FPSTR(TCONST_006A), String(cur_edit_event->stopat), FPSTR(TINTF_06F));
+        interf->number(FPSTR(TCONST_0069), String(cur_edit_event->getRepeat()), FPSTR(TINTF_06E));
+        interf->number(FPSTR(TCONST_006A), String(cur_edit_event->getStopat()), FPSTR(TINTF_06F));
     interf->json_section_end();
 
-    switch(cur_edit_event->event){
+    switch(cur_edit_event->getEvent()){
         case EVENT_TYPE::ALARM: {
                 DynamicJsonDocument doc(1024);
-                String buf = cur_edit_event->message;
+                String buf = cur_edit_event->getMessage();
                 buf.replace("'","\"");
                 DeserializationError err = deserializeJson(doc,buf);
                 int alarmP = !err && doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)].as<uint8_t>() : myLamp.getAlarmP();
                 int alarmT = !err && doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)].as<uint8_t>() : myLamp.getAlarmT();
-                String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : (cur_edit_event->message ? cur_edit_event->message : String(""));
+                String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : cur_edit_event->getMessage();
 
                 interf->spacer(FPSTR(TINTF_0BA));
                 interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
@@ -2268,7 +2273,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
             }
             break;
         default:
-            interf->text(FPSTR(TCONST_0035), String(cur_edit_event->message!=NULL?cur_edit_event->message:""), FPSTR(TINTF_070), false);
+            interf->text(FPSTR(TCONST_0035), cur_edit_event->getMessage(), FPSTR(TINTF_070), false);
             break;
     }
     interf->json_section_hidden(FPSTR(TCONST_0069), FPSTR(TINTF_071));
@@ -2301,7 +2306,7 @@ void show_event_conf(Interface *interf, JsonObject *data){
 void set_eventlist(Interface *interf, JsonObject *data){
     if (!data) return;
     
-    if(cur_edit_event && cur_edit_event->event!=(*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>()){ // только если реально поменялось, то обновляем интерфейс
+    if(cur_edit_event && cur_edit_event->getEvent()!=(*data)[FPSTR(TCONST_0068)].as<EVENT_TYPE>()){ // только если реально поменялось, то обновляем интерфейс
         show_event_conf(interf,data);
     } else if((*data).containsKey(FPSTR(TCONST_002E))){ // эта часть срабатывает даже если нажата кнопка "обновить, следовательно ловим эту ситуацию"
         set_event_conf(interf, data); //через какую-то хитрую жопу отработает :)
@@ -3389,11 +3394,11 @@ t->enableDelayed();
 }
 
 // обработка эвентов лампы
-void event_worker(const EVENT *event){
+void event_worker(DEV_EVENT *event){
     RA action = RA_UNKNOWN;
-    LOG(printf_P, PSTR("%s - %s\n"), ((EVENT *)event)->getName().c_str(), embui.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("%s - %s\n"), ((DEV_EVENT *)event)->getName().c_str(), embui.timeProcessor.getFormattedShortTime().c_str());
 
-    switch (event->event) {
+    switch (event->getEvent()) {
     case EVENT_TYPE::ON: action = RA_ON; break;
     case EVENT_TYPE::OFF: action = RA_OFF; break;
     case EVENT_TYPE::DEMO_ON: action = RA_DEMO; break;
@@ -3409,9 +3414,9 @@ void event_worker(const EVENT *event){
     case EVENT_TYPE::AUX_TOGGLE: action = RA_AUX_TOGLE; break;
 #endif
     case EVENT_TYPE::PIN_STATE: {
-        if (event->message == nullptr) break;
+        if ((event->getMessage()).isEmpty()) break;
 
-        String tmpS(event->message);
+        String tmpS = event->getMessage();
         tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
         StaticJsonDocument<256> doc;
         deserializeJson(doc, tmpS);
@@ -3445,7 +3450,7 @@ void event_worker(const EVENT *event){
     default:;
     }
 
-    remote_action(action, event->message, NULL);
+    remote_action(action, event->getMessage(), NULL);
 }
 
 void show_progress(Interface *interf, JsonObject *data){
