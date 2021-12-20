@@ -3450,7 +3450,7 @@ void event_worker(DEV_EVENT *event){
     default:;
     }
 
-    remote_action(action, event->getMessage(), NULL);
+    remote_action(action, event->getMessage().c_str(), NULL);
 }
 
 void show_progress(Interface *interf, JsonObject *data){
