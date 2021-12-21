@@ -8255,18 +8255,20 @@ String EffectDNA::setDynCtrl(UIControl*_val) {
 }
 
 bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
-  /*fadeToBlackBy(leds, NUM_LEDS, 32);
+  fadeToBlackBy(leds, NUM_LEDS, 32);
   t += speedFactor; // (float)millis()/10;
-  uint8_t _type = 1;
-  if (!type) {
+  if (type == 0) {
     EVERY_N_SECONDS(30) {
       _type ++;
-      if (_type >=4)
+      if (_type >3)
         _type = 1;
     }
   } else _type = type;
 
-  for (byte i = 0; i < ((_type == 1 or _type == 4) ? WIDTH : HEIGHT); i++) {
+  if (_type == 1 or _type == 4) a = (256.0 / (float)WIDTH);
+  else a = (256.0 / (float)HEIGHT);
+
+  for (byte i = 0; i < ((_type == 1) ? HEIGHT : WIDTH); i++) {
     uint16_t shift = (i * 16); 
     float sin1 = (1.0+sin(radians(t + shift)))*128.0; 
     byte brightFront =  constrain(112 * (1 + sin(radians(t + shift + 90))) + 30, 96, 255); 
@@ -8298,13 +8300,6 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
       y1 = (float)(width_height - 1) - (sin1 / a);
       x1 = i;
       break;
-    case 4: // Горизонтально-вертикальная
-      width_height = WIDTH;
-      y = sin1 /a;
-      x = i;
-      x1 = (float)(width_height - 1) - (sin1 / a);
-      y1 = i;
-      break;
     
     default:
       break;
@@ -8318,21 +8313,6 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
     flag = !flag; 
   }
   blur2d(leds, WIDTH, HEIGHT, 64);
-  */
-   fadeToBlackBy(leds, NUM_LEDS, 3);
-  t += speedFactor; // (float)millis()/10;
-  for (uint8_t i = 0; i < HEIGHT; i++) {
-    uint16_t shift = (i * 16);
-    float sin1 = (1.0 + sin(radians(t + shift))) * 128.0;
-    uint8_t bright =  constrain(112 * (1 + sin(radians(t + shift + 90))) + 30, 96, 255); 
-    uint8_t bright2 =  constrain(112 * (1 + sin(radians(t + shift + 270))) + 30, 96, 255);
 
-    if (flag or !bals)
-      EffectMath::drawPixelXYF(sin1 / a, i, CHSV((uint8_t)sin1, 255, bright));
-    if (!flag or !bals)
-      EffectMath::drawPixelXYF((WIDTH - 1) - (sin1 / a), i, CHSV(~(uint8_t)sin1, 255, bright2));
-    flag = !flag;
-  }
-  //blur2d(leds, WIDTH, HEIGHT, 64);
   return true;
 }

@@ -2128,12 +2128,12 @@ public:
 //https://vk.com/ldirko программный код которого он запретил брать
 class EffectDNA : public EffectCalc {
 private:
-    const float a = (256.0 / (float)NUM_LEDS);
+    float a = (256.0 / (float)WIDTH);
     float t = 0.0;
     float speedFactor = 0.5;
     bool flag = true; 
     bool bals = false;
-    uint8_t type = 0;
+    uint8_t type = 0, _type = 1;
     
     String setDynCtrl(UIControl*_val) override;
 
