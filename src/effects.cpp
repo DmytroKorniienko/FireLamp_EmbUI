@@ -8249,7 +8249,8 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
 String EffectDNA::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor  = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 5) * speedfactor;
   else if(_val->getId()==3)  type = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) bals = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4)  _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) bals = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -8260,7 +8261,7 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
   if (type == 0) {
     EVERY_N_SECONDS(30) {
       _type ++;
-      if (_type >3)
+      if (_type > 3)
         _type = 1;
     }
   } else _type = type;
@@ -8269,8 +8270,8 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
   else a = (256.0 / (float)HEIGHT);
 
   for (byte i = 0; i < ((_type == 1) ? HEIGHT : WIDTH); i++) {
-    uint16_t shift = (i * 16); 
-    float sin1 = (1.0+sin(radians(t + shift)))*128.0; 
+    uint16_t shift = (i * _scale);
+    float sin1 = (1.0 + sin(radians(t + shift))) * 128.0;
     byte brightFront =  constrain(112 * (1 + sin(radians(t + shift + 90))) + 30, 96, 255); 
     byte brightBack =  constrain(112 * (1 + sin(radians(t + shift + 270))) + 30, 96, 255);
 

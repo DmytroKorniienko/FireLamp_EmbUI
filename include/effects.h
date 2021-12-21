@@ -2133,7 +2133,7 @@ private:
     float speedFactor = 0.5;
     bool flag = true; 
     bool bals = false;
-    uint8_t type = 0, _type = 1;
+    uint8_t type = 0, _type = 1, _scale = 16;
     
     String setDynCtrl(UIControl*_val) override;
 
