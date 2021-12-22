@@ -8206,7 +8206,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   // осыпаем всё, что есть на экране
   for (uint8_t y = 1; y < HEIGHT; y++)
     for (uint8_t x = 0; x < WIDTH; x++)
-      if (EffectMath::getPixel(x,y))                                                           // проверяем для каждой песчинки
+      if (EffectMath::getPixel(x,y)){                                                          // проверяем для каждой песчинки
         if (!EffectMath::getPixel(x,y-1)){                                                     // если под нами пусто, просто падаем
           EffectMath::getPixel(x,y-1) = EffectMath::getPixel(x,y);
           EffectMath::getPixel(x,y) = 0;
@@ -8231,7 +8231,8 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
         }
         else                                                                       // если под нами плато
           pcnt = y;
-      
+      }
+    
   // эмиттер новых песчинок
   if (!EffectMath::getPixel(CENTER_X_MINOR,HEIGHT-2) && !EffectMath::getPixel(CENTER_X_MAJOR,HEIGHT-2) && !random8(3)){
     temp = random8(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;

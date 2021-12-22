@@ -138,14 +138,14 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
         for (size_t i=0; i<arr.size(); i++) {
             JsonObject item = arr[i];
             event.raw_data = item[F("raw")].as<int>();
-            event.unixtime = item[F("ut")].as<unsigned long>();
+            event.unixtime = item[F("ut")].as<time_t>();
             event.event = (EVENT_TYPE)(item[F("ev")].as<int>());
             event.repeat = item[F("rp")].as<int>();
             event.stopat = item[F("sa")].as<int>();
             event.message = item[F("msg")].as<String>();
             DEV_EVENT *new_event = addEvent(event);
             if(new_event){
-                LOG(printf_P, PSTR("[%u - %lld - %u - %u - %u - %s]\n"), new_event->raw_data, new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat, new_event->message.c_str());
+                LOG(printf_P, PSTR("[%u - %llu - %u - %u - %u - %s]\n"), new_event->raw_data, (unsigned long long)new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat, new_event->message.c_str());
             }
         }
 
@@ -164,14 +164,15 @@ void EVENT_MANAGER::saveConfig(const char *cfg)
             configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
         configFile.print("[");
         
+        LOG(println, F("Save events config"));
         bool firstLine=true;
         DEV_EVENT *next;
         for(int i=0;i<events->size();i++){
             next = (*events)[i];
-            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%lld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
-                (!firstLine?",":""), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
-            configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%lld,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
-                (!firstLine?",":""), next->raw_data, next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
+            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%llu,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                (!firstLine?",":""), next->raw_data, (unsigned long long)next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
+            configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%llu,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                (!firstLine?",":""), next->raw_data, (unsigned long long)next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
             firstLine=false;
         }
         configFile.print("]");

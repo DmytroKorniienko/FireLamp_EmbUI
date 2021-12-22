@@ -102,7 +102,7 @@ public:
     const uint8_t getStopat() {return stopat;}
     void setStopat(uint8_t _stopat) {stopat = _stopat;}
     
-    void setUnixtime(uint8_t _unixtime) {unixtime = _unixtime;}
+    void setUnixtime(time_t _unixtime) {unixtime = _unixtime;}
     const String&getMessage() {return message;}
     void setMessage(const String& _message) {message = _message;}
     DEV_EVENT(const DEV_EVENT &event) {this->raw_data=event.raw_data; this->repeat=event.repeat; this->stopat=event.stopat; this->unixtime=event.unixtime; this->event=event.event; this->message=event.message;}

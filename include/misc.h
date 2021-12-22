@@ -111,9 +111,8 @@ class timerMinim
 
 //----------------------------------------------------
 #if defined(LOG)
-#undef LOG
+  #undef LOG
 #endif
-
 #if defined(LAMP_DEBUG)
 	//#define LOG                   Serial
 	#define LOG(func, ...) Serial.func(__VA_ARGS__)
