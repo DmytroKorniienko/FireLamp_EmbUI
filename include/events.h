@@ -50,7 +50,7 @@ typedef enum _EVENT_TYPE {
     ON                      = 1,
     OFF                     = 2,
     ALARM                   = 3,
-    DEMO_ON                 = 4,
+    DEMO                    = 4,
     LAMP_CONFIG_LOAD        = 5,
     EFF_CONFIG_LOAD         = 6,
     EVENTS_CONFIG_LOAD      = 7,
@@ -66,7 +66,10 @@ typedef enum _EVENT_TYPE {
     SET_WARNING             = 15,
     SET_GLOBAL_BRIGHT       = 16,
     SET_WHITE_HI            = 17,
-    SET_WHITE_LO            = 18
+    SET_WHITE_LO            = 18,
+#ifdef ESP_USE_BUTTON
+    BUTTONS_CONFIG_LOAD     = 19
+#endif
 } EVENT_TYPE;
 
 static const char T_EVENT_DAYS[] PROGMEM = "ПНВТСРЧТПТСБВС";
@@ -135,8 +138,8 @@ public:
         case EVENT_TYPE::ALARM:
             buffer.concat(F("ALARM"));
             break;
-        case EVENT_TYPE::DEMO_ON:
-            buffer.concat(F("DEMO ON"));
+        case EVENT_TYPE::DEMO:
+            buffer.concat(F("DEMO"));
             break;
         case EVENT_TYPE::LAMP_CONFIG_LOAD:
             buffer.concat(F("LMP_GFG"));
@@ -144,6 +147,11 @@ public:
         case EVENT_TYPE::EFF_CONFIG_LOAD:
             buffer.concat(F("EFF_GFG"));
             break;
+#ifdef ESP_USE_BUTTON
+        case EVENT_TYPE::BUTTONS_CONFIG_LOAD:
+            buffer.concat(F("BUT_GFG"));
+            break;
+#endif
         case EVENT_TYPE::EVENTS_CONFIG_LOAD:
             buffer.concat(F("EVT_GFG"));
             break;
@@ -210,42 +218,6 @@ public:
                 buffer.concat(message);
             }
         }
-
-/*
-        if(message && message[0]){     // время тут никто и не копирует, а усекается текст
-            uint8_t UTFNsymbols = 0; // кол-во симоволов UTF-8 уже скопированных
-            uint8_t i = 0;
-            char tmpBuf[EVENT_TSTAMP_LENGTH];
-            while(UTFNsymbols < 5 && message[i] && i < sizeof(tmpBuf)-4)
-            {
-                if(message[i]&0x80){
-                    // это префикс многобайтного
-                    uint8_t nbS = 0; uint8_t chk = message[i];
-                    //LOG(printf_P,PSTR("nbS=%d,%x\n"),nbS,chk);
-                    while(chk&0x80) {
-                        chk=chk<<1; // проверяем сколько символов нужно копировать
-                        nbS++;
-                    }
-                    //LOG(printf_P,PSTR("nbS=%d\n"),nbS);
-                    while(nbS){
-                        tmpBuf[i]=message[i];
-                        nbS--; i++;
-                    }
-                    //LOG(printf_P,PSTR("UTF8 lastchar=%d, UTFNsymbols=%d\n"),i, UTFNsymbols);
-                    UTFNsymbols++; // один UTF-8 скопировали
-                } else {
-                    tmpBuf[i]=message[i];
-                    //LOG(printf_P,PSTR("ASCII lastchar=%d, UTFNsymbols=%d\n"),i, UTFNsymbols);
-                    UTFNsymbols++; // один UTF-8 скопировали
-                    i++;
-                }
-            }
-            strcpy_P(tmpBuf+i,PSTR("..."));
-            //LOG(printf_P,PSTR("lastchar=%d, UTFNsymbols=%d, message=%s\n"),i, UTFNsymbols,tmpBuf);
-            buffer.concat(F(","));
-            buffer.concat(tmpBuf);
-        }
-*/                
         return buffer;
     }
 };
@@ -283,11 +255,6 @@ public:
         cb_func = func;
     }
     
-    // DEV_EVENT *getNextEvent(DEV_EVENT *next=nullptr)
-    // {
-    //     //if(next==nullptr) return root; else return next->next;
-    // }
-
     void events_handle();
     
     // конфиги событий

@@ -2206,27 +2206,31 @@ void show_event_conf(Interface *interf, JsonObject *data){
         interf->select(FPSTR(TCONST_0068), String(cur_edit_event->getEvent()), String(FPSTR(TINTF_05F)), true);
             interf->option(String(EVENT_TYPE::ON), FPSTR(TINTF_060));
             interf->option(String(EVENT_TYPE::OFF), FPSTR(TINTF_061));
-            interf->option(String(EVENT_TYPE::DEMO_ON), FPSTR(TINTF_062));
+            interf->option(String(EVENT_TYPE::DEMO), FPSTR(TINTF_062));
             interf->option(String(EVENT_TYPE::ALARM), FPSTR(TINTF_063));
-#ifndef MOOT
-            interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
-            interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
-            interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
-            interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
-#endif
             interf->option(String(EVENT_TYPE::SEND_TEXT), FPSTR(TINTF_067));
             interf->option(String(EVENT_TYPE::SEND_TIME), FPSTR(TINTF_068));
+            interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
+            interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
 
+            interf->option(String(EVENT_TYPE::SET_GLOBAL_BRIGHT), FPSTR(TINTF_00C));
+            interf->option(String(EVENT_TYPE::SET_WHITE_LO), FPSTR(TINTF_0EA));
+            interf->option(String(EVENT_TYPE::SET_WHITE_HI), FPSTR(TINTF_0EB));
+
+#ifndef MOOT
 #ifdef AUX_PIN
             interf->option(String(EVENT_TYPE::AUX_ON), FPSTR(TINTF_06A));
             interf->option(String(EVENT_TYPE::AUX_OFF), FPSTR(TINTF_06B));
             interf->option(String(EVENT_TYPE::AUX_TOGGLE), FPSTR(TINTF_06C));
 #endif
-            interf->option(String(EVENT_TYPE::SET_EFFECT), FPSTR(TINTF_00A));
-            interf->option(String(EVENT_TYPE::SET_WARNING), FPSTR(TINTF_0CB));
-            interf->option(String(EVENT_TYPE::SET_GLOBAL_BRIGHT), FPSTR(TINTF_00C));
-            interf->option(String(EVENT_TYPE::SET_WHITE_HI), PSTR("WHITE HI"));
-            interf->option(String(EVENT_TYPE::SET_WHITE_LO), PSTR("WHITE LO"));
+            interf->option(String(EVENT_TYPE::LAMP_CONFIG_LOAD), FPSTR(TINTF_064));
+            interf->option(String(EVENT_TYPE::EFF_CONFIG_LOAD), FPSTR(TINTF_065));
+#ifdef ESP_USE_BUTTON
+            interf->option(String(EVENT_TYPE::BUTTONS_CONFIG_LOAD), FPSTR(TINTF_0E9));
+#endif
+            interf->option(String(EVENT_TYPE::EVENTS_CONFIG_LOAD), FPSTR(TINTF_066));
+            interf->option(String(EVENT_TYPE::PIN_STATE), FPSTR(TINTF_069));
+#endif
         interf->json_section_end();
         interf->datetime(FPSTR(TCONST_006B), cur_edit_event->getDateTime(), String(FPSTR(TINTF_06D)));
     interf->json_section_end();
@@ -3401,9 +3405,12 @@ void event_worker(DEV_EVENT *event){
     switch (event->getEvent()) {
     case EVENT_TYPE::ON: action = RA_ON; break;
     case EVENT_TYPE::OFF: action = RA_OFF; break;
-    case EVENT_TYPE::DEMO_ON: action = RA_DEMO; break;
+    case EVENT_TYPE::DEMO: action = RA_DEMO; break;
     case EVENT_TYPE::ALARM: action = RA_ALARM; break;
     case EVENT_TYPE::LAMP_CONFIG_LOAD: action = RA_LAMP_CONFIG; break;
+#ifdef ESP_USE_BUTTON
+    case EVENT_TYPE::BUTTONS_CONFIG_LOAD:  action = RA_BUTTONS_CONFIG; break;
+#endif
     case EVENT_TYPE::EFF_CONFIG_LOAD:  action = RA_EFF_CONFIG; break;
     case EVENT_TYPE::EVENTS_CONFIG_LOAD: action = RA_EVENTS_CONFIG; break;
     case EVENT_TYPE::SEND_TEXT:  action = RA_SEND_TEXT; break;
@@ -3691,6 +3698,18 @@ void remote_action(RA action, ...){
                 myLamp.effects.initDefault(filename.c_str());
             }
             break;
+#ifdef ESP_USE_BUTTON
+        case RA::RA_BUTTONS_CONFIG:
+            if (value && *value) {
+                String filename = String(FPSTR(TCONST_0033));
+                filename.concat(value);
+                myButtons->clear();
+                if (!myButtons->loadConfig()) {
+                    default_buttons();
+                }
+            }
+            break;
+#endif
         case RA::RA_EVENTS_CONFIG:
             if (value && *value) {
                 String filename = String(FPSTR(TCONST_0032));
