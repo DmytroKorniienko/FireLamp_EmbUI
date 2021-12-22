@@ -2120,6 +2120,27 @@ public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+// ============= Эффект ДНК ===============
+// (c) Stepko
+// https://editor.soulmatelights.com/gallery/1520-dna
+//по мотивам визуала эффекта by Yaroslaw Turbin
+//https://vk.com/ldirko программный код которого он запретил брать
+class EffectDNA : public EffectCalc {
+private:
+    float a = (256.0 / (float)WIDTH);
+    float t = 0.0;
+    float speedFactor = 0.5;
+    bool flag = true; 
+    bool bals = false;
+    uint8_t type = 0, _type = 1, _scale = 16;
+    
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 // --------- конец секции эффектов
 
 #endif

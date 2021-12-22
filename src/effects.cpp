@@ -8240,3 +8240,81 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   }
   return true;
 }
+
+// ============= Эффект ДНК ===============
+// (c) Stepko
+// https://editor.soulmatelights.com/gallery/1520-dna
+//по мотивам визуала эффекта by Yaroslaw Turbin
+//https://vk.com/ldirko программный код которого он запретил брать
+// !++
+String EffectDNA::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor  = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 5) * speedfactor;
+  else if(_val->getId()==3)  type = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4)  _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) bals = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
+  fadeToBlackBy(leds, NUM_LEDS, 32);
+  t += speedFactor; // (float)millis()/10;
+  if (type == 0) {
+    EVERY_N_SECONDS(30) {
+      _type ++;
+      if (_type > 3)
+        _type = 1;
+    }
+  } else _type = type;
+
+  if (_type == 1 or _type == 4) a = (256.0 / (float)WIDTH);
+  else a = (256.0 / (float)HEIGHT);
+
+  for (byte i = 0; i < ((_type == 1) ? HEIGHT : WIDTH); i++) {
+    uint16_t shift = (i * _scale);
+    float sin1 = (1.0 + sin(radians(t + shift))) * 128.0;
+    byte brightFront =  constrain(112 * (1 + sin(radians(t + shift + 90))) + 30, 96, 255); 
+    byte brightBack =  constrain(112 * (1 + sin(radians(t + shift + 270))) + 30, 96, 255);
+
+    float x = 0, y = 0, x1 = 0, y1 = 0;
+    uint8_t width_height;
+
+    switch (_type)
+    {
+    case 1: // Вертикальная ДНК
+      width_height = WIDTH;
+      x = sin1 /a;
+      y = i;
+      x1 = (float)(width_height - 1) - (sin1 / a);
+      y1 = i;
+      break;
+    case 2: // Вертикально-горизонтальная
+      width_height = HEIGHT;
+      x = sin1 /a;
+      y = i;
+      y1 = (float)(width_height - 1) - (sin1 / a);
+      x1 = i;
+      break;
+    case 3: // Горизонтальная ДНК
+      width_height = HEIGHT;
+      y = sin1 /a;
+      x = i;
+      y1 = (float)(width_height - 1) - (sin1 / a);
+      x1 = i;
+      break;
+    
+    default:
+      break;
+    }
+
+    if (flag or !bals) {
+      EffectMath::drawPixelXYF(x, y, CHSV(sin1, 255, brightFront));
+    }
+    if (!flag or !bals)
+      EffectMath::drawPixelXYF(x1, y1, CHSV(~(byte)sin1, 255, brightBack));
+    flag = !flag; 
+  }
+  blur2d(leds, WIDTH, HEIGHT, 64);
+
+  return true;
+}
