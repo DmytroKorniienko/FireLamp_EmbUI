@@ -5755,12 +5755,11 @@ void EffectCell::spruce(CRGB *leds) {
 }
 
 void EffectCell::spider(CRGB *leds) {
-  speedFactor = EffectMath::fmap(speed, 1, 255, 20.*EffectCalc::speedfactor, 2.*EffectCalc::speedfactor);
+  speedFactor = EffectMath::fmap(speed, 1, 255, 20., 2.) * EffectCalc::speedfactor;
   fadeToBlackBy(leds, NUM_LEDS, 50);
-  //FastLED.clear(); 
   for (uint8_t c = 0; c < Lines; c++) {
-    float xx = 2. + sin8((float)millis() / speedFactor + 1000 * c * Scale) / 12.;
-    float yy = 2. + cos8((float)millis() / speedFactor + 1500 * c * Scale) / 12.;
+    float xx = 2. + sin8((float)(millis() & 0x7FFFFF) / speedFactor + 1000 * c * Scale) / 12.;
+    float yy = 2. + cos8((float)(millis() & 0x7FFFFF) / speedFactor + 1500 * c * Scale) / 12.;
     EffectMath::drawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, CHSV(c * (256 / Lines), 200, 255));
     
   }
