@@ -262,6 +262,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
    case EFF_ENUM::EFF_DNA :
     worker = std::unique_ptr<EffectDNA>(new EffectDNA());
     break;
+   case EFF_ENUM::EFF_SMOKER :
+    worker = std::unique_ptr<EffectSmoker>(new EffectSmoker());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());

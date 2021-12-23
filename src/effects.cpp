@@ -8322,3 +8322,29 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
 
   return true;
 }
+
+// ----------- Эффект "Дым"
+// based on cod by @Stepko (c) 23/12/2021
+
+// !++
+String EffectSmoker::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, 20) * speedfactor;
+  else if(_val->getId()==2) color = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, 32, 132);
+  else if(_val->getId()==3) saturation = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectSmoker::run(CRGB *leds, EffectWorker *param) {
+  t += speedFactor;
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) { 
+      uint8_t bri= inoise8(x * beatsin8(glitch, 20, 40), (y * _scale) - t);
+      nblend(EffectMath::getPixel(x, y), CHSV(color, saturation, bri), speedFactor);}
+  }
+  
+  EVERY_N_SECONDS(random8(10, 31)) {
+    glitch = random(1, 3);
+  }
+  return true;
+}

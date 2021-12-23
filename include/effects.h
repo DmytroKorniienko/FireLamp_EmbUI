@@ -2141,6 +2141,22 @@ public:
     //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
-// --------- конец секции эффектов
+
+// ----------- Эффект "Дым"
+// based on cod by @Stepko (c) 23/12/2021
+class EffectSmoker : public EffectCalc {
+private:
+    byte color, saturation;
+    byte _scale = 30, glitch;
+	float speedFactor;
+    float t;
+
+    String setDynCtrl(UIControl*_val) override;
+    //void palettesload() override;
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 
 #endif
