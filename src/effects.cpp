@@ -8183,13 +8183,13 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   if (dryrun(2.5))
     return false;
     // если насыпалось уже достаточно, бахаем рандомные песчинки
-  uint8_t temp = map8(random8(), _scale, 255U);
+  uint8_t temp = map8(random(256), _scale, 255U);
   if (pcnt >= map8(temp, 2U, HEIGHT - 3U)) {
     //temp = 255U - temp + 2;
     //if (temp < 2) temp = 255;
     temp = HEIGHT + 1U - pcnt;
-    if (!random8(4U)) {// иногда песка осыпается до половины разом
-      if (random8(2U)) {
+    if (!random(4U)) {// иногда песка осыпается до половины разом
+      if (random(2U)) {
         temp = 2U;
       } else {
         temp = 3U;
@@ -8198,7 +8198,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
     //for (uint16_t i = 0U; i < NUM_LEDS; i++)
     for (uint8_t y = 0; y < pcnt; y++)
       for (uint8_t x = 0; x < WIDTH; x++)
-        if (!random8(temp))
+        if (!random(temp))
           EffectMath::getPixel(x,y) = 0;
   }
 
@@ -8206,37 +8206,42 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   // осыпаем всё, что есть на экране
   for (uint8_t y = 1; y < HEIGHT; y++)
     for (uint8_t x = 0; x < WIDTH; x++)
-      if (EffectMath::getPixel(x,y)){                                                          // проверяем для каждой песчинки
-        if (!EffectMath::getPixel(x,y-1)){                                                     // если под нами пусто, просто падаем
-          EffectMath::getPixel(x,y-1) = EffectMath::getPixel(x,y);
-          EffectMath::getPixel(x,y) = 0;
+      if (EffectMath::getPixel(x, y))
+      { // проверяем для каждой песчинки
+        if (!EffectMath::getPixel(x, y - 1))
+        { // если под нами пусто, просто падаем
+          EffectMath::getPixel(x, y - 1) = EffectMath::getPixel(x, y);
+          EffectMath::getPixel(x, y) = 0;
         }
-        else if (x>0U && !EffectMath::getPixel(x-1,y-1) && x<WIDTH-1 && !EffectMath::getPixel(x+1,y-1)){   // если под нами пик
+        else if (x > 0U && !EffectMath::getPixel(x - 1, y - 1) && x < WIDTH - 1 && !EffectMath::getPixel(x + 1, y - 1))
+        { // если под нами пик
           if (random8(2U))
-            EffectMath::getPixel(x-1,y-1) = EffectMath::getPixel(x,y);
+            EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
           else
-            EffectMath::getPixel(x-1,y-1) = EffectMath::getPixel(x,y);
-          EffectMath::getPixel(x,y) = 0;
-          pcnt = y-1;
+            EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
+          EffectMath::getPixel(x, y) = 0;
+          pcnt = y - 1;
         }
-        else if (x>0U && !EffectMath::getPixel(x-1,y-1)){                                      // если под нами склон налево
-          EffectMath::getPixel(x-1,y-1) = EffectMath::getPixel(x,y);
-          EffectMath::getPixel(x,y) = 0;
-          pcnt = y-1;
+        else if (x > 0U && !EffectMath::getPixel(x - 1, y - 1))
+        { // если под нами склон налево
+          EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
+          EffectMath::getPixel(x, y) = 0;
+          pcnt = y - 1;
         }
-        else if (x<WIDTH-1 && !EffectMath::getPixel(x+1,y-1)){                                 // если под нами склон направо
-          EffectMath::getPixel(x+1,y-1) = EffectMath::getPixel(x,y);
-          EffectMath::getPixel(x,y) = 0;
-          pcnt = y-1;
+        else if (x < WIDTH - 1 && !EffectMath::getPixel(x + 1, y - 1))
+        { // если под нами склон направо
+          EffectMath::getPixel(x + 1, y - 1) = EffectMath::getPixel(x, y);
+          EffectMath::getPixel(x, y) = 0;
+          pcnt = y - 1;
         }
-        else                                                                       // если под нами плато
+        else // если под нами плато
           pcnt = y;
       }
-    
   // эмиттер новых песчинок
-  if (!EffectMath::getPixel(CENTER_X_MINOR,HEIGHT-2) && !EffectMath::getPixel(CENTER_X_MAJOR,HEIGHT-2) && !random8(3)){
-    temp = random8(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;
-    EffectMath::getPixel(temp,HEIGHT-1) = ColorFromPalette(*curPalette, random8());
+  if (!EffectMath::getPixel(CENTER_X_MINOR, HEIGHT - 2) && !EffectMath::getPixel(CENTER_X_MAJOR, HEIGHT - 2) && !random(3))
+  {
+    temp = random(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;
+    EffectMath::getPixel(temp, HEIGHT - 1) = ColorFromPalette(*curPalette, random8());
   }
   return true;
 }
