@@ -202,6 +202,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_116 "Переміщення по синусу"
 #define DFTINTF_117 "Напрямок (0: циклічно)"
 #define DFTINTF_118 "Поріг сигналу"
+#define DFTINTF_11A "Колір (1 = циклічно)"
 
 
 /** набор строк с текстовыми константами интерфейса

@@ -204,6 +204,7 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 #define DFTINTF_116 "Desplazamiento sinusoidal"
 #define DFTINTF_117 "Direccion (0: cíclico)"
 #define DFTINTF_118 "Umbral de señal"
+#define DFTINTF_11A "Color (1: cíclico)"
 
 /** набор строк с текстовыми константами интерфейса
  */

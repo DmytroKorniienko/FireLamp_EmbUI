@@ -2152,10 +2152,31 @@ private:
     float t;
 
     String setDynCtrl(UIControl*_val) override;
-    //void palettesload() override;
 
 public:
-    //void load() override;
+
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ----------- Эффект "Мираж"
+// based on cod by @Stepko (c) 23/12/2021
+class EffectMirage : public EffectCalc {
+private:
+    const float div = 10.;
+    const uint16_t width = (WIDTH - 1) * div, height = HEIGHT * div;
+    uint16_t _speed;
+    byte color;
+    bool colorShift = false;
+    byte buff[WIDTH + 2][HEIGHT + 2];
+    bool a = true;
+	float speedFactor;
+
+
+    String setDynCtrl(UIControl*_val) override;
+    void drawDot(float x, float y, byte a);
+    void blur();
+
+public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

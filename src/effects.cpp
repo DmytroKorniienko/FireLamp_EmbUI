@@ -8329,7 +8329,7 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
 // !++
 String EffectSmoker::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, 20) * speedfactor;
-  else if(_val->getId()==2) color = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, 32, 132);
+  else if(_val->getId()==2) color = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==3) saturation = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
@@ -8345,6 +8345,76 @@ bool EffectSmoker::run(CRGB *leds, EffectWorker *param) {
   
   EVERY_N_SECONDS(random8(10, 31)) {
     glitch = random(1, 3);
+  }
+  return true;
+}
+
+// ----------- Эффект "Мираж"
+// based on cod by @Stepko (c) 23/12/2021
+
+// !++
+String EffectMirage::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 64, 512) * speedfactor;
+  else if(_val->getId()==2) {
+    color = EffectCalc::setDynCtrl(_val).toInt();
+    if (color == 1) colorShift = true;
+    else colorShift = false;
+  }
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectMirage::drawDot(float x, float y, byte a){
+uint8_t xx = (x - (int) x) * 255, yy = (y - (int) y) * 255, ix = 255 - xx, iy = 255 - yy;
+#define WU(a, b)((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+  uint8_t wu[4] = {
+    WU(ix, iy),
+    WU(xx, iy),
+    WU(ix, yy),
+    WU(xx, yy)
+  };
+  // multiply the intensities by the colour, and saturating-add them to the pixels
+  for (uint8_t i = 0; i < 4; i++) {
+    int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
+    byte clr = buff[xn][yn];
+    clr = constrain(qadd8(clr, (a * wu[i]) >> 8), 0, 240);
+    buff[xn][yn] = clr;
+  }
+}
+
+void EffectMirage::blur() {
+  uint16_t sum;
+  for (byte x = 1; x < WIDTH + 1; x++) {
+    for (byte y = 1; y < HEIGHT + 1; y++) {
+      sum = buff[x][y];
+      sum += buff[x + 1][y];
+      sum += buff[x][y - 1];
+      sum += buff[x][y + 1];
+      sum += buff[x - 1][y];
+      sum /= 5;
+      buff[x][y] = sum;
+    }
+  }
+}
+
+bool EffectMirage::run(CRGB *leds, EffectWorker *param) {
+  blur();
+  float x1 = (float)beatsin88(15UL * _speed, div, width) / div;
+  float y1 = (float)beatsin88(20UL * _speed, div, height) / div;
+  float x2 = (float)beatsin88(16UL * _speed, div, width) / div;
+  float y2 = (float)beatsin88(14UL * _speed, div, height) / div;
+  float x3 = (float)beatsin88(12UL * _speed, div, width) / div;
+  float y3 = (float)beatsin88(16UL * _speed, div, height) / div;
+  drawDot(x1, y1, 200);
+  drawDot(x1 + 1, y1, 200);
+  drawDot(x2, y2, 200);
+  drawDot(x2 + 1, y2, 200);
+  drawDot(x3, y3, 200);
+  drawDot(x3 + 1, y3, 200);
+  for (byte x = 1; x < WIDTH + 1; x++) {
+    for (byte y = 1; y < HEIGHT + 1; y++) {
+      EffectMath::getPixel(x - 1, y - 1) = CHSV(colorShift ? color++ : color, buff[x][y], 255);
+    }
   }
   return true;
 }

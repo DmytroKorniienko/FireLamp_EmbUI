@@ -203,6 +203,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_116 "Sin function moving"
 #define DFTINTF_117 "Direction (0: cyclical)"
 #define DFTINTF_118 "Signal threshold"
+#define DFTINTF_11A "Color (1: cyclical)"
 
 /** набор строк с текстовыми константами интерфейса
  */
