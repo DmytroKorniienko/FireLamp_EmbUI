@@ -2180,4 +2180,79 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+// -------------------- Эффект "Акварель"
+// (c) kostyamat 26.12.2021
+// https://editor.soulmatelights.com/gallery/1587-oil
+#define BLOT_SIZE WIDTH/2
+class EffectWcolor : public EffectCalc {
+private:
+    float speedFactor;
+    uint8_t bCounts = 1;
+    uint8_t blur;
+    bool mode = false;
+
+    class Blot {
+    private:
+        byte hue, sat;
+        float bri;
+        int x0;
+        float x[BLOT_SIZE]; 
+        float y[BLOT_SIZE];
+
+    public:
+
+        void appendXY(float nx, float ny) {
+            for (byte i = 0; i < BLOT_SIZE; i++) {
+                x[i] += nx;
+                y[i] += ny; 
+            }
+        }
+        
+
+        void reset(byte num, byte Counts) {  
+            x0 = random(-5, WIDTH - 5);
+            float y0 = EffectMath::randomf(-1, HEIGHT+1);
+            uint8_t dy;
+            for (uint8_t i = 0; i < BLOT_SIZE; i++) {
+                bool f = random(0,2);
+                dy = random(0, 2); 
+                x[i] = x0 + i;
+                if (f)
+                y[i] = float((i ? y[i-1] : y0) + dy);
+                else 
+                y[i] = float((i ? y[i-1] : y0) - dy);
+            }
+            hue = random(0, 256);
+            sat = random(160, 255);
+            bri = 255;
+            
+        }
+
+        float getY() {
+            float result = y[0];
+            for (uint8_t i = 1; i < BLOT_SIZE; i++) {
+                if (y[i] > result) result = y[i];
+            }
+            return result;
+        }
+
+        void drawing() {
+            for (uint8_t i = 0; i < BLOT_SIZE; i++) {
+                bri = constrain(256.f / (float)(HEIGHT) * y[i], 64, 255);
+                EffectMath::drawPixelXYF(x[i], y[i], CHSV(hue, sat, bri), 0);
+            }
+        }
+
+    };
+
+
+    std::vector<Blot> blots;
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
 #endif

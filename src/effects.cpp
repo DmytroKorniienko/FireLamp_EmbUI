@@ -8418,3 +8418,42 @@ bool EffectMirage::run(CRGB *leds, EffectWorker *param) {
   }
   return true;
 }
+
+// -------------------- Эффект "Акварель"
+// (c) kostyamat 26.12.2021
+// https://editor.soulmatelights.com/gallery/1587-oil
+// !++
+String EffectWcolor::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) {
+    speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 0.33);
+    blur = 64.f * speedFactor;
+    speedFactor *= EffectCalc::speedfactor;
+  }  else if(_val->getId()==3) {
+    bCounts = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 8, HEIGHT/4, HEIGHT);
+    blots.resize(bCounts);
+    load();
+  }
+  else if(_val->getId()==4) mode = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectWcolor::load() {
+  for (byte i = 0; i < bCounts; i++) {
+    blots[i].reset(i, bCounts);
+  }
+}
+
+bool EffectWcolor::run(CRGB *leds, EffectWorker *param) {
+  fadeToBlackBy(leds, NUM_LEDS, blur);
+  for (byte i = 0; i < bCounts; i++) {
+    blots[i].drawing();
+    blots[i].appendXY( mode ? ((float)inoise8(millis(), 0, i * 100) / 256) - 0.5f : 0, -speedFactor);
+    if(!(uint8_t)blots[i].getY()) {
+      blots[i].reset(i, bCounts);
+      random16_set_seed(millis());
+    }
+  }
+  //blur2d(leds, WIDTH, HEIGHT, 64); 
+  return true;
+}
