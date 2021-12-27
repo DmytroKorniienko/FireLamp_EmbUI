@@ -8449,7 +8449,7 @@ bool EffectWcolor::run(CRGB *leds, EffectWorker *param) {
   for (byte i = 0; i < bCounts; i++) {
     blots[i].drawing();
     blots[i].appendXY( mode ? ((float)inoise8(millis(), 0, i * 100) / 256) - 0.5f : 0, -speedFactor);
-    if(!(uint8_t)blots[i].getY()) {
+    if(blots[i].getY() < -2) {
       blots[i].reset(i, bCounts);
       random16_set_seed(millis());
     }

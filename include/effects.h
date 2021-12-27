@@ -2228,8 +2228,8 @@ private:
             
         }
 
-        float getY() {
-            float result = y[0];
+        double getY() {
+            double result = y[0];
             for (uint8_t i = 1; i < BLOT_SIZE; i++) {
                 if (y[i] > result) result = y[i];
             }
