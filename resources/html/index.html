@@ -34,19 +34,19 @@
 		</div>
 		<div class="left-block">
 			<div>
-				<span class="menu-title">Time:</span><span id="pTime" class="menu-value">{{value.pTime}}</span>
+				<span class="menu-title" data-i18n="locale_time">Time:</span><span id="pTime" class="menu-value">{{value.pTime}}</span>
 			</div>
 			<div>
-				<span class="menu-title">Memory:</span><span id="pMem" class="menu-value">{{value.pMem}}</span>
+				<span class="menu-title" data-i18n="locale_memory">Memory:</span><span id="pMem" class="menu-value">{{value.pMem}}</span>
 			</div>
 			<div>
-				<span class="menu-title">FS:</span><span id="pFS" class="menu-value">{{value.pFS}}</span>
+				<span class="menu-title" data-i18n="locale_fs">FS:</span><span id="pFS" class="menu-value">{{value.pFS}}</span>
 			</div>
 			<div>
-				<span class="menu-title">Uptime:</span><span id="pUptime" class="menu-value">{{value.pUptime}}</span>
+				<span class="menu-title" data-i18n="locale_uptime">Uptime:</span><span id="pUptime" class="menu-value">{{value.pUptime}}</span>
 			</div>
 			<div>
-				<span class="menu-title">Temp:</span><span id="pTemp" class="menu-value">{{value.pTemp}}</span>
+				<span class="menu-title" data-i18n="locale_temp">Temp:</span><span id="pTemp" class="menu-value">{{value.pTemp}}</span>
 			</div>
 			<div>
 				<span class="menu-title">RSSI &#128246;:</span><span id="pRSSI" class="menu-value">{{value.pRSSI}}</span>
@@ -55,14 +55,18 @@
 				<span class="menu-title">ID:</span><span class="menu-value">{{mc}}</span>
 			</div>
 			<div>
-				<span class="menu-title">Version:</span><span class="menu-value">{{ver}}</span>
+				<span class="menu-title" data-i18n="locale_version">Version:</span><span class="menu-value">{{ver}}</span>
 			</div>
 			<div>
-				<span class="menu-title">Theme:</span><span class="menu-value">
+				<span class="menu-title" data-i18n="locale_theme">Theme:</span><span class="menu-value">
 					<button class="pure-menu-selected" onclick="setDynCSS('css/style.css');">C</button>
 					<button class="pure-menu-selected" onclick="setDynCSS('css/style_light.css');">L</button>
 					<button class="pure-menu-selected" onclick="setDynCSS('css/style_dark.css');">D</button>
 				</span>
+			</div>
+			<div>
+				<span class="menu-title" data-i18n="locale_lang">Lang:</span>
+				<span class="menu-value lang_selector"></span>
 			</div>
 		</div>
 	</script>
@@ -104,15 +108,12 @@
 			<input type="hidden" id="{{id}}" name="{{id}}" value="{{value}}">
 		{{/if}}
 		{{#if html == "button"}}
-			<div id="{{id}}" class="pure-u-1 pure-button pure-button-primary mr{{#if2 confirm}}confirm{{/if2}}" {{#if2 top_margine!=10 || color}}style="{{/if2}} {{#if2 top_margine!=10}} margin-top: {{top_margine}}px !important;{{/if2}} {{#if2 color}} background-color: {{color}};{{/if2}} {{#if2 top_margine!=10 || color}}"{{/if2}}
+			<button id="{{id}}" class="pure-u-1 pure-button pure-button-primary mr{{#if2 confirm}}confirm{{/if2}}" {{#if2 confirm}}data-confirm={{confirm_msg}}{{/if2}} {{#if2 top_margine!=10 || color}}style="{{/if2}} {{#if2 top_margine!=10}} margin-top: {{top_margine}}px !important;{{/if2}} {{#if2 color}} background-color: {{color}};{{/if2}} {{#if2 top_margine!=10 || color}}"{{/if2}}
 				{{#if2 submit}}{{onevent "click", "on_submit", submit, value}}{{/if2}}
 				{{#if2 !submit}}{{onevent "click", "on_change", id}}{{/if2}}
 			>
 				{{label}}
-			</div>
-			{{#if2 confirm}}
-				<div class="hidden">{{confirm_msg}}</div>
-			{{/if2}}
+			</button>
 		{{/if}}
 		{{#if html == "img"}}
 		<div class = "image">
@@ -125,7 +126,7 @@
 			></textarea>
 		{{/if}}
 		{{#if html == "comment"}}
-			<div class="comment">{{label}}</div>
+			<div id="{{id}}" class="comment">{{label}}</div>
 		{{/if}}
 		{{#if html == "file"}}
 			<form method="POST" action="/{{action}}" enctype="multipart/form-data" class="pure-form pure-g mr">
@@ -162,7 +163,7 @@
 			<span>{{label}}</span>
 			{{#if2 type == "range" || type == "color"}}<span id="{{id}}-val">: {{value}}</span>{{/if2}}
 			{{#if2 type == "text" || type == "password"}}<span id="{{id}}-val"> ({{calc value.length || 0}})</span>{{/if2}}
-			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1" value="{{value}}"
+			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1 mr" value="{{value}}"
 				{{#if2 (min || min === 0)}}min="{{min}}"{{/if2}}
 				{{#if2 (max || max === 0)}}max="{{max}}"{{/if2}}
 				{{#if2 (step || step === 0)}}step="{{step}}"{{/if2}}

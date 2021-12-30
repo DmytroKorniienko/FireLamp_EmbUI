@@ -72,7 +72,7 @@ if [ $refresh_styles -eq 1 ] ; then
 
     curl -sL https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip > embui.zip
     # т.к. неизвестно что изменилось во фреймворке, скрипты или цсски, обновляем всё
-    unzip -o -d ../data/ embui.zip "css/*" "js/*"
+    unzip -o -d ../data/ embui.zip "css/*" "js/*" "locale/*"
 
     # append our styles to the embui
     for f in html/css/style_*.css
@@ -94,6 +94,7 @@ cat html/js/*.js | gzip -9 > ../data/js/lamp.js.gz
 # update static files if newer
 [ ! -f ../data/index.html.gz ]  || [ html/index.html -nt ../data/index.html.gz ] && gzip -9k html/index.html && mv -f html/index.html.gz ../data/
 [ ! -f ../data/favicon.ico.gz ] || [ html/favicon.ico -nt ../data/favicon.ico.gz ] &&  gzip -9k html/favicon.ico && mv -f html/favicon.ico.gz ../data/
+[ ! -f ../data/locale/emb.json.gz ]  || [ locale/emb.json -nt ../data/locale/emb.json.gz ] && gzip -9k locale/emb.json && mv -f locale/emb.json.gz ../data/locale/
 
 cp -u html/.exclude.files ../data/
 cp -u html/css/*.svg ../data/css/
