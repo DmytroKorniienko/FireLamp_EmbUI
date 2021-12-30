@@ -12,3 +12,4 @@ user_*.ini
 /resources/embui.zip
 /resources/wget.*
 Uploader*.bat
+/resources/etags.txt
