@@ -8,7 +8,7 @@ user_*.ini
 .vscode/extensions.json
 .vscode/settings.json
 .vscode/c_cpp_properties.json
-/Bin/*.*
+/out_bin/*.*
 /resources/embui.zip
 /resources/wget.*
 Uploader*.bat

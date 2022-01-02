@@ -11,6 +11,8 @@ PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;%PYTHONPATH%;
 mode con: cols=88 lines=45
 cls 
 
+if not exist "%workdir%\out_bin" (mkdir %workdir%\out_bin)
+
 :m1
 Echo  #------------------------------------------#-----------------------------------------# 
 Echo  *                COMMANDS                  *  (Russian)       ŒÃ¿Õƒ€                 *
@@ -69,9 +71,16 @@ if "%choice%"=="2" (
 if "%choice%"=="3" call update-DEV-from-Git.cmd 3
 if "%choice%"=="4" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160
+	copy %workdir%\.pio\build\esp8266@160\firmware.bin %workdir%\out_bin
 )
-if "%choice%"=="5" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266)
-if "%choice%"=="6" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp32)
+if "%choice%"=="5" (
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266
+	copy %workdir%\.pio\build\esp8266\firmware.bin %workdir%\out_bin
+)
+if "%choice%"=="6" (
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp32
+	copy %workdir%\.pio\build\esp32\firmware.bin %workdir%\out_bin
+)
 if "%choice%"=="7" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266@160)
 if "%choice%"=="8" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266)
 if "%choice%"=="9" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp32)
@@ -83,10 +92,16 @@ if "%choice%"=="u" (
 	start respack.cmd
 	cd %workdir%
 )
-if "%choice%"=="b" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266@160)
+if "%choice%"=="b" (
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266@160
+	copy %workdir%\.pio\build\esp8266@160\littlefs.bin %workdir%\out_bin
+)
 if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs --environment esp8266@160)
 if "%choice%"=="e" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266@160)
-if "%choice%"=="b1" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp32)
+if "%choice%"=="b1" (
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp32
+	copy %workdir%\.pio\build\esp32\spiffs.bin %workdir%\out_bin
+)
 if "%choice%"=="f1" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs --environment esp32)
 if "%choice%"=="e1" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp32)
 if "%choice%"=="c" (
