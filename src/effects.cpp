@@ -8425,7 +8425,7 @@ bool EffectMirage::run(CRGB *leds, EffectWorker *param) {
 // !++
 String EffectWcolor::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
-    speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 0.33);
+    speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 0.5);
     blur = 64.f * speedFactor;
     speedFactor *= EffectCalc::speedfactor;
   }  else if(_val->getId()==3) {
@@ -8448,12 +8448,12 @@ bool EffectWcolor::run(CRGB *leds, EffectWorker *param) {
   fadeToBlackBy(leds, NUM_LEDS, blur);
   for (byte i = 0; i < bCounts; i++) {
     blots[i].drawing();
-    blots[i].appendXY( mode ? ((float)inoise8(millis(), 0, i * 100) / 256) - 0.5f : 0, -speedFactor);
-    if(blots[i].getY() < -2) {
+    blots[i].appendXY( mode ? ((float)inoise8(t+= speedFactor, 0, i * 100) / 256) - 0.5f : 0, -speedFactor);
+    if(blots[i].getY() < -0.1) {
       blots[i].reset(i, bCounts);
       random16_set_seed(millis());
     }
   }
-  //blur2d(leds, WIDTH, HEIGHT, 64); 
+  //EffectMath::blur2d(leds, WIDTH, HEIGHT, 32); 
   return true;
 }

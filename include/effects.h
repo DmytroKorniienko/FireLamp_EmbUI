@@ -2190,12 +2190,13 @@ private:
     uint8_t bCounts = 1;
     uint8_t blur;
     bool mode = false;
+    float t;
 
     class Blot {
     private:
         byte hue, sat;
         float bri;
-        int x0;
+        int x0, y0;
         float x[BLOT_SIZE]; 
         float y[BLOT_SIZE];
 
@@ -2223,8 +2224,8 @@ private:
                 y[i] = float((i ? y[i-1] : y0) - dy);
             }
             hue = random(0, 256);
-            sat = random(160, 255);
-            bri = 255;
+            sat = random(160, 256);
+            bri = random(128, 256);
             
         }
 
@@ -2238,8 +2239,9 @@ private:
 
         void drawing() {
             for (uint8_t i = 0; i < BLOT_SIZE; i++) {
-                bri = constrain(256.f / (float)(HEIGHT) * y[i], 64, 255);
-                EffectMath::drawPixelXYF(x[i], y[i], CHSV(hue, sat, bri), 0);
+                byte bright = constrain((float)bri / (float)HEIGHT * (y[i] + HEIGHT - y0), 32, 255);
+                if (y[i] > -0.1)
+                    EffectMath::drawPixelXYF(x[i], y[i], CHSV(hue, sat, bright), 0);
             }
         }
 
