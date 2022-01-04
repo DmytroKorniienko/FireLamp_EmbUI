@@ -1,1 +1,1 @@
-curl -v http://192.168.2.83/update -F "name=@.pio\build\esp8266@160\firmware.bin"
+curl -v http://192.168.2.83/update -F "name=@out_bin\firmware.bin"
