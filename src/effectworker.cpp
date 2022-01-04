@@ -636,23 +636,45 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
   // конфиг текущего эффекта
   DynamicJsonDocument doc(2048);
   EffectListElem *eff = getEffect(nb);
-  doc[F("nb")] = nb;
-  doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
-  doc[F("name")] = effectName;
-  doc[F("ver")] = version;
-  doc[F("snd")] = soundfile;
-  JsonArray arr = doc.createNestedArray(F("ctrls"));
-  for (int i = 0; i < controls.size(); i++)
-      {
-          JsonObject var = arr.createNestedObject();
-          var[F("id")]=controls[i]->getId();
-          var[F("type")]=controls[i]->getType();
-          var[F("name")]=controls[i]->getName();
-          var[F("val")]=(controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : controls[i]->getVal();
-          var[F("min")]=controls[i]->getMin();
-          var[F("max")]=controls[i]->getMax();
-          var[F("step")]=controls[i]->getStep();
-      }
+  if(curEff == nb){ // это текущий, иначе - работает фейдер
+    doc[F("nb")] = nb;
+    doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
+    doc[F("name")] = effectName;
+    doc[F("ver")] = version;
+    doc[F("snd")] = soundfile;
+    JsonArray arr = doc.createNestedArray(F("ctrls"));
+    for (int i = 0; i < controls.size(); i++) {
+      JsonObject var = arr.createNestedObject();
+      var[F("id")]=controls[i]->getId();
+      var[F("type")]=controls[i]->getType();
+      var[F("name")]=controls[i]->getName();
+      var[F("val")]=(controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : controls[i]->getVal();
+      var[F("min")]=controls[i]->getMin();
+      var[F("max")]=controls[i]->getMax();
+      var[F("step")]=controls[i]->getStep();
+    }
+  } else {
+    EffectWorker *tmp=new EffectWorker(eff);
+
+    doc[F("nb")] = nb;
+    doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
+    doc[F("name")] = tmp->effectName;
+    doc[F("ver")] = tmp->version;
+    doc[F("snd")] = tmp->soundfile;
+    JsonArray arr = doc.createNestedArray(F("ctrls"));
+    for (int i = 0; i < tmp->controls.size(); i++) {
+      JsonObject var = arr.createNestedObject();
+      var[F("id")]=tmp->controls[i]->getId();
+      var[F("type")]=tmp->controls[i]->getType();
+      var[F("name")]=tmp->controls[i]->getName();
+      var[F("val")]=(tmp->controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : tmp->controls[i]->getVal();
+      var[F("min")]=tmp->controls[i]->getMin();
+      var[F("max")]=tmp->controls[i]->getMax();
+      var[F("step")]=tmp->controls[i]->getStep();
+    }
+
+    delete tmp;
+  }
   String cfg_str;
   serializeJson(doc, cfg_str);
   doc.clear();

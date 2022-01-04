@@ -655,7 +655,7 @@ void set_effects_config_list(Interface *interf, JsonObject *data){
 #ifdef EMBUI_USE_MQTT
 void publish_ctrls_vals()
 {
-  embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(myLamp.effects.getCurrent()).toInt(), myLamp.getNormalizedLampBrightness()), true);
+  embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AE), myLamp.effects.geteffconfig(String(myLamp.effects.getSelected()).toInt(), myLamp.getNormalizedLampBrightness()), true);
 }
 #endif
 
@@ -699,15 +699,11 @@ void block_effects_param(Interface *interf, JsonObject *data){
             default: break;
         }
         bool isRandDemo = (myLamp.getLampSettings().dRand && myLamp.getMode()==LAMPMODE::MODE_DEMO);
+        String ctrlId = String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
+        String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
         switch(ctrlCaseType&0x0F){
             case CONTROL_TYPE::RANGE :
                 {
-                    // String ctrlId = controls[i]->getId()==0 ? String(FPSTR(TCONST_0012))
-                    //     : controls[i]->getId()==1 ? String(FPSTR(TCONST_0013))
-                    //     : controls[i]->getId()==2 ? String(FPSTR(TCONST_0014))
-                    //     : String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
-                    String ctrlId = String(FPSTR(TCONST_0015)) + String(controls[i]->getId());
-                    String ctrlName = i ? controls[i]->getName() : (myLamp.IsGlobalBrightness() ? FPSTR(TINTF_00C) : FPSTR(TINTF_00D));
                     if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1))
                         ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
                     int value = i ? controls[i]->getVal().toInt() : myLamp.getNormalizedLampBrightness();
@@ -720,8 +716,7 @@ void block_effects_param(Interface *interf, JsonObject *data){
                         , ctrlName
                         , true);
 #ifdef EMBUI_USE_MQTT
-                    if(controls[i]->getId()<3)
-                        embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, String(value), true);
 #endif
                 }
                 break;
@@ -736,7 +731,9 @@ void block_effects_param(Interface *interf, JsonObject *data){
                     , ctrlName
                     , true
                     );
-                    //embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
+#ifdef EMBUI_USE_MQTT
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
+#endif
                     break;
                 }
             case CONTROL_TYPE::CHECKBOX :
@@ -750,10 +747,15 @@ void block_effects_param(Interface *interf, JsonObject *data){
                     , ctrlName
                     , true
                     );
-                    //embui.publish(String(FPSTR(TCONST_008B)) + String(FPSTR(TCONST_0015)) + String(controls[i]->getId()), String(controls[i]->getVal()), true);
+#ifdef EMBUI_USE_MQTT
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
+#endif
                     break;
                 }
             default:
+#ifdef EMBUI_USE_MQTT
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
+#endif
                 break;
         }
     }
@@ -874,6 +876,9 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
             direct_set_effects_dynCtrl(data);
 #ifdef EMBUI_USE_MQTT
             publish_ctrls_vals();
+            for (JsonPair kv : *data){
+                embui.publish(String(FPSTR(TCONST_008B)) + String(kv.key().c_str()), kv.value().as<String>(), true);
+            }
 #endif
             // отправка данных в WebUI
             {
