@@ -271,6 +271,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_WATERCOLORS :
     worker = std::unique_ptr<EffectWcolor>(new EffectWcolor());
     break;
+  case EFF_ENUM::EFF_FIRE :
+    worker = std::unique_ptr<EffectRadialFire>(new EffectRadialFire());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());

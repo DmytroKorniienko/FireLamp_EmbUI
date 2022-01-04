@@ -8457,3 +8457,66 @@ bool EffectWcolor::run(CRGB *leds, EffectWorker *param) {
   //EffectMath::blur2d(leds, WIDTH, HEIGHT, 32); 
   return true;
 }
+
+// ----------- Эффект "Неопалимая купина"
+//RadialFire
+// (c) Stepko and Sutaburosu https://editor.soulmatelights.com/gallery/1570-radialfire
+//23/12/21
+// !++
+String EffectRadialFire::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) {
+    speed = EffectCalc::setDynCtrl(_val).toInt();
+    speedFactor = EffectMath::fmap(speed, 1, 255, 2., 20.);
+  } else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectRadialFire::load() {
+  XY_angle.resize(MIN_MAX, std::vector<float>(MIN_MAX, 0));
+  XY_radius.resize(MIN_MAX, std::vector<float>(MIN_MAX, 0));
+  for (int8_t x = -CENTRE; x < CENTRE + (int8_t)(WIDTH % 2); x++) {
+    for (int8_t y = -CENTRE; y < CENTRE + (int8_t)(HEIGHT % 2); y++) {
+      XY_angle[x + CENTRE][y + CENTRE] = atan2(y, x) * (180. / 2. / PI) * MIN_MAX;
+      XY_radius[x + CENTRE][y + CENTRE] = hypotf(x, y); // thanks Sutaburosu
+    }
+  }
+  palettesload();
+
+}
+
+void EffectRadialFire::palettesload(){
+  // собираем свой набор палитр для эффекта
+  palettes.reserve(NUMPALETTES);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&NormalFire2_p);
+  palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&NormalFire3_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&MagmaColor_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p); 
+  palettes.push_back(&WaterfallColors_p);
+
+  usepalettes = true; // включаем флаг палитр
+  scale2pallete();    // выставляем текущую палитру
+}
+
+bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
+  t += speedFactor;
+  for (uint8_t x = 0; x < MIN_MAX; x++) {
+    for (uint8_t y = 0; y < MIN_MAX; y++) {
+      float angle = XY_angle[x][y];
+      float radius = XY_radius[x][y];
+      int16_t Bri = inoise8(angle, radius * _scale - t, x * _scale) - radius * (256 /MIN_MAX);
+      byte Col = Bri;
+      if (Bri < 0) Bri = 0; 
+      if(Bri != 0) Bri = 256 - (Bri * 0.2);
+        nblend(EffectMath::getPixel(x+X, y+Y), ColorFromPalette(*curPalette, Col, Bri), speed);
+    }
+  }
+  return true;
+}
