@@ -361,15 +361,19 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
 }
 
 CRGB colorsmear(const CRGB &col1, const CRGB &col2, byte l) {
-  if (l == 0) return col1;
-  else if (l == 255) return col2;
-  else {
-    CRGB col;
-    col.r = ((col1.r * (255 - l)) + col2.r * l) >> 8;
-    col.g = ((col1.g * (255 - l)) + col2.g * l) >> 8;
-    col.b = ((col1.b * (255 - l)) + col2.b * l) >> 8;
-    return col;
-  }
+  // if (l == 0) return col1;
+  // else if (l == 255) return col2;
+  // else {
+  //   CRGB col;
+  //   col.r = ((col1.r * (255 - l)) + col2.r * l) >> 8;
+  //   col.g = ((col1.g * (255 - l)) + col2.g * l) >> 8;
+  //   col.b = ((col1.b * (255 - l)) + col2.b * l) >> 8;
+  //   return col;
+  // }
+  CRGB temp1 = col1;
+  CRGB temp2 = col2;
+  nblend(temp1, temp2, l);
+  return temp1;
 }
 
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
