@@ -8470,7 +8470,8 @@ String EffectRadialFire::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
     speedFactor = EffectMath::fmap(speed, 1, 255, 2., 20.);
-  } else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==3) {_scale = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==5) mode = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -8513,7 +8514,7 @@ bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
   for (uint8_t x = 0; x < MIN_MAX; x++) {
     for (uint8_t y = 0; y < MIN_MAX; y++) {
       float angle = XY_angle[x][y];
-      float radius = XY_radius[x][y];
+      uint16_t radius = mode ? MIN_MAX - 3 - XY_radius[x][y] : XY_radius[x][y];
       int16_t Bri = inoise8(angle, radius * _scale - t, x * _scale) - radius * (256 /MIN_MAX);
       byte Col = Bri;
       if (Bri < 0) Bri = 0; 

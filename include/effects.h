@@ -2272,6 +2272,7 @@ private:
     float t;
     float speedFactor;
     uint8_t _scale;
+    bool mode = false;
 
 
     String setDynCtrl(UIControl*_val) override;
