@@ -1456,9 +1456,9 @@ bool EffectComet::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
-  if(isDebug()){
-    FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
-  }
+  // if(isDebug()){
+  //   FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
+  // }
   count ++;
   if (colorId == 1) {
     if (count%2 == 0) hue ++;
@@ -1483,7 +1483,7 @@ bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
   }
   
   // скорость движения по массиву noise
-  if(!isDebug()){
+  // if(!isDebug()){
     e_x[0] += 1000 * speedFactor; //1000;
     e_y[0] += 1000 * speedFactor; //1000;
     e_z[0] += 1000 * speedFactor; //1000;
@@ -1496,14 +1496,14 @@ bool EffectComet::smokeRoutine(CRGB *leds, EffectWorker *param) {
     EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 8, 0.33);//4
 
     EffectMath::blur2d(64); // без размытия как-то пиксельно, наверное...  
-  }
+  // }
   return true;
 }
 
 bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
-  if(!isDebug()) 
+  // if(!isDebug()) 
     fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); 
-  else FastLED.clear();
+  // else FastLED.clear();
 
   count ++;
   if (colorId == 1) {
@@ -1532,8 +1532,9 @@ bool EffectComet::firelineRoutine(CRGB *leds, EffectWorker *param) {
 
 bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
 
-  if(!isDebug()) fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); 
-  else FastLED.clear();
+  // if(!isDebug()) 
+    fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 20, 5)); 
+  // else FastLED.clear();
 
   float beat = (float)beatsin88(5 * speedy, 50, 100) / 100 ;
   count ++;
@@ -1559,8 +1560,9 @@ bool EffectComet::fractfireRoutine(CRGB *leds, EffectWorker *param) {
 }
 
 bool EffectComet::flsnakeRoutine(CRGB *leds, EffectWorker *param) {
-  if(!isDebug()) EffectMath::dimAll(blur); 
-  else FastLED.clear();
+  // if(!isDebug()) 
+    EffectMath::dimAll(blur); 
+  // else FastLED.clear();
   
   count ++;
   if (colorId == 1 or colorId == 255) {
@@ -1603,9 +1605,9 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
   EffectMath::blur2d(e_com_BLUR);    // < -- размытие хвоста
   if (blur < 64) fadeToBlackBy(leds, NUM_LEDS, map(blur, 1, 64, 32, 0));
 
-  if(isDebug()){
-    FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
-  }
+  // if(isDebug()){
+  //   FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
+  // }
   CRGB _eNs_color;
   if (colorId == 255) {
     _eNs_color= CRGB::White;
@@ -1618,8 +1620,9 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
   }
 
   drawFillRect2_fast(e_centerX, e_centerY, e_centerX + 1, e_centerY + 1, _eNs_color);
+  isDebug();
 
-  if(!isDebug()){
+  // if(!isDebug()){
     // Noise
     e_x[0] += 12 * speedy; // 2000;
     e_y[0] += 12 * speedy; // 2000;
@@ -1629,7 +1632,7 @@ bool EffectComet::rainbowCometRoutine(CRGB *leds, EffectWorker *param)
     FillNoise(0);
     EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 3U);
     EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 3U, 0.5);
-  }
+  // }
   return true;
 }
 
@@ -1641,9 +1644,9 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
 
   if (count%2 == 0) hue++;
 
-  if(isDebug()){
-    FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
-  }
+  // if(isDebug()){
+  //   FastLED.clear(); // для отладки чистим матрицу, чтобы показать перемещение точек
+  // }
 
   CHSV color;
   color = rgb2hsv_approximate(CRGB::Green);
@@ -1668,7 +1671,7 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
   else color.hue += colorId;
   EffectMath::drawPixelXYF(xx, yy, color, 0);
 
-  if(!isDebug()){
+  // if(!isDebug()){
     e_x[0] += 3000 * speedFactor;
     e_y[0] += 3000 * speedFactor;
     e_z[0] += 3000 * speedFactor;
@@ -1677,7 +1680,7 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
     FillNoise(0);
     EffectMath::MoveFractionalNoise(MOVE_X, noise3d, WIDTH / 6);
     EffectMath::MoveFractionalNoise(MOVE_Y, noise3d, HEIGHT / 6, 0.33);
-  }
+  // }
 
   return true;
 }
@@ -2904,9 +2907,9 @@ bool EffectCube2d::cube2dClassicRoutine(CRGB *leds, EffectWorker *param)
 
 //-------------- Эффект "Часы"
 bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
-  if(isDebug())
-    return palleteTest(ledarr, opt);
-  else {
+  // if(isDebug())
+  //   return palleteTest(ledarr, opt);
+  // else {
     if((millis() - lastrun - EFFECTS_RUN_TIMER) < (unsigned)((255-speed)) && (speed==1 || speed==255)){
         EffectMath::dimAll(254);
       return true;
@@ -2916,7 +2919,7 @@ bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
         return true;
     }
     return timePrintRoutine(ledarr, opt);
-  }
+  // }
 }
 
 void EffectTime::load(){
@@ -5139,7 +5142,7 @@ bool EffectSnake::run(CRGB *leds, EffectWorker *param) {
 #endif
 
     snake.move(speedFactor);
-    snake.draw(colors, i, subPix, isDebug());
+    snake.draw(colors, i, subPix, false /*isDebug()*/);
   }
   return true;
 }
@@ -7459,7 +7462,7 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 
   ff_y += speedFactor * 2;
   ff_z += speedFactor;
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
+  //EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   return true;
 }
 

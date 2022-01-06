@@ -360,70 +360,157 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
   #undef WU_WEIGHT
 }
 
+CRGB colorsmear(const CRGB &col1, const CRGB &col2, byte l) {
+  if (l == 0) return col1;
+  else if (l == 255) return col2;
+  else {
+    CRGB col;
+    col.r = ((col1.r * (255 - l)) + col2.r * l) >> 8;
+    col.g = ((col1.g * (255 - l)) + col2.g * l) >> 8;
+    col.b = ((col1.b * (255 - l)) + col2.b * l) >> 8;
+    return col;
+  }
+}
+
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
+  if (myLamp.isDebug()) {
+    //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-    int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-    // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается, 
-    // что все ЛЕД в одном сегменте одинакового цвета, и достаточно получить цвет любого из них.
-    CRGB clr = getLed(getPixelNumber(xn, yn)); //EffectMath::getPixColorXY(xn, yn);
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
-    else EffectMath::drawPixelXY(xn, yn, clr);
+    // extract the fractional parts and derive their inverses
+    uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
+    // calculate the intensities for each affected pixel
+    uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                    WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+    // multiply the intensities by the colour, and saturating-add them to the pixels
+    for (uint8_t i = 0; i < 4; i++) {
+      int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
+      // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается, 
+      // что все ЛЕД в одном сегменте одинакового цвета, и достаточно получить цвет любого из них.
+      CRGB clr = getLed(getPixelNumber(xn, yn)); //EffectMath::getPixColorXY(xn, yn);
+      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+      if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
+      else EffectMath::drawPixelXY(xn, yn, clr);
+    }
+  } else {
+    byte ax = byte(x);
+    byte xsh = (x - byte(x)) * 255;
+    byte ay = byte(y);
+    byte ysh = (y - byte(y)) * 255;
+    CRGB colP1 = colorsmear(color, CRGB(0, 0, 0), xsh);
+    CRGB col1 = colorsmear(colP1, CRGB(0, 0, 0), ysh);
+    CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+    CRGB col3 = colorsmear(CRGB(0, 0, 0),colP1, ysh);
+    CRGB col4 = colorsmear(CRGB(0, 0, 0),col2, ysh);
+
+    getPixel(ax, ay) += col1;
+    getPixel(ax+1, ay) += col2;
+    getPixel(ax, ay+1) += col3;
+    getPixel(ax+1, ay+1) += col4;
   }
   #undef WU_WEIGHT
 }
 
+
+// void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t dummy) {
+//   byte ax = byte(x);
+//   byte xsh = (x - byte(x)) * 255;
+//   byte ay = byte(y);
+//   byte ysh = (y - byte(y)) * 255;
+//   CRGB colP1 = colorsmear(color, CRGB(0, 0, 0), xsh);
+//   CRGB col1 = colorsmear(colP1, CRGB(0, 0, 0), ysh);
+//   CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+//   CRGB col3 = colorsmear(CRGB(0, 0, 0),colP1, ysh);
+//   CRGB col4 = colorsmear(CRGB(0, 0, 0),col2, ysh);
+
+//   getPixel(ax, ay) += col1;
+//   getPixel(ax+1, ay) += col2;
+//   getPixel(ax, ay+1) += col3;
+//   getPixel(ax+1, ay+1) += col4;
+// }
+
+
 void EffectMath::drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t darklevel)
 {
-  if (x<-1.0 || y<-1 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  if (myLamp.isDebug()) {
+    if (x<-1.0 || y<-1 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
-  // calculate the intensities for each affected pixel
-  uint8_t wu[2] = {ix, xx};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (int8_t i = 1; i >= 0; i--) {
-    int16_t xn = x + (i & 1);
-    CRGB clr = getLed(getPixelNumber(xn, y));
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
-    else EffectMath::drawPixelXY(xn, y, clr);
+    // extract the fractional parts and derive their inverses
+    uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
+    // calculate the intensities for each affected pixel
+    uint8_t wu[2] = {ix, xx};
+    // multiply the intensities by the colour, and saturating-add them to the pixels
+    for (int8_t i = 1; i >= 0; i--) {
+      int16_t xn = x + (i & 1);
+      CRGB clr = getLed(getPixelNumber(xn, y));
+      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+      if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
+      else EffectMath::drawPixelXY(xn, y, clr);
+  }
+  } else {
+    byte ax = byte(x);
+    byte xsh = (x - byte(x)) * 255;
+    CRGB col1 = colorsmear(color, CRGB(0, 0, 0), xsh);
+    CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+    getPixel(ax, y) += col1;
+    getPixel(ax + 1, y) += col2;
   }
 }
+
+
+// void EffectMath::drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t darklevel) {
+//   byte ax = byte(x);
+//   byte xsh = (x - byte(x)) * 255;
+//   CRGB col1 = colorsmear(color, CRGB(0, 0, 0), xsh);
+//   CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+//   getPixel(ax, y) += col1;
+//   getPixel(ax + 1, y) += col2;
+// }
+
 
 void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel)
 {
-  if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
+  if (myLamp.isDebug()) {
+    if (x<-1 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
 
-  // extract the fractional parts and derive their inverses
-  uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  uint8_t wu[2] = {iy, yy};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (int8_t i = 1; i >= 0; i--) {
-    int16_t yn = y + (i & 1);
-    CRGB clr = getLed(getPixelNumber(x, yn));
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
-    else EffectMath::drawPixelXY(x, yn, clr);
+    // extract the fractional parts and derive their inverses
+    uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
+    // calculate the intensities for each affected pixel
+    uint8_t wu[2] = {iy, yy};
+    // multiply the intensities by the colour, and saturating-add them to the pixels
+    for (int8_t i = 1; i >= 0; i--) {
+      int16_t yn = y + (i & 1);
+      CRGB clr = getLed(getPixelNumber(x, yn));
+      clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
+      clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
+      clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+      if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
+      else EffectMath::drawPixelXY(x, yn, clr);
+    }
+  } else {
+    byte ay = byte(y);
+    byte ysh = (y - byte(y)) * 255;
+    CRGB col1 = colorsmear(color, CRGB(0, 0, 0), ysh);
+    CRGB col2 = colorsmear(CRGB(0, 0, 0), color, ysh);
+    getPixel(x, ay) += col1;
+    getPixel(x, ay+1) += col2; 
   }
 }
+
+
+// void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel) {
+//   byte ay = byte(y);
+//   byte ysh = (y - byte(y)) * 255;
+//   CRGB col1 = colorsmear(color, CRGB(0, 0, 0), ysh);
+//   CRGB col2 = colorsmear(CRGB(0, 0, 0), color, ysh);
+//   getPixel(x, ay) += col1;
+//   getPixel(x, ay+1) += col2; 
+// }
 
 CRGB EffectMath::getPixColorXYF(float x, float y)
 {
