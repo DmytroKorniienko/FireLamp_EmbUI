@@ -4640,8 +4640,8 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
       for (byte y = 0; y <= x; y++) {
         if (arrow_x[0] - x >= 0 && arrow_x[0] - x <= stop_x[0]) {
           CHSV clr = (x < 4 || (x >= 4 && y < 2)) ? color : CHSV(0,0,0);
-          EffectMath::drawPixelXYF_X(arrow_x[0] - x, arrow_y[0] - y, clr);
-          EffectMath::drawPixelXYF_X(arrow_x[0] - x, arrow_y[0] + y, clr);
+          EffectMath::sDrawPixelXYF_X(arrow_x[0] - x, arrow_y[0] - y, clr);
+          EffectMath::sDrawPixelXYF_X(arrow_x[0] - x, arrow_y[0] + y, clr);
         }
       }
     }
@@ -4655,8 +4655,8 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
       for (byte x = 0; x <= y; x++) {
         if (arrow_y[1] - y >= 0 && arrow_y[1] - y <= stop_y[1]) {
           CHSV clr = (y < 4 || (y >= 4 && x < 2)) ? color : CHSV(0,0,0);
-          EffectMath::drawPixelXYF_Y(arrow_x[1] - x, arrow_y[1] - y, clr);
-          EffectMath::drawPixelXYF_Y(arrow_x[1] + x, arrow_y[1] - y, clr);
+          EffectMath::sDrawPixelXYF_Y(arrow_x[1] - x, arrow_y[1] - y, clr);
+          EffectMath::sDrawPixelXYF_Y(arrow_x[1] + x, arrow_y[1] - y, clr);
         }
       }
     }
@@ -4670,8 +4670,8 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
       for (byte y = 0; y <= x; y++) {
         if (arrow_x[2] + x >= stop_x[2] && arrow_x[2] + x < WIDTH) {
           CHSV clr = (x < 4 || (x >= 4 && y < 2)) ? color : CHSV(0,0,0);
-          EffectMath::drawPixelXYF_X(arrow_x[2] + x, arrow_y[2] - y, clr);
-          EffectMath::drawPixelXYF_X(arrow_x[2] + x, arrow_y[2] + y, clr);
+          EffectMath::sDrawPixelXYF_X(arrow_x[2] + x, arrow_y[2] - y, clr);
+          EffectMath::sDrawPixelXYF_X(arrow_x[2] + x, arrow_y[2] + y, clr);
         }
       }
     }
@@ -4685,8 +4685,8 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
       for (byte x = 0; x <= y; x++) {
         if (arrow_y[3] + y >= stop_y[3] && arrow_y[3] + y < HEIGHT) {
           CHSV clr = (y < 4 || (y >= 4 && x < 2)) ? color : CHSV(0,0,0);
-          EffectMath::drawPixelXYF_Y(arrow_x[3] - x, arrow_y[3] + y, clr);
-          EffectMath::drawPixelXYF_Y(arrow_x[3] + x, arrow_y[3] + y, clr);
+          EffectMath::sDrawPixelXYF_Y(arrow_x[3] - x, arrow_y[3] + y, clr);
+          EffectMath::sDrawPixelXYF_Y(arrow_x[3] + x, arrow_y[3] + y, clr);
         }
       }
     }

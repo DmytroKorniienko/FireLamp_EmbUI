@@ -153,6 +153,11 @@ public:
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel=50);
     static void drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t darklevel=50);
+    
+    // Вариант субпикселя от @stepko, в некоторых случаях работает лучше, но в некоторых хуже
+    static void sDrawPixelXYF(float x, float y, const CRGB &color); 
+    static void sDrawPixelXYF_Y(int16_t x, float y, const CRGB &color);
+    static void sDrawPixelXYF_X(float x, int16_t y, const CRGB &color);
 
     static CRGB getPixColorXYF_X(float x, int16_t y);
     static CRGB getPixColorXYF_Y(int16_t x, float y);
