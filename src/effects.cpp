@@ -8040,7 +8040,7 @@ void EffectFire2021::palettesload(){
 
 // !++
 String EffectFire2021::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 100);
+  if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 100) * speedfactor;
   else if(_val->getId()==3) _scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, 32, 132);
   else if(_val->getId()==5) withSparks = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -8052,7 +8052,7 @@ bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
 
   if (withSparks)
     for (byte i = 0; i < sparksCount; i++) {
-      sparks[i].addXY((float)random(-1, 2) / 2, 0.5);
+      sparks[i].addXY((float)random(-1, 2) / 2, 0.5 * speedfactor);
       if (sparks[i].getY() > HEIGHT && !random(0, 50))
         sparks[i].reset();
       else
