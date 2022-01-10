@@ -8005,9 +8005,10 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
 }
 #endif
 
-// ----------- Эффект "Огонь 2021"
+// ----------- Эффект "Огненная Лампа"
 // https://editor.soulmatelights.com/gallery/546-fire
 // (c) Stepko 17.06.21
+// sparks (c) kostyamat 10.01.2022 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
 void EffectFire2021::load() {
   palettesload();    // подгружаем палитры
 }
@@ -8030,23 +8031,38 @@ void EffectFire2021::palettesload(){
 
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
+  
+  sparks.resize(sparksCount);
+  for (byte i = 0; i < sparksCount; i++) 
+    sparks[i].reset();
 }
 
 
 // !++
 String EffectFire2021::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 10, 100);
+  if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 100);
   else if(_val->getId()==3) _scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, 32, 132);
+  else if(_val->getId()==5) withSparks = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
   t += speedFactor;
+
+  if (withSparks)
+    for (byte i = 0; i < sparksCount; i++) {
+      sparks[i].addXY((float)random(-1, 2) / 2, 0.5);
+      if (sparks[i].getY() > HEIGHT && !random(0, 50))
+        sparks[i].reset();
+      else
+        sparks[i].draw();
+    }
+
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
      
-      int16_t bri= inoise8(x * _scale, (y * _scale) - t) - (y * (256 / WIDTH));
+      int16_t bri= inoise8(x * _scale, (y * _scale) - t) - ((withSparks ? y + spacer : y) * (256 / WIDTH));
       byte col = bri;
       if(bri<0){bri= 0;} if(bri!=0) {bri= 256 - (bri* 0.2);}
       nblend(EffectMath::getPixel(x, y), ColorFromPalette(*curPalette, col, bri), speedFactor);}

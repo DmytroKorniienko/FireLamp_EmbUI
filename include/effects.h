@@ -2055,15 +2055,60 @@ public:
 };
 #endif
 
-// ----------- Эффект "Огонь 2021"
+// ----------- Эффект "Огненная лампа"
 // https://editor.soulmatelights.com/gallery/546-fire
 // (c) Stepko 17.06.21
+// sparks (c) kostyamat 10.01.2022 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
 class EffectFire2021 : public EffectCalc {
 private:
     byte _pal = 8;
     byte _scale = 32;
 	byte speedFactor;
     uint32_t t;
+    bool withSparks = false;
+
+    const uint8_t sparksCount = WIDTH / 4;
+    const uint8_t spacer = HEIGHT/4;
+
+    class Spark {
+    private:
+        CRGB color;
+        uint8_t Bri;
+        uint8_t Hue;
+        float x, y, speedy = 1;
+    
+    public:
+        void addXY(float nx, float ny) {
+            EffectMath::drawPixelXYF(x, y, 0);
+            x += nx;
+            y += ny * speedy;
+        }
+
+        float getY() {
+        return y;
+        }
+
+        void reset() {
+            uint32_t peak = 0;
+            speedy = (float)random(5, 30) / 10;
+            y = random((HEIGHT/4) * 5, (HEIGHT /2) * 5) / 5;
+            for (uint8_t i=0; i < WIDTH; i++) {
+                uint32_t temp = EffectMath::RGBweight(leds, getPixelNumber(i, y));
+                if (temp > peak) {
+                    x = i;
+                    peak = temp;
+                }
+            }
+            color = EffectMath::getPixel(x, y);
+        }
+
+        void draw() {
+            color.fadeLightBy(256 / (HEIGHT));
+            EffectMath::drawPixelXYF(x, y, color);
+        }
+    }; 
+
+    std::vector<Spark> sparks;
 
     String setDynCtrl(UIControl*_val) override;
     void palettesload() override;
