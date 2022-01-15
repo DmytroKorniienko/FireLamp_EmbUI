@@ -274,6 +274,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_FIRE :
     worker = std::unique_ptr<EffectRadialFire>(new EffectRadialFire());
     break;
+  case EFF_ENUM::EFF_SPBALS :
+    worker = std::unique_ptr<EffectSplashBals>(new EffectSplashBals());
+    break;
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());

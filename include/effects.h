@@ -1661,7 +1661,6 @@ private:
     const float radiusMax = (float)ballsAmount /5;
 
     float speedFactor;
-    void fill_circle(float cx, float cy, float radius, CRGB col);
     //void setspd(const byte _spd) override;
     String setDynCtrl(UIControl*_val) override;
 
@@ -2328,4 +2327,37 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+class EffectSplashBals : public EffectCalc {
+private:
+    uint8_t count = 3;
+    uint8_t hue;
+    const uint8_t DEV = 5;
+    const float R = (float)NUM_LEDS/128;
+
+    float x[6];
+    float y[6];
+    uint8_t iniX[6];
+    uint8_t iniY[6];
+
+    float speedFactor;
+
+
+    float dist(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+        float dist;
+        int a = y2 - y1;
+        int b = x2 - x1;
+        a *= a;
+        b *= b;
+        a += b;
+        dist = EffectMath::sqrt(a);
+        return dist;
+    };
+    
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
 #endif

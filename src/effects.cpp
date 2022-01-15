@@ -6721,11 +6721,6 @@ void EffectCircles::drawCircle(CRGB *leds, Circle circle) {
 
   for (int16_t x = startX; x < endX; x++) {
     for (int16_t y = startY; y < endY; y++) {
-      // if (y < 0 or y > EffectMath::getmaxHeightIndex()) continue;
-      // if (x < 0 or y > EffectMath::getmaxWidthIndex()) continue;
-      // int16_t index = myLamp.getPixelNumber(x, y);
-      // if (index < 0 || index > NUM_LEDS - 1)
-      //   continue;
       float distance = EffectMath::sqrt(sq(x - centerX) + sq(y - centerY));
       if (distance > radius)
         continue;
@@ -6860,19 +6855,6 @@ String EffectBalls::setDynCtrl(UIControl*_val){
   return String();
 }
 
-void EffectBalls::fill_circle(float cx, float cy, float radius, CRGB col) {
-  uint8_t rad = radius;
-  for (float y = -radius; y <= radius; y += fabs(y) < rad ? 1 : 0.2) {
-    for (float x = -radius; x <= radius; x += fabs(x) < rad ? 1 : 0.2) {
-      if (x * x + y * y <= radius * radius)
-        // if (fabs(x) < rad and fabs(y) < rad)
-          EffectMath::drawPixelXYF(cx + x, cy + y, col, 0);
-        // else 
-          // EffectMath::drawPixelXY(cx + x, cy + y, col);
-    }
-  }
-}
-
 bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 5, 20));
 
@@ -6893,7 +6875,7 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
 
     //EffectMath::drawCircleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]), 0.5);
     if (radius[i] > 1) 
-      fill_circle(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]));
+      EffectMath::fill_circleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]));
     else 
       EffectMath::drawPixelXYF(ball[i][1], ball[i][0], ColorFromPalette(*curPalette, color[i]));
 
@@ -8538,5 +8520,43 @@ bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
         nblend(EffectMath::getPixel(x+X, y+Y), ColorFromPalette(*curPalette, Col, Bri), speed);
     }
   }
+  return true;
+}
+
+// 
+String EffectSplashBals::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) {
+    speed = EffectCalc::setDynCtrl(_val).toInt();
+    speedFactor = EffectMath::fmap(speed, 1, 255, 0.5, 3);
+  } else if(_val->getId()==3) {count = EffectCalc::setDynCtrl(_val).toInt();
+  } /* else if(_val->getId()==5) mode = EffectCalc::setDynCtrl(_val).toInt();*/
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectSplashBals::load() {
+  for (uint8_t i = 0; i < 6; i++) {
+    iniX[i] = random(0, 8);
+    iniY[i] = random(1, 9);
+  }
+  palettesload();
+}
+
+bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
+  FastLED.clear();
+  hue++;
+
+  for (byte i = 0; i < count; i++) {
+    x[i] = (float)beatsin88(((10UL + iniX[i]) * 256) * speedFactor, 0, (WIDTH - 1) * DEV) / DEV;
+    y[i] = (float)beatsin88(((10UL + iniY[i]) * 256) * speedFactor, 0, (HEIGHT - 1) * DEV) / DEV;
+    for (byte j = 0; j < count; j++) {
+      byte a = dist(x[i], y[i], x[j], y[j]);
+      if ((i != j) & (a <= float(min(WIDTH, HEIGHT) / 2))) {
+        EffectMath::drawLineF(x[i], y[i], x[j], y[j], CHSV(0, 0, EffectMath::fmap(a, min(WIDTH, HEIGHT), 0, 48, 255)));
+      }
+      EffectMath::fill_circleF(x[i], y[i], EffectMath::fmap(fabs(float(WIDTH / 2) - x[i]), 0, WIDTH / 2, R, 0.2), ColorFromPalette(*curPalette, 256 - 256/HEIGHT * fabs(float(HEIGHT/2) - y[i])));
+    }
+  }
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 48);
   return true;
 }

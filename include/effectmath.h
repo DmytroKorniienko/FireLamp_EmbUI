@@ -168,6 +168,7 @@ public:
 	static void drawSquareF(float x, float y, float leg, CRGB color);
     static void drawCircle(int x0, int y0, int radius, const CRGB &color);
     static void drawCircleF(float x0, float y0, float radius, const CRGB &color, float step = 0.25);
+    static void fill_circleF(float cx, float cy, float radius, CRGB col);
     //static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
     static void setLedsNscale8(uint16_t idx, uint8_t val);
     static void dimAll(uint8_t value);
