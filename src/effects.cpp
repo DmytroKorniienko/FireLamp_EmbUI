@@ -8554,8 +8554,8 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
       if ((i != j) & (a <= float(min(WIDTH, HEIGHT) / 2))) {
         EffectMath::drawLineF(x[i], y[i], x[j], y[j], CHSV(0, 0, EffectMath::fmap(a, min(WIDTH, HEIGHT), 0, 48, 255)));
       }
-      EffectMath::fill_circleF(x[i], y[i], EffectMath::fmap(fabs(float(WIDTH / 2) - x[i]), 0, WIDTH / 2, R, 0.2), ColorFromPalette(*curPalette, 256 - 256/HEIGHT * fabs(float(HEIGHT/2) - y[i])));
     }
+    EffectMath::fill_circleF(x[i], y[i], EffectMath::fmap(fabs(float(WIDTH / 2) - x[i]), 0, WIDTH / 2, R, 0.2), ColorFromPalette(*curPalette, 256 - 256/HEIGHT * fabs(float(HEIGHT/2) - y[i])));
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 48);
   return true;
