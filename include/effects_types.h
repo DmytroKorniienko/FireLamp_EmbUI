@@ -360,7 +360,7 @@ EFF_3DNOISE,                                  // 3D-шум
 EFF_CELL,                                     // Клеточки
 EFF_PUZZLES,                                  // Пятнашки
 EFF_T_LEND,                                   // Тикси Ленд
-EFF_SPBALS,                                   // SplashBals 
+EFF_SPBALS,                                   // Н.Тесла
 //20
 EFF_OSCIL,                                    // Осцилятор 
 EFF_WRAIN,                                    // Шторм 
