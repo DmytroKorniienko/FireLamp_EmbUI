@@ -8527,7 +8527,7 @@ bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
 String EffectSplashBals::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
-    speedFactor = EffectMath::fmap(speed, 1, 255, 0.5, 3);
+    speedFactor = EffectMath::fmap(speed, 1, 255, 1, 3) * speedfactor;
   } else if(_val->getId()==3) {count = EffectCalc::setDynCtrl(_val).toInt();
   } /* else if(_val->getId()==5) mode = EffectCalc::setDynCtrl(_val).toInt();*/
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -8543,13 +8543,13 @@ void EffectSplashBals::load() {
 }
 
 bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
-  FastLED.clear();
+  fadeToBlackBy(leds, NUM_LEDS, 100);
   hue++;
 
   for (byte i = 0; i < count; i++) {
     x[i] = (float)beatsin88(((10UL + iniX[i]) * 256) * speedFactor, 0, (WIDTH - 1) * DEV) / DEV;
     y[i] = (float)beatsin88(((10UL + iniY[i]) * 256) * speedFactor, 0, (HEIGHT - 1) * DEV) / DEV;
-    for (byte j = 0; j < count; j++) {
+    for (byte j = i; j < count; j++) {
       byte a = dist(x[i], y[i], x[j], y[j]);
       if ((i != j) & (a <= float(min(WIDTH, HEIGHT) / 2))) {
         EffectMath::drawLineF(x[i], y[i], x[j], y[j], CHSV(0, 0, EffectMath::fmap(a, min(WIDTH, HEIGHT), 0, 48, 255)));
