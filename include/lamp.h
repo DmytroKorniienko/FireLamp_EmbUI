@@ -265,6 +265,11 @@ private:
      * и перезапуск эффект-процессора
      */
     void frameShow(const uint32_t ticktime);
+
+#ifdef MP3PLAYER
+    void playEffect(bool isPlayName = false, EFFSWITCH action = EFFSWITCH::SW_NEXT);
+#endif
+
 public:
     void showWarning(const CRGB &color, uint32_t duration, uint16_t blinkHalfPeriod, uint8_t warnType=0, bool forcerestart=true, const char *msg = nullptr); // Неблокирующая мигалка
     void warningHelper();

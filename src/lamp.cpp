@@ -507,6 +507,18 @@ void LAMP::startAlarm(char *value){
 #endif
 }
 
+#ifdef MP3PLAYER
+void LAMP::playEffect(bool isPlayName, EFFSWITCH action){
+  if(mp3!=nullptr && mp3->isOn() && effects.getEn()>0 && (flags.playEffect || ((isLampOn() || millis()>5000) && flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
+    LOG(printf_P, PSTR("playEffect soundfile:%s, effect:%d, delayed:%d\n"), effects.getSoundfile().c_str(), effects.getEn(), (flags.playName && !flags.playMP3));
+    if(!flags.playMP3 || (flags.playEffect && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND)) // для mp3-плеера есть отдельное управление
+      mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
+  } else {
+    mp3->setCurEffect(effects.getEn());
+  }
+}
+#endif
+
 void LAMP::stopAlarm(){
   lampState.dawnFlag = false;
   if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
@@ -517,6 +529,7 @@ void LAMP::stopAlarm(){
   mp3->setAlarm(false);
   Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
     mp3->RestoreVolume(); // восстановить уровень громкости
+    mp3->playEffect(mp3->getCurPlayingNb(),"");
     TASK_RECYCLE;
   });
   _t->enableDelayed();
@@ -1192,13 +1205,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
 #ifdef MP3PLAYER
-  if(mp3!=nullptr && mp3->isOn() && effects.getEn()>0 && (flags.playEffect || ((isLampOn() || millis()>5000) && flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
-    LOG(printf_P, PSTR("playEffect soundfile:%s, effect:%d, delayed:%d\n"), effects.getSoundfile().c_str(), effects.getEn(), (flags.playName && !flags.playMP3));
-    if(!flags.playMP3 || (flags.playEffect && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND)) // для mp3-плеера есть отдельное управление
-      mp3->playEffect(effects.getEn(), effects.getSoundfile(), (isPlayName && mp3!=nullptr && mp3->isOn() && !flags.playMP3)); // влияние на отложенное воспроизведение, но не для MP3-плеера
-  } else {
-    mp3->setCurEffect(effects.getEn());
-  }
+  playEffect(isPlayName, action); // воспроизведение звука, с проверкой текущего состояния
 #endif
 
   bool natural = true;
