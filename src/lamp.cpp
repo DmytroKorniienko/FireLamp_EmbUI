@@ -206,33 +206,6 @@ void LAMP::alarmWorker(){
       return;
     }
 
-    // проверка рассвета
-    EVERY_N_SECONDS(10){
-      // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...300 секунд приведенные к 0...255
-      dawnPosition = constrain(dawnPosition, 0, 255);
-
-#ifdef MP3PLAYER
-      //LOG(println, dawnPosition);
-      if(curAlarm.isStartSnd)
-        mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // наростание громкости
-      else if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
-        mp3->setAlarm(true);
-        mp3->StartAlarmSoundAtVol(curAlarm.type, mp3->getVolume()); // запуск звука будильника
-      }
-#endif
-      
-      dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
-        map(dawnPosition, 0, 255, 255, 170),
-        map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
-      );
-      dawnCounter++; //=dawnCounter%(sizeof(dawnColorMinus)/sizeof(CHSV))+1;
-
-      for (uint8_t i = sizeof(dawnColorMinus) / sizeof(CHSV) - 1; i > 0U; i--){
-          dawnColorMinus[i]=((dawnCounter > i)?dawnColorMinus[i-1]:dawnColorMinus[i]);
-      }
-    }
-
     EVERY_N_SECONDS(1){
       if (embui.timeProcessor.seconds00()) {
         CRGB letterColor;
@@ -247,6 +220,30 @@ void LAMP::alarmWorker(){
             if(curAlarm.msg != "-") // отключение вывода по спец. символу "минус"
               sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
 #endif
+        }
+      } else if(!(localtime(TimeProcessor::now())->tm_sec%6)){ // проверка рассвета каждые 6 секунд, кроме 0 секунды
+        // величина рассвета 0-255
+        int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...300 секунд приведенные к 0...255
+        dawnPosition = constrain(dawnPosition, 0, 255);
+
+#ifdef MP3PLAYER
+        //LOG(println, dawnPosition);
+        if(curAlarm.isStartSnd)
+          mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // наростание громкости
+        else if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
+          mp3->setAlarm(true);
+          mp3->StartAlarmSoundAtVol(curAlarm.type, mp3->getVolume()); // запуск звука будильника
+        }
+#endif
+        
+        dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
+          map(dawnPosition, 0, 255, 255, 170),
+          map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
+        );
+        dawnCounter++; //=dawnCounter%(sizeof(dawnColorMinus)/sizeof(CHSV))+1;
+
+        for (uint8_t i = sizeof(dawnColorMinus) / sizeof(CHSV) - 1; i > 0U; i--){
+            dawnColorMinus[i]=((dawnCounter > i)?dawnColorMinus[i-1]:dawnColorMinus[i]);
         }
       }
     }
@@ -529,7 +526,8 @@ void LAMP::stopAlarm(){
   mp3->setAlarm(false);
   Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
     mp3->RestoreVolume(); // восстановить уровень громкости
-    mp3->playEffect(mp3->getCurPlayingNb(),"");
+    if(flags.ONflag)
+      mp3->playEffect(mp3->getCurPlayingNb(),"");
     TASK_RECYCLE;
   });
   _t->enableDelayed();

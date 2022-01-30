@@ -45,6 +45,8 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
   private:
     union {
       struct {
+        TIME_SOUND_TYPE timeSoundType; // вид озвучивания времени
+        ALARM_SOUND_TYPE tAlarm; // вид будильника
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
@@ -52,6 +54,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
         bool alarm:1; // сейчас будильник
         bool isplayname:1; // проигрывается имя
         bool isadvert:1; // воспроизводится ли сейчас время в ADVERT (для совместимости между 24SS и GD3200B)
+        bool isplaying:1; // воспроизводится ли сейчас песня или эффект
       };
       uint32_t flags;
     };
@@ -61,7 +64,6 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     uint16_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
     uint16_t cur_effnb=0; // текущий эффект
     uint16_t prev_effnb=0; // предыдущий эффект
-    ALARM_SOUND_TYPE tAlarm;
     SoftwareSerial mp3player;
     String soundfile; // хранилище пути/имени
     unsigned long restartTimeout = millis(); // таймаут воспроизведения имени эффекта
@@ -79,9 +81,10 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     bool isMP3Mode() {return mp3mode;}
     void setIsOn(bool val, bool forcePlay=true) {
       on = val;
-      if(!on)
+      if(!on){
         stop();
-      else if(forcePlay && (effectmode || mp3mode))
+        isplaying = false;
+      } else if(forcePlay && (effectmode || mp3mode))
         playEffect(cur_effnb, soundfile);
 
       if(tPeriodic)
@@ -124,7 +127,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
     void setPlayEffect(bool flag) {effectmode = flag;}
-    void setAlarm(bool flag) {alarm = flag; stop();}
+    void setAlarm(bool flag) {alarm = flag; stop(); isplaying = false;}
     void StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);
     void RestoreVolume() { setVolume(cur_volume); }
