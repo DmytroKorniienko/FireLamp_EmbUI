@@ -836,7 +836,8 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 #ifdef MP3PLAYER
           String tmpStr = var[F("s")];
           if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-            mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
+            if(FastLED.getBrightness()!=OFF_BRIGHTNESS)
+              mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
         }
         if(arr.size()>0)
@@ -867,7 +868,8 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
 #ifdef MP3PLAYER
       String tmpStr = text;
       if(mp3!=nullptr && ((mp3->isOn() && isLampOn()) || isAlarm()) && flags.playTime && tmpStr.indexOf(String(F("%TM")))>=0)
-        mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
+        if(FastLED.getBrightness()!=OFF_BRIGHTNESS)
+          mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)flags.playTime);
 #endif
     } else { // идет печать, помещаем в очередь
       JsonArray arr; // добавляем в очередь
