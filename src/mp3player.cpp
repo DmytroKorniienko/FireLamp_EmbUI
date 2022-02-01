@@ -80,7 +80,7 @@ void MP3PLAYERDEVICE::restartSound()
         TASK_ONCE, [this](){
           if(isOn() || (ready && alarm)){
             if(alarm){
-              ReStartAlarmSound(tAlarm);
+              ReStartAlarmSound((ALARM_SOUND_TYPE)tAlarm);
             } else if(!mp3mode && effectmode){
               if(cur_effnb>0)
                 playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
@@ -132,7 +132,12 @@ void MP3PLAYERDEVICE::printSatusDetail(){
         LOG(printf_P, PSTR("DFplayer: Number: %d Play Finished!\n"), value);
         if(restartTimeout+5000<millis() && !isadvert){ // c момента инициализации таймаута прошло более 5 секунд (нужно чтобы не прерывало вывод времени в режиме без звука)
           isplaying = false;
-          restartSound();
+          if(!iscancelrestart)
+            restartSound();
+          else {
+            iscancelrestart = false;
+            restartTimeout = millis();
+          }
         }
       }
       break;
@@ -305,7 +310,7 @@ void MP3PLAYERDEVICE::StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol){
   setTempVolume(vol);
   tAlarm = val;
   Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
-    ReStartAlarmSound(tAlarm);
+    ReStartAlarmSound((ALARM_SOUND_TYPE)tAlarm);
     TASK_RECYCLE;
   });
   _t->enableDelayed();

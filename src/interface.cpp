@@ -2533,8 +2533,12 @@ void set_mp3flag(Interface *interf, JsonObject *data){
     myLamp.setONMP3((*data)[FPSTR(TCONST_009D)] == "1");
     if(myLamp.isLampOn())
         mp3->setIsOn(myLamp.isONMP3(), true); // при включенной лампе - форсировать воспроизведение
-    else
-        mp3->setIsOn(myLamp.isONMP3(), (myLamp.getLampSettings().isOnMP3 && millis()>5000)); // при выключенной - только для mp3 и не после перезагрузки
+    else {
+        mp3->setIsOn(myLamp.isONMP3(), false); // при выключенной - не форсировать, но произнести время, но не ранее чем через 10с после перезагрузки
+        if(myLamp.isONMP3() && millis()>10000)
+            if(!data->containsKey(FPSTR(TCONST_00D5)) || (data->containsKey(FPSTR(TCONST_00D5)) && (*data)[FPSTR(TCONST_00D5)] == "1")) // при наличие force="1" или без этого ключа
+                mp3->playTime(embui.timeProcessor.getHours(), embui.timeProcessor.getMinutes(), (TIME_SOUND_TYPE)myLamp.getLampSettings().playTime);
+    }
     save_lamp_flags();
 }
 
@@ -3644,6 +3648,7 @@ void remote_action(RA action, ...){
             mp3->playEffect((int)value,"");
             break;
         case RA::RA_PLAYERONOFF:
+            obj[FPSTR(TCONST_00D5)] = "0"; // не озвучивать время
             CALL_INTF(FPSTR(TCONST_009D), value, set_mp3flag);
             break;
 #endif

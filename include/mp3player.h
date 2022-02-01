@@ -45,8 +45,8 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
   private:
     union {
       struct {
-        TIME_SOUND_TYPE timeSoundType; // вид озвучивания времени
-        ALARM_SOUND_TYPE tAlarm; // вид будильника
+        uint8_t timeSoundType:3; // вид озвучивания времени
+        uint8_t tAlarm:3; // вид будильника
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
@@ -55,6 +55,7 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
         bool isplayname:1; // проигрывается имя
         bool isadvert:1; // воспроизводится ли сейчас время в ADVERT (для совместимости между 24SS и GD3200B)
         bool isplaying:1; // воспроизводится ли сейчас песня или эффект
+        bool iscancelrestart:1; // отменить рестарт после однократного воспроизведения
       };
       uint32_t flags;
     };
@@ -84,6 +85,8 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
       if(!on){
         stop();
         isplaying = false;
+        iscancelrestart = true;
+        restartTimeout = millis();
       } else if(forcePlay && (effectmode || mp3mode))
         playEffect(cur_effnb, soundfile);
 
