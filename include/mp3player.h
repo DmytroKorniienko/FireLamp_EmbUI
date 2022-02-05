@@ -82,6 +82,12 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     bool isMP3Mode() {return mp3mode;}
     void setIsOn(bool val, bool forcePlay=true) {
       on = val;
+
+      if(!forcePlay){
+        iscancelrestart = true;
+        restartTimeout = millis();
+      }
+
       if(!on){
         stop();
         isplaying = false;

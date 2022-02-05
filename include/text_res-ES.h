@@ -452,6 +452,8 @@ static const char TINTF_0E8[] PROGMEM = "Universo primero";
 static const char TINTF_0E9[] PROGMEM = "Cargar Config. Botons";
 static const char TINTF_0EA[] PROGMEM = "Luz de noche";
 static const char TINTF_0EB[] PROGMEM = "Lámpara brillante";
+static const char TINTF_0EC[] PROGMEM = "De todos modos";
+static const char TINTF_0ED[] PROGMEM = "Dice el tiempo";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";

@@ -449,7 +449,7 @@ public:
     void setAlatmSound(ALARM_SOUND_TYPE val) {flags.alarmSound = val;}
     void setEqType(uint8_t val) {flags.MP3eq = val;}
 
-    void periodicTimeHandle(bool force=false);
+    void periodicTimeHandle(char *value, bool force=false);
 
 #ifdef TM1637_CLOCK
     void settm24 (bool flag) {flags.tm24 = flag;}

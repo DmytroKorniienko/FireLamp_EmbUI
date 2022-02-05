@@ -2146,6 +2146,18 @@ void set_event_conf(Interface *interf, JsonObject *data){
                 myLamp.events.addEvent(event);
             }
             break;
+        case EVENT_TYPE::SEND_TIME: {
+                DynamicJsonDocument doc(1024);
+                doc[FPSTR(TCONST_0048)] = (*data)[FPSTR(TCONST_0048)];
+#ifdef MP3PLAYER
+                doc[FPSTR(TCONST_0056)] = (*data)[FPSTR(TCONST_0056)];
+#endif
+                serializeJson(doc,buf);
+                buf.replace("\"","'");
+                event.setMessage(buf);
+                myLamp.events.addEvent(event);
+            }
+            break;
         default:
             event.setMessage((*data)[FPSTR(TCONST_0035)]);
             myLamp.events.addEvent(event);
@@ -2279,6 +2291,26 @@ void show_event_conf(Interface *interf, JsonObject *data){
                     interf->option(String(ALARM_SOUND_TYPE::AT_RANDOMMP3), FPSTR(TINTF_0A2));
                 interf->json_section_end();
 #endif
+            }
+            break;
+        case EVENT_TYPE::SEND_TIME: {
+                DynamicJsonDocument doc(1024);
+                String buf = cur_edit_event->getMessage();
+                buf.replace("'","\"");
+                DeserializationError err = deserializeJson(doc,buf);
+                String isShowOff  = !err && doc.containsKey(FPSTR(TCONST_0048)) ? doc[FPSTR(TCONST_0048)] : String("0");
+                String isPlayTime = !err && doc.containsKey(FPSTR(TCONST_0056)) ? doc[FPSTR(TCONST_0056)] : String("0");
+                
+                //String msg = !err && doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : cur_edit_event->getMessage();
+
+                interf->spacer("");
+                //interf->text(FPSTR(TCONST_0035), msg, FPSTR(TINTF_070), false);
+                interf->json_section_line();
+                    interf->checkbox(FPSTR(TCONST_0048), isShowOff, FPSTR(TINTF_0EC), false);
+#ifdef MP3PLAYER
+                    interf->checkbox(FPSTR(TCONST_0056), isPlayTime, FPSTR(TINTF_0ED), false);
+#endif
+                interf->json_section_end();
             }
             break;
         default:
@@ -3810,7 +3842,7 @@ void remote_action(RA action, ...){
 #endif
             break;
         case RA::RA_SEND_TIME:
-            myLamp.periodicTimeHandle(true);
+            myLamp.periodicTimeHandle(value, true);
             //myLamp.sendString(String(F("%TM")).c_str(), CRGB::Green);
             break;
 #ifdef OTA
