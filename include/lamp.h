@@ -393,19 +393,22 @@ public:
     void setDrawBuff(bool flag) {
         // flags.isDraw=flag;
         if(!flag){
-            if (!drawbuff.empty()) {
-                drawbuff.resize(0);
-                drawbuff.shrink_to_fit();
+            if (drawbuff) {
+                delete [] drawbuff;
+                drawbuff = nullptr;
             }
-        } else if(drawbuff.empty()){
-            drawbuff.resize(NUM_LEDS);
+        } else if(!drawbuff){
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+            HeapSelectIram ephemeral;
+#endif
+            drawbuff = new CRGB[NUM_LEDS];
             //for(uint16_t i=0; i<NUM_LEDS; i++) {drawbuff[i] = CHSV(random(0,255),0,255);} // тест :)
         }
     }
-    void writeDrawBuf(CRGB &color, uint16_t x, uint16_t y) { if(!drawbuff.empty()) { drawbuff[getPixelNumber(x,y)]=color; } }
-    void writeDrawBuf(CRGB &color, uint16_t num) { if(!drawbuff.empty()) { drawbuff[num]=color; } }
-    void fillDrawBuf(CRGB &color) { for(uint16_t i=0; i<drawbuff.size(); i++) drawbuff[i]=color; }
-    void clearDrawBuf() { for(uint16_t i=0; i<drawbuff.size(); i++) drawbuff[i]=CRGB::Black; }
+    void writeDrawBuf(CRGB &color, uint16_t x, uint16_t y) { if(drawbuff) { drawbuff[getPixelNumber(x,y)]=color; } }
+    void writeDrawBuf(CRGB &color, uint16_t num) { if(drawbuff) { drawbuff[num]=color; } }
+    void fillDrawBuf(CRGB &color) { for(uint16_t i=0; i<NUM_LEDS; i++) drawbuff[i]=color; }
+    void clearDrawBuf() { for(uint16_t i=0; i<NUM_LEDS; i++) drawbuff[i]=CRGB::Black; }
 #ifdef USE_STREAMING
     bool isStreamOn() {return flags.isStream;}
     bool isDirect() {return flags.isDirect;}
@@ -421,6 +424,9 @@ public:
                 streambuff.shrink_to_fit();
             }
         } else if(streambuff.empty()){
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+            HeapSelectIram ephemeral;
+#endif
             streambuff.resize(NUM_LEDS);
             //for(uint16_t i=0; i<NUM_LEDS; i++) {drawbuff[i] = CHSV(random(0,255),0,255);} // тест :)
         }
@@ -540,8 +546,8 @@ void setTempDisp(bool flag) {flags.isTempOn = flag;}
 private:
     LAMP(const LAMP&);  // noncopyable
     LAMP& operator=(const LAMP&);  // noncopyable
-    std::vector<CRGB> ledsbuff; // вспомогательный буфер для слоя после эффектов
-    std::vector<CRGB> drawbuff; // буфер для рисования
+    CRGB *sledsbuff; // вспомогательный буфер для слоя после эффектов
+    CRGB *drawbuff=nullptr; // буфер для рисования
 #if defined(USE_STREAMING) && defined(EXT_STREAM_BUFFER)
     std::vector<CRGB> streambuff; // буфер для трансляции
 #endif

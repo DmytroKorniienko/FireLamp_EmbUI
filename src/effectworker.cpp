@@ -51,6 +51,10 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   if(worker)
      worker.reset(); // освободим явно, т.к. 100% здесь будем пересоздавать
 
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+  HeapSelectIram ephemeral;
+#endif
+
   switch (static_cast<EFF_ENUM>(effect%256)) // номер может быть больше чем ENUM из-за копирований, находим эффект по модулю
   {
   case EFF_ENUM::EFF_TIME :
@@ -660,6 +664,9 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
       var[F("step")]=controls[i]->getStep();
     }
   } else {
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+    HeapSelectIram ephemeral;
+#endif
     EffectWorker *tmp=new EffectWorker(eff);
 
     doc[F("nb")] = nb;
@@ -1160,6 +1167,9 @@ void EffectWorker::setSelected(uint16_t effnb)
 
   selEff = effnb;
   //LOG(println,F("Читаю список контроллов выбранного эффекта:"));
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+  HeapSelectIram ephemeral;
+#endif
   EffectWorker *tmpEffect = new EffectWorker(effnb);
   LList<UIControl *> fake;
   this->selcontrols = tmpEffect->controls; // копирую список контроллов, освобождать будет другой объект

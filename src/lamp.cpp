@@ -132,7 +132,18 @@ void LAMP::handle()
     // fps counter
     LOG(printf_P, PSTR("Eff:%d, FPS: %u, FastLED FPS: %u\n"), effects.getEn(), avgfps, FastLED.getFPS());
 #ifdef ESP8266
+
+#ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+    uint32_t iram;
+    {
+        HeapSelectIram ephemeral;
+        iram = ESP.getFreeHeap();
+    }
+    LOG(printf_P, PSTR("MEM stat: %d/%d, HF: %d, Time: %s\n"), lampState.freeHeap, iram, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
+#else
     LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), lampState.freeHeap, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
+#endif
+
 #else
     LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), lampState.freeHeap, embui.timeProcessor.getFormattedShortTime().c_str());
 #endif
@@ -168,6 +179,16 @@ void LAMP::handle()
   // обработчик событий (пока не выкину в планировщик)
   if (flags.isEventsHandled) {
     events.events_handle();
+  }
+
+  // EVERY_N_SECONDS(5){
+  //   LOG(printf_P, PSTR("Test: %d %d %d\n"),!lampState.isStringPrinting, !flags.ONflag, !fader);
+  // }
+  if(!lampState.isStringPrinting && !flags.ONflag && !fader){ // освобождать буфер только если не выводится строка, иначе держать его
+    if(sledsbuff){
+      delete [] sledsbuff;
+      sledsbuff = nullptr;
+    }
   }
 
 }
@@ -259,13 +280,19 @@ void LAMP::effectsTick(){
 
   if (effects.worker && (flags.ONflag || fader) && !isAlarm()) {
     if(!lampState.isEffectsDisabledUntilText){
-      if (!ledsbuff.empty()) {
-        std::copy( ledsbuff.begin(), ledsbuff.end(), getUnsafeLedsArray() );
+      if (sledsbuff) {
+        //std::copy(sledsbuff, NUM_LEDS, getUnsafeLedsArray());
+        memcpy(getUnsafeLedsArray(), sledsbuff, NUM_LEDS);
       }
       // посчитать текущий эффект (сохранить кадр в буфер, если ОК)
       if(effects.worker ? effects.worker->run(getUnsafeLedsArray(), &effects) : 1) {
-        ledsbuff.resize(NUM_LEDS);
-        std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin());
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+        HeapSelectIram ephemeral;
+#endif
+        if(!sledsbuff)
+          sledsbuff = new CRGB[NUM_LEDS];
+        //std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, sledsbuff);
+        memcpy(sledsbuff, getUnsafeLedsArray(), NUM_LEDS);
       }
     }
   }
@@ -283,9 +310,9 @@ void LAMP::effectsTick(){
     }
   }
 #endif
-  if(!drawbuff.empty()){
+  if(drawbuff){
     uint8_t mi;
-    for(uint16_t i=0; i<drawbuff.size() && i<NUM_LEDS; i++){
+    for(uint16_t i=0; i<NUM_LEDS; i++){
       mi = drawbuff[i].r > drawbuff[i].g ? drawbuff[i].r : drawbuff[i].g;
       mi = mi > drawbuff[i].b ? mi : drawbuff[i].b;
       if(mi>=5) {
@@ -315,11 +342,6 @@ void LAMP::effectsTick(){
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
     effectsTimer(T_ENABLE);
-  }
-  
-  if(!lampState.isStringPrinting && !flags.ONflag && !fader){ // чистить буфер только если не выводится строка, иначе держать его
-    ledsbuff.resize(0);
-    ledsbuff.shrink_to_fit();
   }
 }
 
@@ -1052,7 +1074,16 @@ void LAMP::micHandler()
   if(effects.getEn()==EFF_ENUM::EFF_NONE)
     return;
   if(mw==nullptr && !lampState.isCalibrationRequest && lampState.micAnalyseDivider){ // обычный режим
-    mw = new MICWORKER(lampState.mic_scale,lampState.mic_noise,!counter);
+    {
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+      HeapSelectIram ephemeral;
+#endif
+      mw = new MICWORKER(lampState.mic_scale,lampState.mic_noise,!counter);
+    }
+    if(!mw) {
+      mw = new MICWORKER(lampState.mic_scale,lampState.mic_noise,!counter);
+    }
+
     if(!mw) {
       mw=nullptr;
       return; // не удалось выделить память, на выход
@@ -1081,7 +1112,15 @@ void LAMP::micHandler()
     mw = nullptr;
   } else if(lampState.isCalibrationRequest) {
     if(mw==nullptr){ // калибровка начало
-      mw = new MICWORKER();
+      {
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+        HeapSelectIram ephemeral;
+#endif
+        mw = new MICWORKER();
+      }
+      if(!mw){
+        mw = new MICWORKER();   
+      }
       mw->calibrate();
     } else { // калибровка продолжение
       mw->calibrate();
@@ -1241,8 +1280,14 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
   if(effects.worker && flags.ONflag && !lampState.isEffectsDisabledUntilText){
     effects.worker->run(getUnsafeLedsArray(), &effects);
-    ledsbuff.resize(NUM_LEDS);
-    std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, ledsbuff.begin()); // сохранить кадр в буфер
+#if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
+    HeapSelectIram ephemeral;
+#endif
+    if(!sledsbuff){
+      sledsbuff = new CRGB[NUM_LEDS];
+    }
+    //std::copy(getUnsafeLedsArray(), getUnsafeLedsArray() + NUM_LEDS, sledsbuff); // сохранить кадр в буфер
+    memcpy(sledsbuff, getUnsafeLedsArray(), NUM_LEDS);
   }
   setBrightness(getNormalizedLampBrightness(), fade, natural);
 }
