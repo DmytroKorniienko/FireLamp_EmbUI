@@ -203,29 +203,18 @@ String ha_autodiscovery()
     hass_discover[F("~")] = embui.id("embui/"); // embui.upperParam(FPSTR(P_m_pref)) + F("/embui/") //String(F("homeassistant/light/"))+name;
     hass_discover[F("name")] = name;                // name
     hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
+
     hass_discover[F("avty_t")] = F("~pub/online");  // availability_topic
-    //hass_discover[F("avty_t")] = F("2EF4323C728E/embui/pub/online");  // availability_topic
     hass_discover[F("pl_avail")] = F("1");       // payload_available
     hass_discover[F("pl_not_avail")] = F("0");  // payload_not_available
 
     hass_discover[F("cmd_t")] = F("~set/on");             // command_topic
-    //hass_discover[F("cmd_tpl")] = F("{{ value }}");             // command_template
-    // hass_discover[F("cmd_on_tpl")] = F("1");             // command_on_template
-    // hass_discover[F("cmd_off_tpl")] = F("0");            // command_off_template
-
     hass_discover[F("stat_t")] = F("~pub/on");            // state_topic
-    //hass_discover[F("stat_t")] = F("2EF4323C728E/embui/pub/on");  // state_topic
-    //hass_discover[F("stat_tpl")] = F("{{ value }}");             // state_template
-    // hass_discover[F("stat_on")] = F("1");             // state_on
-    // hass_discover[F("stat_off")] = F("0");            // state_off
-
     hass_discover[F("pl_on")] = F("1");             // payload_on
     hass_discover[F("pl_off")] = F("0");            // payload_off
 
     hass_discover[F("bri_cmd_t")] = F("~set/g_bright");     // brightness_command_topic
     hass_discover[F("bri_stat_t")] = F("~pub/dynCtrl0");    // brightness_state_topic
-    // hass_discover[F("bri_tpl")] = F("[0,{{ value }}]");    // brightness_template
-    // hass_discover[F("bri_val_tpl")] = F("[0,{{ value }}]");    // brightness_value_template
     hass_discover[F("bri_scl")] = 255;
 
     hass_discover[F("clr_temp_cmd_t")] = F("~set/speed");     // speed as color temperature
@@ -233,9 +222,17 @@ String ha_autodiscovery()
     hass_discover[F("min_mireds")] = 1;
     hass_discover[F("max_mireds")] = 255;
 
-    hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level
+    hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level (Яркость белого)
     hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
     hass_discover[F("whit_val_scl")] = 255;
+
+    // hass_discover[F("effect_list")] = F("[Blink, Static]");
+    hass_discover[F("effect_list")] = F("[\"Test1\", \"Test2\"]");
+    // hass_discover[F("effect")] = F("rainbow");
+
+    // hass_discover[F("xy_cmd_t")] = F("~set/speed");     // scale as white level (Яркость белого)
+    // hass_discover[F("xy_stat_t")] = F("~pub/speed");    // scale as white level
+    //hass_discover[F("whit_val_scl")] = 255; // 'xy_val_tpl':          'xy_value_template',
 
     hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
     hass_discover[F("fx_stat_t")] = F("~pub/eff_config");                              // effect_state_topic
@@ -243,8 +240,8 @@ String ha_autodiscovery()
 
     hass_discover[F("json_attr_t")] = F("~pub/eff_config");                            // json_attributes_topic
 
-    // hass_discover[F("rgb_cmd_t")] = "~rgb/set";       // rgb_command_topic
-    // hass_discover[F("rgb_stat_t")] = "~rgb/status";   // rgb_state_topic
+    hass_discover[F("rgb_cmd_t")] = "~set/rgb";       // rgb_command_topic
+    hass_discover[F("rgb_stat_t")] = "~pub/rgb";   // rgb_state_topic
 
     String hass_discover_str;
     serializeJson(hass_discover, hass_discover_str);

@@ -50,7 +50,8 @@ typedef enum _remote_action {
     RA_GLOBAL_BRIGHT,
     RA_WARNING,
     RA_DRAW,
-    RA_FILLMATRIX
+    RA_FILLMATRIX,
+    RA_RGB
 } RA;
 
 void remote_action(RA action, ...);

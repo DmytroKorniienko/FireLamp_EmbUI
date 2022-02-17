@@ -407,8 +407,8 @@ public:
     }
     void writeDrawBuf(CRGB &color, uint16_t x, uint16_t y) { if(drawbuff) { drawbuff[getPixelNumber(x,y)]=color; } }
     void writeDrawBuf(CRGB &color, uint16_t num) { if(drawbuff) { drawbuff[num]=color; } }
-    void fillDrawBuf(CRGB &color) { for(uint16_t i=0; i<NUM_LEDS; i++) drawbuff[i]=color; }
-    void clearDrawBuf() { for(uint16_t i=0; i<NUM_LEDS; i++) drawbuff[i]=CRGB::Black; }
+    void fillDrawBuf(CRGB &color) { if(drawbuff) { for(uint16_t i=0; i<NUM_LEDS; i++) drawbuff[i]=color; } }
+    void clearDrawBuf() { if(drawbuff) { for(uint16_t i=0; i<NUM_LEDS; i++) drawbuff[i]=CRGB::Black; } }
 #ifdef USE_STREAMING
     bool isStreamOn() {return flags.isStream;}
     bool isDirect() {return flags.isDirect;}

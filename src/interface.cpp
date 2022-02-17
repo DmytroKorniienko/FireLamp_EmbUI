@@ -3590,6 +3590,7 @@ void remote_action(RA action, ...){
             break;
         case RA::RA_OFF: {
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
+                myLamp.clearDrawBuf(); // очистка буфера рисования, если вызов через http/mqtt
                 if(value){
                    remote_action(RA::RA_SEND_TEXT, value, NULL);
                 }
@@ -3824,9 +3825,32 @@ void remote_action(RA action, ...){
             myLamp.writeDrawBuf(col,x,y);
             break; 
         }
-
+        case RA::RA_RGB:
+            myLamp.setDraw(true); // без break, т.к. вызываем затем RA_FILLMATRIX
         case RA::RA_FILLMATRIX: {
             String tmpStr = value;
+            if(tmpStr.indexOf(",")!=-1){
+                int16_t pos = 0;
+                int16_t frompos = 0;
+                uint8_t val = 0;
+                uint32_t res = 0;
+                do {
+                    frompos = pos;
+                    pos = tmpStr.indexOf(",", pos);
+                    if(pos!=-1){
+                        val = tmpStr.substring(frompos,pos).toInt();
+                        res=(res<<8)|val;
+                        pos++;
+                    } else if(frompos<tmpStr.length()){
+                        val = tmpStr.substring(frompos,tmpStr.length()).toInt();
+                        res=(res<<8)|val; 
+                    }
+                } while(pos!=-1);
+                LOG(printf_P,PSTR("RA_FILLMATRIX: %d\n"), res);
+                CRGB color=CRGB(res);
+                myLamp.fillDrawBuf(color);
+                break;
+            }
             tmpStr.replace(F("#"), F("0x"));
             long val = strtol(tmpStr.c_str(), NULL, 0);
             LOG(printf_P, PSTR("%s:%ld\n"), tmpStr.c_str(), val);
@@ -4001,6 +4025,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (upperParam == FPSTR(CMD_TCONST_000A)) action = RA_WARNING;
         else if (upperParam == FPSTR(CMD_TCONST_001B)) action = RA_DRAW;
         else if (upperParam == FPSTR(CMD_TCONST_001D)) action = RA_FILLMATRIX;
+        else if (upperParam == FPSTR(CMD_TCONST_000D)) action = RA_RGB;
 #ifdef MP3PLAYER
         else if (upperParam == FPSTR(CMD_TCONST_0006)) action = RA_MP3_PREV;
         else if (upperParam == FPSTR(CMD_TCONST_0007)) action = RA_MP3_NEXT;
