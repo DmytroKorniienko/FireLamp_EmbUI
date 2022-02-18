@@ -70,36 +70,6 @@ void LAMP::lamp_init(const uint16_t curlimit)
   digitalWrite(ALARM_PIN, !ALARM_LEVEL);
 #endif
 #endif
-
-#ifdef VERTGAUGE
-      if(VERTGAUGE){
-        xStep = WIDTH / 4;
-        xCol = 4;
-        if(xStep<2) {
-          xStep = WIDTH / 3;
-          xCol = 3;
-        } else if(xStep<2) {
-          xStep = WIDTH / 2;
-          xCol = 2;
-        } else if(xStep<2) {
-          xStep = 1;
-          xCol = 1;
-        }
-
-        yStep = HEIGHT / 4;
-        yCol = 4;
-        if(yStep<2) {
-          yStep = HEIGHT / 3;
-          yCol = 3;
-        } else if(yStep<2) {
-          yStep = HEIGHT / 2;
-          yCol = 2;
-        } else if(yStep<2) {
-          yStep = 1;
-          yCol = 1;
-        }
-    }
-#endif
 }
 
 void LAMP::handle()
@@ -278,7 +248,7 @@ void LAMP::alarmWorker(){
 void LAMP::effectsTick(){
   uint32_t _begin = millis();
 
-  if (effects.worker && (flags.ONflag || fader) && !isAlarm()) {
+  if (effects.worker && (flags.ONflag || fader) && !isAlarm() && !isRGB()) {
     if(!lampState.isEffectsDisabledUntilText){
       if (sledsbuff) {
         //std::copy(sledsbuff, NUM_LEDS, getUnsafeLedsArray());
@@ -323,6 +293,11 @@ void LAMP::effectsTick(){
     }
   }
 
+  if(isRGB()) { // режим заливки цветом
+    fill_solid(getUnsafeLedsArray(), NUM_LEDS, rgbColor);
+    //FastLED.showColor(rgbColor); // залить все цветом
+  }
+
   if(isWarning()) {
     warningHelper(); // вывод предупреждения
   }
@@ -331,14 +306,12 @@ void LAMP::effectsTick(){
     doPrintStringToLamp(); // обработчик печати строки
   }
 
-#ifdef VERTGAUGE
-  GaugeMix();
-#endif
+  if(gauge)
+    gauge->GaugeMix((GAUGETYPE)flags.GaugeType);
 
-  if (isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || fader || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
+  if (isRGB() || isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || fader || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     effectsTimer(T_FRAME_ENABLE, _begin);
-
   } else if(isLampOn()) {
     // иначе возвращаемся к началу обсчета следующего кадра
     effectsTimer(T_ENABLE);
@@ -363,19 +336,13 @@ void LAMP::frameShow(const uint32_t ticktime){
   ++fps;
 }
 
-#ifdef VERTGAUGE
-    void LAMP::GaugeShow(unsigned val, unsigned max, uint8_t hue) {
-      gauge_time = millis();
-      gauge_val = val;
-      gauge_max = max;
-      gauge_hue = hue;
-    }
+GAUGE *gauge = nullptr; // объект индикатора
+void GAUGE::GaugeMix(GAUGETYPE type) {
+  if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
-    void LAMP::GaugeMix() {
-      if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
-
-#if (VERTGAUGE==1)
-/*      uint8_t ind = (uint8_t)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+  if(type==GAUGETYPE::GT_VERT){
+      /*
+      uint8_t ind = (uint8_t)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
       for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
         for (uint8_t y = 0; y < HEIGHT ; y++) {
           if (ind > y)
@@ -383,12 +350,13 @@ void LAMP::frameShow(const uint32_t ticktime){
           else
             EffectMath::drawPixelXY(x, y,  0);
         }
-      }*/
+      }
+      */
       for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
         EffectMath::drawLine(x, 0, x, HEIGHT, 0);
         EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), (gauge_hue ? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)));
       }
-#else
+  } else {
       uint8_t ind = (uint8_t)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
       for (uint8_t y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
         for (uint8_t x = 0; x < WIDTH ; x++) {
@@ -398,9 +366,8 @@ void LAMP::frameShow(const uint32_t ticktime){
             EffectMath::drawPixelXY((x + y) % WIDTH, y,  0);
         }
       }
-#endif
-    }
-#endif
+  }
+}
 
 LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef OTA
@@ -418,10 +385,6 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       lampState.isCalibrationRequest = false; // находимся ли в режиме калибровки микрофона
       lampState.micAnalyseDivider = 1; // анализ каждый раз
 //#endif
-
-#ifdef VERTGAUGE
-      gauge_time = millis();
-#endif
       lampState.flags = 0; // сборосить все флаги состояния
       lampState.speedfactor = 1.0; // дефолтное значение
       lampState.brightness = 127;
@@ -573,6 +536,26 @@ void LAMP::stopAlarm(){
   } else if(mode==LAMPMODE::MODE_DEMO)
     demoTimer(T_ENABLE);     // вернуть демо-таймер
 }
+
+void LAMP::startRGB(CRGB &val){
+  rgbColor = val;
+  storedMode = ((mode == LAMPMODE::MODE_RGBLAMP) ? storedMode: mode);
+  mode = LAMPMODE::MODE_RGBLAMP;
+  demoTimer(T_DISABLE);     // гасим Демо-таймер
+  effectsTimer(T_ENABLE);
+}
+
+void LAMP::stopRGB(){
+  if (mode != LAMPMODE::MODE_RGBLAMP) return;
+
+  setBrightness(getNormalizedLampBrightness(), false, false);
+  mode = (storedMode != LAMPMODE::MODE_RGBLAMP ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
+  if(mode==LAMPMODE::MODE_DEMO)
+    demoTimer(T_ENABLE);     // вернуть демо-таймер
+  if (flags.ONflag)
+    effectsTimer(T_ENABLE);
+}
+
 
 /*
  * запускаем режим "ДЕМО"
@@ -1196,6 +1179,9 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
 #endif
 
   if (!skip) {
+    if(isRGB()){ // выход из этого режима, при любой попытки перехода по эффектам
+      stopRGB();
+    }
     switch (action) {
     case EFFSWITCH::SW_NEXT :
         fade = (!fader) && fade;
@@ -1316,7 +1302,7 @@ void LAMP::demoTimer(SCHEDULER action, uint8_t tmout){
   case SCHEDULER::T_RESET :
     if (isAlarm())
       stopAlarm(); // тут же сбросим и будильник
-    if (mode==MODE_DEMO && demoTask)
+    if (mode==LAMPMODE::MODE_DEMO && demoTask)
       demoTask->restartDelayed();
     break;
   default:

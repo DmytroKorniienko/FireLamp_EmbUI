@@ -920,7 +920,7 @@ void block_main_flags(Interface *interf, JsonObject *data){
     interf->json_section_begin(FPSTR(TCONST_0019));
     interf->json_section_line("");
     interf->checkbox(FPSTR(TCONST_001A), String(myLamp.isLampOn()), FPSTR(TINTF_00E), true);
-    interf->checkbox(FPSTR(TCONST_001B), String(myLamp.getMode() == MODE_DEMO), FPSTR(TINTF_00F), true);
+    interf->checkbox(FPSTR(TCONST_001B), String(myLamp.getMode() == LAMPMODE::MODE_DEMO), FPSTR(TINTF_00F), true);
     interf->checkbox(FPSTR(TCONST_001C), String(myLamp.IsGlobalBrightness()), FPSTR(TINTF_010), true);
 #ifndef MOOT
     interf->checkbox(FPSTR(TCONST_001D), String(myLamp.IsEventsHandled()), FPSTR(TINTF_011), true);
@@ -1178,16 +1178,17 @@ void set_demoflag(Interface *interf, JsonObject *data){
     if (!data) return;
     resetAutoTimers();
     // Специально не сохраняем, считаю что демо при старте не должно запускаться
-    bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == MODE_DEMO));
+    bool newdemo = TOGLE_STATE((*data)[FPSTR(TCONST_001B)], (myLamp.getMode() == LAMPMODE::MODE_DEMO));
     switch (myLamp.getMode()) {
-        case MODE_OTA:
-        case MODE_ALARMCLOCK:
-        case MODE_NORMAL:
+        case LAMPMODE::MODE_OTA:
+        case LAMPMODE::MODE_ALARMCLOCK:
+        case LAMPMODE::MODE_NORMAL:
+        case LAMPMODE::MODE_RGBLAMP:
             if(newdemo)
                 myLamp.startDemoMode(embui.param(FPSTR(TCONST_0026)).toInt());
             break;
-        case MODE_DEMO:
-        case MODE_WHITELAMP:
+        case LAMPMODE::MODE_DEMO:
+        case LAMPMODE::MODE_WHITELAMP:
             if(!newdemo)
                 myLamp.startNormalMode();
             break;
@@ -1919,7 +1920,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == "1");
         myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == "1");
 
-        SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
+        SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == LAMPMODE::MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
 
         float sf = (*data)[FPSTR(TCONST_0053)];
         SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor(sf));
@@ -2009,7 +2010,7 @@ void block_settings_update(Interface *interf, JsonObject *data){
     interf->json_section_hidden(FPSTR(T_DO_OTAUPD), FPSTR(TINTF_056));
 #ifdef OTA
     interf->spacer(FPSTR(TINTF_057));
-    if (myLamp.getMode() != MODE_OTA) {
+    if (myLamp.getMode() != LAMPMODE::MODE_OTA) {
         interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_058), FPSTR(TCONST_005B));
     } else {
         interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(P_GRAY));
@@ -2354,13 +2355,11 @@ void set_eventlist(Interface *interf, JsonObject *data){
     }
 }
 #ifdef ESP_USE_BUTTON
-    #ifdef VERTGAUGE
-    void set_gaugeflag(Interface *interf, JsonObject *data){
+    void set_gaugetype(Interface *interf, JsonObject *data){
         if (!data) return;
-        myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
+        myLamp.setGaugeType((*data)[FPSTR(TCONST_003F)].as<GAUGETYPE>());
         save_lamp_flags();
     }
-    #endif
 #endif
 
 #ifdef ESP_USE_BUTTON
@@ -2369,9 +2368,12 @@ void block_settings_butt(Interface *interf, JsonObject *data){
     interf->json_section_main(FPSTR(TCONST_006D), FPSTR(TINTF_013));
 
     interf->checkbox(FPSTR(TCONST_001F), myButtons->isButtonOn()? "1" : "0", FPSTR(TINTF_07B), true);
-    #ifdef VERTGAUGE
-    interf->checkbox(FPSTR(TCONST_003F), myLamp.getLampSettings().isGaugeOn ? String("1") : String("0"), FPSTR(TINTF_0DD), true);
-    #endif
+    interf->select(String(FPSTR(TCONST_003F)), String(myLamp.getLampSettings().GaugeType), String(FPSTR(TINTF_0DD)), true);
+        interf->option(String(GAUGETYPE::GT_NONE), String(FPSTR(TINTF_0EE)));
+        interf->option(String(GAUGETYPE::GT_VERT), String(FPSTR(TINTF_0EF)));
+        interf->option(String(GAUGETYPE::GT_HORIZ), String(FPSTR(TINTF_0F0)));
+    interf->json_section_end();
+    interf->spacer();
 
     interf->json_section_begin(FPSTR(TCONST_006E));
     interf->select(FPSTR(TCONST_006F), String(0), String(FPSTR(TINTF_07A)), false);
@@ -2510,10 +2512,15 @@ void set_btnflag(Interface *interf, JsonObject *data){
 void block_settings_enc(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_main(FPSTR(TCONST_000C), FPSTR(TINTF_0DC));
-    #ifdef VERTGAUGE
-    interf->checkbox(FPSTR(TCONST_003F), myLamp.getLampSettings().isGaugeOn ? String("1") : String("0"), FPSTR(TINTF_0DD), false);
+
+    interf->select(String(FPSTR(TCONST_003F)), String(myLamp.getLampSettings().GaugeType), String(FPSTR(TINTF_0DD)), true);
+        interf->option(String(GAUGETYPE::GT_NONE), String(FPSTR(TINTF_0EE)));
+        interf->option(String(GAUGETYPE::GT_VERT), String(FPSTR(TINTF_0EF)));
+        interf->option(String(GAUGETYPE::GT_HORIZ), String(FPSTR(TINTF_0F0)));
+    interf->json_section_end();
     interf->color(FPSTR(TCONST_0040), FPSTR(TINTF_0DE));
-    #endif
+    interf->spacer();
+
     interf->color(FPSTR(TCONST_0042), FPSTR(TINTF_0DF));
     interf->range(FPSTR(TCONST_0043), String(110U-getEncTxtDelay()), String(10), String(100), String(5), String(FPSTR(TINTF_044)), false);
     interf->button_submit(FPSTR(TCONST_000C), FPSTR(TINTF_008), FPSTR(P_GRAY));
@@ -2529,14 +2536,14 @@ void show_settings_enc(Interface *interf, JsonObject *data){
 }
 void set_settings_enc(Interface *interf, JsonObject *data){
     if (!data) return;
-    #ifdef VERTGAUGE
-    myLamp.setGauge((*data)[FPSTR(TCONST_003F)] == "1");
+
+    myLamp.setGaugeType((*data)[FPSTR(TCONST_003F)].as<GAUGETYPE>());
     save_lamp_flags();
     SETPARAM(FPSTR(TCONST_0040));
     String tmpStr = (*data)[FPSTR(TCONST_0040)];
     tmpStr.replace(F("#"), F("0x"));
-    myLamp.setGaugeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
-    #endif
+    myLamp.setGaugeTypeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
+
     SETPARAM(FPSTR(TCONST_0042));
     String tmpStr2 = (*data)[FPSTR(TCONST_0042)];
     tmpStr2.replace(F("#"), F("0x"));
@@ -3027,17 +3034,13 @@ void create_parameters(){
     // пины и системные настройки
 #ifdef ESP_USE_BUTTON
     embui.var_create(FPSTR(TCONST_0097), String(BTN_PIN)); // Пин кнопки
-    #ifdef VERTGAUGE
-    embui.var_create(FPSTR(TCONST_003F), F("1"));         // Вкл\Выкл шкалы
-    #endif
+    embui.var_create(FPSTR(TCONST_003F), String(GAUGETYPE::GT_VERT));         // Тип шкалы
 #endif
 #ifdef ENCODER
     embui.var_create(FPSTR(TCONST_0042), F("#FFA500"));  // Дефолтный цвет текста (Orange)
     embui.var_create(FPSTR(TCONST_0043), F("40"));        // Задержка прокрутки текста
-#ifdef VERTGAUGE
-    embui.var_create(FPSTR(TCONST_003F), F("1"));         // Вкл\Выкл шкалы
+    embui.var_create(FPSTR(TCONST_003F), String(GAUGETYPE::GT_VERT));  // Тип шкалы
     embui.var_create(FPSTR(TCONST_0040), F("#FF2A00"));  // Дефолтный цвет шкалы
-#endif
 #endif
 
 #ifdef MP3PLAYER
@@ -3168,9 +3171,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_006E), show_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_0075), set_butt_conf);
     embui.section_handle_add(FPSTR(TCONST_001F), set_btnflag);
-    #ifdef VERTGAUGE
-    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugeflag);
-    #endif
+    embui.section_handle_add(FPSTR(TCONST_003F), set_gaugetype);
 #endif
 
 #ifdef LAMP_DEBUG
@@ -3316,19 +3317,15 @@ t->enableDelayed();
 #ifdef ESP_USE_BUTTON
     obj[FPSTR(TCONST_001F)] = tmp.isBtn ? "1" : "0";
     CALL_INTF_OBJ(set_btnflag);
-    #ifdef VERTGAUGE
-    obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
-    CALL_INTF_OBJ(set_gaugeflag);
-    #endif
+    obj[FPSTR(TCONST_003F)] = String(tmp.GaugeType);
+    CALL_INTF_OBJ(set_gaugetype);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
 #ifdef ENCODER
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
     obj[FPSTR(TCONST_0043)] = (110U - embui.param(FPSTR(TCONST_0043)).toInt());
-    #ifdef VERTGAUGE
-    obj[FPSTR(TCONST_003F)] = tmp.isGaugeOn ? "1" : "0";;
+    obj[FPSTR(TCONST_003F)] = tmp.GaugeType ? "1" : "0";;
     obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
-    #endif
     set_settings_enc(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 #endif
@@ -3523,9 +3520,12 @@ uint8_t uploadProgress(size_t len, size_t total){
         obj[FPSTR(TINTF_05A)] = String(progress);
         CALL_INTF_OBJ(show_progress);
     }
-#ifdef VERTGAUGE
-    if (myLamp.getLampSettings().isGaugeOn) myLamp.GaugeShow(len, total, 100);
-#endif
+    if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
+        if(gauge)
+            gauge->GaugeShow(len, total, 100);
+        else
+            gauge = new GAUGE(len, total, 100);
+    }
     return progress;
 }
 
@@ -3590,7 +3590,7 @@ void remote_action(RA action, ...){
             break;
         case RA::RA_OFF: {
                 // нажатие кнопки точно отключает ДЕМО и белую лампу возвращая в нормальный режим
-                myLamp.clearDrawBuf(); // очистка буфера рисования, если вызов через http/mqtt
+                myLamp.stopRGB(); // выключение RGB-режима
                 if(value){
                    remote_action(RA::RA_SEND_TEXT, value, NULL);
                 }
@@ -3825,8 +3825,36 @@ void remote_action(RA action, ...){
             myLamp.writeDrawBuf(col,x,y);
             break; 
         }
-        case RA::RA_RGB:
-            myLamp.setDraw(true); // без break, т.к. вызываем затем RA_FILLMATRIX
+        case RA::RA_RGB: {
+            String tmpStr = value;
+            if(tmpStr.indexOf(",")!=-1){
+                int16_t pos = 0;
+                int16_t frompos = 0;
+                uint8_t val = 0;
+                uint32_t res = 0;
+                do {
+                    frompos = pos;
+                    pos = tmpStr.indexOf(",", pos);
+                    if(pos!=-1){
+                        val = tmpStr.substring(frompos,pos).toInt();
+                        res=(res<<8)|val;
+                        pos++;
+                    } else if(frompos<(signed)tmpStr.length()){
+                        val = tmpStr.substring(frompos,tmpStr.length()).toInt();
+                        res=(res<<8)|val; 
+                    }
+                } while(pos!=-1);
+                CRGB color=CRGB(res);
+                myLamp.startRGB(color);
+                break;
+            }
+            tmpStr.replace(F("#"), F("0x"));
+            long val = strtol(tmpStr.c_str(), NULL, 0);
+            LOG(printf_P, PSTR("%s:%ld\n"), tmpStr.c_str(), val);
+            CRGB color=CRGB(val);
+            myLamp.startRGB(color);
+            break; 
+        }
         case RA::RA_FILLMATRIX: {
             String tmpStr = value;
             if(tmpStr.indexOf(",")!=-1){
@@ -3841,7 +3869,7 @@ void remote_action(RA action, ...){
                         val = tmpStr.substring(frompos,pos).toInt();
                         res=(res<<8)|val;
                         pos++;
-                    } else if(frompos<tmpStr.length()){
+                    } else if(frompos<(signed)tmpStr.length()){
                         val = tmpStr.substring(frompos,tmpStr.length()).toInt();
                         res=(res<<8)|val; 
                     }

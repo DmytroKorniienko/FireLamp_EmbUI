@@ -45,6 +45,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effects.h"
 #include "ui.h"
 #include "DS18B20.h"
+#include "extra_tasks.h"
 
 uint8_t currDynCtrl;        // текущий контрол, с которым работаем
 uint8_t currAction;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
@@ -438,9 +439,12 @@ void encSetBri(int val) {
   }
   currAction = 1;
   anyValue = constrain(anyValue + val, 1, 255);
-#ifdef VERTGAUGE
-  if (myLamp.isGauge()) myLamp.GaugeShow(anyValue, 255);
-#endif
+  if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
+      if(gauge)
+          gauge->GaugeShow(anyValue, 255);
+      else
+          gauge = new GAUGE(anyValue, 255);
+  }
   encDisplay(anyValue, String(F("b.")));
 }
 
@@ -501,9 +505,12 @@ void encSetDynCtrl(int val) {
     myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val, 0, 1)));
   
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
-#ifdef VERTGAUGE
-  else if (myLamp.isGauge()) myLamp.GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
-#endif
+  else if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
+      if(gauge)
+          gauge->GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
+      else
+          gauge = new GAUGE(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
+  }
   encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
   interrupt();
 }
@@ -565,7 +572,7 @@ void encSendStringNumEff(String str, CRGB color) {
 
 
 void toggleDemo() {
-  if (myLamp.getMode() == MODE_DEMO) {
+  if (myLamp.getMode() == LAMPMODE::MODE_DEMO) {
     remote_action(RA::RA_DEMO, "0", NULL); 
     encSendString(String(F("Demo OFF")), txtColor, true, txtDelay);
   }

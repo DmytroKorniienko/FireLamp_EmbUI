@@ -43,6 +43,69 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // TaskScheduler
 extern Scheduler ts;
 
+typedef enum _GAUGETYPE {
+    GT_NONE = 0,    // пустой
+    GT_VERT,        // вертикальный
+    GT_HORIZ        // горизонтальный
+} GAUGETYPE;
+
+class GAUGE;
+extern GAUGE *gauge;
+
+class GAUGE : public Task {
+private:
+    uint8_t xStep; uint8_t xCol; uint8_t yStep; uint8_t yCol; // для индикатора
+    unsigned long gauge_time = 0;
+    unsigned gauge_val = 0;
+    unsigned gauge_max = 0;
+    uint8_t gauge_hue = 0;
+    CRGB gauge_color = 0;
+public:
+    INLINE GAUGE(unsigned val, unsigned max, uint8_t hue = 0)
+    : Task(3*TASK_SECOND, TASK_ONCE, []() {TASK_RECYCLE; gauge = nullptr;}, &ts, false){
+        gauge_time = millis();
+        gauge_val = val;
+        gauge_max = max;
+        gauge_hue = hue;
+
+        xStep = WIDTH / 4;
+        xCol = 4;
+        if(xStep<2) {
+          xStep = WIDTH / 3;
+          xCol = 3;
+        } else if(xStep<2) {
+          xStep = WIDTH / 2;
+          xCol = 2;
+        } else if(xStep<2) {
+          xStep = 1;
+          xCol = 1;
+        }
+
+        yStep = HEIGHT / 4;
+        yCol = 4;
+        if(yStep<2) {
+          yStep = HEIGHT / 3;
+          yCol = 3;
+        } else if(yStep<2) {
+          yStep = HEIGHT / 2;
+          yCol = 2;
+        } else if(yStep<2) {
+          yStep = 1;
+          yCol = 1;
+        }
+
+        this->enableDelayed();
+    };
+    void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE);
+    void GaugeShow(unsigned val, unsigned max, uint8_t hue = 0) { 
+        gauge_time = millis();
+        gauge_val = val;
+        gauge_max = max;
+        gauge_hue = hue;
+        this->restartDelayed(); }
+    void setGaugeTypeColor(CRGB color) { gauge_color = color;}
+};
+
 class StringTask : public Task {
     char *_data = nullptr;
     INLINE char *makeCopy(const char *data) {

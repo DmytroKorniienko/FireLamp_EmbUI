@@ -63,6 +63,7 @@ typedef enum _LAMPMODE {
   MODE_NORMAL = 0,
   MODE_DEMO,
   MODE_WHITELAMP,
+  MODE_RGBLAMP,
   MODE_ALARMCLOCK,
   MODE_OTA
 } LAMPMODE;
@@ -136,7 +137,7 @@ struct {
     uint8_t playTime:3; // воспроизводить время?
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
     //--------16 штук граница-------------------
-    bool isGaugeOn:1;
+    uint8_t GaugeType:2; // тип индикатора
     bool isTempOn:1;
     bool isStream:1;
     bool isDirect:1;
@@ -170,7 +171,7 @@ _LAMPFLAGS(){
     isDraw = false;
     tm24 = true;
     tmZero = false;
-    isGaugeOn = true;
+    GaugeType = GAUGETYPE::GT_VERT;
     isTempOn = true;
     isStream = false;
     isDirect = false;
@@ -195,10 +196,11 @@ private:
     uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
-    LAMPMODE mode = MODE_NORMAL; // текущий режим
-    LAMPMODE storedMode = MODE_NORMAL; // предыдущий режим
+    LAMPMODE mode = LAMPMODE::MODE_NORMAL; // текущий режим
+    LAMPMODE storedMode = LAMPMODE::MODE_NORMAL; // предыдущий режим
     uint16_t storedEffect = (uint16_t)EFF_ENUM::EFF_NONE;
     uint8_t storedBright;
+    CRGB rgbColor = CRGB::White; // дефолтный цвет для RGB-режима
 
     typedef struct {
         uint8_t alarmP;
@@ -238,16 +240,6 @@ private:
     void brightness(const uint8_t _brt, bool natural=true);     // низкоуровневая крутилка глобальной яркостью для других методов
 
     void effectsTick(); // обработчик эффектов
-
-#ifdef VERTGAUGE
-    uint8_t xStep; uint8_t xCol; uint8_t yStep; uint8_t yCol; // для индикатора
-    unsigned long gauge_time = 0;
-    unsigned gauge_val = 0;
-    unsigned gauge_max = 0;
-    uint8_t gauge_hue = 0;
-    CRGB gauge_color = 0;
-    void GaugeMix();
-#endif
 
 #ifdef OTA
     OtaManager otaManager;
@@ -321,11 +313,6 @@ public:
     bool isMicOnOff() {return flags.isMicOn;}
 #endif
 
-#ifdef VERTGAUGE
-    void GaugeShow(unsigned val, unsigned max, uint8_t hue = 0);
-    void setGaugeColor(CRGB color) { gauge_color = color;}
-#endif
-
     void setSpeedFactor(float val) {
         lampState.speedfactor = val;
         if(effects.worker) effects.worker->setDynCtrl(effects.getControls()[1]);
@@ -338,7 +325,7 @@ public:
     void setGlobalBrightness(uint8_t brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val; if(effects.worker) { lampState.brightness=getLampBrightness(); effects.worker->setDynCtrl(effects.getControls()[0]);} }
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
-    bool isAlarm() {return mode == MODE_ALARMCLOCK;}
+    bool isAlarm() {return mode == LAMPMODE::MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
     //int getmqtt_int() {return mqtt_int;}
 
@@ -470,12 +457,13 @@ public:
 bool isTempDisp() {return flags.isTempOn;}
 void setTempDisp(bool flag) {flags.isTempOn = flag;}
 #endif
-#ifdef VERTGAUGE
-    bool isGauge() {return flags.isGaugeOn;}
-    void setGauge(bool flag) {flags.isGaugeOn = flag;}
-#endif
+    bool getGaugeType() {return flags.GaugeType;}
+    void setGaugeType(GAUGETYPE val) {flags.GaugeType = val;}
     void startAlarm(char *value = nullptr);
     void stopAlarm();
+    void startRGB(CRGB &val);
+    void stopRGB();
+    bool isRGB() {return mode == LAMPMODE::MODE_RGBLAMP;}
     void startDemoMode(uint8_t tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
     void startNormalMode(bool forceOff=false);
     void restoreStored();
