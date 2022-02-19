@@ -49,11 +49,10 @@ typedef enum _GAUGETYPE {
     GT_HORIZ        // горизонтальный
 } GAUGETYPE;
 
-class GAUGE;
-extern GAUGE *gauge;
-
 class GAUGE : public Task {
 private:
+    static GAUGE *gauge; // объект индикатора
+
     uint8_t xStep; uint8_t xCol; uint8_t yStep; uint8_t yCol; // для индикатора
     unsigned long gauge_time = 0;
     unsigned gauge_val = 0;
@@ -63,6 +62,8 @@ private:
 public:
     INLINE GAUGE(unsigned val, unsigned max, uint8_t hue = 0)
     : Task(3*TASK_SECOND, TASK_ONCE, []() {TASK_RECYCLE; gauge = nullptr;}, &ts, false){
+        GAUGE::gauge = this;
+
         gauge_time = millis();
         gauge_val = val;
         gauge_max = max;
@@ -96,14 +97,56 @@ public:
 
         this->enableDelayed();
     };
-    void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE);
-    void GaugeShow(unsigned val, unsigned max, uint8_t hue = 0) { 
-        gauge_time = millis();
-        gauge_val = val;
-        gauge_max = max;
-        gauge_hue = hue;
-        this->restartDelayed(); }
-    void setGaugeTypeColor(CRGB color) { gauge_color = color;}
+    ~GAUGE() {GAUGE::gauge = nullptr;}
+
+    void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE) {
+        if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
+
+        if(type==GAUGETYPE::GT_VERT){
+            /*
+            uint8_t ind = (uint8_t)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+            for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
+                for (uint8_t y = 0; y < HEIGHT ; y++) {
+                if (ind > y)
+                    EffectMath::drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
+                else
+                    EffectMath::drawPixelXY(x, y,  0);
+                }
+            }
+            */
+            for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
+                EffectMath::drawLine(x, 0, x, HEIGHT, 0);
+                EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), (gauge_hue ? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)));
+            }
+        } else {
+            uint8_t ind = (uint8_t)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
+            for (uint8_t y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
+                for (uint8_t x = 0; x < WIDTH ; x++) {
+                if (ind > x)
+                    EffectMath::drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
+                else
+                    EffectMath::drawPixelXY((x + y) % WIDTH, y,  0);
+                }
+            }
+        }
+    }
+
+    static GAUGE *GetGaugeInstance() {
+        return GAUGE::gauge;
+    }
+
+    static void GaugeShow(unsigned val, unsigned max, uint8_t hue = 0) {
+        if(GAUGE::gauge==nullptr){
+            GAUGE::gauge = new GAUGE(val,max,hue);
+        } else {
+            GetGaugeInstance()->gauge_time = millis();
+            GetGaugeInstance()->gauge_val = val;
+            GetGaugeInstance()->gauge_max = max;
+            GetGaugeInstance()->gauge_hue = hue;
+            GetGaugeInstance()->restartDelayed();
+        }
+    }
+    void setGaugeTypeColor(CRGB color) { if(GetGaugeInstance()!=nullptr) GetGaugeInstance()->gauge_color = color;}
 };
 
 class StringTask : public Task {

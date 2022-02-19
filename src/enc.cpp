@@ -440,10 +440,7 @@ void encSetBri(int val) {
   currAction = 1;
   anyValue = constrain(anyValue + val, 1, 255);
   if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-      if(gauge)
-          gauge->GaugeShow(anyValue, 255);
-      else
-          gauge = new GAUGE(anyValue, 255);
+      GAUGE::GaugeShow(anyValue, 255);
   }
   encDisplay(anyValue, String(F("b.")));
 }
@@ -506,10 +503,7 @@ void encSetDynCtrl(int val) {
   
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
   else if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-      if(gauge)
-          gauge->GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
-      else
-          gauge = new GAUGE(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
+      GAUGE::GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
   }
   encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
   interrupt();

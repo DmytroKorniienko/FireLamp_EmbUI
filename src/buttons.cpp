@@ -42,10 +42,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 					tReverseTimeout->enableDelayed();
 				} 
 				if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-						if(gauge)
-								gauge->GaugeShow(newval, 255, 10);
-						else
-								gauge = new GAUGE(newval, 255, 10);
+						GAUGE::GaugeShow(newval, 255, 10);
 				}
 				remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(newval).c_str(), NULL);
 				return true;
@@ -60,10 +57,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 					tReverseTimeout->enableDelayed();
 				}
 				if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-						if(gauge)
-								gauge->GaugeShow(newval, 255, 100);
-						else
-								gauge = new GAUGE(newval, 255, 100);
+						GAUGE::GaugeShow(newval, 255, 100);
 				}
 				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"1").c_str(), String(newval).c_str(), NULL);
 				return true;
@@ -79,10 +73,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 					tReverseTimeout->enableDelayed();
 				}
 				if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-						if(gauge)
-								gauge->GaugeShow(newval, 255, 150);
-						else
-								gauge = new GAUGE(newval, 255, 150);
+						GAUGE::GaugeShow(newval, 255, 150);
 				}
 				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"2").c_str(), String(newval).c_str(), NULL);
 				return true;

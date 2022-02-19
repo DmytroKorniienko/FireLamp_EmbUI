@@ -2542,7 +2542,7 @@ void set_settings_enc(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0040));
     String tmpStr = (*data)[FPSTR(TCONST_0040)];
     tmpStr.replace(F("#"), F("0x"));
-    myLamp.setGaugeTypeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
+    GAUGE::GetGaugeInstance()->setGaugeTypeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
 
     SETPARAM(FPSTR(TCONST_0042));
     String tmpStr2 = (*data)[FPSTR(TCONST_0042)];
@@ -3521,10 +3521,7 @@ uint8_t uploadProgress(size_t len, size_t total){
         CALL_INTF_OBJ(show_progress);
     }
     if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-        if(gauge)
-            gauge->GaugeShow(len, total, 100);
-        else
-            gauge = new GAUGE(len, total, 100);
+        GAUGE::GaugeShow(len, total, 100);
     }
     return progress;
 }

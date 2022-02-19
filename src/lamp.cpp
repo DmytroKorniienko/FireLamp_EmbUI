@@ -306,8 +306,8 @@ void LAMP::effectsTick(){
     doPrintStringToLamp(); // обработчик печати строки
   }
 
-  if(gauge)
-    gauge->GaugeMix((GAUGETYPE)flags.GaugeType);
+  if(GAUGE::GetGaugeInstance())
+    GAUGE::GetGaugeInstance()->GaugeMix((GAUGETYPE)flags.GaugeType);
 
   if (isRGB() || isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || fader || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
@@ -336,38 +336,7 @@ void LAMP::frameShow(const uint32_t ticktime){
   ++fps;
 }
 
-GAUGE *gauge = nullptr; // объект индикатора
-void GAUGE::GaugeMix(GAUGETYPE type) {
-  if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
-
-  if(type==GAUGETYPE::GT_VERT){
-      /*
-      uint8_t ind = (uint8_t)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
-      for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
-        for (uint8_t y = 0; y < HEIGHT ; y++) {
-          if (ind > y)
-            EffectMath::drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
-          else
-            EffectMath::drawPixelXY(x, y,  0);
-        }
-      }
-      */
-      for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
-        EffectMath::drawLine(x, 0, x, HEIGHT, 0);
-        EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), (gauge_hue ? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)));
-      }
-  } else {
-      uint8_t ind = (uint8_t)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
-      for (uint8_t y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
-        for (uint8_t x = 0; x < WIDTH ; x++) {
-          if (ind > x)
-            EffectMath::drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
-          else
-            EffectMath::drawPixelXY((x + y) % WIDTH, y,  0);
-        }
-      }
-  }
-}
+GAUGE *GAUGE::gauge = nullptr; // объект индикатора
 
 LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef OTA
