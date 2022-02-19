@@ -226,17 +226,17 @@ String ha_autodiscovery()
     hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
     hass_discover[F("whit_val_scl")] = 255;
 
-    // hass_discover[F("effect_list")] = F("[Blink, Static]");
-    hass_discover[F("effect_list")] = F("[\"Test1\", \"Test2\"]");
-    // hass_discover[F("effect")] = F("rainbow");
+    JsonArray data = hass_discover.createNestedArray(F("effect_list"));
+    data.add("1:Белая лампа");
+    data.add("Test2");
 
     // hass_discover[F("xy_cmd_t")] = F("~set/speed");     // scale as white level (Яркость белого)
     // hass_discover[F("xy_stat_t")] = F("~pub/speed");    // scale as white level
     //hass_discover[F("whit_val_scl")] = 255; // 'xy_val_tpl':          'xy_value_template',
 
     hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
-    hass_discover[F("fx_stat_t")] = F("~pub/eff_config");                              // effect_state_topic
-    hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");     // effect_template
+    hass_discover[F("fx_stat_t")] = F("~pub/eef_oname");                              // effect_state_topic
+    hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.ename }}");     // effect_template
 
     hass_discover[F("json_attr_t")] = F("~pub/eff_config");                            // json_attributes_topic
 

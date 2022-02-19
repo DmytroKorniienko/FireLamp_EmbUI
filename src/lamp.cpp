@@ -126,7 +126,7 @@ void LAMP::handle()
 
 
   // будильник обрабатываем раз в секунду
-  alarmWorker();
+  //alarmWorker();
 
   if(lampState.isEffectsDisabledUntilText && !lampState.isStringPrinting) {
     setBrightness(0,false,false); // напечатали, можно гасить матрицу :)
@@ -152,9 +152,9 @@ void LAMP::handle()
   }
 
   // EVERY_N_SECONDS(5){
-  //   LOG(printf_P, PSTR("Test: %d %d %d\n"),!lampState.isStringPrinting, !flags.ONflag, !fader);
+  //   LOG(printf_P, PSTR("Test: %d %d %d\n"),!lampState.isStringPrinting, !flags.ONflag, !LEDFader::getInstance());
   // }
-  if(!lampState.isStringPrinting && !flags.ONflag && !fader){ // освобождать буфер только если не выводится строка, иначе держать его
+  if(!lampState.isStringPrinting && !flags.ONflag && !LEDFader::getInstance()){ // освобождать буфер только если не выводится строка, иначе держать его
     if(sledsbuff){
       delete [] sledsbuff;
       sledsbuff = nullptr;
@@ -163,92 +163,10 @@ void LAMP::handle()
 
 }
 
-// обработчик будильника "рассвет"
-void LAMP::alarmWorker(){
-    // временно статикой, дальше нужно будет переписать
-    static CHSV dawnColorMinus[6];                                            // цвет "рассвета"
-    static uint8_t dawnCounter = 0;                                           // счётчик первых шагов будильника
-    static time_t startmillis;
-    
-    if (mode != LAMPMODE::MODE_ALARMCLOCK){
-      lampState.dawnFlag = false;
-      return;
-    }
-
-    // проверка рассвета, первый вход в функцию
-    if (!lampState.dawnFlag){
-      startmillis = millis();
-      memset(dawnColorMinus,0,sizeof(dawnColorMinus));
-      dawnCounter = 0;
-      FastLED.clear();
-      brightness(BRIGHTNESS, false);   // не помню, почему тут стояло 255... надо будет проверить работу рассвета :), ниже есть доп. ограничение - DAWN_BRIGHT
-      // величина рассвета 0-255
-      int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...curAlarm.alarmP*60 секунд приведенные к 0...255
-      dawnPosition = constrain(dawnPosition, 0, 255);
-      dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
-        map(dawnPosition, 0, 255, 255, 170),
-        map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
-      );
-    }
-
-    if (((millis() - startmillis) / 1000 > (((uint32_t)(curAlarm.alarmP) + curAlarm.alarmT) * 60UL+30U))) {
-      // рассвет закончился
-      stopAlarm();
-      return;
-    }
-
-    EVERY_N_SECONDS(1){
-      if (embui.timeProcessor.seconds00()) {
-        CRGB letterColor;
-        hsv2rgb_rainbow(dawnColorMinus[0], letterColor); // конвертация цвета времени, с учетом текущей точки рассвета
-        if(!curAlarm.msg.isEmpty() && curAlarm.msg != "-") {
-            sendStringToLamp(curAlarm.msg.c_str(), letterColor, true);
-        } else {
-#ifdef PRINT_ALARM_TIME
-#ifdef MP3PLAYER
-          if(mp3->isAlarm()) // если отложенный звук будильника, то время тоже не выводим, т.к. может быть включено озвучивание
-#endif
-            if(curAlarm.msg != "-") // отключение вывода по спец. символу "минус"
-              sendStringToLamp(String(F("%TM")).c_str(), letterColor, true);
-#endif
-        }
-      } else if(!(localtime(TimeProcessor::now())->tm_sec%6)){ // проверка рассвета каждые 6 секунд, кроме 0 секунды
-        // величина рассвета 0-255
-        int16_t dawnPosition = map((millis()-startmillis)/1000,0,curAlarm.alarmP*60,0,255); // 0...300 секунд приведенные к 0...255
-        dawnPosition = constrain(dawnPosition, 0, 255);
-
-#ifdef MP3PLAYER
-        //LOG(println, dawnPosition);
-        if(curAlarm.isStartSnd)
-          mp3->setTempVolume(map(dawnPosition,0,255,1,(curAlarm.isLimitVol ? mp3->getVolume() : 30))); // наростание громкости
-        else if(dawnPosition==255 && !curAlarm.isStartSnd && !mp3->isAlarm()){
-          mp3->setAlarm(true);
-          mp3->StartAlarmSoundAtVol(curAlarm.type, mp3->getVolume()); // запуск звука будильника
-        }
-#endif
-        
-        dawnColorMinus[0] = CHSV(map(dawnPosition, 0, 255, 10, 35),
-          map(dawnPosition, 0, 255, 255, 170),
-          map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
-        );
-        dawnCounter++; //=dawnCounter%(sizeof(dawnColorMinus)/sizeof(CHSV))+1;
-
-        for (uint8_t i = sizeof(dawnColorMinus) / sizeof(CHSV) - 1; i > 0U; i--){
-            dawnColorMinus[i]=((dawnCounter > i)?dawnColorMinus[i-1]:dawnColorMinus[i]);
-        }
-      }
-    }
-
-    for (uint16_t i = 0U; i < NUM_LEDS; i++) {
-        getUnsafeLedsArray()[i] = dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
-    }
-    lampState.dawnFlag = true;
-}
-
 void LAMP::effectsTick(){
   uint32_t _begin = millis();
 
-  if (effects.worker && (flags.ONflag || fader) && !isAlarm() && !isRGB()) {
+  if (effects.worker && (flags.ONflag || LEDFader::getInstance()) && !isAlarm() && !isRGB()) {
     if(!lampState.isEffectsDisabledUntilText){
       if (sledsbuff) {
         //std::copy(sledsbuff, NUM_LEDS, getUnsafeLedsArray());
@@ -306,10 +224,9 @@ void LAMP::effectsTick(){
     doPrintStringToLamp(); // обработчик печати строки
   }
 
-  if(GAUGE::GetGaugeInstance())
-    GAUGE::GetGaugeInstance()->GaugeMix((GAUGETYPE)flags.GaugeType);
+  GAUGE::GetGaugeInstance()->GaugeMix((GAUGETYPE)flags.GaugeType);
 
-  if (isRGB() || isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || fader || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
+  if (isRGB() || isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || LEDFader::getInstance() || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     effectsTimer(T_FRAME_ENABLE, _begin);
   } else if(isLampOn()) {
@@ -323,7 +240,7 @@ void LAMP::effectsTick(){
  * и перезапуск эффект-процессора
  */
 void LAMP::frameShow(const uint32_t ticktime){
-  if ( !fader && !isLampOn() && !isAlarm() ) return;
+  if ( !LEDFader::getInstance() && !isLampOn() && !isAlarm() ) return;
 
   FastLED.show();
 
@@ -337,6 +254,8 @@ void LAMP::frameShow(const uint32_t ticktime){
 }
 
 GAUGE *GAUGE::gauge = nullptr; // объект индикатора
+LEDFader *LEDFader::fader = nullptr; // объект фейдера
+ALARMTASK *ALARMTASK::alarmTask = nullptr; // объект будильника
 
 LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
 #ifdef OTA
@@ -364,7 +283,7 @@ void LAMP::changePower() {changePower(!flags.ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
-  stopAlarm();            // любая активность в интерфейсе - отключаем будильник
+  ALARMTASK::stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == flags.ONflag) return;  // пропускаем холостые вызовы
   LOG(print, F("Lamp powering ")); LOG(println, flag ? F("On"): F("Off"));
   flags.ONflag = flag;
@@ -386,7 +305,7 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     Led_Stream::clearStreamObj();
 #endif
     if(flags.isFaderON && !lampState.isOffAfterText)
-      fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
+      LEDFader::fadelight(this, 0, FADE_TIME, std::bind(&LAMP::effectsTimer, this, SCHEDULER::T_DISABLE, 0));  // гасим эффект-процессор
     else {
       brightness(0);
       effectsTimer(SCHEDULER::T_DISABLE);
@@ -421,43 +340,6 @@ void LAMP::changePower(bool flag) // флаг включения/выключе�
     FastLED.setMaxPowerInVoltsAndMilliamps(5, curLimit); // установка максимального тока БП, более чем актуально))). Проверил, без этого куска - ограничение по току не работает :)
 }
 
-void LAMP::startAlarm(char *value){
-  DynamicJsonDocument doc(1024);
-  String buf = value;
-  buf.replace("'","\"");
-  deserializeJson(doc,buf);
-  curAlarm.alarmP = doc.containsKey(FPSTR(TCONST_00BB)) ? doc[FPSTR(TCONST_00BB)] : getAlarmP();
-  curAlarm.alarmT = doc.containsKey(FPSTR(TCONST_00BC)) ? doc[FPSTR(TCONST_00BC)] : getAlarmT();
-  curAlarm.msg = doc.containsKey(FPSTR(TCONST_0035)) ? doc[FPSTR(TCONST_0035)] : String("");
-  curAlarm.isLimitVol = doc.containsKey(FPSTR(TCONST_00D2)) ? doc[FPSTR(TCONST_00D2)].as<String>()=="1" : getLampSettings().limitAlarmVolume;
-  curAlarm.isStartSnd = doc.containsKey(FPSTR(TCONST_00D1)) ? doc[FPSTR(TCONST_00D1)].as<String>()=="1" : true;
-  curAlarm.type = (ALARM_SOUND_TYPE)(doc.containsKey(FPSTR(TCONST_00D3)) ? doc[FPSTR(TCONST_00D3)].as<uint8_t>() : getLampSettings().alarmSound);
-
-  storedMode = ((mode == LAMPMODE::MODE_ALARMCLOCK) ? storedMode: mode);
-  mode = LAMPMODE::MODE_ALARMCLOCK;
-  demoTimer(T_DISABLE);     // гасим Демо-таймер
-#ifdef USE_STREAMING
-  if(!flags.isDirect || !flags.isStream)
-#endif
-  effectsTimer(T_ENABLE);
-#ifdef MP3PLAYER
-  if(curAlarm.isStartSnd){
-    mp3->setAlarm(true);
-    mp3->StartAlarmSoundAtVol(curAlarm.type, 1); // запуск звука будильника c минимальной громкости
-  } else {
-    mp3->setAlarm(false); // здесь будет стоп музыки
-  }
-#endif
-
-#if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
-  digitalWrite(ALARM_PIN, ALARM_LEVEL);
-#endif
-
-#if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
-  digitalWrite(MOSFET_PIN, MOSFET_LEVEL);
-#endif
-}
-
 #ifdef MP3PLAYER
 void LAMP::playEffect(bool isPlayName, EFFSWITCH action){
   if(mp3!=nullptr && mp3->isOn() && effects.getEn()>0 && (flags.playEffect || ((isLampOn() || millis()>5000) && flags.playMP3 && action!=EFFSWITCH::SW_NEXT_DEMO && action!=EFFSWITCH::SW_RND))){
@@ -469,42 +351,6 @@ void LAMP::playEffect(bool isPlayName, EFFSWITCH action){
   }
 }
 #endif
-
-void LAMP::stopAlarm(){
-  lampState.dawnFlag = false;
-  if (mode != LAMPMODE::MODE_ALARMCLOCK) return;
-
-  setBrightness(getNormalizedLampBrightness(), false, false);
-  mode = (storedMode != LAMPMODE::MODE_ALARMCLOCK ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
-#ifdef MP3PLAYER
-  mp3->setAlarm(false);
-  Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
-    mp3->RestoreVolume(); // восстановить уровень громкости
-    if(flags.ONflag)
-      mp3->playEffect(mp3->getCurPlayingNb(),"");
-    TASK_RECYCLE;
-  });
-  _t->enableDelayed();
-  curAlarm.clear(); // очистить сообщение выводимое на лампу в будильнике
-#endif
-
-#if defined(ALARM_PIN) && defined(ALARM_LEVEL)                    // установка сигнала в пин, управляющий будильником
-  digitalWrite(ALARM_PIN, !ALARM_LEVEL);
-#endif
-
-#if defined(MOSFET_PIN) && defined(MOSFET_LEVEL)                  // установка сигнала в пин, управляющий MOSFET транзистором, соответственно состоянию вкл/выкл матрицы
-  digitalWrite(MOSFET_PIN, flags.ONflag ? MOSFET_LEVEL : !MOSFET_LEVEL);
-#endif
-
-  LOG(printf_P, PSTR("Отключение будильника рассвет, ONflag=%d\n"), flags.ONflag);
-  brightness(getNormalizedLampBrightness());
-  if (!flags.ONflag) {
-      effectsTimer(T_DISABLE);
-      FastLED.clear();
-      FastLED.show();
-  } else if(mode==LAMPMODE::MODE_DEMO)
-    demoTimer(T_ENABLE);     // вернуть демо-таймер
-}
 
 void LAMP::startRGB(CRGB &val){
   rgbColor = val;
@@ -1100,7 +946,7 @@ void LAMP::micHandler()
 void LAMP::setBrightness(const uint8_t _brt, const bool fade, const bool natural){
     LOG(printf_P, PSTR("Set brightness: %u\n"), _brt);
     if (fade) {
-        fadelight(this, _brt);
+        LEDFader::fadelight(this, _brt);
     } else {
         brightness(_brt, natural);
     }
@@ -1153,18 +999,18 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     }
     switch (action) {
     case EFFSWITCH::SW_NEXT :
-        fade = (!fader) && fade;
+        fade = (!LEDFader::getInstance()) && fade;
         effects.setSelected(effects.getNext());
         break;
     case EFFSWITCH::SW_NEXT_DEMO :
         effects.setSelected(effects.getByCnt(1));
         break;
     case EFFSWITCH::SW_PREV :
-        fade = (!fader) && fade;
+        fade = (!LEDFader::getInstance()) && fade;
         effects.setSelected(effects.getPrev());
         break;
     case EFFSWITCH::SW_SPECIFIC :
-        //fade = (!fader) && fade;
+        //fade = (!LEDFader::getInstance()) && fade;
         effects.setSelected(effects.getBy(effnb));
         break;
     case EFFSWITCH::SW_RND :
@@ -1186,7 +1032,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
     LOG(printf_P, PSTR("EFFSWITCH=%d, fade=%d, effnb=%d\n"), action, fade, effects.getSelected());
     // тухнем "вниз" только на включенной лампе
     if (fade && flags.ONflag) {
-      fadelight(this, min(FADE_MINCHANGEBRT, (unsigned int)myLamp.getLampBrightness()), FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
+      LEDFader::fadelight(this, min(FADE_MINCHANGEBRT, (unsigned int)myLamp.getLampBrightness()), FADE_TIME, std::bind(&LAMP::switcheffect, this, action, fade, effnb, true));
       return;
     }
   } else {
@@ -1270,7 +1116,7 @@ void LAMP::demoTimer(SCHEDULER action, uint8_t tmout){
     break;
   case SCHEDULER::T_RESET :
     if (isAlarm())
-      stopAlarm(); // тут же сбросим и будильник
+      ALARMTASK::stopAlarm(); // тут же сбросим и будильник
     if (mode==LAMPMODE::MODE_DEMO && demoTask)
       demoTask->restartDelayed();
     break;
@@ -1410,19 +1256,3 @@ void LAMP::showWarning(
   }
 }
 
-// Fader object
-LEDFader *fader = nullptr;
-/**
- * @brief - Non-blocking light fader, uses scheduler to globaly fade FastLED brighness within specified duration
- * @param LAMP *lamp - lamp instance
- * @param uint8_t _targetbrightness - end value for the brighness to fade to, FastLED dim8
- *                                   function applied internaly for natiral dimming
- * @param uint32_t _duration - fade effect duraion, ms
- * @param callback  -  callback-функция, которая будет выполнена после окончания затухания
- */
-void fadelight(LAMP *lamp, const uint8_t _targetbrightness, const uint32_t _duration, std::function<void()> callback){
-    while(fader){
-      fader->skipBrightness(); // отмена предыдущего фейдера
-    }
-    fader = (new LEDFader(&ts, lamp,_targetbrightness, _duration, callback))->getInstance();
-}

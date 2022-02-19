@@ -43,6 +43,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // TaskScheduler
 extern Scheduler ts;
 
+//-----------------------------------------------
+
 typedef enum _GAUGETYPE {
     GT_NONE = 0,    // пустой
     GT_VERT,        // вертикальный
@@ -51,14 +53,15 @@ typedef enum _GAUGETYPE {
 
 class GAUGE : public Task {
 private:
-    static GAUGE *gauge; // объект индикатора
+    static GAUGE *gauge; // статический объект индикатора
 
-    uint8_t xStep; uint8_t xCol; uint8_t yStep; uint8_t yCol; // для индикатора
+    uint16_t xStep; uint16_t xCol; uint16_t yStep; uint16_t yCol; // для индикатора
     unsigned long gauge_time = 0;
     unsigned gauge_val = 0;
     unsigned gauge_max = 0;
     uint8_t gauge_hue = 0;
     CRGB gauge_color = 0;
+    GAUGE() = delete;
 public:
     INLINE GAUGE(unsigned val, unsigned max, uint8_t hue = 0)
     : Task(3*TASK_SECOND, TASK_ONCE, []() {TASK_RECYCLE; gauge = nullptr;}, &ts, false){
@@ -100,6 +103,7 @@ public:
     ~GAUGE() {GAUGE::gauge = nullptr;}
 
     void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE) {
+        if(GAUGE::gauge==nullptr) return;
         if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
         if(type==GAUGETYPE::GT_VERT){
@@ -149,6 +153,8 @@ public:
     void setGaugeTypeColor(CRGB color) { if(GetGaugeInstance()!=nullptr) GetGaugeInstance()->gauge_color = color;}
 };
 
+//-----------------------------------------------
+
 class StringTask : public Task {
     char *_data = nullptr;
     INLINE char *makeCopy(const char *data) {
@@ -171,6 +177,8 @@ public:
     ~StringTask() {if(_data) delete[] _data;}
 };
 
+//-----------------------------------------------
+
 class WarningTask : public StringTask {
     CRGB _warn_color;
     uint32_t _warn_duration;
@@ -185,6 +193,8 @@ public:
       //LOG(println, F("WarningTask constructor"));
     }
 };
+
+//-----------------------------------------------
 
 class CtrlsTask : public Task {
     DynamicJsonDocument *_data = nullptr;
@@ -221,5 +231,7 @@ public:
     }
     ~CtrlsTask() {if(_data) delete _data;}
 };
+
+//-----------------------------------------------
 
 #endif

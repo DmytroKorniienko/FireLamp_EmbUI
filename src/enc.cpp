@@ -342,7 +342,7 @@ void myClicks() {
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
     enc.clicks = 0;
-		myLamp.stopAlarm();
+		ALARMTASK::stopAlarm();
 		return;
 	}
   

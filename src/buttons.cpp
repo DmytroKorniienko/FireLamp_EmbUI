@@ -199,7 +199,7 @@ void Buttons::buttonTick(){
 	
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
-		myLamp.stopAlarm();
+		ALARMTASK::stopAlarm();
 		return;
 	}
 

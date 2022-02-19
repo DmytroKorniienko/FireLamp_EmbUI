@@ -649,7 +649,7 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
   if(curEff == nb){ // это текущий, иначе - работает фейдер
     doc[F("nb")] = nb;
     doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
-    doc[F("name")] = effectName;
+    doc[F("ename")] = effectName;
     doc[F("ver")] = version;
     doc[F("snd")] = soundfile;
     JsonArray arr = doc.createNestedArray(F("ctrls"));
@@ -671,7 +671,7 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
 
     doc[F("nb")] = nb;
     doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
-    doc[F("name")] = tmp->effectName;
+    doc[F("ename")] = tmp->effectName;
     doc[F("ver")] = tmp->version;
     doc[F("snd")] = tmp->soundfile;
     JsonArray arr = doc.createNestedArray(F("ctrls"));

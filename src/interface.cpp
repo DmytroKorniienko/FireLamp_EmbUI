@@ -3708,10 +3708,10 @@ void remote_action(RA action, ...){
             myLamp.switcheffect(SW_WHITE_LO);
             return remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
         case RA::RA_ALARM:
-            myLamp.startAlarm(value);
+            ALARMTASK::startAlarm(&myLamp, value);
             break;
         case RA::RA_ALARM_OFF:
-            myLamp.stopAlarm();
+            ALARMTASK::stopAlarm();
             break;
         case RA::RA_REBOOT: {
                 remote_action(RA::RA_WARNING, F("[16711680,3000,500]"), NULL);
