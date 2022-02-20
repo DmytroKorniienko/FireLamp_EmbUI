@@ -103,7 +103,7 @@ typedef enum _SCHEDULER {
  */
 #define LED_SHOW_DELAY 1
 
-//#pragma pack(push,2)
+#pragma pack(push,4)
 typedef union _LAMPFLAGS {
 struct {
     // ВНИМАНИЕ: порядок следования не менять, флаги не исключать, переводить в reserved!!! используется как битовый массив в конфиге!
@@ -178,7 +178,7 @@ _LAMPFLAGS(){
     isMapping = true;
 }
 } LAMPFLAGS;
-//#pragma pack(pop)
+#pragma pack(pop)
 
 class LAMP {
     friend class LEDFader;
