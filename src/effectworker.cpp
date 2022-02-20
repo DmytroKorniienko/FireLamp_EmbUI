@@ -640,54 +640,39 @@ String EffectWorker::getfseffconfig(uint16_t nb)
   return cfg_str;
 }
 
-
 String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
 {
   // конфиг текущего эффекта
   DynamicJsonDocument doc(2048);
   EffectListElem *eff = getEffect(nb);
-  if(curEff == nb){ // это текущий, иначе - работает фейдер
-    doc[F("nb")] = nb;
-    doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
-    doc[F("ename")] = effectName;
-    doc[F("ver")] = version;
-    doc[F("snd")] = soundfile;
-    JsonArray arr = doc.createNestedArray(F("ctrls"));
-    for (int i = 0; i < controls.size(); i++) {
-      JsonObject var = arr.createNestedObject();
-      var[F("id")]=controls[i]->getId();
-      var[F("type")]=controls[i]->getType();
-      var[F("name")]=controls[i]->getName();
-      var[F("val")]=(controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : controls[i]->getVal();
-      var[F("min")]=controls[i]->getMin();
-      var[F("max")]=controls[i]->getMax();
-      var[F("step")]=controls[i]->getStep();
-    }
-  } else {
+  EffectWorker *tmp=this;
+  bool isFader = (curEff != nb);
+  if(isFader){ // работает фейдер, нужен новый экземпляр
 #if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
     HeapSelectIram ephemeral;
 #endif
-    EffectWorker *tmp=new EffectWorker(eff);
-
-    doc[F("nb")] = nb;
-    doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
-    doc[F("ename")] = tmp->effectName;
-    doc[F("ver")] = tmp->version;
-    doc[F("snd")] = tmp->soundfile;
-    JsonArray arr = doc.createNestedArray(F("ctrls"));
-    for (int i = 0; i < tmp->controls.size(); i++) {
-      JsonObject var = arr.createNestedObject();
-      var[F("id")]=tmp->controls[i]->getId();
-      var[F("type")]=tmp->controls[i]->getType();
-      var[F("name")]=tmp->controls[i]->getName();
-      var[F("val")]=(tmp->controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : tmp->controls[i]->getVal();
-      var[F("min")]=tmp->controls[i]->getMin();
-      var[F("max")]=tmp->controls[i]->getMax();
-      var[F("step")]=tmp->controls[i]->getStep();
-    }
-
-    delete tmp;
+    tmp=new EffectWorker(eff);
   }
+
+  doc[F("nb")] = nb;
+  doc[F("flags")] = eff ? eff->flags.mask : SET_ALL_EFFFLAGS;
+  doc[F("name")] = tmp->effectName;
+  doc[F("ver")] = tmp->version;
+  doc[F("snd")] = tmp->soundfile;
+  JsonArray arr = doc.createNestedArray(F("ctrls"));
+  for (int i = 0; i < tmp->controls.size(); i++) {
+    JsonObject var = arr.createNestedObject();
+    var[F("id")]=tmp->controls[i]->getId();
+    var[F("type")]=tmp->controls[i]->getType();
+    var[F("name")]=tmp->controls[i]->getName();
+    var[F("val")]=(tmp->controls[i]->getId()==0 && replaceBright) ? String(replaceBright) : tmp->controls[i]->getVal();
+    var[F("min")]=tmp->controls[i]->getMin();
+    var[F("max")]=tmp->controls[i]->getMax();
+    var[F("step")]=tmp->controls[i]->getStep();
+  }
+  if(isFader)
+    delete tmp;
+
   String cfg_str;
   serializeJson(doc, cfg_str);
   doc.clear();
