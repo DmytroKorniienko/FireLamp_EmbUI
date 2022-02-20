@@ -665,6 +665,7 @@ public:
         lamp = _l;
         alarmTask = this;
         initAlarm(value);
+        enableDelayed();
     }
 
     static inline ALARMTASK *getInstance() {return alarmTask;}
@@ -739,6 +740,7 @@ public:
                 map(dawnPosition, 0, 255, 255, 170),
                 map(dawnPosition, 0, 255, 10, DAWN_BRIGHT)
             );
+            lamp->getLampState().dawnFlag = true;
         }
 
         if (((millis() - ALARMTASK::getInstance()->startmillis) / 1000 > (((uint32_t)(ALARMTASK::getInstance()->curAlarm.alarmP) + ALARMTASK::getInstance()->curAlarm.alarmT) * 60UL+30U))) {
@@ -792,7 +794,7 @@ public:
         for (uint16_t i = 0U; i < NUM_LEDS; i++) {
             getUnsafeLedsArray()[i] = ALARMTASK::getInstance()->dawnColorMinus[i%(sizeof(dawnColorMinus)/sizeof(CHSV))];
         }
-        lamp->getLampState().dawnFlag = true;
+
     }
 };
 
