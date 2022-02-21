@@ -637,7 +637,7 @@ private:
         lamp->setMode(LAMPMODE::MODE_ALARMCLOCK);
         lamp->demoTimer(T_DISABLE);     // гасим Демо-таймер
         #ifdef USE_STREAMING
-        if(!flags.isDirect || !flags.isStream)
+        if(!lamp->getLampSettings().isDirect || !lamp->getLampSettings().isStream)
         #endif
         lamp->effectsTimer(T_ENABLE);
         #ifdef MP3PLAYER

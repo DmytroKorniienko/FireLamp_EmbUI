@@ -289,8 +289,23 @@ static const char TCONST_00D9[] PROGMEM = "tmBrightOff";
 static const char TCONST_00DA[] PROGMEM = "tm24";
 static const char TCONST_00DB[] PROGMEM = "tmZero";
 static const char TCONST_00DC[] PROGMEM = "drawClear";
-static const char TCONST_00DD[] PROGMEM = "";
-static const char TCONST_00DE[] PROGMEM = "";
+static const char TCONST_00DD[] PROGMEM = "Mode";
+static const char TCONST_00DE[] PROGMEM = "Time";
+static const char TCONST_00DF[] PROGMEM = "Memory";
+static const char TCONST_00E0[] PROGMEM = "Uptime";
+static const char TCONST_00E1[] PROGMEM = "RSSI";
+static const char TCONST_00E2[] PROGMEM = "Ip";
+static const char TCONST_00E3[] PROGMEM = "Mac";
+static const char TCONST_00E4[] PROGMEM = "Host";
+static const char TCONST_00E5[] PROGMEM = "Version";
+static const char TCONST_00E6[] PROGMEM = "MQTTTopic";
+static const char TCONST_00E7[] PROGMEM = "embui/";
+static const char TCONST_00E8[] PROGMEM = "Normal";
+static const char TCONST_00E9[] PROGMEM = "Alarm";
+static const char TCONST_00EA[] PROGMEM = "Demo";
+static const char TCONST_00EB[] PROGMEM = "RGB";
+static const char TCONST_00EC[] PROGMEM = "White";
+static const char TCONST_00ED[] PROGMEM = "Other";
 
 
 /** набор служебных текстовых констант (HTTP/MQTT запросы)

@@ -200,7 +200,7 @@ String ha_autodiscovery()
     String name = embui.param(FPSTR(P_hostname));
     String unique_id = embui.mc;
 
-    hass_discover[F("~")] = embui.id("embui/");     // embui.upperParam(FPSTR(P_m_pref)) + F("/embui/")
+    hass_discover[F("~")] = embui.id(FPSTR(TCONST_00E7));     // embui.param(FPSTR(P_m_pref)) + F("/embui/")
     hass_discover[F("name")] = name;                // name
     hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
 
@@ -222,7 +222,19 @@ String ha_autodiscovery()
     hass_discover[F("bri_stat_t")] = F("~pub/dynCtrl0");    // brightness_state_topic
     hass_discover[F("bri_scl")] = 255;
 
+    JsonArray data = hass_discover.createNestedArray(F("effect_list"));
+    data.add(FPSTR(TCONST_00E8));
+    data.add(FPSTR(TCONST_00E9));
+    data.add(FPSTR(TCONST_00EA));
+    data.add(FPSTR(TCONST_00EB));
+    data.add(FPSTR(TCONST_00EC));
+    data.add(FPSTR(TCONST_00ED));
+
     //---------------------
+
+    hass_discover[F("fx_cmd_t")] = F("~set/mode");                                 // effect_command_topic
+    hass_discover[F("fx_stat_t")] = F("~pub/state");                               // effect_state_topic
+    hass_discover[F("fx_tpl")] = F("{{ value_json.Mode }}");                       // effect_template
 
     hass_discover[F("clr_temp_cmd_t")] = F("~set/speed");     // speed as color temperature
     hass_discover[F("clr_temp_stat_t")] = F("~pub/speed");    // speed as color temperature
@@ -233,21 +245,9 @@ String ha_autodiscovery()
     hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
     hass_discover[F("whit_val_scl")] = 255;
 
-    JsonArray data = hass_discover.createNestedArray(F("effect_list"));
-    data.add("white");
-    data.add("rgb");
-    data.add("alarm");
-    data.add("demo");
-
     // hass_discover[F("xy_cmd_t")] = F("~set/speed");     // scale as white level (Яркость белого)
     // hass_discover[F("xy_stat_t")] = F("~pub/speed");    // scale as white level
     //hass_discover[F("whit_val_scl")] = 255; // 'xy_val_tpl':          'xy_value_template',
-
-    hass_discover[F("fx_cmd_t")] = F("~set/effect");                                   // effect_command_topic
-    hass_discover[F("fx_stat_t")] = F("~pub/effect");                              // effect_state_topic
-    //hass_discover[F("fx_tpl")] = F("{{ value_json.nb + ':' + value_json.name }}");     // effect_template
-
-
 
     String hass_discover_str;
     serializeJson(hass_discover, hass_discover_str);
@@ -281,21 +281,45 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
 // Periodic MQTT publishing
 void sendData(){
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
-    LOG(println, F("send MQTT Data :"));
-    DynamicJsonDocument obj(256);
+    DynamicJsonDocument obj(512);
     //JsonObject obj = doc.to<JsonObject>();
-    obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
-    obj[FPSTR(TCONST_0002)] = String(myLamp.getLampState().freeHeap);
-    obj[FPSTR(TCONST_008F)] = String(embui.getUptime());
-    obj[FPSTR(TCONST_00CE)] = String(myLamp.getLampState().rssi);
+    switch (myLamp.getMode())
+    {
+        case LAMPMODE::MODE_NORMAL :
+            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00E8);
+            break;
+        case LAMPMODE::MODE_ALARMCLOCK :
+            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00E9);
+            break;
+        case LAMPMODE::MODE_DEMO :
+            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00EA);
+            break;
+        case LAMPMODE::MODE_RGBLAMP :
+            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00EB);
+            break;
+        case LAMPMODE::MODE_WHITELAMP :
+            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00EC);
+            break;
+        default:
+            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00ED);
+            break;
+    }
+    obj[FPSTR(TCONST_00DE)] = String(embui.timeProcessor.getFormattedShortTime());
+    obj[FPSTR(TCONST_00DF)] = String(myLamp.getLampState().freeHeap);
+    obj[FPSTR(TCONST_00E0)] = String(embui.getUptime());
+    obj[FPSTR(TCONST_00E1)] = String(myLamp.getLampState().rssi);
+    obj[FPSTR(TCONST_00E2)] = WiFi.localIP().toString();
+    obj[FPSTR(TCONST_00E3)] = WiFi.macAddress();
+    obj[FPSTR(TCONST_00E4)] = String(F("http://"))+WiFi.localIP().toString();
+    obj[FPSTR(TCONST_00E5)] = embui.getEmbUIver();
+    obj[FPSTR(TCONST_00E6)] = embui.id(FPSTR(TCONST_00E7));     // embui.param(FPSTR(P_m_pref)) + F("/embui/")
     String sendtopic=FPSTR(TCONST_008B);
     sendtopic+=FPSTR(TCONST_00AD);
     String out;
     serializeJson(obj, out);
+    LOG(println, F("send MQTT Data :"));
     LOG(println, out);
-#ifdef EMBUI_USE_MQTT
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
-#endif
 }
 #endif
 
