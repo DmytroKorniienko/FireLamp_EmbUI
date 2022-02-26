@@ -1868,17 +1868,6 @@ private:
         }
     }
 
-    //Russia
-    void russia(uint8_t i)
-    {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 4) ? CHSV(0, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(150, 255, thisVal)
-            : CHSV(0, 0, thisVal);
-        }
-    }
-
     //Poland
     void poland(uint8_t i)
     {

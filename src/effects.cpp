@@ -7625,9 +7625,6 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
     thisMax = map(thisVal, 0, 255, 0, EffectMath::getmaxHeightIndex());
     switch (flag)
     {
-    case 0:
-      russia(i);
-      break;
     case 1:
       germany(i);
       break;
@@ -7635,6 +7632,7 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
       usa(i);
       break;
     case 3:
+    case 0:
       ukraine(i);
       break;
     case 4:
