@@ -8,19 +8,19 @@ mode con: cols=88 lines=40
 cls
 
 :m1
-Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                  Commands                *  (Russian)      Команды                 * 
-Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *             Install tools                *     Установка инструментов и среды      * 
-Echo  *  Install Python          (step 1) - (0)  *  Установить Python             (Шаг 1)  * 
-Echo  *  Install Platformio Core (step 2) - (1)  *  Установить PIO Core           (Шаг 2)  * 
-Echo  *  Install Git for Windows (step 3) - (2)  *  Установить Git                (Шаг 3)  * 
-Echo  *  Get firmware repository (step 4) - (3)  *  Получить репозиторий прошивки (Шаг 4)  *
-Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *  Remove Platformio installation   - (R)  *  Полностью удалить Platformio с ПК      * 
-Echo  #------------------------------------------#-----------------------------------------#
+Echo  #----------------------------------------#-#-----------------------------------------# 
+Echo  *                  Commands              * *                  Команди                * 
+Echo  #----------------------------------------#-#-----------------------------------------# 
+Echo  *             Install tools              * *  Встановлення інструментів і середовища * 
+Echo  *  Install Python          (step 1)      *0*  Встановити Python            (Крок 1)  * 
+Echo  *  Install Platformio Core (step 2)      *1*  Встановити PIO Core          (Крок 2)  * 
+Echo  *  Install Git for Windows (step 3)      *2*  Встановити Git               (Крок 3)  * 
+Echo  *  Get firmware repository (step 4)      *3*  Отримати репозиторій прошивки(Крок 4)  *
+Echo  #----------------------------------------#-#-----------------------------------------# 
+Echo  *  Remove Platformio installation        *R*  Повністю видалити Platformio           * 
+Echo  #----------------------------------------#-#-----------------------------------------#
 Echo.
-Set /p choice="Your choice (Ваш выбор): "
+Set /p choice="Your choice (Ваш вибір): "
 
 if "%choice%"=="0" (
 	if not exist "%systemdrive%\Program Files (x86)" (
