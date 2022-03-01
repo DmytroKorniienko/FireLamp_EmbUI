@@ -1,3 +1,5 @@
+## People of good will, we Ukrainians appeal to you! The Russian Fuhrer sent all the military power of his Russian Reich to our country. Do not believe rashist-fascist propaganda. Ukrainians defend their home and believe that the free people of the whole world will support us in this. The Russian Reich will fall, the Russian Fuhrer will answer for nuclear threats to the whole world, victory will be ours!
+
 ## Гражданам России. В связи с тем, что ваша страна развязала полномасштабную войну против моей страны, тех, кто поддерживает действия своего фюрера, просим собрать остатки совести и не использовать этот проект, как проект авторов из ненавистной вам Украины. Тем, же, кто против войны, команда проекта соболезнует, вам, и вашим детям нести этот стыд. Проект не закрывется, но переносится на после нашей победы! Будет "денационализирован" (будет убрана рус.озвучка, рус.переводы, эффекты с российской символикой). Зарубежным же друзьям, кто мог раньше пользоваться русскоязычным интерфейсов, приносим искренние извинения. Друзья, используя ../include/text_res-UA.h делайте переводы на свои родные языки, и предлагайте в issues. Слава Україні!!
 
 ## Что это
