@@ -8473,12 +8473,12 @@ String EffectRadialFire::setDynCtrl(UIControl*_val){
 }
 
 void EffectRadialFire::load() {
-  XY_angle.resize(MIN_MAX, std::vector<float>(MIN_MAX, 0));
-  XY_radius.resize(MIN_MAX, std::vector<float>(MIN_MAX, 0));
-  for (int8_t x = -CENTRE; x < CENTRE + (int8_t)(WIDTH % 2); x++) {
-    for (int8_t y = -CENTRE; y < CENTRE + (int8_t)(HEIGHT % 2); y++) {
-      XY_angle[x + CENTRE][y + CENTRE] = atan2(y, x) * (180. / 2. / PI) * MIN_MAX;
-      XY_radius[x + CENTRE][y + CENTRE] = hypotf(x, y); // thanks Sutaburosu
+  XY_angle.resize(MIN_MAX, std::vector<int>(MIN_MAX, 0));
+  XY_radius.resize(MIN_MAX, std::vector<byte>(MIN_MAX, 0));
+  for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
+    for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
+      XY_angle[x + C_X][y + C_Y] = atan2(y, x) * (180. / 2. / PI) * MIN_MAX;
+      XY_radius[x + C_X][y + C_Y] = hypotf(x, y); // thanks Sutaburosu
     }
   }
   palettesload();
@@ -8507,15 +8507,15 @@ void EffectRadialFire::palettesload(){
 
 bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
   t += speedFactor;
-  for (uint8_t x = 0; x < MIN_MAX; x++) {
-    for (uint8_t y = 0; y < MIN_MAX; y++) {
-      float angle = XY_angle[x][y];
-      uint16_t radius = mode ? MIN_MAX - 3 - XY_radius[x][y] : XY_radius[x][y];
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      int angle = XY_angle[x][y];
+      byte radius = mode ? MIN_MAX - 3 - XY_radius[x][y] : XY_radius[x][y];
       int16_t Bri = inoise8(angle, radius * _scale - t, x * _scale) - radius * (256 /MIN_MAX);
       byte Col = Bri;
       if (Bri < 0) Bri = 0; 
       if(Bri != 0) Bri = 256 - (Bri * 0.2);
-        nblend(EffectMath::getPixel(x+X, y+Y), ColorFromPalette(*curPalette, Col, Bri), speed);
+        nblend(EffectMath::getPixel(x, y), ColorFromPalette(*curPalette, Col, Bri), speed);
     }
   }
   return true;
