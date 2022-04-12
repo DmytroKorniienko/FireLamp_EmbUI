@@ -1305,17 +1305,18 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 // размеры лабиринта ДОЛЖНЫ БЫТЬ НЕЧЁТНЫЕ независимо от размеров матрицы!
 // при SHIFT 1 размер лабиринта можно ставить на 1 длиннее матрицы (матрица 16х16 лабиринт 17х17)
 #if (WIDTH % 2 == 0)
-#define MAZE_WIDTH (WIDTH-1)      // ширина лабиринта
+#define MAZE_WIDTH (WIDTH+1)      // ширина лабиринта
 #else
 #define MAZE_WIDTH WIDTH          // ширина лабиринта
 #endif
 
 #if (HEIGHT % 2 == 0)
-#define MAZE_HEIGHT (HEIGHT-1)    // высота лабиринта
+#define MAZE_HEIGHT (HEIGHT+1)    // высота лабиринта
 #else
 #define MAZE_HEIGHT HEIGHT        // высота лабиринта
 #endif
-#define MAZE_SHIFT 0                   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
+#define MAZE_SHIFT (HEIGHT % 2 == 0)   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
+
 
 // VU-meter
 #define SAMPLES           256U          // Must be a power of 8
