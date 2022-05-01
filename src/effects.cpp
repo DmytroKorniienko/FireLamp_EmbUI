@@ -1115,10 +1115,11 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ***** SINUSOID3 / СИНУСОИД3 *****
+// ***** SINUSOID / СИНУСОИД *****
 /*
   Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
+  Sinusoid1/2/4 remade by Stepko
 */
 // !++
 String EffectSinusoid3::setDynCtrl(UIControl*_val){
@@ -1152,19 +1153,20 @@ switch (type) {
         }
       }
       break;
-    case 1: //it's not sinusoid II
+    case 1: //it's maybe sinusoid II
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
 		  CRGB color;
           float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
           float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
-          int8_t v = 127 * (float(0.001 * time_shift * e_s3_speed) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
+          int8_t v = 127 * (float(0.002 * time_shift * e_s3_speed) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
           cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
           cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
-          v = 127 * (((float)(0.001 * time_shift * e_s3_speed)) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
-          color.g = ~v;
+          v = 127 * (((float)(0.003 * time_shift * e_s3_speed)) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
+          color.r = (uint8_t(~v)>color.r)?~v:color.r;
+		  color.g = uint8_t(~v)/2;
 		  EffectMath::drawPixelXY(x, y, color);
         }
       }
@@ -8323,7 +8325,7 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
 }
 
 // ----------- Эффект "Дым"
-// based on cod by @Stepko (c) 23/12/2021
+// based on code by @Stepko (c) 23/12/2021
 
 // !++
 String EffectSmoker::setDynCtrl(UIControl*_val) {
@@ -8349,7 +8351,7 @@ bool EffectSmoker::run(CRGB *leds, EffectWorker *param) {
 }
 
 // ----------- Эффект "Мираж"
-// based on cod by @Stepko (c) 23/12/2021
+// based on code by @Stepko (c) 23/12/2021
 
 // !++
 String EffectMirage::setDynCtrl(UIControl*_val) {
@@ -8557,4 +8559,44 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 48);
   return true;
+}
+
+
+
+
+int16_t EffectFlower::ZVcalcRadius(int16_t x, int16_t y) {
+  x *= x;
+  y *= y;
+  int16_t radi = sin8(x + y);
+  return radi;
+ 
+
+}
+
+int16_t EffectFlower::ZVcalcDist(uint8_t x, uint8_t y, float center_x, float center_y) {
+  int16_t a = (center_y - y - .5);
+  int16_t b = (center_x - x - .5);
+  int16_t dista = ZVcalcRadius(a, b);
+  return dista;
+}
+bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
+	effTimer = (1+sin(radians((float)millis()/6000)))*12.5;
+	ZVoffset += EffectMath::fmap((float)speed, 1, 255, 0.2, 6.0);;
+	
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      int dista = ZVcalcDist(x, y, COLS_HALF, ROWS_HALF);
+      
+      // exclude outside of circle
+      int brightness = 1;
+      if (dista += max(COLS_HALF,ROWS_HALF)) {
+        brightness = map(dista, -effTimer,max(COLS_HALF,ROWS_HALF), 255, 110);
+        brightness += ZVoffset;
+        brightness = sin8(brightness);
+      }
+      int hue = map(dista, max(COLS_HALF,ROWS_HALF),-3,  125, 255);
+      EffectMath::drawPixelXY(x, y, CHSV(hue+ZVoffset/4, 255, brightness));
+    }
+  } 
+	return true;
 }
