@@ -58,13 +58,13 @@ static const char TEFF_009[] PROGMEM = "Світлячки зі шлейфом";
 static const char TEFF_010[] PROGMEM = "Блукаючий кубик";
 static const char TEFF_011[] PROGMEM = "Пульс";
 static const char TEFF_012[] PROGMEM = "Ефектопад";
-static const char TEFF_013[] PROGMEM = "Неопаліма купина"; 
+static const char TEFF_013[] PROGMEM = "Неопалима купина"; 
 static const char TEFF_014[] PROGMEM = "Пейнтбол";
 static const char TEFF_015[] PROGMEM = "Шум 3D";
 static const char TEFF_016[] PROGMEM = "Клітинки-Ялинки";
 static const char TEFF_017[] PROGMEM = "П'ятнашки";
 static const char TEFF_018[] PROGMEM = "Тіксі Ленд";
-static const char TEFF_019[] PROGMEM = "Н.Тесла";
+static const char TEFF_019[] PROGMEM = "Нікола Тесла";
 static const char TEFF_020[] PROGMEM = "Осцилятор";
 static const char TEFF_021[] PROGMEM = "Шторм";
 static const char TEFF_022[] PROGMEM = "Фея";
@@ -73,7 +73,7 @@ static const char TEFF_024[] PROGMEM = "Стрибаючі м'ячики";
 static const char TEFF_025[] PROGMEM = "Синусоїд";
 static const char TEFF_026[] PROGMEM = "Метасфери";
 static const char TEFF_027[] PROGMEM = "Спіраль";
-static const char TEFF_028[] PROGMEM = "Комети, Витаючі Вогні +";
+static const char TEFF_028[] PROGMEM = "Комети, Витаючі Вогні ++";
 static const char TEFF_029[] PROGMEM = "Бульбулятор";
 static const char TEFF_030[] PROGMEM = "Призмата";
 static const char TEFF_031[] PROGMEM = "Стадо та Хижак";
@@ -141,7 +141,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0D8 "Запал!"
 #define DFTINTF_0D9 "Кількість/Колір (нічник)"
 #define DFTINTF_0DA "Насиченість"
-#define DFTINTF_0DB "Посилення"
+#define DFTINTF_0DB "Підсилення"
 #define DFTINTF_0DC "Розгортка"
 #define DFTINTF_0DD "Пульсація"
 #define DFTINTF_0DE "Розмиття"
@@ -188,7 +188,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_108 "Варіант 1/2"
 #define DFTINTF_109 "Спалахи"
 #define DFTINTF_10A "Глюк"
-#define DFTINTF_10B "Шторм"
+#define DFTINTF_10B "Блискавка"
 #define DFTINTF_10C "Кількість снарядів"
 #define DFTINTF_10D "Розмір (ширина)"
 #define DFTINTF_10E "Зміщення кольору (0: випадковий)"
@@ -241,7 +241,7 @@ static const char TINTF_01E[] PROGMEM = "Колір повідомлення";
 static const char TINTF_01F[] PROGMEM = "Надіслати";
 static const char TINTF_020[] PROGMEM = DFTINTF_020;
 static const char TINTF_021[] PROGMEM = "Мікрофон активний";
-static const char TINTF_022[] PROGMEM = "Коеф. корекції нуля";
+static const char TINTF_022[] PROGMEM = "Коеф.корекції нуля";
 static const char TINTF_023[] PROGMEM = "Рівень шуму, од";
 static const char TINTF_024[] PROGMEM = "Подавлення шуму";
 static const char TINTF_025[] PROGMEM = "Калібровка мікрофона";
@@ -346,7 +346,7 @@ static const char TINTF_081[] PROGMEM = "WiFi & FTP";
 static const char TINTF_081[] PROGMEM = "WiFi";
 #endif
 static const char TINTF_082[] PROGMEM = "Інші";
-static const char TINTF_083[] PROGMEM = "Очищувати лампу при зміні ефектів";
+static const char TINTF_083[] PROGMEM = "Очистити лампу при зміні ефектів";
 static const char TINTF_084[] PROGMEM = DFTINTF_084;
 static const char TINTF_085[] PROGMEM = "В алфавітному порядку (внутрішнє)";
 static const char TINTF_086[] PROGMEM = "Події активні";
@@ -392,7 +392,7 @@ static const char TINTF_0AD[] PROGMEM = "Класика";
 static const char TINTF_0AE[] PROGMEM = "Бас";
 static const char TINTF_0AF[] PROGMEM = "MP3 плеєр";
 static const char TINTF_0B0[] PROGMEM = "Кількість файлів в теці MP3";
-static const char TINTF_0B1[] PROGMEM = "Режими озвучування";
+static const char TINTF_0B1[] PROGMEM = "Режими озвучення";
 static const char TINTF_0B2[] PROGMEM = "Тека\\номер звукового файла (приклади: MP3\\17, 5\\19)";
 static const char TINTF_0B3[] PROGMEM = "Обмежити гучність будильника";
 static const char TINTF_0B4[] PROGMEM = "За замовчуванням";
