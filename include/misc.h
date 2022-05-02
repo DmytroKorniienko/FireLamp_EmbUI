@@ -46,14 +46,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include <umm_malloc/umm_heap_select.h>
 #endif
 
-#ifdef ESP8266
- #include <LittleFS.h>
-#else
- #include <LITTLEFS.h>
-#if ARDUINO <= 10805
- #define LittleFS LITTLEFS
-#endif
-#endif
+#include "EmbUI.h"        //  Файлова система опреділяється в хедері EmbUI
 
 typedef enum : uint8_t {AT_NONE=0, AT_FIRST, AT_SECOND, AT_THIRD, AT_FOURTH, AT_FIFTH, AT_RANDOM, AT_RANDOMMP3} ALARM_SOUND_TYPE; // виды будильников (8 вариантов максимум)
 typedef enum : uint8_t {TS_NONE=0, TS_VER1, TS_VER2} TIME_SOUND_TYPE; // виды озвучки времени (8 вариантов максимум)
