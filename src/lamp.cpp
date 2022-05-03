@@ -283,8 +283,8 @@ void LAMP::changePower() {changePower(!flags.ONflag);}
 
 void LAMP::changePower(bool flag) // флаг включения/выключения меняем через один метод
 {
-  ALARMTASK::stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   if (flag == flags.ONflag) return;  // пропускаем холостые вызовы
+  ALARMTASK::stopAlarm();            // любая активность в интерфейсе - отключаем будильник
   LOG(print, F("Lamp powering ")); LOG(println, flag ? F("On"): F("Off"));
   flags.ONflag = flag;
 
@@ -392,35 +392,40 @@ void LAMP::startDemoMode(uint8_t tmout)
 
 void LAMP::storeEffect()
 {
-  storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+  storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) || storedEffect ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
   storedBright = getLampBrightness();
   lampState.isMicOn = false;
   LOG(printf_P, PSTR("Store: %d,%d\n"),storedEffect,storedBright);
 }
 
-void LAMP::restoreStored()
+void LAMP::restoreStored(bool switch_eff)
 {
   LOG(printf_P, PSTR("Restore: %d,%d\n"),storedEffect,storedBright);
   if(storedBright)
     setLampBrightness(storedBright);
   lampState.isMicOn = flags.isMicOn;
-  if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-    Task *_t = new Task(3 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL); TASK_RECYCLE; }, &ts, false);
-    _t->enableDelayed();
-  } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
-    Task *_t = new Task(3 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFF_RAND, NULL); TASK_RECYCLE; }, &ts, false);
-    _t->enableDelayed();
+  if(switch_eff){
+    if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
+      Task *_t = new Task(1 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL); TASK_RECYCLE; }, &ts, false);
+      _t->enableDelayed();
+    } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
+      Task *_t = new Task(1 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFF_RAND, NULL); TASK_RECYCLE; }, &ts, false);
+      _t->enableDelayed();
+    }
+    storedEffect = EFF_NONE;
   }
 }
 
-void LAMP::startNormalMode(bool forceOff)
+void LAMP::startNormalMode(bool forceOff, bool switch_eff)
 {
   LOG(println,F("Normal mode"));
   if(forceOff)
     flags.ONflag=false;
+  if(mode == LAMPMODE::MODE_NORMAL)
+    return;
   mode = LAMPMODE::MODE_NORMAL;
   demoTimer(T_DISABLE);
-  restoreStored();
+  restoreStored(switch_eff);
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
@@ -994,7 +999,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
 #endif
 
   if (!skip) {
-    if(isRGB()){ // выход из этого режима, при любой попытки перехода по эффектам
+    if(isRGB() && isLampOn()){ // выход из этого режима, при любой попытки перехода по эффектам
       stopRGB();
     }
     switch (action) {
@@ -1017,11 +1022,8 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
         effects.setSelected(effects.getByCnt(random(0, effects.getModeAmount())));
         break;
     case EFFSWITCH::SW_WHITE_HI:
-        storeEffect();
-        effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
-        setMode(LAMPMODE::MODE_WHITELAMP);
-        break;
     case EFFSWITCH::SW_WHITE_LO:
+    case EFFSWITCH::SW_WHITE_CUR:
         storeEffect();
         effects.setSelected(effects.getBy(EFF_WHITE_COLOR));
         setMode(LAMPMODE::MODE_WHITELAMP);
@@ -1068,6 +1070,9 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   case EFFSWITCH::SW_WHITE_HI:
       setLampBrightness(255); // здесь яркость ползунка в UI, т.е. ставим 255 в самое крайнее положение, а дальше уже будет браться приведенная к BRIGHTNESS яркость
       fade = natural = false;
+      changePower(true);  // принудительно включаем лампу
+      break;
+  case EFFSWITCH::SW_WHITE_CUR:
       changePower(true);  // принудительно включаем лампу
       break;
   case EFFSWITCH::SW_WHITE_LO:

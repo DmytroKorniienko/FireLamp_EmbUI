@@ -92,7 +92,7 @@ public:
 
 // ***** SINUSOID3 / СИНУСОИД3 *****
 /*
-  Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  Sinusoid3 by Stefan Petrick
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
 class EffectSinusoid3 : public EffectCalc {
@@ -254,7 +254,7 @@ public:
 };
 
 // ========== Эффект "Эффектопад"
-// совместное творчество юзеров форума https://community.alexgyver.ru/
+// совместное творчество юзеров форума community.alexgyver.ru
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
@@ -1006,7 +1006,7 @@ public:
 };
 
 // ---- Эффект "Мотыльки"
-// (с) SottNick, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
+// (с) SottNick
 class EffectButterfly : public EffectCalc {
 private:
     float butterflysPosX[BUTTERFLY_MAX_COUNT];
@@ -1322,7 +1322,6 @@ class EffectNexus: public EffectCalc {
 
 // ----------- Эфеект "Змеиный Остров"
 // (c) Сотнег
-// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
 // адаптация и доработки kostyamat
 class EffectTest : public EffectCalc {
 private:

@@ -79,6 +79,7 @@ typedef enum _EFFSWITCH {
     SW_NEXT_DEMO,    // следующий для ДЕМО, исключая отключенные
     SW_WHITE_HI,
     SW_WHITE_LO,
+    SW_WHITE_CUR,
 } EFFSWITCH;
 
 // управление Тикером
@@ -266,6 +267,31 @@ public:
     LAMPSTATE &getLampState() {return lampState;}
     LList<UIControl*>&getEffControls() { LList<UIControl*>&controls = effects.getControls(); return controls; }
 
+    String getModeDesc() {
+        String res;
+        switch (getMode()){
+            case LAMPMODE::MODE_NORMAL :
+                res = FPSTR(TCONST_00E8);
+                break;
+            case LAMPMODE::MODE_ALARMCLOCK :
+                res = FPSTR(TCONST_00E9);
+                break;
+            case LAMPMODE::MODE_DEMO :
+                res = FPSTR(TCONST_00EA);
+                break;
+            case LAMPMODE::MODE_RGBLAMP :
+                res = FPSTR(TCONST_00EB);
+                break;
+            case LAMPMODE::MODE_WHITELAMP :
+                res = FPSTR(TCONST_00EC);
+                break;
+            default:
+                res = FPSTR(TCONST_00ED);
+                break;
+        }
+        return res;
+    }
+
 #ifdef MIC_EFFECTS
     void setMicCalibration() {lampState.isCalibrationRequest = true;}
     bool isMicCalibration() {return lampState.isCalibrationRequest;}
@@ -447,12 +473,13 @@ void setTempDisp(bool flag) {flags.isTempOn = flag;}
 #endif
     bool getGaugeType() {return flags.GaugeType;}
     void setGaugeType(GAUGETYPE val) {flags.GaugeType = val;}
+    CRGB &getRGBColor() { return rgbColor; }
     void startRGB(CRGB &val);
     void stopRGB();
     bool isRGB() {return mode == LAMPMODE::MODE_RGBLAMP;}
     void startDemoMode(uint8_t tmout = DEFAULT_DEMO_TIMER); // дефолтное значение, настраивается из UI
-    void startNormalMode(bool forceOff=false);
-    void restoreStored();
+    void startNormalMode(bool forceOff=false, bool switch_eff=true);
+    void restoreStored(bool switch_eff=true);
     void storeEffect();
 #ifdef OTA
     void startOTAUpdate();

@@ -74,7 +74,7 @@ void MP3PLAYERDEVICE::restartSound()
   isplayname = false;
   int currentState = readState();
   LOG(printf_P,PSTR("DFplayer: readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
-  if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение, попытка фикса https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-312#post-75394
+  if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение
     Task *_t = new Task(
         200,
         TASK_ONCE, [this](){

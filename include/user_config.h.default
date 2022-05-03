@@ -212,21 +212,17 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define CONNECTION_ANGLE      (1U)                          // кут підключення: 0 - лівий нижній, 1 - лівий верхній, 2 - правий верхній, 3 - правий нижній
 #define STRIP_DIRECTION       (3U)                          // напрямок стрічки з кута: 0 - вправо, 1 - вгору, 2 - вліво, 3 - вниз
                                                             // при неправильному налаштуванні матриці ви отримаєте попередження "Wrong matrix parameters! Set to default"
-                                                            // шпаргалка з налаштування матриці тут! https://alexgyver.ru/matrix_guide/
 
 #define BRIGHTNESS            (255U)                        // стандартна максимальна яскравість (0-255), чим менше значення, тим менша максимально можлива яскравість
 #define OFF_BRIGHTNESS          (2U)                        // яскравість виведення тексту у разі вимкненої лампи
 #define CURRENT_LIMIT         (2000U)                       // ліміт по струму в міліамперах, автоматично керує яскравістю (пошкодуй свій блок живлення!) 0 - вимкнути ліміт
 
-//#define XY_EXTERN                                           // Користувальницький мапінг нестандартних матриць, читати у файлі ../include/XY.h і/або тут 
-                                                            // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
+//#define XY_EXTERN                                         // Користувальницький мапінг нестандартних матриць, читати у файлі ../include/XY.h і/або тут 
                                                             // тут звіт користувача 
-                                                            // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-72777
 
 //#define MATRIXx4                                            // Активувати, якщо ваша матриця складається з 4-х однакових квадратних матриць розміром 16х16 або 8х8 пікселів.
                                                              // При цьому WIDTH і HEIGHT повинні відповідати дворазовому розміру матриць, що використовуються в панно.
                                                              // Приклад: використовуються чотири матриці розміром 16х16, - WIDTH і HEIGHT повинні бути встановлені в (32U)
-                                                             // Схема підключення тут https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-102618
 //------------------------------ 
 
 //------------------------------ Всякое разное

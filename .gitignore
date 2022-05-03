@@ -13,3 +13,7 @@ user_*.ini
 /resources/wget.*
 Uploader*.bat
 /resources/etags.txt
+/data/backup/btn/firelamp.json
+/data/backup/evn/firelamp.json
+/data/backup/glb/firelamp.json
+/data/backup/idx/firelamp.json

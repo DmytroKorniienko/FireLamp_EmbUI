@@ -192,7 +192,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
 }
 
 // ========== Эффект "Эффектопад"
-// совместное творчество юзеров форума https://community.alexgyver.ru/
+// совместное творчество юзеров форума community.alexgyver.ru
 void EffectEverythingFall::load(){
     palettesload();    // подгружаем дефолтные палитры
 }
@@ -236,7 +236,7 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
 }
 
 // --------------------------- эффект пульс ----------------------
-// Stefan Petrick's PULSE Effect mod by PalPalych for GyverLamp
+// Stefan Petrick's PULSE Effect
 
 // !++
 String EffectPulse::setDynCtrl(UIControl*_val){
@@ -1117,7 +1117,7 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 
 // ***** SINUSOID / СИНУСОИД *****
 /*
-  Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  Sinusoid3 by Stefan Petrick
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
   Sinusoid1/2/4 remade by Stepko
 */
@@ -4268,7 +4268,7 @@ void EffectNoise::load() {
 }
 
 // ---- Эффект "Мотыльки"
-// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
+// (с) Сотнег
 void EffectButterfly::load()
 {
   for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
@@ -5290,7 +5290,6 @@ void EffectNexus::resetDot(uint8_t idx) {
 
 // ----------- Эфеект "Змеиный Остров"
 // (c) Сотнег
-// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
 // адаптация и доработки kostyamat
 // !++
 String EffectTest::setDynCtrl(UIControl*_val){
@@ -7729,7 +7728,6 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 #ifdef MIC_EFFECTS
   setMicAnalyseDivider(0); // отключить авто-работу микрофона, т.к. тут все анализируется отдельно, т.е. не нужно выполнять одну и ту же работу дважды
 #endif
-  // Оставлю себе напоминалку как все это работает https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-85649
   //bool ready = false;
   tickCounter++;
 #ifdef MIC_EFFECTS

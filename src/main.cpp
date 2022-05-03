@@ -215,8 +215,8 @@ String ha_autodiscovery()
 
     hass_discover[F("json_attr_t")] = F("~pub/state"); // json_attributes_topic
 
-    hass_discover[F("rgb_cmd_t")] = "~set/rgb";        // rgb_command_topic
-    hass_discover[F("rgb_stat_t")] = "~pub/rgb";       // rgb_state_topic
+    hass_discover[F("rgb_cmd_t")] = "~set/RGB";        // rgb_command_topic
+    hass_discover[F("rgb_stat_t")] = "~pub/RGB";       // rgb_state_topic
 
     hass_discover[F("bri_cmd_t")] = F("~set/g_bright");     // brightness_command_topic
     hass_discover[F("bri_stat_t")] = F("~pub/dynCtrl0");    // brightness_state_topic
@@ -230,20 +230,39 @@ String ha_autodiscovery()
     data.add(FPSTR(TCONST_00EC));
     data.add(FPSTR(TCONST_00ED));
 
+    hass_discover[F("fx_cmd_t")] = F("~set/modecmd");                              // effect_command_topic
+    hass_discover[F("fx_stat_t")] = F("~pub/state");                               // effect_state_topic
+    hass_discover[F("fx_val_tpl")] = F("{{ value_json.Mode }}");                   // effect_value_template effect_template
+
     //---------------------
 
-    hass_discover[F("fx_cmd_t")] = F("~set/mode");                                 // effect_command_topic
-    hass_discover[F("fx_stat_t")] = F("~pub/state");                               // effect_state_topic
-    hass_discover[F("fx_tpl")] = F("{{ value_json.Mode }}");                       // effect_template
 
-    hass_discover[F("clr_temp_cmd_t")] = F("~set/speed");     // speed as color temperature
-    hass_discover[F("clr_temp_stat_t")] = F("~pub/speed");    // speed as color temperature
+    hass_discover[F("clr_temp_cmd_t")] = F("~set/colortemp");     // speed as color temperature
+    hass_discover[F("clr_temp_stat_t")] = F("~pub/colortemp");    // speed as color temperature
     hass_discover[F("min_mireds")] = 1;
     hass_discover[F("max_mireds")] = 255;
 
-    hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level (Яркость белого)
-    hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
-    hass_discover[F("whit_val_scl")] = 255;
+    // JsonObject devobj = hass_discover.createNestedObject(F("dev"));
+    // //JsonArray devids = devobj.createNestedArray(F("ids"));
+    // //devids.add()
+    // devobj[F("name")] = F("Firelamp");
+    // devobj[F("mdl")] = F("Firelamp");
+    // devobj[F("sw")] = F("2.7.0");
+    // devobj[F("mf")] = F("kDn");
+    
+
+    // "\"dev\":{"
+    //   "\"ids\":[\"%s\"],"                                //clientId
+    //   "\"name\":\"%s\","                              //host
+    //   "\"mdl\":\"%s\","                                 //host
+    //   "\"sw\":\"%s\","                                  //version
+    //   "\"mf\":\"lg\""
+    // "}"
+
+
+    // hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level (Яркость белого)
+    // hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
+    // hass_discover[F("whit_val_scl")] = 255;
 
     // hass_discover[F("xy_cmd_t")] = F("~set/speed");     // scale as white level (Яркость белого)
     // hass_discover[F("xy_stat_t")] = F("~pub/speed");    // scale as white level
@@ -283,27 +302,7 @@ void sendData(){
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
     DynamicJsonDocument obj(512);
     //JsonObject obj = doc.to<JsonObject>();
-    switch (myLamp.getMode())
-    {
-        case LAMPMODE::MODE_NORMAL :
-            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00E8);
-            break;
-        case LAMPMODE::MODE_ALARMCLOCK :
-            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00E9);
-            break;
-        case LAMPMODE::MODE_DEMO :
-            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00EA);
-            break;
-        case LAMPMODE::MODE_RGBLAMP :
-            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00EB);
-            break;
-        case LAMPMODE::MODE_WHITELAMP :
-            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00EC);
-            break;
-        default:
-            obj[FPSTR(TCONST_00DD)] = FPSTR(TCONST_00ED);
-            break;
-    }
+    obj[FPSTR(TCONST_00DD)] = myLamp.getModeDesc();
     obj[FPSTR(TCONST_00DE)] = String(embui.timeProcessor.getFormattedShortTime());
     obj[FPSTR(TCONST_00DF)] = String(myLamp.getLampState().freeHeap);
     obj[FPSTR(TCONST_00E0)] = String(embui.getUptime());

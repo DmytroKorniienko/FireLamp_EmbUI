@@ -1295,7 +1295,6 @@ bool EffectCalc::status(){return active;}
 /**
  * setDynCtrl - была смена динамического контрола, idx=3+
  * вызывается в UI, для реализации особого поведения (палитра и т.д.)...
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-112#post-48848
  */
 String EffectCalc::setDynCtrl(UIControl*_val){
   if(!_val)

@@ -61,7 +61,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
 #ifndef LANG_FILE
-#define LANG_FILE                  "text_res-RUS.h"           // Языковой файл по дефолту
+#define LANG_FILE                  "text_res-UA.h"            // Языковой файл по дефолту
 #endif
 
 #ifdef RTC
