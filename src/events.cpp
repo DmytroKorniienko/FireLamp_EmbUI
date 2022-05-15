@@ -180,7 +180,8 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             event.message = item[F("msg")].as<String>();
             DEV_EVENT *new_event = addEvent(event);
             if(new_event){
-                LOG(printf_P, PSTR("[%u - %llu - %u - %u - %u - %s]\n"), new_event->raw_data, (unsigned long long)new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat, new_event->message.c_str());
+                LOG(println,F("event"));
+                LOG(printf_P, PSTR("[%u - %lu - %u - %u - %u - %s]\n"), new_event->raw_data, (unsigned long)new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat, new_event->message.c_str());
             }
         }
 
@@ -204,10 +205,10 @@ void EVENT_MANAGER::saveConfig(const char *cfg)
         DEV_EVENT *next;
         for(int i=0;i<events->size();i++){
             next = (*events)[i];
-            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%llu,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
-                (!firstLine?",":""), next->raw_data, (unsigned long long)next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
-            configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%llu,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
-                (!firstLine?",":""), next->raw_data, (unsigned long long)next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
+            LOG(printf_P, PSTR("%s{\"raw\":%u,\"ut\":%lu,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                (!firstLine?",":""), next->raw_data, (unsigned long)next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
+            configFile.printf_P(PSTR("%s{\"raw\":%u,\"ut\":%lu,\"ev\":%u,\"rp\":%u,\"sa\":%u,\"msg\":\"%s\"}"),
+                (!firstLine?",":""), next->raw_data, (unsigned long)next->unixtime, next->event, next->repeat, next->stopat, next->message.c_str());
             firstLine=false;
         }
         configFile.print("]");

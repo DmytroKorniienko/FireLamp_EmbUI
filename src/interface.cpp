@@ -2126,7 +2126,7 @@ void set_event_conf(Interface *interf, JsonObject *data){
 
     time_t ut = mktime(tm);
     event.setUnixtime(ut);
-    LOG(printf_P, PSTR("Set Event at %4d-%2d-%2d %2d:%2d:00 -> %llu\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, (unsigned long long)ut);
+    LOG(printf_P, PSTR("Set Event at %4d-%2d-%2d %2d:%2d:00 -> %lu\n"), tm->tm_year, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, (unsigned long)ut);
 
     String buf; // внешний буффер, т.к. добавление эвента ниже
     switch(event.getEvent()){

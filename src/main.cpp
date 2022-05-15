@@ -98,7 +98,7 @@ void setup() {
 #endif
     myLamp.effects.setEffSortType((SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-    myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
+    myLamp.events.loadConfig(); // << -- SDK3.0+ помилка пов'язана з unsigned long long на деяких esp32
 #ifdef RTC
     rtc.init();
 #endif
