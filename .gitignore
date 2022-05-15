@@ -1,13 +1,10 @@
 .gitattributes
-.pio
-.vscode
+/.pio
+/.vscode
 eff
 data/*.json
 include/user_config.h
 user_*.ini
-.vscode/extensions.json
-.vscode/settings.json
-.vscode/c_cpp_properties.json
 /out_bin/*.*
 /resources/embui.zip
 /resources/wget.*
