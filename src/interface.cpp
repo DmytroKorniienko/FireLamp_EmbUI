@@ -3324,7 +3324,7 @@ t->enableDelayed();
 #ifdef ENCODER
     obj[FPSTR(TCONST_0042)] = embui.param(FPSTR(TCONST_0042));
     obj[FPSTR(TCONST_0043)] = (110U - embui.param(FPSTR(TCONST_0043)).toInt());
-    obj[FPSTR(TCONST_003F)] = tmp.GaugeType ? "1" : "0";;
+    obj[FPSTR(TCONST_003F)] = String(tmp.GaugeType);
     obj[FPSTR(TCONST_0040)] = embui.param(FPSTR(TCONST_0040));
     set_settings_enc(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();

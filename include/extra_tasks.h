@@ -60,7 +60,7 @@ private:
     unsigned gauge_val = 0;
     unsigned gauge_max = 0;
     uint8_t gauge_hue = 0;
-    CRGB gauge_color = 0;
+    static CRGB gauge_color;
     GAUGE() = delete;
 public:
     INLINE GAUGE(unsigned val, unsigned max, uint8_t hue = 0)
@@ -150,7 +150,7 @@ public:
             GetGaugeInstance()->restartDelayed();
         }
     }
-    void setGaugeTypeColor(CRGB color) { if(GetGaugeInstance()!=nullptr) GetGaugeInstance()->gauge_color = color;}
+    static void setGaugeTypeColor(CRGB color) { gauge_color = color;}
 };
 
 //-----------------------------------------------

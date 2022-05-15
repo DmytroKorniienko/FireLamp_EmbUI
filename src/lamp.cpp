@@ -254,6 +254,7 @@ void LAMP::frameShow(const uint32_t ticktime){
 }
 
 GAUGE *GAUGE::gauge = nullptr; // объект индикатора
+CRGB GAUGE::gauge_color = 0;        // TODO: Замінити
 LEDFader *LEDFader::fader = nullptr; // объект фейдера
 ALARMTASK *ALARMTASK::alarmTask = nullptr; // объект будильника
 
