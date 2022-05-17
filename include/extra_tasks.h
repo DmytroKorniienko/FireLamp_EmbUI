@@ -63,7 +63,7 @@ private:
     CRGB gauge_color = 0;
     GAUGE() = delete;
 public:
-    INLINE GAUGE(unsigned val, unsigned max, uint8_t hue = 0)
+    INLINE GAUGE(unsigned val, unsigned max, uint8_t hue = 0, CRGB color = 0)
     : Task(3*TASK_SECOND, TASK_ONCE, []() {TASK_RECYCLE; gauge = nullptr;}, &ts, false){
         GAUGE::gauge = this;
 
@@ -71,6 +71,7 @@ public:
         gauge_val = val;
         gauge_max = max;
         gauge_hue = hue;
+        gauge_color = color;
 
         xStep = WIDTH / 4;
         xCol = 4;
@@ -140,17 +141,23 @@ public:
     }
 
     static void GaugeShow(unsigned val, unsigned max, uint8_t hue = 0) {
+        CRGB color = 0;
+        if (0 == hue) {
+            String tmpStr = embui.param(FPSTR(TCONST_0040));
+            tmpStr.replace(F("#"), F("0x"));
+            color = (CRGB)strtol(tmpStr.c_str(), NULL, 0);
+        }
         if(GAUGE::gauge==nullptr){
-            GAUGE::gauge = new GAUGE(val,max,hue);
+            GAUGE::gauge = new GAUGE(val,max,hue,color);
         } else {
             GetGaugeInstance()->gauge_time = millis();
             GetGaugeInstance()->gauge_val = val;
             GetGaugeInstance()->gauge_max = max;
+            GetGaugeInstance()->gauge_color = color;
             GetGaugeInstance()->gauge_hue = hue;
             GetGaugeInstance()->restartDelayed();
         }
     }
-    void setGaugeTypeColor(CRGB color) { if(GetGaugeInstance()!=nullptr) GetGaugeInstance()->gauge_color = color;}
 };
 
 //-----------------------------------------------
