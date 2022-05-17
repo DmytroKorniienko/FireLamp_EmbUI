@@ -67,10 +67,18 @@ public:
     : Task(3*TASK_SECOND, TASK_ONCE, []() {TASK_RECYCLE; gauge = nullptr;}, &ts, false){
         GAUGE::gauge = this;
 
+        CRGB color = 0;
+        if (0 == hue) {
+            String tmpStr = embui.param(FPSTR(TCONST_0040));
+            tmpStr.replace(F("#"), F("0x"));
+            color = (CRGB)strtol(tmpStr.c_str(), NULL, 0);
+        }
+
         gauge_time = millis();
         gauge_val = val;
         gauge_max = max;
         gauge_hue = hue;
+        gauge_color = color;
 
         xStep = WIDTH / 4;
         xCol = 4;
@@ -150,7 +158,6 @@ public:
             GetGaugeInstance()->restartDelayed();
         }
     }
-    void setGaugeTypeColor(CRGB color) { if(GetGaugeInstance()!=nullptr) GetGaugeInstance()->gauge_color = color;}
 };
 
 //-----------------------------------------------
