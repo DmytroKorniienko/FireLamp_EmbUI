@@ -70,9 +70,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 namespace INTERFACE {
 // ------------- глобальные переменные построения интерфейса
 // планировщик заполнения списка
-Task *optionsTask = nullptr;     // задача для отложенной генерации списка
+Task *optionsTask = nullptr;       // задача для отложенной генерации списка
 Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
-CtrlsTask *ctrlsTask = nullptr;       // планировщик контролов
+CtrlsTask *ctrlsTask = nullptr;    // планировщик контролов
+StringTask *pubEffTask = nullptr;  // отложенная публикация эффекта
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
 static DEV_EVENT *cur_edit_event = NULL; // текущее редактируемое событие, сбрасывается после сохранения
@@ -789,7 +790,7 @@ void set_effects_list(Interface *interf, JsonObject *data){
     }
 
     myLamp.setDRand(myLamp.getLampSettings().dRand); // сборосить флаг рандомного демо
-    LOG(printf_P, PSTR("EFF LIST n:%d, o:%d, on:%d, md:%d\n"), eff->eff_nb, curr, myLamp.isLampOn(), myLamp.getMode());
+    LOG(printf_P, PSTR("EFF LIST num:%d, eff_nb:%d, o:%d, on:%d, md:%d\n"), num, eff->eff_nb, curr, myLamp.isLampOn(), myLamp.getMode());
     if (eff->eff_nb != curr) {
         if (!myLamp.isLampOn()) {
             myLamp.effects.directMoveBy(eff->eff_nb); // переходим на выбранный эффект для начальной инициализации
@@ -2646,7 +2647,7 @@ void block_streaming(Interface *interf, JsonObject *data){
         if (embui.param(FPSTR(TCONST_0047)).toInt() == E131){
             interf->range(FPSTR(TCONST_0077), embui.param(FPSTR(TCONST_0077)), F("1"), F("255"), F("1"), (String)FPSTR(TINTF_0E8), true);
             interf->comment(String(F("Universes:")) + String(ceil((float)HEIGHT / (512U / (WIDTH * 3))), 0U) + String(F(";    X:")) + String(WIDTH) + String(F(";    Y:")) + String(512U / (WIDTH * 3)));
-            interf->comment(String(F("Как настроить разметку матрицы в Jinx! можно посмотреть <a href=\"https://github.com/DmytroKorniienko/FireLamp_JeeUI">на форуме</a>")));
+            interf->comment(String(F("Как настроить разметку матрицы в Jinx! можно посмотреть <a href=\"https://github.com/DmytroKorniienko/FireLamp_EmbUI\">на форуме</a>")));
         }
     interf->json_section_end();
 }
@@ -3642,15 +3643,19 @@ void remote_action(RA action, ...){
             } else if(mode==LAMPMODE::MODE_NORMAL){
                 embui.var(FPSTR(TCONST_0016), value); // сохранить в конфиг изменившийся эффект
             }
-            StringTask *t = new StringTask(value, 5 * TASK_SECOND, TASK_ONCE, nullptr, &ts, false, nullptr,  [](){
+            if(pubEffTask)
+                pubEffTask->cancel();
+            pubEffTask = new StringTask(value, myLamp.getLampSettings().isFaderON ? (FADE_TIME / 1000.0) * TASK_SECOND + 500 : 500, TASK_ONCE, [](){
                 StringTask *cur = (StringTask *)ts.getCurrentTask();
                 DynamicJsonDocument doc(512);
                 JsonObject obj = doc.to<JsonObject>();
                 LOG(printf_P,PSTR("EmbUI::GetInstance()->ws.count()=%d, %s\n"),EmbUI::GetInstance()->ws.count(),cur->getData());
                 CALL_INTF(FPSTR(TCONST_0016), String(cur->getData()), set_effects_list); // публикация будет здесь
+            }, &ts, false, nullptr,  [](){
                 TASK_RECYCLE;
+                pubEffTask=nullptr;
             });
-            t->enableDelayed();
+            pubEffTask->enableDelayed();
             break;
         }
         case RA::RA_GLOBAL_BRIGHT:
