@@ -837,6 +837,8 @@ float EffectMath::InOutCirc(float t, float b, float c, float d) {
   return c/2 * (sqrt(1 - t*t) + 1) + b;
 }
 
+#ifdef RGB_PLAYER
+
 // преобразовать цвет из 8 битного формата rgb332 в 24 битный
 CRGB EffectMath::rgb332_To_CRGB(uint8_t value) {
     CRGB color;
@@ -855,13 +857,13 @@ CRGB EffectMath::rgb332_To_CRGB(uint8_t value) {
 CRGB EffectMath::rgb565_To_CRGB(uint16_t value) {
   // gamma correction для expandColor
   static const uint8_t
-  gamma5[] = {
+  gamma5[] PROGMEM = {
     0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
     0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
     0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64, 0x6f, 0x7c,
     0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff
   },
-  gamma6[] = {
+  gamma6[] PROGMEM = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
     0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,
     0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20, 0x22, 0x25,
@@ -871,8 +873,13 @@ CRGB EffectMath::rgb565_To_CRGB(uint16_t value) {
     0x91, 0x97, 0x9d, 0xa4, 0xab, 0xb2, 0xb9, 0xc0,
     0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff
   };
-  CRGB color =  ((uint32_t)(gamma5[ value >> 11       ]) << 16) |
-                ((uint32_t)(gamma6[(value >> 5) & 0x3F]) <<  8) |
-                (gamma5[ value       & 0x1F]);
+  // CRGB color =  ((uint32_t)(gamma5[ value >> 11       ]) << 16) |
+  //               ((uint32_t)(gamma6[(value >> 5) & 0x3F]) <<  8) |
+  //               (gamma5[ value       & 0x1F]);
+  CRGB color =  ((uint32_t)pgm_read_dword(&gamma5[ value >> 11       ]) << 16) |
+                ((uint32_t)pgm_read_dword(&gamma6[(value >> 5) & 0x3F]) <<  8) |
+                pgm_read_dword(&gamma5[ value       & 0x1F]);
   return color;
 }
+
+#endif

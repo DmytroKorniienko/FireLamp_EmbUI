@@ -180,7 +180,7 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
             event.message = item[F("msg")].as<String>();
             DEV_EVENT *new_event = addEvent(event);
             if(new_event){
-                LOG(println,F("event"));
+                //LOG(println,F("event"));
                 LOG(printf_P, PSTR("[%u - %lu - %u - %u - %u - %s]\n"), new_event->raw_data, (unsigned long)new_event->unixtime, new_event->event, new_event->repeat, new_event->stopat, new_event->message.c_str());
             }
         }
