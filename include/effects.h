@@ -42,6 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectworker.h"
 #include "effectmath.h"
 
+
 const byte maxDim = max(WIDTH, HEIGHT);
 const byte minDim = min(WIDTH, HEIGHT);
 const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
@@ -2350,14 +2351,50 @@ public:
 
 class EffectFlower : public EffectCalc {
 	private:
-	uint8_t effTimer;
-	float ZVoffset = 0;
-	const float COLS_HALF = WIDTH * .5;
-    const float ROWS_HALF = HEIGHT * .5;
-	int16_t ZVcalcRadius(int16_t x, int16_t y);
-	int16_t ZVcalcDist(uint8_t x, uint8_t y, float center_x, float center_y);
+        uint8_t effTimer;
+        float ZVoffset = 0;
+        const float COLS_HALF = WIDTH * .5;
+        const float ROWS_HALF = HEIGHT * .5;
+        int16_t ZVcalcRadius(int16_t x, int16_t y);
+        int16_t ZVcalcDist(uint8_t x, uint8_t y, float center_x, float center_y);
 	public:
-	bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+        bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
+
+#ifdef RGB_PLAYER
+// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko
+// 27.01.2022
+// https://editor.soulmatelights.com/gallery/1684-pgm-player-with-resize
+// License GPL v.3 as a part of the FireLamp_EmbUI project
+#define MULTIPLIC 256
+class EffectPlayer : public EffectCalc {
+    private:
+        uint8_t frameWidth, frameHeight, frames, frame = 0; 
+        uint16_t maxSize; 
+        int16_t corrX, corrY;
+        uint16_t resizeX, resizeY;
+        uint8_t* frameBuf = nullptr;
+        uint8_t frameDelay;
+        bool codec332 = true;
+        File rgbFile;
+        uint8_t bufSize = 0;
+        bool blur;
+
+        void calc();
+        void getFromFile_332(uint8_t frame);
+        void getFromFile_565(uint8_t frame);
+        void drawFrame();
+        bool loadFile(String &filename);
+        String setDynCtrl(UIControl*_val) override;
+    
+    public:
+        void load() override;
+        bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+        ~EffectPlayer() {
+            delete [] frameBuf;
+            frameBuf = nullptr;
+        }
+};
+#endif
 
 #endif

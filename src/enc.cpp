@@ -50,7 +50,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 uint8_t currDynCtrl;        // текущий контрол, с которым работаем
 uint8_t currAction;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
 uint16_t currEffNum;        // текущий номер эффекта
-uint16_t anyValue;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
+int16_t anyValue;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
 uint8_t loops;              // счетчик псевдотаймера
 bool done;                  // true == все отложенные до enc_loop операции выполнены.
 bool inSettings;            // флаг - мы в настройках эффекта
@@ -66,7 +66,7 @@ void callEncTick () {
 }
 
 void encLoop() {
-  static uint16_t valRepiteChk = anyValue;
+  static int16_t valRepiteChk = anyValue;
   noInterrupt();
   enc.tick();
 
@@ -497,9 +497,9 @@ void encSetDynCtrl(int val) {
   // тут магия, некоторые чекбоксы у нас особенные, типа локальный "Микрофон". 
   // Придется проверять что это - ползунок или чекбокс и по разному подходить к процессу внесения нового значения. Бля...
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 0) // если ползунок
-    myLamp.getEffControls()[currDynCtrl]->setVal(String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val));
+    myLamp.getEffControls()[currDynCtrl]->setVal((String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt()) + (val)));
   else // если чекбокс
-    myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val, 0, 1)));
+    myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + (val), 0, 1)));
   
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
   else if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){

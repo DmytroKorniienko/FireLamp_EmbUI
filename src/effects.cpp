@@ -8577,6 +8577,7 @@ int16_t EffectFlower::ZVcalcDist(uint8_t x, uint8_t y, float center_x, float cen
   int16_t dista = ZVcalcRadius(a, b);
   return dista;
 }
+
 bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
 	effTimer = (1+sin(radians((float)millis()/6000)))*12.5;
 	ZVoffset += EffectMath::fmap((float)speed, 1, 255, 0.2, 6.0);;
@@ -8598,3 +8599,123 @@ bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
   } 
 	return true;
 }
+
+
+#ifdef RGB_PLAYER
+// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko
+// 27.01.2022
+// https://editor.soulmatelights.com/gallery/1684-pgm-player-with-resize
+// License GPL v.3 as a part of the FireLamp_EmbUI project
+String EffectPlayer::setDynCtrl(UIControl*_val){
+  if(_val->getId()==1) {
+    speed = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==3) {
+    blur = EffectCalc::setDynCtrl(_val).toInt() == 1;
+  } /* else if(_val->getId()==5) mode = EffectCalc::setDynCtrl(_val).toInt();*/
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectPlayer::load() {
+  String tmp = (String)PSTR("//animations/Спираль.565");  // тут загружаємо файл с ФС. Який попередньо був прописаний в конфіг.
+  if (!loadFile(tmp)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
+      tmp = (String)PSTR("//animations/test.332");
+      loadFile(tmp);
+  }
+
+}
+
+void EffectPlayer::calc() {
+    maxSize = max(WIDTH, HEIGHT);
+    resizeX = ((float)frameWidth / maxSize) * MULTIPLIC;
+    resizeY = ((float)frameHeight / maxSize) * MULTIPLIC;
+    corrX = ((maxSize - WIDTH) / 2) * MULTIPLIC;
+    corrY = ((maxSize - HEIGHT) / 2) * MULTIPLIC;
+    uint16_t newBufSize = frameWidth * frameHeight * (codec332 ? 1 : 2);
+    if (bufSize < newBufSize) {
+        delete [] frameBuf;
+        frameBuf = new uint8_t[newBufSize];
+    }
+    bufSize = newBufSize;
+    LOG(printf_P, PSTR("RGBPlayer: Framebuffer size is %d bytes.\n"), newBufSize);
+
+}
+
+void EffectPlayer::getFromFile_332(uint8_t frame) {
+    uint32_t index = (frameWidth * frameHeight) * frame + 3;
+    rgbFile.seek(index, SeekSet);
+
+    for(uint16_t i = 0; i < frameWidth * frameHeight; i++) {
+        uint8_t data;
+        rgbFile.read(&data, 1);
+        frameBuf[i] = data;
+    }
+}
+
+void EffectPlayer::getFromFile_565(uint8_t frame) {
+    uint32_t index = (frameWidth * frameHeight) * frame * 2 + 3;
+    rgbFile.seek(index, SeekSet);
+
+    for(uint16_t i = 0; i < frameWidth * frameHeight; i ++) {
+        uint8_t data0;
+        rgbFile.read(&data0, 1);
+        frameBuf[i*2] = data0;
+        uint8_t data1;
+        rgbFile.read(&data1, 1);
+        frameBuf[i*2 + 1] = data1;
+    }
+}
+
+void EffectPlayer::drawFrame () {
+    for (uint16_t y = 0; y < (maxSize * MULTIPLIC); y+= resizeY) {
+        for (uint16_t x = 0; x < (maxSize * MULTIPLIC); x+= resizeX) {
+            uint16_t index = ((x / MULTIPLIC * resizeX) / MULTIPLIC) + ((y/MULTIPLIC * resizeY) / MULTIPLIC) * frameWidth;
+            if (codec332) 
+                EffectMath::getPixel(((x - corrX) /MULTIPLIC), (HEIGHT- 1) - (y - corrY) / MULTIPLIC) = EffectMath::rgb332_To_CRGB(frameBuf[index]);
+            else {
+                index *= 2;
+                uint16_t result = ((uint16_t)frameBuf[index] << 8) | (uint16_t)frameBuf[index + 1];
+                EffectMath::getPixel(((x - corrX) /MULTIPLIC), (HEIGHT- 1) - (y - corrY) / MULTIPLIC) = EffectMath::rgb565_To_CRGB(result);
+            }
+        }
+    }
+    if (blur) EffectMath::blur2d(64);
+}
+
+bool EffectPlayer::loadFile(String &filename) {
+    if (rgbFile and rgbFile.isFile()) {
+        rgbFile.close();
+        LOG(println, F("RGBPlayer: Previose file was cloced"));
+    }
+    codec332 = filename.indexOf(F("332")) > 0; 
+    LOG(printf_P, PSTR("RGBPlayer: Start. File rgb%d mode.\n"), (codec332 ? 332U: 565U));
+    rgbFile = LittleFS.open(filename, "r");
+    if (rgbFile && rgbFile.isFile() && rgbFile.size() >= (3 + WIDTH * HEIGHT)) {
+        rgbFile.read(&frameWidth, 1);
+        rgbFile.read(&frameHeight, 1);
+        rgbFile.read(&frames, 1);
+        LOG(printf_P, PSTR("RGBPlayer: File %s loaded. It has %d frames. \nRGBPlayer: Image size %dX%d.\n"), filename.c_str(), frames, frameWidth, frameHeight);
+    
+        calc();
+    } else {
+        LOG(println, F("File not found or wrong format!"));
+        return false;
+    }
+    return true;
+}
+
+bool EffectPlayer::run(CRGB *leds, EffectWorker *param) {
+  if (dryrun(5.0))
+    return false;
+    
+  if (codec332) getFromFile_332(frame);
+  else getFromFile_565(frame);
+  drawFrame();
+  frame++;
+  if (frame >= frames)
+    frame = 0;
+  return true;
+}
+
+
+#endif

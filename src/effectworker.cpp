@@ -284,6 +284,11 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
   case EFF_ENUM::EFF_SPBALS :
     worker = std::unique_ptr<EffectSplashBals>(new EffectSplashBals());
     break;
+#ifdef RGB_PLAYER
+  case EFF_ENUM::EEF_RGBPLAYER :
+    worker = std::unique_ptr<EffectPlayer>(new EffectPlayer());
+    break;
+#endif
 #ifdef MIC_EFFECTS
   case EFF_ENUM::EFF_VU :
     worker = std::unique_ptr<EffectVU>(new EffectVU());

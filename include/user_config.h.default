@@ -79,6 +79,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define DS18B20                                             // Використовувати датчик температури DS18b20 
 //#define ENCODER                                             // Для керування використовувати енкодер (не сумісно з кнопкою)
 //#define RTC                                                 // Увімкнути використання зовнішнього модуля RTC
+#define RGB_PLAYER
 
 //------------------------------ 
 

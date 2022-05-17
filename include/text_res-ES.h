@@ -45,7 +45,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 /** набор строк с именами эффектов
  *  ссылки на эти строки собираются во флеш-массив в файле effect_types.h
  */
-static const char TEFF_000[] PROGMEM = "";  // "пустышка"
+static const char TEFF_000 [] PROGMEM = "";  // "пустышка"
 static const char TEFF_001 [] PROGMEM = "Lámpara blanca";
 static const char TEFF_002 [] PROGMEM = "Colores";
 static const char TEFF_003 [] PROGMEM = "Arcoiris 2D";
@@ -123,6 +123,7 @@ static const char TEFF_074 [] PROGMEM = "Humo";
 static const char TEFF_075 [] PROGMEM = "Lampara de Fuego";
 static const char TEFF_076 [] PROGMEM = "Espejismo";
 static const char TEFF_250 [] PROGMEM = "Reloj";
+static const char TEFF_251 [] PROGMEM = "Reproductor RGB 332/565";
 static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 
