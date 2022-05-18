@@ -864,7 +864,7 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
     }
    
     //LOG(println, "Delaying dynctrl");
-
+    //String tmp; serializeJson(*data,tmp); LOG(println, tmp);
     ctrlsTask = new CtrlsTask(data, 300, TASK_ONCE,
         [](){
             CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();

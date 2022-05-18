@@ -8611,18 +8611,15 @@ String EffectPlayer::setDynCtrl(UIControl*_val){
     speed = EffectCalc::setDynCtrl(_val).toInt();
   } else if(_val->getId()==3) {
     blur = EffectCalc::setDynCtrl(_val).toInt() == 1;
-  } /* else if(_val->getId()==5) mode = EffectCalc::setDynCtrl(_val).toInt();*/
+  }
+  else if(_val->getId()==4) { loadFile(String(F("/animations/"))+_val->getVal()); }
+  /* else if(_val->getId()==5) mode = EffectCalc::setDynCtrl(_val).toInt();*/
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 void EffectPlayer::load() {
-  String tmp = (String)PSTR("//animations/Спираль.565");  // тут загружаємо файл с ФС. Який попередньо був прописаний в конфіг.
-  if (!loadFile(tmp)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
-      tmp = (String)PSTR("//animations/test.332");
-      loadFile(tmp);
-  }
-
+  //String tmp = F("/animations/Спираль.565");  // тут загружаємо файл с ФС. Який попередньо був прописаний в конфіг.
 }
 
 void EffectPlayer::calc() {
@@ -8683,9 +8680,14 @@ void EffectPlayer::drawFrame () {
 }
 
 bool EffectPlayer::loadFile(String &filename) {
+    if (!LittleFS.exists(filename)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
+      LOG(println, filename);
+      filename = F("/animations/test.332");
+    }
+
     if (rgbFile and rgbFile.isFile()) {
         rgbFile.close();
-        LOG(println, F("RGBPlayer: Previose file was cloced"));
+        LOG(println, F("RGBPlayer: Previous file was closed"));
     }
     codec332 = filename.indexOf(F("332")) > 0; 
     LOG(printf_P, PSTR("RGBPlayer: Start. File rgb%d mode.\n"), (codec332 ? 332U: 565U));

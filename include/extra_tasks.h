@@ -201,7 +201,7 @@ public:
 class CtrlsTask : public Task {
     DynamicJsonDocument *_data = nullptr;
     INLINE DynamicJsonDocument *makeDoc(JsonObject *data) {
-        DynamicJsonDocument *storage = new DynamicJsonDocument(data->size()*2+32);
+        DynamicJsonDocument *storage = new DynamicJsonDocument(data->memoryUsage()*2+32);
         if(!storage) return nullptr;
         String tmp; serializeJson(*data,tmp); //LOG(printf_P, PSTR("makeDoc: %s\n"), tmp.c_str());
         deserializeJson((*storage), tmp);
