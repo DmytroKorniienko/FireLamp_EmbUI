@@ -15,30 +15,31 @@
 	Документацию читай здесь: https://alexgyver.ru/gyverbutton/
 	Для максимально быстрого опроса кнопки рекомендуется использовать ядро GyverCore https://alexgyver.ru/gyvercore/
 		
-	Версия 2.15: Добавлена возможность объявить кнопку без привязки к пину	
-	Версия 3.0: Ускорен и оптимизирован код, переделана инициализация, дополнены примеры	
-	Версия 3.1: isStep может принимать количество кликов, сделанных перед ним (см. пример clicks_step)	
-	Версия 3.2: Добавлен метод getHoldClicks() - вернуть количество кликов, предшествующее удерживанию	
-	Версия 3.3: Мелкие исправления
-	Версия 3.4: Добавлен метод resetStates(), сбрасывающий состояния и счётчики
+	Переработанная (kDn) Версия 3.4: Добавлен метод resetStates(), сбрасывающий состояния и счётчики
 */
 
 #pragma pack(push,4)
-typedef struct {		
-	bool btn_deb: 1;	
-	bool hold_flag: 1;
-	bool counter_flag: 1;
-	bool isHolded_f: 1;
-	bool isRelease_f: 1;
-	bool isPress_f: 1;
-	bool step_flag: 1;
-	bool oneClick_f: 1;
-	bool isOne_f: 1;
-	bool inv_state: 1;
-	bool mode: 1;
-	bool type: 1;
-	bool tickMode: 1;
-	bool noPin: 1;
+typedef union _GyverButtonFlags{
+	struct {		
+		bool btn_deb: 1;	
+		bool hold_flag: 1;
+		bool counter_flag: 1;
+		bool isHolded_f: 1;
+		bool isRelease_f: 1;
+		bool isPress_f: 1;
+		bool step_flag: 1;
+		bool oneClick_f: 1;
+		bool isOne_f: 1;
+		bool inv_state: 1;
+		bool mode: 1;
+		bool type: 1;
+		bool tickMode: 1;
+		bool noPin: 1;
+		bool btn_state: 1;
+		bool btn_flag: 1;
+	};
+	_GyverButtonFlags() { flags=0; }
+	uint32_t flags; // набор битов для конфига
 } GyverButtonFlags;
 #pragma pack(pop)
 
@@ -82,7 +83,7 @@ class GButton {
 	boolean isPress();		// возвращает true при нажатии на кнопку. Сбрасывается после вызова
 	boolean isRelease();	// возвращает true при отпускании кнопки. Сбрасывается после вызова
 	boolean isClick();		// возвращает true при клике. Сбрасывается после вызова
-    boolean isHolded();		// возвращает true при удержании дольше timeout. Сбрасывается после вызова
+  boolean isHolded();		// возвращает true при удержании дольше timeout. Сбрасывается после вызова
 	boolean isHold();		// возвращает true при нажатой кнопке, не сбрасывается
 	boolean state();		// возвращает состояние кнопки
 
@@ -100,13 +101,11 @@ class GButton {
 	
   private:
     GyverButtonFlags flags;
+		uint32_t btn_timer = 0;	
+		uint16_t _timeout = 500;
+		uint16_t _click_timeout = 500;
+		uint16_t _step_timeout = 400;
     uint8_t _PIN = 0;
-	uint16_t _debounce = 60;
-	uint16_t _timeout = 500;
-	uint16_t _click_timeout = 500;
-	uint16_t _step_timeout = 400;
-	uint8_t btn_counter = 0, last_counter = 0, last_hold_counter = 0;
-	uint32_t btn_timer = 0;	
-	bool btn_state = false;
-	bool btn_flag = false;
+		uint8_t _debounce = 60;
+		uint8_t btn_counter = 0, last_counter = 0, last_hold_counter = 0;
 };
