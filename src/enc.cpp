@@ -50,7 +50,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 uint8_t currDynCtrl;        // текущий контрол, с которым работаем
 uint8_t currAction;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
 uint16_t currEffNum;        // текущий номер эффекта
-int16_t anyValue;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
+uint16_t anyValue;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
 uint8_t loops;              // счетчик псевдотаймера
 bool done;                  // true == все отложенные до enc_loop операции выполнены.
 bool inSettings;            // флаг - мы в настройках эффекта
@@ -66,7 +66,7 @@ void callEncTick () {
 }
 
 void encLoop() {
-  static int16_t valRepiteChk = anyValue;
+  static uint16_t valRepiteChk = anyValue;
   noInterrupt();
   //enc.tick();
 
@@ -144,25 +144,25 @@ void encLoop() {
 }
 
 
-// Обработчик прерываний
-void IRAM_ATTR isrEnc() { 
-  noInterrupt();
-  enc.tick();  // отработка в прерывании
-  interrupt();
-}
+// // Обработчик прерываний
+//void IRAM_ATTR isrEnc() { 
+//  noInterrupt();
+//  enc.tick();  // отработка в прерывании
+//  interrupt();
+//}
 
 // Функция запрещает прерывания от энкодера, на время других операций, чтобы не спамить контроллер
 void interrupt() {
-  //attachInterrupt(digitalPinToInterrupt(DT), isrEnc,  FALLING/* CHANGE*/);   // прерывание на DT пине
-  // attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, CHANGE);  // прерывание на CLK пине
-  //attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
+  //attachInterrupt(digitalPinToInterrupt(DT), isrEnc, FALLING/*CHANGE*/);   // прерывание на DT пине
+  //attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, FALLING);  // прерывание на CLK пине
+  // attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
 }
 
 // Функция восстанавливает прерывания энкодера
 void noInterrupt() {
   //detachInterrupt(DT);
   // detachInterrupt(CLK);
-  //detachInterrupt(SW);
+  // detachInterrupt(SW);
 }
 
 // Функция обрабатывает повороты энкодера
@@ -443,6 +443,7 @@ void encSetBri(int val) {
       GAUGE::GaugeShow(anyValue, 255);
   }
   encDisplay(anyValue, String(F("b.")));
+  LOG(printf_P, PSTR("Enc: setBri Value %d\n"), anyValue);
 }
 
 // Функция смены эффекта зажатым энкодером
@@ -497,15 +498,16 @@ void encSetDynCtrl(int val) {
   // тут магия, некоторые чекбоксы у нас особенные, типа локальный "Микрофон". 
   // Придется проверять что это - ползунок или чекбокс и по разному подходить к процессу внесения нового значения. Бля...
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 0) // если ползунок
-    myLamp.getEffControls()[currDynCtrl]->setVal((String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt()) + (val)));
+    myLamp.getEffControls()[currDynCtrl]->setVal(String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val));
   else // если чекбокс
-    myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + (val), 0, 1)));
+    myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val, 0, 1)));
   
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
   else if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
       GAUGE::GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
   }
   encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
+  LOG(printf_P, PSTR("Enc: dynCtrl: %d Value %d\n"), myLamp.getEffControls()[currDynCtrl]->getId(), myLamp.getEffControls()[currDynCtrl]->getVal().toInt());
   interrupt();
 }
 
