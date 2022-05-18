@@ -59,7 +59,7 @@ uint8_t speed, fade;
 uint8_t txtDelay = 40U;
 CRGB txtColor = CRGB::Orange;
 
-//Task encTask(100 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
+Task encTask(1 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
 void callEncTick () {
   enc.tick();
@@ -68,7 +68,7 @@ void callEncTick () {
 void encLoop() {
   static int16_t valRepiteChk = anyValue;
   noInterrupt();
-  enc.tick();
+  //enc.tick();
 
   if (inSettings) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     resetTimers();
@@ -153,16 +153,16 @@ void IRAM_ATTR isrEnc() {
 
 // Функция запрещает прерывания от энкодера, на время других операций, чтобы не спамить контроллер
 void interrupt() {
-  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, CHANGE);   // прерывание на DT пине
-  attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, CHANGE);  // прерывание на CLK пине
-  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
+  //attachInterrupt(digitalPinToInterrupt(DT), isrEnc,  FALLING/* CHANGE*/);   // прерывание на DT пине
+  // attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, CHANGE);  // прерывание на CLK пине
+  //attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
 }
 
 // Функция восстанавливает прерывания энкодера
 void noInterrupt() {
-  detachInterrupt(DT);
-  detachInterrupt(CLK);
-  detachInterrupt(SW);
+  //detachInterrupt(DT);
+  // detachInterrupt(CLK);
+  //detachInterrupt(SW);
 }
 
 // Функция обрабатывает повороты энкодера
@@ -193,10 +193,10 @@ void isTurn() {
   case 1: // Влево 
   case 2: // Влево быстро
     if (inSettings) {
-      encSetDynCtrl(turnType == 1 ? -1 : -10);
+      encSetDynCtrl(turnType == 1 ? -1 : -16);
     } 
     else 
-      encSetBri(turnType == 1 ? -1 : -10);
+      encSetBri(turnType == 1 ? -1 : -16);
     break;
   case 3: // нажатый влево 
     encSetEffect(-1);
@@ -207,10 +207,10 @@ void isTurn() {
   case 5: // Вправо  
   case 6:  // Вправо быстро  
     if (inSettings) {
-      encSetDynCtrl(turnType == 5 ? 1 : 10);
+      encSetDynCtrl(turnType == 5 ? 1 : 16);
     } 
     else 
-      encSetBri(turnType == 5 ? 1 : 10);
+      encSetBri(turnType == 5 ? 1 : 16);
     break;
   case 7: // вправо нажатый 
     encSetEffect(1);
