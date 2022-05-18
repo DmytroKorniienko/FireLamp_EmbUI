@@ -303,6 +303,7 @@ void sendData(){
     DynamicJsonDocument obj(512);
     //JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_00DD)] = myLamp.getModeDesc();
+    obj[FPSTR(TCONST_00EE)] = myLamp.effects.getEffectName();
     obj[FPSTR(TCONST_00DE)] = String(embui.timeProcessor.getFormattedShortTime());
     obj[FPSTR(TCONST_00DF)] = String(myLamp.getLampState().freeHeap);
     obj[FPSTR(TCONST_00E0)] = String(embui.getUptime());

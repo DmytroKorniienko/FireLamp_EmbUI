@@ -406,13 +406,13 @@ void LAMP::restoreStored(bool switch_eff)
   lampState.isMicOn = flags.isMicOn;
   if(switch_eff){
     if (static_cast<EFF_ENUM>(storedEffect) != EFF_NONE) {    // ничего не должно происходить, включаемся на текущем :), текущий всегда определен...
-      Task *_t = new Task(1 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL); TASK_RECYCLE; }, &ts, false);
+      Task *_t = new Task(1 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFFECT, String(storedEffect).c_str(), NULL); storedEffect = EFF_NONE; TASK_RECYCLE; }, &ts, false);
       _t->enableDelayed();
     } else if(static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_NONE) { // если по каким-то причинам текущий пустой, то выбираем рандомный
       Task *_t = new Task(1 * TASK_SECOND, TASK_ONCE, [this](){remote_action(RA::RA_EFF_RAND, NULL); TASK_RECYCLE; }, &ts, false);
       _t->enableDelayed();
     }
-    storedEffect = EFF_NONE;
+    //storedEffect = EFF_NONE;
   }
 }
 
