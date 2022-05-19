@@ -67,13 +67,13 @@ void ds_setup() {
 
 int16_t getTemp() {
 #if defined(ENCODER) && SW == DS18B20_PIN
-  detachInterrupt(SW);
+  //detachInterrupt(SW);
 #endif
   int currentTemp = dallas.getTemp(); // получить с далласа
   dallas.requestTemp();           // запросить измерение
   LOG(printf_P, PSTR("DS18B20: Temperature  %d\U000000B0C\n"), currentTemp);
 #if defined(ENCODER) && SW == DS18B20_PIN
-  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);
 #endif
   return currentTemp;
 }
