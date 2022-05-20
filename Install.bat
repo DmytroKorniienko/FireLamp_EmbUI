@@ -81,9 +81,9 @@ if "%choice%"=="4" (
 	) else (
 		echo "Firmware repo wil be instaled on disk !diskInstal!:"
 		!diskInstal!:
-		if exist "!diskInstal!:\FireLamp_JeeUI" (rmdir /S /Q !diskInstal!:\FireLamp_JeeUI)
-		"%ProgramFiles%\Git\bin\git" clone https://github.com/DmytroKorniienko/FireLamp_JeeUI.git
-		start .\FireLamp_JeeUI
+		if exist "!diskInstal!:\FireLamp_EmbUI" (rmdir /S /Q !diskInstal!:\FireLamp_EmbUI)
+		"%ProgramFiles%\Git\bin\git" clone https://github.com/DmytroKorniienko/FireLamp_EmbUI.git
+		start .\FireLamp_EmbUI
 	)
 )
 

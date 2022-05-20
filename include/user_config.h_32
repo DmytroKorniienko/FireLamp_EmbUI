@@ -218,15 +218,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #define OFF_BRIGHTNESS          (2U)                        // яскравість виведення тексту у разі вимкненої лампи
 #define CURRENT_LIMIT         (30000U)                       // ліміт по струму в міліамперах, автоматично керує яскравістю (пошкодуй свій блок живлення!) 0 - вимкнути ліміт
 
-//#define XY_EXTERN                                           // Користувальницький мапінг нестандартних матриць, читати у файлі ../include/XY.h і/або тут 
-                                                            // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-64771
-                                                            // тут звіт користувача 
-                                                            // https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-72777
+//#define XY_EXTERN                                           // Користувальницький мапінг нестандартних матриць, читати у файлі ../include/XY.h
 
 #define MATRIXx4                                            // Активувати, якщо ваша матриця складається з 4-х однакових квадратних матриць розміром 16х16 або 8х8 пікселів.
                                                              // При цьому WIDTH і HEIGHT повинні відповідати дворазовому розміру матриць, що використовуються в панно.
                                                              // Приклад: використовуються чотири матриці розміром 16х16, - WIDTH і HEIGHT повинні бути встановлені в (32U)
-                                                             // Схема підключення тут https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-102618
 //------------------------------ 
 
 //------------------------------ Всякое разное
