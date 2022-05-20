@@ -3,7 +3,7 @@
 /.vscode
 eff
 data/*.json
-include/user_config.h
+include/user_config*.h
 user_*.ini
 /out_bin/*.*
 /resources/embui.zip
