@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -67,8 +67,14 @@ void TMCLOCK::tm_loop() {
   if (!bannerShowed) return;
   #endif
 
+
   if (getSetDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу с другиг плагинов
     getSetDelay()--;
+    return;
+  }
+
+  if(ipShow) {      // Пропускаем все, если выводится IP
+    showIp();
     return;
   }
 
@@ -95,14 +101,26 @@ void TMCLOCK::showBanner(){
   if (l == 21) return;
   l++;   // Добавляем счетчик и ограничиваем, чтобы не гонял по кругу
   if (embui.sysData.wifi_sta && l <= 20 && l > 4) {
-    String ip = (String) "IP." + (String) WiFi.localIP().toString();
-    splitIp(ip, ".", splittedIp);
-    display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+    String ip = (String) F("IP.") + (String) WiFi.localIP().toString();
+    splitIp(ip, F("."), splittedIp);
+    display(formatIp(splittedIp, F("")))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
   }
-  else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) display("__AP_192_168___4___1")->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
+  else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) display(String(F("__AP_192_168___4___1")))->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
   if (l == 20) bannerShowed = 1;
 }
 #endif
+
+
+void TMCLOCK::showIp(){
+  if (embui.sysData.wifi_sta) {
+    String ip = (String)F("IP.") + (String) WiFi.localIP().toString();
+    splitIp(ip, F("."), splittedIp);
+    display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+  }
+  else if (!embui.sysData.wifi_sta) display(String(F("__AP_192_168___4___1")))->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
+  ipShow--;
+}
+
 
 // | FUNC - Split IP
 // |----------
@@ -124,8 +142,8 @@ void TMCLOCK::splitIp(String str, String dlm, String dest[])
 // |----------
 String TMCLOCK::formatIp(String inArr[], String dlm)
 {
-  String tmp    = "____";
-  String output = "";
+  String tmp    = F("____");
+  String output = F("");
 
   for(uint8_t i=0; i<5; i++){
     String crnt = inArr[i];
@@ -139,7 +157,7 @@ String TMCLOCK::formatIp(String inArr[], String dlm)
       output += dlm;
     }
 
-    tmp    = "____";
+    tmp    = F("____");
   }
 
   return output;

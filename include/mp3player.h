@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -45,22 +45,26 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
   private:
     union {
       struct {
+        uint8_t timeSoundType:3; // вид озвучивания времени
+        uint8_t tAlarm:3; // вид будильника
         bool ready:1; // закончилась ли инициализация
         bool on:1; // включен ли...
         bool mp3mode:1; // режим mp3 плеера
         bool effectmode:1; // режим проигрывания эффектов
         bool alarm:1; // сейчас будильник
         bool isplayname:1; // проигрывается имя
+        bool isadvert:1; // воспроизводится ли сейчас время в ADVERT (для совместимости между 24SS и GD3200B)
+        bool isplaying:1; // воспроизводится ли сейчас песня или эффект
+        bool iscancelrestart:1; // отменить рестарт после однократного воспроизведения
       };
       uint32_t flags;
     };
     Task *tPeriodic = nullptr; // периодический опрос плеера
-    uint8_t cur_volume = 0;
+    uint8_t cur_volume = 1;
     uint16_t mp3filescount = 255; // кол-во файлов в каталоге MP3
     uint16_t nextAdv=0; // следующее воспроизводимое сообщение (произношение минут после часов)
     uint16_t cur_effnb=0; // текущий эффект
     uint16_t prev_effnb=0; // предыдущий эффект
-    ALARM_SOUND_TYPE tAlarm;
     SoftwareSerial mp3player;
     String soundfile; // хранилище пути/имени
     unsigned long restartTimeout = millis(); // таймаут воспроизведения имени эффекта
@@ -78,9 +82,18 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     bool isMP3Mode() {return mp3mode;}
     void setIsOn(bool val, bool forcePlay=true) {
       on = val;
-      if(!on)
+
+      if(!forcePlay){
+        iscancelrestart = true;
+        restartTimeout = millis();
+      }
+
+      if(!on){
         stop();
-      else if(forcePlay && (effectmode || mp3mode))
+        isplaying = false;
+        iscancelrestart = true;
+        restartTimeout = millis();
+      } else if(forcePlay && (effectmode || mp3mode))
         playEffect(cur_effnb, soundfile);
 
       if(tPeriodic)
@@ -94,15 +107,36 @@ class MP3PLAYERDEVICE : protected DFRobotDFPlayerMini {
     void playTime(int hours, int minutes, TIME_SOUND_TYPE tst);
     void playEffect(uint16_t effnb, const String &_soundfile, bool delayed=false);
     void playName(uint16_t effnb);
-    void setVolume(uint8_t vol) { cur_volume=vol; volume(vol); LOG(printf_P, PSTR("DFplayer: Set volume: %d\n"), cur_volume); }
     uint8_t getVolume() { return cur_volume; }
-    void setTempVolume(uint8_t vol) { volume(vol); LOG(printf_P, PSTR("DFplayer: Set temp volume: %d\n"), vol); }
+    void setVolume(uint8_t vol) {
+      cur_volume=vol;
+      if(ready){
+        int tcnt = 5;
+        do {
+          tcnt--;
+          if(readVolume()!=vol)
+            volume(vol);
+        } while(!readType() && tcnt);
+      }
+      LOG(printf_P, PSTR("DFplayer: Set volume: %d\n"), cur_volume);
+    }
+    void setTempVolume(uint8_t vol) {
+      if(ready){
+        int tcnt = 5;
+        do {
+          tcnt--;
+          if(readVolume()!=vol)
+            volume(vol);
+        } while(!readType() && tcnt);
+      }
+      LOG(printf_P, PSTR("DFplayer: Set temp volume: %d\n"), vol);
+    }
     void setMP3count(uint16_t cnt) {mp3filescount = cnt;} // кол-во файлов в папке MP3
     uint16_t getMP3count() {return mp3filescount;}
     void setEqType(uint8_t val) { EQ(val); }
     void setPlayMP3(bool flag) {mp3mode = flag;}
     void setPlayEffect(bool flag) {effectmode = flag;}
-    void setAlarm(bool flag) {alarm = flag; stop();}
+    void setAlarm(bool flag) {alarm = flag; stop(); isplaying = false;}
     void StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol);
     void ReStartAlarmSound(ALARM_SOUND_TYPE val);
     void RestoreVolume() { setVolume(cur_volume); }

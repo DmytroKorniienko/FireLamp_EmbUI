@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -153,6 +153,11 @@ public:
     static void drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel=25); // darklevel - насколько затемнять картинку
     static void drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t darklevel=50);
     static void drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t darklevel=50);
+    
+    // Вариант субпикселя от @stepko, в некоторых случаях работает лучше, но в некоторых хуже
+    static void sDrawPixelXYF(float x, float y, const CRGB &color); 
+    static void sDrawPixelXYF_Y(int16_t x, float y, const CRGB &color);
+    static void sDrawPixelXYF_X(float x, int16_t y, const CRGB &color);
 
     static CRGB getPixColorXYF_X(float x, int16_t y);
     static CRGB getPixColorXYF_Y(int16_t x, float y);
@@ -163,12 +168,16 @@ public:
 	static void drawSquareF(float x, float y, float leg, CRGB color);
     static void drawCircle(int x0, int y0, int radius, const CRGB &color);
     static void drawCircleF(float x0, float y0, float radius, const CRGB &color, float step = 0.25);
+    static void fill_circleF(float cx, float cy, float radius, CRGB col);
     //static void setLedsfadeToBlackBy(uint16_t idx, uint8_t val);
     static void setLedsNscale8(uint16_t idx, uint8_t val);
     static void dimAll(uint8_t value);
     static CRGB &getLed(uint16_t idx);
     static void blur2d(uint8_t val);
-
+#ifdef RGB_PLAYER
+    static CRGB rgb332_To_CRGB(uint8_t value); 
+    static CRGB rgb565_To_CRGB(uint16_t value);
+#endif
     /** аналог ардуино функции map(), но только для float
    */
     static double fmap(const double x, const double in_min, const double in_max, const double out_min, const double out_max){

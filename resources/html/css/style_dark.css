@@ -1,5 +1,5 @@
 /*!
-FireLamp_JeeUI overrides for EmbUI Styles
+FireLamp_EmbUI overrides for EmbUI Styles
 */
 .pure-g [class*=pure-u]{
 	font-family:sans-serif;
@@ -7,8 +7,8 @@ FireLamp_JeeUI overrides for EmbUI Styles
 	font-style: italic;
 }
 .pure-button{
-	display:inline-block;
-	line-height:normal;
+	/* display:inline-block; */
+	/* line-height:normal; */
 	white-space:nowrap;
 	vertical-align:middle;
 	text-align:center;
@@ -76,9 +76,21 @@ FireLamp_JeeUI overrides for EmbUI Styles
 .pure-form-stacked textarea{
 	display:block;
 }
-
 .select-editable input{
 	font-family:sans-serif;
 	font-weight: bold;
 	font-style: italic;
+}
+body {
+  background-color: #333;
+  background-image: url('wp_dark.svg'), url('wp_dark.webp');
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.button__text {
+  vertical-align: super;
+}
+.button--loading {
+  padding: 0 !important;
 }

@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -76,11 +76,11 @@ static const char TCONST_0004[] PROGMEM = "settings";
 static const char TCONST_0005[] PROGMEM = "set_effect";
 static const char TCONST_0006[] PROGMEM = "eff_sel";
 static const char TCONST_0007[] PROGMEM = "eff_fav";
-//static const char TCONST_0008[] PROGMEM = "gray";
+static const char TCONST_0008[] PROGMEM = "encoder";
 static const char TCONST_0009[] PROGMEM = "copy";
 static const char TCONST_000A[] PROGMEM = "del*";
 static const char TCONST_000B[] PROGMEM = "makeidx";
-//static const char TCONST_000C[] PROGMEM = "red";
+static const char TCONST_000C[] PROGMEM = "set_enc";
 static const char TCONST_000D[] PROGMEM = "black";
 static const char TCONST_000E[] PROGMEM = "AUX";
 static const char TCONST_000F[] PROGMEM = "effects_config";
@@ -115,7 +115,7 @@ static const char TCONST_002B[] PROGMEM = "/backup/idx";
 static const char TCONST_002C[] PROGMEM = "/backup/idx/";
 static const char TCONST_002D[] PROGMEM = "load";
 static const char TCONST_002E[] PROGMEM = "save";
-//static const char TCONST_002F[] PROGMEM = "green";
+static const char TCONST_002F[] PROGMEM = "ds18b20";
 static const char TCONST_0030[] PROGMEM = "add_lamp_config";
 static const char TCONST_0031[] PROGMEM = "/backup/glb/";
 static const char TCONST_0032[] PROGMEM = "/backup/evn/";
@@ -130,19 +130,19 @@ static const char TCONST_003A[] PROGMEM = "micNoise";
 static const char TCONST_003B[] PROGMEM = "micnRdcLvl";
 static const char TCONST_003C[] PROGMEM = "mic_cal";
 static const char TCONST_003D[] PROGMEM = "settings_wifi";
-static const char TCONST_003E[] PROGMEM = "set_wifi";
-static const char TCONST_003F[] PROGMEM = "hostname";
-static const char TCONST_0040[] PROGMEM = "wcssid";
+static const char TCONST_003E[] PROGMEM = "pTemp";
+static const char TCONST_003F[] PROGMEM = "EncVG";
+static const char TCONST_0040[] PROGMEM = "EncVGCol";
 static const char TCONST_0041[] PROGMEM = "wcpass";
-static const char TCONST_0042[] PROGMEM = "set_wifiAP";
-static const char TCONST_0043[] PROGMEM = "APonly";
-static const char TCONST_0044[] PROGMEM = "APpwd";
+static const char TCONST_0042[] PROGMEM = "encTxtCol";
+static const char TCONST_0043[] PROGMEM = "encTxtDel";
+static const char TCONST_0044[] PROGMEM = "streaming";
 static const char TCONST_0045[] PROGMEM = "set_mqtt";
-static const char TCONST_0046[] PROGMEM = "m_host";
-static const char TCONST_0047[] PROGMEM = "m_port";
-static const char TCONST_0048[] PROGMEM = "m_user";
-static const char TCONST_0049[] PROGMEM = "m_pass";
-static const char TCONST_004A[] PROGMEM = "m_tupd";
+static const char TCONST_0046[] PROGMEM = "isStreamOn";
+static const char TCONST_0047[] PROGMEM = "stream_type";
+static const char TCONST_0048[] PROGMEM = "isShowOff";
+static const char TCONST_0049[] PROGMEM = "direct";
+static const char TCONST_004A[] PROGMEM = "mapping";
 static const char TCONST_004B[] PROGMEM = "set_other";
 static const char TCONST_004C[] PROGMEM = "MIRR_H";
 static const char TCONST_004D[] PROGMEM = "MIRR_V";
@@ -154,11 +154,11 @@ static const char TCONST_0052[] PROGMEM = "txtOf";
 static const char TCONST_0053[] PROGMEM = "spdcf";
 static const char TCONST_0054[] PROGMEM = "ny_period";
 static const char TCONST_0055[] PROGMEM = "ny_unix";
-static const char TCONST_0056[] PROGMEM = "set_time";
-static const char TCONST_0057[] PROGMEM = "TZSET";
-static const char TCONST_0058[] PROGMEM = "userntp";
-static const char TCONST_0059[] PROGMEM = "setdatetime";
-static const char TCONST_005A[] PROGMEM = "update";
+static const char TCONST_0056[] PROGMEM = "isPlayTime";
+// static const char TCONST_0057[] PROGMEM = "TZSET";
+// static const char TCONST_0058[] PROGMEM = "userntp";
+// static const char TCONST_0059[] PROGMEM = "setdatetime";
+// static const char TCONST_005A[] PROGMEM = "update";
 static const char TCONST_005B[] PROGMEM = "blue";
 static const char TCONST_005C[] PROGMEM = "show_event";
 static const char TCONST_005D[] PROGMEM = "event_conf";
@@ -187,26 +187,26 @@ static const char TCONST_0073[] PROGMEM = "clicks";
 static const char TCONST_0074[] PROGMEM = "bactList";
 static const char TCONST_0075[] PROGMEM = "set_butt";
 static const char TCONST_0076[] PROGMEM = "show_butt";
-static const char TCONST_0077[] PROGMEM = "show_time";
-static const char TCONST_0078[] PROGMEM = "show_wifi";
+static const char TCONST_0077[] PROGMEM = "Universe";
+// static const char TCONST_0078[] PROGMEM = "show_wifi";
 static const char TCONST_0079[] PROGMEM = "show_mic";
 static const char TCONST_007A[] PROGMEM = "show_other";
-static const char TCONST_007B[] PROGMEM = "m_pref";
+//static const char TCONST_007B[] PROGMEM = "m_pref";
 static const char TCONST_007C[] PROGMEM = "#ffffff";
 static const char TCONST_007D[] PROGMEM = "1609459200";
 static const char TCONST_007E[] PROGMEM = "main";
 static const char TCONST_007F[] PROGMEM = "dynCtrl*";
 static const char TCONST_0080[] PROGMEM = "STA";
-static const char TCONST_0081[] PROGMEM = "off";
-static const char TCONST_0082[] PROGMEM = "effect";
-static const char TCONST_0083[] PROGMEM = "move_next";
-static const char TCONST_0084[] PROGMEM = "move_prev";
-static const char TCONST_0085[] PROGMEM = "move_rnd";
-static const char TCONST_0086[] PROGMEM = "reboot";
-static const char TCONST_0087[] PROGMEM = "alarm";
-static const char TCONST_0088[] PROGMEM = "aux_on";
-static const char TCONST_0089[] PROGMEM = "aux_off";
-static const char TCONST_008A[] PROGMEM = "aux_toggle";
+static const char TCONST_0081[] PROGMEM = "/tmpqlist.tmp";
+static const char TCONST_0082[] PROGMEM = "/fquicklist.json";
+static const char TCONST_0083[] PROGMEM = "/fslowlist.json";
+static const char TCONST_0084[] PROGMEM = "/slowlist.json";
+static const char TCONST_0085[] PROGMEM = "/tmplist.tmp";
+static const char TCONST_0086[] PROGMEM = "/quicklist.json";
+// static const char TCONST_0087[] PROGMEM = "alarm";
+// static const char TCONST_0088[] PROGMEM = "aux_on";
+// static const char TCONST_0089[] PROGMEM = "aux_off";
+// static const char TCONST_008A[] PROGMEM = "aux_toggle";
 static const char TCONST_008B[] PROGMEM = "embui/pub/";
 static const char TCONST_008C[] PROGMEM = "pin";
 static const char TCONST_008D[] PROGMEM = "act";
@@ -215,7 +215,7 @@ static const char TCONST_008F[] PROGMEM = "pUptime";
 static const char TCONST_0090[] PROGMEM = "numInList";
 static const char TCONST_0091[] PROGMEM = "effHasMic";
 static const char TCONST_0092[] PROGMEM = "effname";
-static const char TCONST_0093[] PROGMEM = "";
+static const char TCONST_0093[] PROGMEM = "set_opt_pass";
 static const char TCONST_0094[] PROGMEM = "syslampFlags";
 static const char TCONST_0095[] PROGMEM = "debug";
 static const char TCONST_0096[] PROGMEM = "isShowSysMenu";
@@ -251,23 +251,23 @@ static const char TCONST_00B3[] PROGMEM = "orange";
 static const char TCONST_00B4[] PROGMEM = "gbright";
 static const char TCONST_00B5[] PROGMEM = "bparam";
 static const char TCONST_00B6[] PROGMEM = "delete";
-static const char TCONST_00B7[] PROGMEM = "warning";
-//static const char TCONST_00B8[] PROGMEM = "";
+// static const char TCONST_00B7[] PROGMEM = "warning";
+static const char TCONST_00B8[] PROGMEM = "opt_pass";
 static const char TCONST_00B9[] PROGMEM = "text_config";
 static const char TCONST_00BA[] PROGMEM = "edit_text_config";
 static const char TCONST_00BB[] PROGMEM = "alarmP";
 static const char TCONST_00BC[] PROGMEM = "alarmT";
 static const char TCONST_00BD[] PROGMEM = "alarmPT";
-static const char TCONST_00BE[] PROGMEM = "mp3_prev";
-static const char TCONST_00BF[] PROGMEM = "mp3_next";
+// static const char TCONST_00BE[] PROGMEM = "mp3_prev";
+// static const char TCONST_00BF[] PROGMEM = "mp3_next";
 static const char TCONST_00C0[] PROGMEM = "mp3_p5";
 static const char TCONST_00C1[] PROGMEM = "mp3_n5";
 static const char TCONST_00C2[] PROGMEM = "pFS";
 static const char TCONST_00C3[] PROGMEM = "txtBfade";
 static const char TCONST_00C4[] PROGMEM = "drawbuff";
-static const char TCONST_00C5[] PROGMEM = "draw";
-static const char TCONST_00C6[] PROGMEM = "matrix";
-static const char TCONST_00C7[] PROGMEM = "fillmatrix";
+// static const char TCONST_00C5[] PROGMEM = "draw";
+// static const char TCONST_00C6[] PROGMEM = "matrix";
+// static const char TCONST_00C7[] PROGMEM = "fillmatrix";
 static const char TCONST_00C8[] PROGMEM = "drawing";
 static const char TCONST_00C9[] PROGMEM = "drawing_ctrl";
 static const char TCONST_00CA[] PROGMEM = "drawing_ctrl*";
@@ -280,16 +280,73 @@ static const char TCONST_00D0[] PROGMEM = "control";
 static const char TCONST_00D1[] PROGMEM = "afS";
 static const char TCONST_00D2[] PROGMEM = "lV";
 static const char TCONST_00D3[] PROGMEM = "sT";
-static const char TCONST_00D4[] PROGMEM = "inccontrol";
+static const char TCONST_00D4[] PROGMEM = "ra_call";
 static const char TCONST_00D5[] PROGMEM = "force";
-static const char TCONST_00D6[] PROGMEM = "tm1637";
+// static const char TCONST_00D6[] PROGMEM = "tm1637";
 static const char TCONST_00D7[] PROGMEM = "tmBright";
 static const char TCONST_00D8[] PROGMEM = "tmBrightOn";
 static const char TCONST_00D9[] PROGMEM = "tmBrightOff";
 static const char TCONST_00DA[] PROGMEM = "tm24";
 static const char TCONST_00DB[] PROGMEM = "tmZero";
 static const char TCONST_00DC[] PROGMEM = "drawClear";
-static const char TCONST_00DD[] PROGMEM = "scan";
+static const char TCONST_00DD[] PROGMEM = "Mode";
+static const char TCONST_00DE[] PROGMEM = "Time";
+static const char TCONST_00DF[] PROGMEM = "Memory";
+static const char TCONST_00E0[] PROGMEM = "Uptime";
+static const char TCONST_00E1[] PROGMEM = "RSSI";
+static const char TCONST_00E2[] PROGMEM = "Ip";
+static const char TCONST_00E3[] PROGMEM = "Mac";
+static const char TCONST_00E4[] PROGMEM = "Host";
+static const char TCONST_00E5[] PROGMEM = "Version";
+static const char TCONST_00E6[] PROGMEM = "MQTTTopic";
+static const char TCONST_00E7[] PROGMEM = "embui/";
+static const char TCONST_00E8[] PROGMEM = "Normal";
+static const char TCONST_00E9[] PROGMEM = "Alarm";
+static const char TCONST_00EA[] PROGMEM = "Demo";
+static const char TCONST_00EB[] PROGMEM = "RGB";
+static const char TCONST_00EC[] PROGMEM = "White";
+static const char TCONST_00ED[] PROGMEM = "Other";
+static const char TCONST_00EE[] PROGMEM = "Eff";
+
+/** набор служебных текстовых констант (HTTP/MQTT запросы)
+ */
+
+static const char CMD_TCONST_0000[] PROGMEM = "ON";         // Без параметров - возвращает 1/0 в зависимости вкл/выкл лампа, принимает параметр - 1/0 (вкл/выкл лампу)
+static const char CMD_TCONST_0001[] PROGMEM = "OFF";        // Без параметров - возвращает 1/0 в зависимости выкл/вкл лампа, принимает параметр - 1/0 (выкл/вкл лампу)
+static const char CMD_TCONST_0002[] PROGMEM = "G_BRIGHT";   // Без параметров - возвращает 1/0 в зависимости вкл/выкл глобальная яркость, принимает параметр - 1/0 (вкл/выкл глобальная яркость)
+static const char CMD_TCONST_0003[] PROGMEM = "DEMO";       // Без параметров - возвращает 1/0 в зависимости вкл/выкл глобальная яркость, принимает параметр - 1/0 (вкл/выкл глобальная яркость)
+static const char CMD_TCONST_0004[] PROGMEM = "PLAYER";     // Без параметров - возвращает 1/0 в зависимости вкл/выкл плеер, принимает параметр - 1/0 (вкл/выкл плеер)
+static const char CMD_TCONST_0005[] PROGMEM = "MP3_SOUND";  // Без параметров - возвращает 1/0 в зависимости вкл/выкл проигрывание MP3, принимает параметр - 1/0 (вкл/выкл проигрывание MP3)
+static const char CMD_TCONST_0006[] PROGMEM = "MP3_PREV";   // Без параметров - переключает трек на 1 назад, принимает числовой параметр, на сколько треков вернуть назад
+static const char CMD_TCONST_0007[] PROGMEM = "MP3_NEXT";   // Без параметров - переключает трек на 1 назад, принимает числовой параметр, на сколько треков вернуть назад
+static const char CMD_TCONST_0008[] PROGMEM = "MIC";        // Без параметров - возвращает 1/0 в зависимости вкл/выкл микрофон, принимает параметр - 1/0 (вкл/выкл микрофон)
+static const char CMD_TCONST_0009[] PROGMEM = "EFFECT";     // Без параметров - возвращает номер текущего эффекта, принимает числовой параметр - включить заданный эффект
+static const char CMD_TCONST_000A[] PROGMEM = "WARNING";    // Без параметров - мигает желтым 5 раз (1 раз в сек), принимает параметры /cmd?warning=[16777215,5000,500,1] - неблокирующий вывод мигалки поверх эффекта (выдача предупреждений), первое число - цвет, второе - полный период, третье - полупериод мигания, четвертое - тип уведомления (0 - цвет, 1-2 - цвет и счетчик, 3 - счетчик)
+static const char CMD_TCONST_000B[] PROGMEM = "EFF_CONFIG"; // Без параметров - возвращает ВСЕ настройки текущего эффекта, с параметрами - не реализовано пока
+static const char CMD_TCONST_000C[] PROGMEM = "CONTROL";    // Только с параметрами - принимает числовой параметр (номер контрола) и возвращает его текущие настройки, также принимает массив /cmd?control=[N,val] где - N - номер контрола, val - нужное значение
+static const char CMD_TCONST_000D[] PROGMEM = "RGB";        // RGB = r,g,b т.е. к примеру для красного 255,0,0
+static const char CMD_TCONST_000E[] PROGMEM = "MODECMD";    // Без параметрів - повертає режим роботи лампи для MQTT
+static const char CMD_TCONST_000F[] PROGMEM = "LIST";       // Без параметров - возвращает полный список эффектов (их номера)
+static const char CMD_TCONST_0010[] PROGMEM = "SHOWLIST";   // Без параметров - возвращает список отображаемых эффектов (их номера)
+static const char CMD_TCONST_0011[] PROGMEM = "DEMOLIST";   // Без параметров - возвращает список отображаемых эффектов (их номера) в DEMO режиме
+static const char CMD_TCONST_0012[] PROGMEM = "EFF_NAME";   // Без параметров - возвращает из конфига имя текущего эффекта, принимает числовой параметр (номер эффекта) и возвращает имя этого эффекта
+static const char CMD_TCONST_0013[] PROGMEM = "EFF_ONAME";  // Без параметров - возвращает из внутренней памяти имя текущего эффекта, принимает числовой параметр (номер эффекта) и возвращает имя этого эффекта
+static const char CMD_TCONST_0014[] PROGMEM = "MOVE_NEXT";  // Без параметров - переключает на следующий эффект
+static const char CMD_TCONST_0015[] PROGMEM = "MOVE_PREV";  // Без параметров - переключает на предыдущий эффект
+static const char CMD_TCONST_0016[] PROGMEM = "MOVE_RND";   // Без параметров - переключает на рандомный эффект
+static const char CMD_TCONST_0017[] PROGMEM = "REBOOT";     // Без параметров - перезагружает лампу
+static const char CMD_TCONST_0018[] PROGMEM = "ALARM";      // Без параметров - возвращает 1/0 в зависимости включен ли сейчас будильник рассвет, принимает параметры "cmd?alarm={alarmP=N,alarmT=N,msg="Message",lV=N, afS=N, sT=N}", где alarmP длительность рассвета, alarmT - светить после рассвета, msg - сообщение, lV - уровень громкости будильника, afS - стандартная ли мелодия будильника, sT - мелодия будильника (от 0 до 7), все комманды указывать не обязательно
+static const char CMD_TCONST_0019[] PROGMEM = "MATRIX";     // Возвращает размер матрицы в формате [X, Y]
+static const char CMD_TCONST_001A[] PROGMEM = "MSG";        // Только с параметрами - выводит сообщение на лампу
+static const char CMD_TCONST_001B[] PROGMEM = "DRAW";       // Только с параметрами =[цвет,X,Y] - закрашивает пиксель указанным цветом (если включено рисование)
+static const char CMD_TCONST_001C[] PROGMEM = "INC_CONTROL";// Только с параметрами =[N,val] - увеличивает\уменьшает контрол N на значение val
+static const char CMD_TCONST_001D[] PROGMEM = "FILL_MATRIX";// Только с параметрами - закрашивает матрицу указанным цветом (если включено рисование)
+static const char CMD_TCONST_001E[] PROGMEM = "OTA";        // Запускает OTA режим
+static const char CMD_TCONST_001F[] PROGMEM = "AUX_ON";     // Включает AUX пин
+static const char CMD_TCONST_0020[] PROGMEM = "AUX_OFF";    // Выключает AUX пин
+static const char CMD_TCONST_0021[] PROGMEM = "AUX_TOGGLE"; // Переключает AUX пин
+static const char CMD_TCONST_0022[] PROGMEM = "DRAWING";    // Без параметров - возвращает 1/0 в зависимости вкл/выкл рисование, принимает параметр - 1/0 (вкл/выкл рисование)
+static const char CMD_TCONST_0023[] PROGMEM = "COLORTEMP";  // Без параметрів повертає цвітову температуру лампи якщо в режимі білої лампи
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка
@@ -303,10 +360,10 @@ EFF_WHITE_COLOR,                              // Белый свет
 EFF_COLORS,                                   // Смена цвета
 EFF_RAINBOW_2D,                               // Радуга универсальная
 EFF_SPARKLES,                                 // Конфетти
-EFF_PILE,                                     // Куча
+EFF_PILE,                                     // Цветные Драже
 EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
 EFF_MATRIX,                                   // Матрица
-EFF_DNA2,                                     // ДНК 2
+EFF_WATERCOLORS,                              // Акварель
 EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
 // 10
 EFF_CUBE,                                     // Блуждающий кубик
@@ -316,9 +373,9 @@ EFF_FIRE,                                     // Огонь
 EFF_PAINTBALL,                                // Пейнтбол
 EFF_3DNOISE,                                  // 3D-шум
 EFF_CELL,                                     // Клеточки
-EFF_F_LYING,                                  // Геометрический вальс
+EFF_PUZZLES,                                  // Пятнашки
 EFF_T_LEND,                                   // Тикси Ленд
-EFF_LDIRKO,                                   // LDIRKO Ленд 
+EFF_SPBALS,                                   // Н.Тесла
 //20
 EFF_OSCIL,                                    // Осцилятор 
 EFF_WRAIN,                                    // Шторм 
@@ -380,10 +437,14 @@ EFF_PICASSO4,                                 // Меташары
 EFF_LIQUIDLAMP,                               // Лаваламп 
 EFF_RACER,                                    // Космо-Гонщик
 EFF_SMOKER,                                   // Дым
-EFF_FIRE2021, 
+EFF_FIRE2021,                                 // Огонь от Степко
+EFF_MIRAGE,                                   // Мираж
 EFF_TIME = (250U)                             // Часы (служебный, смещаем в конец)
+#ifdef RGB_PLAYER
+,EEF_RGBPLAYER = (251)
+#endif
 #ifdef MIC_EFFECTS
-,EFF_VU = (254U)                            // Частотный анализатор (служебный, смещаем в конец)
+,EFF_VU = (254U)                              // Частотный анализатор (служебный, смещаем в конец)
 ,EFF_OSC = (255U)                             // Осциллограф
 #endif
 } EFF_ENUM;
@@ -397,7 +458,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
   TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
-  TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_073, TEFF_074, TEFF_075, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
+  TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_073, TEFF_074, TEFF_075, TEFF_076, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 96 - 111
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 112 - 127
@@ -408,7 +469,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 192 - 207
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 208 - 223
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 224 - 39
-  TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_250, TEFF_000, TEFF_000, TEFF_000, TEFF_254, TEFF_255  // 240 - 255
+  TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_250, TEFF_251, TEFF_000, TEFF_000, TEFF_254, TEFF_255  // 240 - 255
 };
 
 /**
@@ -419,11 +480,11 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  0, 6, 6, 4, 4, 5, 3, 3, 1, 5, 3, 6, 5, 3, 5, 10, // 0-15
-  3, 5, 3, 7, 3, 7, 5, 2, 1, 5, 5, 7, 7, 2, 1, 5, // 16-31
-  5, 5, 5, 3, 7, 3, 4, 3, 3, 9, 4, 5, 7, 1, 1, 3, // 32 - 47
-  1, 6, 6, 6, 2, 7, 5, 4, 1, 5, 6, 3, 1, 5, 7, 6, // 48 - 63
-  5, 1, 1, 5, 4, 1, 7, 1, 3, 1, 3, 3, 0, 0, 0, 0, // 64 - 79
+  0, 6, 6, 4, 4, 1, 3, 3, 3, 5, 3, 6, 5, 3, 5, 10, // 0-15
+  1, 1, 3, 1, 3, 7, 5, 2, 1, 5, 5, 7, 7, 2, 1, 5, // 16-31
+  5, 5, 5, 3, 7, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
+  1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 3, 1, 5, 7, 6, // 48 - 63
+  5, 1, 1, 5, 1, 1, 7, 1, 3, 1, 1, 1, 1, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -434,13 +495,12 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 2, // 240 - 255
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 0, 0, 2, 2, // 240 - 255
 };
 
 
 /* младшие 4 бита отдаются на выбор контрола, что даст 16 различных типов контроллов
 * старшие 4 бита используются как набор управляющих кодов, к примеру - отображать при включенном микрофоне, при выключенном и т.д., тоже 16 вариантов
-* https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-67459
 */
 typedef enum : uint8_t {ALWAYS=0,ISMICON,ISMICOFF,HIDE} CONTROL_CASE; // старшие 4 бита
 typedef enum : uint8_t {RANGE=0,EDIT,CHECKBOX} CONTROL_TYPE; // младшие 4 бита
@@ -459,8 +519,6 @@ typedef const TProgmemRGBPalette16 PGMPalette;
  * Полный формат для пользовательского (id=0...7) параметра имеет вид: {"id":0,"type":0,"name":"Параметр","val":"127","min":"1","max":"255","step":"1"}
  * если какой-то из параметров стандартный из этого списка, то его можно опустить и не указывать
  * @nb@ - будет заменен на реальный номер эффекта, @name@ - на дефолтное имя эффекта, @ver@ - версия
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48813
- * https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/post-48848
  */
 
 #define COTNROLS_PREFIX "\"nb\":@nb@,\"name\":\"@name@\",\"ver\":@ver@,\"flags\":"
@@ -481,7 +539,7 @@ static const char E_2_MIC[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_4PAL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_4PAL_MIC[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"type\":16,\"val\":127,\"min\":0,\"max\":255,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 
-static const char E_LLEND[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_0D2 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"val\":16,\"min\":0,\"max\":32,\"name\":\"" DFTINTF_0D3 "\"}]}";
+static const char E_PUZZLES[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"min\":4,\"max\":8,\"name\":\"" DFTINTF_10D "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_SPARCLES[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":16,\"max\":10,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_LIGHTERS[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0D5 "\"}, {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
 static const char E_RADAR255[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"}, {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
@@ -491,7 +549,7 @@ static const char E_BUTTERFLY[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_PULS[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D6 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_BBALLS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":32,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E1 "\"}]}";
 static const char E_PRIZMATA[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
-static const char E_AQUARIUM[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DA "\"},  {\"id\":4,\"min\":0,\"max\":2,\"name\":\"" DFTINTF_0E2 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
+static const char E_AQUARIUM[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"val\":160,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":3,\"val\":190,\"name\":\"" DFTINTF_0DA "\"},  {\"id\":4,\"min\":0,\"max\":2,\"name\":\"" DFTINTF_0E2 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_OSC[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0DC "\"},  {\"id\":2,\"val\":160,\"min\":1,\"max\":255,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 // размерность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
 static const char E_PATT[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48},  {\"id\":2,\"type\":48},  {\"id\":3,\"val\":0,\"min\":-32,\"max\":32,\"name\":\"" DFTINTF_0EA "\"},  {\"id\":4,\"val\":0,\"min\":-32,\"max\":32,\"name\":\"" DFTINTF_0EB "\"},  {\"id\":5,\"min\":0,\"max\":38,\"val\":0,\"name\":\"" DFTINTF_0EC "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":7,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_116 "\"}]}";
@@ -512,13 +570,13 @@ static const char E_SNAKE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_NEXUS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_FWORK[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"val\":127,\"name\":\"" DFTINTF_0F2 "\"},  {\"id\":2,\"type\":48},  {\"id\":3,\"max\":8,\"val\":4,\"name\":\"" DFTINTF_10C "\"},  {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_109 "\"}]}";
 static const char E_MATRIX[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":12,\"max\":32,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"val\":90,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":5,\"val\":20,\"max\":60,\"name\":\"" DFTINTF_10A "\"}]}";
-static const char E_NFIRE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":50,\"max\":100,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"max\":12,\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_NFIRE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":50,\"max\":100,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"val\":7,\"max\":12,\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}";
+static const char E_BBUSH[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":50,\"max\":100,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"val\":7,\"max\":12,\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_112 "\"}]}";
 static const char E_POPCORN[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DE "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_112 "\"}]}";
 static const char E_MBL[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0F4 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"}]}";
 static const char E_LIQLAM[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":17,\"name\":\"" DFTINTF_0F4 "\"},  {\"id\":4,\"val\":0,\"min\":0,\"name\":\"" DFTINTF_0D6 "\"},  {\"id\":5,\"val\":0,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_105 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_106 "\"}]}";
 static const char E_F2012_MIC[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":64,\"max\":128,\"name\":\"" DFTINTF_088 "\"},  {\"id\":4,\"val\":6,\"max\":10,\"name\":\"" DFTINTF_084 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
-static const char E_DNA[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F3 "\"}]}";
-static const char E_DNA2[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F3 "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}";
+static const char E_DNA[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":1,\"min\":0,\"max\":3,\"name\":\"" DFTINTF_0D2 "\"}, {\"id\":4,\"val\":10,\"min\":2,\"max\":16,\"name\":\"" DFTINTF_0DC "\"}, {\"id\":5,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}";
 static const char E_SNOW[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":\"1\",\"max\":3,\"name\":\"" DFTINTF_0F5 "\"}]}";
 static const char E_SMOKBALLS[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_PALMICUI[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_0FB "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}, {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E6 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
@@ -528,7 +586,7 @@ static const char E_FLYING[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_WRAIN[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":25,\"max\":45,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"val\":4,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_102 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_10B "\"},  {\"id\":7,\"max\":8,\"name\":\"" DFTINTF_115 "\"}]}";
 static const char E_CLOCK[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"max\":8,\"name\":\"" DFTINTF_0F7 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_COMET[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"max\":6,\"name\":\"" DFTINTF_00A "\"},  {\"id\":4,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":5,\"val\":6,\"max\":12,\"name\":\"" DFTINTF_104 "\"},  {\"id\":6,\"val\":32,\"max\":64,\"name\":\"" DFTINTF_0DE "\"}]}";
-static const char E_CELL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":7,\"name\":\"" DFTINTF_0D2 "\"}]}"; 
+static const char E_CELL[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":6,\"name\":\"" DFTINTF_0D2 "\"}]}"; 
 static const char E_FAIRY[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F9 "\"}]}";
 static const char E_FOUNT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0FA "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":10,\"name\":\"" DFTINTF_103 "\"}, {\"id\":5,\"type\":16,\"val\":127,\"min\":0,\"max\":255,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_POLAR[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"val\":1,\"max\":14,\"name\":\"" DFTINTF_084 "\"}]}";
@@ -540,7 +598,11 @@ static const char E_FLAGS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_FREQ[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"min\":1,\"val\":50,\"max\":255,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":2,\"min\":1,\"val\":30,\"max\":255,\"name\":\"" DFTINTF_118 "\"}, {\"id\":3,\"min\":1,\"val\":1,\"max\":10,\"name\":\"" DFTINTF_00A "\"}, {\"id\":4,\"min\":1,\"val\":1,\"max\":4,\"name\":\"" DFTINTF_0D6 "\"}, {\"id\":5,\"min\":0,\"val\":1,\"max\":255,\"name\":\"" DFTINTF_0D3 "\"}, {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_108 "\"}, {\"id\":7,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F5 "\"}]}";
 static const char E_CNOISE[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_108 "\"}]}";
 static const char E_SINUS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[ {\"id\":3,\"max\":255,\"name\":\"" DFTINTF_0DB "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":3,\"name\":\"" DFTINTF_00A "\"}]}";
-
+static const char E_1[]         PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48}, {\"id\":2,\"type\":48}]}"; // 3*16+0 для 2 контрола
+static const char E_MIRAGE[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"val\":160,\"name\":\"" DFTINTF_11A "\"}]}";
+static const char E_WCOLOR[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":1,\"max\":8,\"val\":4,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}"; 
+static const char E_SPBALS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":3,\"max\":6,\"val\":3,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_PLAYER[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"type\":1,\"name\":\"" DFTINTF_00A "\"}]}";
 // Инженерный
 //static const char E_TEST[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
 static const char E_TEST2[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"name\":\"" DFTINTF_084 "\"},  {\"id\":4},  {\"id\":5},  {\"id\":6},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
@@ -551,11 +613,11 @@ static const char E_TEST2[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
  * не обязательно каждому эффекту лепить свой конфиг, можно ставить указатели на эффекты с похожими контролами
  */
 static const char* const T_EFFUICFG[] PROGMEM = {
-  E_DEFUI, E_WHITE,   E_COLORS,   E_DEFMICUI, E_SPARCLES, E_DRAGE, E_STARFAIL,   E_MATRIX, E_DNA2,      E_LIGHT2,    E_CUBE,   E_PULS,  E_4PAL,   E_NFIRE,    E_2,        E_PALMICUI, // 0-15
-  E_CELL,  E_FLYING,  E_TLAND,    E_LLEND,    E_3PAL,     E_WRAIN, E_FAIRY,      E_FOUNT,  E_BBALLS,    E_SINUS,     E_4PAL,   E_3PAL,  E_COMET,  E_4PAL_MIC, E_PRIZMATA, E_FLOCK, // 16-31
+  E_DEFUI, E_WHITE,   E_COLORS,   E_DEFMICUI, E_SPARCLES, E_4PAL, E_STARFAIL,   E_MATRIX,  E_WCOLOR,    E_LIGHT2,    E_CUBE,   E_PULS,  E_4PAL,   E_BBUSH,    E_2,        E_PALMICUI, // 0-15
+  E_CELL,  E_PUZZLES, E_TLAND,    E_SPBALS,   E_3PAL,     E_WRAIN, E_FAIRY,      E_FOUNT,  E_BBALLS,    E_SINUS,     E_4PAL,   E_3PAL,  E_COMET,  E_4PAL_MIC, E_PRIZMATA, E_FLOCK, // 16-31
   E_3PAL,  E_DRIFT,   E_POPCORN,  E_4PAL,     E_RADAR255, E_WAVES, E_F2012_MIC,  E_FAIRY,  E_4PAL,      E_DNA,       E_F2018,  E_CLOCK, E_CUBE2D, E_NFIRE,    E_PICAS,    E_SSHIPS, // 32 - 47
   E_FLAGS, E_LEAPERS, E_3PAL_MIC, E_3PAL_MIC, E_AQUARIUM, E_FWORK, E_2,          E_MUNCH,  E_CNOISE,    E_BUTTERFLY, E_SHAD,   E_PATT,  E_ARR,    E_NBAL,     E_ATTRACT,  E_SNAKE, // 48 - 63
-  E_NEXUS, E_DEFUI,   E_DEFUI,    E_POLAR,    E_2_MIC,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_SMOKER, E_NFIRE, E_DEFUI,  E_DEFUI,    E_DEFUI,    E_DEFUI, // 64 - 79
+  E_NEXUS, E_DEFUI,   E_DEFUI,    E_POLAR,    E_2_MIC,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_SMOKER, E_NFIRE, E_MIRAGE, E_DEFUI,    E_DEFUI,    E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 112 - 127
@@ -566,7 +628,7 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 192 - 207
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 208 - 223
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 224 - 39
-  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL,  E_DEFUI, E_DEFUI, E_DEFUI, E_FREQ,  E_OSC  // 240 - 255
+  E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_3PAL,  E_PLAYER,     E_DEFUI, E_DEFUI, E_FREQ,  E_OSC  // 240 - 255
 };
 
 /**
@@ -1220,7 +1282,7 @@ static const TProgmemRGBPalette16 pacifica_palette_3 FL_PROGMEM =
       0x000E39, 0x001040, 0x001450, 0x001860, 0x001C70, 0x002080, 0x1040BF, 0x2060FF };
 
 // ---- Эффект "Мотыльки"
-// (с) Сотнег, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
+// (с) Сотнег
 #define BUTTERFLY_MAX_COUNT           (64U) // максимальное количество мотыльков
 #define BUTTERFLY_FIX_COUNT           (28U) // количество мотыльков для режима, конда бегунок Масштаб регулирует цвет
 
@@ -1244,17 +1306,18 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 // размеры лабиринта ДОЛЖНЫ БЫТЬ НЕЧЁТНЫЕ независимо от размеров матрицы!
 // при SHIFT 1 размер лабиринта можно ставить на 1 длиннее матрицы (матрица 16х16 лабиринт 17х17)
 #if (WIDTH % 2 == 0)
-#define MAZE_WIDTH (WIDTH-1)      // ширина лабиринта
+#define MAZE_WIDTH (WIDTH+1)      // ширина лабиринта
 #else
 #define MAZE_WIDTH WIDTH          // ширина лабиринта
 #endif
 
 #if (HEIGHT % 2 == 0)
-#define MAZE_HEIGHT (HEIGHT-1)    // высота лабиринта
+#define MAZE_HEIGHT (HEIGHT+1)    // высота лабиринта
 #else
 #define MAZE_HEIGHT HEIGHT        // высота лабиринта
 #endif
-#define MAZE_SHIFT 0                   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
+#define MAZE_SHIFT (HEIGHT % 2 == 0)   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
+
 
 // VU-meter
 #define SAMPLES           256U          // Must be a power of 8

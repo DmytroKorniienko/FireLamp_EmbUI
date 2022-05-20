@@ -17,27 +17,30 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
 #include "lamp.h"
 #include "effectmath.h"
 //#include "main.h"
+#ifdef MATRIXx4
+  #include "matrix4.h"
+#endif
 extern LAMP myLamp; // Объект лампы
 
 // Общий набор мат. функций и примитивов для обсчета эффектов
@@ -52,7 +55,13 @@ namespace EffectMath_PRIVATE {
     // ключевая функция с подстройкой под тип матрицы, использует MIRR_V и MIRR_H
     uint32_t getPixelNumber(int16_t x, int16_t y) // получить номер пикселя в ленте по координатам
     {
-    #ifndef XY_EXTERN
+    #if defined(XY_EXTERN)
+        uint16_t i = (y * WIDTH) + x;
+        uint16_t j = pgm_read_dword(&XYTable[i]);
+        return j;
+    #elif defined(MATRIXx4)
+      return matrix4_XY(x, y);
+    #else
         // хак с макроподстановкой, пусть живет пока
         #define MIRR_H matrixflags.MIRR_H
         #define MIRR_V matrixflags.MIRR_V
@@ -68,10 +77,6 @@ namespace EffectMath_PRIVATE {
     
         #undef MIRR_H
         #undef MIRR_V
-    #else
-        uint16_t i = (y * WIDTH) + x;
-        uint16_t j = pgm_read_dword(&XYTable[i]);
-        return j;
     #endif
     }
 }
@@ -355,27 +360,66 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
   #undef WU_WEIGHT
 }
 
+CRGB colorsmear(const CRGB &col1, const CRGB &col2, byte l) {
+  CRGB temp1 = col1;
+  nblend(temp1, col2, l);
+  return temp1;
+}
+
+void EffectMath::sDrawPixelXYF(float x, float y, const CRGB &color) {
+  byte ax = byte(x);
+  byte xsh = (x - byte(x)) * 255;
+  byte ay = byte(y);
+  byte ysh = (y - byte(y)) * 255;
+  CRGB colP1 = colorsmear(color, CRGB(0, 0, 0), xsh);
+  CRGB col1 = colorsmear(colP1, CRGB(0, 0, 0), ysh);
+  CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+  CRGB col3 = colorsmear(CRGB(0, 0, 0),colP1, ysh);
+  CRGB col4 = colorsmear(CRGB(0, 0, 0),col2, ysh);
+
+  getPixel(ax, ay) += col1;
+  getPixel(ax+1, ay) += col2;
+  getPixel(ax, ay+1) += col3;
+  getPixel(ax+1, ay+1) += col4;
+}
+
+void EffectMath::sDrawPixelXYF_X(float x, int16_t y, const CRGB &color) {
+  byte ax = byte(x);
+  byte xsh = (x - byte(x)) * 255;
+  CRGB col1 = colorsmear(color, CRGB(0, 0, 0), xsh);
+  CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+  getPixel(ax, y) += col1;
+  getPixel(ax + 1, y) += col2;
+}
+
+void EffectMath::sDrawPixelXYF_Y(int16_t x, float y, const CRGB &color) {
+  byte ay = byte(y);
+  byte ysh = (y - byte(y)) * 255;
+  CRGB col1 = colorsmear(color, CRGB(0, 0, 0), ysh);
+  CRGB col2 = colorsmear(CRGB(0, 0, 0), color, ysh);
+  getPixel(x, ay) += col1;
+  getPixel(x, ay+1) += col2; 
+}
+
 void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
 {
-  //if (x<-1.0 || y<-1.0 || x>((float)WIDTH) || y>((float)HEIGHT)) return;
-
+#define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   // extract the fractional parts and derive their inverses
   uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
   // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+                  WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
     // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается, 
     // что все ЛЕД в одном сегменте одинакового цвета, и достаточно получить цвет любого из них.
-    CRGB clr = getLed(getPixelNumber(xn, yn)); //EffectMath::getPixColorXY(xn, yn);
+    CRGB clr = getPixel(xn, yn); 
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (darklevel > 0) EffectMath::drawPixelXY(xn, yn, EffectMath::makeDarker(clr, darklevel));
-    else EffectMath::drawPixelXY(xn, yn, clr);
+    if (darklevel > 0) getPixel(xn, yn) = EffectMath::makeDarker(clr, darklevel);
+    else getPixel(xn, yn) = clr;
   }
   #undef WU_WEIGHT
 }
@@ -391,12 +435,12 @@ void EffectMath::drawPixelXYF_X(float x, int16_t y, const CRGB &color, uint8_t d
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
     int16_t xn = x + (i & 1);
-    CRGB clr = getLed(getPixelNumber(xn, y));
+    CRGB clr = getPixel(xn, y);
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (darklevel > 0) EffectMath::drawPixelXY(xn, y, EffectMath::makeDarker(clr, darklevel));
-    else EffectMath::drawPixelXY(xn, y, clr);
+    if (darklevel > 0) getPixel(xn, y) = EffectMath::makeDarker(clr, darklevel);
+    else getPixel(xn, y) = clr;
   }
 }
 
@@ -411,12 +455,12 @@ void EffectMath::drawPixelXYF_Y(int16_t x, float y, const CRGB &color, uint8_t d
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (int8_t i = 1; i >= 0; i--) {
     int16_t yn = y + (i & 1);
-    CRGB clr = getLed(getPixelNumber(x, yn));
+    CRGB clr = getPixel(x, yn);
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
     clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    if (darklevel > 0) EffectMath::drawPixelXY(x, yn, EffectMath::makeDarker(clr, darklevel));
-    else EffectMath::drawPixelXY(x, yn, clr);
+    if (darklevel > 0) getPixel(x, yn) = EffectMath::makeDarker(clr, darklevel);
+    else getPixel(x, yn) = clr;
   }
 }
 
@@ -433,9 +477,9 @@ CRGB EffectMath::getPixColorXYF(float x, float y)
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
     if(!i){
-      clr = EffectMath::getPixColorXY(xn, yn);
+      clr = getPixel(xn, yn);
     } else {
-      CRGB tmpColor=EffectMath::getPixColorXY(xn, yn);
+      CRGB tmpColor = getPixel(xn, yn);
       clr.r = qadd8(clr.r, (tmpColor.r * wu[i]) >> 8);
       clr.g = qadd8(clr.g, (tmpColor.g * wu[i]) >> 8);
       clr.b = qadd8(clr.b, (tmpColor.b * wu[i]) >> 8);
@@ -458,9 +502,9 @@ CRGB EffectMath::getPixColorXYF_X(float x, int16_t y)
   for (int8_t i = 1; i >= 0; i--) {
       int16_t xn = x + (i & 1);
       if(i){
-        clr = EffectMath::getPixColorXY(xn, y);
+        clr = getPixel(xn, y);
       } else {
-        CRGB tmpColor=EffectMath::getPixColorXY(xn, y);
+        CRGB tmpColor = getPixel(xn, y);
         clr.r = qadd8(clr.r, (tmpColor.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (tmpColor.g * wu[i]) >> 8);
         clr.b = qadd8(clr.b, (tmpColor.b * wu[i]) >> 8);
@@ -482,9 +526,9 @@ CRGB EffectMath::getPixColorXYF_Y(int16_t x, float y)
   for (int8_t i = 1; i >= 0; i--) {
       int16_t yn = y + (i & 1);
       if(i){
-        clr = EffectMath::getPixColorXY(x, yn);
+        clr = getPixel(x, yn);
       } else {
-        CRGB tmpColor=EffectMath::getPixColorXY(x, yn);
+        CRGB tmpColor = getPixel(x, yn);
         clr.r = qadd8(clr.r, (tmpColor.r * wu[i]) >> 8);
         clr.g = qadd8(clr.g, (tmpColor.g * wu[i]) >> 8);
         clr.b = qadd8(clr.b, (tmpColor.b * wu[i]) >> 8);
@@ -604,6 +648,16 @@ void EffectMath::drawCircleF(float x0, float y0, float radius, const CRGB &color
     {
       a-= step;
       radiusError += 2 * (b - a + step);
+    }
+  }
+}
+
+void EffectMath::fill_circleF(float cx, float cy, float radius, CRGB col) {
+  int8_t rad = radius;
+  for (float y = -radius; y < radius; y += (fabs(y) < rad ? 1 : 0.2)) {
+    for (float x = -radius; x < radius; x += (fabs(x) < rad ? 1 : 0.2)) {
+      if (x * x + y * y < radius * radius)
+        EffectMath::drawPixelXYF(cx + x, cy + y, col, 0);
     }
   }
 }
@@ -782,3 +836,50 @@ float EffectMath::InOutCirc(float t, float b, float c, float d) {
   t -= 2;
   return c/2 * (sqrt(1 - t*t) + 1) + b;
 }
+
+#ifdef RGB_PLAYER
+
+// преобразовать цвет из 8 битного формата rgb332 в 24 битный
+CRGB EffectMath::rgb332_To_CRGB(uint8_t value) {
+    CRGB color;
+    color.r = value & 0xe0; // mask out the 3 bits of red at the start of the byte
+    color.r |= (color.r >> 3); // extend limited 0-224 range to 0-252
+    color.r |= (color.r >> 3); // extend limited 0-252 range to 0-255
+    color.g = value & 0x1c; // mask out the 3 bits of green in the middle of the byte
+    color.g |= (color.g << 3) | (color.r >> 3); // extend limited 0-34 range to 0-255
+    color.b = value & 0x03; // mask out the 2 bits of blue at the end of the byte
+    color.b |= color.b << 2; // extend 0-3 range to 0-15
+    color.b |= color.b << 4; // extend 0-15 range to 0-255
+    return color;
+}
+
+// преобразовать цвет из 16 битного формата rgb565 в 24 битный
+CRGB EffectMath::rgb565_To_CRGB(uint16_t value) {
+  // gamma correction для expandColor
+  static const uint8_t
+  gamma5[] PROGMEM = {
+    0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
+    0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
+    0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64, 0x6f, 0x7c,
+    0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff
+  },
+  gamma6[] PROGMEM = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
+    0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,
+    0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20, 0x22, 0x25,
+    0x27, 0x2a, 0x2d, 0x30, 0x33, 0x37, 0x3a, 0x3e,
+    0x41, 0x45, 0x49, 0x4d, 0x52, 0x56, 0x5b, 0x5f,
+    0x64, 0x69, 0x6e, 0x74, 0x79, 0x7f, 0x85, 0x8b,
+    0x91, 0x97, 0x9d, 0xa4, 0xab, 0xb2, 0xb9, 0xc0,
+    0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff
+  };
+  // CRGB color =  ((uint32_t)(gamma5[ value >> 11       ]) << 16) |
+  //               ((uint32_t)(gamma6[(value >> 5) & 0x3F]) <<  8) |
+  //               (gamma5[ value       & 0x1F]);
+  CRGB color =  ((uint32_t)pgm_read_dword(&gamma5[ value >> 11       ]) << 16) |
+                ((uint32_t)pgm_read_dword(&gamma6[(value >> 5) & 0x3F]) <<  8) |
+                pgm_read_dword(&gamma5[ value       & 0x1F]);
+  return color;
+}
+
+#endif

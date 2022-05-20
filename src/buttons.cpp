@@ -1,3 +1,39 @@
+/*
+Copyright © 2020 Dmytro Korniienko (kDn)
+JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
+
+    This file is part of FireLamp_JeeUI.
+
+    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+
+(Цей файл є частиною FireLamp_JeeUI.
+
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
+
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
+
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
+   <https://www.gnu.org/licenses/>.)
+*/
 #include "buttons.h"
 #ifdef ESP_USE_BUTTON
 #include "main.h"
@@ -41,9 +77,9 @@ bool Button::activate(btnflags& flg, bool reverse){
 							);
 					tReverseTimeout->enableDelayed();
 				} 
-#ifdef VERTGAUGE
-				myLamp.GaugeShow(newval, 255, 10);
-#endif
+				if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
+						GAUGE::GaugeShow(newval, 255, 10);
+				}
 				remote_action(RA::RA_BRIGHT_NF, (String(FPSTR(TCONST_0015))+"0").c_str(), String(newval).c_str(), NULL);
 				return true;
 			case BA_SPEED: {
@@ -56,9 +92,9 @@ bool Button::activate(btnflags& flg, bool reverse){
 							);
 					tReverseTimeout->enableDelayed();
 				}
-#ifdef VERTGAUGE
-				myLamp.GaugeShow(newval, 255, 100);
-#endif
+				if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
+						GAUGE::GaugeShow(newval, 255, 100);
+				}
 				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"1").c_str(), String(newval).c_str(), NULL);
 				return true;
 			}
@@ -72,14 +108,14 @@ bool Button::activate(btnflags& flg, bool reverse){
 							);
 					tReverseTimeout->enableDelayed();
 				}
-#ifdef VERTGAUGE
-				myLamp.GaugeShow(newval, 255, 150);
-#endif
+				if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
+						GAUGE::GaugeShow(newval, 255, 150);
+				}
 				remote_action(RA::RA_CONTROL, (String(FPSTR(TCONST_0015))+"2").c_str(), String(newval).c_str(), NULL);
 				return true;
 			}
 			case BA_ON: ract = RA_ON; break;
-			case BA_OFF: ract = RA_OFF; break;
+			case BA_OFF: ract = RA_OFF; myLamp.startNormalMode(); break; // З кнопки перемикаємо в нормальний режим
 			case BA_DEMO: ract = RA_DEMO; break;
 #ifdef AUX_PIN
 			case BA_AUX_TOGLE: ract = RA_AUX_TOGLE; break;
@@ -133,7 +169,7 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 	state = _state;
 	holding = false;
 	holded = false;
-	buttonEnabled = true; // кнопка обрабатывается если true, пока что обрабатывается всегда :)
+	buttonEnabled = false; // відключено по замовчуванню
 	pinTransition = true;
 	onoffLampState = myLamp.isLampOn();
 
@@ -152,8 +188,8 @@ Buttons::Buttons(uint8_t _pin, uint8_t _pullmode, uint8_t _state): buttons(), to
 	touch.setDebounce(BUTTON_DEBOUNCE);   // т.к. работаем с прерываниями, может пригодиться для железной кнопки
 	touch.resetStates();
 
-	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
-	isrEnable();
+	//attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode!=LOW_PULL ? RISING : FALLING );
+	//isrEnable();
 }
 
 void Buttons::buttonTick(){
@@ -199,7 +235,7 @@ void Buttons::buttonTick(){
 	
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
-		myLamp.stopAlarm();
+		ALARMTASK::stopAlarm();
 		return;
 	}
 
@@ -309,6 +345,8 @@ void Buttons::saveConfig(const char *cfg){
 
 void IRAM_ATTR Buttons::isrPress() {
   detachInterrupt(pin);
+	//LOG(println,F("ISR"));
+	//touch.tick(1);
 	if(tButton)
 		tButton->cancel();
 	tButton = new Task(20, TASK_FOREVER, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;}); // переключение в режим удержания кнопки
@@ -319,7 +357,7 @@ void Buttons::isrEnable(){
 	attachInterrupt(pin, std::bind(&Buttons::isrPress,this), pullmode==LOW_PULL ? RISING : FALLING );
 	if(tButton)
 		tButton->cancel();
-	tButton = new Task(TASK_SECOND, 5, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;});	// "ленивый" опрос 1 раз в сек в течение 5 секунд
+	tButton = new Task(500, 4, std::bind(&Buttons::buttonTick, this), &ts, true, nullptr, [this](){TASK_RECYCLE; tButton=nullptr;});	// "ленивый" опрос 4 раза в течение 2 секунд
 }
 
 void Buttons::setButtonOn(bool flag) {

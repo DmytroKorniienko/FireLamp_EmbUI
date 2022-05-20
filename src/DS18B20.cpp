@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -67,13 +67,13 @@ void ds_setup() {
 
 int16_t getTemp() {
 #if defined(ENCODER) && SW == DS18B20_PIN
-  detachInterrupt(SW);
+  //detachInterrupt(SW);
 #endif
   int currentTemp = dallas.getTemp(); // получить с далласа
   dallas.requestTemp();           // запросить измерение
   LOG(printf_P, PSTR("DS18B20: Temperature  %d\U000000B0C\n"), currentTemp);
 #if defined(ENCODER) && SW == DS18B20_PIN
-  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);
 #endif
   return currentTemp;
 }
@@ -114,7 +114,7 @@ void ds_loop() {
   if (!digitalRead(SW)) return; // если кнопка энкодера нажата, пропускаем этот loop
 #endif
   int16_t curTemp = getTemp();
-  if (canDisplayTemp()) ds_display(curTemp);
+  if (canDisplayTemp() && myLamp.isTempDisp()) ds_display(curTemp);
 
   tempToSpeed(curTemp);
 
@@ -138,6 +138,7 @@ void ds_loop() {
 
 void ds_display(int16_t value) { 
 #ifdef TM1637_CLOCK
+  if (tm1637.getIpShow()) return;   // Не выводим температуру, пока выводится IP
   tm1637.getSetDelay() = TM_TIME_DELAY;
   String tmp = String(value) + ((value < -9 || value > 99) ? "" : String(F("%")));    // "%" - для отображения "о" вверху, "*" - для отображения "с" вверху
   tm1637.display(tmp, true, false, (value < -9 || value > 99) ? 0 : (value < 10 ? 2 : 1));

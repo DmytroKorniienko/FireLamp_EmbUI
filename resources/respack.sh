@@ -72,7 +72,7 @@ if [ $refresh_styles -eq 1 ] ; then
 
     curl -sL https://github.com/DmytroKorniienko/EmbUI/raw/$embuitag/resources/data.zip > embui.zip
     # т.к. неизвестно что изменилось во фреймворке, скрипты или цсски, обновляем всё
-    unzip -o -d ../data/ embui.zip "css/*" "js/*"
+    unzip -o -d ../data/ embui.zip "css/*" "js/*" "locale/*"
 
     # append our styles to the embui
     for f in html/css/style_*.css
@@ -88,13 +88,19 @@ fi
 
 # обновляем скрипты/стили специфичные для лампы
 [ ! -f ../data/css/lamp.css.gz ] || [ html/css/custom_drawing.css -nt ../data/css/lamp.css.gz ] && gzip -9k html/css/custom_drawing.css && mv -f html/css/custom_drawing.css.gz ../data/css/lamp.css.gz
-[ ! -f ../data/js/lamp.js.gz ]   || [ html/js/drawing.js -nt ../data/js/lamp.js.gz ] && gzip -9k html/js/drawing.js && mv -f html/js/drawing.js.gz ../data/js/lamp.js.gz
+# [ ! -f ../data/js/lamp.js.gz ]   || [ html/js/drawing.js -nt ../data/js/lamp.js.gz ] && gzip -9k html/js/drawing.js && mv -f html/js/drawing.js.gz ../data/js/lamp.js.gz
+cat html/js/*.js | gzip -9 > ../data/js/lamp.js.gz
 
 # update static files if newer
 [ ! -f ../data/index.html.gz ]  || [ html/index.html -nt ../data/index.html.gz ] && gzip -9k html/index.html && mv -f html/index.html.gz ../data/
 [ ! -f ../data/favicon.ico.gz ] || [ html/favicon.ico -nt ../data/favicon.ico.gz ] &&  gzip -9k html/favicon.ico && mv -f html/favicon.ico.gz ../data/
+[ ! -f ../data/locale/emb.json.gz ]  || [ locale/emb.json -nt ../data/locale/emb.json.gz ] && gzip -9k locale/emb.json && mv -f locale/emb.json.gz ../data/locale/
 
 cp -u html/.exclude.files ../data/
+cp -u html/manifest.webmanifest ../data/
+cp -u html/css/*.svg ../data/css/
+cp -u html/css/*.png ../data/css/
+
 #cp -u html/events_config.json ../data/
 #cp -u html/buttons_config.json ../data/
 

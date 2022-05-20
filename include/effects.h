@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -41,6 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "color_palette.h"
 #include "effectworker.h"
 #include "effectmath.h"
+
 
 const byte maxDim = max(WIDTH, HEIGHT);
 const byte minDim = min(WIDTH, HEIGHT);
@@ -92,7 +93,7 @@ public:
 
 // ***** SINUSOID3 / СИНУСОИД3 *****
 /*
-  Sinusoid3 by Stefan Petrick (mod by Palpalych for GyverLamp 27/02/2020)
+  Sinusoid3 by Stefan Petrick
   read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
 class EffectSinusoid3 : public EffectCalc {
@@ -254,7 +255,7 @@ public:
 };
 
 // ========== Эффект "Эффектопад"
-// совместное творчество юзеров форума https://community.alexgyver.ru/
+// совместное творчество юзеров форума community.alexgyver.ru
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
@@ -308,27 +309,6 @@ private:
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ------------- "ДНК Вариант" -------------
-//Yaroslaw Turbin 08.12.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-//updated & adopted by kostyamat
-class EffectDNA2 : public EffectCalc {
-protected:
-    const uint8_t freq = 6;
-    byte hue = 0;
-    uint16_t ms;
-    uint8_t speeds;
-    bool rotate = true;
-    bool dots = true;
-
-private:
-    String setDynCtrl(UIControl*_val) override;
-
-public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1027,7 +1007,7 @@ public:
 };
 
 // ---- Эффект "Мотыльки"
-// (с) SottNick, https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-49262
+// (с) SottNick
 class EffectButterfly : public EffectCalc {
 private:
     float butterflysPosX[BUTTERFLY_MAX_COUNT];
@@ -1341,71 +1321,8 @@ class EffectNexus: public EffectCalc {
     void load() override;
 };
 
-
-// --------------  Эффект "Цветение"
-//Yaroslaw Turbin
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-class EffectFlower : public EffectCalc {
-private:
-    float c = 0.5;   //diameter
-    float angle = 1.;
-    float  counter = 0.;
-    CHSV color;
-	float speedFactor;
-
-    String setDynCtrl(UIControl*_val) override;
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ----------- Эфеект "ДНК"
-// Yaroslaw Turbin 04.09.2020
-// https://vk.com/ldirko
-// https://pastebin.com/jwvC1sNF
-// адаптация и доработки kostyamat
-class EffectDNA : public EffectCalc {
-private:
-    double freq = 3000;
-    float mn =255.0/13.8;
-    uint8_t speeds = 30;
-    bool rotate = false;
-
-    String setDynCtrl(UIControl*_val) override;
-
-public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ----------- Эффект "Огненная Лампа"
-// Yaroslaw Turbin, 22.06.2020 
-// https://vk.com/ldirko
-// https://pastebin.com/eKqe4zzA
-// переделака на субпиксель и доработки - kostyamat
-class EffectFire2020 : public EffectCalc {
-private:
-    #define NOISE_HEIGHT  (HEIGHT * 3U)
-    uint16_t noises[WIDTH * NOISE_HEIGHT];   //precalculated noise table
-    byte colorfade[HEIGHT];                   //simple colorfade table for speedup
-    float a = 0;
-    byte _pal = 8;
-    byte _scale = 60;
-	float speedFactor;
-
-    String setDynCtrl(UIControl*_val) override;
-    //void palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max) override;
-    void palettesload() override;
-    void regenNoise();
-
-public:
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
 // ----------- Эфеект "Змеиный Остров"
 // (c) Сотнег
-// База https://community.alexgyver.ru/threads/wifi-lampa-budilnik-obsuzhdenie-proekta.1411/post-53132
 // адаптация и доработки kostyamat
 class EffectTest : public EffectCalc {
 private:
@@ -1483,7 +1400,6 @@ class EffectSmokeballs: public EffectCalc {
 // ----------- Эффект "Ёлки-Палки"
 // "Cell" (C) Elliott Kember из примеров программы Soulmate
 // Spaider и Spruce (c) stepko
-// RGBPattern (c) ldir https://editor.soulmatelights.com/gallery/810-rgb-pattern1
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
@@ -1503,39 +1419,10 @@ class EffectCell: public EffectCalc {
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
     void vals(CRGB *leds);
-    void RGBPattern(CRGB *leds);
 
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     String setDynCtrl(UIControl*_val) override;
-};
-
-// ----------- Эффект "Геометрический Вальс"
-//F_lying 
-//Fastled 16x16 rgb led matrix demo
-//Yaroslaw Turbin, 27.10.2020 
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-
-//https://www.reddit.com/r/FastLED/comments/jj4oc9/new_fastled_matrix_example_f_lying_code_in
-//code for arduino: https://wokwi.com/arduino/projects/280541577702539789
-//                  https://wokwi.com/arduino/projects/280607115091902988
-class EffectF_lying: public EffectCalc {
-  private:
-    byte hue = 0;
-    uint8_t _blur = 1;
-    void mydrawLine(CRGB *leds, float x, float y, float x1, float y1, byte hueLamda);
-	float speedFactor;
-    String setDynCtrl(UIControl*_val);
-#ifdef BIGMATRIX
-    const float deviator = 2.;
-#else
-    const float deviator = 4;
-#endif
-    bool type = false;
-  public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void load() override;
 };
 
 // ---------- Эффект "Тикси Ленд"
@@ -1556,29 +1443,6 @@ class EffectTLand: public EffectCalc {
     String setDynCtrl(UIControl*_val);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// -------- "LDIRKO Ленд"
-//simple playground for fasled
-//best use with 16x16 matrix and bigger
-//like tixy.land ))
-//...ldir... Yaroslaw Turbin, 18.11.2020 
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-class EffectLLand: public EffectCalc {
-  private:
-    const byte effects = 10; //how many effects
-    byte effnumber = 0; //start effect
-    uint8_t _scale = 1;
-    float t;
-    uint16_t code(byte x, byte y, uint16_t i, float t);
-    String setDynCtrl(UIControl*_val) override;
-    bool select = false;
-    bool randColor = false;
-    float hue = 0;
-  public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    void load() override;
 };
 
 // ----------- Эффект "Осцилятор"
@@ -1648,29 +1512,6 @@ class EffectWrain: public EffectCalc {
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     void load() override;
-};
-
-// ------------- Эффект "Цветные драже"
-//Simple sand automata
-//fastled 16x16 matrix demo https://editor.soulmatelights.com/gallery/560-sand-automata-16x16
-//Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko
-//https://www.reddit.com/user/ldirko/
-class EffectPile : public EffectCalc {
-private:
-    bool behavior;
-    byte density;
-    byte sc;
-    void randomdot();
-    void updatesand();
-    void randomdel();
-    void falldown();
-  String setDynCtrl(UIControl*_val) override;
-  
-public:
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    
 };
 
 //-------- по мотивам Эффектов Particle System -------------------------
@@ -1820,7 +1661,6 @@ private:
     const float radiusMax = (float)ballsAmount /5;
 
     float speedFactor;
-    void fill_circle(float cx, float cy, float radius, CRGB col);
     //void setspd(const byte _spd) override;
     String setDynCtrl(UIControl*_val) override;
 
@@ -1891,7 +1731,6 @@ public:
 // --------- Эффект "Северное Сияние"
 // (c) kostyamat 05.02.2021
 // идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
-// особая благодарность https://www.reddit.com/user/ldirko/ Yaroslaw Turbin aka ldirko
 
 // Палитры, специально созданные под этот эффект, огромная благодарность @Stepko
 static const TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM ={0x000000, 0x003300, 0x006600, 0x009900, 0x00cc00,0x00ff00, 0x33ff00, 0x66ff00, 0x99ff00,0xccff00, 0xffff00, 0xffcc00, 0xff9900, 0xff6600, 0xff3300, 0xff0000};
@@ -1946,24 +1785,6 @@ private:
 
 public:
     void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-// ------------  Эффект "Дым"
-// https://wokwi.com/arduino/projects/286246948457939464
-// (c) ldir + sutaburosu
-class EffectSmoker: public EffectCalc {
-private:
-    float timer;
-    byte bump[NUM_LEDS];
-    byte sat;
-	float speedFactor;
-
-    void generatebump ();
-    void Bumpmap(CRGB *leds, int8_t lightx, int8_t lighty);
-    String setDynCtrl(UIControl*_val) override;
-
-public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -2044,17 +1865,6 @@ private:
             EffectMath::getPixel(i, j) += 
             (j < thisMax - HEIGHT / 4) ? CHSV(0, 224, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 0, thisVal)
             : CHSV(0, 224, thisVal);
-        }
-    }
-
-    //Russia
-    void russia(uint8_t i)
-    {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 4) ? CHSV(0, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(150, 255, thisVal)
-            : CHSV(0, 0, thisVal);
         }
     }
 
@@ -2233,15 +2043,60 @@ public:
 };
 #endif
 
-// ----------- Эффект "Огонь 2021"
+// ----------- Эффект "Огненная лампа"
 // https://editor.soulmatelights.com/gallery/546-fire
 // (c) Stepko 17.06.21
+// sparks (c) kostyamat 10.01.2022 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
 class EffectFire2021 : public EffectCalc {
 private:
     byte _pal = 8;
     byte _scale = 32;
 	byte speedFactor;
     uint32_t t;
+    bool withSparks = false;
+
+    const uint8_t sparksCount = WIDTH / 4;
+    const uint8_t spacer = HEIGHT/4;
+
+    class Spark {
+    private:
+        CRGB color;
+        uint8_t Bri;
+        uint8_t Hue;
+        float x, y, speedy = 1;
+    
+    public:
+        void addXY(float nx, float ny) {
+            EffectMath::drawPixelXYF(x, y, 0);
+            x += nx;
+            y += ny * speedy;
+        }
+
+        float getY() {
+        return y;
+        }
+
+        void reset() {
+            uint32_t peak = 0;
+            speedy = (float)random(5, 30) / 10;
+            y = random((HEIGHT/4) * 5, (HEIGHT /2) * 5) / 5;
+            for (uint8_t i=0; i < WIDTH; i++) {
+                uint32_t temp = EffectMath::RGBweight(leds, getPixelNumber(i, y));
+                if (temp > peak) {
+                    x = i;
+                    peak = temp;
+                }
+            }
+            color = EffectMath::getPixel(x, y);
+        }
+
+        void draw() {
+            color.fadeLightBy(256 / (HEIGHT));
+            EffectMath::drawPixelXYF(x, y, color);
+        }
+    }; 
+
+    std::vector<Spark> sparks;
 
     String setDynCtrl(UIControl*_val) override;
     void palettesload() override;
@@ -2250,6 +2105,296 @@ public:
     void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
-// --------- конец секции эффектов
+
+// ----------- Эффект "Пятнашки"
+// https://editor.soulmatelights.com/gallery/1471-puzzles-subpixel
+// (c) Stepko 10.12.21
+class EffectPuzzles : public EffectCalc {
+private:
+    byte PSizeX = 4;
+    byte PSizeY = 4;
+    float Ecols = (WIDTH / PSizeX);
+    float Erows = (HEIGHT / PSizeY);
+    bool Ca = (WIDTH % PSizeX)? 1 : 0;
+    bool Ra = (HEIGHT % PSizeY)? 1 : 0;
+    uint8_t PCols = round(Ecols) + Ca;
+    uint8_t PRows = round(Erows) + Ra;
+    float speedFactor = 0.1;
+    std::vector<std::vector<uint8_t>> puzzle;
+    byte color;
+    byte z_dot[2];
+    byte step;
+    int8_t move[2];
+    float shift[2] = { 0, 0 };
+    bool XorY;
+
+
+    void draw_square(byte x1, byte y1, byte x2, byte y2, byte col);
+    void draw_squareF(float x1, float y1, float x2, float y2, byte col);
+    void regen();
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ============= Эффект Цветные драже ===============
+// (c) SottNick
+//по мотивам визуала эффекта by Yaroslaw Turbin 14.12.2020
+//https://vk.com/ldirko программный код которого он запретил брать
+class EffectPile : public EffectCalc {
+private:
+    uint8_t pcnt = 0U, _scale;
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ============= Эффект ДНК ===============
+// (c) Stepko
+// https://editor.soulmatelights.com/gallery/1520-dna
+//по мотивам визуала эффекта by Yaroslaw Turbin
+//https://vk.com/ldirko программный код которого он запретил брать
+class EffectDNA : public EffectCalc {
+private:
+    float a = (256.0 / (float)WIDTH);
+    float t = 0.0;
+    float speedFactor = 0.5;
+    bool flag = true; 
+    bool bals = false;
+    uint8_t type = 0, _type = 1, _scale = 16;
+    
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    //void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ----------- Эффект "Дым"
+// based on cod by @Stepko (c) 23/12/2021
+class EffectSmoker : public EffectCalc {
+private:
+    byte color, saturation;
+    byte _scale = 30, glitch;
+	float speedFactor;
+    float t;
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ----------- Эффект "Мираж"
+// based on cod by @Stepko (c) 23/12/2021
+class EffectMirage : public EffectCalc {
+private:
+    const float div = 10.;
+    const uint16_t width = (WIDTH - 1) * div, height = HEIGHT * div;
+    uint16_t _speed;
+    byte color;
+    bool colorShift = false;
+    byte buff[WIDTH + 2][HEIGHT + 2];
+    bool a = true;
+	float speedFactor;
+
+
+    String setDynCtrl(UIControl*_val) override;
+    void drawDot(float x, float y, byte a);
+    void blur();
+
+public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// -------------------- Эффект "Акварель"
+// (c) kostyamat 26.12.2021
+// https://editor.soulmatelights.com/gallery/1587-oil
+#define BLOT_SIZE WIDTH/2
+class EffectWcolor : public EffectCalc {
+private:
+    float speedFactor;
+    uint8_t bCounts = 1;
+    uint8_t blur;
+    bool mode = false;
+    float t;
+
+    class Blot {
+    private:
+        byte hue, sat;
+        float bri;
+        int x0, y0;
+        float x[BLOT_SIZE]; 
+        float y[BLOT_SIZE];
+
+    public:
+
+        void appendXY(float nx, float ny) {
+            for (byte i = 0; i < BLOT_SIZE; i++) {
+                x[i] += nx;
+                y[i] += ny; 
+            }
+        }
+        
+
+        void reset(byte num, byte Counts) {  
+            x0 = random(-5, WIDTH - 5);
+            float y0 = EffectMath::randomf(-1, HEIGHT+1);
+            uint8_t dy;
+            for (uint8_t i = 0; i < BLOT_SIZE; i++) {
+                bool f = random(0,2);
+                dy = random(0, 2); 
+                x[i] = x0 + i;
+                if (f)
+                y[i] = float((i ? y[i-1] : y0) + dy);
+                else 
+                y[i] = float((i ? y[i-1] : y0) - dy);
+            }
+            hue = random(0, 256);
+            sat = random(160, 256);
+            bri = random(128, 256);
+            
+        }
+
+        double getY() {
+            double result = y[0];
+            for (uint8_t i = 1; i < BLOT_SIZE; i++) {
+                if (y[i] > result) result = y[i];
+            }
+            return result;
+        }
+
+        void drawing() {
+            for (uint8_t i = 0; i < BLOT_SIZE; i++) {
+                byte bright = constrain((float)bri / (float)HEIGHT * (y[i] + HEIGHT - y0), 32, 255);
+                if (y[i] > -0.1)
+                    EffectMath::drawPixelXYF(x[i], y[i], CHSV(hue, sat, bright), 0);
+            }
+        }
+
+    };
+
+
+    std::vector<Blot> blots;
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+// ----------- Эффект "Неопалимая купина"
+//RadialFire
+// (c) Stepko and Sutaburosu https://editor.soulmatelights.com/gallery/1570-radialfire
+//23/12/21
+class EffectRadialFire : public EffectCalc {
+private:
+    const int8_t MIN_MAX = max(WIDTH, HEIGHT);
+    const int8_t C_X = (WIDTH / 2);
+	const int8_t C_Y = (HEIGHT / 2);
+    std::vector<std::vector<int>> XY_angle;
+    std::vector<std::vector<byte>> XY_radius;
+    float t;
+    float speedFactor;
+    uint8_t _scale;
+    bool mode = false;
+
+
+    String setDynCtrl(UIControl*_val) override;
+    void palettesload();
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+class EffectSplashBals : public EffectCalc {
+private:
+    uint8_t count = 3;
+    uint8_t hue;
+    const uint8_t DEV = 5;
+    const float R = (float)NUM_LEDS/128;
+
+    float x[6];
+    float y[6];
+    uint8_t iniX[6];
+    uint8_t iniY[6];
+
+    float speedFactor;
+
+
+    float dist(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
+        float dist;
+        int a = y2 - y1;
+        int b = x2 - x1;
+        a *= a;
+        b *= b;
+        a += b;
+        dist = EffectMath::sqrt(a);
+        return dist;
+    };
+    
+
+    String setDynCtrl(UIControl*_val) override;
+
+public:
+    void load() override;
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+class EffectFlower : public EffectCalc {
+	private:
+        uint8_t effTimer;
+        float ZVoffset = 0;
+        const float COLS_HALF = WIDTH * .5;
+        const float ROWS_HALF = HEIGHT * .5;
+        int16_t ZVcalcRadius(int16_t x, int16_t y);
+        int16_t ZVcalcDist(uint8_t x, uint8_t y, float center_x, float center_y);
+	public:
+        bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+#ifdef RGB_PLAYER
+// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko
+// 27.01.2022
+// https://editor.soulmatelights.com/gallery/1684-pgm-player-with-resize
+// License GPL v.3 as a part of the FireLamp_EmbUI project
+#define MULTIPLIC 256
+class EffectPlayer : public EffectCalc {
+    private:
+        uint8_t frameWidth, frameHeight, frames, frame = 0; 
+        uint16_t maxSize; 
+        int16_t corrX, corrY;
+        uint16_t resizeX, resizeY;
+        uint8_t* frameBuf = nullptr;
+        uint8_t frameDelay;
+        bool codec332 = true;
+        File rgbFile;
+        uint8_t bufSize = 0;
+        bool blur;
+
+        void calc();
+        void getFromFile_332(uint8_t frame);
+        void getFromFile_565(uint8_t frame);
+        void drawFrame();
+        bool loadFile(String &filename);
+        String setDynCtrl(UIControl*_val) override;
+    
+    public:
+        void load() override;
+        bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+        ~EffectPlayer() {
+            delete [] frameBuf;
+            frameBuf = nullptr;
+        }
+};
+#endif
 
 #endif

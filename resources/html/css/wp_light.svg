@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Creator: CorelDRAW 2019 (64-Bit) -->
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="210mm" height="210mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+viewBox="0 0 21000 21000"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css">
+   <![CDATA[
+    .fil3 {fill:#75FF73}
+    .fil6 {fill:#7675FE}
+    .fil5 {fill:#FE7583}
+    .fil1 {fill:#9FF2B1;fill-opacity:0.301961}
+    .fil0 {fill:#FFCDCC;fill-opacity:0.301961}
+    .fil8 {fill:url(#id0)}
+    .fil10 {fill:url(#id1)}
+    .fil4 {fill:url(#id2)}
+    .fil7 {fill:url(#id3);fill-opacity:0.301961}
+    .fil2 {fill:url(#id4);fill-opacity:0.301961}
+    .fil9 {fill:url(#id5);fill-opacity:0.301961}
+   ]]>
+  </style>
+  <linearGradient id="id0" gradientUnits="userSpaceOnUse" x1="10441.96" y1="8023.33" x2="18037.9" y2="8023.33">
+   <stop offset="0" style="stop-opacity:1; stop-color:#F275FF"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:#EFC3F0"/>
+  </linearGradient>
+  <linearGradient id="id1" gradientUnits="userSpaceOnUse" x1="15440.02" y1="13620.62" x2="7060.26" y2="14173.58">
+   <stop offset="0" style="stop-opacity:1; stop-color:#FFD475"/>
+   <stop offset="0.631373" style="stop-opacity:1; stop-color:#FFA875"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:#FF7B75"/>
+  </linearGradient>
+  <linearGradient id="id2" gradientUnits="userSpaceOnUse" x1="13632.11" y1="4987.22" x2="20430.37" y2="4987.22">
+   <stop offset="0" style="stop-opacity:1; stop-color:#97FF76"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:#E0FF76"/>
+  </linearGradient>
+  <linearGradient id="id3" gradientUnits="userSpaceOnUse" x1="10281.54" y1="7910.51" x2="2693.74" y2="7554.07">
+   <stop offset="0" style="stop-opacity:1; stop-color:#ECABFC"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:#F2E4F5"/>
+  </linearGradient>
+  <linearGradient id="id4" gradientUnits="userSpaceOnUse" x1="13739.2" y1="4459.45" x2="7067.74" y2="5713.48">
+   <stop offset="0" style="stop-opacity:1; stop-color:#C4FE76"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:white"/>
+  </linearGradient>
+  <linearGradient id="id5" gradientUnits="userSpaceOnUse" x1="7326.24" y1="13929.07" x2="-1071.38" y2="14023.85">
+   <stop offset="0" style="stop-opacity:1; stop-color:#F5DD56"/>
+   <stop offset="0.258824" style="stop-opacity:1; stop-color:#FAEEAA"/>
+   <stop offset="1" style="stop-opacity:1; stop-color:white"/>
+  </linearGradient>
+ </defs>
+ <g id="Слой_x0020_1">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <path class="fil0" d="M13762.68 14554.42c1493.65,0 2704.48,1205.46 2704.48,2692.46 0,1487 -1210.83,2692.46 -2704.48,2692.46 -1493.65,0 -2704.48,-1205.46 -2704.48,-2692.46 0,-1487 1210.83,-2692.46 2704.48,-2692.46z"/>
+  <path class="fil1" d="M20034.31 9680c1664.25,0 3013.39,1343.15 3013.39,3000 0,1656.85 -1349.14,3000 -3013.39,3000 -1664.25,0 -3013.39,-1343.15 -3013.39,-3000 0,-1656.85 1349.14,-3000 3013.39,-3000z"/>
+  <path class="fil2" d="M10403.47 1836.47c1877.28,0 3399.13,1455.08 3399.13,3249.99 0,1794.92 -1521.85,3250 -3399.13,3250 -1877.28,0 -3399.13,-1455.08 -3399.13,-3250 0,-1794.91 1521.85,-3249.99 3399.13,-3249.99z"/>
+  <ellipse class="fil3" cx="21463.06" cy="15034.8" rx="3013.39" ry="3000"/>
+  <ellipse class="fil4" cx="17031.24" cy="4987.22" rx="3399.13" ry="3249.99"/>
+  <ellipse class="fil5" cx="19393.58" cy="17215.46" rx="2704.48" ry="2692.46"/>
+  <ellipse class="fil6" cx="17020.92" cy="12680" rx="3242.34" ry="3227.92"/>
+  <path class="fil7" d="M6487.64 11582.29c-2097.56,0 -3797.97,-1723.7 -3797.97,-3850 0,-2126.3 1700.41,-3850 3797.97,-3850 2097.56,0 3797.97,1723.7 3797.97,3850 0,2126.3 -1700.41,3850 -3797.97,3850z"/>
+  <ellipse class="fil8" cx="14239.93" cy="8023.33" rx="3797.97" ry="3850"/>
+  <path class="fil9" d="M3127.43 9796.05c2319.09,0 4199.08,1871.63 4199.08,4180.41 0,2308.78 -1879.99,4180.41 -4199.08,4180.41 -2319.09,0 -4199.08,-1871.63 -4199.08,-4180.41 0,-2308.78 1879.99,-4180.41 4199.08,-4180.41z"/>
+  <ellipse class="fil10" cx="11250.14" cy="13897.09" rx="4199.08" ry="4180.41"/>
+ </g>
+</svg>

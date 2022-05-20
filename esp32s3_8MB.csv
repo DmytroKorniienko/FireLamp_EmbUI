@@ -1,0 +1,10 @@
+# https://raw.githubusercontent.com/espressif/arduino-esp32/master/tools/partitions/
+# https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-guides/partition-tables.html
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     0x9000,  0x4000,
+otadata,  data, ota,     0xd000,  0x2000,
+phy_init, data, phy,     0xf000,  0x1000,
+app0,     app,  ota_0,   0x10000, 0x330000,
+app1,     app,  ota_1,   0x340000,0x330000,
+spiffs,   data, spiffs,  0x670000,0x190000,

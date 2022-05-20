@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 #include "mp3player.h"
@@ -44,8 +44,8 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
   mp3player.begin(9600);
   setTimeOut(MP3_SERIAL_TIMEOUT); //Set serial communictaion time out ~300ms
   LOG(println);
-  LOG(println, F("DFRobot DFPlayer Mini"));
-  LOG(println, F("Initializing DFPlayer ... (May take 3~5 seconds)"));
+  LOG(println, F("DFplayer: DFRobot DFPlayer Mini"));
+  LOG(println, F("DFplayer: Initializing DFPlayer ... (May take 3~5 seconds)"));
   // cur_volume при инициализации используется как счетчик попыток :), так делать не хорошо, но экономим память
   Task *_t = new Task(DFPALYER_START_DELAY, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
     if(!begin(mp3player) && cur_volume++<=5){
@@ -55,19 +55,15 @@ MP3PLAYERDEVICE::MP3PLAYERDEVICE(const uint8_t rxPin, const uint8_t txPin) : mp3
     }
 
     if (cur_volume>=5 && !begin(mp3player)) {
-      LOG(println, F("1.Please recheck the connection!"));
-      LOG(println, F("2.Please insert the SD card!"));
+      LOG(println, F("DFplayer: 1.Please recheck the connection!"));
+      LOG(println, F("DFplayer: 2.Please insert the SD card!"));
       ready = false;
       return;
     }
     ready = true;
-    LOG(println, F("DFPlayer Mini online."));
+    LOG(println, F("DFplayer: DFPlayer Mini online."));
     outputDevice(DFPLAYER_DEVICE_SD);
-    Task *_t = new Task(200, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
-      volume(5);  // start volume
-      TASK_RECYCLE;
-    });
-    _t->enableDelayed();
+    setTempVolume(5);
     TASK_RECYCLE;
   });
   _t->enableDelayed();
@@ -77,14 +73,14 @@ void MP3PLAYERDEVICE::restartSound()
 {
   isplayname = false;
   int currentState = readState();
-  LOG(printf_P,PSTR("readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
-  if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение, попытка фикса https://community.alexgyver.ru/threads/wifi-lampa-budilnik-proshivka-firelamp_jeeui-gpl.2739/page-312#post-75394
+  LOG(printf_P,PSTR("DFplayer: readState()=%d, mp3mode=%d, alarm=%d\n"), currentState, mp3mode, alarm);
+  if(currentState == 512 || currentState == -1 || currentState == 0){ // странное поведение
     Task *_t = new Task(
         200,
         TASK_ONCE, [this](){
           if(isOn() || (ready && alarm)){
             if(alarm){
-              ReStartAlarmSound(tAlarm);
+              ReStartAlarmSound((ALARM_SOUND_TYPE)tAlarm);
             } else if(!mp3mode && effectmode){
               if(cur_effnb>0)
                 playEffect(cur_effnb, soundfile); // начать повтороное воспроизведение в эффекте
@@ -95,6 +91,7 @@ void MP3PLAYERDEVICE::restartSound()
               playMp3Folder(cur_effnb);
             }
           }
+          isplaying = true;
         TASK_RECYCLE; },
         &ts, false);
     _t->enableDelayed();
@@ -107,27 +104,40 @@ void MP3PLAYERDEVICE::printSatusDetail(){
 
   switch (type) {
     case TimeOut:
-      LOG(println, F("Time Out!"));
+      LOG(println, F("DFplayer: Time Out!"));
+      if(isAlarm()){
+        isplaying = false;
+        restartSound();
+      }
       break;
     case WrongStack:
-      LOG(println, F("Stack Wrong!"));
+      LOG(println, F("DFplayer: Stack Wrong!"));
       break;
     case DFPlayerCardInserted:
-      LOG(println, F("Card Inserted!"));
-      break;
-    case DFPlayerCardRemoved:
-      LOG(println, F("Card Removed!"));
-      break;
-    case DFPlayerCardOnline:
-      LOG(println, F("Card Online!"));
+      LOG(println, F("DFplayer: Card Inserted!"));
+      ready = true;
       setVolume(cur_volume); // в случае перетыкания карты или сборса плеера - восстановим громкость
       break;
-    case DFPlayerPlayFinished: {
-        LOG(print, F("Number:"));
-        LOG(print, value);
-        LOG(println, F(" Play Finished!"));
-        if(restartTimeout+5000<millis()){ // c момента инициализации таймаута прошло более 5 секунд (нужно чтобы не прерывало вывод времени в режиме без звука)
-          restartSound();
+    case DFPlayerCardRemoved:
+      LOG(println, F("DFplayer: Card Removed!"));
+      ready = false;
+      break;
+    case DFPlayerCardOnline:
+      LOG(println, F("DFplayer: Card Online!"));
+      setVolume(cur_volume); // в случае перетыкания карты или сборса плеера - восстановим громкость
+      break;
+    //case DFPlayerFeedBack:  // этот кейс добавлен для нормальной работы с некоторыми версиями DFPlayer - поправлено в библиотеке, требуется проверка
+    case DFPlayerPlayFinished:
+     {
+        LOG(printf_P, PSTR("DFplayer: Number: %d Play Finished!\n"), value);
+        if(restartTimeout+5000<millis() && !isadvert){ // c момента инициализации таймаута прошло более 5 секунд (нужно чтобы не прерывало вывод времени в режиме без звука)
+          isplaying = false;
+          if(!iscancelrestart)
+            restartSound();
+          else {
+            iscancelrestart = false;
+            restartTimeout = millis();
+          }
         }
       }
       break;
@@ -153,20 +163,26 @@ void MP3PLAYERDEVICE::printSatusDetail(){
           LOG(println, F("Cannot Find File"));
           if(isplayname) // только для случая когда нет файла с именем эффекта, если нет самой озвучки эффекта, то не рестартуем
             restartSound();
+          isplaying = false;
           break;
         case Advertise:
           LOG(println, F("In Advertise"));
-          // возникла ошибка с минутами, попробуем еще раз
-          if(restartTimeout+10000<millis()){ // c момента инициализации таймаута прошло более 10 секунд, избавляюсь от зацикливания попыток
+          isplaying = false;
+          isadvert = false;
+          // возникла ошибка с минутами или будильником, попробуем еще раз
+          if((restartTimeout+10000<millis() && timeSoundType == TIME_SOUND_TYPE::TS_VER1) || isAlarm()){ // c момента инициализации таймаута прошло более 10 секунд, избавляюсь от зацикливания попыток
             restartTimeout=millis();
-            restartSound(); // тут будет отложенный запуск через 0.2 секунды
-            Task *_t = new Task(
-                2.5 * TASK_SECOND + 300,
-                TASK_ONCE, [this](){
-                  playAdvertise(nextAdv);
-                TASK_RECYCLE; },
-                &ts, false);
-            _t->enableDelayed();
+            if(isAlarm())
+              restartSound();
+            if(timeSoundType == TIME_SOUND_TYPE::TS_VER1 && nextAdv){
+              Task *_t = new Task(
+                  2.5 * TASK_SECOND + 300,
+                  TASK_ONCE, [this](){
+                    playAdvertise(nextAdv);
+                  TASK_RECYCLE; },
+                  &ts, false);
+              _t->enableDelayed();
+            }
           }
           break;
         default:
@@ -190,9 +206,11 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
   if(!isReady()) return;
 
   int currentState = readState();
-  LOG(printf_P,PSTR("readState()=%d\n"), currentState);
+  LOG(printf_P,PSTR("DFplayer: playTime readState()=%d\n"), currentState);
+  timeSoundType = tst;
+
   if(tst==TIME_SOUND_TYPE::TS_VER1){
-    if(currentState == 513 || currentState == -1)
+    if(currentState == 513 || currentState == 1 || (currentState == -1 && isplaying)) // SS24 & GD3200B
     {
       playAdvertise(3000+hours);
       nextAdv = minutes+3100;
@@ -216,7 +234,7 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
       restartTimeout = millis();
     }
   } else if(tst==TIME_SOUND_TYPE::TS_VER2){
-    if(currentState == 513 || currentState == -1)
+    if(currentState == 513 || currentState == 1 || (currentState == -1 && isplaying)) // SS24 & GD3200B
     {
       playAdvertise(hours*100+minutes);
     } else {
@@ -226,13 +244,24 @@ void MP3PLAYERDEVICE::playTime(int hours, int minutes, TIME_SOUND_TYPE tst)
 }
 
 void MP3PLAYERDEVICE::playFolder0(int filenb) {
+  LOG(printf_P, PSTR("DFplayer: playLargeFolder filenb: %d\n"), filenb);
   playLargeFolder(0x00, filenb);
 }
 
 void MP3PLAYERDEVICE::playAdvertise(int filenb) {
-  LOG(printf_P, PSTR("Advertise filenb: %d\n"), filenb);
+  LOG(printf_P, PSTR("DFplayer: Advertise filenb: %d\n"), filenb);
   advertise(filenb);
+  isadvert = true;
+  Task *_t = new Task(
+      6.66 * TASK_SECOND,
+      TASK_ONCE, [this](){
+        LOG(println, F("DFplayer: isadvert = false"));
+        isadvert = false; // через 6.66 секунд снимим флаг, шаманство!
+      TASK_RECYCLE; },
+      &ts, false);
+  _t->enableDelayed();
 }
+
 
 void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool delayed)
 {
@@ -240,7 +269,7 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool 
   soundfile = _soundfile;
   int folder = _soundfile.substring(0,_soundfile.lastIndexOf('\\')).toInt();
   int filenb = _soundfile.substring(_soundfile.lastIndexOf('\\')+1).toInt();
-  LOG(printf_P, PSTR("soundfile:%s, folder:%d, filenb:%d, effnb:%d\n"), soundfile.c_str(), folder, filenb, effnb%256);
+  LOG(printf_P, PSTR("DFplayer: soundfile:%s, folder:%d, filenb:%d, effnb:%d\n"), soundfile.c_str(), folder, filenb, effnb%256);
   if(!mp3mode){
     if(!filenb){
       cur_effnb = effnb%256;
@@ -272,21 +301,24 @@ void MP3PLAYERDEVICE::playEffect(uint16_t effnb, const String &_soundfile, bool 
 void MP3PLAYERDEVICE::playName(uint16_t effnb)
 {
   isplayname = true;
-  LOG(printf_P, PSTR("playName, effnb:%d\n"), effnb%256);
+  LOG(printf_P, PSTR("DFplayer: playName, effnb:%d\n"), effnb%256);
   playFolder(2, effnb%256);
 }
 
 void MP3PLAYERDEVICE::StartAlarmSoundAtVol(ALARM_SOUND_TYPE val, uint8_t vol){
-  volume(vol);
-  Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this, val](){
-    tAlarm = val;
-    ReStartAlarmSound(val);
+  LOG(printf_P, PSTR("DFplayer: StartAlarmSoundAtVol at %d\n"), vol);
+  setTempVolume(vol);
+  tAlarm = val;
+  Task *_t = new Task(300, TASK_ONCE, nullptr, &ts, false, nullptr, [this](){
+    ReStartAlarmSound((ALARM_SOUND_TYPE)tAlarm);
     TASK_RECYCLE;
   });
   _t->enableDelayed();
 }
 
 void MP3PLAYERDEVICE::ReStartAlarmSound(ALARM_SOUND_TYPE val){
+  isplaying = true;
+  LOG(printf_P, PSTR("DFplayer: ReStartAlarmSound %d\n"), val);
   switch(val){
     case ALARM_SOUND_TYPE::AT_FIRST :
       playFolder(1,1);
@@ -303,12 +335,20 @@ void MP3PLAYERDEVICE::ReStartAlarmSound(ALARM_SOUND_TYPE val){
     case ALARM_SOUND_TYPE::AT_FIFTH :
       playFolder(1,5);
       break;
-    case ALARM_SOUND_TYPE::AT_RANDOM :
-      playFolder(1,random(1,5+1));
+    case ALARM_SOUND_TYPE::AT_RANDOM : {
+      randomSeed(millis());
+      int soundfile = random(5)+1;
+      LOG(printf_P, PSTR("DFplayer: Random alarm %d\n"), soundfile);
+      playFolder(1,soundfile);
       break;
-    case ALARM_SOUND_TYPE::AT_RANDOMMP3 :
-      playMp3Folder(random(1,mp3filescount+1));
+    }
+    case ALARM_SOUND_TYPE::AT_RANDOMMP3 : {
+      randomSeed(millis());
+      int soundfile = random(mp3filescount)+1;
+      LOG(printf_P, PSTR("DFplayer: Random alarm %d\n"), soundfile);
+      playMp3Folder(soundfile);
       break;
+    }
     default:
     break;
   }

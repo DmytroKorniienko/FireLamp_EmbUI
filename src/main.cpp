@@ -17,37 +17,24 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
-
 #include "main.h"
-#include <SPIFFSEditor.h>
-#include "buttons.h"
-#ifdef USE_FTP
-  #include "ftpSrv.h"
-#endif
-#ifdef TM1637_CLOCK
-  #include "tm.h"
-#endif
-
-#ifdef ENCODER
-  #include "enc.h"
-#endif
 
 // глобальные переменные для работы с ними в программе
 LAMP myLamp;
@@ -59,47 +46,76 @@ Buttons *myButtons;
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
-
 void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
-    
+
+#ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+    {
+        HeapSelectIram ephemeral;
+        LOG(printf_P, PSTR("\n\nIRAM ESP.getFreeHeap:  %u\n"), ESP.getFreeHeap());
+    }
+    {
+        HeapSelectDram ephemeral;
+        LOG(printf_P, PSTR("DRAM ESP.getFreeHeap:  %u\n"), ESP.getFreeHeap());
+    }
+#else
+    LOG(printf_P, PSTR("\n\nsetup: free heap  : %d\n"), ESP.getFreeHeap());
+#endif
+
+#ifdef ESP32
+    LOG(printf_P, PSTR("setup: free PSRAM  : %d\n"), ESP.getFreePsram()); // 4194252
+#endif
+
 #ifdef AUX_PIN
 	pinMode(AUX_PIN, OUTPUT);
 #endif
-    embui.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
 
-#if defined(ESP8266) && defined(LED_BUILTIN_AUX) && !defined(__DISABLE_BUTTON0)
+#ifdef EMBUI_USE_UDP
+    embui.udp(); // Ответ на UDP запрс. в качестве аргумента - переменная, содержащая macid (по умолчанию)
+#endif
+
+#if defined(ESP8266) && defined(LED_BUILTIN_AUX)
     embui.led(LED_BUILTIN_AUX, false); // назначаем пин на светодиод, который нам будет говорит о состоянии устройства. (быстро мигает - пытается подключиться к точке доступа, просто горит (или не горит) - подключен к точке доступа, мигает нормально - запущена своя точка доступа)
-#elif defined(__DISABLE_BUTTON0)
+#elif defined(LED_BUILTIN)
     embui.led(LED_BUILTIN, false); // Если матрица находится на этом же пине, то будет ее моргание!
 #endif
 
-    // EmbUI
-    embui.begin(); // Инициализируем JeeUI2 фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
-    //embui.mqtt(embui.param(F("m_pref")), embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
-    embui.mqtt(mqttCallback, true);
+#if defined(LED_BUILTIN) && defined (DISABLE_LED_BUILTIN)
+#ifdef ESP8266
+    digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
+#elif defined(LED_BUILTIN)
+    digitalWrite(LED_BUILTIN, LOW); // "душим" светодиод nodeMCU32
+#endif
+#endif
 
-    myLamp.effects.setEffSortType((SORT_TYPE)embui.param(F("effSort")).toInt()); // сортировка должна быть определена до заполнения
+    // EmbUI
+    embui.begin(); // Инициализируем EmbUI фреймворк - загружаем конфиг, запускаем WiFi и все зависимые от него службы
+#ifdef EMBUI_USE_MQTT
+    //embui.mqtt(embui.param(F("m_pref")), embui.param(F("m_host")), embui.param(F("m_port")).toInt(), embui.param(F("m_user")), embui.param(F("m_pass")), mqttCallback, true); // false - никакой автоподписки!!!
+    //embui.mqtt(mqttCallback, true);
+    embui.mqtt(mqttCallback, mqttConnect, true);
+#endif
+    myLamp.effects.setEffSortType((SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt()); // сортировка должна быть определена до заполнения
     myLamp.effects.initDefault(); // если вызывать из конструктора, то не забыть о том, что нужно инициализировать Serial.begin(115200); иначе ничего не увидеть!
-    myLamp.events.loadConfig(); // << -- SDK3.0 будет падение, разобраться позже
-    
+    myLamp.events.loadConfig(); // << -- SDK3.0+ помилка пов'язана з unsigned long long на деяких esp32
+#ifdef RTC
+    rtc.init();
+#endif
+
 #ifdef DS18B20
-  ds_setup();
+    ds_setup();
 #endif
 
 #ifdef SHOWSYSCONFIG
-    myLamp.lamp_init(embui.param(F("CLmt")).toInt());
+    myLamp.lamp_init(embui.param(FPSTR(TCONST_0098)).toInt());
 #else
     myLamp.lamp_init(CURRENT_LIMIT);
-#endif
-#ifdef USE_FTP
-    ftp_setup(); // запуск ftp-сервера
 #endif
 
 #ifdef ESP_USE_BUTTON
 #ifdef SHOWSYSCONFIG
-    myLamp.setbPin(embui.param(F("PINB")).toInt());
+    myLamp.setbPin(embui.param(FPSTR(TCONST_0097)).toInt());
     myButtons = new Buttons(myLamp.getbPin(), PULL_MODE, NORM_OPEN);
 #else
     myButtons = new Buttons(BTN_PIN, PULL_MODE, NORM_OPEN);
@@ -127,9 +143,10 @@ void setup() {
 #else
   embui.server.addHandler(new SPIFFSEditor(LittleFS, F("esp32"), F("esp32")));
 #endif
+
   sync_parameters();        // падение есп32 не воспоизводится, kDn
 
-  //embui.setPubInterval(5);   // change periodic WebUI publish interval from PUB_PERIOD to 5
+  //embui.setPubInterval(5);   // change periodic WebUI publish interval from EMBUI_PUB_PERIOD to 5
 
 #ifdef TM1637_CLOCK
   tm1637.tm_setup();
@@ -139,97 +156,21 @@ void setup() {
   enc_setup();
 #endif
 
-#if defined LED_BUILTIN && defined DISABLE_LED_BUILTIN
-    digitalWrite(LED_BUILTIN, HIGH); // "душим" светодиод nodeMCU
-#endif
     LOG(println, F("setup() done"));
 }   // End setup()
 
-// typedef struct {
-//   uint64 timeAcc;
-//   uint32 timeBase;
-//   uint32 storage;
-// } RTC_DATA;
-
-// unsigned long _RTC_Worker(unsigned long _storage=0){
-// #ifdef ESP8266
-//     RTC_DATA rtcTime;
-//     uint32 rtc_time = system_get_rtc_time();
-//     if(rtc_time<500000){
-//         rtcTime.timeBase = rtc_time;
-//         rtcTime.timeAcc = 0;
-//         rtcTime.storage = 0;
-//         //LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), rtc_time, rtcTime.timeBase, rtcTime.timeAcc, (rtcTime.timeAcc / 1000000) / 1000);
-//         //ESP.rtcUserMemoryWrite(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
-//         system_rtc_mem_write(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
-//     } else {
-//         //ESP.rtcUserMemoryRead(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
-//         system_rtc_mem_read(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
-//         rtc_time = system_get_rtc_time();
-//         uint32_t cal = system_rtc_clock_cali_proc();
-//         rtcTime.timeAcc += ((uint64)(rtc_time - rtcTime.timeBase) * (((uint64)cal * 1000) >> 12));
-//         //LOG(printf_P, PSTR("%d - %d - %lld - %d\n"), rtc_time, rtcTime.timeBase, rtcTime.timeAcc, (rtcTime.timeAcc / 1000000) / 1000);
-//         rtcTime.timeBase = rtc_time;
-//         if(_storage)
-//             rtcTime.storage = _storage;
-//         //ESP.rtcUserMemoryWrite(128-sizeof(RTC_DATA), (uint32_t*)&rtcTime, sizeof(RTC_DATA));
-//         system_rtc_mem_write(192-sizeof(RTC_DATA), &rtcTime, sizeof(RTC_DATA));
-//     }
-//     LOG(printf_P, PSTR("TIME: RTC time = %d sec\n"), (uint32)(rtcTime.timeAcc / 1000000) / 1000);
-//     return rtcTime.storage+(rtcTime.timeAcc / 1000000) / 1000;
-// #else
-//     return 0;
-// #endif
-// }
 
 void loop() {
     embui.handle(); // цикл, необходимый фреймворку
     // TODO: Проконтроллировать и по возможности максимально уменьшить создание объектов на стеке
     myLamp.handle(); // цикл, обработка лампы
 
-    // static uint32_t cnt = 0;
-    // static unsigned long cur_ms = millis();
-    // if(millis()>cur_ms+1000){
-    //     Serial.printf("cnt=%u, fps=%d\n", cnt, FastLED.getFPS());
-    //     cnt=0;
-    //     cur_ms = millis();
-    // }
-    // cnt++;
-
-// #if defined(ESP8266)
-//     // тестирование rtc
-//     EVERY_N_SECONDS(1){
-//         _RTC_Worker();
-//     }
-//     // // esp32
-//     // time_t now()
-//     // {
-//     //     struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };   /* btw settimeofday() is helpfull here too*/
-//     //     // uint64_t sec, us;
-//     //     uint32_t sec, us;
-//     //     gettimeofday(&tv, NULL); 
-//     //     (sec) = tv.tv_sec;  
-//     //     (us) = tv.tv_usec; 
-//     //     return sec;
-//     // }
-// #endif
-// // тестирование стабильности
-// EVERY_N_MILLIS(20) {
-//     Task *t = new Task(10, TASK_ONCE, [](){
-//         Task *task = ts.getCurrentTask();
-//         //TASK_RECYCLE;
-//         delete task;
-//     }, &ts, false
-//     );
-//     t->enableDelayed();
-// }
-
-#ifdef USE_FTP
-    ftp_loop(); // цикл обработки событий фтп-сервера
-#endif
-
 #ifdef ENCODER
     encLoop(); // цикл обработки событий энкодера. Эта функция будет отправлять в УИ изменения, только тогда, когда подошло время ее loop
+#endif
+
+#ifdef RTC
+    rtc.updateRtcTime();
 #endif
 
 #ifdef TM1637_CLOCK
@@ -242,6 +183,103 @@ void loop() {
         ds_loop();
     }
 #endif
+#ifdef USE_STREAMING
+    if (ledStream)
+        ledStream->handle();
+#endif
+}
+
+//------------------------------------------
+
+#ifdef EMBUI_USE_MQTT
+// реализация autodiscovery
+String ha_autodiscovery()
+{
+    LOG(println,F("MQTT: Autodiscovery"));
+    DynamicJsonDocument hass_discover(1024);
+    String name = embui.param(FPSTR(P_hostname));
+    String unique_id = embui.mc;
+
+    hass_discover[F("~")] = embui.id(FPSTR(TCONST_00E7));     // embui.param(FPSTR(P_m_pref)) + F("/embui/")
+    hass_discover[F("name")] = name;                // name
+    hass_discover[F("uniq_id")] = unique_id;        // String(ESP.getChipId(), HEX); // unique_id
+
+    hass_discover[F("avty_t")] = F("~pub/online");  // availability_topic
+    hass_discover[F("pl_avail")] = F("1");          // payload_available
+    hass_discover[F("pl_not_avail")] = F("0");      // payload_not_available
+
+    hass_discover[F("cmd_t")] = F("~set/on");       // command_topic
+    hass_discover[F("stat_t")] = F("~pub/on");      // state_topic
+    hass_discover[F("pl_on")] = F("1");             // payload_on
+    hass_discover[F("pl_off")] = F("0");            // payload_off
+
+    hass_discover[F("json_attr_t")] = F("~pub/state"); // json_attributes_topic
+
+    hass_discover[F("rgb_cmd_t")] = "~set/RGB";        // rgb_command_topic
+    hass_discover[F("rgb_stat_t")] = "~pub/RGB";       // rgb_state_topic
+
+    hass_discover[F("bri_cmd_t")] = F("~set/g_bright");     // brightness_command_topic
+    hass_discover[F("bri_stat_t")] = F("~pub/dynCtrl0");    // brightness_state_topic
+    hass_discover[F("bri_scl")] = 255;
+
+    JsonArray data = hass_discover.createNestedArray(F("effect_list"));
+    data.add(FPSTR(TCONST_00E8));
+    data.add(FPSTR(TCONST_00E9));
+    data.add(FPSTR(TCONST_00EA));
+    data.add(FPSTR(TCONST_00EB));
+    data.add(FPSTR(TCONST_00EC));
+    data.add(FPSTR(TCONST_00ED));
+
+    hass_discover[F("fx_cmd_t")] = F("~set/modecmd");                              // effect_command_topic
+    hass_discover[F("fx_stat_t")] = F("~pub/state");                               // effect_state_topic
+    hass_discover[F("fx_val_tpl")] = F("{{ value_json.Mode }}");                   // effect_value_template effect_template
+
+    //---------------------
+
+
+    hass_discover[F("clr_temp_cmd_t")] = F("~set/COLORTEMP");     // speed as color temperature
+    hass_discover[F("clr_temp_stat_t")] = F("~pub/COLORTEMP");    // speed as color temperature
+    hass_discover[F("min_mireds")] = 1;
+    hass_discover[F("max_mireds")] = 255;
+
+    // JsonObject devobj = hass_discover.createNestedObject(F("dev"));
+    // //JsonArray devids = devobj.createNestedArray(F("ids"));
+    // //devids.add()
+    // devobj[F("name")] = F("Firelamp");
+    // devobj[F("mdl")] = F("Firelamp");
+    // devobj[F("sw")] = F("2.7.0");
+    // devobj[F("mf")] = F("kDn");
+    
+
+    // "\"dev\":{"
+    //   "\"ids\":[\"%s\"],"                                //clientId
+    //   "\"name\":\"%s\","                              //host
+    //   "\"mdl\":\"%s\","                                 //host
+    //   "\"sw\":\"%s\","                                  //version
+    //   "\"mf\":\"lg\""
+    // "}"
+
+
+    // hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level (Яркость белого)
+    // hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
+    // hass_discover[F("whit_val_scl")] = 255;
+
+    // hass_discover[F("xy_cmd_t")] = F("~set/speed");     // scale as white level (Яркость белого)
+    // hass_discover[F("xy_stat_t")] = F("~pub/speed");    // scale as white level
+    //hass_discover[F("whit_val_scl")] = 255; // 'xy_val_tpl':          'xy_value_template',
+
+    String hass_discover_str;
+    serializeJson(hass_discover, hass_discover_str);
+    hass_discover.clear();
+
+    embui.publishto(String(F("homeassistant/light/")) + name + F("/config"), hass_discover_str, true);
+    return hass_discover_str;
+}
+
+extern void mqtt_dummy_connect();
+void mqttConnect(){ 
+    mqtt_dummy_connect();
+    ha_autodiscovery();
 }
 
 ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){ // функция вызывается, когда приходят данные MQTT
@@ -261,19 +299,27 @@ ICACHE_FLASH_ATTR void mqttCallback(const String &topic, const String &payload){
 
 // Periodic MQTT publishing
 void sendData(){
-
     // Здесь отсылаем текущий статус лампы и признак, что она живая (keepalive)
-    LOG(println, F("send MQTT Data :"));
-    DynamicJsonDocument obj(256);
+    DynamicJsonDocument obj(512);
     //JsonObject obj = doc.to<JsonObject>();
-    obj[FPSTR(TCONST_0001)] = String(embui.timeProcessor.getFormattedShortTime());
-    obj[FPSTR(TCONST_0002)] = String(myLamp.getLampState().freeHeap);
-    obj[FPSTR(TCONST_008F)] = String(millis()/1000);
-    obj[FPSTR(TCONST_00CE)] = String(myLamp.getLampState().rssi);
+    obj[FPSTR(TCONST_00DD)] = myLamp.getModeDesc();
+    obj[FPSTR(TCONST_00EE)] = myLamp.effects.getEffectName();
+    obj[FPSTR(TCONST_00DE)] = String(embui.timeProcessor.getFormattedShortTime());
+    obj[FPSTR(TCONST_00DF)] = String(myLamp.getLampState().freeHeap);
+    obj[FPSTR(TCONST_00E0)] = String(embui.getUptime());
+    obj[FPSTR(TCONST_00E1)] = String(myLamp.getLampState().rssi);
+    obj[FPSTR(TCONST_00E2)] = WiFi.localIP().toString();
+    obj[FPSTR(TCONST_00E3)] = WiFi.macAddress();
+    obj[FPSTR(TCONST_00E4)] = String(F("http://"))+WiFi.localIP().toString();
+    obj[FPSTR(TCONST_00E5)] = embui.getEmbUIver();
+    obj[FPSTR(TCONST_00E6)] = embui.id(FPSTR(TCONST_00E7));     // embui.param(FPSTR(P_m_pref)) + F("/embui/")
     String sendtopic=FPSTR(TCONST_008B);
     sendtopic+=FPSTR(TCONST_00AD);
     String out;
     serializeJson(obj, out);
+    LOG(println, F("send MQTT Data :"));
     LOG(println, out);
     embui.publish(sendtopic, out, true); // отправляем обратно в MQTT в топик embui/pub/
 }
+#endif
+

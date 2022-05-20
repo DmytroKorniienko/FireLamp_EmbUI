@@ -4,7 +4,7 @@
 #include "misc.h"
 #include <FunctionalInterrupt.h>
 #include "ts.h"
-#include "../../include/LList.h"
+#include "LList.h"
 
 typedef enum _button_action {
 	BA_NONE,
@@ -67,7 +67,7 @@ class Button{
 
 class Buttons {
   private:
-//#pragma pack(push,2)
+  #pragma pack(push,4)
 	union {
 		struct {
 			bool buttonEnabled:1; // кнопка обрабатывается если true
@@ -78,7 +78,7 @@ class Buttons {
 		};
 		uint8_t btnflags = 0; // очистим флаги
 	};
-//#pragma pack(pop)
+  #pragma pack(pop)
 	uint8_t pin; // пин
 	uint8_t pullmode; // подтяжка
 	uint8_t state; // тип (нормально открытый/закрытый)

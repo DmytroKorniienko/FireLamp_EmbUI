@@ -17,21 +17,21 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
     You should have received a copy of the GNU General Public License
     along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
 
-  (Этот файл — часть FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_JeeUI.
 
-   FireLamp_JeeUI - свободная программа: вы можете перераспространять ее и/или
-   изменять ее на условиях Стандартной общественной лицензии GNU в том виде,
-   в каком она была опубликована Фондом свободного программного обеспечения;
-   либо версии 3 лицензии, либо (по вашему выбору) любой более поздней
-   версии.
+   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
+   у якому вона була опублікована Фондом вільного програмного забезпечення;
+   або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
+   версії.
 
-   FireLamp_JeeUI распространяется в надежде, что она будет полезной,
-   но БЕЗО ВСЯКИХ ГАРАНТИЙ; даже без неявной гарантии ТОВАРНОГО ВИДА
-   или ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробнее см. в Стандартной
-   общественной лицензии GNU.
+   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
+   або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
+   громадська ліцензія GNU.
 
-   Вы должны были получить копию Стандартной общественной лицензии GNU
-   вместе с этой программой. Если это не так, см.
+   Ви повинні були отримати копію Стандартної громадської ліцензії GNU
+   разом із цією програмою. Якщо це не так, див.
    <https://www.gnu.org/licenses/>.)
 */
 
@@ -49,7 +49,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "ui.h"
 
 // Опциональные настройки (показаны по умолчанию)
-//#define EB_FAST 30     // таймаут быстрого поворота, мс
+#define EB_FAST 65     // таймаут быстрого поворота, мс 30
 //#define EB_DEB 80      // дебаунс кнопки, мс
 //#define EB_HOLD 1000   // таймаут удержания кнопки, мс
 //#define EB_STEP 500    // период срабатывания степ, мс
@@ -63,24 +63,12 @@ static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кноп�
 #define EXIT_TIMEOUT 3U
 #endif
 
-#ifndef ENC_STRING_DELAY
-#define ENC_STRING_DELAY 30
-#endif
-
 #ifndef ENC_STRING_EFFNUM_DELAY
 #define ENC_STRING_EFFNUM_DELAY 17
 #endif
 
-#ifndef ENC_STRING_COLOR
-#define ENC_STRING_COLOR CRGB::Orange
-#endif
-
-#ifndef VERTGAUGE_COLOR
-#define VERTGAUGE_COLOR 10
-#endif
-
 void callEncTick ();
-void IRAM_ATTR isrEnc();
+//void IRAM_ATTR isrEnc();
 void interrupt();
 void noInterrupt();
 
@@ -96,12 +84,16 @@ void encDisplay(float value);
 void encDisplay(String str);
 void resetTimers();
 void exitSettings();
-void encSendString(String str, CRGB color, bool force = true, uint8_t delay = ENC_STRING_DELAY);
+void encSendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
 void encSendStringNumEff(String str, CRGB color);
 bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
 extern void encLoop();
+uint8_t getEncTxtDelay();
+void setEncTxtDelay(const uint8_t speed);
+CRGB getEncTxtColor();
+void setEncTxtColor(const CRGB color);
 
 void toggleDemo();
 void toggleGBright();
