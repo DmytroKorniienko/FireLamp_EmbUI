@@ -49,7 +49,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "ui.h"
 
 // Опциональные настройки (показаны по умолчанию)
-//#define EB_FAST 30     // таймаут быстрого поворота, мс
+#define EB_FAST 65     // таймаут быстрого поворота, мс 30
 //#define EB_DEB 80      // дебаунс кнопки, мс
 //#define EB_HOLD 1000   // таймаут удержания кнопки, мс
 //#define EB_STEP 500    // период срабатывания степ, мс
@@ -68,7 +68,7 @@ static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кноп�
 #endif
 
 void callEncTick ();
-void IRAM_ATTR isrEnc();
+//void IRAM_ATTR isrEnc();
 void interrupt();
 void noInterrupt();
 
