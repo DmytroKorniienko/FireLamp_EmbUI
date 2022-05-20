@@ -1124,6 +1124,7 @@ void set_eff_next(Interface *interf, JsonObject *data){
  */
 void set_onflag(Interface *interf, JsonObject *data){
     if (!data) return;
+    bool ra_call = (*data).containsKey(FPSTR(TCONST_00D4));
 
     bool newpower = TOGLE_STATE((*data)[FPSTR(TCONST_001A)], myLamp.isLampOn());
     if (newpower != myLamp.isLampOn()) {
@@ -1146,11 +1147,11 @@ void set_onflag(Interface *interf, JsonObject *data){
 #endif
 #ifdef EMBUI_USE_MQTT
             embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), "1", true);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
-            embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
 #endif
         } else {
             resetAutoTimers(); // автосохранение конфига будет отсчитываться от этого момента
+            if(!ra_call)
+                myLamp.startNormalMode();
             //myLamp.changePower(newpower);
             Task *_t = new Task(300, TASK_ONCE,
                                 [](){ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
@@ -1163,14 +1164,16 @@ void set_onflag(Interface *interf, JsonObject *data){
                 #endif
                 #ifdef EMBUI_USE_MQTT
                                 embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), "0", true);
-                                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
-                                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
                 #endif
                                 TASK_RECYCLE; },
                                 &ts, false);
             _t->enableDelayed();
         }
     }
+#ifdef EMBUI_USE_MQTT
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(myLamp.getMode()), true);
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_00AA), String(myLamp.getMode()==LAMPMODE::MODE_DEMO?"1":"0"), true);
+#endif
 #ifdef RESTORE_STATE
     save_lamp_flags();
 #endif
@@ -1409,7 +1412,8 @@ void block_lamp_textsend(Interface *interf, JsonObject *data){
                 //interf->number(FPSTR(TCONST_0055), FPSTR(TINTF_050));
                 String datetime;
                 TimeProcessor::getDateTimeString(datetime, embui.param(FPSTR(TCONST_0055)).toInt());
-                interf->text(FPSTR(TCONST_0055), datetime, FPSTR(TINTF_050), false);
+                interf->datetime(FPSTR(TCONST_0055), datetime, FPSTR(TINTF_050), false);
+                //interf->text(FPSTR(TCONST_0055), datetime, FPSTR(TINTF_050), false);
                 interf->button_submit(FPSTR(TCONST_00BA), FPSTR(TINTF_008), FPSTR(P_GRAY));
             interf->spacer();
                 //interf->button(FPSTR(TCONST_0000), FPSTR(TINTF_00B));
@@ -1494,7 +1498,8 @@ void set_text_config(Interface *interf, JsonObject *data){
     String newYearTime = (*data)[FPSTR(TCONST_0055)]; // Дата/время наструпления нового года с интерфейса
     struct tm t;
     tm *tm=&t;
-    localtime_r(TimeProcessor::now(), tm);  // reset struct to local now()
+    //localtime_r(TimeProcessor::now(), tm);  // reset struct to local now()
+    gmtime_r(TimeProcessor::now(), tm);
 
     // set desired date
     tm->tm_year = newYearTime.substring(0,4).toInt()-EMBUI_TM_BASE_YEAR;
@@ -2950,6 +2955,7 @@ bool notfound_handle(AsyncWebServerRequest *request, const String& req)
     uint8_t bright = myLamp.getLampBrightness();
     if ((req.indexOf(F("&T=2")) > 1)){
         if(myLamp.isLampOn()){
+            myLamp.startNormalMode(); // З WLED перемикаємо в нормальний режим
             remote_action(RA::RA_OFF, NULL);
             bright = 0;
         }
@@ -3443,7 +3449,7 @@ void event_worker(DEV_EVENT *event){
 
     switch (event->getEvent()) {
     case EVENT_TYPE::ON: action = RA_ON; break;
-    case EVENT_TYPE::OFF: action = RA_OFF; break;
+    case EVENT_TYPE::OFF: action = RA_OFF; myLamp.startNormalMode(); break; // З евенту перемикаємо в нормальний режим
     case EVENT_TYPE::DEMO: action = RA_DEMO; break;
     case EVENT_TYPE::ALARM: action = RA_ALARM; break;
     case EVENT_TYPE::LAMP_CONFIG_LOAD: action = RA_LAMP_CONFIG; break;
@@ -3597,15 +3603,16 @@ void remote_action(RA action, ...){
                         Task *task = ts.getCurrentTask();
                         DynamicJsonDocument doc(512);
                         JsonObject obj = doc.to<JsonObject>();
-                        LAMPMODE mode = myLamp.getMode();
-                        if(mode!=LAMPMODE::MODE_NORMAL){
-                            CALL_INTF(FPSTR(TCONST_001B), "0", set_demoflag); // отключить демо, если было включено
-                            if (myLamp.IsGlobalBrightness()) {
-                                embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
-                            }
-                        }
-                        obj.clear();
-                        doc.garbageCollect();
+                        obj[FPSTR(TCONST_00D4)] = "1"; // ознака виклику з REMOTE ACTION
+                        // LAMPMODE mode = myLamp.getMode();
+                        // if(mode!=LAMPMODE::MODE_NORMAL){
+                        //     CALL_INTF(FPSTR(TCONST_001B), "0", set_demoflag); // отключить демо, если было включено
+                        //     if (myLamp.IsGlobalBrightness()) {
+                        //         embui.var(FPSTR(TCONST_0018), String(myLamp.getLampBrightness())); // сохранить восстановленную яркость в конфиг, если она глобальная
+                        //     }
+                        // }
+                        // obj.clear();
+                        // doc.garbageCollect();
                         CALL_INTF(FPSTR(TCONST_001A), "0", set_onflag);
                         task->disable();
                         TASK_RECYCLE;
@@ -3718,8 +3725,15 @@ void remote_action(RA action, ...){
             myLamp.switcheffect(SW_WHITE_HI);
             return remote_action(RA::RA_EFFECT, "1", NULL);
         case RA::RA_WHITE_CUR:
-            myLamp.switcheffect(SW_WHITE_CUR);
-            return remote_action(RA::RA_EFFECT, "1", NULL);
+            if(myLamp.getMode()!=LAMPMODE::MODE_WHITELAMP){
+                myLamp.switcheffect(SW_WHITE_CUR);
+                return remote_action(RA::RA_EFFECT, "1", NULL);
+            } else {
+                obj[F("dynCtrl1")] = value;
+                obj[FPSTR(TCONST_00D5)] = true;
+                set_effects_dynCtrl(nullptr, &obj);
+            }
+            break;
         case RA::RA_WHITE_LO:
             myLamp.switcheffect(SW_WHITE_LO);
             return remote_action(RA::RA_EFFECT, "1", NULL);
@@ -3928,29 +3942,29 @@ void remote_action(RA action, ...){
                     } else if (curMode==LAMPMODE::MODE_RGBLAMP){
                         myLamp.stopRGB();
                         httpCallback(FPSTR(TCONST_00EB), F("255,255,255"), false);
-                    }  else if (curMode==LAMPMODE::MODE_WHITELAMP){
+                    } else if (curMode==LAMPMODE::MODE_WHITELAMP){
                         myLamp.startNormalMode(false);
                     }
                 }
                 // Теперь установить новый
-                if(mode==FPSTR(TCONST_00E8)){
-                    return;
-                } else if(mode==FPSTR(TCONST_00E9)){
+                if(mode==FPSTR(TCONST_00E8)){ // Normal
+                    myLamp.startNormalMode();
+                } else if(mode==FPSTR(TCONST_00E9)){ // Alarm
                     remote_action(RA::RA_ALARM, NULL);
-                } else if(mode==FPSTR(TCONST_00EA)){
+                } else if(mode==FPSTR(TCONST_00EA)){ // Demo
                     remote_action(RA::RA_DEMO, F("1"), NULL);
-                } else if(mode==FPSTR(TCONST_00EB)){
+                } else if(mode==FPSTR(TCONST_00EB)){ // RGB
                     char buf[12]; sprintf_P(buf, PSTR("%d,%d,%d"), myLamp.getRGBColor().r, myLamp.getRGBColor().g, myLamp.getRGBColor().b);
                     remote_action(RA::RA_RGB, buf, NULL);
                     httpCallback(FPSTR(TCONST_00EB), buf, false);
-                } else if(mode==FPSTR(TCONST_00EC)){
+                } else if(mode==FPSTR(TCONST_00EC)){ // White
                     remote_action(RA::RA_WHITE_CUR, NULL);
                 } else if(mode==FPSTR(TCONST_00ED)){
                     // skip
                 }
-#ifdef EMBUI_USE_MQTT
-                sendData();
-#endif
+// #ifdef EMBUI_USE_MQTT
+//                 sendData();
+// #endif
             }
             break;
 #ifdef OTA
@@ -4090,6 +4104,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (cmdParam == FPSTR(CMD_TCONST_0018)) { result = myLamp.isAlarm() ? "1" : "0"; }
         else if (cmdParam == FPSTR(CMD_TCONST_0019)) { char buf[32]; sprintf_P(buf, PSTR("[%d,%d]"), WIDTH, HEIGHT);  result = buf; }
         else if (cmdParam == FPSTR(CMD_TCONST_000D)) { if(value.isEmpty()) {char buf[12]; sprintf_P(buf, PSTR("%d,%d,%d"), myLamp.getRGBColor().r, myLamp.getRGBColor().g, myLamp.getRGBColor().b); result = buf;} else {result = value.c_str();} }
+        else if (cmdParam == FPSTR(CMD_TCONST_0023)) { if(myLamp.getMode()==LAMPMODE::MODE_WHITELAMP) {result = myLamp.getEffControls()[1]->getVal();} else {result = String(F("127"));} }
         else if (cmdParam == FPSTR(CMD_TCONST_000E)) { result = myLamp.getModeDesc().c_str(); }
 #ifdef EMBUI_USE_MQTT        
         embui.publish(String(FPSTR(TCONST_008B)) + param, result, true);
@@ -4112,6 +4127,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (cmdParam == FPSTR(CMD_TCONST_001B)) action = RA_DRAW;
         else if (cmdParam == FPSTR(CMD_TCONST_001D)) action = RA_FILLMATRIX;
         else if (cmdParam == FPSTR(CMD_TCONST_000D)) { remote_action(RA_RGB, value.c_str(), NULL); return httpCallback(FPSTR(CMD_TCONST_000D), "", false);}
+        else if (cmdParam == FPSTR(CMD_TCONST_0023)) { remote_action(RA_WHITE_CUR, value.c_str(), NULL); return httpCallback(FPSTR(CMD_TCONST_0023), "", false);}
         else if (cmdParam == FPSTR(CMD_TCONST_000E)) action = RA_MODECMD;
 #ifdef MP3PLAYER
         else if (cmdParam == FPSTR(CMD_TCONST_0006)) action = RA_MP3_PREV;

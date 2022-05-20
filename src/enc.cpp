@@ -350,6 +350,7 @@ void myClicks() {
   {
   case 1: // Включение\выключение лампы
     if (myLamp.isLampOn()) {
+      myLamp.startNormalMode(); // З енкодеру перемикаємо в нормальний режим
       remote_action(RA::RA_OFF, NULL);
 #ifdef TM1637_CLOCK
       tm1637.getSetDelay() = 1;

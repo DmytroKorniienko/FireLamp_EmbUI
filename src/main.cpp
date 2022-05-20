@@ -237,8 +237,8 @@ String ha_autodiscovery()
     //---------------------
 
 
-    hass_discover[F("clr_temp_cmd_t")] = F("~set/colortemp");     // speed as color temperature
-    hass_discover[F("clr_temp_stat_t")] = F("~pub/colortemp");    // speed as color temperature
+    hass_discover[F("clr_temp_cmd_t")] = F("~set/COLORTEMP");     // speed as color temperature
+    hass_discover[F("clr_temp_stat_t")] = F("~pub/COLORTEMP");    // speed as color temperature
     hass_discover[F("min_mireds")] = 1;
     hass_discover[F("max_mireds")] = 255;
 

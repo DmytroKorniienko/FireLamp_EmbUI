@@ -115,7 +115,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 				return true;
 			}
 			case BA_ON: ract = RA_ON; break;
-			case BA_OFF: ract = RA_OFF; break;
+			case BA_OFF: ract = RA_OFF; myLamp.startNormalMode(); break; // З кнопки перемикаємо в нормальний режим
 			case BA_DEMO: ract = RA_DEMO; break;
 #ifdef AUX_PIN
 			case BA_AUX_TOGLE: ract = RA_AUX_TOGLE; break;

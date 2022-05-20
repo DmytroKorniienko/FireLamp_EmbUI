@@ -64,6 +64,7 @@ typedef enum _LAMPMODE {
   MODE_DEMO,
   MODE_WHITELAMP,
   MODE_RGBLAMP,
+  // те режимы что ниже не сохраняются в storedMode
   MODE_ALARMCLOCK,
   MODE_OTA
 } LAMPMODE;
@@ -357,7 +358,14 @@ public:
 
     LAMPMODE getMode() {return mode;}
     LAMPMODE getStoredMode() {return storedMode;}
-    void setMode(LAMPMODE _mode) { storedMode = ((mode == _mode) ? storedMode: mode); mode=_mode;}
+    void setMode(LAMPMODE _mode) {
+        storedMode = ((mode == _mode) ? storedMode: (mode<LAMPMODE::MODE_ALARMCLOCK ? mode : LAMPMODE::MODE_NORMAL)); mode=_mode;
+#ifdef EMBUI_USE_MQTT
+        extern void sendData();
+        sendData();
+        embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0021), String(getMode()), true);
+#endif
+    }
 
     void sendString(const char* text, const CRGB &letterColor, bool forcePrint = true, bool clearQueue = false);
     void sendStringToLamp(const char* text = nullptr,  const CRGB &letterColor = CRGB::Black, bool forcePrint = false, bool clearQueue = false, const int8_t textOffset = -128, const int16_t fixedPos = 0);

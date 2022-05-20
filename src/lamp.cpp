@@ -109,13 +109,13 @@ void LAMP::handle()
         HeapSelectIram ephemeral;
         iram = ESP.getFreeHeap();
     }
-    LOG(printf_P, PSTR("MEM stat: %d/%d, HF: %d, Time: %s\n"), lampState.freeHeap, iram, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("Mode: %d, MEM stat: %d/%d, HF: %d, Time: %s\n"), mode, lampState.freeHeap, iram, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
 #else
-    LOG(printf_P, PSTR("MEM stat: %d, HF: %d, Time: %s\n"), lampState.freeHeap, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("Mode: %d, MEM stat: %d, HF: %d, Time: %s\n"), mode, lampState.freeHeap, lampState.HeapFragmentation, embui.timeProcessor.getFormattedShortTime().c_str());
 #endif
 
 #else
-    LOG(printf_P, PSTR("MEM stat: %d, Time: %s\n"), lampState.freeHeap, embui.timeProcessor.getFormattedShortTime().c_str());
+    LOG(printf_P, PSTR("Mode: %d, MEM stat: %d, Time: %s\n"), mode, lampState.freeHeap, embui.timeProcessor.getFormattedShortTime().c_str());
 #endif
 #endif
   }
@@ -354,8 +354,8 @@ void LAMP::playEffect(bool isPlayName, EFFSWITCH action){
 
 void LAMP::startRGB(CRGB &val){
   rgbColor = val;
-  storedMode = ((mode == LAMPMODE::MODE_RGBLAMP) ? storedMode: mode);
-  mode = LAMPMODE::MODE_RGBLAMP;
+  //storedMode = ((mode == LAMPMODE::MODE_RGBLAMP) ? storedMode: mode);
+  setMode(LAMPMODE::MODE_RGBLAMP);
   demoTimer(T_DISABLE);     // гасим Демо-таймер
   effectsTimer(T_ENABLE);
 }
@@ -364,30 +364,11 @@ void LAMP::stopRGB(){
   if (mode != LAMPMODE::MODE_RGBLAMP) return;
 
   setBrightness(getNormalizedLampBrightness(), false, false);
-  mode = (storedMode != LAMPMODE::MODE_RGBLAMP ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
+  setMode(storedMode != LAMPMODE::MODE_RGBLAMP ? storedMode : LAMPMODE::MODE_NORMAL); // возвращаем предыдущий режим
   if(mode==LAMPMODE::MODE_DEMO)
     demoTimer(T_ENABLE);     // вернуть демо-таймер
   if (flags.ONflag)
     effectsTimer(T_ENABLE);
-}
-
-
-/*
- * запускаем режим "ДЕМО"
- */
-void LAMP::startDemoMode(uint8_t tmout)
-{
-  LOG(println,F("Demo mode"));
-  if(mode == LAMPMODE::MODE_DEMO) return;
-  
-  storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
-  mode = LAMPMODE::MODE_DEMO;
-  if(isLampOn()){
-    randomSeed(millis());
-    remote_action(RA::RA_DEMO_NEXT, NULL);
-    demoTimer(T_ENABLE, tmout);
-  }
-  sendString(String(PSTR("- Demo ON -")).c_str(), CRGB::Green, false);
 }
 
 void LAMP::storeEffect()
@@ -416,23 +397,45 @@ void LAMP::restoreStored(bool switch_eff)
   }
 }
 
+/*
+ * запускаем режим "ДЕМО"
+ */
+void LAMP::startDemoMode(uint8_t tmout)
+{
+  LOG(println,F("Demo mode"));
+  if(mode == LAMPMODE::MODE_DEMO) return;
+  
+  storeEffect();
+  //storedEffect = ((static_cast<EFF_ENUM>(effects.getEn()%256) == EFF_ENUM::EFF_WHITE_COLOR) ? storedEffect : effects.getEn()); // сохраняем предыдущий эффект, если только это не белая лампа
+  setMode(LAMPMODE::MODE_DEMO);
+  if(isLampOn()){
+    randomSeed(millis());
+    remote_action(RA::RA_DEMO_NEXT, NULL);
+    demoTimer(T_ENABLE, tmout);
+  }
+  sendString(String(PSTR("- Demo ON -")).c_str(), CRGB::Green, false);
+}
+
 void LAMP::startNormalMode(bool forceOff, bool switch_eff)
 {
   LOG(println,F("Normal mode"));
+  //stopRGB();
   if(forceOff)
     flags.ONflag=false;
   if(mode == LAMPMODE::MODE_NORMAL)
     return;
-  mode = LAMPMODE::MODE_NORMAL;
+  setMode(LAMPMODE::MODE_NORMAL);
   demoTimer(T_DISABLE);
   restoreStored(switch_eff);
+  if (flags.ONflag)
+    effectsTimer(T_ENABLE);
 }
 #ifdef OTA
 void LAMP::startOTAUpdate()
 {
   if (mode == LAMPMODE::MODE_OTA) return;
-  storedMode = mode;
-  mode = LAMPMODE::MODE_OTA;
+  //storedMode = mode;
+  setMode(LAMPMODE::MODE_OTA);
 
   effects.directMoveBy(EFF_MATRIX); // принудительное включение режима "Матрица" для индикации перехода в режим обновления по воздуху
   FastLED.clear();

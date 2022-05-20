@@ -280,7 +280,7 @@ static const char TCONST_00D0[] PROGMEM = "control";
 static const char TCONST_00D1[] PROGMEM = "afS";
 static const char TCONST_00D2[] PROGMEM = "lV";
 static const char TCONST_00D3[] PROGMEM = "sT";
-// static const char TCONST_00D4[] PROGMEM = "inccontrol";
+static const char TCONST_00D4[] PROGMEM = "ra_call";
 static const char TCONST_00D5[] PROGMEM = "force";
 // static const char TCONST_00D6[] PROGMEM = "tm1637";
 static const char TCONST_00D7[] PROGMEM = "tmBright";
@@ -325,7 +325,7 @@ static const char CMD_TCONST_000A[] PROGMEM = "WARNING";    // Без парам
 static const char CMD_TCONST_000B[] PROGMEM = "EFF_CONFIG"; // Без параметров - возвращает ВСЕ настройки текущего эффекта, с параметрами - не реализовано пока
 static const char CMD_TCONST_000C[] PROGMEM = "CONTROL";    // Только с параметрами - принимает числовой параметр (номер контрола) и возвращает его текущие настройки, также принимает массив /cmd?control=[N,val] где - N - номер контрола, val - нужное значение
 static const char CMD_TCONST_000D[] PROGMEM = "RGB";        // RGB = r,g,b т.е. к примеру для красного 255,0,0
-static const char CMD_TCONST_000E[] PROGMEM = "MODECMD";
+static const char CMD_TCONST_000E[] PROGMEM = "MODECMD";    // Без параметрів - повертає режим роботи лампи для MQTT
 static const char CMD_TCONST_000F[] PROGMEM = "LIST";       // Без параметров - возвращает полный список эффектов (их номера)
 static const char CMD_TCONST_0010[] PROGMEM = "SHOWLIST";   // Без параметров - возвращает список отображаемых эффектов (их номера)
 static const char CMD_TCONST_0011[] PROGMEM = "DEMOLIST";   // Без параметров - возвращает список отображаемых эффектов (их номера) в DEMO режиме
@@ -346,7 +346,7 @@ static const char CMD_TCONST_001F[] PROGMEM = "AUX_ON";     // Включает 
 static const char CMD_TCONST_0020[] PROGMEM = "AUX_OFF";    // Выключает AUX пин
 static const char CMD_TCONST_0021[] PROGMEM = "AUX_TOGGLE"; // Переключает AUX пин
 static const char CMD_TCONST_0022[] PROGMEM = "DRAWING";    // Без параметров - возвращает 1/0 в зависимости вкл/выкл рисование, принимает параметр - 1/0 (вкл/выкл рисование)
-
+static const char CMD_TCONST_0023[] PROGMEM = "COLORTEMP";  // Без параметрів повертає цвітову температуру лампи якщо в режимі білої лампи
 
 /*
 заменено на "0" и "1" глобально с поддержкой в .js фреймворка
