@@ -2867,9 +2867,9 @@ void set_settings_enc(Interface *interf, JsonObject *data){
     SETPARAM(FPSTR(TCONST_0042));
     String tmpStr2 = (*data)[FPSTR(TCONST_0042)];
     tmpStr2.replace(F("#"), F("0x"));
-    setEncTxtColor((CRGB)strtol(tmpStr2.c_str(), NULL, 0));
+    enc.setTxtColor((CRGB)strtol(tmpStr2.c_str(), NULL, 0));
     (*data)[FPSTR(TCONST_0043)]=JsonUInt(110U-(*data)[FPSTR(TCONST_0043)].as<int>());
-    SETPARAM(FPSTR(TCONST_0043), setEncTxtDelay((*data)[FPSTR(TCONST_0043)]))
+    SETPARAM(FPSTR(TCONST_0043), enc.setTxtDelay((*data)[FPSTR(TCONST_0043)]))
     section_settings_frame(interf, data);
 }
 #endif  // ENCODER

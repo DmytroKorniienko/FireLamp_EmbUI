@@ -46,18 +46,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "ui.h"
 #include "DS18B20.h"
 #include "extra_tasks.h"
-
-uint8_t currDynCtrl;        // текущий контрол, с которым работаем
-uint8_t currAction;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
-uint16_t currEffNum;        // текущий номер эффекта
-uint16_t anyValue;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
-uint8_t loops;              // счетчик псевдотаймера
-bool done;                  // true == все отложенные до enc_loop операции выполнены.
-bool inSettings;            // флаг - мы в настройках эффекта
-uint8_t speed, fade;
-
-uint8_t txtDelay = 40U;
-CRGB txtColor = CRGB::Orange;
+Encoder enc;
 
 Task encTask(1 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
@@ -65,20 +54,20 @@ Task encTask(1 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 void copyPastFile(String FileFrom, String FileTo) {
   if (LittleFS.exists(FileFrom))  // видаляємо копію, якщо існує
     LittleFS.remove(FileTo);
-  
+
   File f1 = LittleFS.open(FileFrom, "r");    // відкриваємо джерело
   File f2 = LittleFS.open(FileTo, "w");    // створюємо кінцевий файл
-  if (!f2 || !f1) 
+  if (!f2 || !f1)
     return;
 
   char b;
   while (f1.available() > 0) { // побайтово копіюємо файл-джерело в кінцевий файл
-    f1.readBytes(&b, 1); 
+    f1.readBytes(&b, 1);
     f2.write(b);
   }
   //  закриваємо файли
-  f2.close(); 
-  f1.close(); 
+  f2.close();
+  f1.close();
 }
 
 // Функція затирає системний конфіг та заміняє його дефолтним
@@ -100,13 +89,9 @@ void callEncTick () {
   enc.tick();
 }
 
-void encLoop() {
+void Encoder::handle() {
   static uint16_t valRepiteChk = anyValue;
-  noInterrupt();
-  // if (currAction == 4) {
-  //   currAction = 0;
-  //   remote_action(RA::RA_WHITE_LO, "0", NULL);
-  // }
+  // noInterrupt();
   //enc.tick();
   if (inSettings) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     resetTimers();
@@ -119,7 +104,7 @@ void encLoop() {
         exitSettings();
         return;
       }
-      encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, false, txtDelay); 
+      encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, false, txtDelay);
     }
   }
 #ifdef DS18B20
@@ -134,7 +119,7 @@ void encLoop() {
 *     Оперативные изменения, яркость например, чтобы было видно что происходит
 */
   if (currAction != 2) {
-    if (valRepiteChk != (currAction == 3 ? myLamp.getEffControls()[currDynCtrl]->getVal().toInt() : anyValue) && !done) {  // проверим менялось ли значение, чтобы не дергать почем зря 
+    if (valRepiteChk != (currAction == 3 ? myLamp.getEffControls()[currDynCtrl]->getVal().toInt() : anyValue) && !done) {  // проверим менялось ли значение, чтобы не дергать почем зря
       valRepiteChk = (currAction == 3 ? myLamp.getEffControls()[currDynCtrl]->getVal().toInt() : anyValue);
       switch (currAction)
       {
@@ -148,7 +133,7 @@ void encLoop() {
       break;
       default:
         break;
-      } 
+      }
     }
   } else
 /*
@@ -162,7 +147,7 @@ void encLoop() {
           encSendStringNumEff(currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U)), txtColor);
           printed = true;
         }
-      } 
+      }
       else {
         valRepiteChk = currEffNum;
         printed = false;
@@ -178,12 +163,12 @@ void encLoop() {
       currAction = 0;
     }
   }
-  interrupt();
+  // interrupt();
 }
 
 
 // // Обработчик прерываний
-//void IRAM_ATTR isrEnc() { 
+//void IRAM_ATTR isrEnc() {
 //  noInterrupt();
 //  enc.tick();  // отработка в прерывании
 //  interrupt();
@@ -206,8 +191,8 @@ void noInterrupt() {
 // Функция обрабатывает повороты энкодера
 void isTurn() {
   if (!myLamp.isLampOn()) return;
-  noInterrupt();
-  resetTimers();
+  // noInterrupt();
+  // resetTimers();
   uint8_t turnType = 0;
 
   // тут опрос эвентов с энкодера Right, Left, etc.
@@ -217,7 +202,7 @@ void isTurn() {
     } else if (enc.isLeftH()) {
         if (enc.isFast()) {turnType = 4; }  // Fast left hold
         else {turnType = 3; }  // Hold left
-    } else 
+    } else
     if (enc.isRight()) {
         if (enc.isFast()) {turnType = 6; }  // Fast right
         else {turnType = 5; }  // Right
@@ -228,35 +213,35 @@ void isTurn() {
 
   switch (turnType)
   {
-  case 1: // Влево 
+  case 1: // Влево
   case 2: // Влево быстро
     if (inSettings) {
       encSetDynCtrl(turnType == 1 ? -1 : -16);
-    } 
-    else 
+    }
+    else
       encSetBri(turnType == 1 ? -1 : -16);
     break;
-  case 3: // нажатый влево 
+  case 3: // нажатый влево
     encSetEffect(-1);
     break;
   case 4: // влево нажатый и быстро
     encSetEffect(-5);
     break;
-  case 5: // Вправо  
-  case 6:  // Вправо быстро  
+  case 5: // Вправо
+  case 6:  // Вправо быстро
     if (inSettings) {
       encSetDynCtrl(turnType == 5 ? 1 : 16);
-    } 
-    else 
+    }
+    else
       encSetBri(turnType == 5 ? 1 : 16);
     break;
-  case 7: // вправо нажатый 
+  case 7: // вправо нажатый
     encSetEffect(1);
     break;
   case 8: // вправо нажатый и быстро
     encSetEffect(5);
     break;
-  
+
   default:
     break;
   }
@@ -284,7 +269,7 @@ void isClick() {
       if (validControl(myLamp.getEffControls()[currDynCtrl]->getType())) break;
     }
     encDisplay(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(FPSTR(".")));
-    encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, true, txtDelay);  
+    encSendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, true, txtDelay);
   }
   interrupt();
 }
@@ -308,7 +293,7 @@ bool validControl(const CONTROL_TYPE ctrlCaseType) {
       break;
     }
 
-    switch (ctrlCaseType >> 4) 
+    switch (ctrlCaseType >> 4)
     {
     case CONTROL_CASE::HIDE: // Если спрятанный контрол, возвращаем ложь.
       return false;
@@ -322,7 +307,7 @@ bool validControl(const CONTROL_TYPE ctrlCaseType) {
     default:
       break;
     }
-    
+
   return isOk;
 }
 
@@ -335,7 +320,7 @@ void isHolded() {
     remote_action(RA::RA_WHITE_LO, "0", NULL); // для энкодера я хочу сделать запуск белой лампы с яркостью из конфига, а не фиксированной
     return;
   }
-  
+
   if (!inSettings) {
     inSettings = true;
     resetTimers();
@@ -384,7 +369,7 @@ void myClicks() {
 		ALARMTASK::stopAlarm();
 		return;
 	}
-  
+
   switch (enc.clicks)
   {
   case 1: // Включение\выключение лампы
@@ -393,13 +378,13 @@ void myClicks() {
       remote_action(RA::RA_OFF, NULL);
 #ifdef TM1637_CLOCK
       tm1637.getSetDelay() = 1;
-      tm1637.display(String(F("Off")), true, false, 1);  // Выводим 
+      tm1637.display(String(F("Off")), true, false, 1);  // Выводим
 #endif
     } else {
       remote_action(RA::RA_ON, NULL);
 #ifdef TM1637_CLOCK
       tm1637.getSetDelay() = 1;
-      tm1637.display(String(F("On")), true, false, 2);  // Выводим 
+      tm1637.display(String(F("On")), true, false, 2);  // Выводим
 #endif
     }
     break;
@@ -446,7 +431,7 @@ void myClicks() {
 }
 
 // Поместить в общий setup()
-void enc_setup() {
+void Encoder::init() {
   currAction = 0; // id операции, котору нужно выпонить в enc_loop
   currEffNum = 0;
   anyValue = 0; // просто любое значение, которое крутить прямо сейчас, очищается в enc_loop
@@ -460,19 +445,19 @@ void enc_setup() {
   enc.attach(HOLDED_HANDLER, isHolded);
   enc.attach(CLICKS_HANDLER, myClicks);
   bool briFlag = false;
-  while(millis() <= 20100 && !digitalRead(SW)) { 
+  while(millis() <= 20100 && !digitalRead(SW)) {
     if (!briFlag) {
       FastLED.setBrightness(30);
       briFlag = true;
     }
       if (millis() >= 20000) {
         // currAction = 4;
-        for (uint16_t i = 0; i< NUM_LEDS; i++) 
+        for (uint16_t i = 0; i< NUM_LEDS; i++)
           EffectMath::getLed(i) = CRGB(0, 255, 0);
         FastLED.show();
         resetLamp();
       } else {
-        for (uint16_t i = 0; i< NUM_LEDS; i++) 
+        for (uint16_t i = 0; i< NUM_LEDS; i++)
           EffectMath::getLed(i) = CRGB(255, 0, (uint8_t)millis()<<2);
         FastLED.show();
         delay(50);
@@ -485,7 +470,7 @@ void enc_setup() {
 void encSetBri(int val) {
   resetTimers();
 
-  if (done or currAction !=1) { 
+  if (done or currAction !=1) {
     anyValue = myLamp.getLampBrightness();
     done = false;
   }
@@ -520,13 +505,13 @@ void encSetEffect(int val) {
   currAction = 2;
 
   anyValue = anyValue + val;
-  
+
   while (1)  // в цикле проверим может быть текущий накрученный контролл выбранным
   {
     if (myLamp.effects.effCanBeSelected(anyValue)) break;
 
     if (val > 0) { // если курутили вперед по списку - скипим в том же направлении, если назад - в обратном
-      anyValue++; 
+      anyValue++;
       if(anyValue >= myLamp.effects.getModeAmount()) // если ничего не нашли, - снова начинаем сначала
         anyValue = 0;
     }
@@ -537,7 +522,7 @@ void encSetEffect(int val) {
     }
   }
   currEffNum = myLamp.effects.realEffNumdByList(anyValue);
-  encDisplay(currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U)));  
+  encDisplay(currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U)));
   interrupt();
 }
 
@@ -546,19 +531,19 @@ void encSetDynCtrl(int val) {
   noInterrupt();
   resetTimers();
   loops = 0;
-  
-  if (done or currAction !=3) { 
+
+  if (done or currAction !=3) {
     done = false;
   }
   currAction = 3;
-  // тут магия, некоторые чекбоксы у нас особенные, типа локальный "Микрофон". 
+  // тут магия, некоторые чекбоксы у нас особенные, типа локальный "Микрофон".
   // Придется проверять что это - ползунок или чекбокс и по разному подходить к процессу внесения нового значения. Бля...
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 0) // если ползунок
     myLamp.getEffControls()[currDynCtrl]->setVal(String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val));
   else // если чекбокс
     myLamp.getEffControls()[currDynCtrl]->setVal(String(constrain(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() + val, 0, 1)));
-  
-  if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay); 
+
+  if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) encSendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
   else if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
       GAUGE::GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
   }
@@ -571,7 +556,7 @@ void encSetDynCtrl(int val) {
 void encDisplay(uint16_t value, String type) {
 #ifdef TM1637_CLOCK
   tm1637.getSetDelay() = TM_TIME_DELAY;
-  tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
+  tm1637.display(value, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );
   tm1637.display(type);
 #endif
 }
@@ -580,7 +565,7 @@ void encDisplay(float value) {
 #ifdef TM1637_CLOCK
   tm1637.getSetDelay() = TM_TIME_DELAY;
   tm1637.clearScreen();
-  tm1637.display(value, false, true); //, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );  
+  tm1637.display(value, false, true); //, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );
 #endif
 }
 
@@ -592,7 +577,7 @@ void encDisplay(String str) {
 #endif
 }
 
-// Ресетим таймера автосохранения конфигов и Демо на время "баловства" с энкодером 
+// Ресетим таймера автосохранения конфигов и Демо на время "баловства" с энкодером
 void resetTimers() {
   myLamp.demoTimer(T_RESET);
   myLamp.effects.autoSaveConfig();
@@ -608,7 +593,7 @@ void encSendString(String str, CRGB color, bool force, uint8_t delay) {
   myLamp.sendStringToLamp(str.c_str(), color, false, force);
   myLamp.setBFade(fade);
   myLamp.setTextMovingSpeed(speed);
-  
+
 }
 
 void encSendStringNumEff(String str, CRGB color) {
@@ -625,10 +610,10 @@ void encSendStringNumEff(String str, CRGB color) {
 
 void toggleDemo() {
   if (myLamp.getMode() == LAMPMODE::MODE_DEMO) {
-    remote_action(RA::RA_DEMO, "0", NULL); 
+    remote_action(RA::RA_DEMO, "0", NULL);
     encSendString(String(F("Demo OFF")), txtColor, true, txtDelay);
   }
-  else 
+  else
     remote_action(RA::RA_DEMO, "1", NULL);
 }
 
@@ -661,11 +646,5 @@ void sendIP() {
   tm1637.setIpShow();
   #endif
 }
-
-
-uint8_t getEncTxtDelay(){ return txtDelay;}
-void setEncTxtDelay(const uint8_t speed){ txtDelay = speed;}
-CRGB getEncTxtColor(){ return txtColor;}
-void setEncTxtColor(const CRGB color){ txtColor = color;}
 
 #endif

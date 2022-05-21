@@ -57,7 +57,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "EncButton.h"
 
-static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кнопкой <A, B, KEY>
 
 #ifndef EXIT_TIMEOUT
 #define EXIT_TIMEOUT 3U
@@ -67,41 +66,62 @@ static EncButton<EB_CALLBACK, DT, CLK, SW> enc;   // энкодер с кноп�
 #define ENC_STRING_EFFNUM_DELAY 17
 #endif
 
+
+class Encoder : public EncButton<EB_CALLBACK, DT, CLK, SW>
+{
+public:
+    Encoder() : EncButton(){}
+    void init();
+    void handle();
+    uint8_t getEncTxtDelay(){ return txtDelay;}
+    void setTxtDelay(const uint8_t speed){ txtDelay = speed;}
+    CRGB getTxtColor(){ return txtColor;}
+    void setTxtColor(const CRGB color){ txtColor = color;}
+
+private:
+    void isTurn();
+    void isClick();
+    void isHolded();
+    void encSetBri(int val);
+    void encSetEffect(int val);
+    void encSetDynCtrl(int val);
+    void encDisplay(uint16_t value, String type = "");
+    void encDisplay(float value);
+    void encDisplay(String str);
+    void resetTimers();
+    void exitSettings();
+    void encSendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
+    void encSendStringNumEff(String str, CRGB color);
+    bool validControl(const CONTROL_TYPE ctrlCaseType);
+
+    void toggleDemo();
+    void toggleGBright();
+    void toggleMic();
+    void toggleAUX();
+    void sendTime();
+    void sendIP();
+
+    uint8_t speed = 0U, fade = 0U;
+    uint8_t txtDelay = 40U;
+    uint8_t currDynCtrl = 0U;        // текущий контрол, с которым работаем
+    uint8_t currAction = 0U;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
+    uint8_t loops = 0U;              // счетчик псевдотаймера
+    bool done = false;                  // true == все отложенные до enc_loop операции выполнены.
+    bool inSettings = false;            // флаг - мы в настройках эффекта
+    uint16_t currEffNum = 0U;        // текущий номер эффекта
+    uint16_t anyValue  = 0U;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
+
+    CRGB txtColor = CRGB::Orange;
+    CRGB gaugeCol = CRGB::Orange;
+};
+
+extern Encoder enc;   // энкодер с кнопкой <A, B, KEY>
+
 void callEncTick ();
 //void IRAM_ATTR isrEnc();
 void interrupt();
 void noInterrupt();
 
-void isTurn();
-void isClick();
-void isHolded();
 //void myStep();
-void encSetBri(int val);
-void encSetEffect(int val);
-void encSetDynCtrl(int val);
-void encDisplay(uint16_t value, String type = "");
-void encDisplay(float value);
-void encDisplay(String str);
-void resetTimers();
-void exitSettings();
-void encSendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
-void encSendStringNumEff(String str, CRGB color);
-bool validControl(const CONTROL_TYPE ctrlCaseType);
-
-void enc_setup(); 
-void copyPastFile(String FileFrom, String FileTo);
-void resetLamp();
-extern void encLoop();
-uint8_t getEncTxtDelay();
-void setEncTxtDelay(const uint8_t speed);
-CRGB getEncTxtColor();
-void setEncTxtColor(const CRGB color);
-
-void toggleDemo();
-void toggleGBright();
-void toggleMic();
-void toggleAUX();
-void sendTime();
-void sendIP();
 #endif
 #endif
