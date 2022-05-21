@@ -41,12 +41,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "config.h"
 
 #ifdef ENCODER
-#include "misc.h"
 #include "main.h"
-#include "tm.h"
-#include "interface.h"
-#include "effects.h"
-#include "ui.h"
 
 // Опциональные настройки (показаны по умолчанию)
 #define EB_FAST 65     // таймаут быстрого поворота, мс 30
@@ -56,15 +51,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define EB_CLICK 400   // таймаут накликивания, мс
 
 #include "EncButton.h"
-
-
-#ifndef EXIT_TIMEOUT
-#define EXIT_TIMEOUT 3U
-#endif
-
-#ifndef ENC_STRING_EFFNUM_DELAY
-#define ENC_STRING_EFFNUM_DELAY 17
-#endif
 
 
 class Encoder : public EncButton<EB_CALLBACK, DT, CLK, SW>
@@ -82,16 +68,16 @@ private:
     void isTurn();
     void isClick();
     void isHolded();
-    void encSetBri(int val);
-    void encSetEffect(int val);
-    void encSetDynCtrl(int val);
-    void encDisplay(uint16_t value, String type = "");
-    void encDisplay(float value);
-    void encDisplay(String str);
+    void SetBri(int val);
+    void SetEffect(int val);
+    void SetDynCtrl(int val);
+    void Display(uint16_t value, String type = "");
+    void Display(float value);
+    void Display(String str);
     void resetTimers();
     void exitSettings();
-    void encSendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
-    void encSendStringNumEff(String str, CRGB color);
+    void SendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
+    void SendStringNumEff(String str, CRGB color);
     bool validControl(const CONTROL_TYPE ctrlCaseType);
 
     void toggleDemo();
@@ -101,10 +87,15 @@ private:
     void sendTime();
     void sendIP();
 
+    enum ENC_ACTION {
+    WAIT,
+    SET_BRIGHT,
+    SET_EFFECT,
+    SET_CONTROL,
+    } currAction = WAIT;        // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
     uint8_t speed = 0U, fade = 0U;
     uint8_t txtDelay = 40U;
-    uint8_t currDynCtrl = 0U;        // текущий контрол, с которым работаем
-    uint8_t currAction = 0U;         // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
+    uint8_t currDynCtrl = 0U;        // текущий контрол, с которым работаем 
     uint8_t loops = 0U;              // счетчик псевдотаймера
     bool done = false;                  // true == все отложенные до enc_loop операции выполнены.
     bool inSettings = false;            // флаг - мы в настройках эффекта
