@@ -57,19 +57,19 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "buttons.h"
 
 #ifdef TM1637_CLOCK
-  #include "tm.h"
+#include "tm.h"
 #endif
 
 #ifdef ENCODER
-  #include "enc.h"
+#include "enc.h"
 #endif
 
 #ifdef RTC
-  #include "rtc.h"
+#include "rtc.h"
 #endif
 
 #ifdef USE_STREAMING
-  #include "ledStream.h"
+#include "ledStream.h"
 #endif
 
 // TaskScheduler
@@ -101,7 +101,7 @@ void sendData();
 void create_parameters();
 void sync_parameters();
 void event_worker(DEV_EVENT *);
-bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
+bool notfound_handle(AsyncWebServerRequest *request, const String &req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
 bool ws_action_handle(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
 #endif

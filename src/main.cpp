@@ -157,7 +157,7 @@ void setup() {
 #endif 
 
 #ifdef ENCODER
-  enc_setup();
+  enc.init();
 #endif
 
     LOG(println, F("setup() done"));
@@ -170,7 +170,7 @@ void loop() {
     myLamp.handle(); // цикл, обработка лампы
 
 #ifdef ENCODER
-    encLoop(); // цикл обработки событий энкодера. Эта функция будет отправлять в УИ изменения, только тогда, когда подошло время ее loop
+    enc.handle(); // цикл обработки событий энкодера. Эта функция будет отправлять в УИ изменения, только тогда, когда подошло время ее loop
 #endif
 
 #ifdef RTC

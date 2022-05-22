@@ -63,22 +63,23 @@ public:
     void setTxtDelay(const uint8_t speed){ txtDelay = speed;}
     CRGB getTxtColor(){ return txtColor;}
     void setTxtColor(const CRGB color){ txtColor = color;}
+    void exitSettings();
 
 private:
-    void isTurn();
-    void isClick();
-    void isHolded();
-    void SetBri(int val);
-    void SetEffect(int val);
-    void SetDynCtrl(int val);
-    void Display(uint16_t value, String type = "");
-    void Display(float value);
-    void Display(String str);
+    void turn();
+    void click();
+    void hold();
+    void setBri(int val);
+    void setEffect(int val);
+    void setDynCtrl(int val);
+    void display(uint16_t value, String type = "");
+    void display(float value);
+    void display(String str);
     void resetTimers();
-    void exitSettings();
-    void SendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
-    void SendStringNumEff(String str, CRGB color);
+    void sendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
+    void sendStringNumEff(String str, CRGB color);
     bool validControl(const CONTROL_TYPE ctrlCaseType);
+    void myClicks();
 
     void toggleDemo();
     void toggleGBright();
@@ -88,10 +89,10 @@ private:
     void sendIP();
 
     enum ENC_ACTION {
-    WAIT,
-    SET_BRIGHT,
-    SET_EFFECT,
-    SET_CONTROL,
+        WAIT,
+        SET_BRIGHT,
+        SET_EFFECT,
+        SET_CONTROL,
     } currAction = WAIT;        // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
     uint8_t speed = 0U, fade = 0U;
     uint8_t txtDelay = 40U;

@@ -2842,7 +2842,7 @@ void block_settings_enc(Interface *interf, JsonObject *data){
     interf->spacer();
 
     interf->color(FPSTR(TCONST_0042), FPSTR(TINTF_0DF));
-    interf->range(FPSTR(TCONST_0043), String(110U-getEncTxtDelay()), String(10), String(100), String(5), String(FPSTR(TINTF_044)), false);
+    interf->range(FPSTR(TCONST_0043), String(110U - enc.getEncTxtDelay()), String(10), String(100), String(5), String(FPSTR(TINTF_044)), false);
     interf->button_submit(FPSTR(TCONST_000C), FPSTR(TINTF_008), FPSTR(P_GRAY));
     interf->spacer();
     interf->button(FPSTR(TCONST_0004), FPSTR(TINTF_00B));
