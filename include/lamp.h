@@ -411,6 +411,8 @@ public:
             HeapSelectIram ephemeral;
 #endif
             drawbuff = new CRGB[NUM_LEDS];
+            clearDrawBuf();
+            //memset(drawbuff, CRGB::Black, NUM_LEDS*sizeof(CRGB));
             //for(uint16_t i=0; i<NUM_LEDS; i++) {drawbuff[i] = CHSV(random(0,255),0,255);} // тест :)
         }
     }
@@ -428,22 +430,24 @@ public:
 #ifdef EXT_STREAM_BUFFER
     void setStreamBuff(bool flag) {
         if(!flag){
-            if (!streambuff.empty()) {
-                streambuff.resize(0);
-                streambuff.shrink_to_fit();
+            if (streambuff) {
+                delete [] streambuff;
+                streambuff = nullptr;
             }
-        } else if(streambuff.empty()){
+        } else if(!streambuff){
 #if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
             HeapSelectIram ephemeral;
 #endif
-            streambuff.resize(NUM_LEDS);
-            //for(uint16_t i=0; i<NUM_LEDS; i++) {drawbuff[i] = CHSV(random(0,255),0,255);} // тест :)
+            streambuff = new CRGB[NUM_LEDS];
+            clearDrawBuf();
+            //memset(streambuff, CRGB::Black, NUM_LEDS*sizeof(CRGB));
+            //for(uint16_t i=0; i<NUM_LEDS; i++) {streambuff[i] = CHSV(random(0,255),0,255);} // тест :)
         }
     }
-    void writeStreamBuff(CRGB &color, uint16_t x, uint16_t y) { if(!streambuff.empty()) { streambuff[getPixelNumber(x,y)]=color; } }
-    void writeStreamBuff(CRGB &color, uint16_t num) { if(!streambuff.empty()) { streambuff[num]=color; } }
-    void fillStreamBuff(CRGB &color) { for(uint16_t i=0; i<streambuff.size(); i++) streambuff[i]=color; }
-    void clearStreamBuff() { for(uint16_t i=0; i<streambuff.size(); i++) streambuff[i]=CRGB::Black; }
+    void writeStreamBuff(CRGB &color, uint16_t x, uint16_t y) { if(streambuff) { streambuff[getPixelNumber(x,y)]=color; } }
+    void writeStreamBuff(CRGB &color, uint16_t num) { if(streambuff) { streambuff[num]=color; } }
+    void fillStreamBuff(CRGB &color) { if(streambuff) { for(uint16_t i=0; i<NUM_LEDS; i++) streambuff[i]=color; } }
+    void clearStreamBuff() { if(streambuff) { for(uint16_t i=0; i<NUM_LEDS; i++) streambuff[i]=CRGB::Black; } }
 #endif
 #endif
     bool isONMP3() {return flags.isOnMP3;}
@@ -558,7 +562,7 @@ private:
     CRGB *sledsbuff=nullptr; // вспомогательный буфер для слоя после эффектов
     CRGB *drawbuff=nullptr; // буфер для рисования
 #if defined(USE_STREAMING) && defined(EXT_STREAM_BUFFER)
-    std::vector<CRGB> streambuff; // буфер для трансляции
+    CRGB *streambuff=nullptr; // буфер для трансляции
 #endif
 };
 
