@@ -1537,9 +1537,17 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->json_section_line(); // расположить в одной линии
         interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? "1" : "0", FPSTR(TINTF_09D), false);
     interf->json_section_end();
-    interf->json_section_line(); // расположить в одной линии
-        interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? "1" : "0", FPSTR(TINTF_09E), false);
-        interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? "1" : "0", FPSTR(TINTF_0AF), false);
+    // interf->json_section_line(); // расположить в одной линии
+    //     interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? "1" : "0", FPSTR(TINTF_09E), false);
+    //     interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? "1" : "0", FPSTR(TINTF_0AF), false);
+    // interf->json_section_end();
+
+    PLAYER_MODE mode = (PLAYER_MODE)((myLamp.getLampSettings().playEffect) | (myLamp.getLampSettings().playMP3<<1));
+    interf->select(FPSTR(TCONST_00B7), String(mode), String(FPSTR(TINTF_0F1)), false);
+    interf->option(String(PLAYER_MODE::PM_OFF), FPSTR(TINTF_0B6));
+    interf->option(String(PLAYER_MODE::PM_EFF), FPSTR(TINTF_09E));
+    interf->option(String(PLAYER_MODE::PM_MP3), FPSTR(TINTF_0AF));
+    interf->option(String(PLAYER_MODE::PM_MP3_RESET), FPSTR(TINTF_0F2));
     interf->json_section_end();
 
     //interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? "1" : "0", FPSTR(TINTF_09C), false);
@@ -1597,9 +1605,10 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
 
     myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)].as<int>());
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]=="1");
-    myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]=="1"); mp3->setPlayEffect(myLamp.getLampSettings().playEffect);
+    PLAYER_MODE playerMode = (*data)[FPSTR(TCONST_00B7)].as<PLAYER_MODE>();
+    myLamp.setPlayEffect(playerMode&0x1); mp3->setPlayEffect(myLamp.getLampSettings().playEffect);
+    myLamp.setPlayMP3(playerMode&0x2); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
-    myLamp.setPlayMP3((*data)[FPSTR(TCONST_00A8)]=="1"); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
     myLamp.setLimitAlarmVolume((*data)[FPSTR(TCONST_00AF)]=="1");
 
     SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
@@ -3283,10 +3292,11 @@ Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nul
     //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
     obj[FPSTR(TCONST_00A3)] = tmp.playTime;
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? "1" : "0";
-    obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? "1" : "0";
+    //obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? "1" : "0";
+    //obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? "1" : "0";
+    obj[FPSTR(TCONST_00B7)] = (PLAYER_MODE)((uint8_t)tmp.playEffect | (((uint8_t)tmp.playMP3)<<1));
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
     obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
-    obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? "1" : "0";
     obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
     obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? "1" : "0";
 
