@@ -753,6 +753,74 @@ void block_effects_param(Interface *interf, JsonObject *data){
 #endif
                     break;
                 }
+            case CONTROL_TYPE::SELECT :
+                {
+                    String ctrlName = controls[i]->getName();
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1))
+                        ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
+                    
+                    if(isinterf) interf->select(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                    , controls[i]->getVal()
+                    , ctrlName
+                    , true
+                    );
+                    String tmpS = controls[i]->getStep();
+                    tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
+                    // Пример массива: "[{'v':'1', 'l':'option1'},{'v':'2', 'l':'option2'},{'v':'3', 'l':'option3'}]"
+                    // Альтернатива - укзать путь к ФС, например: "/folde1/folder2/" чи "/animations/"
+                    StaticJsonDocument<1024> doc;
+                    deserializeJson(doc, tmpS);
+                    JsonArray arr = doc.as<JsonArray>();
+                    if(!arr){
+                        if(LittleFS.begin()){
+                    #ifdef ESP32
+                            File tst = LittleFS.open(tmpS);
+                            if(tst.openNextFile())
+                    #else
+                            Dir tst = LittleFS.openDir(tmpS);
+                            if(tst.next())
+                    #endif    
+                            {
+                    #ifdef ESP32
+                                File root = LittleFS.open(tmpS);
+                                File file = root.openNextFile();
+                    #else
+                                Dir dir = LittleFS.openDir(tmpS);
+                    #endif
+                                String fn;
+                    #ifdef ESP32
+                                while (file) {
+                                    fn=file.name();
+                                    if(!file.isDirectory()){
+                    #else
+                                while (dir.next()) {
+                                    fn=dir.fileName();
+                    #endif
+
+                                    fn.replace(tmpS,F(""));
+                                    //LOG(println, fn);
+                                    interf->option(fn, fn);
+                    #ifdef ESP32
+                                        file = root.openNextFile();
+                                    }
+                                }
+                    #else
+                                }
+                    #endif
+                            }
+                        }
+                    } else {
+                        for (size_t i = 0; i < arr.size(); i++) {
+                            JsonObject item = arr[i];
+                            interf->option(item["v"], item["l"]);
+                        }
+                    }
+                    interf->json_section_end();
+#ifdef EMBUI_USE_MQTT
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
+#endif
+                    break;
+                }
             default:
 #ifdef EMBUI_USE_MQTT
                     embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
