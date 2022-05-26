@@ -8680,20 +8680,21 @@ void EffectPlayer::drawFrame () {
     if (blur) EffectMath::blur2d(64);
 }
 
+
 bool EffectPlayer::loadFile(String &filename) {
     if (!LittleFS.exists(filename)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
       LOG(println, filename);
-      filename = F("/animations/test.332");
+      filename = F("/animations/Candle.565");
     }
 
-    if (rgbFile and rgbFile.isFile()) {
+    if (rgbFile && !rgbFile.isDirectory()) {
         rgbFile.close();
         LOG(println, F("RGBPlayer: Previous file was closed"));
     }
     codec332 = filename.indexOf(F("332")) > 0; 
     LOG(printf_P, PSTR("RGBPlayer: Start. File rgb%d mode.\n"), (codec332 ? 332U: 565U));
     rgbFile = LittleFS.open(filename, "r");
-    if (rgbFile && rgbFile.isFile() && rgbFile.size() >= (3 + WIDTH * HEIGHT)) {
+    if (rgbFile && !rgbFile.isDirectory() && rgbFile.size() >= (3 + WIDTH * HEIGHT)) {
         rgbFile.read(&frameWidth, 1);
         rgbFile.read(&frameHeight, 1);
         rgbFile.read(&frames, 1);
