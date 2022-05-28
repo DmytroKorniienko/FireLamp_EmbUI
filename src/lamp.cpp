@@ -185,16 +185,9 @@ void LAMP::effectsTick(){
     }
   }
 #if defined(USE_STREAMING) && defined(EXT_STREAM_BUFFER)
-    if(!streambuff.empty()){
-    uint8_t mi;
-    for(uint16_t i=0; i<streambuff.size() && i<NUM_LEDS; i++){
-      mi = streambuff[i].r > streambuff[i].g ? streambuff[i].r : streambuff[i].g;
-      mi = mi > streambuff[i].b ? mi : streambuff[i].b;
-      if(mi>=5) {
-        getUnsafeLedsArray()[i] = streambuff[i];
-      } else if(mi && mi<5) {
-        EffectMath::setLedsNscale8(i, map(mi,1,4,128,10)); // 5 градаций прозрачности, где 0 - полностью прозрачный
-      }
+  if(streambuff){
+    for(uint16_t i=0; i<NUM_LEDS; i++){
+      getUnsafeLedsArray()[i] = streambuff[i];
     }
   }
 #endif

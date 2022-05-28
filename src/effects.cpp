@@ -8481,29 +8481,30 @@ void EffectRadialFire::load() {
       XY_radius[x + C_X][y + C_Y] = hypotf(x, y); // thanks Sutaburosu
     }
   }
+  // palettesload();
   palettesload();
 
 }
 
-void EffectRadialFire::palettesload(){
-  // собираем свой набор палитр для эффекта
-  palettes.reserve(NUMPALETTES);
-  palettes.push_back(&NormalFire_p);
-  palettes.push_back(&LithiumFireColors_p);
-  palettes.push_back(&NormalFire2_p);
-  palettes.push_back(&WoodFireColors_p);
-  palettes.push_back(&NormalFire3_p);
-  palettes.push_back(&CopperFireColors_p);
-  palettes.push_back(&HeatColors_p);
-  palettes.push_back(&PotassiumFireColors_p);
-  palettes.push_back(&MagmaColor_p);
-  palettes.push_back(&RubidiumFireColors_p);
-  palettes.push_back(&AlcoholFireColors_p); 
-  palettes.push_back(&WaterfallColors_p);
+// void EffectRadialFire::palettesload(){
+//   // собираем свой набор палитр для эффекта
+//   palettes.reserve(NUMPALETTES);
+//   palettes.push_back(&NormalFire_p);
+//   palettes.push_back(&LithiumFireColors_p);
+//   palettes.push_back(&NormalFire2_p);
+//   palettes.push_back(&WoodFireColors_p);
+//   palettes.push_back(&NormalFire3_p);
+//   palettes.push_back(&CopperFireColors_p);
+//   palettes.push_back(&HeatColors_p);
+//   palettes.push_back(&PotassiumFireColors_p);
+//   palettes.push_back(&MagmaColor_p);
+//   palettes.push_back(&RubidiumFireColors_p);
+//   palettes.push_back(&AlcoholFireColors_p); 
+//   palettes.push_back(&WaterfallColors_p);
 
-  usepalettes = true; // включаем флаг палитр
-  scale2pallete();    // выставляем текущую палитру
-}
+//   usepalettes = true; // включаем флаг палитр
+//   scale2pallete();    // выставляем текущую палитру
+// }
 
 bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
   t += speedFactor;
@@ -8679,20 +8680,21 @@ void EffectPlayer::drawFrame () {
     if (blur) EffectMath::blur2d(64);
 }
 
+
 bool EffectPlayer::loadFile(String &filename) {
     if (!LittleFS.exists(filename)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
       LOG(println, filename);
-      filename = F("/animations/test.332");
+      filename = F("/animations/Candle.565");
     }
 
-    if (rgbFile and rgbFile.isFile()) {
+    if (rgbFile && !rgbFile.isDirectory()) {
         rgbFile.close();
         LOG(println, F("RGBPlayer: Previous file was closed"));
     }
     codec332 = filename.indexOf(F("332")) > 0; 
     LOG(printf_P, PSTR("RGBPlayer: Start. File rgb%d mode.\n"), (codec332 ? 332U: 565U));
     rgbFile = LittleFS.open(filename, "r");
-    if (rgbFile && rgbFile.isFile() && rgbFile.size() >= (3 + WIDTH * HEIGHT)) {
+    if (rgbFile && !rgbFile.isDirectory() && rgbFile.size() >= (3 + WIDTH * HEIGHT)) {
         rgbFile.read(&frameWidth, 1);
         rgbFile.read(&frameHeight, 1);
         rgbFile.read(&frames, 1);

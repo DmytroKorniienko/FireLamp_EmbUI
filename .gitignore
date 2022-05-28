@@ -3,7 +3,7 @@
 /.vscode
 eff
 data/*.json
-include/user_config.h
+include/user_config*.h
 user_*.ini
 /out_bin/*.*
 /resources/embui.zip
@@ -14,3 +14,6 @@ Uploader*.bat
 /data/backup/evn/firelamp.json
 /data/backup/glb/firelamp.json
 /data/backup/idx/firelamp.json
+*.gif
+*.332
+*.565

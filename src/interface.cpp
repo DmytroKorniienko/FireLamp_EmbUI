@@ -753,6 +753,74 @@ void block_effects_param(Interface *interf, JsonObject *data){
 #endif
                     break;
                 }
+            case CONTROL_TYPE::SELECT :
+                {
+                    String ctrlName = controls[i]->getName();
+                    if(isRandDemo && controls[i]->getId()>0 && !(controls[i]->getId()==7 && controls[i]->getName().startsWith(FPSTR(TINTF_020))==1))
+                        ctrlName=String(FPSTR(TINTF_0C9))+ctrlName;
+                    
+                    if(isinterf) interf->select(String(FPSTR(TCONST_0015)) + String(controls[i]->getId())
+                    , controls[i]->getVal()
+                    , ctrlName
+                    , true
+                    );
+                    String tmpS = controls[i]->getStep();
+                    tmpS.replace(F("'"),F("\"")); // так делать не красиво, но шопаделаешь...
+                    // Пример массива: "[{'v':'1', 'l':'option1'},{'v':'2', 'l':'option2'},{'v':'3', 'l':'option3'}]"
+                    // Альтернатива - укзать путь к ФС, например: "/folde1/folder2/" чи "/animations/"
+                    StaticJsonDocument<1024> doc;
+                    deserializeJson(doc, tmpS);
+                    JsonArray arr = doc.as<JsonArray>();
+                    if(!arr){
+                        if(LittleFS.begin()){
+                    #ifdef ESP32
+                            File tst = LittleFS.open(tmpS);
+                            if(tst.openNextFile())
+                    #else
+                            Dir tst = LittleFS.openDir(tmpS);
+                            if(tst.next())
+                    #endif    
+                            {
+                    #ifdef ESP32
+                                File root = LittleFS.open(tmpS);
+                                File file = root.openNextFile();
+                    #else
+                                Dir dir = LittleFS.openDir(tmpS);
+                    #endif
+                                String fn;
+                    #ifdef ESP32
+                                while (file) {
+                                    fn=file.name();
+                                    if(!file.isDirectory()){
+                    #else
+                                while (dir.next()) {
+                                    fn=dir.fileName();
+                    #endif
+
+                                    fn.replace(tmpS,F(""));
+                                    //LOG(println, fn);
+                                    interf->option(fn, fn);
+                    #ifdef ESP32
+                                        file = root.openNextFile();
+                                    }
+                                }
+                    #else
+                                }
+                    #endif
+                            }
+                        }
+                    } else {
+                        for (size_t i = 0; i < arr.size(); i++) {
+                            JsonObject item = arr[i];
+                            interf->option(item["v"], item["l"]);
+                        }
+                    }
+                    interf->json_section_end();
+#ifdef EMBUI_USE_MQTT
+                    embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
+#endif
+                    break;
+                }
             default:
 #ifdef EMBUI_USE_MQTT
                     embui.publish(String(FPSTR(TCONST_008B)) + ctrlId, controls[i]->getVal(), true);
@@ -1537,9 +1605,17 @@ void block_settings_mp3(Interface *interf, JsonObject *data){
     interf->json_section_line(); // расположить в одной линии
         interf->checkbox(FPSTR(TCONST_00A4), myLamp.getLampSettings().playName ? "1" : "0", FPSTR(TINTF_09D), false);
     interf->json_section_end();
-    interf->json_section_line(); // расположить в одной линии
-        interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? "1" : "0", FPSTR(TINTF_09E), false);
-        interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? "1" : "0", FPSTR(TINTF_0AF), false);
+    // interf->json_section_line(); // расположить в одной линии
+    //     interf->checkbox(FPSTR(TCONST_00A5), myLamp.getLampSettings().playEffect ? "1" : "0", FPSTR(TINTF_09E), false);
+    //     interf->checkbox(FPSTR(TCONST_00A8), myLamp.getLampSettings().playMP3 ? "1" : "0", FPSTR(TINTF_0AF), false);
+    // interf->json_section_end();
+
+    PLAYER_MODE mode = (PLAYER_MODE)((myLamp.getLampSettings().playEffect) | (myLamp.getLampSettings().playMP3<<1));
+    interf->select(FPSTR(TCONST_00B7), String(mode), String(FPSTR(TINTF_0F1)), false);
+    interf->option(String(PLAYER_MODE::PM_OFF), FPSTR(TINTF_0B6));
+    interf->option(String(PLAYER_MODE::PM_EFF), FPSTR(TINTF_09E));
+    interf->option(String(PLAYER_MODE::PM_MP3), FPSTR(TINTF_0AF));
+    interf->option(String(PLAYER_MODE::PM_MP3_RESET), FPSTR(TINTF_0F2));
     interf->json_section_end();
 
     //interf->checkbox(FPSTR(TCONST_00A3), myLamp.getLampSettings().playTime ? "1" : "0", FPSTR(TINTF_09C), false);
@@ -1597,9 +1673,10 @@ void set_settings_mp3(Interface *interf, JsonObject *data){
 
     myLamp.setPlayTime((*data)[FPSTR(TCONST_00A3)].as<int>());
     myLamp.setPlayName((*data)[FPSTR(TCONST_00A4)]=="1");
-    myLamp.setPlayEffect((*data)[FPSTR(TCONST_00A5)]=="1"); mp3->setPlayEffect(myLamp.getLampSettings().playEffect);
+    PLAYER_MODE playerMode = (*data)[FPSTR(TCONST_00B7)].as<PLAYER_MODE>();
+    myLamp.setPlayEffect(playerMode&0x1); mp3->setPlayEffect(myLamp.getLampSettings().playEffect);
+    myLamp.setPlayMP3(playerMode&0x2); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
     myLamp.setAlatmSound((ALARM_SOUND_TYPE)(*data)[FPSTR(TCONST_00A6)].as<int>());
-    myLamp.setPlayMP3((*data)[FPSTR(TCONST_00A8)]=="1"); mp3->setPlayMP3(myLamp.getLampSettings().playMP3);
     myLamp.setLimitAlarmVolume((*data)[FPSTR(TCONST_00AF)]=="1");
 
     SETPARAM(FPSTR(TCONST_00A9), mp3->setMP3count((*data)[FPSTR(TCONST_00A9)].as<int>())); // кол-во файлов в папке мп3
@@ -3283,10 +3360,11 @@ Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nul
     //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
     obj[FPSTR(TCONST_00A3)] = tmp.playTime;
     obj[FPSTR(TCONST_00A4)] = tmp.playName ? "1" : "0";
-    obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? "1" : "0";
+    //obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? "1" : "0";
+    //obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? "1" : "0";
+    obj[FPSTR(TCONST_00B7)] = (PLAYER_MODE)((uint8_t)tmp.playEffect | (((uint8_t)tmp.playMP3)<<1));
     obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
     obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
-    obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? "1" : "0";
     obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
     obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? "1" : "0";
 
