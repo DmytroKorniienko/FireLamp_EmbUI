@@ -195,7 +195,11 @@ private:
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
     //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
-    uint8_t bPin = BTN_PIN;        // пин кнопки
+#ifndef ENCODER
+    uint8_t bPin = BTN_PIN;
+#else  
+    uint8_t bPin = 255;      // пин кнопки
+#endif
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
     LAMPMODE mode = LAMPMODE::MODE_NORMAL; // текущий режим
