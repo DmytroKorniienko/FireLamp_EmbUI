@@ -147,6 +147,39 @@ struct {
 };
 uint64_t lampflags; // набор битов для конфига
 _LAMPFLAGS(){
+#ifdef MOOT
+    MIRR_V = false; // отзрекаливание по V
+    MIRR_H = false; // отзрекаливание по H
+    ONflag = false; // флаг включения/выключения
+    isDebug = false; // флаг отладки
+    isFaderON = true; // признак того, что используется фейдер для смены эффектов
+    isEffClearing = true; // нужно ли очищать эффекты при переходах с одного на другой
+    isGlobalBrightness = true; // признак использования глобальной яркости для всех режимов
+    isEventsHandled = false;
+    isMicOn = false; // глобальное использование микрофона
+    numInList = true;
+    effHasMic = true;
+    dRand = false;
+    isShowSysMenu = false;
+    isOnMP3 = false;
+    isBtn = true;
+    showName = false;
+    playTime = TIME_SOUND_TYPE::TS_NONE; // воспроизводить время?
+    playName = false; // воспроизводить имя?
+    playEffect = false; // воспроизводить эффект?
+    alarmSound = ALARM_SOUND_TYPE::AT_NONE;
+    MP3eq = 0;
+    playMP3 = false;
+    limitAlarmVolume = false;
+    isDraw = false;
+    tm24 = true;
+    tmZero = false;
+    GaugeType = GAUGETYPE::GT_VERT;
+    isTempOn = true;
+    isStream = false;
+    isDirect = true;
+    isMapping = true;
+#else
     MIRR_V = false; // отзрекаливание по V
     MIRR_H = false; // отзрекаливание по H
     ONflag = false; // флаг включения/выключения
@@ -178,6 +211,7 @@ _LAMPFLAGS(){
     isStream = false;
     isDirect = false;
     isMapping = true;
+#endif
 }
 } LAMPFLAGS;
 #pragma pack(pop)

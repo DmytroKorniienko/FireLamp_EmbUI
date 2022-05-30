@@ -69,15 +69,6 @@ void encLoop() {
   static uint16_t valRepiteChk = anyValue;
   noInterrupt();
   //enc.tick();
-  if (millis() <= 1000 && !digitalRead(SW)) {
-    // reset(); //тут має бути виклик функції ресетування WiFi
-    WiFi.disconnect(true);
-    LittleFS.remove(F("/config.json"));
-    LittleFS.remove(F("/config_bkp.json"));
-    delay(1000);
-    ESP.restart();
-  }
-
   if (inSettings) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     resetTimers();
 #ifdef TM1637_CLOCK
