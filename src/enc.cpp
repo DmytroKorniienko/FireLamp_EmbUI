@@ -61,6 +61,14 @@ CRGB txtColor = CRGB::Orange;
 
 Task encTask(1 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
+void resetLamp() { // Функція відновлює дефолтні налаштування лампи (основний конфіг, WiFi)
+    WiFi.disconnect(true);
+    LittleFS.remove(F("/config.json"));
+    LittleFS.remove(F("/config_bkp.json"));
+    delay(1000);
+    ESP.restart();
+}
+
 void callEncTick () {
   enc.tick();
 }
@@ -68,6 +76,10 @@ void callEncTick () {
 void encLoop() {
   static uint16_t valRepiteChk = anyValue;
   noInterrupt();
+  // if (currAction == 4) {
+  //   currAction = 0;
+  //   remote_action(RA::RA_WHITE_LO, "0", NULL);
+  // }
   //enc.tick();
   if (inSettings) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     resetTimers();
@@ -423,6 +435,28 @@ void enc_setup() {
  // enc.attach(STEP_HANDLER, myStep);
   enc.attach(CLICKS_HANDLER, myClicks);
   //enc.attachClicks(6, isClick6);
+#ifdef ENCODER
+    bool briFlag = false;
+    while(millis() <= 20100 && !digitalRead(SW)) { 
+      if (!briFlag) {
+        FastLED.setBrightness(30);
+        briFlag = true;
+      }
+        if (millis() >= 20000) {
+          // currAction = 4;
+          for (uint16_t i = 0; i< NUM_LEDS; i++) 
+            EffectMath::getLed(i) = CRGB(0, 255, 0);
+          FastLED.show();
+          resetLamp();
+        } else {
+          for (uint16_t i = 0; i< NUM_LEDS; i++) 
+            EffectMath::getLed(i) = CRGB(255, 0, (uint8_t)millis()<<2);
+
+          FastLED.show();
+          delay(50);
+        }
+    }
+#endif
 
 }
 
@@ -466,7 +500,7 @@ void encSetEffect(int val) {
 
   anyValue = anyValue + val;
   
-  while (1)  // в цикле проверим может быть текущий накрученный выбранным
+  while (1)  // в цикле проверим может быть текущий накрученный контролл выбранным
   {
     if (myLamp.effects.effCanBeSelected(anyValue)) break;
 
@@ -585,7 +619,7 @@ void toggleGBright() {
 void toggleMic() {
 #ifdef MIC_EFFECTS
   remote_action(RA::RA_MICONOFF, myLamp.isMicOnOff() ? "0" : "1", NULL);
-  encSendString(String(FPSTR(TINTF_021)) + String(myLamp.isMicOnOff() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
+  encSendString(String(FPSTR(TINTF_012)) + String(myLamp.isMicOnOff() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
 #endif
 }
 

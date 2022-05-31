@@ -46,13 +46,6 @@ Buttons *myButtons;
 MP3PLAYERDEVICE *mp3 = nullptr;
 #endif
 
-void resetLamp() { // Функція відновлює дефолтні налаштування лампи (основний конфіг, WiFi)
-    WiFi.disconnect(true);
-    LittleFS.remove(F("/config.json"));
-    LittleFS.remove(F("/config_bkp.json"));
-    delay(1000);
-    ESP.restart();
-}
 
 void setup() {
     //Serial.begin(115200);
@@ -119,15 +112,6 @@ void setup() {
     myLamp.lamp_init(embui.param(FPSTR(TCONST_0098)).toInt());
 #else
     myLamp.lamp_init(CURRENT_LIMIT);
-#endif
-
-#ifdef ENCODER
-    while(millis() <= 10100 && !digitalRead(SW)) { 
-        if (millis() >= 10000) {
-            resetLamp();
-        }
-        delay(1);
-    }
 #endif
 
 #ifdef ESP_USE_BUTTON

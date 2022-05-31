@@ -89,6 +89,7 @@ void encSendStringNumEff(String str, CRGB color);
 bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
+void resetLamp();
 extern void encLoop();
 uint8_t getEncTxtDelay();
 void setEncTxtDelay(const uint8_t speed);
