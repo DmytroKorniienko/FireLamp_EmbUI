@@ -188,18 +188,18 @@ private:
     LAMPFLAGS flags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
-    uint8_t txtOffset = 0; // смещение текста относительно края матрицы
+    int8_t txtOffset = 0; // смещение текста относительно края матрицы
     uint8_t globalBrightness = 127; // глобальная яркость, пока что будет использоваться для демо-режимов
     uint8_t fps = 0;        // fps counter
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
     //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
-#ifndef ENCODER
-    uint8_t bPin = BTN_PIN;
-#else  
-    uint8_t bPin = 255;      // пин кнопки
-#endif
+// #ifndef ENCODER
+//     uint8_t bPin = BTN_PIN;
+// #else  
+//     uint8_t bPin = 255;      // пин кнопки
+// #endif
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
     LAMPMODE mode = LAMPMODE::MODE_NORMAL; // текущий режим
@@ -265,8 +265,8 @@ public:
     uint64_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
     const LAMPFLAGS &getLampSettings() {return flags;} // возвращает упакованные флаги лампы
     //void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
-    void setbPin(uint8_t val) {bPin = val;}
-    uint8_t getbPin() {return bPin;}
+    //void setbPin(uint8_t val) {bPin = val;}
+    //uint8_t getbPin() {return bPin;}
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
     LAMPSTATE &getLampState() {return lampState;}
@@ -345,6 +345,7 @@ public:
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == LAMPMODE::MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
+    bool isWarningTask() {return warningTask?1:0;} // чи є активна задача варнінгу
     //int getmqtt_int() {return mqtt_int;}
 
 #ifdef EMBUI_USE_MQTT
@@ -383,7 +384,7 @@ public:
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
     bool getClearingFlag() {return flags.isEffClearing;}
-    void disableEffectsUntilText() {lampState.isEffectsDisabledUntilText = true; FastLED.clear();}
+    void disableEffects() {lampState.isEffectsDisabled = true; FastLED.clear();}
     void setOffAfterText() {lampState.isOffAfterText = true;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
     bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);

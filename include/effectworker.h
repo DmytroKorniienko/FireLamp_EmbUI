@@ -64,7 +64,7 @@ typedef struct {
 
             bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
             bool isStringPrinting:1; // печатается ли прямо сейчас строка?
-            bool isEffectsDisabledUntilText:1; // признак отключения эффектов, пока выводится текст
+            bool isEffectsDisabled:1; // признак отключения эффектов, пока выводится текст
             bool isOffAfterText:1; // признак нужно ли выключать после вывода текста
             bool isCalibrationRequest:1; // находимся ли в режиме калибровки микрофона
             bool isWarning:1; // выводится ли индикация предупреждения

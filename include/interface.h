@@ -90,7 +90,8 @@ typedef enum _remote_action {
     RA_FILLMATRIX,
     RA_RGB,
     RA_MODECMD,
-    RA_WHITE_CUR
+    RA_WHITE_CUR,
+    RA_LAMPRESET
 } RA;
 
 void remote_action(RA action, ...);

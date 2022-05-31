@@ -2489,7 +2489,7 @@ void show_settings_butt(Interface *interf, JsonObject *data){
 
 void set_butt_conf(Interface *interf, JsonObject *data){
     if (!data) return;
-    Button *btn = nullptr;
+    ButtonAction *btn = nullptr;
     bool on = ((*data)[FPSTR(TCONST_0070)] == "1");
     bool hold = ((*data)[FPSTR(TCONST_0071)] == "1");
     bool onetime = ((*data)[FPSTR(TCONST_0072)] == "1");
@@ -2511,7 +2511,7 @@ void set_butt_conf(Interface *interf, JsonObject *data){
         btn->flags.onetime = onetime;
         btn->setParam(param);
     } else {
-        myButtons->add(new Button(on, hold, clicks, onetime, action, param));
+        myButtons->add(new ButtonAction(on, hold, clicks, onetime, action, param));
     }
 
     myButtons->saveConfig();
@@ -2521,7 +2521,7 @@ void set_butt_conf(Interface *interf, JsonObject *data){
 void show_butt_conf(Interface *interf, JsonObject *data){
     if (!interf || !data) return;
 
-    Button *btn = nullptr;
+    ButtonAction *btn = nullptr;
     String act;
     int num = 0;
 
@@ -2564,7 +2564,7 @@ void show_butt_conf(Interface *interf, JsonObject *data){
 
     interf->checkbox(FPSTR(TCONST_0070), (btn? btn->flags.on : 0)? "1" : "0", FPSTR(TINTF_07C), false);
     interf->checkbox(FPSTR(TCONST_0071), (btn? btn->flags.hold : 0)? "1" : "0", FPSTR(TINTF_07D), false);
-    interf->number(String(FPSTR(TCONST_0073)), String(btn? btn->flags.click : 0), String(FPSTR(TINTF_07E)), String(1), String(0), String(7));
+    interf->number(String(FPSTR(TCONST_0073)), String(btn? btn->flags.click : 0), String(FPSTR(TINTF_07E)), String(1), String(0), String(7)); // 7 - максимальне значення
     interf->checkbox(String(FPSTR(TCONST_0072)), String((btn? btn->flags.onetime&1 : 0)? "1" : "0"), FPSTR(TINTF_07F), false);
 
     if (btn) {
@@ -3616,26 +3616,27 @@ uint8_t uploadProgress(size_t len, size_t total){
 void default_buttons(){
     myButtons->clear();
     // Выключена
-    myButtons->add(new Button(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
-    myButtons->add(new Button(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
-    myButtons->add(new Button(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
-    myButtons->add(new Button(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
-    myButtons->add(new Button(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
-    myButtons->add(new Button(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+    myButtons->add(new ButtonAction(false, false, 1, true, BA::BA_ON)); // 1 клик - ON
+    myButtons->add(new ButtonAction(false, false, 2, true, BA::BA_DEMO)); // 2 клика - Демо
+    myButtons->add(new ButtonAction(false, false, 7, true, BA::BA_LAMPRESET)); // 7 натискань у вимкненому стані - скидання налаштувань
+    myButtons->add(new ButtonAction(false, true, 0, true, BA::BA_WHITE_LO)); // удержание Включаем белую лампу в мин яркость
+    myButtons->add(new ButtonAction(false, true, 1, true, BA::BA_WHITE_HI)); // удержание + 1 клик Включаем белую лампу в полную яркость
+    myButtons->add(new ButtonAction(false, true, 0, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
+    myButtons->add(new ButtonAction(false, true, 1, false, BA::BA_BRIGHT)); // удержание из выключенного - яркость
 
     // Включена
-    myButtons->add(new Button(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
-    myButtons->add(new Button(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
-    myButtons->add(new Button(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
+    myButtons->add(new ButtonAction(true, false, 1, true, BA::BA_OFF)); // 1 клик - OFF
+    myButtons->add(new ButtonAction(true, false, 2, true, BA::BA_EFF_NEXT)); // 2 клика - след эффект
+    myButtons->add(new ButtonAction(true, false, 3, true, BA::BA_EFF_PREV)); // 3 клика - пред эффект
 #ifdef OTA
-    myButtons->add(new Button(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
+    myButtons->add(new ButtonAction(true, false, 4, true, BA::BA_OTA)); // 4 клика - OTA
 #endif
-    myButtons->add(new Button(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
-    myButtons->add(new Button(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
-    myButtons->add(new Button(true, false, 7, true, BA::BA_EFFECT, String(F("253")))); // 7 кликов - эффект часы
-    myButtons->add(new Button(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
-    myButtons->add(new Button(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
-    myButtons->add(new Button(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
+    myButtons->add(new ButtonAction(true, false, 5, true, BA::BA_SEND_IP)); // 5 клика - показ IP
+    myButtons->add(new ButtonAction(true, false, 6, true, BA::BA_SEND_TIME)); // 6 клика - показ времени
+    myButtons->add(new ButtonAction(true, false, 7, true, BA::BA_EFFECT, String(F("253")))); // 7 кликов - эффект часы
+    myButtons->add(new ButtonAction(true, true, 0, false, BA::BA_BRIGHT)); // удержание яркость
+    myButtons->add(new ButtonAction(true, true, 1, false, BA::BA_SPEED)); // удержание + 1 клик скорость
+    myButtons->add(new ButtonAction(true, true, 2, false, BA::BA_SCALE)); // удержание + 2 клика масштаб
 }
 #endif
 
@@ -3676,7 +3677,7 @@ void remote_action(RA action, ...){
                 if(value){
                    remote_action(RA::RA_SEND_TEXT, value, NULL);
                 }
-                new Task(500, TASK_FOREVER, [value](){
+                new Task(500*(value?1:0), TASK_FOREVER, [value](){
                     if((!myLamp.isPrintingNow() && value) || !value){ // отложенное выключение только для случая когда сообщение выводится в этом же экшене, а не чужое
                         Task *task = ts.getCurrentTask();
                         DynamicJsonDocument doc(512);
@@ -3692,7 +3693,7 @@ void remote_action(RA action, ...){
                         // obj.clear();
                         // doc.garbageCollect();
                         CALL_INTF(FPSTR(TCONST_001A), "0", set_onflag);
-                        task->disable();
+                        task->cancel();
                         TASK_RECYCLE;
                     }
                 }, &ts, true);
@@ -3824,6 +3825,53 @@ void remote_action(RA action, ...){
         case RA::RA_REBOOT: {
                 remote_action(RA::RA_WARNING, F("[16711680,3000,500]"), NULL);
                 Task *t = new Task(3 * TASK_SECOND, TASK_ONCE, nullptr, &ts, false, nullptr, [](){ ESP.restart(); TASK_RECYCLE; });
+                t->enableDelayed();
+            }
+            break;
+        case RA::RA_LAMPRESET: {
+                if(!myLamp.isLampOn()){
+                    myLamp.changePower(true);
+                    myLamp.disableEffects(); // заборонити роботу ефект-процессору
+                    myLamp.setBrightness(50, false, false); // встановити яскравість 50
+                }
+                String str = F("Скидання налаштувань лампи");
+                remote_action(RA::RA_SEND_TEXT, str.c_str(), NULL);
+                Task *t = new Task(500, TASK_FOREVER, [](){
+                    if(!myLamp.isPrintingNow()){
+                        if(myLamp.isLampOn())
+                            remote_action(RA::RA_WARNING, F("[16711680,30000,500,2]"), NULL);
+                        ts.getCurrentTask()->cancel();
+                        //------
+                        Task *t = new Task(500, TASK_FOREVER, [](){
+                            if(!myLamp.isWarningTask()){
+                                if(myLamp.isLampOn()){
+                                    ESP.restart();
+                                } else {
+                                    Task *t = new Task(2000, TASK_ONCE, [](){
+                                        myLamp.disableEffects(); // заборонити роботу ефект-процессору
+                                        myLamp.setOffAfterText();
+                                        myLamp.setBrightness(50, false, false); // встановити яскравість 50
+                                        myLamp.changePower(true);
+                                        String str = F("Операція скасована");
+                                        myLamp.sendString(str.c_str(), CRGB::Red, true, true);
+                                    } , &ts, false, nullptr, [](){
+                                        TASK_RECYCLE;
+                                    });
+                                    t->enableDelayed();
+                                }
+                                ts.getCurrentTask()->cancel();
+                            }
+                        }
+                        , &ts, false, nullptr, [](){
+                            TASK_RECYCLE;
+                        });
+                        t->enableDelayed();
+                        //------
+                    }
+                }
+                , &ts, false, nullptr, [](){
+                    TASK_RECYCLE;
+                });
                 t->enableDelayed();
             }
             break;

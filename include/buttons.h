@@ -24,6 +24,7 @@ typedef enum _button_action {
 	BA_WHITE_LO,
 	BA_WIFI_REC,
 	BA_EFFECT,
+	BA_LAMPRESET,
 	BA_END			// признак конца enum
 } BA;
 
@@ -32,7 +33,7 @@ const char *btn_get_desc(BA action);
 // TaskScheduler
 extern Scheduler ts;
 
-class Button{
+class ButtonAction{
 	typedef union _bflags {
 		uint8_t mask;
 		struct {
@@ -44,14 +45,14 @@ class Button{
 		};
 	} btnflags;
 
-	friend bool operator== (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) == (f2.flags.mask&0x1F)); }
-	friend bool operator!= (const Button &f1, const Button &f2) { return ((f1.flags.mask&0x1F) != (f2.flags.mask&0x1F)); }
+	friend bool operator== (const ButtonAction &f1, const ButtonAction &f2) { return ((f1.flags.mask&0x1F) == (f2.flags.mask&0x1F)); }
+	friend bool operator!= (const ButtonAction &f1, const ButtonAction &f2) { return ((f1.flags.mask&0x1F) != (f2.flags.mask&0x1F)); }
 
 	public:
-		Button(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE, const String& _param=String()) {
+		ButtonAction(bool on, bool hold, uint8_t click, bool onetime, BA act = BA_NONE, const String& _param=String()) {
 			flags.direction = false; flags.mask = 0; flags.on = on; flags.hold = hold; flags.click = click; flags.onetime=onetime; action = act; param=_param;
 		}
-		Button(uint8_t mask, BA act = BA_NONE, const String& _param=String()) {
+		ButtonAction(uint8_t mask, BA act = BA_NONE, const String& _param=String()) {
 			flags.direction = false; flags.mask = mask; action = act; param=_param;
 		}
 		bool activate(btnflags& flg, bool reverse);
@@ -86,7 +87,7 @@ class Buttons {
 	byte clicks = 0;
 	Task *tButton = nullptr;      // планировщик кнопки
 	Task *tClicksClear = nullptr; // очистка кол-ва нажатий, после таймаута
-	LList<Button*> buttons;
+	LList<ButtonAction*> buttons;
 
 	void resetStates() { clicks=0; holding=false; holded=false; touch.resetStates();}
 
@@ -104,10 +105,10 @@ class Buttons {
 	void setButtonOn(bool flag);
 	bool isButtonOn() { return buttonEnabled; }
 
-	inline Button* operator[](int i) { return buttons[i]; }
+	inline ButtonAction* operator[](int i) { return buttons[i]; }
 
 	int size(){ return buttons.size(); }
-	void add(Button *btn) { buttons.add(btn); }
+	void add(ButtonAction *btn) { buttons.add(btn); }
 	void remove(int i) { buttons.remove(i); }
 	void clear();
 
