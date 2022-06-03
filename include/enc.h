@@ -89,6 +89,7 @@ void encSendStringNumEff(String str, CRGB color);
 bool validControl(const CONTROL_TYPE ctrlCaseType);
 
 void enc_setup(); 
+void copyPastFile(String FileFrom, String FileTo);
 void resetLamp();
 extern void encLoop();
 uint8_t getEncTxtDelay();

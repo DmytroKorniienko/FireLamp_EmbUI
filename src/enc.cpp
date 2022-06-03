@@ -61,12 +61,35 @@ CRGB txtColor = CRGB::Orange;
 
 Task encTask(1 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
+// Функція копіює вміст одного файлу в інший (немає стандартної в LittleFS)
+void copyPastFile(String FileFrom, String FileTo) {
+  if (LittleFS.exists(FileFrom))  // видаляємо копію, якщо існує
+    LittleFS.remove(FileTo);
+  
+  File f1 = LittleFS.open(FileFrom, "r");    // відкриваємо джерело
+  File f2 = LittleFS.open(FileTo, "w");    // створюємо кінцевий файл
+  if (!f2 || !f1) 
+    return;
+
+  char b;
+  while (f1.available() > 0) { // побайтово копіюємо файл-джерело в кінцевий файл
+    f1.readBytes(&b, 1); 
+    f2.write(b);
+  }
+  //  закриваємо файли
+  f2.close(); 
+  f1.close(); 
+}
+
+// Функція затирає системний конфіг та заміняє його дефолтним
 void resetLamp() { // Функція відновлює дефолтні налаштування лампи (основний конфіг, WiFi)
-    WiFi.disconnect(true);
-    LittleFS.remove(F("/config.json"));
+    WiFi.disconnect(true); // закриваємо з'єднання, та забуваємо налаштування WiFi
+    LittleFS.remove(F("/config.json"));  // видаляємо файли конфігурації, як оригінал, так і копію
     LittleFS.remove(F("/config_bkp.json"));
+    copyPastFile(F("/glb/default.json"), F("/glb/config.json")); // створюємо копію дефолтних налаштувань в ту ж папку
+    LittleFS.rename(F("/glb/config.json"), F("/config.json"));   // переносимо новий конфіг в корінь
     delay(1000);
-    ESP.restart();
+    ESP.restart();  // Приміняємо зміни, перезагрузивши лампу
 }
 
 void callEncTick () {
@@ -428,35 +451,29 @@ void enc_setup() {
   inSettings = false;
   currDynCtrl = 1;
   interrupt(); // включаем прерывания энкодера и кнопки
-  //enc.counter = 100;      // изменение счётчика
   enc.attach(TURN_HANDLER, isTurn);
   enc.attach(CLICK_HANDLER, isClick);
   enc.attach(HOLDED_HANDLER, isHolded);
- // enc.attach(STEP_HANDLER, myStep);
   enc.attach(CLICKS_HANDLER, myClicks);
-  //enc.attachClicks(6, isClick6);
-#ifdef ENCODER
-    bool briFlag = false;
-    while(millis() <= 20100 && !digitalRead(SW)) { 
-      if (!briFlag) {
-        FastLED.setBrightness(30);
-        briFlag = true;
-      }
-        if (millis() >= 20000) {
-          // currAction = 4;
-          for (uint16_t i = 0; i< NUM_LEDS; i++) 
-            EffectMath::getLed(i) = CRGB(0, 255, 0);
-          FastLED.show();
-          resetLamp();
-        } else {
-          for (uint16_t i = 0; i< NUM_LEDS; i++) 
-            EffectMath::getLed(i) = CRGB(255, 0, (uint8_t)millis()<<2);
-
-          FastLED.show();
-          delay(50);
-        }
+  bool briFlag = false;
+  while(millis() <= 20100 && !digitalRead(SW)) { 
+    if (!briFlag) {
+      FastLED.setBrightness(30);
+      briFlag = true;
     }
-#endif
+      if (millis() >= 20000) {
+        // currAction = 4;
+        for (uint16_t i = 0; i< NUM_LEDS; i++) 
+          EffectMath::getLed(i) = CRGB(0, 255, 0);
+        FastLED.show();
+        resetLamp();
+      } else {
+        for (uint16_t i = 0; i< NUM_LEDS; i++) 
+          EffectMath::getLed(i) = CRGB(255, 0, (uint8_t)millis()<<2);
+        FastLED.show();
+        delay(50);
+      }
+  }
 
 }
 
