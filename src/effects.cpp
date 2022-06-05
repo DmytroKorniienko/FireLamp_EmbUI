@@ -6919,191 +6919,44 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ---------- Эффект-игра "Лабиринт"
-void EffectMaze::newGameMaze() {
-  playerPos[0] = !MAZE_SHIFT;
-  playerPos[1] = !MAZE_SHIFT;
-
-  gameOverFlag = false;
-  buttons = 4;
-
-  GenerateMaze(maze, MAZE_WIDTH, MAZE_HEIGHT);    // генерировать лабиринт обычным способом
-  SolveMaze(maze, MAZE_WIDTH, MAZE_HEIGHT);       // найти путь
-
-  if (!(GAMEMODE || mazeMode)) {
-    for (byte y = 0; y < MAZE_HEIGHT; y++) {
-      for (byte x = 0; x < MAZE_WIDTH; x++) {
-        switch (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)]) {
-          case 1:  EffectMath::drawPixelXY(x, y, color); break;
-          case 2:
-            EffectMath::drawPixelXY(x, y, 0x000000);
-            break;
-          default: EffectMath::drawPixelXY(x, y, 0x000000); break;
-        }
-      }
-      // Отображаем сгенерированный лабиринт строка за строкой
-      FastLED.show();  // стоит убрать, и все начинает мерцать
-      delay(50);
-    }
-
-  } else {
-    for (byte y = 0; y < FOV; y++) {
-      for (byte x = 0; x < FOV; x++) {
-        switch (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)]) {
-          case 1:  EffectMath::drawPixelXY(x, y, color);  break;
-          case 2:
-            EffectMath::drawPixelXY(x, y, 0x000000);
-            break;
-          default: EffectMath::drawPixelXY(x, y, 0x000000);  break;
-        }
-      }
-    }
-  }
-
-  // Отрисовка - с видимыми границами по периметру (настройки MAZE_SHIFT выше)
-  // Слева от начальной позиции делаем дыру - это вход
-  if (playerPos[0]>0) {
-    playerPos[0] = playerPos[0] - 1;
-    EffectMath::drawPixelXY(playerPos[0], playerPos[1], 0x000000);
-  }
-  
-  EffectMath::drawPixelXY(playerPos[0], playerPos[1],  playerColor);
-
-  mazeStarted = false;  
-}
-
-bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
-  if (loadingFlag || gameOverFlag) {  
-    if (loadingFlag) FastLED.clear();
-    gameTimer = map(speed, 1, 255, 500, 50);   // установить начальную скорость
-    loadingFlag = false;
-    newGameMaze();
-    // modeCode = MC_MAZE;
-  }
-
-  if (gameDemo && !gamePaused) demoMaze();
-  buttonsTickMaze();
-  return true;
-}
-
-void EffectMaze::buttonsTickMaze() {
-
-  if (gameDemo && (millis() - timer < gameTimer)) { // тут крутим скорость в демо-режиме
-    return;
-  }
-  timer = millis();
-
-  if (checkButtons()) {
-    bool btnPressed = false;
-    if (buttons == 3) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[0] - 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxWidthIndex())
-        if (EffectMath::getPixColorXY(newPos, playerPos[1]) == 0) {
-          movePlayer(newPos, playerPos[1], playerPos[0], playerPos[1]);
-          playerPos[0] = newPos;
-        }
-    }
-    if (buttons == 1) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[0] + 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxWidthIndex())
-        if (EffectMath::getPixColorXY(newPos, playerPos[1]) == 0) {
-          movePlayer(newPos, playerPos[1], playerPos[0], playerPos[1]);
-          playerPos[0] = newPos;
-        }
-    }
-    if (buttons == 0) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[1] + 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxHeightIndex())
-        if (EffectMath::getPixColorXY(playerPos[0], newPos) == 0) {
-          movePlayer(playerPos[0], newPos, playerPos[0], playerPos[1]);
-          playerPos[1] = newPos;
-        }
-    }
-    if (buttons == 2) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[1] - 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxHeightIndex())
-        if (EffectMath::getPixColorXY(playerPos[0], newPos) == 0) {
-          movePlayer(playerPos[0], newPos, playerPos[0], playerPos[1]);
-          playerPos[1] = newPos;
-        }
-    }
-    if (btnPressed && !mazeStarted) {
-      mazeStarted = true;
-      labTimer = millis();
-    }
-    buttons = 4;
-  }
-}
-
-void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY) {
-  if (!track) EffectMath::drawPixelXY(prevX, prevY, 0x000000);
-  EffectMath::drawPixelXY(nowX, nowY,  playerColor);
-
-  if ((nowX == (MAZE_WIDTH - 2) - MAZE_SHIFT) && (nowY == (MAZE_HEIGHT - 1) - MAZE_SHIFT)) {
-    gameOverFlag = true;
-    return;
-  }
-
-  if (GAMEMODE || mazeMode) {
-    for (int8_t y = nowY - FOV; y < nowY + FOV; y++) {
-      for (int8_t x = nowX - FOV; x < nowX + FOV; x++) {
-        if (x < 0 || x > EffectMath::getmaxWidthIndex() || y < 0 || y > EffectMath::getmaxHeightIndex()) continue;
-        if (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)] == 1) {
-          EffectMath::drawPixelXY(x, y, CRGB::Aqua);
-        }
-      }
-      FastLED.show();
-    }
-  }
-}
-
-void EffectMaze::demoMaze() {
-  if (checkPath(0, 1)) buttons = 0;
-  if (checkPath(1, 0)) buttons = 1;
-  if (checkPath(0, -1)) buttons = 2;
-  if (checkPath(-1, 0)) buttons = 3;
-}
-
-bool EffectMaze::checkPath(int8_t x, int8_t y) {
-  // если проверяемая клетка является путью к выходу
-  if ( (maze[(playerPos[1] + y + MAZE_SHIFT) * MAZE_WIDTH + (playerPos[0] + x + MAZE_SHIFT)]) == 2) {
-    maze[(playerPos[1] + MAZE_SHIFT) * MAZE_WIDTH + (playerPos[0] + MAZE_SHIFT)] = 4;   // убираем текущую клетку из пути (2 - метка пути, ставим любое число, например 4)
-    return true;
-  }
-  else return false;
-}
-
-// копаем лабиринт
-void EffectMaze::CarveMaze(char *maze, int width, int height, int x, int y) {
+// ---------- Ефект лабіринт
+//remade by stepko
+void EffectMaze::digMaze(int x, int y) {
   int x1, y1;
   int x2, y2;
   int dx, dy;
   int dir, count;
-
-  dir = random(10) % 4;
+  
+  dir = random8() % 4;
   count = 0;
   while (count < 4) {
-    dx = 0; dy = 0;
+    dx = 0;
+    dy = 0;
     switch (dir) {
-      case 0:  dx = 1;  break;
-      case 1:  dy = 1;  break;
-      case 2:  dx = -1; break;
-      default: dy = -1; break;
+      case 0:
+        dx = 1;
+        break;
+      case 1:
+        dy = 1;
+        break;
+      case 2:
+        dx = -1;
+        break;
+      default:
+        dy = -1;
+        break;
     }
     x1 = x + dx;
     y1 = y + dy;
     x2 = x1 + dx;
     y2 = y1 + dy;
-    if (   x2 > 0 && x2 < width && y2 > 0 && y2 < height
-           && maze[y1 * width + x1] == 1 && maze[y2 * width + x2] == 1) {
-      maze[y1 * width + x1] = 0;
-      maze[y2 * width + x2] = 0;
-      x = x2; y = y2;
-      dir = random(10) % 4;
+    if (x2 > 0 && x2 < M_WIDTH && y2 > 0 && y2 < M_HEIGHT &&
+      maze[x1][y1] && maze[x2][y2]) {
+      maze[x1][y1] = 0;
+      maze[x2][y2] = 0;
+      x = x2;
+      y = y2;
+      dir = random8() % 4;
       count = 0;
     } else {
       dir = (dir + 1) % 4;
@@ -7112,89 +6965,133 @@ void EffectMaze::CarveMaze(char *maze, int width, int height, int x, int y) {
   }
 }
 
-// генерацтор лабиринта
-void EffectMaze::GenerateMaze(char *maze, int width, int height) {
+void EffectMaze::generateMaze() {
   int x, y;
-  for (x = 0; x < width * height; x++) {
-    maze[x] = 1;
-  }
-  maze[1 * width + 1] = 0;
-  for (y = 1; y < height; y += 2) {
-    for (x = 1; x < width; x += 2) {
-      CarveMaze(maze, width, height, x, y);
+  for (x = 0; x < M_WIDTH; x++) {
+    for (y = 0; y < M_HEIGHT; y++) {
+      maze[x][y] = 1;
     }
   }
-  // вход и выход
-  maze[0 * width + 1] = 0;
-  maze[(height - 1) * width + (width - 2)] = 0;
-
-  track = random8(0,2);
-  color = CHSV(hue += 8, random8(192, 255), 192);
-  
- /* CHSV tmp = rgb2hsv_approximate(color);
-  tmp.s = 255;
-  tmp.hue += 100;
-  tmp.val = 255; */
-
-  playerColor = CHSV(hue + random(63, 127), random8(127, 200), 255);;
-  
+  maze[1][1] = 0;
+  for (y = 1; y < M_HEIGHT; y += 2) {
+    for (x = 1; x < M_WIDTH; x += 2) {
+      digMaze(x, y);
+    }
+  }
+  maze[0][1] = 0;
+  maze[M_WIDTH - 2][M_HEIGHT - 1] = 0;
 }
 
-// решатель (ищет путь)
-void EffectMaze::SolveMaze(char *maze, int width, int height) {
-  int dir, count;
-  int x, y;
-  int dx, dy;
-  int forward;
-  // Remove the entry and exit. 
-  maze[0 * width + 1] = 1;
-  maze[(height - 1) * width + (width - 2)] = 1;
-
-  forward = 1;
-  dir = 0;
-  count = 0;
-  x = 1;
-  y = 1;
-  unsigned int attempts = 0;
-  while (x != width - 2 || y != height - 2) {
-    if (attempts++ > maxSolves) {   // если решатель не может найти решение (maxSolves в 5 раз больше числа клеток лабиринта)
-      gameOverFlag = true;          // перегенерировать лабиринт
-      break;                        // прервать решение
+bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
+    if (start) {
+    start = 0;
+    color = random8();
+    generateMaze();
+    posX = 0, posY = 1;
+    checkFlag = 1;
+  }
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+      EffectMath::drawPixelXY(x, y,(maze[x + M_SHIFT_X][y + M_SHIFT_Y]) ? CHSV(color, 200, 255) : CHSV(0, 0, 0));
     }
-    dx = 0; dy = 0;
-    switch (dir) {
-      case 0:  dx = 1;  break;
-      case 1:  dy = 1;  break;
-      case 2:  dx = -1; break;
-      default: dy = -1; break;
+  }
+  if (checkFlag) {
+    switch (Lookdir) {
+      case 0:
+        if (!maze[posX][posY - 1]) {
+          Lookdir = 1;
+        }
+        break;
+      case 1:
+        if (!maze[posX - 1][posY]) {
+          Lookdir = 2;
+        }
+        break;
+      case 2:
+        if (!maze[posX][posY + 1]) {
+          Lookdir = 3;
+        }
+        break;
+      case 3:
+        if (!maze[posX + 1][posY]) {
+          Lookdir = 0;
+        }
+        break;
     }
-    if (   (forward  && maze[(y + dy) * width + (x + dx)] == 0)
-           || (!forward && maze[(y + dy) * width + (x + dx)] == 2)) {
-      maze[y * width + x] = forward ? 2 : 3;
-      x += dx;
-      y += dy;
-      forward = 1;
-      count = 0;
-      dir = 0;
-    } else {
-      dir = (dir + 1) % 4;
-      count += 1;
-      if (count > 3) {
-        forward = 0;
-        count = 0;
+    while (true) {
+      bool et1 = 0;
+      switch (Lookdir) {
+        case 0:
+          if (maze[posX + 1][posY]) {
+            Lookdir = 3;
+            et1 = 1;
+          }
+          break;
+        case 1:
+          if (maze[posX][posY - 1]) {
+            Lookdir = 0;
+            et1 = 1;
+          }
+          break;
+        case 2:
+          if (maze[posX - 1][posY]) {
+            Lookdir = 1;
+            et1 = 1;
+          }
+          break;
+        case 3:
+          if (maze[posX][posY + 1]) {
+            Lookdir = 2;
+            et1 = 1;
+          }
+          break;
       }
+      if (!et1) break;
+    }
+    checkFlag = 0;
+  }
+  SubPos += _speed;
+  if (SubPos >= 255) {
+    SubPos %= 255;
+    checkFlag = 1;
+    switch (Lookdir) {
+      case 0:
+        posX += 1;
+        break;
+      case 1:
+        posY -= 1;
+        break;
+      case 2:
+        posX -= 1;
+        break;
+      case 3:
+        posY += 1;
+        break;
     }
   }
-  
-  // Replace the entry and exit.
-  maze[(height - 2) * width + (width - 2)] = 2;
-  maze[(height - 1) * width + (width - 2)] = 2;
+  switch (Lookdir) {
+    case 0:
+      EffectMath::drawPixelXYF(float(posX - M_SHIFT_X) + (float(SubPos) / 255.), (posY - M_SHIFT_Y), CHSV(0, 0, 255));
+      break;
+    case 1:
+      EffectMath::drawPixelXYF((posX - M_SHIFT_X), float(posY - M_SHIFT_Y) - (float(SubPos) / 255.), CHSV(0, 0, 255));
+      break;
+    case 2:
+      EffectMath::drawPixelXYF(float(posX - M_SHIFT_X) - (float(SubPos) / 255.), (posY - M_SHIFT_Y), CHSV(0, 0, 255));
+      break;
+    case 3:
+      EffectMath::drawPixelXYF((posX - M_SHIFT_X), float(posY - M_SHIFT_Y) + (float(SubPos) / 255.), CHSV(0, 0, 255));
+      break;
+  }
+  if ((posX == M_WIDTH - 2) & (posY == M_HEIGHT - 1))
+    start = 1;
+  return true;
 }
 
 // !++
 String EffectMaze::setDynCtrl(UIControl*_val){
   if(_val->getId()==1)
-    gameTimer = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 500, 50);   // установить скорость
+   _speed = EffectCalc::setDynCtrl(_val).toInt();   // установить скорость
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }

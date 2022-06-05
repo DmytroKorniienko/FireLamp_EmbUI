@@ -1670,43 +1670,21 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---------- Эффект-игра "Лабиринт"
+// ---------- Лабіринт
+//remade by stepko
 class EffectMaze : public EffectCalc {
 private:
-    const uint16_t maxSolves = MAZE_WIDTH * MAZE_WIDTH * 5;
-    char *maze = (char*)malloc(MAZE_WIDTH * MAZE_HEIGHT * sizeof(char));
-    int8_t playerPos[2];
-    uint32_t labTimer;
-    bool mazeMode = false;
-    bool mazeStarted = false;
-    uint8_t hue;
-    CRGB color;
-    CRGB playerColor = CRGB::White;
+    bool start = true;
+	bool checkFlag;
+	uint8_t posX, posY;
+	uint8_t color;
+	uint8_t Lookdir;
+	uint8_t _speed;
+	uint16_t SubPos;
+	bool maze[M_WIDTH][M_HEIGHT];
 
-    bool loadingFlag = true;
-    bool gameOverFlag = false;
-    bool gameDemo = true;
-    bool gamePaused = false;
-    bool track = random8(0,2);  // будет ли трек игрока
-    uint8_t buttons;
-
-    unsigned long timer = millis(), gameTimer = 200;         // Таймер скорости игр
-
-    void newGameMaze();
-    void buttonsTickMaze();
-    void movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY);
-    void demoMaze();
-    bool checkPath(int8_t x, int8_t y);
-    void CarveMaze(char *maze, int width, int height, int x, int y);
-    void GenerateMaze(char *maze, int width, int height);
-    void SolveMaze(char *maze, int width, int height);
-
-    bool checkButtons()
-    {
-        if (buttons != 4)
-            return true;
-        return false;
-    }
+	void digMaze(int x, int y);
+	void generateMaze();
 
     String setDynCtrl(UIControl*_val) override;
     //void setspd(const byte _spd) override; // перегрузка для скорости
