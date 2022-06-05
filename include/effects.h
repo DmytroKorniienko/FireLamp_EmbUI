@@ -2384,7 +2384,7 @@ class EffectPlayer : public EffectCalc {
         void getFromFile_332(uint8_t frame);
         void getFromFile_565(uint8_t frame);
         void drawFrame();
-        bool loadFile(String &filename);
+        bool loadFile(String filename);
         String setDynCtrl(UIControl*_val) override;
     
     public:

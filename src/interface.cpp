@@ -250,12 +250,12 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     myLamp.effects.loadeffname(tmpName,confEff->eff_nb);
     myLamp.effects.loadsoundfile(tmpSoundfile,confEff->eff_nb);
     interf->json_section_begin(FPSTR(TCONST_0005));
-    interf->text(FPSTR(TCONST_0092), tmpName, FPSTR(TINTF_089), false);
+    interf->text(FPSTR(TCONST_0092), tmpName, FPSTR(TINTF_089), true);
 #ifdef MP3PLAYER
-    interf->text(FPSTR(TCONST_00AB), tmpSoundfile, FPSTR(TINTF_0B2), false);
+    interf->text(FPSTR(TCONST_00AB), tmpSoundfile, FPSTR(TINTF_0B2), true);
 #endif
-    interf->checkbox(FPSTR(TCONST_0006), confEff->canBeSelected()? "1" : "0", FPSTR(TINTF_003), false);
-    interf->checkbox(FPSTR(TCONST_0007), confEff->isFavorite()? "1" : "0", FPSTR(TINTF_004), false);
+    interf->checkbox(FPSTR(TCONST_0006), confEff->canBeSelected()? "1" : "0", FPSTR(TINTF_003), true);
+    interf->checkbox(FPSTR(TCONST_0007), confEff->isFavorite()? "1" : "0", FPSTR(TINTF_004), true);
 
     interf->spacer();
 
@@ -303,6 +303,7 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
 /**
  * обработчик установок эффекта
  */
+void show_effects_config(Interface *, JsonObject *);
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
     recreateoptionsTask(true); // only cancel task
@@ -330,7 +331,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             myLamp.setEffHasMic(isEffHasMic);
 #endif
             myLamp.effects.removeLists();
-            recreateoptionsTask();
+            myLamp.setRefreshEffList(true);
         }
     }
     myLamp.setNumInList(isNumInList);
@@ -343,14 +344,18 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
         Task *_t = new Task(
-            300,
+            100,
             TASK_ONCE, [effect](){
-                                myLamp.effects.copyEffect(effect); // копируем текущий
+                                uint16_t eff_nb = myLamp.effects.copyEffect(effect); // копируем текущий
+                                confEff = myLamp.effects.getEffect(eff_nb);
                                 myLamp.effects.makeIndexFileFromList(); // создаем индекс по списку и на выход
                                 Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                section_main_frame(interf, nullptr);
+                                myLamp.effects.setSelected(eff_nb);
+                                show_effects_config(interf, nullptr);
                                 delete interf;
-                                recreateoptionsTask();
+                                String tmpStr=F("+");
+                                tmpStr+=String(eff_nb);
+                                myLamp.sendString(tmpStr.c_str(), CRGB::Green);
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -359,38 +364,46 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
     } else if (act == FPSTR(TCONST_00B0) || act == FPSTR(TCONST_00B1)) {
         uint16_t tmpEffnb = effect->eff_nb;
         bool isCfgRemove = (act == FPSTR(TCONST_00B1));
-        LOG(printf_P,PSTR("confEff->eff_nb=%d\n"), tmpEffnb);
-        if(tmpEffnb==myLamp.effects.getCurrent()){
-            myLamp.effects.directMoveBy(EFF_ENUM::EFF_NONE);
-            remote_action(RA_EFF_NEXT, NULL);
-        }
-        String tmpStr=F("- ");
-        tmpStr+=String(tmpEffnb);
-        myLamp.sendString(tmpStr.c_str(), CRGB::Red);
-        confEff = myLamp.effects.getEffect(EFF_ENUM::EFF_NONE);
+        LOG(printf_P,PSTR("remove confEff->eff_nb=%d\n"), tmpEffnb);
         if(isCfgRemove){
             Task *_t = new Task(
-                300,
+                100,
                 TASK_ONCE, [effect](){
-                                    myLamp.effects.deleteEffect(effect, true); // удаляем эффект из ФС
+                                    uint16_t del_eff_nb = effect->eff_nb;
+                                    uint16_t eff_nb = myLamp.effects.deleteEffect(effect, true); // удаляем эффект из ФС
+                                    confEff = myLamp.effects.getEffect(eff_nb);
                                     myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
                                     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                    section_main_frame(interf, nullptr);
+                                    myLamp.effects.setSelected(eff_nb);
+                                    myLamp.effects.directMoveBy(eff_nb);
+                                    //remote_action(RA_EFF_NEXT, NULL);
+                                    //remote_action(RA_EFFECT, eff_nb);
+                                    show_effects_config(interf, nullptr);
                                     delete interf;
-                                    recreateoptionsTask();
+                                    String tmpStr=F("-");
+                                    tmpStr+=String(del_eff_nb);
+                                    myLamp.sendString(tmpStr.c_str(), CRGB::Red);
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
         } else {
             Task *_t = new Task(
-                300,
+                100,
                 TASK_ONCE, [effect](){
-                                    myLamp.effects.deleteEffect(effect, false); // удаляем эффект из списка
+                                    uint16_t del_eff_nb = effect->eff_nb;
+                                    uint16_t eff_nb = myLamp.effects.deleteEffect(effect, false); // удаляем эффект из ФС
+                                    confEff = myLamp.effects.getEffect(eff_nb);
                                     myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
                                     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                    section_main_frame(interf, nullptr);
+                                    myLamp.effects.setSelected(eff_nb);
+                                    myLamp.effects.directMoveBy(eff_nb);
+                                    //remote_action(RA_EFF_NEXT, NULL);
+                                    //remote_action(RA_EFFECT, eff_nb);
+                                    show_effects_config(interf, nullptr);
                                     delete interf;
-                                    recreateoptionsTask();
+                                    String tmpStr=F("-");
+                                    tmpStr+=String(del_eff_nb);
+                                    myLamp.sendString(tmpStr.c_str(), CRGB::Red);
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
@@ -398,13 +411,13 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         return;
     } else if (act == FPSTR(TCONST_000B)) {
         Task *_t = new Task(
-            300,
+            100,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
                                 Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
                                 section_main_frame(interf, nullptr);
                                 delete interf;
-                                recreateoptionsTask();
+                                myLamp.setRefreshEffList(true);
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -413,15 +426,38 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         effect->canBeSelected((*data)[FPSTR(TCONST_0006)] == "1");
         effect->isFavorite((*data)[FPSTR(TCONST_0007)] == "1");
         myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], effect);
-// #ifdef CASHED_EFFECTS_NAMES
-//         effect->setName((*data)[FPSTR(TCONST_0092)]);
-// #endif
         myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
     }
 
     resetAutoTimers();
     myLamp.effects.makeIndexFileFromList(); // обновить индексный файл после возможных изменений
     section_main_frame(interf, nullptr);
+}
+
+/**
+ * обработчик установок эффекта direct
+ */
+void set_cur_eff_param(Interface *interf, JsonObject *data){
+    //LOG(printf_P, PSTR("set_cur_eff_param %p %p"), confEff, data);
+    if(data->containsKey(FPSTR(TCONST_0005))){
+        set_effects_config_param(interf,data);
+        return;
+    }
+
+    if (!confEff || !data) return;
+
+    EffectListElem *effect = confEff;
+
+    if(data->containsKey(FPSTR(TCONST_0006)))
+        effect->canBeSelected((*data)[FPSTR(TCONST_0006)] == "1");
+    if(data->containsKey(FPSTR(TCONST_0007)))
+        effect->isFavorite((*data)[FPSTR(TCONST_0007)] == "1");
+    if(data->containsKey(FPSTR(TCONST_00AB)))
+        myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], effect);
+    if(data->containsKey(FPSTR(TCONST_0092)))
+        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
+
+    myLamp.setRefreshEffList(true);
 }
 
 void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
@@ -1015,8 +1051,8 @@ void block_main_flags(Interface *interf, JsonObject *data){
 #ifdef MP3PLAYER
     interf->json_section_line(F("line124")); // спец. имя - разбирается внутри html
     if(mp3->isMP3Mode()){
-        interf->button(FPSTR(CMD_TCONST_0006), FPSTR(TINTF_0BD), FPSTR(P_GRAY));
-        interf->button(FPSTR(CMD_TCONST_0007), FPSTR(TINTF_0BE), FPSTR(P_GRAY));
+        interf->button(FPSTR(TCONST_00BE), FPSTR(TINTF_0BD), FPSTR(P_GRAY));
+        interf->button(FPSTR(TCONST_00BF), FPSTR(TINTF_0BE), FPSTR(P_GRAY));
         interf->button(FPSTR(TCONST_00C0), FPSTR(TINTF_0BF), FPSTR(P_GRAY));
         interf->button(FPSTR(TCONST_00C1), FPSTR(TINTF_0C0), FPSTR(P_GRAY));
     }
@@ -1988,12 +2024,10 @@ void set_settings_other(Interface *interf, JsonObject *data){
 
     resetAutoTimers();
 
-    DynamicJsonDocument *_str = new DynamicJsonDocument(1024);
-    (*_str)=(*data);
-
-    Task *_t = new Task(300, TASK_ONCE, [_str](){
-        JsonObject dataStore = (*_str).as<JsonObject>();
-        JsonObject *data = &dataStore;
+    Task *_t = new CtrlsTask(data, 300, TASK_ONCE, [](){
+        CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+        JsonObject storage = task->getData();
+        JsonObject *data = &storage; // task->getData();
 
         // LOG(printf_P,PSTR("Settings: %s\n"),tmpData.c_str());
         myLamp.setMIRR_H((*data)[FPSTR(TCONST_004C)] == "1");
@@ -2002,14 +2036,10 @@ void set_settings_other(Interface *interf, JsonObject *data){
         myLamp.setClearingFlag((*data)[FPSTR(TCONST_008E)] == "1");
         myLamp.setDRand((*data)[FPSTR(TCONST_004F)] == "1");
         myLamp.setShowName((*data)[FPSTR(TCONST_009E)] == "1");
-
         SETPARAM(FPSTR(TCONST_0026), ({if (myLamp.getMode() == LAMPMODE::MODE_DEMO){ myLamp.demoTimer(T_DISABLE); myLamp.demoTimer(T_ENABLE, embui.param(FPSTR(TCONST_0026)).toInt()); }}));
-
         float sf = (*data)[FPSTR(TCONST_0053)];
         SETPARAM(FPSTR(TCONST_0053), myLamp.setSpeedFactor(sf));
-
         myLamp.setIsShowSysMenu((*data)[FPSTR(TCONST_0096)] == "1");
-
     #ifdef TM1637_CLOCK
         uint8_t tmBri = ((*data)[FPSTR(TCONST_00D8)]).as<uint8_t>()<<4; // старшие 4 бита
         tmBri = tmBri | ((*data)[FPSTR(TCONST_00D9)]).as<uint8_t>(); // младшие 4 бита
@@ -2024,11 +2054,7 @@ void set_settings_other(Interface *interf, JsonObject *data){
         uint8_t alatmPT = ((*data)[FPSTR(TCONST_00BB)]).as<uint8_t>()<<4; // старшие 4 бита
         alatmPT = alatmPT | ((*data)[FPSTR(TCONST_00BC)]).as<uint8_t>(); // младшие 4 бита
         embui.var(FPSTR(TCONST_00BD), String(alatmPT)); myLamp.setAlarmPT(alatmPT);
-        //SETPARAM(FPSTR(TCONST_00BD), myLamp.setAlarmPT(alatmPT));
-        //LOG(printf_P, PSTR("alatmPT=%d, alatmP=%d, alatmT=%d\n"), alatmPT, myLamp.getAlarmP(), myLamp.getAlarmT());
-
         save_lamp_flags();
-        delete _str;
         TASK_RECYCLE; },
         &ts, false
     );
@@ -2675,9 +2701,9 @@ void set_mp3_player(Interface *interf, JsonObject *data){
 
     if(!myLamp.isONMP3()) return;
     uint16_t cur_palyingnb = mp3->getCurPlayingNb();
-    if(data->containsKey(FPSTR(CMD_TCONST_0006))){
+    if(data->containsKey(FPSTR(TCONST_00BE))){
         mp3->playEffect(cur_palyingnb-1,"");
-    } else if(data->containsKey(FPSTR(CMD_TCONST_0007))){
+    } else if(data->containsKey(FPSTR(TCONST_00BF))){
         mp3->playEffect(cur_palyingnb+1,"");
     } else if(data->containsKey(FPSTR(TCONST_00C0))){
         mp3->playEffect(cur_palyingnb-5,"");
@@ -2899,6 +2925,11 @@ if (!interf) return;
 
 void section_main_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
+
+    if(myLamp.isRefreshEffList()){
+        recreateoptionsTask();
+        myLamp.setRefreshEffList(false);
+    }
 
     interf->json_frame_interface(FPSTR(TINTF_080));
 
@@ -3174,6 +3205,8 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_000F), show_effects_config);
     embui.section_handle_add(FPSTR(TCONST_0010), set_effects_config_list);
     embui.section_handle_add(FPSTR(TCONST_0005), set_effects_config_param);
+    
+    embui.section_handle_add(FPSTR(TCONST_0058), set_cur_eff_param);
 
     embui.section_handle_add(FPSTR(TCONST_001A), set_onflag);
     embui.section_handle_add(FPSTR(TCONST_001B), set_demoflag);
@@ -3268,10 +3301,7 @@ void create_parameters(){
     embui.section_handle_add(FPSTR(TCONST_009F), show_settings_mp3);
     embui.section_handle_add(FPSTR(TCONST_00A0), set_settings_mp3);
 
-    embui.section_handle_add(FPSTR(CMD_TCONST_0006), set_mp3_player);
-    embui.section_handle_add(FPSTR(CMD_TCONST_0007), set_mp3_player);
-    embui.section_handle_add(FPSTR(TCONST_00C0), set_mp3_player);
-    embui.section_handle_add(FPSTR(TCONST_00C1), set_mp3_player);
+    embui.section_handle_add(FPSTR(TCONST_00C5), set_mp3_player);
 #endif
 #ifdef ENCODER
     embui.section_handle_add(FPSTR(TCONST_0008), show_settings_enc);
@@ -3344,42 +3374,43 @@ void sync_parameters(){
         CALL_SETTER(String(FPSTR(TCONST_0015)) + "0", myLamp.getLampBrightness(), set_effects_dynCtrl);
 
 #ifdef MP3PLAYER
-Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nullptr, [tmp](){
-    if(!mp3->isReady()){
-        LOG(println, F("DFPlayer not ready yet..."));
-        if(millis()<10000){
-            ts.getCurrentTask()->restartDelayed(TASK_SECOND*2);
-            return;
+    LOG(println, F("DFPlayer init..."));
+    Task *t = new Task(DFPALYER_START_DELAY+500, TASK_ONCE, nullptr, &ts, false, nullptr, [tmp](){
+        if(!mp3 || !mp3->isReady()){
+            LOG(println, F("DFPlayer not ready yet..."));
+            if(millis()<10000){
+                ts.getCurrentTask()->restartDelayed(TASK_SECOND*2);
+                return;
+            }
         }
-    }
-    
-    DynamicJsonDocument doc(1024);
-    //https://arduinojson.org/v6/api/jsondocument/
-    //JsonDocument::to<T>() clears the document and converts it to the specified type. Don’t confuse this function with JsonDocument::as<T>() that returns a reference only if the requested type matches the one in the document.
-    JsonObject obj = doc.to<JsonObject>();
-    //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
-    obj[FPSTR(TCONST_00A3)] = tmp.playTime;
-    obj[FPSTR(TCONST_00A4)] = tmp.playName ? "1" : "0";
-    //obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? "1" : "0";
-    //obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? "1" : "0";
-    obj[FPSTR(TCONST_00B7)] = (PLAYER_MODE)((uint8_t)tmp.playEffect | (((uint8_t)tmp.playMP3)<<1));
-    obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
-    obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
-    obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
-    obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? "1" : "0";
+        
+        DynamicJsonDocument doc(1024);
+        //https://arduinojson.org/v6/api/jsondocument/
+        //JsonDocument::to<T>() clears the document and converts it to the specified type. Don’t confuse this function with JsonDocument::as<T>() that returns a reference only if the requested type matches the one in the document.
+        JsonObject obj = doc.to<JsonObject>();
+        //obj[FPSTR(TCONST_00A2)] = embui.param(FPSTR(TCONST_00A2));  // пишет в плеер!
+        obj[FPSTR(TCONST_00A3)] = tmp.playTime;
+        obj[FPSTR(TCONST_00A4)] = tmp.playName ? "1" : "0";
+        //obj[FPSTR(TCONST_00A5)] = tmp.playEffect ? "1" : "0";
+        //obj[FPSTR(TCONST_00A8)] = tmp.playMP3 ? "1" : "0";
+        obj[FPSTR(TCONST_00B7)] = (PLAYER_MODE)((uint8_t)tmp.playEffect | (((uint8_t)tmp.playMP3)<<1));
+        obj[FPSTR(TCONST_00A6)] = String(tmp.alarmSound);
+        obj[FPSTR(TCONST_00A7)] = String(tmp.MP3eq); // пишет в плеер!
+        obj[FPSTR(TCONST_00A9)] = embui.param(FPSTR(TCONST_00A9));
+        obj[FPSTR(TCONST_00AF)] = tmp.limitAlarmVolume ? "1" : "0";
 
-    set_settings_mp3(nullptr, &obj);
-    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+        set_settings_mp3(nullptr, &obj);
+        doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
-    mp3->setupplayer(myLamp.effects.getEn(), myLamp.effects.getSoundfile()); // установить начальные значения звука
-    obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? "1" : "0";
-    set_mp3flag(nullptr, &obj);
-    doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
+        mp3->setupplayer(myLamp.effects.getEn(), myLamp.effects.getSoundfile()); // установить начальные значения звука
+        obj[FPSTR(TCONST_009D)] = tmp.isOnMP3 ? "1" : "0";
+        set_mp3flag(nullptr, &obj);
+        doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();
 
-    CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
-    TASK_RECYCLE;
-});
-t->enableDelayed();
+        CALL_SETTER(FPSTR(TCONST_00A2), embui.param(FPSTR(TCONST_00A2)), set_mp3volume);
+        TASK_RECYCLE;
+    });
+    t->enableDelayed();
 #endif
 
 #ifdef AUX_PIN
@@ -3472,7 +3503,6 @@ t->enableDelayed();
     uint8_t alarmPT = embui.param(FPSTR(TCONST_00BD)).toInt();
     obj[FPSTR(TCONST_00BB)] = alarmPT>>4;
     obj[FPSTR(TCONST_00BC)] = alarmPT&0x0F;
-
     obj[FPSTR(TCONST_0053)] = embui.param(FPSTR(TCONST_0053));
 
     set_settings_other(nullptr, &obj);
@@ -3755,11 +3785,9 @@ void remote_action(RA action, ...){
         case RA::RA_BRIGHT_NF:
             obj[FPSTR(TCONST_0017)] = true;
             obj[FPSTR(TCONST_00D5)] = true;
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
             set_effects_dynCtrl(nullptr, &obj);
             break;
         case RA::RA_CONTROL:
-            //CALL_INTF_OBJ(set_effects_dynCtrl);
             obj[FPSTR(TCONST_00D5)] = true;
             set_effects_dynCtrl(nullptr, &obj);
             break;

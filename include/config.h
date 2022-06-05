@@ -282,6 +282,14 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define CFG_AUTOSAVE_TIMEOUT       (20*1000U)                   // таймаут сохранения конфигурации эффекта, по умолчанию - 20 секунд
 #endif
 
+#ifndef EFF_BUFFER_SIZE
+#define EFF_BUFFER_SIZE            (2000U)                      // розмір буферу, потрібен бути кратним до 4
+#endif
+
+#ifndef EFF_NB_PER_FILE
+#define EFF_NB_PER_FILE            (4U)                         // кількість ефектів на 1 файл
+#endif
+
 #ifndef TEXT_OFFSET
 #define TEXT_OFFSET           (4U)                          // высота, на которой бежит текст (от низа матрицы)
 #endif

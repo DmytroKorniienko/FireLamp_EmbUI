@@ -194,12 +194,6 @@ private:
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
-    //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
-// #ifndef ENCODER
-//     uint8_t bPin = BTN_PIN;
-// #else  
-//     uint8_t bPin = 255;      // пин кнопки
-// #endif
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
     LAMPMODE mode = LAMPMODE::MODE_NORMAL; // текущий режим
@@ -264,9 +258,8 @@ public:
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
     uint64_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
     const LAMPFLAGS &getLampSettings() {return flags;} // возвращает упакованные флаги лампы
-    //void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
-    //void setbPin(uint8_t val) {bPin = val;}
-    //uint8_t getbPin() {return bPin;}
+    void setRefreshEffList(bool flag) { lampState.isEffListRefresh = flag; }
+    bool isRefreshEffList() { return lampState.isEffListRefresh; }
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
     LAMPSTATE &getLampState() {return lampState;}
@@ -333,7 +326,11 @@ public:
 
     void setSpeedFactor(float val) {
         lampState.speedfactor = val;
-        if(effects.worker) effects.worker->setDynCtrl(effects.getControls()[1]);
+        if(effects.worker) {
+            LList<UIControl*>&controls = effects.getControls();
+            if(controls.size()>1)
+                effects.worker->setDynCtrl(controls[1]);
+        }
     }
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)

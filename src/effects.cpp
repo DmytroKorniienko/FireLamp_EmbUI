@@ -8681,7 +8681,7 @@ void EffectPlayer::drawFrame () {
 }
 
 
-bool EffectPlayer::loadFile(String &filename) {
+bool EffectPlayer::loadFile(String filename) {
     if (!LittleFS.exists(filename)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
       LOG(println, filename);
       filename = F("/animations/Candle.565");

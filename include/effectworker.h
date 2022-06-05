@@ -52,16 +52,16 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // TaskScheduler - Let the runner object be a global, single instance shared between object files.
 extern Scheduler ts;
 
-typedef struct {
+typedef struct _LAMPSTATE{
     union {
-        uint32_t flags;
         struct {
-            bool isInitCompleted:1; // завершилась ли инициализация лампы
-            bool isOptPass:1;       // введен ли пароль для опций
             bool isMicOn:1;
             bool isDebug:1;
             bool isRandDemo:1;
 
+            bool isInitCompleted:1; // завершилась ли инициализация лампы
+            bool isOptPass:1;       // введен ли пароль для опций
+            bool isEffListRefresh:1; // потрібно оновити список ефектів
             bool dawnFlag:1; // флаг устанавливается будильником "рассвет"
             bool isStringPrinting:1; // печатается ли прямо сейчас строка?
             bool isEffectsDisabled:1; // признак отключения эффектов, пока выводится текст
@@ -71,7 +71,11 @@ typedef struct {
             uint8_t micAnalyseDivider:2; // делитель анализа микрофона 0 - выключен, 1 - каждый раз, 2 - каждый четвертый раз, 3 - каждый восьмой раз
             uint8_t warnType:2; // тип предупреждения 0 - цвет, 1 - цвет + счетчик,  1 - цвет + счетчик обратным цветом,  3 - счетчик цветом
         };
+        uint32_t flags;
     };
+    _LAMPSTATE(){
+        flags = 0;
+    }
     float speedfactor;
     uint8_t brightness;
 
@@ -169,45 +173,6 @@ public:
 class EffectListElem{
 private:
     uint8_t ms = micros()|0xFF; // момент создания элемента, для сортировки в порядке следования (естественно, что байта мало, но экономим память)
-// #ifdef CASHED_EFFECTS_NAMES
-//     String name;
-//     void initName(uint16_t nb) {
-//         uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
-//         String filename;
-//         char buffer[5];
-//         filename.concat(F("/eff/"));
-//         sprintf_P(buffer,PSTR("%04x"), swapnb);
-//         filename.concat(buffer);
-//         filename.concat(F(".json"));
-
-//         DynamicJsonDocument doc(2048);
-//         bool ok = false;
-
-//         File jfile = LittleFS.open(filename.c_str(), "r");
-//         DeserializationError error;
-//         if (jfile){
-//             error = deserializeJson(doc, jfile);
-//             jfile.close();
-//         } else {
-//             ok = false;
-//         }
-
-//         if (error) {
-//             LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filename.c_str());
-//             LOG(println, error.code());
-//             ok = false;
-//         }
-//         ok = true;
-
-//         if (ok && doc[F("name")]){
-//             name = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
-//         } else if(!ok) {
-//             // LittleFS.remove(filename);
-//             // savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
-//             name = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
-//         }
-//     }
-// #endif
 public:
     uint16_t eff_nb; // номер эффекта, для копий наращиваем старший байт
     EFFFLAGS flags; // флаги эффекта
@@ -215,17 +180,11 @@ public:
     EffectListElem(uint16_t nb, uint8_t mask){
         eff_nb = nb;
         flags.mask = mask;
-// #ifdef CASHED_EFFECTS_NAMES
-//         initName(nb);
-// #endif
     }
 
     EffectListElem(const EffectListElem *base){
         eff_nb = ((((base->eff_nb >> 8) + 1 ) << 8 ) | (base->eff_nb&0xFF)); // в старшем байте увеличиваем значение на 1
         flags = base->flags;
-// #ifdef CASHED_EFFECTS_NAMES
-//         initName(base->eff_nb);
-// #endif
     }
 
     bool canBeSelected(){ return flags.canBeSelected; }
@@ -233,10 +192,6 @@ public:
     bool isFavorite(){ return flags.isFavorite; }
     void isFavorite(bool val){ flags.isFavorite = val; }
     uint8_t getMS(){ return ms; }
-// #ifdef CASHED_EFFECTS_NAMES
-//     String& getName() {return name;}
-//     void setName(const String& _name) {name = _name;}
-// #endif
 };
 
 
@@ -491,7 +446,7 @@ private:
      */
     void chckdefconfigs(const char *folder);
 
-    void savedefaulteffconfig(uint16_t nb, String &filename);
+    void savedefaulteffconfig(uint16_t nb, String &filename, bool force=false);
     void saveeffconfig(uint16_t nb, char *folder=NULL);
     void makeIndexFile(const char *folder = NULL);
     // создать или обновить текущий индекс эффекта
@@ -510,7 +465,7 @@ private:
      *  @param doc - DynamicJsonDocument куда будет загружен джейсон
      *  @param jsonfile - файл, для загрузки
      */
-    bool deserializeFile(DynamicJsonDocument& doc, const char* filepath);
+    bool deserializeFile(DynamicJsonDocument& doc, const char* filepath, int32_t nb=-1);
 
     /**
      * процедура открывает индекс-файл на запись в переданный хендл,
@@ -597,7 +552,10 @@ public:
 
     // если текущий, то просто пишем имя звукового файла, если другой - создаем экземпляр, пишем, удаляем
     void setSoundfile(const String &_soundfile, EffectListElem*to){
-        if(to->eff_nb==curEff) soundfile=_soundfile;
+        if(to->eff_nb==curEff){
+            soundfile=_soundfile;
+            saveeffconfig(curEff);
+        }
         else {EffectWorker *tmp=new EffectWorker(to);
         tmp->curEff=to->eff_nb;
         tmp->selEff=to->eff_nb;
@@ -680,9 +638,9 @@ public:
     void setSelected(const uint16_t effnb);
     bool isSelected(){ return (curEff == selEff); }
     // копирование эффекта
-    void copyEffect(const EffectListElem *base);
+    uint16_t copyEffect(const EffectListElem *base);
     // удалить эффект
-    void deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
+    uint16_t deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
 };
 
 #endif
