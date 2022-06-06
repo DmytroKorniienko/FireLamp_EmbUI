@@ -447,7 +447,8 @@ private:
     void chckdefconfigs(const char *folder);
 
     void savedefaulteffconfig(uint16_t nb, String &filename, bool force=false);
-    void saveeffconfig(uint16_t nb, char *folder=NULL);
+    bool isemptyconfig(uint16_t nb, const char *folder=NULL);
+    void saveeffconfig(uint16_t nb, const char *folder=NULL, bool clear=false);
     void makeIndexFile(const char *folder = NULL);
     // создать или обновить текущий индекс эффекта
     void updateIndexFile();

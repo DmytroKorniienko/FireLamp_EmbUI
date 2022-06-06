@@ -406,9 +406,9 @@ void EffectWorker::removeConfig(const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
   LOG(printf_P,PSTR("Remove from FS: %s\n"), filename.c_str());
-  if (LittleFS.begin() && LittleFS.exists(filename))
+  saveeffconfig(nb,folder,true); // clear
+  if (isemptyconfig(nb,folder))
     LittleFS.remove(filename); // удаляем файл
-  LittleFS.end(); LittleFS.begin();
 }
 
 void EffectWorker::effectsReSort(SORT_TYPE _effSort)
@@ -733,7 +733,29 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
   return cfg_str;
 }
 
-void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
+bool EffectWorker::isemptyconfig(uint16_t nb, const char *folder){
+  String filename = geteffectpathname(nb,folder);
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  //const uint32_t pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+  File configFile = LittleFS.open(filename, "r+");
+  if(configFile.size()!=bufsize*nbfiles)
+    configFile.truncate(bufsize*nbfiles);
+  int8_t cnt=0;
+  for(uint8_t i=0; i<nbfiles; i++){
+      uint8_t chk;
+      configFile.seek(bufsize*i, SeekMode::SeekSet);
+      configFile.read(&chk,1);
+      //LOG(printf_P,PSTR("pos: %d, char: %d\n"), configFile.position(), buffer[0]);
+      if(chk!='{'){
+        cnt++;
+      }
+  }
+  configFile.close();
+  if(cnt==nbfiles) return true; else return false;
+}
+
+void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
   if(millis()<10000) return; // в первые десять секунд после рестарта запрещаем запись
   if(tConfigSave)
@@ -749,7 +771,8 @@ void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
   if(configFile.size()!=bufsize*nbfiles)
     configFile.truncate(bufsize*nbfiles);
   configFile.seek(bufsize*pos, SeekMode::SeekSet);
-  sprintf((char *)buffer, "%s",geteffconfig(nb).c_str());
+  if(!clear)
+    sprintf((char *)buffer, "%s",geteffconfig(nb).c_str());
   configFile.write(buffer,bufsize);
   configFile.close();
   delete[] buffer;
