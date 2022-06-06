@@ -6920,7 +6920,7 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
 }
 
 // ---------- Ефект лабіринт
-//remade by stepko
+//reworked by stepko
 void EffectMaze::digMaze(int x, int y) {
   int x1, y1;
   uint16_t x2, y2;
@@ -6956,7 +6956,7 @@ void EffectMaze::digMaze(int x, int y) {
       maze[x2][y2] = 0;
       x = x2;
       y = y2;
-      dir = random8() % 4;
+      dir = random(10) % 4;
       count = 0;
     } else {
       dir = (dir + 1) % 4;
@@ -6966,6 +6966,7 @@ void EffectMaze::digMaze(int x, int y) {
 }
 
 void EffectMaze::generateMaze() {
+  randomSeed(millis());
   uint16_t x, y;
   for (x = 0; x < M_WIDTH; x++) {
     for (y = 0; y < M_HEIGHT; y++) {
@@ -7091,7 +7092,7 @@ bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
 // !++
 String EffectMaze::setDynCtrl(UIControl*_val){
   if(_val->getId()==1)
-   _speed = EffectCalc::setDynCtrl(_val).toInt();   // установить скорость
+   _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 147);   // установить скорость
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }

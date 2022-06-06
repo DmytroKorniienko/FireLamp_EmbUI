@@ -84,10 +84,14 @@ void copyPastFile(String FileFrom, String FileTo) {
 // Функція затирає системний конфіг та заміняє його дефолтним
 void resetLamp() { // Функція відновлює дефолтні налаштування лампи (основний конфіг, WiFi)
     WiFi.disconnect(true); // закриваємо з'єднання, та забуваємо налаштування WiFi
+    if (LittleFS.exists(F("/backup/glb/default.json"))) {
+      copyPastFile(F("/backup/glb/default.json"), F("/backup/glb/config.json")); // створюємо копію дефолтних налаштувань в ту ж папку
+    }
     LittleFS.remove(F("/config.json"));  // видаляємо файли конфігурації, як оригінал, так і копію
     LittleFS.remove(F("/config_bkp.json"));
-    copyPastFile(F("/glb/default.json"), F("/glb/config.json")); // створюємо копію дефолтних налаштувань в ту ж папку
-    LittleFS.rename(F("/glb/config.json"), F("/config.json"));   // переносимо новий конфіг в корінь
+    if (LittleFS.exists(F("/backup/glb/default.json"))) {
+      LittleFS.rename(F("/backup/glb/config.json"), F("/config.json"));   // переносимо новий конфіг в корінь
+    }
     delay(1000);
     ESP.restart();  // Приміняємо зміни, перезагрузивши лампу
 }
