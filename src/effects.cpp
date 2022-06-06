@@ -6923,7 +6923,7 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
 //remade by stepko
 void EffectMaze::digMaze(int x, int y) {
   int x1, y1;
-  int x2, y2;
+  uint16_t x2, y2;
   int dx, dy;
   int dir, count;
   
@@ -6966,7 +6966,7 @@ void EffectMaze::digMaze(int x, int y) {
 }
 
 void EffectMaze::generateMaze() {
-  int x, y;
+  uint16_t x, y;
   for (x = 0; x < M_WIDTH; x++) {
     for (y = 0; y < M_HEIGHT; y++) {
       maze[x][y] = 1;
