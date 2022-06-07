@@ -175,7 +175,7 @@
 		{{#if html == "input" && type != "checkbox"}}
 			<span>{{label}}</span>
 			{{#if2 type == "range" || type == "color"}}<span id="{{id}}-val">: {{value}}</span>{{/if2}}
-			<!-- {{#if2 type == "text" || type == "password"}}<span id="{{id}}-val"> ({{calc value.length || 0}})</span>{{/if2}} -->
+			{{#if2 type == "password}}<!--<span id="{{id}}-val"> ({{calc value.length || 0}})</span>-->{{/if2}}
 			{{#if2 type == "text"}}<span id="{{id}}-val"> ({{calc value.length || 0}})</span>{{/if2}}
 			<input type="{{type}}" id="{{id}}" name="{{id}}" class="pure-u-1 mr" value="{{value}}"
 				{{#if2 (min || min === 0)}}min="{{min}}"{{/if2}}
