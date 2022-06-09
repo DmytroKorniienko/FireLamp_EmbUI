@@ -339,29 +339,39 @@ void EffectWorker::initDefault(const char *folder)
   String filename;
   DynamicJsonDocument doc(8192); // отожрет много памяти, но имена все равно не храним, так что хрен с ним, писать ручной парсер как-то лень
 
-  if(!LittleFS.exists(F("/eff"))){
-    LittleFS.mkdir(F("/eff"));
+  if(!LittleFS.exists(FPSTR(TCONST_005A))){
+    LittleFS.mkdir(FPSTR(TCONST_005A));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_005A));
   }
-  if(!LittleFS.exists(F("/backup"))){
-    LittleFS.mkdir(F("/backup"));
+  if(!LittleFS.exists(FPSTR(TCONST_002B))){
+    LittleFS.mkdir(FPSTR(TCONST_002B));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_002B));
   }
-  if(!LittleFS.exists(F("/backup/btn"))){
-    LittleFS.mkdir(F("/backup/btn"));
+  if(!LittleFS.exists(FPSTR(TCONST_0033))){
+    LittleFS.mkdir(FPSTR(TCONST_0033));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_0033));
   }
-  if(!LittleFS.exists(F("/backup/evn"))){
-    LittleFS.mkdir(F("/backup/evn"));
+  if(!LittleFS.exists(FPSTR(TCONST_0032))){
+    LittleFS.mkdir(FPSTR(TCONST_0032));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_0032));
   }
-  if(!LittleFS.exists(F("/backup/glb"))){
-    LittleFS.mkdir(F("/backup/glb"));
+  if(!LittleFS.exists(FPSTR(TCONST_0031))){
+    LittleFS.mkdir(FPSTR(TCONST_0031));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_0031));
   }
-  if(!LittleFS.exists(F("/backup/idx"))){
-    LittleFS.mkdir(F("/backup/idx"));
+  if(!LittleFS.exists(FPSTR(TCONST_002C))){
+    LittleFS.mkdir(FPSTR(TCONST_002C));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_002C));
+  }
+  if(!LittleFS.exists(FPSTR(TCONST_0078))){
+    LittleFS.mkdir(FPSTR(TCONST_0078));
+    LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), FPSTR(TCONST_0078));
   }
 
   if(folder && folder[0])
     filename = folder;
   else
-    filename = F("/eff_index.json");
+    filename = FPSTR(TCONST_0059);
 
   TRYAGAIN:
   if (!deserializeFile(doc, filename.c_str())){
@@ -624,7 +634,7 @@ const String EffectWorker::geteffectpathname(const uint16_t nb, const char *fold
       filename.concat(F("/"));
       filename.concat(folder);
   }
-  filename.concat(F("/eff/"));
+  filename.concat(FPSTR(TCONST_005A));
   sprintf_P(buffer,PSTR("e%02x%04x"), fnb, swapnb);
   filename.concat(buffer);
   filename.concat(F(".json"));
@@ -885,7 +895,7 @@ File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
     LOG(print, F("index:"));
     LOG(println, filename.c_str());
   } else
-    filename.concat(F("/eff_index.json"));
+    filename.concat(FPSTR(TCONST_0059));
   
   fhandle = LittleFS.open(filename, "w");
   return fhandle;
@@ -979,7 +989,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       sourcedir.concat(F("/"));
       sourcedir.concat(fromfolder);
   }
-  sourcedir.concat(F("/eff"));
+  sourcedir.concat(FPSTR(TCONST_005A));
 
 #ifdef ESP8266
   Dir dir = LittleFS.openDir(sourcedir);

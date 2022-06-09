@@ -1351,6 +1351,49 @@ void set_gbrflag(Interface *interf, JsonObject *data){
 
 void block_lamp_config(Interface *interf, JsonObject *data){
     if (!interf) return;
+    static const char descr[] PROGMEM = "eff,idx,glb,evn,btn";
+
+    typedef struct _FILELIST {
+        String filename;
+        struct {
+            union {
+                bool cfg_eff:1;
+                bool cfg_idx:1;
+                bool cfg_glb:1;
+                bool cfg_evn:1;
+                bool cfg_btn:1;
+            };
+            uint8_t flags;
+        };
+        _FILELIST(){flags=0;}
+        String getName(){
+            char buffer[5]; buffer[3]=0; buffer[4]=0;
+            uint8_t from=0, cnt=3;
+            String result=filename;
+            result.concat('(');
+            for(uint8_t i=0; i<5;i++){
+                if(flags&(1<<i)) {
+                    strncpy_P(buffer,descr+from,cnt);
+                    result.concat(buffer);
+                    from+=cnt; cnt=4;
+                } else {
+                    from+=4;
+                }
+            }
+            result.concat(')');
+            return result;
+        }
+    } FILELIST;
+
+    LList<String> dirlist;
+    LList<FILELIST> filelist;
+
+    dirlist.add(FPSTR(TCONST_0078));
+    dirlist.add(FPSTR(TCONST_002C));
+    dirlist.add(FPSTR(TCONST_0031));
+    dirlist.add(FPSTR(TCONST_0032));
+    dirlist.add(FPSTR(TCONST_0033));
+
     interf->json_section_hidden(FPSTR(TCONST_0028), FPSTR(TINTF_018));
 
     interf->json_section_begin(FPSTR(TCONST_0029));
@@ -1359,56 +1402,81 @@ void block_lamp_config(Interface *interf, JsonObject *data){
 
     // проверка на наличие конфигураций
     if(LittleFS.begin()){
-#ifdef ESP32
-        File tst = LittleFS.open(FPSTR(TCONST_002B));
-        if(tst.openNextFile())
-#else
-        Dir tst = LittleFS.openDir(FPSTR(TCONST_002B));
-        if(tst.next())
-#endif    
-        {
-            interf->select(FPSTR(TCONST_002A), cfg);
-#ifdef ESP32
-            File root = LittleFS.open(FPSTR(TCONST_002B));
-            File file = root.openNextFile();
-#else
-            Dir dir = LittleFS.openDir(FPSTR(TCONST_002B));
-#endif
-            String fn;
-#ifdef ESP32
-            while (file) {
-                fn=file.name();
-                if(!file.isDirectory()){
-#else
-            while (dir.next()) {
-                fn=dir.fileName();
-#endif
+        for(int i=0; i<dirlist.size(); i++){
+    #ifdef ESP32
+            File tst = LittleFS.open(dirlist[i]);
+            if(tst.openNextFile())
+    #else
+            Dir tst = LittleFS.openDir(dirlist[i]);
+            if(tst.next())
+    #endif    
+            {
+    #ifdef ESP32
+                File root = LittleFS.open(dirlist[i]);
+                File file = root.openNextFile();
+    #else
+                Dir dir = LittleFS.openDir(dirlist[i]);
+    #endif
+                String fn;
+    #ifdef ESP32
+                while (file) {
+                    fn=file.name();
+                    if(!file.isDirectory()){
+    #else
+                while (dir.next()) {
+                    fn=dir.fileName();
+    #endif
 
-                fn.replace(FPSTR(TCONST_002C),F(""));
-                //LOG(println, fn);
-                interf->option(fn, fn);
-#ifdef ESP32
-                    file = root.openNextFile();
+                    fn.replace(dirlist[i],F(""));
+                    bool found = false;
+                    for(int j=0; j<filelist.size(); j++){
+                        if(filelist[j].filename==fn){
+                            filelist[j].flags|=(1<<i);
+                            found=true;
+                        }
+                    }
+                    if(!found){
+                        FILELIST fl;
+                        fl.flags|=(1<<i);
+                        fl.filename=fn;
+                        filelist.add(fl);
+                    }
+    #ifdef ESP32
+                        file = root.openNextFile();
+                    }
                 }
+    #else
+                }
+    #endif
             }
-#else
-            }
-#endif
-            interf->json_section_end(); // select
-
-            interf->json_section_line();
-                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(P_GREEN));
-                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
-                interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(P_RED));
-            interf->json_section_end(); // json_section_line
-            filename.clear();
-            interf->spacer();
         }
     }
-    interf->json_section_begin(FPSTR(TCONST_0030));
-        interf->text(FPSTR(TCONST_00CF), filename, FPSTR(TINTF_01A), false);
-        interf->button_submit(FPSTR(TCONST_0030), FPSTR(TINTF_01B));
-    interf->json_section_end();
+    
+    interf->select(FPSTR(TCONST_002A), cfg);
+    for(int i=0; i<filelist.size(); i++){
+        //LOG(printf_P,PSTR("%s - %s : %d\n"),filelist[i].filename.c_str(),filelist[i].getName().c_str(),filelist[i].flags);
+        interf->option(filelist[i].filename, filelist[i].getName());
+    }
+    interf->json_section_end(); // select
+
+    interf->json_section_line();
+        interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002D), FPSTR(TINTF_019), FPSTR(P_GREEN));
+        interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_002E), FPSTR(TINTF_008));
+        interf->button_submit_value(FPSTR(TCONST_0029), FPSTR(TCONST_00B2), FPSTR(TINTF_006), FPSTR(P_RED));
+    interf->json_section_end(); // json_section_line
+
+    interf->json_section_line();
+        interf->checkbox(FPSTR(TCONST_0087), FPSTR(P_true),  FPSTR(TINTF_002), false);
+        interf->checkbox(FPSTR(TCONST_0088), FPSTR(P_false), FPSTR(TINTF_0F3), false);
+        interf->checkbox(FPSTR(TCONST_0089), FPSTR(P_false), FPSTR(TINTF_011), false);
+        interf->checkbox(FPSTR(TCONST_008A), FPSTR(P_false), FPSTR(TINTF_013), false);
+        interf->checkbox(FPSTR(TCONST_007B), FPSTR(P_false), FPSTR(TINTF_000), false);
+    interf->json_section_end(); // json_section_line
+
+    //interf->spacer();
+
+    interf->text(FPSTR(TCONST_00CF), filename, FPSTR(TINTF_01A), false);
+    interf->button_submit_value(FPSTR(TCONST_0029),FPSTR(TCONST_0030), FPSTR(TINTF_01B));
 
     interf->json_section_end(); // json_section_begin
     interf->json_section_end(); // json_section_hidden
@@ -1422,77 +1490,149 @@ void show_lamp_config(Interface *interf, JsonObject *data){
 }
 
 void edit_lamp_config(Interface *interf, JsonObject *data){
-    // Рбоата с конфигурациями в ФС
+    // Работа с конфигурациями в ФС
     if (!data) return;
-    String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
     String act = (*data)[FPSTR(TCONST_0029)];
 
+    String name = (data->containsKey(FPSTR(TCONST_002A)) && ((*data)[FPSTR(TCONST_0029)] != FPSTR(TCONST_0030)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
     if(name.isEmpty() || act.isEmpty())
         name = (*data)[FPSTR(TCONST_00CF)].as<String>();
     LOG(printf_P, PSTR("name=%s, act=%s\n"), name.c_str(), act.c_str());
-
-    if(name.isEmpty()) return;
-
-    if (act == FPSTR(TCONST_00B2)) { // удаление
-        String filename = String(FPSTR(TCONST_0031)) + name;
-        if (LittleFS.begin()) LittleFS.remove(filename);
-
-        filename = String(FPSTR(TCONST_002C)) + name;
-        if (LittleFS.begin()) LittleFS.remove(filename);
-
-        filename = String(FPSTR(TCONST_0032)) + name;
-        if (LittleFS.begin()) LittleFS.remove(filename);
-#ifdef ESP_USE_BUTTON
-        filename = String(FPSTR(TCONST_0033)) + name;
-        if (LittleFS.begin()) LittleFS.remove(filename);
-#endif
-    } else if (act == FPSTR(TCONST_002D)) { // загрузка
-        //myLamp.changePower(false);
-        resetAutoTimers();
-
-        String filename = String(FPSTR(TCONST_0031)) + name;
-        embui.load(filename.c_str());
-
-        filename = String(FPSTR(TCONST_002C)) + name;
-        myLamp.effects.initDefault(filename.c_str());
-
-        filename = String(FPSTR(TCONST_0032)) + name;
-        myLamp.events.loadConfig(filename.c_str());
-#ifdef ESP_USE_BUTTON
-        filename = String(FPSTR(TCONST_0033)) + name;
-        myButtons->clear();
-        if (!myButtons->loadConfig()) {
-            default_buttons();
-        }
-#endif
-        //embui.var(FPSTR(TCONST_002A), name);
-
-        String str = String(F("CFG:")) + name;
-        myLamp.sendString(str.c_str(), CRGB::Red);
-
-        Task *_t = new Task(3*TASK_SECOND, TASK_ONCE, [](){ myLamp.effects.makeIndexFileFromFS(); sync_parameters(); TASK_RECYCLE; }, &ts, false);
-        _t->enableDelayed();
-
-    } else { // создание
-        if(!name.endsWith(F(".json"))){
-            name.concat(F(".json"));
-        }
-
-        String filename = String(FPSTR(TCONST_0031)) + name;
-        embui.save(filename.c_str(), true);
-
-        filename = String(FPSTR(TCONST_002C)) + name;
-        myLamp.effects.makeIndexFileFromList(filename.c_str(), false);
-
-        filename = String(FPSTR(TCONST_0032)) + name;
-        myLamp.events.saveConfig(filename.c_str());
-#ifdef ESP_USE_BUTTON
-        filename = String(FPSTR(TCONST_0033)) + name;
-        myButtons->saveConfig(filename.c_str());
-#endif
+    if(name.isEmpty()){
+        (*data)[FPSTR(TCONST_00CF)] = FPSTR(TCONST_00C7);
+        name = FPSTR(TCONST_00C7);
+        //return;
     }
 
-    show_lamp_config(interf, data);
+    String cfg; serializeJson(*data,cfg); LOG(println,cfg);
+
+    if (act == FPSTR(TCONST_00B2)) { // удаление
+        Task *_t = new CtrlsTask(data, 100, TASK_ONCE, [](){
+            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+            JsonObject storage = task->getData();
+            JsonObject *data = &storage; // task->getData();
+            String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
+            if(name.isEmpty())
+                name = (*data)[FPSTR(TCONST_00CF)].as<String>();
+            String filename = String(FPSTR(TCONST_0031)) + name;
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
+
+            filename = String(FPSTR(TCONST_002C)) + name;
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0088)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
+
+            filename = String(FPSTR(TCONST_0032)) + name;
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0089)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
+
+            filename = String(FPSTR(TCONST_0032)) + name;
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
+
+    #ifdef ESP_USE_BUTTON
+            filename = String(FPSTR(TCONST_0033)) + name;
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_008A)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
+    #endif
+
+            String str = String(F("Del CFG: ")) + name;
+            myLamp.sendString(str.c_str(), CRGB::Red);
+        TASK_RECYCLE; }, &ts, false);
+        _t->enableDelayed();
+    } else if (act == FPSTR(TCONST_002D)) { // загрузка
+        Task *_t = new CtrlsTask(data, 100, TASK_ONCE, [](){
+            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+            JsonObject storage = task->getData();
+            JsonObject *data = &storage; // task->getData();
+            String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
+            if(name.isEmpty())
+                name = (*data)[FPSTR(TCONST_00CF)].as<String>();
+            //myLamp.changePower(false);
+            resetAutoTimers();
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0078)) + name;
+                //myLamp.loadEff(filename.c_str());
+            }
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0031)) + name;
+                embui.load(filename.c_str());
+            }
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0088)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_002C)) + name;
+                myLamp.effects.initDefault(filename.c_str());
+            }
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0089)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0032)) + name;
+                myLamp.events.loadConfig(filename.c_str());
+            }
+    #ifdef ESP_USE_BUTTON
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_008A)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0033)) + name;
+                myButtons->clear();
+                if (!myButtons->loadConfig()) {
+                    default_buttons();
+                }
+            }
+    #endif
+            String str = String(F("Load CFG: ")) + name;
+            myLamp.sendString(str.c_str(), CRGB::Green);
+
+            if ((*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true) || (*data)[FPSTR(TCONST_0088)].as<String>()==FPSTR(P_true)){
+                Task *_t = new Task(500, TASK_ONCE, [](){ myLamp.effects.makeIndexFileFromFS(); TASK_RECYCLE; }, &ts, false);
+                _t->enableDelayed();
+            } else if ((*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){
+                Task *_t = new Task(500, TASK_ONCE, [](){ sync_parameters(); TASK_RECYCLE; }, &ts, false);
+                _t->enableDelayed();
+            }
+        TASK_RECYCLE; }, &ts, false);
+        _t->enableDelayed();
+    } else { // создание
+        Task *_t = new CtrlsTask(data, 100, TASK_ONCE, [](){
+            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+            JsonObject storage = task->getData();
+            JsonObject *data = &storage; // task->getData();
+            String name = (data->containsKey(FPSTR(TCONST_002A)) && ((*data)[FPSTR(TCONST_0029)] != FPSTR(TCONST_0030)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
+            if(name.isEmpty())
+                name = (*data)[FPSTR(TCONST_00CF)].as<String>();
+            if(!name.endsWith(F(".json"))){
+                name.concat(F(".json"));
+            }
+
+            LOG(printf_P,PSTR("%s %s\n"),name.c_str(), (*data)[FPSTR(TCONST_0087)].as<String>().c_str());
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0078)) + name;
+                //myLamp.saveEffCfgs(filename.c_str());
+            }
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0031)) + name;
+                embui.save(filename.c_str(), true);
+            }
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0088)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_002C)) + name;
+                myLamp.effects.makeIndexFileFromList(filename.c_str(), false);
+            }
+
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_0089)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0032)) + name;
+                myLamp.events.saveConfig(filename.c_str());
+            }
+    #ifdef ESP_USE_BUTTON
+            if (LittleFS.begin() && (*data)[FPSTR(TCONST_008A)].as<String>()==FPSTR(P_true)){
+                String filename = String(FPSTR(TCONST_0033)) + name;
+                myButtons->saveConfig(filename.c_str());
+            }
+    #endif
+            String str = String(F("Save CFG: ")) + name;
+            myLamp.sendString(str.c_str(), CRGB::Blue);
+        TASK_RECYCLE; }, &ts, false);
+        _t->enableDelayed();
+    }
+    //show_lamp_config(interf, data);
+    embui.var(FPSTR(TCONST_002A), name);
+    section_settings_frame(interf, data);
 }
 
 void block_lamp_textsend(Interface *interf, JsonObject *data){
@@ -2918,7 +3058,15 @@ if (!interf) return;
         interf->button(FPSTR(TCONST_009A), FPSTR(TINTF_08F));
 #endif
 #ifndef MOOT
-    block_lamp_config(interf, data);
+    //block_lamp_config(interf, data);
+    interf->json_section_hidden(FPSTR(TCONST_0028), FPSTR(TINTF_018));
+    interf->json_section_end();
+    Task *_t = new Task(300, TASK_ONCE, [](){
+        Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+        show_lamp_config(interf, nullptr);
+        delete interf;
+    TASK_RECYCLE; }, &ts, false);
+    _t->enableDelayed();
 #endif
 
 }

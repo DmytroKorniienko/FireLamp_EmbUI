@@ -459,6 +459,7 @@ static const char TINTF_0EF[] PROGMEM = "Vertical";
 static const char TINTF_0F0[] PROGMEM = "Horizontal";
 static const char TINTF_0F1[] PROGMEM = "DFPlayer mode";
 static const char TINTF_0F2[] PROGMEM = "MP3 player + reset";
+static const char TINTF_0F3[] PROGMEM = "List";
 
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";

@@ -459,6 +459,7 @@ static const char TINTF_0EF[] PROGMEM = "Вертикальна";
 static const char TINTF_0F0[] PROGMEM = "Горизонтальна";
 static const char TINTF_0F1[] PROGMEM = "Режим плеєра";
 static const char TINTF_0F2[] PROGMEM = "MP3 плеєр + скидання";
+static const char TINTF_0F3[] PROGMEM = "Список";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";
