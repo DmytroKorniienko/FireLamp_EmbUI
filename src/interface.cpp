@@ -1466,11 +1466,11 @@ void block_lamp_config(Interface *interf, JsonObject *data){
     interf->json_section_end(); // json_section_line
 
     interf->json_section_line();
-        interf->checkbox(FPSTR(TCONST_0087), FPSTR(P_true),  FPSTR(TINTF_002), false);
+        interf->checkbox(FPSTR(TCONST_007B), FPSTR(P_false), FPSTR(TINTF_000), false);
         interf->checkbox(FPSTR(TCONST_0088), FPSTR(P_false), FPSTR(TINTF_0F3), false);
         interf->checkbox(FPSTR(TCONST_0089), FPSTR(P_false), FPSTR(TINTF_011), false);
         interf->checkbox(FPSTR(TCONST_008A), FPSTR(P_false), FPSTR(TINTF_013), false);
-        interf->checkbox(FPSTR(TCONST_007B), FPSTR(P_false), FPSTR(TINTF_000), false);
+        interf->checkbox(FPSTR(TCONST_0087), FPSTR(P_true),  FPSTR(TINTF_002), false);
     interf->json_section_end(); // json_section_line
 
     //interf->spacer();
@@ -1543,12 +1543,11 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
             String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
             if(name.isEmpty())
                 name = (*data)[FPSTR(TCONST_00CF)].as<String>();
-            //myLamp.changePower(false);
             resetAutoTimers();
 
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)){
                 String filename = String(FPSTR(TCONST_0078)) + name;
-                //myLamp.loadEff(filename.c_str());
+                myLamp.effects.loadEffectsBackup(filename.c_str());
             }
 
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){
@@ -1602,7 +1601,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)){
                 String filename = String(FPSTR(TCONST_0078)) + name;
-                //myLamp.saveEffCfgs(filename.c_str());
+                myLamp.effects.saveEffectsBackup(filename.c_str());
             }
 
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){

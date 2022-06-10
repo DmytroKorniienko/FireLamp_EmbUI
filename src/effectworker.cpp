@@ -695,9 +695,10 @@ String EffectWorker::getfseffconfig(uint16_t nb)
     jfile.seek(bufsize*pos, SeekMode::SeekSet);
   }
   if(jfile)
-    cfg_str = jfile.readString();
+    cfg_str = jfile.readStringUntil(0);//jfile.readString();
   jfile.close();
 
+  //LOG(println,cfg_str);
   return cfg_str;
 }
 
@@ -1060,6 +1061,68 @@ void EffectWorker::deleteFromIndexFile(const uint16_t effect)
   makeIndexFileFromList();
 }
 
+// створення резервної копії ефектів
+void EffectWorker::saveEffectsBackup(const char *filename)
+{
+  if(!filename) return;
+  String buffer;
+
+  File bkp = LittleFS.open(filename, "w");
+  for(int i=0; i<effects.size(); i++){
+    buffer = getfseffconfig(effects[i]->eff_nb);
+    if(!buffer.isEmpty())
+      bkp.println(buffer);
+  }
+  bkp.close();
+}
+
+// завантаження резервної копії ефектів
+void EffectWorker::loadEffectsBackup(const char *filename)
+{
+  if(!filename) return;
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  DynamicJsonDocument doc(bufsize*2);
+  File bkp = LittleFS.open(filename, "r");
+  File configFile;
+  uint8_t *buffer = new uint8_t[bufsize];
+  uint32_t pos=0;
+  String cfilename;
+
+  size_t size;
+  memset(buffer,0,bufsize);
+  while((size = bkp.readBytesUntil('\n',buffer,bufsize))){
+    String storage = (char *)buffer;
+    DeserializationError err = deserializeJson(doc, storage);
+    if (err) {
+			LOG(print, F("deserializeJson error: "));
+			LOG(println, err.code());
+      LOG(println, (char *)buffer);
+    } else {
+      if(size && buffer[size-1]==0x0D) buffer[size-1]=0;
+      uint16_t nb=doc[F("nb")].as<uint16_t>();
+      LOG(printf_P, PSTR("%d.%s\n"),nb,doc[F("name")].as<String>().c_str());
+      doc.clear(); doc.garbageCollect(); storage=String();
+      cfilename = geteffectpathname(nb);
+      pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+      configFile = LittleFS.open(cfilename, "r+");
+      if(configFile.size()!=bufsize*nbfiles)
+        configFile.truncate(bufsize*nbfiles);
+      configFile.seek(bufsize*pos, SeekMode::SeekSet);
+      configFile.write(buffer,bufsize);
+      configFile.close();
+    }
+    memset(buffer,0,bufsize);
+#ifdef ESP8266
+    ESP.wdtFeed(); // long term operation...
+#elif defined ESP32
+    delay(1);
+#endif
+  }
+  delete[] buffer;
+  bkp.close();
+}
+
 // удалить эффект
 uint16_t EffectWorker::deleteEffect(const EffectListElem *eff, bool isCfgRemove)
 {
@@ -1295,20 +1358,6 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   isMicActive = isMicOnState();
   for(int i=0; i<controls->size(); i++){
     setDynCtrl((*controls)[i]);
-    // switch(i){
-    //   case 0:
-    //     setbrt((*controls)[i]->getVal().toInt());
-    //     break;
-    //   case 1:
-    //     setspd((*controls)[i]->getVal().toInt());
-    //     break;
-    //   case 2:
-    //     setscl((*controls)[i]->getVal().toInt());
-    //     break;
-    //   default:
-    //     setDynCtrl((*controls)[i]);
-    //     break;
-    // }
   }
 
   active=true;
@@ -1343,55 +1392,6 @@ bool EffectCalc::dryrun(float n, uint8_t delay){
  * status - статус воркера, если работает и загружен эффект, отдает true
  */
 bool EffectCalc::status(){return active;}
-
-// /**
-//  * setbrt - установка яркости для воркера
-//  */
-// void EffectCalc::setbrt(const byte _brt){
-//   if(isRandDemo()){
-//     brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
-//   } else
-//     brightness = _brt;
-//   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
-//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-//   if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
-//     palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
-//     paletteIdx = brightness;
-//   }
-// }
-
-// /**
-//  * setspd - установка скорости для воркера
-//  */
-// void EffectCalc::setspd(const byte _spd){
-//   if(isRandDemo()){
-//     speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
-//   } else
-//     speed = _spd;
-//   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
-//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-//   if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
-//     palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
-//     paletteIdx = speed;
-//   }
-//   speedfactor = lampstate->speedfactor*SPEED_ADJ;
-// }
-
-// /**
-//  * setscl - установка шкалы для воркера
-//  */
-// void EffectCalc::setscl(byte _scl){
-//   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
-//   if(isRandDemo()){
-//     scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
-//   } else
-//     scale = _scl;
-//   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
-//   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
-//     palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
-//     paletteIdx = scale;
-//   }
-// }
 
 /**
  * setDynCtrl - была смена динамического контрола, idx=3+
@@ -1493,9 +1493,6 @@ void EffectCalc::scale2pallete(){
     return;
 
   LOG(println, F("Reset all controls"));
-  // setbrt((*ctrls)[0]->getVal().toInt());
-  // setspd((*ctrls)[1]->getVal().toInt());
-  // setscl((*ctrls)[2]->getVal().toInt());
   for(int i=0;i<ctrls->size();i++){
     setDynCtrl((*ctrls)[i]);
   }

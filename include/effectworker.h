@@ -642,6 +642,10 @@ public:
     uint16_t copyEffect(const EffectListElem *base);
     // удалить эффект
     uint16_t deleteEffect(const EffectListElem *eff, bool isCfgRemove = false);
+    // створення резервної копії ефектів
+    void saveEffectsBackup(const char *filename=NULL);
+    // завантаження резервної копії ефектів
+    void loadEffectsBackup(const char *filename=NULL);
 };
 
 #endif
