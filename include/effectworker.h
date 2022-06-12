@@ -527,7 +527,7 @@ public:
     // пересоздает индекс с текущего списка эффектов
     void makeIndexFileFromList(const char *folder = NULL, bool forceRemove = true);
     // пересоздает индекс с конфигов в ФС
-    void makeIndexFileFromFS(const char *fromfolder = NULL, const char *tofolder = NULL);
+    void makeIndexFileFromFS(const char *fromfolder = NULL, const char *tofolder = NULL, bool skipInit=false);
 
     byte getModeAmount() {return effects.size();}
 
@@ -645,7 +645,7 @@ public:
     // створення резервної копії ефектів
     void saveEffectsBackup(const char *filename=NULL);
     // завантаження резервної копії ефектів
-    void loadEffectsBackup(const char *filename=NULL);
+    void loadEffectsBackup(const char *filename=NULL, bool clear=false);
 };
 
 #endif

@@ -1507,7 +1507,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
     String cfg; serializeJson(*data,cfg); LOG(println,cfg);
 
     if (act == FPSTR(TCONST_00B2)) { // удаление
-        Task *_t = new CtrlsTask(data, 100, TASK_ONCE, [](){
+        Task *_t = new CtrlsTask(data, 300, TASK_ONCE, [](){
             CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
@@ -1523,7 +1523,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
             filename = String(FPSTR(TCONST_0032)) + name;
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_0089)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
 
-            filename = String(FPSTR(TCONST_0032)) + name;
+            filename = String(FPSTR(TCONST_0078)) + name;
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)) LittleFS.remove(filename);
 
     #ifdef ESP_USE_BUTTON
@@ -1536,7 +1536,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         TASK_RECYCLE; }, &ts, false);
         _t->enableDelayed();
     } else if (act == FPSTR(TCONST_002D)) { // загрузка
-        Task *_t = new CtrlsTask(data, 100, TASK_ONCE, [](){
+        Task *_t = new CtrlsTask(data, 300, TASK_ONCE, [](){
             CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
@@ -1547,7 +1547,7 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
 
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)){
                 String filename = String(FPSTR(TCONST_0078)) + name;
-                myLamp.effects.loadEffectsBackup(filename.c_str());
+                myLamp.effects.loadEffectsBackup(filename.c_str(),true);
             }
 
             if (LittleFS.begin() && (*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){
@@ -1573,11 +1573,30 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
                 }
             }
     #endif
-            String str = String(F("Load CFG: ")) + name;
-            myLamp.sendString(str.c_str(), CRGB::Green);
-
             if ((*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true) || (*data)[FPSTR(TCONST_0088)].as<String>()==FPSTR(P_true)){
-                Task *_t = new Task(500, TASK_ONCE, [](){ myLamp.effects.makeIndexFileFromFS(); TASK_RECYCLE; }, &ts, false);
+                Task *_t = new CtrlsTask(data, 500, TASK_ONCE, [](){
+                    CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+                    JsonObject storage = task->getData();
+                    JsonObject *data = &storage; // task->getData();
+                    
+                    myLamp.effects.makeIndexFileFromFS();
+                    uint16_t eff_nb = myLamp.effects.getSelected();
+                    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+                    myLamp.effects.setSelected(EFF_NONE);
+                    myLamp.effects.setSelected(eff_nb);
+                    myLamp.effects.directMoveBy(eff_nb);
+                    show_effects_config(interf, nullptr);
+                    delete interf;
+
+                    if((*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true)){
+                        String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
+                        if(name.isEmpty())
+                            name = (*data)[FPSTR(TCONST_00CF)].as<String>();
+                        String str = String(F("Load CFG: ")) + name;
+                        myLamp.sendString(str.c_str(), CRGB::Green);
+                    }
+                    TASK_RECYCLE;
+                }, &ts, false);
                 _t->enableDelayed();
             } else if ((*data)[FPSTR(TCONST_0087)].as<String>()==FPSTR(P_true)){
                 Task *_t = new Task(500, TASK_ONCE, [](){ sync_parameters(); TASK_RECYCLE; }, &ts, false);

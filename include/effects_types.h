@@ -64,7 +64,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-static const char PGidxtemplate[] PROGMEM  = "%s{\"n\":%d,\"f\":%d}";
+static const char PGidxtemplate[] PROGMEM  = "%s{\"n\":%d,\"f\":%d}\n";
 
 /** набор служебных текстовых констант (не для локализации)
  */
