@@ -307,6 +307,8 @@ static const char TCONST_00EB[] PROGMEM = "RGB";
 static const char TCONST_00EC[] PROGMEM = "White";
 static const char TCONST_00ED[] PROGMEM = "Other";
 static const char TCONST_00EE[] PROGMEM = "Eff";
+static const char TCONST_00EF[] PROGMEM = "folder";
+static const char TCONST_00F0[] PROGMEM = "curEff";
 
 /** набор служебных текстовых констант (HTTP/MQTT запросы)
  */

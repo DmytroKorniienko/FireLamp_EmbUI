@@ -336,6 +336,8 @@ void EffectWorker::clearControlsList()
 
 void EffectWorker::initDefault(const char *folder)
 {
+  LOG(println,F("initDefault"));
+  
   String filename;
   if(folder && folder[0])
     filename = folder;
@@ -354,6 +356,11 @@ void EffectWorker::initDefault(const char *folder)
     File idx = LittleFS.open(filename,"r");
     //idx.seek(0, SeekMode::SeekSet);
     while((size = idx.readBytesUntil('\n',storage,buffersize))){
+#ifdef ESP8266
+      ESP.wdtFeed();
+#elif defined ESP32
+      delay(1);
+#endif
       if(size<=3) continue;
       if(size && storage[size-1]==0x7D){
         storage[size]=0x00;
@@ -375,7 +382,7 @@ void EffectWorker::initDefault(const char *folder)
     if(!effcnt){
       if (LittleFS.begin() && LittleFS.exists(filename))
         LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
-      if(ntry<2)
+      if(ntry<2 && LittleFS.exists(FPSTR(TCONST_005A)))
         makeIndexFileFromFS(NULL,NULL,true);
       else
         makeIndexFile();
@@ -386,6 +393,8 @@ void EffectWorker::initDefault(const char *folder)
   if(!effcnt){
     LOG(println, F("Effect index currupted!"));
     return;
+  } else {
+    LOG(printf_P, PSTR("Found index for %d effects\n"),effcnt);
   }
 
   //LOG(printf_P,PSTR("Создаю список эффектов конструктор (%d): %s\n"),arr.size(),idx.c_str());
@@ -641,7 +650,7 @@ const String EffectWorker::geteffectpathname(const uint16_t nb, const char *fold
 void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename, bool force){
 
   const String efname(FPSTR(T_EFFNAMEID[(uint8_t)nb])); // выдергиваем имя эффекта из таблицы
-  LOG(printf_P,PSTR("Make default config: %d %s\n"), nb, efname.c_str());
+  LOG(printf_P,PSTR("Make default config: %d %s %s\n"), nb, efname.c_str(), filename.c_str());
 
   String  cfg(FPSTR(T_EFFUICFG[(uint8_t)nb]));    // извлекаем конфиг для UI-эффекта по-умолчанию из флеш-таблицы
   cfg.replace(F("@name@"), efname);
@@ -793,27 +802,71 @@ void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
  *
  */
-void EffectWorker::chckdefconfigs(const char *folder){
-  uint16_t tst = 0;
-  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
-    if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
-      continue;
+void EffectWorker::chkdefconfigs(const char *folder){
+//   uint16_t tst = 0;
+//   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
+//     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
+//       continue;
 
-#ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
-#endif
-    String cfgfilename = geteffectpathname(i, folder);
-    if(!LittleFS.exists(cfgfilename) || tst>i){ // если конфига эффекта не существует, создаем дефолтный
-      savedefaulteffconfig(i, cfgfilename);
-      if(!tst)
-        tst = i + EFF_NB_PER_FILE;
-    } else {
-      tst = 0;
-    }
-#ifdef ESP8266
-    ESP.wdtFeed();
-#endif
+// #ifndef MIC_EFFECTS
+//     if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+// #endif
+//     String cfgfilename = geteffectpathname(i, folder);
+//     if(!LittleFS.exists(cfgfilename) || tst>i){ // если конфига эффекта не существует, создаем дефолтный
+//       savedefaulteffconfig(i, cfgfilename);
+//       if(!tst)
+//         tst = i + EFF_NB_PER_FILE;
+//     } else {
+//       tst = 0;
+//     }
+// #ifdef ESP8266
+//     ESP.wdtFeed();
+// #endif
+//   }
+
+  DynamicJsonDocument doc(512);
+  JsonObject data = doc.to<JsonObject>();
+  data[FPSTR(TCONST_00EF)] = folder ? folder : "";
+  data[FPSTR(TCONST_00F0)] = EFF_ENUM::EFF_NONE;
+
+  LOG(println,F("Create chkdefconfigs task"));
+  String scurEff = embui.param(FPSTR(TCONST_0016)); // текущий создадим вне очереди
+  uint16_t ce = scurEff.toInt();
+  String cfgfilename = geteffectpathname(ce, folder);
+  if(getfseffconfig(ce).isEmpty()){ // если конфига эффекта не существует, создаем дефолтный
+    savedefaulteffconfig(ce, cfgfilename, true);
   }
+
+  Task *_t = new JsonTask(&data, 1000, TASK_FOREVER, [this](){
+    JsonTask *task = (JsonTask *)ts.getCurrentTask();
+    JsonObject storage = task->getData();
+    JsonObject *data = &storage; // task->getData();
+
+    //LOG(println,F("chkdefconfigs task"));
+
+    String folder=(*data)[FPSTR(TCONST_00EF)];
+    uint16_t i=(*data)[FPSTR(TCONST_00F0)].as<uint16_t>();
+
+    if(!(i < (uint16_t)256)){
+      //LOG(println,F("chkdefconfigs task canceled"));
+      task->cancel();
+      return;
+    }
+
+    uint16_t chk=i+1;
+    while(!strlen_P(T_EFFNAMEID[chk]) && chk<256){   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
+      chk++;
+    }
+    (*data)[FPSTR(TCONST_00F0)]=chk;
+#ifndef MIC_EFFECTS
+    if(i>EFF_ENUM::EFF_TIME) {return;} // пропускаем эффекты для микрофона, если отключен микрофон
+#endif
+    String cfgfilename = geteffectpathname(i, folder.isEmpty() ? NULL : folder.c_str());
+    if(getfseffconfig(i).isEmpty() || !i){ // если конфига эффекта не существует или 0 эффект, создаем дефолтный
+      savedefaulteffconfig(i, cfgfilename, true);
+    }
+  }, &ts, false, nullptr, [this](){TASK_RECYCLE;});
+  _t->enable();
 }
 
 void EffectWorker::autoSaveConfig(bool force) {
@@ -914,7 +967,7 @@ void EffectWorker::makeIndexFile(const char *folder)
   // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношерстные операции во времени
   // сначала проверяем наличие дефолтных конфигов для всех эффектов
   if(!LittleFS.exists(FPSTR(TCONST_005A)))
-    chckdefconfigs(folder);
+    chkdefconfigs(folder);
 
   File indexFile;
 

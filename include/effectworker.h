@@ -444,7 +444,7 @@ private:
      * проверка на существование "дефолтных" конфигов для всех статичных эффектов
      *
      */
-    void chckdefconfigs(const char *folder);
+    void chkdefconfigs(const char *folder);
 
     void savedefaulteffconfig(uint16_t nb, String &filename, bool force=false);
     bool isemptyconfig(uint16_t nb, const char *folder=NULL);

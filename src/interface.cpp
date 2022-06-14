@@ -72,7 +72,7 @@ namespace INTERFACE {
 // планировщик заполнения списка
 Task *optionsTask = nullptr;       // задача для отложенной генерации списка
 Task *delayedOptionTask = nullptr; // текущая отложенная задача, для сброса при повторных входах
-CtrlsTask *ctrlsTask = nullptr;    // планировщик контролов
+JsonTask *ctrlsTask = nullptr;    // планировщик контролов
 StringTask *pubEffTask = nullptr;  // отложенная публикация эффекта
 
 static EffectListElem *confEff = nullptr; // эффект, который сейчас конфигурируется на странице "Управление списком эффектов"
@@ -969,9 +969,9 @@ void set_effects_dynCtrl(Interface *interf, JsonObject *data){
    
     //LOG(println, "Delaying dynctrl");
     //String tmp; serializeJson(*data,tmp); LOG(println, tmp);
-    ctrlsTask = new CtrlsTask(data, 300, TASK_ONCE,
+    ctrlsTask = new JsonTask(data, 300, TASK_ONCE,
         [](){
-            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+            JsonTask *task = (JsonTask *)ts.getCurrentTask();
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
             if(!data) return;
@@ -1507,8 +1507,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
     String cfg; serializeJson(*data,cfg); LOG(println,cfg);
 
     if (act == FPSTR(TCONST_00B2)) { // удаление
-        Task *_t = new CtrlsTask(data, 300, TASK_ONCE, [](){
-            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+        Task *_t = new JsonTask(data, 300, TASK_ONCE, [](){
+            JsonTask *task = (JsonTask *)ts.getCurrentTask();
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
             String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
@@ -1536,8 +1536,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         TASK_RECYCLE; }, &ts, false);
         _t->enableDelayed();
     } else if (act == FPSTR(TCONST_002D)) { // загрузка
-        Task *_t = new CtrlsTask(data, 300, TASK_ONCE, [](){
-            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+        Task *_t = new JsonTask(data, 300, TASK_ONCE, [](){
+            JsonTask *task = (JsonTask *)ts.getCurrentTask();
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
             String name = (data->containsKey(FPSTR(TCONST_002A)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
@@ -1574,8 +1574,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
             }
     #endif
             if ((*data)[FPSTR(TCONST_007B)].as<String>()==FPSTR(P_true) || (*data)[FPSTR(TCONST_0088)].as<String>()==FPSTR(P_true)){
-                Task *_t = new CtrlsTask(data, 500, TASK_ONCE, [](){
-                    CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+                Task *_t = new JsonTask(data, 500, TASK_ONCE, [](){
+                    JsonTask *task = (JsonTask *)ts.getCurrentTask();
                     JsonObject storage = task->getData();
                     JsonObject *data = &storage; // task->getData();
                     
@@ -1605,8 +1605,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
         TASK_RECYCLE; }, &ts, false);
         _t->enableDelayed();
     } else { // создание
-        Task *_t = new CtrlsTask(data, 100, TASK_ONCE, [](){
-            CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+        Task *_t = new JsonTask(data, 100, TASK_ONCE, [](){
+            JsonTask *task = (JsonTask *)ts.getCurrentTask();
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
             String name = (data->containsKey(FPSTR(TCONST_002A)) && ((*data)[FPSTR(TCONST_0029)] != FPSTR(TCONST_0030)) ? (*data)[FPSTR(TCONST_002A)] : (*data)[FPSTR(TCONST_00CF)]);
@@ -2182,8 +2182,8 @@ void set_settings_other(Interface *interf, JsonObject *data){
 
     resetAutoTimers();
 
-    Task *_t = new CtrlsTask(data, 300, TASK_ONCE, [](){
-        CtrlsTask *task = (CtrlsTask *)ts.getCurrentTask();
+    Task *_t = new JsonTask(data, 300, TASK_ONCE, [](){
+        JsonTask *task = (JsonTask *)ts.getCurrentTask();
         JsonObject storage = task->getData();
         JsonObject *data = &storage; // task->getData();
 

@@ -198,7 +198,7 @@ public:
 
 //-----------------------------------------------
 
-class CtrlsTask : public Task {
+class JsonTask : public Task {
     DynamicJsonDocument *_data = nullptr;
     INLINE DynamicJsonDocument *makeDoc(JsonObject *data) {
         DynamicJsonDocument *storage = new DynamicJsonDocument(data->memoryUsage()*2+32);
@@ -227,11 +227,11 @@ public:
         }
         return same;
     }
-    INLINE CtrlsTask(JsonObject *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
+    INLINE JsonTask(JsonObject *data = nullptr, unsigned long aInterval=0, long aIterations=0, TaskCallback aCallback=NULL, Scheduler* aScheduler=NULL, bool aEnable=false, TaskOnEnable aOnEnable=NULL, TaskOnDisable aOnDisable=NULL)
     : Task(aInterval, aIterations, aCallback, aScheduler, aEnable, aOnEnable, aOnDisable){
         _data = makeDoc(data);
     }
-    ~CtrlsTask() {if(_data) delete _data;}
+    ~JsonTask() {if(_data) delete _data;}
 };
 
 //-----------------------------------------------
