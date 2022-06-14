@@ -162,7 +162,7 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
     if(LittleFS.begin()){
         clear_events();
         DynamicJsonDocument doc(4096);
-        String filename = cfg ? String(cfg) : String(F("/events_config.json"));
+        String filename = cfg ? String(cfg) : String(FPSTR(TCONST_00A8));
         if (!deserializeFile(doc, filename.c_str())){
             LOG(print, F("deserializeJson error: "));
             LOG(println, filename);
@@ -195,7 +195,7 @@ void EVENT_MANAGER::saveConfig(const char *cfg)
     if(LittleFS.begin()){
         File configFile;
         if(cfg == nullptr)
-            configFile = LittleFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+            configFile = LittleFS.open(FPSTR(TCONST_00A8), "w"); // PSTR("w") использовать нельзя, будет исключение!
         else
             configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
         configFile.print("[");

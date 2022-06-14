@@ -233,10 +233,10 @@ static const char TCONST_00A1[] PROGMEM = "settings_mp3";
 static const char TCONST_00A2[] PROGMEM = "mp3volume";
 static const char TCONST_00A3[] PROGMEM = "playTime";
 static const char TCONST_00A4[] PROGMEM = "playName";
-//static const char TCONST_00A5[] PROGMEM = "playEffect";
+static const char TCONST_00A5[] PROGMEM = "/buttons_config.json";
 static const char TCONST_00A6[] PROGMEM = "alarmSound";
 static const char TCONST_00A7[] PROGMEM = "eqSetings";
-//static const char TCONST_00A8[] PROGMEM = "playMP3";
+static const char TCONST_00A8[] PROGMEM = "/events_config.json";
 static const char TCONST_00A9[] PROGMEM = "mp3count";
 static const char TCONST_00AA[] PROGMEM = "demo";
 static const char TCONST_00AB[] PROGMEM = "cf_eff_sndf";
@@ -1188,7 +1188,6 @@ class Boid {
 // refactored by Vortigont
 #define CUBE2D_MAX_SIZE 7       // максимальный размер обрабатываемых квадратов (AxA)
 #define CUBE2D_PAUSE_FRAMES 20   // число кадров паузы между трансформациями
-#endif
 
 // ----------- Эффект "Звезды" адаптация SottNick
 #define CENTER_DRIFT_SPEED 6U         // скорость перемещения плавающего центра возникновения звёзд
@@ -1323,4 +1322,4 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 #define TOP            (HEIGHT - 1)                // Don't allow the bars to go offscreen
 //#define BAR_WIDTH      (WIDTH  / (NUM_BANDS - 1))  // If width >= 8 light 1 LED width per bar, >= 16 light 2 LEDs width bar etc
 
-
+#endif // #define __EFFECTS_TYPES_H

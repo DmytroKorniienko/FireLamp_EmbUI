@@ -42,6 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "timeProcessor.h"
 #include "misc.h"
 #include "LList.h"
+#include "effects_types.h"
 
 #define EVENT_TSTAMP_LENGTH 17  // для строки вида "YYYY-MM-DDThh:mm"
 

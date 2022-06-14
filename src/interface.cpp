@@ -4028,7 +4028,7 @@ void remote_action(RA action, ...){
                     myLamp.disableEffects(); // заборонити роботу ефект-процессору
                     myLamp.setBrightness(50, false, false); // встановити яскравість 50
                 }
-                String str = F("Скидання налаштувань лампи");
+                String str = FPSTR(TINTF_0F4);
                 remote_action(RA::RA_SEND_TEXT, str.c_str(), NULL);
                 Task *t = new Task(500, TASK_FOREVER, [](){
                     if(!myLamp.isPrintingNow()){
@@ -4039,6 +4039,13 @@ void remote_action(RA action, ...){
                         Task *t = new Task(500, TASK_FOREVER, [](){
                             if(!myLamp.isWarningTask()){
                                 if(myLamp.isLampOn()){
+                                    myLamp.effects.clearEffDir();
+                                    myLamp.effects.removeLists();
+                                    LittleFS.remove(FPSTR(P_cfgfile));  // видаляємо файли конфігурації, як оригінал, так і копію
+                                    LittleFS.remove(FPSTR(P_cfgfile_bkp));
+                                    LittleFS.remove(FPSTR(TCONST_00A5));
+                                    LittleFS.remove(FPSTR(TCONST_00A8));
+                                    LittleFS.remove(FPSTR(TCONST_0059));
                                     ESP.restart();
                                 } else {
                                     Task *t = new Task(2000, TASK_ONCE, [](){
@@ -4046,7 +4053,7 @@ void remote_action(RA action, ...){
                                         myLamp.setOffAfterText();
                                         myLamp.setBrightness(50, false, false); // встановити яскравість 50
                                         myLamp.changePower(true);
-                                        String str = F("Операція скасована");
+                                        String str = FPSTR(TINTF_0F5);
                                         myLamp.sendString(str.c_str(), CRGB::Red, true, true);
                                     } , &ts, false, nullptr, [](){
                                         TASK_RECYCLE;

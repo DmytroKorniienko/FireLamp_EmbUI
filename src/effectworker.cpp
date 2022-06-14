@@ -342,7 +342,6 @@ void EffectWorker::initDefault(const char *folder)
   else
     filename = FPSTR(TCONST_0059);
 
-  File idx = LittleFS.open(filename,"r");
   const uint16_t buffersize = 32;
   char storage[buffersize];
   DynamicJsonDocument doc(buffersize*2+32);
@@ -352,6 +351,8 @@ void EffectWorker::initDefault(const char *folder)
 
   clearEffectList();
   do {
+    File idx = LittleFS.open(filename,"r");
+    //idx.seek(0, SeekMode::SeekSet);
     while((size = idx.readBytesUntil('\n',storage,buffersize))){
       if(size<=3) continue;
       if(size && storage[size-1]==0x7D){
@@ -380,8 +381,8 @@ void EffectWorker::initDefault(const char *folder)
         makeIndexFile();
     }
     ntry++;
+    idx.close();
   } while(!effcnt && ntry<3);
-  idx.close();
   if(!effcnt){
     LOG(println, F("Effect index currupted!"));
     return;
@@ -1099,6 +1100,44 @@ void EffectWorker::saveEffectsBackup(const char *filename)
   bkp.close();
 }
 
+// очищення папки з конфігураціями ефектів
+void EffectWorker::clearEffDir()
+{
+  LOG(println, F("Clear /eff folder"));
+  String effdir = FPSTR(TCONST_005A);
+#ifdef ESP8266
+  Dir dir = LittleFS.openDir(effdir);
+#endif
+
+#ifdef ESP32
+  File dir = LittleFS.open(effdir);
+  if (!dir || !dir.isDirectory()){
+    LOG(print, F("Can't open dir: ")); LOG(println, effdir);
+    return;
+  }
+#endif
+
+  String fn;
+#ifdef ESP8266
+  while (dir.next()) {
+      fn=effdir + "/" + dir.fileName();
+#endif
+#ifdef ESP32
+  File _f = dir.openNextFile();
+  while(_f){
+      fn = _f.name();
+#endif
+      LittleFS.remove(fn);
+#ifdef ESP8266
+  ESP.wdtFeed();
+#elif defined ESP32
+  delay(1);
+  _f = dir.openNextFile();
+#endif
+  }
+  //LittleFS.rmdir(effdir);
+}
+
 // завантаження резервної копії ефектів
 void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
 {
@@ -1112,41 +1151,8 @@ void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
   uint32_t pos=0, nb=0;
   String cfilename;
 
-  if(clear){
-    LOG(println, F("Clear /eff folder"));
-    String effdir = FPSTR(TCONST_005A);
-  #ifdef ESP8266
-    Dir dir = LittleFS.openDir(effdir);
-  #endif
-
-  #ifdef ESP32
-    File dir = LittleFS.open(effdir);
-    if (!dir || !dir.isDirectory()){
-      LOG(print, F("Can't open dir: ")); LOG(println, effdir);
-      return;
-    }
-  #endif
-
-    String fn;
-  #ifdef ESP8266
-    while (dir.next()) {
-        fn=effdir + "/" + dir.fileName();
-  #endif
-  #ifdef ESP32
-    File _f = dir.openNextFile();
-    while(_f){
-        fn = _f.name();
-  #endif
-        LittleFS.remove(fn);
-  #ifdef ESP8266
-    ESP.wdtFeed();
-  #elif defined ESP32
-    delay(1);
-    _f = dir.openNextFile();
-  #endif
-    }
-    //LittleFS.rmdir(effdir);
-  }
+  if(clear)
+    clearEffDir();
 
   size_t size;
   memset(buffer,0,bufsize);

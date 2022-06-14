@@ -646,6 +646,8 @@ public:
     void saveEffectsBackup(const char *filename=NULL);
     // завантаження резервної копії ефектів
     void loadEffectsBackup(const char *filename=NULL, bool clear=false);
+    // очищення папки з конфігураціями ефектів
+    void clearEffDir();
 };
 
 #endif

@@ -282,7 +282,7 @@ int Buttons::loadConfig(const char *cfg){
 		File configFile;
 		if (cfg == nullptr) {
 			LOG(println, F("Load default buttons config file"));
-			configFile = LittleFS.open(F("/buttons_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+			configFile = LittleFS.open(FPSTR(TCONST_00A5), "r"); // PSTR("r") использовать нельзя, будет исключение!
 		} else {
 			LOG(printf_P, PSTR("Load %s buttons config file\n"), cfg);
 			configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
@@ -323,7 +323,7 @@ void Buttons::saveConfig(const char *cfg){
 		File configFile;
 		if (cfg == nullptr) {
 			LOG(println, F("Save default buttons config file"));
-			configFile = LittleFS.open(F("/buttons_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+			configFile = LittleFS.open(FPSTR(TCONST_00A5), "w"); // PSTR("w") использовать нельзя, будет исключение!
 		} else {
 			LOG(printf_P, PSTR("Save %s buttons config file\n"), cfg);
 			configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
