@@ -281,12 +281,14 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
     //}
 
     interf->json_section_line();
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B0), FPSTR(TINTF_0B5), FPSTR(TCONST_00B3));
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B1), FPSTR(TINTF_0B4), FPSTR(P_RED));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B0), FPSTR(TINTF_0B4), FPSTR(P_ORANGE));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B1), FPSTR(TINTF_0B5), FPSTR(P_RED));
     interf->json_section_end();
 
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(TCONST_000D));
-
+    interf->json_section_line();
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(P_BLUE));
+    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B3), FPSTR(TINTF_007), FPSTR(P_BLACK));
+    interf->json_section_end();
     interf->json_section_end();
 }
 
@@ -370,7 +372,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                 100,
                 TASK_ONCE, [effect](){
                                     uint16_t del_eff_nb = effect->eff_nb;
-                                    uint16_t eff_nb = myLamp.effects.deleteEffect(effect, true); // удаляем эффект из ФС
+                                    uint16_t eff_nb = myLamp.effects.deleteEffect(effect, true); // удаляем эффект из ФС та списку
                                     confEff = myLamp.effects.getEffect(eff_nb);
                                     myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
                                     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
@@ -390,19 +392,14 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             Task *_t = new Task(
                 100,
                 TASK_ONCE, [effect](){
-                                    uint16_t del_eff_nb = effect->eff_nb;
-                                    uint16_t eff_nb = myLamp.effects.deleteEffect(effect, false); // удаляем эффект из ФС
-                                    confEff = myLamp.effects.getEffect(eff_nb);
-                                    myLamp.effects.makeIndexFileFromList(); // создаем индекс по текущему списку и на выход
+                                    uint16_t curEff = effect->eff_nb;
+                                    myLamp.effects.resettodefaultconfig(curEff);
+                                    myLamp.effects.setSelected(curEff,true);
                                     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                    myLamp.effects.setSelected(eff_nb);
-                                    myLamp.effects.directMoveBy(eff_nb);
-                                    //remote_action(RA_EFF_NEXT, NULL);
-                                    //remote_action(RA_EFFECT, eff_nb);
                                     show_effects_config(interf, nullptr);
                                     delete interf;
-                                    String tmpStr=F("-");
-                                    tmpStr+=String(del_eff_nb);
+                                    String tmpStr=F("!");
+                                    tmpStr+=String(curEff);
                                     myLamp.sendString(tmpStr.c_str(), CRGB::Red);
                                     TASK_RECYCLE; },
                 &ts, false);
@@ -410,6 +407,19 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         }
         return;
     } else if (act == FPSTR(TCONST_000B)) {
+        Task *_t = new Task(
+            100,
+            TASK_ONCE, [](){
+                                myLamp.effects.makeIndexFileFromFS(NULL,NULL,false,true); // создаем индекс по файлам ФС и на выход
+                                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+                                section_main_frame(interf, nullptr);
+                                delete interf;
+                                myLamp.setRefreshEffList(true);
+                                TASK_RECYCLE; },
+            &ts, false);
+        _t->enableDelayed();
+        return;
+    } else if (act == FPSTR(TCONST_00B3)) {
         Task *_t = new Task(
             100,
             TASK_ONCE, [](){
@@ -2278,7 +2288,7 @@ void block_settings_update(Interface *interf, JsonObject *data){
 #ifdef OTA
     interf->spacer(FPSTR(TINTF_057));
     if (myLamp.getMode() != LAMPMODE::MODE_OTA) {
-        interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_058), FPSTR(TCONST_005B));
+        interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_058), FPSTR(P_BLUE));
     } else {
         interf->button(FPSTR(TCONST_0027), FPSTR(TINTF_017), FPSTR(P_GRAY));
     }
@@ -3092,10 +3102,10 @@ if (!interf) return;
 void section_main_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
 
-    if(myLamp.isRefreshEffList()){
-        recreateoptionsTask();
-        myLamp.setRefreshEffList(false);
-    }
+    // if(myLamp.isRefreshEffList()){
+    //     recreateoptionsTask();
+    //     myLamp.setRefreshEffList(false);
+    // }
 
     interf->json_frame_interface(FPSTR(TINTF_080));
 

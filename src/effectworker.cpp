@@ -44,8 +44,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
  */
-void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
-  if(worker && isCfgProceed){ // сначала сохраним текущий эффект
+void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed, const bool isSkipSave){
+  if(worker && isCfgProceed && !isSkipSave){ // сначала сохраним текущий эффект
     saveeffconfig(curEff); // пишем конфиг только если это требуется, для индекса - пропускаем, там свой механизм
   }
   if(worker)
@@ -647,7 +647,7 @@ const String EffectWorker::geteffectpathname(const uint16_t nb, const char *fold
   return filename;
 }
 
-void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename, bool force){
+void EffectWorker::savedefaulteffconfig(uint16_t nb, const String &filename, bool force){
 
   const String efname(FPSTR(T_EFFNAMEID[(uint8_t)nb])); // выдергиваем имя эффекта из таблицы
   LOG(printf_P,PSTR("Make default config: %d %s %s\n"), nb, efname.c_str(), filename.c_str());
@@ -666,8 +666,8 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename, bool forc
     memset(buffer,0,bufsize);
     if(!LittleFS.exists(filename)){
       File configFile = LittleFS.open(filename, "w");
-      configFile.seek(bufsize*pos, SeekMode::SeekSet);
       configFile.truncate(bufsize*nbfiles);
+      configFile.seek(bufsize*pos, SeekMode::SeekSet);
       sprintf((char *)buffer, "%s",cfg.c_str());
       configFile.write(buffer,bufsize);
       configFile.close();
@@ -675,8 +675,10 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename, bool forc
       File configFile = LittleFS.open(filename, "r+");
       if(configFile.size()!=bufsize*nbfiles)
         configFile.truncate(bufsize*nbfiles);
-      configFile.seek(bufsize*pos, SeekMode::SeekSet);
-      configFile.read(buffer,bufsize);
+      if(!force){
+        configFile.seek(bufsize*pos, SeekMode::SeekSet);
+        configFile.read(buffer,bufsize);
+      }
       configFile.seek(bufsize*pos, SeekMode::SeekSet);
       //LOG(printf_P,PSTR("pos: %d, char: %d\n"), configFile.position(), buffer[0]);
       if(buffer[0]!='{' || force){
@@ -708,7 +710,7 @@ String EffectWorker::getfseffconfig(uint16_t nb)
   return cfg_str;
 }
 
-String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
+String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, char *buffer)
 {
   // конфиг текущего эффекта
   const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
@@ -740,11 +742,14 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
     var[F("max")]=tmp->controls[i]->getMax();
     var[F("step")]=tmp->controls[i]->getStep();
   }
-  if(isFader)
+  if(tmp!=this)
     delete tmp;
 
   String cfg_str;
-  serializeJson(doc, cfg_str);
+  if(!buffer)
+    serializeJson(doc, cfg_str);
+  else
+    serializeJson(doc, buffer, bufsize);
   doc.clear();
   //LOG(println,cfg_str);
   return cfg_str;
@@ -792,7 +797,8 @@ void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
     configFile.truncate(bufsize*nbfiles);
   configFile.seek(bufsize*pos, SeekMode::SeekSet);
   if(!clear)
-    sprintf((char *)buffer, "%s",geteffconfig(nb).c_str());
+    //sprintf((char *)buffer, "%s",geteffconfig(nb).c_str());
+    geteffconfig(nb,0,(char *)buffer);
   configFile.write(buffer,bufsize);
   configFile.close();
   delete[] buffer;
@@ -802,6 +808,7 @@ void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
  *
  */
+void recreateoptionsTask(bool isCancelOnly);
 void EffectWorker::chkdefconfigs(const char *folder){
 //   uint16_t tst = 0;
 //   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
@@ -859,11 +866,25 @@ void EffectWorker::chkdefconfigs(const char *folder){
     }
     (*data)[FPSTR(TCONST_00F0)]=chk;
 #ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) {return;} // пропускаем эффекты для микрофона, если отключен микрофон
+    if(i>=EFF_ENUM::EFF_VU) {return;} // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
     String cfgfilename = geteffectpathname(i, folder.isEmpty() ? NULL : folder.c_str());
-    if(getfseffconfig(i).isEmpty() || !i){ // если конфига эффекта не существует или 0 эффект, создаем дефолтный
+    if((strlen_P(T_EFFNAMEID[i]) && getfseffconfig(i).isEmpty()) || !i){ // если конфига эффекта не существует или 0 эффект, создаем дефолтный
+      recreateoptionsTask(true);
       savedefaulteffconfig(i, cfgfilename, true);
+    } else {
+      i=chk;
+      while(!getfseffconfig(i).isEmpty() && i<256 && i<=chk+10){ // знайти наступний порожній
+#ifdef ESP8266
+        ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер...
+#elif defined ESP32
+        delay(1);
+#endif
+        recreateoptionsTask(true);
+        //LOG(println,i);
+        i++;
+      }
+      (*data)[FPSTR(TCONST_00F0)]=i;
     }
   }, &ts, false, nullptr, [this](){TASK_RECYCLE;});
   _t->enable();
@@ -960,13 +981,13 @@ File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
  *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов
  *
  */
-void EffectWorker::makeIndexFile(const char *folder)
+void EffectWorker::makeIndexFile(const char *folder, const bool forcechkdef)
 {
   uint32_t timest = millis();
 
   // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношерстные операции во времени
   // сначала проверяем наличие дефолтных конфигов для всех эффектов
-  if(!LittleFS.exists(FPSTR(TCONST_005A)))
+  if(!LittleFS.exists(FPSTR(TCONST_005A)) || forcechkdef)
     chkdefconfigs(folder);
 
   File indexFile;
@@ -1040,11 +1061,11 @@ void EffectWorker::makeIndexFileFromList(const char *folder, bool forceRemove)
   effectsReSort(); // восстанавливаем сортировку
 }
 
-void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder, bool skipInit)
+void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder, const bool skipInit, const bool forcechkdef)
 {
   File indexFile;
   String sourcedir;
-  makeIndexFile(tofolder); // создать дефолтный набор прежде всего
+  makeIndexFile(tofolder,forcechkdef); // создать дефолтный набор прежде всего
 
   removeLists();
 
@@ -1436,13 +1457,13 @@ uint16_t EffectWorker::getNext()
 }
 
 // выбор нового эффекта с отложенной сменой, на время смены эффекта читаем его список контроллов отдельно
-void EffectWorker::setSelected(uint16_t effnb)
+void EffectWorker::setSelected(uint16_t effnb, bool clear)
 {
-  //selcontrols.size()!=controls.size() || 
   if(controls.size()==0 || selcontrols[0]!=controls[0] || !effnb){
     while(selcontrols.size()>0){ // очистить предыщий набор, если он только не отображен на текущий
       delete selcontrols.shift();
     }
+    selcontrols.clear();
   }
 
   selEff = effnb;
@@ -1455,12 +1476,14 @@ void EffectWorker::setSelected(uint16_t effnb)
   this->selcontrols = tmpEffect->controls; // копирую список контроллов, освобождать будет другой объект
   tmpEffect->controls = fake;
   delete tmpEffect;
+  if(clear)
+    moveSelected(true);
 }
 
-void EffectWorker::moveSelected(){
+void EffectWorker::moveSelected(bool force){
   LOG(printf_P,PSTR("Синхронизация списков! Эффект: %d\n"), selEff);
-  if(curEff != selEff){
-    workerset(selEff);
+  if(curEff != selEff || force){
+    workerset(selEff, true, force);
     curEff = selEff;
     clearControlsList();
     controls = selcontrols; // теперь оба списка совпадают, смена эффекта завершена

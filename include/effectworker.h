@@ -425,7 +425,7 @@ private:
      * создает и инициализирует экземпляр класса выбранного эффекта
      *
     */
-    void workerset(uint16_t effect, const bool isCfgProceed = true);
+    void workerset(uint16_t effect, const bool isCfgProceed = true, const bool isSkipSave = false);
 
     EffectWorker(const EffectWorker&);  // noncopyable
     EffectWorker& operator=(const EffectWorker&);  // noncopyable
@@ -446,10 +446,10 @@ private:
      */
     void chkdefconfigs(const char *folder);
 
-    void savedefaulteffconfig(uint16_t nb, String &filename, bool force=false);
+    void savedefaulteffconfig(uint16_t nb, const String &filename, bool force=false);
     bool isemptyconfig(uint16_t nb, const char *folder=NULL);
     void saveeffconfig(uint16_t nb, const char *folder=NULL, bool clear=false);
-    void makeIndexFile(const char *folder = NULL);
+    void makeIndexFile(const char *folder = NULL, const bool forcechkdef=false);
     // создать или обновить текущий индекс эффекта
     void updateIndexFile();
     // удалить эффект из индексного файла
@@ -476,6 +476,7 @@ private:
 
 
 public:
+    void resettodefaultconfig(const uint16_t nb, const char *folder=NULL) { savedefaulteffconfig(nb, geteffectpathname(nb, folder), true); }
     void removeLists(); // уделение списков из ФС
     time_t getlistsuffix() {return listsuffix ? listsuffix : (listsuffix=micros());}
     void setlistsuffix(time_t val) {listsuffix=val;}
@@ -505,7 +506,7 @@ public:
     SORT_TYPE getEffSortType() {return effSort;}
 
     // Получить конфиг текущего эффекта
-    String geteffconfig(uint16_t nb, uint8_t replaceBright = 0);
+    String geteffconfig(uint16_t nb, uint8_t replaceBright = 0, char *buffer=NULL);
 
     // Получить конфиг эффекта из ФС
     String getfseffconfig(uint16_t nb);
@@ -527,7 +528,7 @@ public:
     // пересоздает индекс с текущего списка эффектов
     void makeIndexFileFromList(const char *folder = NULL, bool forceRemove = true);
     // пересоздает индекс с конфигов в ФС
-    void makeIndexFileFromFS(const char *fromfolder = NULL, const char *tofolder = NULL, bool skipInit=false);
+    void makeIndexFileFromFS(const char *fromfolder = NULL, const char *tofolder = NULL, const bool skipInit=false, const bool forcechkdef=false);
 
     byte getModeAmount() {return effects.size();}
 
@@ -598,7 +599,7 @@ public:
     uint16_t getBy(uint16_t select){ return select;}
     // перейти по предворительно выбранному
 
-    void moveSelected();
+    void moveSelected(bool force=false);
     // перейти на количество шагов, к ближйшему большему (для DEMO)
 
     void moveByCnt(byte cnt){ uint16_t eff = getByCnt(cnt); directMoveBy(eff); }
@@ -636,7 +637,7 @@ public:
     uint16_t getSelected() {return selEff;}
     // вернуть выбранный элемент списка
     EffectListElem *getSelectedListElement();
-    void setSelected(const uint16_t effnb);
+    void setSelected(const uint16_t effnb, bool clear=false);
     bool isSelected(){ return (curEff == selEff); }
     // копирование эффекта
     uint16_t copyEffect(const EffectListElem *base);
