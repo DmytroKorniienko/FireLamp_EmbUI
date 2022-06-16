@@ -313,47 +313,32 @@ void show_effects_config_param(Interface *interf, JsonObject *data){
  * обработчик установок эффекта
  */
 void show_effects_config(Interface *, JsonObject *);
+void set_cur_eff_param(Interface *, JsonObject *);
 void set_effects_config_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
     recreateoptionsTask(true); // only cancel task
     EffectListElem *effect = confEff;
     
-    bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
-#ifdef MIC_EFFECTS
-    bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
-#endif
-    SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
-
-    if(myLamp.getLampState().isInitCompleted){
-        LOG(printf_P, PSTR("Settings: call removeLists()\n"));
-        bool isRecreate = false;
-        isRecreate = myLamp.getLampSettings().numInList!=isNumInList;
-#ifdef MIC_EFFECTS
-        isRecreate = (myLamp.getLampSettings().effHasMic!=isEffHasMic) || isRecreate;
-#endif
-        isRecreate = (myLamp.effects.getEffSortType()!=st) || isRecreate;
-
-        if(isRecreate){
-            myLamp.effects.setEffSortType(st);
-            myLamp.setNumInList(isNumInList);
-#ifdef MIC_EFFECTS
-            myLamp.setEffHasMic(isEffHasMic);
-#endif
-            myLamp.effects.removeLists();
-            myLamp.setRefreshEffList(true);
+    Task *_t = new JsonTask(data,500,TASK_ONCE, [](){
+        if(myLamp.getLampState().isInitCompleted){
+            JsonTask *task = (JsonTask *)ts.getCurrentTask();
+            JsonObject storage = task->getData();
+            JsonObject *data = &storage; // task->getData();
+            data->remove(FPSTR(TCONST_0005));
+            (*data)[FPSTR(TCONST_0049)] = FPSTR(P_false);
+            Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+            set_cur_eff_param(interf, data);
+            delete interf;
+            save_lamp_flags();
+            resetAutoTimers();
         }
-    }
-    myLamp.setNumInList(isNumInList);
-#ifdef MIC_EFFECTS
-    myLamp.setEffHasMic(isEffHasMic);
-#endif
-    SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
-    save_lamp_flags();
+    TASK_RECYCLE; }, &ts, false);
+    _t->enableDelayed();
     
     String act = (*data)[FPSTR(TCONST_0005)];
     if (act == FPSTR(TCONST_0009)) {
         Task *_t = new Task(
-            100,
+            500,
             TASK_ONCE, [effect](){
                                 uint16_t eff_nb = myLamp.effects.copyEffect(effect); // копируем текущий
                                 confEff = myLamp.effects.getEffect(eff_nb);
@@ -370,13 +355,9 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         _t->enableDelayed();
         return;
     //} else if (act == FPSTR(TCONST_000A)) {
-    } else if (act == FPSTR(TCONST_00B0) || act == FPSTR(TCONST_00B1)) {
-        uint16_t tmpEffnb = effect->eff_nb;
-        bool isCfgRemove = (act == FPSTR(TCONST_00B1));
-        LOG(printf_P,PSTR("remove confEff->eff_nb=%d\n"), tmpEffnb);
-        if(isCfgRemove){
-            Task *_t = new Task(
-                100,
+    } else if (act == FPSTR(TCONST_00B1)) {
+        Task *_t = new Task(
+                500,
                 TASK_ONCE, [effect](){
                                     uint16_t del_eff_nb = effect->eff_nb;
                                     uint16_t eff_nb = myLamp.effects.deleteEffect(effect, true); // удаляем эффект из ФС та списку
@@ -385,8 +366,6 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                                     Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
                                     myLamp.effects.setSelected(eff_nb);
                                     myLamp.effects.directMoveBy(eff_nb);
-                                    //remote_action(RA_EFF_NEXT, NULL);
-                                    //remote_action(RA_EFFECT, eff_nb);
                                     show_effects_config(interf, nullptr);
                                     delete interf;
                                     String tmpStr=F("-");
@@ -395,23 +374,25 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
                                     TASK_RECYCLE; },
                 &ts, false);
             _t->enableDelayed();
-        } else {
-            Task *_t = new Task(
-                100,
-                TASK_ONCE, [effect](){
-                                    uint16_t curEff = effect->eff_nb;
-                                    myLamp.effects.resettodefaultconfig(curEff);
-                                    myLamp.effects.setSelected(curEff,true);
-                                    Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                    show_effects_config(interf, nullptr);
-                                    delete interf;
-                                    String tmpStr=F("!");
-                                    tmpStr+=String(curEff);
-                                    myLamp.sendString(tmpStr.c_str(), CRGB::Red);
-                                    TASK_RECYCLE; },
-                &ts, false);
-            _t->enableDelayed();
-        }
+            return;
+    } else if (act == FPSTR(TCONST_00B0)){
+        Task *_t = new Task(
+            500,
+            TASK_ONCE, [effect](){
+                                uint16_t curEff = effect->eff_nb;
+                                myLamp.effects.removeLists();
+                                myLamp.setRefreshEffList(true);
+                                myLamp.effects.resettodefaultconfig(curEff);
+                                myLamp.effects.setSelected(curEff,true);
+                                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+                                show_effects_config(interf, nullptr);
+                                delete interf;
+                                String tmpStr=F("!");
+                                tmpStr+=String(curEff);
+                                myLamp.sendString(tmpStr.c_str(), CRGB::Red);
+                                TASK_RECYCLE; },
+            &ts, false);
+        _t->enableDelayed();
         return;
     } else if (act == FPSTR(TCONST_000B)) {
         Task *_t = new Task(
@@ -441,15 +422,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             &ts, false);
         _t->enableDelayed();
         return;
-    } else {
-        effect->canBeSelected((*data)[FPSTR(TCONST_0006)] == "1");
-        effect->isFavorite((*data)[FPSTR(TCONST_0007)] == "1");
-        myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], effect);
-        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
     }
-
-    resetAutoTimers();
-    myLamp.effects.makeIndexFileFromList(); // обновить индексный файл после возможных изменений
     section_main_frame(interf, nullptr);
 }
 
@@ -457,7 +430,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
  * обработчик установок эффекта direct
  */
 void set_cur_eff_param(Interface *interf, JsonObject *data){
-    //LOG(printf_P, PSTR("set_cur_eff_param %p %p"), confEff, data);
+    String tmp; serializeJson(*data, tmp); LOG(printf_P, PSTR("set_cur_eff_param %s\n"), tmp.c_str());
     if(data->containsKey(FPSTR(TCONST_0005))){
         set_effects_config_param(interf,data);
         return;
@@ -492,14 +465,10 @@ void set_cur_eff_param(Interface *interf, JsonObject *data){
         //myLamp.effects.setEffSortType(st);
     }
 
-    if(data->containsKey(FPSTR(TCONST_0006)))
-        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
-    if(data->containsKey(FPSTR(TCONST_0007)))
-        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
-
     myLamp.effects.removeLists();
     myLamp.setRefreshEffList(true);
-    show_effects_config(interf, nullptr);
+    if(!data->containsKey(FPSTR(TCONST_0049)))
+        show_effects_config(interf, nullptr);
 }
 
 void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
