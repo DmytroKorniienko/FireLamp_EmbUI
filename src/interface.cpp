@@ -649,7 +649,7 @@ void delayedcall_show_effects(){
                 if (eff != nullptr){
                     myLamp.effects.loadeffname(effname, eff->eff_nb);
                     LOG(println, effname);
-                    if(confEff || eff->eff_nb || (!eff->eff_nb && eff->canBeSelected())){ // если в конфигурировании или не 0 или 0 эффект и он может быть выбран
+                    if(confEff || eff->canBeSelected()){ // если в конфигурировании или эффект может быть выбран
                         String name =                             (!confEff ? EFF_NUMBER : String(eff->eff_nb) + (eff->eff_nb>255 ? String(F(" (")) + String(eff->eff_nb&0xFF) + String(F(")")) : String("")) + String(F(". "))) +
                             effname +
                             MIC_SYMBOL;
