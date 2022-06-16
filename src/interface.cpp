@@ -439,34 +439,66 @@ void set_cur_eff_param(Interface *interf, JsonObject *data){
     if (!confEff || !data) return;
 
     EffectListElem *effect = confEff;
+    bool isRefresh = false;
 
-    if(data->containsKey(FPSTR(TCONST_0006)))
-        effect->canBeSelected((*data)[FPSTR(TCONST_0006)] == "1");
-    if(data->containsKey(FPSTR(TCONST_0007)))
-        effect->isFavorite((*data)[FPSTR(TCONST_0007)] == "1");
-    if(data->containsKey(FPSTR(TCONST_00AB)))
-        myLamp.effects.setSoundfile((*data)[FPSTR(TCONST_00AB)], effect);
-    if(data->containsKey(FPSTR(TCONST_0092)))
-        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
+    if(data->containsKey(FPSTR(TCONST_0006))){
+        bool canBeSelected = (*data)[FPSTR(TCONST_0006)] == "1";
+        if(effect->flags.canBeSelected!=canBeSelected){
+            effect->canBeSelected(canBeSelected);
+            isRefresh = true;
+        }
+    }
+    if(data->containsKey(FPSTR(TCONST_0007))){
+        bool isFavorite = (*data)[FPSTR(TCONST_0007)] == "1";
+        if(effect->flags.isFavorite!=isFavorite){
+            effect->isFavorite(isFavorite);
+            isRefresh = true;
+        }
+    }
+    if(data->containsKey(FPSTR(TCONST_00AB))){
+        String snd = (*data)[FPSTR(TCONST_00AB)];
+        if(myLamp.effects.getSoundfile()!=snd){
+            myLamp.effects.setSoundfile(snd, effect);
+            isRefresh = true;
+        }    
+    }
+    if(data->containsKey(FPSTR(TCONST_0092))){
+        String eff = (*data)[FPSTR(TCONST_0092)];
+        if(myLamp.effects.getEffectName()!=eff){
+            myLamp.effects.setEffectName(eff, effect);
+            isRefresh = true;
+        } 
+    }
 
     if(data->containsKey(FPSTR(TCONST_0090))){
         bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
-        myLamp.setNumInList(isNumInList);
+        if(myLamp.getLampSettings().numInList!=isNumInList){
+            myLamp.setNumInList(isNumInList);
+            isRefresh = true;
+        } 
     }
 #ifdef MIC_EFFECTS
     if(data->containsKey(FPSTR(TCONST_0091))){
         bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
-        myLamp.setEffHasMic(isEffHasMic);
+        if(myLamp.getLampSettings().effHasMic!=isEffHasMic){
+            myLamp.setEffHasMic(isEffHasMic);
+            isRefresh = true;
+        } 
     }
 #endif
     if(data->containsKey(FPSTR(TCONST_0050))){
         SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
-        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
-        //myLamp.effects.setEffSortType(st);
+        if(myLamp.effects.getEffSortType()!=st){
+            SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
+            isRefresh = true;
+        } 
     }
 
-    myLamp.effects.removeLists();
-    myLamp.setRefreshEffList(true);
+    if(isRefresh){
+        myLamp.effects.makeIndexFileFromList();
+        myLamp.effects.removeLists();
+        myLamp.setRefreshEffList(true);
+    }
     if(!data->containsKey(FPSTR(TCONST_0049)))
         show_effects_config(interf, nullptr);
 }
