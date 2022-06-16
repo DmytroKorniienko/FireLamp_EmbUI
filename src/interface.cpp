@@ -254,42 +254,49 @@ void block_effects_config_param(Interface *interf, JsonObject *data){
 #ifdef MP3PLAYER
     interf->text(FPSTR(TCONST_00AB), tmpSoundfile, FPSTR(TINTF_0B2), true);
 #endif
+    interf->json_section_line();
     interf->checkbox(FPSTR(TCONST_0006), confEff->canBeSelected()? "1" : "0", FPSTR(TINTF_003), true);
     interf->checkbox(FPSTR(TCONST_0007), confEff->isFavorite()? "1" : "0", FPSTR(TINTF_004), true);
-
-    interf->spacer();
-
-    interf->select(FPSTR(TCONST_0050), FPSTR(TINTF_040));
-    interf->option(String(SORT_TYPE::ST_BASE), FPSTR(TINTF_041));
-    interf->option(String(SORT_TYPE::ST_END), FPSTR(TINTF_042));
-    interf->option(String(SORT_TYPE::ST_IDX), FPSTR(TINTF_043));
-    interf->option(String(SORT_TYPE::ST_AB), FPSTR(TINTF_085));
-    interf->option(String(SORT_TYPE::ST_AB2), FPSTR(TINTF_08A));
-#ifdef MIC_EFFECTS
-    interf->option(String(SORT_TYPE::ST_MIC), FPSTR(TINTF_08D));  // эффекты с микрофоном
-#endif
     interf->json_section_end();
-    interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? "1" : "0", FPSTR(TINTF_090), false); // нумерация в списке эффектов
-#ifdef MIC_EFFECTS
-    interf->checkbox(FPSTR(TCONST_0091), myLamp.getLampSettings().effHasMic ? "1" : "0", FPSTR(TINTF_091), false); // значек микрофона в списке эффектов
-#endif
 
-    interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(P_GRAY));
     interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_0009), FPSTR(TINTF_005));
     //if (confEff->eff_nb&0xFF00) { // пока удаление только для копий, но в теории можно удалять что угодно
         // interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000A), FPSTR(TINTF_006), FPSTR(P_RED));
     //}
 
     interf->json_section_line();
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B0), FPSTR(TINTF_0B4), FPSTR(P_ORANGE));
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B1), FPSTR(TINTF_0B5), FPSTR(P_RED));
+        interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B0), FPSTR(TINTF_0B4), FPSTR(P_ORANGE));
+        interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B1), FPSTR(TINTF_0B5), FPSTR(P_RED));
+    interf->json_section_end();
+
+    interf->spacer();
+
+    interf->select(FPSTR(TCONST_0050), FPSTR(TINTF_040),true);
+        interf->option(String(SORT_TYPE::ST_BASE), FPSTR(TINTF_041));
+        interf->option(String(SORT_TYPE::ST_END), FPSTR(TINTF_042));
+        interf->option(String(SORT_TYPE::ST_IDX), FPSTR(TINTF_043));
+        interf->option(String(SORT_TYPE::ST_AB), FPSTR(TINTF_085));
+        interf->option(String(SORT_TYPE::ST_AB2), FPSTR(TINTF_08A));
+#ifdef MIC_EFFECTS
+        interf->option(String(SORT_TYPE::ST_MIC), FPSTR(TINTF_08D));  // эффекты с микрофоном
+#endif
     interf->json_section_end();
 
     interf->json_section_line();
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_007), FPSTR(P_BLUE));
-    interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B3), FPSTR(TINTF_007), FPSTR(P_BLACK));
+    interf->checkbox(FPSTR(TCONST_0090), myLamp.getLampSettings().numInList ? "1" : "0", FPSTR(TINTF_090), true); // нумерация в списке эффектов
+#ifdef MIC_EFFECTS
+    interf->checkbox(FPSTR(TCONST_0091), myLamp.getLampSettings().effHasMic ? "1" : "0", FPSTR(TINTF_091), true); // значек микрофона в списке эффектов
+#endif
     interf->json_section_end();
+
+    interf->json_section_line();
+        interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_000B), FPSTR(TINTF_0F6), FPSTR(P_BLUE));
+        interf->button_submit_value(FPSTR(TCONST_0005), FPSTR(TCONST_00B3), FPSTR(TINTF_007), FPSTR(P_BLACK));
     interf->json_section_end();
+
+    interf->json_section_end();
+    // interf->spacer();
+    // interf->button_submit(FPSTR(TCONST_0005), FPSTR(TINTF_008), FPSTR(P_GRAY));
 }
 
 /**
@@ -408,26 +415,28 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
         return;
     } else if (act == FPSTR(TCONST_000B)) {
         Task *_t = new Task(
-            100,
+            500,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(NULL,NULL,false,true); // создаем индекс по файлам ФС и на выход
-                                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                section_main_frame(interf, nullptr);
-                                delete interf;
                                 myLamp.setRefreshEffList(true);
+                                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+                                //section_main_frame(interf, nullptr);
+                                show_effects_config(interf, nullptr);
+                                delete interf;
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
         return;
     } else if (act == FPSTR(TCONST_00B3)) {
         Task *_t = new Task(
-            100,
+            500,
             TASK_ONCE, [](){
                                 myLamp.effects.makeIndexFileFromFS(); // создаем индекс по файлам ФС и на выход
-                                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
-                                section_main_frame(interf, nullptr);
-                                delete interf;
                                 myLamp.setRefreshEffList(true);
+                                Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
+                                //section_main_frame(interf, nullptr);
+                                show_effects_config(interf, nullptr);
+                                delete interf;
                                 TASK_RECYCLE; },
             &ts, false);
         _t->enableDelayed();
@@ -467,7 +476,30 @@ void set_cur_eff_param(Interface *interf, JsonObject *data){
     if(data->containsKey(FPSTR(TCONST_0092)))
         myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
 
+    if(data->containsKey(FPSTR(TCONST_0090))){
+        bool isNumInList =  (*data)[FPSTR(TCONST_0090)] == "1";
+        myLamp.setNumInList(isNumInList);
+    }
+#ifdef MIC_EFFECTS
+    if(data->containsKey(FPSTR(TCONST_0091))){
+        bool isEffHasMic =  (*data)[FPSTR(TCONST_0091)] == "1";
+        myLamp.setEffHasMic(isEffHasMic);
+    }
+#endif
+    if(data->containsKey(FPSTR(TCONST_0050))){
+        SORT_TYPE st = (*data)[FPSTR(TCONST_0050)].as<SORT_TYPE>();
+        SETPARAM(FPSTR(TCONST_0050), myLamp.effects.setEffSortType(st));
+        //myLamp.effects.setEffSortType(st);
+    }
+
+    if(data->containsKey(FPSTR(TCONST_0006)))
+        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
+    if(data->containsKey(FPSTR(TCONST_0007)))
+        myLamp.effects.setEffectName((*data)[FPSTR(TCONST_0092)], effect);
+
+    myLamp.effects.removeLists();
     myLamp.setRefreshEffList(true);
+    show_effects_config(interf, nullptr);
 }
 
 void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
@@ -3102,10 +3134,10 @@ if (!interf) return;
 void section_main_frame(Interface *interf, JsonObject *data){
     if (!interf) return;
 
-    // if(myLamp.isRefreshEffList()){
-    //     recreateoptionsTask();
-    //     myLamp.setRefreshEffList(false);
-    // }
+    if(myLamp.isRefreshEffList()){
+        recreateoptionsTask();
+        myLamp.setRefreshEffList(false);
+    }
 
     interf->json_frame_interface(FPSTR(TINTF_080));
 

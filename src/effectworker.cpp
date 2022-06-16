@@ -866,7 +866,10 @@ void EffectWorker::chkdefconfigs(const char *folder){
     }
     (*data)[FPSTR(TCONST_00F0)]=chk;
 #ifndef MIC_EFFECTS
-    if(i>=EFF_ENUM::EFF_VU) {return;} // пропускаем эффекты для микрофона, если отключен микрофон
+    if(i>=254U) {return;} // пропускаем эффекты для микрофона, если отключен микрофон EFF_ENUM::EFF_VU +
+#endif
+#ifndef RGB_PLAYER
+    if(i==251U) {return;} // пропускаем плеер, если отключен
 #endif
     String cfgfilename = geteffectpathname(i, folder.isEmpty() ? NULL : folder.c_str());
     if((strlen_P(T_EFFNAMEID[i]) && getfseffconfig(i).isEmpty()) || !i){ // если конфига эффекта не существует или 0 эффект, создаем дефолтный
@@ -1003,8 +1006,11 @@ void EffectWorker::makeIndexFile(const char *folder, const bool forcechkdef)
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
 
+#ifndef RGB_PLAYER
+    if(i==251U) continue; // пропускаем плеер, если отключен
+#endif
 #ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+    if(i>254U) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
 
     eff = getEffect(i);

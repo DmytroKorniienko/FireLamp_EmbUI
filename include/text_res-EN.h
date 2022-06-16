@@ -462,7 +462,7 @@ static const char TINTF_0F2[] PROGMEM = "MP3 player + reset";
 static const char TINTF_0F3[] PROGMEM = "List";
 static const char TINTF_0F4[] PROGMEM = "Lamp settings reset";
 static const char TINTF_0F5[] PROGMEM = "Canceled";
-
+static const char TINTF_0F6[] PROGMEM = "Effects checking";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Until the new year is left %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Happy new %d year!";
