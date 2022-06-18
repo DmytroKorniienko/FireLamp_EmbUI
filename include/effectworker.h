@@ -506,7 +506,8 @@ public:
     SORT_TYPE getEffSortType() {return effSort;}
 
     // Получить конфиг текущего эффекта
-    String geteffconfig(uint16_t nb, uint8_t replaceBright = 0, char *buffer=NULL);
+    void geteffconfig(uint16_t nb, uint8_t replaceBright = 0, char *buffer=NULL);
+    String &geteffconfig(uint16_t nb, uint8_t replaceBright, String &str);
 
     // Получить конфиг эффекта из ФС
     String getfseffconfig(uint16_t nb);
@@ -637,7 +638,7 @@ public:
     uint16_t getSelected() {return selEff;}
     // вернуть выбранный элемент списка
     EffectListElem *getSelectedListElement();
-    void setSelected(const uint16_t effnb, bool clear=false);
+    void setSelected(const uint16_t effnb, const bool move=false);
     bool isSelected(){ return (curEff == selEff); }
     // копирование эффекта
     uint16_t copyEffect(const EffectListElem *base);

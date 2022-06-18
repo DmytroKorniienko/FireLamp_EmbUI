@@ -710,7 +710,15 @@ String EffectWorker::getfseffconfig(uint16_t nb)
   return cfg_str;
 }
 
-String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, char *buffer)
+void EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, char *buffer)
+{
+  // конфиг текущего эффекта
+  String storage;
+  geteffconfig(nb,replaceBright,storage);
+  snprintf((char *)buffer,EFF_BUFFER_SIZE,"%s",storage.c_str());
+}
+
+String &EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, String &str)
 {
   // конфиг текущего эффекта
   const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
@@ -745,14 +753,9 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, char *buff
   if(tmp!=this)
     delete tmp;
 
-  String cfg_str;
-  if(!buffer)
-    serializeJson(doc, cfg_str);
-  else
-    serializeJson(doc, buffer, bufsize);
+  serializeJson(doc, str);
   doc.clear();
-  //LOG(println,cfg_str);
-  return cfg_str;
+  return str;
 }
 
 bool EffectWorker::isemptyconfig(uint16_t nb, const char *folder){
@@ -797,7 +800,6 @@ void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
     configFile.truncate(bufsize*nbfiles);
   configFile.seek(bufsize*pos, SeekMode::SeekSet);
   if(!clear)
-    //sprintf((char *)buffer, "%s",geteffconfig(nb).c_str());
     geteffconfig(nb,0,(char *)buffer);
   configFile.write(buffer,bufsize);
   configFile.close();
@@ -1463,7 +1465,7 @@ uint16_t EffectWorker::getNext()
 }
 
 // выбор нового эффекта с отложенной сменой, на время смены эффекта читаем его список контроллов отдельно
-void EffectWorker::setSelected(uint16_t effnb, bool clear)
+void EffectWorker::setSelected(uint16_t effnb, const bool move)
 {
   if(controls.size()==0 || selcontrols[0]!=controls[0] || !effnb){
     while(selcontrols.size()>0){ // очистить предыщий набор, если он только не отображен на текущий
@@ -1482,7 +1484,7 @@ void EffectWorker::setSelected(uint16_t effnb, bool clear)
   this->selcontrols = tmpEffect->controls; // копирую список контроллов, освобождать будет другой объект
   tmpEffect->controls = fake;
   delete tmpEffect;
-  if(clear)
+  if(move)
     moveSelected(true);
 }
 
