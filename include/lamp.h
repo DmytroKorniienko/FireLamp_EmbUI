@@ -382,7 +382,7 @@ public:
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
     bool getClearingFlag() {return flags.isEffClearing;}
     void disableEffects() {lampState.isEffectsDisabled = true; FastLED.clear();}
-    void setOffAfterText() {lampState.isOffAfterText = true;}
+    void setOffAfterText(const bool flag=true) {lampState.isOffAfterText = flag;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
     bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);
     bool isLampOn() {return flags.ONflag;}

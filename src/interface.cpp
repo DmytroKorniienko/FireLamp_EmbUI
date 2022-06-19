@@ -495,7 +495,6 @@ void set_cur_eff_param(Interface *interf, JsonObject *data){
 
     if(isRefresh){
         myLamp.effects.makeIndexFileFromList();
-        myLamp.effects.removeLists();
         myLamp.setRefreshEffList(true);
     }
     if(!data->containsKey(FPSTR(TCONST_0049)))
@@ -1282,6 +1281,7 @@ void set_onflag(Interface *interf, JsonObject *data){
             // включаем через switcheffect, т.к. простого isOn недостаточно чтобы запустить фейдер и поменять яркость (при необходимости)
             myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), myLamp.effects.getEn());
             myLamp.changePower(newpower);
+            myLamp.setOffAfterText(false);
 #ifdef MP3PLAYER
             if(myLamp.getLampSettings().isOnMP3)
                 mp3->setIsOn(true);
@@ -1303,20 +1303,20 @@ void set_onflag(Interface *interf, JsonObject *data){
             if(!ra_call)
                 myLamp.startNormalMode();
             //myLamp.changePower(newpower);
-            Task *_t = new Task(300, TASK_ONCE,
-                                [](){ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
-                                myLamp.changePower(false);
-                #ifdef MP3PLAYER
-                                mp3->setIsOn(false);
-                #endif
-                #ifdef RESTORE_STATE
-                                save_lamp_flags(); // злобный баг, забыть передернуть флаги здесь)))), не вздумать убрать!!! Отлавливал его кучу времени
-                #endif
-                #ifdef EMBUI_USE_MQTT
-                                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), "0", true);
-                #endif
-                                TASK_RECYCLE; },
-                                &ts, false);
+            Task *_t = new Task(300, TASK_ONCE,[](){ // при выключении бывает эксепшен, видимо это слишком длительная операция, разносим во времени и отдаем управление
+                //LOG(printf_P,PSTR("%d %d\n"), myLamp.getLampState().isOffAfterText, myLamp.getLampState().isStringPrinting);
+                if(!(myLamp.getLampState().isOffAfterText && myLamp.getLampState().isStringPrinting))
+                    myLamp.changePower(false);
+#ifdef RESTORE_STATE
+                save_lamp_flags(); // злобный баг, забыть передернуть флаги здесь)))), не вздумать убрать!!! Отлавливал его кучу времени
+#endif
+#ifdef MP3PLAYER
+                mp3->setIsOn(false);
+#endif
+#ifdef EMBUI_USE_MQTT
+                embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(TCONST_0070), "0", true);
+#endif
+                TASK_RECYCLE; }, &ts, false);
             _t->enableDelayed();
         }
     }
@@ -1630,12 +1630,8 @@ void edit_lamp_config(Interface *interf, JsonObject *data){
                 //Task *_t = new Task(300, TASK_ONCE, [](){
                     StringTask *task = (StringTask *)ts.getCurrentTask();
                     char *name = task->getData();
+                    myLamp.setOffAfterText();
                     sync_parameters();
-                    if(!myLamp.isLampOn()){
-                        myLamp.setOffAfterText();
-                        myLamp.setBrightness(50, false, false); // встановити яскравість 50
-                        myLamp.changePower(true);
-                    }
                     String str = String(F("Load CFG: ")) + name;
                     myLamp.sendString(str.c_str(), CRGB::Green);
                     TASK_RECYCLE;
@@ -3238,7 +3234,7 @@ void set_lamp_flags(Interface *interf, JsonObject *data){
 }
 
 void save_lamp_flags(){
-    DynamicJsonDocument doc(8*2+32);
+    DynamicJsonDocument doc(26*2+32);
     JsonObject obj = doc.to<JsonObject>();
     obj[FPSTR(TCONST_0094)] = ulltos(myLamp.getLampFlags());
     set_lamp_flags(nullptr, &obj);

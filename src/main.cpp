@@ -51,6 +51,10 @@ void setup() {
     //Serial.begin(115200);
     Serial.begin(460800);
 
+#ifdef WIFI_IS_OFF_AT_BOOT // https://github.com/esp8266/Arduino/issues/8593
+    enableWiFiAtBootTime();
+#endif
+
 #ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
     {
         HeapSelectIram ephemeral;

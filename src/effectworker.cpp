@@ -1035,6 +1035,7 @@ void EffectWorker::makeIndexFile(const char *folder, const bool forcechkdef)
 }
 
 void EffectWorker::removeLists(){
+  LOG(println, F("removeLists"));
   LittleFS.remove(FPSTR(TCONST_0082));
   LittleFS.remove(FPSTR(TCONST_0083));
   LittleFS.remove(FPSTR(TCONST_0086));
