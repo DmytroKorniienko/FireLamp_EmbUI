@@ -1225,22 +1225,108 @@ void EffectWorker::clearEffDir()
 void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
 {
   if(!filename) return;
-  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
-  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
-  DynamicJsonDocument doc(bufsize*2);
-  File bkp = LittleFS.open(filename, "r");
-  File configFile;
-  uint8_t *buffer = new uint8_t[bufsize];
-  uint32_t pos=0, nb=0;
-  String cfilename;
+//   const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+//   const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+//   DynamicJsonDocument doc(bufsize*2);
+//   File bkp = LittleFS.open(filename, "r");
+//   File configFile;
+//   uint8_t *buffer = new uint8_t[bufsize];
+//   uint32_t pos=0, nb=0;
+//   String cfilename;
+
+//   if(clear)
+//     clearEffDir();
+
+//   size_t size;
+//   memset(buffer,0,bufsize);
+//   while((size = bkp.readBytesUntil('\n',buffer,bufsize))){
+//     if(size<=3) continue;
+//     String storage = (char *)buffer;
+//     DeserializationError err = deserializeJson(doc, storage);
+//     if (err) {
+// 			LOG(print, F("deserializeJson error: "));
+// 			LOG(println, err.code());
+//       LOG(println, (char *)buffer);
+//     } else {
+//       if(size && buffer[size-1]==0x7D){
+//         buffer[size]=0x00;
+//       }
+//       if(size && buffer[0]==','){
+//         buffer[0]=' ';
+//       }
+//       nb=doc[F("nb")].as<uint16_t>();
+//       LOG(printf_P, PSTR("%d.%s "),nb,doc[F("name")].as<String>().c_str());
+//       doc.clear(); doc.garbageCollect(); storage=String();
+//       cfilename = geteffectpathname(nb);
+//       pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+//       if(LittleFS.exists(cfilename))
+//         configFile = LittleFS.open(cfilename, "r+");
+//       else
+//         configFile = LittleFS.open(cfilename, "w");
+//       if(configFile.size()!=bufsize*nbfiles)
+//         configFile.truncate(bufsize*nbfiles);
+//       configFile.seek(bufsize*pos, SeekMode::SeekSet);
+//       size_t size = configFile.write(buffer,bufsize);
+//       LOG(println, size);
+//       configFile.close();
+//     }
+//     memset(buffer,0,bufsize);
+// #ifdef ESP8266
+//     ESP.wdtFeed(); // long term operation...
+// #elif defined ESP32
+//     delay(1);
+// #endif
+//   }
+//   delete[] buffer;
+//   bkp.close();
+
+  DynamicJsonDocument doc(256);
+  JsonObject data = doc.to<JsonObject>();
+  data[FPSTR(TCONST_002A)] = filename ? filename : "";
+  data[FPSTR(TCONST_005B)] = 2;
 
   if(clear)
     clearEffDir();
 
-  size_t size;
-  memset(buffer,0,bufsize);
-  while((size = bkp.readBytesUntil('\n',buffer,bufsize))){
-    if(size<=3) continue;
+  LOG(println,F("Create loadEffectsBackup task"));
+
+  Task *_t = new JsonTask(&data, 1000, TASK_FOREVER, [this](){
+    JsonTask *task = (JsonTask *)ts.getCurrentTask();
+    JsonObject jstorage = task->getData();
+    JsonObject *data = &jstorage; // task->getData();
+
+    const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+    const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+    DynamicJsonDocument doc(bufsize*2);
+    File bkp = LittleFS.open((*data)[FPSTR(TCONST_002A)].as<String>(), "r");
+    bkp.seek((*data)[FPSTR(TCONST_005B)].as<size_t>(), SeekMode::SeekSet);
+    uint8_t *buffer = new uint8_t[bufsize];
+    memset(buffer,0,bufsize);
+    size_t size = bkp.readBytesUntil('\n',buffer,bufsize);
+    uint32_t pos=0, nb=0;
+    String cfilename;
+    File configFile;
+
+    if(size<=3) {
+      if(bkp.position()>=bkp.size()){
+        makeIndexFileFromFS();
+        setSelected(getSelected(),true);
+        LOG(println, F("loadEffectsBackup done"));
+        task->cancel();
+      }
+      else
+        (*data)[FPSTR(TCONST_005B)] = bkp.position();
+      bkp.close();
+      delete[] buffer;
+      return;
+    }
+    if(size && buffer[size-1]==0x7D){
+      buffer[size]=0x00;
+    }
+    if(size && buffer[0]==','){
+      buffer[0]=' ';
+    }
+
     String storage = (char *)buffer;
     DeserializationError err = deserializeJson(doc, storage);
     if (err) {
@@ -1248,12 +1334,6 @@ void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
 			LOG(println, err.code());
       LOG(println, (char *)buffer);
     } else {
-      if(size && buffer[size-1]==0x7D){
-        buffer[size]=0x00;
-      }
-      if(size && buffer[0]==','){
-        buffer[0]=' ';
-      }
       nb=doc[F("nb")].as<uint16_t>();
       LOG(printf_P, PSTR("%d.%s "),nb,doc[F("name")].as<String>().c_str());
       doc.clear(); doc.garbageCollect(); storage=String();
@@ -1270,15 +1350,11 @@ void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
       LOG(println, size);
       configFile.close();
     }
-    memset(buffer,0,bufsize);
-#ifdef ESP8266
-    ESP.wdtFeed(); // long term operation...
-#elif defined ESP32
-    delay(1);
-#endif
-  }
-  delete[] buffer;
-  bkp.close();
+    (*data)[FPSTR(TCONST_005B)] = bkp.position();
+    delete[] buffer;
+    bkp.close();
+  }, &ts, false, nullptr, [this](){TASK_RECYCLE;});
+  _t->enable();
 }
 
 // удалить эффект
