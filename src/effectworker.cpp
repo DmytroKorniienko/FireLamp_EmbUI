@@ -337,7 +337,19 @@ void EffectWorker::clearControlsList()
 void EffectWorker::initDefault(const char *folder)
 {
   LOG(println,F("initDefault"));
-  
+
+#ifndef ESP8266
+  static const char *dirs[] = {TCONST_005A,TCONST_002B,TCONST_0033,TCONST_0032,TCONST_0031,TCONST_002C,TCONST_0078};
+  for(int i=0; i<sizeof(dirs)/sizeof(const char *);i++){
+    String dirname = FPSTR(dirs[i]);
+    dirname.remove(dirname.length()-1); // remove last '/'
+    if(!LittleFS.exists(dirname)){
+      LittleFS.mkdir(dirname);
+      LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), dirname.c_str());
+    }
+  }
+#endif
+
   String filename;
   if(folder && folder[0])
     filename = folder;
@@ -666,15 +678,19 @@ void EffectWorker::savedefaulteffconfig(uint16_t nb, const String &filename, boo
     memset(buffer,0,bufsize);
     if(!LittleFS.exists(filename)){
       File configFile = LittleFS.open(filename, "w");
+#ifdef ESP8266
       configFile.truncate(bufsize*nbfiles);
+#endif
       configFile.seek(bufsize*pos, SeekMode::SeekSet);
       sprintf((char *)buffer, "%s",cfg.c_str());
       configFile.write(buffer,bufsize);
       configFile.close();
     } else {
       File configFile = LittleFS.open(filename, "r+");
+#ifdef ESP8266
       if(configFile.size()!=bufsize*nbfiles)
         configFile.truncate(bufsize*nbfiles);
+#endif
       if(!force){
         configFile.seek(bufsize*pos, SeekMode::SeekSet);
         configFile.read(buffer,bufsize);
@@ -796,8 +812,10 @@ void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
     configFile = LittleFS.open(filename, "r+");
   else
     configFile = LittleFS.open(filename, "w");
+#ifdef ESP8266
   if(configFile.size()!=bufsize*nbfiles)
     configFile.truncate(bufsize*nbfiles);
+#endif
   configFile.seek(bufsize*pos, SeekMode::SeekSet);
   if(!clear)
     geteffconfig(nb,0,(char *)buffer);
@@ -1112,7 +1130,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
 #ifdef ESP32
   File _f = dir.openNextFile();
   while(_f){
-      fn = _f.name();
+      fn = sourcedir + _f.name();
 #endif
       for(uint32_t i=0;i<nbfiles;i++){
         if (!deserializeFile(doc, fn.c_str(), i)) {
@@ -1343,8 +1361,10 @@ void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
         configFile = LittleFS.open(cfilename, "r+");
       else
         configFile = LittleFS.open(cfilename, "w");
+#ifdef ESP8266
       if(configFile.size()!=bufsize*nbfiles)
         configFile.truncate(bufsize*nbfiles);
+#endif        
       configFile.seek(bufsize*pos, SeekMode::SeekSet);
       size_t size = configFile.write(buffer,bufsize);
       LOG(println, size);
