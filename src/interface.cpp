@@ -325,7 +325,7 @@ void set_effects_config_param(Interface *interf, JsonObject *data){
             JsonObject storage = task->getData();
             JsonObject *data = &storage; // task->getData();
             data->remove(FPSTR(TCONST_0005));
-            (*data)[FPSTR(TCONST_0049)] = FPSTR(P_false);
+            (*data)[FPSTR(TCONST_00F1)] = FPSTR(P_true);
             Interface *interf = embui.ws.count()? new Interface(&embui, &embui.ws, 1024) : nullptr;
             set_cur_eff_param(interf, data);
             delete interf;
@@ -493,12 +493,15 @@ void set_cur_eff_param(Interface *interf, JsonObject *data){
         } 
     }
 
+    if(!data->containsKey(FPSTR(TCONST_00F1))){
+        show_effects_config(interf, nullptr);
+    } else if(isRefresh){
+        isRefresh = (*data)[FPSTR(TCONST_00F1)].as<String>() == FPSTR(P_true) ? true : false; // override refresh
+    }
     if(isRefresh){
         myLamp.effects.makeIndexFileFromList();
         myLamp.setRefreshEffList(true);
     }
-    if(!data->containsKey(FPSTR(TCONST_0049)))
-        show_effects_config(interf, nullptr);
 }
 
 void block_effects_config(Interface *interf, JsonObject *data, bool fast=true){
@@ -3643,7 +3646,7 @@ void sync_parameters(){
     SORT_TYPE type = (SORT_TYPE)embui.param(FPSTR(TCONST_0050)).toInt();
     obj[FPSTR(TCONST_0050)] = type;
     //set_effects_config_param(nullptr, &obj);
-    obj[FPSTR(TCONST_0049)] = 1;
+    obj[FPSTR(TCONST_00F1)] = FPSTR(P_false); // do not re-create lists
     confEff = NULL;
     set_cur_eff_param(nullptr, &obj);
     doc.clear(); doc.garbageCollect(); obj = doc.to<JsonObject>();

@@ -301,10 +301,15 @@ void MICWORKER::calibrate()
     count+=cnt;
   }
   double D = sumSq / count; // dispersion
-  if(D>500) return; // слишком большой разброс, не включаем данный замер...
-  //sqrt(D); // standard error
-  //LOG(print(F("dispersion="));LOG(print(D);LOG(print(F(", standard error="));LOG(println, sqrt(D));
 
+  //sqrt(D); // standard error
+  //LOG(print,F("dispersion=")); LOG(print,D); LOG(print,F(", standard error=")); LOG(println, sqrt(D));
+
+#ifdef ESP8266
+  if(D>500) return; // слишком большой разброс, не включаем данный замер...
+#else
+  if(D>2500) return; // слишком большой разброс, не включаем данный замер...
+#endif
   uint16_t step; // где мы сейчас
   for(step=0; step<samples/2; step++){ // делим на 2 диапазона AVG+stderr
     if(vImag[step]==0.0){
