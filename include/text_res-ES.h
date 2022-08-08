@@ -166,7 +166,7 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 #define DFTINTF_0EE "Energía"
 #define DFTINTF_0EF "Densidad"
 #define DFTINTF_0F0 "Color/Rotación"
-#define DFTINTF_0F1 "Tamaño/Cola (1-85-170-255)"
+#define DFTINTF_0F1 "Cola (0: no hay)"
 #define DFTINTF_0F2 "Frecuencia de inicio"
 #define DFTINTF_0F3 "Rotar"
 #define DFTINTF_0F4 "Paleta (0: generador)"

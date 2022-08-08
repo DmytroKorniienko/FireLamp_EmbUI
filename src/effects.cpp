@@ -824,14 +824,10 @@ String EffectBall::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) {
     speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 0.15) * EffectCalc::speedfactor;
   }
-  else if(_val->getId()==2) {
-    EffectCalc::setDynCtrl(_val).toInt();
-    if (scale <= 85)
-      ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-    else if (scale > 85 and scale <= 170)
-      ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-    else
-      ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  else if(_val->getId()==3) {
+    ballSize = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==4) {
+    scale = EffectCalc::setDynCtrl(_val).toInt();
   }
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
@@ -892,9 +888,9 @@ bool EffectBall::run(CRGB *leds, EffectWorker *param) {
     ballColor = ColorFromPalette(*curPalette, random(1, 250), random(200, 255));
   }
 
-  if (scale <= 85)  // при масштабе до 85 выводим кубик без шлейфа
+  if (scale == 0)  // при масштабе до 85 выводим кубик без шлейфа
     memset8( leds, 0, NUM_LEDS * 3);
-  else if (scale > 85 and scale <= 170)
+  else if (scale == 1)
     fadeToBlackBy(leds, NUM_LEDS, 255 - map(speed, 1, 255, 245, 200)); // выводим кубик со шлейфом, длинна которого зависит от скорости.
   else
     fadeToBlackBy(leds, NUM_LEDS, 255 - map(speed, 1, 255, 253, 248)); // выводим кубик с длинным шлейфом, длинна которого зависит от скорости.
@@ -4559,8 +4555,8 @@ void EffectPatterns::load() {
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  _speedX = EffectMath::fmap(_scale, -32, 32, 0.75, -0.75);
-  _speedY = EffectMath::fmap(_speed, -32, 32, 0.75, -0.75);
+  _speedX = EffectMath::fmap(_scale, 1, 65, 0.75, -0.75);
+  _speedY = EffectMath::fmap(_speed, 1, 65, 0.75, -0.75);
 
   if(!_sinMove){
     xsin += _speedX;
