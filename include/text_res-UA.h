@@ -135,7 +135,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0D1 "Палітра/Масштаб"
 #define DFTINTF_0D2 "Ефект (0: циклічно)"
 #define DFTINTF_0D3 "Зміщення кольору (0: циклічно)"
-#define DFTINTF_0D4 "Cубпіксель"
+#define DFTINTF_0D4 "Субпіксель"
 #define DFTINTF_0D5 "Кількість"
 #define DFTINTF_0D6 "Генератор кольору"
 #define DFTINTF_0D7 "Відтінок"
