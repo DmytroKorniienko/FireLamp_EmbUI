@@ -1862,12 +1862,13 @@ void EffectDrift::load(){
 String EffectDrift::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) _dri_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 2., 20.);
   else if(_val->getId()==4) driftType = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) flag = EffectCalc::setDynCtrl(_val).toInt() == 1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
-  if (driftType == 1 or driftType == 2)
+  if (!flag)
     FastLED.clear();
   else
     fadeToBlackBy(ledarr, NUM_LEDS, beatsin88(350. * EffectMath::fmap((float)speed, 1., 255., 1., 5.), 512, 4096) / 256);
@@ -1879,12 +1880,10 @@ bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
 
   switch (driftType)
   {
-  case 1:
-  case 3:
+  case 0:
     return incrementalDriftRoutine(*&ledarr, &*opt);
     break;
-  case 2:
-  case 4:
+  case 1:
     return incrementalDriftRoutine2(*&ledarr, &*opt);
     break;
   default:

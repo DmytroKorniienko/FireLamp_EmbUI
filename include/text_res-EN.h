@@ -178,7 +178,7 @@ static const char TEFF_255[] PROGMEM = "Oscilloscope";
 #define DFTINTF_0FC "Color (1: random, 255: white)"
 #define DFTINTF_0FD "Snowfall/Starfall/Meteors"
 #define DFTINTF_0FE "Quantity"
-#define DFTINTF_0FF "Type 1/2, Blur 3/4"
+//#define DFTINTF_0FF "Type 1/2, Blur 3/4"
 #define DFTINTF_100 "Palette (0: random color)"
 #define DFTINTF_101 "Color 1 (0: cyclical)"
 #define DFTINTF_102 "Cloud"

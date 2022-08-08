@@ -177,7 +177,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0FC "Колір (1: випадковий, 255: білий)"
 #define DFTINTF_0FD "Снігопад/Зорепад/Метеори"
 #define DFTINTF_0FE "Кількість"
-#define DFTINTF_0FF "Тип 1/2, Розмиття 3/4"
+//#define DFTINTF_0FF "Тип 1/2, Розмиття 3/4"
 #define DFTINTF_100 "Палітра (0: випадковий колір)"
 #define DFTINTF_101 "Колір 1 (0: циклічно)"
 #define DFTINTF_102 "Хмарка"

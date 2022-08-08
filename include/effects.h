@@ -508,6 +508,7 @@ private:
 	float _dri_speed;
 	uint8_t _dri_delta;
 	byte driftType = 0;
+    bool flag = false;
 
 	String setDynCtrl(UIControl*_val) override;
 	bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
