@@ -37,6 +37,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #ifndef __MICFFT_H
 #define __MICFFT_H
 
+#ifdef CONFIG_IDF_TARGET_ESP32
+#include "driver/adc_common.h"
+#include "esp_adc_cal.h"
+#define DEFAULT_VREF 1100
+#endif
 
 // Define this to use reciprocal multiplication for division and some more speedups that might decrease precision
 #define FFT_SPEED_OVER_PRECISION
@@ -51,10 +56,11 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 class MICWORKER {
 private:
-#ifdef FAST_ADC_READ
+#if defined(FAST_ADC_READ) && defined(ESP8266)
   bool useFixedFreq = true; // использовать фиксированное семплирование, либо максимально возможное (false)
 #else
   bool useFixedFreq = false; // использовать фиксированное семплирование, либо максимально возможное (false)
+  esp_adc_cal_characteristics_t *adc_chars;
 #endif
   bool _isCaliblation = false;
   float scale = 1.27; // 400 как средняя точка у меня, но надо будет калибравать для каждого случая отдельно калибровкой :)
@@ -75,11 +81,42 @@ private:
   void debug();
 public:
 #ifdef FAST_ADC_READ
+#ifdef ESP8266
   static const uint16_t samples=256U;     //This value MUST ALWAYS be a power of 2
+#else
+  static const uint16_t samples=256U;     //This value MUST ALWAYS be a power of 2
+#endif
 #else
   static const uint16_t samples=64U;     //This value MUST ALWAYS be a power of 2
 #endif
   MICWORKER(float scale = 1.28, float noise = 0, bool withAnalyse=true) {
+#if CONFIG_IDF_TARGET_ESP32
+    //analogSetAttenuation(ADC_11db);
+    //analogSetClockDiv(1); // fastest == 1
+    //analogReadResolution(9);
+
+  //Range 0-4096
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  // full voltage range
+  adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11);
+
+  // // check to see what calibration is available
+  // if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK)
+  // {
+  //   Serial.println("Using voltage ref stored in eFuse");
+  // }
+  // if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK)
+  // {
+  //   Serial.println("Using two point values from eFuse");
+  // }
+  // if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_DEFAULT_VREF) == ESP_OK)
+  // {
+  //   Serial.println("Using default VREF");
+  // }
+  //Characterize ADC
+  adc_chars = (esp_adc_cal_characteristics_t *)calloc(1, sizeof(esp_adc_cal_characteristics_t));
+  esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, adc_chars); 
+#endif
     this->vReal = new float[samples];
     if(withAnalyse)
       this->vImag = new float[samples];
