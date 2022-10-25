@@ -8054,85 +8054,71 @@ bool EffectPuzzles::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ============= Эффект Цветные драже ===============
-// (c) SottNick
-//по мотивам визуала эффекта by Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko программный код которого он запретил брать
-// !++
+// ============= Ефект Кольорові драже ===============
+// (c)stepko
+																				 
+																									   
+	  
 String EffectPile::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speed = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 200);
   else if(_val->getId()==2) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  else EffectCalc::setDynCtrl(_val).toInt(); 
   return String();
 }
 
 void EffectPile::load() {
-  palettesload();    // подгружаем палитры
+  palettesload();
+}
+
+void EffectPile::changeFrame() {
+  memcpy(F[0], F[1], WIDTH * HEIGHT);
+				 
+																												  
+    uint8_t temp = map8(random(256), _scale, 255U);
+  if (pcnt >= map8(temp, 2U, HEIGHT - 3U)) {
+							 
+							   
+    temp = HEIGHT + 1U - pcnt;
+    if (!random8(4U))
+      if (random8(2U))
+        temp = 2U;
+      else
+        temp = 3U;
+    for (byte y = 0; y < pcnt; y++) {
+    for (byte x = 0; x < WIDTH; x++) {
+      if(random(255)%3) F[1][x][y] = 0;
+    }
+  }
+}
+pcnt = 0;
+  for (byte y = 0; y < HEIGHT; y++) {
+    for (byte x = 0; x < WIDTH; x++) {
+      if (!F[1][x][y]) continue;
+      if (F[1][x][y] && !F[1][x][y - 1] && y) {F[1][x][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+      else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x + 1][y - 1]  && !(x==WIDTH-1) && y) {F[1][x + 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+       else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x - 1][y - 1] && x && y) {F[1][x - 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+        else if (pcnt < y) pcnt = y;
+    }
+											  
+									  
+										 
+						  
+										
+  }
+  if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][HEIGHT - 1] = random(10, 255);
 }
 
 bool EffectPile::run(CRGB *leds, EffectWorker *param) {
-  if (dryrun(2.5))
-    return false;
-    // если насыпалось уже достаточно, бахаем рандомные песчинки
-  uint8_t temp = map8(random(256), _scale, 255U);
-  if (pcnt >= map8(temp, 2U, HEIGHT - 3U)) {
-    //temp = 255U - temp + 2;
-    //if (temp < 2) temp = 255;
-    temp = HEIGHT + 1U - pcnt;
-    if (!random(4U)) {// иногда песка осыпается до половины разом
-      if (random(2U)) {
-        temp = 2U;
-      } else {
-        temp = 3U;
-      }
-    }
-    //for (uint16_t i = 0U; i < NUM_LEDS; i++)
-    for (uint8_t y = 0; y < pcnt; y++)
-      for (uint8_t x = 0; x < WIDTH; x++)
-        if (!random(temp))
-          EffectMath::getPixel(x,y) = 0;
+  shift += speed;
+  if (shift >= 255) {
+    changeFrame();
+    shift = 0;
   }
-
-  pcnt = 0U;
-  // осыпаем всё, что есть на экране
-  for (uint8_t y = 1; y < HEIGHT; y++)
-    for (uint8_t x = 0; x < WIDTH; x++)
-      if (EffectMath::getPixel(x, y))
-      { // проверяем для каждой песчинки
-        if (!EffectMath::getPixel(x, y - 1))
-        { // если под нами пусто, просто падаем
-          EffectMath::getPixel(x, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-        }
-        else if (x > 0U && !EffectMath::getPixel(x - 1, y - 1) && x < WIDTH - 1 && !EffectMath::getPixel(x + 1, y - 1))
-        { // если под нами пик
-          if (random8(2U))
-            EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
-          else
-            EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-          pcnt = y - 1;
-        }
-        else if (x > 0U && !EffectMath::getPixel(x - 1, y - 1))
-        { // если под нами склон налево
-          EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-          pcnt = y - 1;
-        }
-        else if (x < WIDTH - 1 && !EffectMath::getPixel(x + 1, y - 1))
-        { // если под нами склон направо
-          EffectMath::getPixel(x + 1, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-          pcnt = y - 1;
-        }
-        else // если под нами плато
-          pcnt = y;
-      }
-  // эмиттер новых песчинок
-  if (!EffectMath::getPixel(CENTER_X_MINOR, HEIGHT - 2) && !EffectMath::getPixel(CENTER_X_MAJOR, HEIGHT - 2) && !random(3))
-  {
-    temp = random(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;
-    EffectMath::getPixel(temp, HEIGHT - 1) = ColorFromPalette(*curPalette, random8());
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+      CRGB col1 = CHSV(F[0][x][y], 255, (F[0][x][y]) ? 255 : 0);
+      EffectMath::drawPixelXY(x, y, nblend(col1, CHSV(F[1][x][y], 255, (F[1][x][y]) ? 255 : 0), shift));
+    }
   }
   return true;
 }

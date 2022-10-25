@@ -2119,17 +2119,20 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= Эффект Цветные драже ===============
-// (c) SottNick
-//по мотивам визуала эффекта by Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko программный код которого он запретил брать
+// ============= Ефект Кольорові драже ===============
+// (c)stepko
+																				 
+																									   
 class EffectPile : public EffectCalc {
 private:
     uint8_t pcnt = 0U, _scale;
     String setDynCtrl(UIControl*_val) override;
-
+    void changeFrame();
+    byte F[2][WIDTH][HEIGHT];
+    int shift;
 public:
     void load() override;
+    
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
