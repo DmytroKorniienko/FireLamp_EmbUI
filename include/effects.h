@@ -1954,14 +1954,14 @@ private:
     byte _scale = 8;
     const byte DIR_CHARGE = 2; // Chance to change direction 1-5
     uint16_t chance = 4096;
-
-    byte dir = 3;
+	
     byte _dir;
-    byte count = 0;
     uint8_t _fade;
-
+	int8_t zF;int8_t zD;
 	float speedFactor;
-
+	
+	void MoveX(uint8_t am, int8_t amplitude, float shift);
+	void MoveY(uint8_t am, int8_t amplitude, float shift);
     void draw(float x, float y, CRGB color);
     String setDynCtrl(UIControl*_val) override;
 

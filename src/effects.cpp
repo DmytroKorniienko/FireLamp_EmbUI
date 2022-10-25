@@ -7406,85 +7406,93 @@ void EffectStarShips::load() {
   FastLED.clear();
 }
 
+void EffectStarShips::MoveX(uint8_t am = 128, int8_t amplitude = 1, float shift = 0) {
+  CRGB ledsbuff[WIDTH];
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    int16_t amount = ((int16_t)am - 128) * 2 * amplitude + shift * 256  ;
+    int8_t delta = abs(amount) >> 8 ;
+    int8_t fraction = abs(amount) & 255;
+    for (uint8_t x = 0 ; x < WIDTH; x++) {
+      if (amount < 0) {
+        zD = x - delta; zF = zD - 1;
+      } else {
+        zD = x + delta; zF = zD + 1;
+      }
+      CRGB PixelA = CRGB::Black  ;
+      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(zD, y);
+      CRGB PixelB = CRGB::Black ;
+      if ((zF >= 0) && (zF < WIDTH)) PixelB = EffectMath::getPixel(zF, y);
+      ledsbuff[x] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
+    }
+    for(uint8_t x = 0; x < WIDTH; x++){
+    EffectMath::getPixel(x, y) = ledsbuff[x];}
+  }
+}
+
+void EffectStarShips::MoveY(uint8_t am = 128, int8_t amplitude = 1, float shift = 0) {
+  CRGB ledsbuff[HEIGHT];
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    int16_t amount = ((int16_t)am - 128) * 2 * amplitude + shift * 256 ;
+    int8_t delta = abs(amount) >> 8 ;
+    int8_t fraction = abs(amount) & 255;
+    for (uint8_t y = 0 ; y < HEIGHT; y++) {
+      if (amount < 0) {
+        zD = y - delta; zF = zD - 1;
+      } else {
+        zD = y + delta; zF = zD + 1;
+      }
+      CRGB PixelA = CRGB::Black ;
+      if ((zD >= 0) && (zD < HEIGHT)) PixelA = EffectMath::getPixel(x, zD);
+      CRGB PixelB = CRGB::Black ;
+      if ((zF >= 0) && (zF < HEIGHT)) PixelB = EffectMath::getPixel(x, zF);
+      ledsbuff[y] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+    }
+    for(uint8_t y = 0; y < HEIGHT; y++){
+    EffectMath::getPixel(x, y) = ledsbuff[y];}
+  }
+}
+
 bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, _fade);
-  switch (dir) {
-    case 0: // Up
-      for (byte x = 0; x < WIDTH; x++) {
-		    if (!_dir and x > WIDTH/2 and random8(chance) == DIR_CHARGE) {count++; break;}
-        for (float y = 0; y < HEIGHT; y+=speedFactor) {
-          EffectMath::getPixel(x, y) = (((int)y == EffectMath::getmaxHeightIndex()) ? CRGB::Black : EffectMath::getPixel(x, y + 1));
-        }
-      }
+  switch (_dir) {
+    case 1: // Up
+        MoveY(255);
       break;
-    case 1: // Up - Right 
-      for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (byte y = 0; y < HEIGHT; y++) {
-          EffectMath::getPixel(x, y) = ((y == EffectMath::getmaxHeightIndex() or (int)x == EffectMath::getmaxWidthIndex()) ? CRGB::Black : EffectMath::getPixel(x + 1, y + 1));
-        }
-      }
+    case 2: // Up - Right 
+        MoveY(255);
+		MoveX(255);
       break;
-    case 2: // Right
-      for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = (((int)x == EffectMath::getmaxWidthIndex()) ? CRGB::Black : EffectMath::getPixel(x + 1, y));
-        }
-      }
+    case 3: // Right
+        MoveX(255);
       break;
-    case 3: // Down - Right 
-      for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = (((int)x == EffectMath::getmaxWidthIndex() or y == 0) ? CRGB::Black : EffectMath::getPixel(x + 1, y - 1));
-        }
-      }
+    case 4: // Down - Right 
+        MoveY(0);
+		MoveX(255);
       break;
-    case 4: // Down
-      for (byte x = 0; x < WIDTH; x++) {
-		    if (!_dir and x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (float y = EffectMath::getmaxHeightIndex(); y > 0; y-=speedFactor) {
-          EffectMath::getPixel(x, y) = (((int)y == 0) ? CRGB::Black : EffectMath::getPixel(x, y - 1));
-        }
-      }
+    case 5: // Down
+        MoveY(0);
       break;
-    case 5: // Down - Left
-      for (float x = EffectMath::getmaxWidthIndex(); x > 0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = ((y == 0 or (int)x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y - 1));
-        }
-      }
+    case 6: // Down - Left
+       MoveY(0);
+	   MoveX(0);
       break;
-    case 6: // Left
-      for (float x = EffectMath::getmaxWidthIndex(); x > 0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = ((int)x == 0 ? CRGB::Black : EffectMath::getPixel(x - 1, y));
-        }
-      }
+    case 7: // Left
+        MoveX(0);
       break;
-    case 7: // Up - Left 
-      for (float x = WIDTH -1; x >0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = ((y == EffectMath::getmaxHeightIndex() or (int)x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y + 1));
-        }
-      }
+    case 8: // Up - Left 
+        MoveY(255);
+		MoveX(0);
       break;
-  }
+	 default:
+		MoveY(sin8(beatsin88(1460*speedFactor, 0, 255, 0, _scale*256)));
+		MoveX(cos8(beatsin88(1502*speedFactor, 0, 255, 0, 0)));
+		break;  }
 
   for (byte i = 0; i < _scale; i++) {
     float x = (float)beatsin88(3840*speedFactor + i*256, 0, EffectMath::getmaxWidthIndex() *4, 0, _scale*i*256) /4;
     float y = (float)beatsin88(3072*speedFactor + i*256, 0, EffectMath::getmaxWidthIndex() *4, 0, 0) /4;
     if ((x >= 0 and x <= EffectMath::getmaxWidthIndex()) and (y >= 0 and y <= EffectMath::getmaxHeightIndex())) draw(x, y, ColorFromPalette(*curPalette, beatsin88(256*12.*speedFactor + i*256, 0, 255), 255));
   }
-
-  if (_dir) 
-    dir = _dir - 1;
-  else dir = count%8;
-  if (dir == 0) randomSeed(millis());
   EffectMath::blur2d(16);
   return true;
 }
