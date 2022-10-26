@@ -1874,16 +1874,12 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
   for (uint8_t i = 1; i < maxDim / 2U; i++) { // возможно, стоит здесь использовать const MINLENGTH
     int8_t x = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
     int8_t y = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
-    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, ColorFromPalette(RainbowColors_p, (i - 1U) * maxDim_steps + _dri_delta));
+    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, ColorFromPalette(*curPalette, (i - 1U) * maxDim_steps + _dri_delta));
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
 }
 
-// ============= DRIFT 2 / ДРИФТ 2 ===============
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
-// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
-// https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift2.h
 bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
@@ -1899,13 +1895,13 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
     {
       x = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim- 1 - i, 0, 64U + dri_phase);
       y = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim - 1 - i, 0, dri_phase);
-      color = ColorFromPalette(RainbowColors_p, i * maxDim_steps * 2U + _dri_delta);
+      color = ColorFromPalette(*curPalette, i * maxDim_steps * 2U + _dri_delta);
     }
     else
     {
       x = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, dri_phase);
       y = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, 64U + dri_phase);
-      color = ColorFromPalette(RainbowColors_p, ~(i * maxDim_steps + _dri_delta)); 
+      color = ColorFromPalette(*curPalette, ~(i * maxDim_steps + _dri_delta)); 
     }
     EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, color);
   }
@@ -8087,7 +8083,7 @@ pcnt = 0;
 						  
 										
   }
-  if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][HEIGHT - 1] = random(10, 255);
+  if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][HEIGHT - 1] = random(16, 255);
 }
 
 bool EffectPile::run(CRGB *leds, EffectWorker *param) {
@@ -8098,8 +8094,8 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   }
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
-      CRGB col1 = CHSV(F[0][x][y], 255, (F[0][x][y]) ? 255 : 0);
-      EffectMath::drawPixelXY(x, y, nblend(col1, CHSV(F[1][x][y], 255, (F[1][x][y]) ? 255 : 0), shift));
+      CRGB col1 = ColorFromPalette(*curPalette,F[0][x][y],(F[0][x][y]) ? 255 : 0);
+      EffectMath::drawPixelXY(x, y, nblend(col1, ColorFromPalette(*curPalette,F[1][x][y],(F[1][x][y]) ? 255 : 0), shift));
     }
   }
   return true;
