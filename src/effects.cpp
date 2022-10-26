@@ -7493,44 +7493,46 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
   changeFlags();
   fadeToBlackBy(leds, NUM_LEDS, 32);
   for (uint8_t i = 0; i < WIDTH; i++) {
-    thisVal = inoise8((float) i * DEVIATOR, counter, (int)count/*(float)i * SPEED_ADJ/2*/);
-    thisMax = map(thisVal, 0, 255, 0, EffectMath::getmaxHeightIndex());
+    thisVal = mix(inoise8(((float) i * DEVIATOR)-counter,counter/2,(float)i*SPEED_ADJ),128,i*(255/WIDTH));
+    thisMax = map(thisVal, 0, 255, 0, HEIGHT - 1);
+	for (byte j = 0; j < HEIGHT; j++) {
+		if(j>((flag == 2 || flag == 7)? (HEIGHT-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || (thisMax>=HEIGHT/2 && j < ((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
     switch (flag)
     {
     case 1:
-      germany(i);
+      germany(i,j);
       break;
     case 2:
-      usa(i);
+      usa(i,j);
       break;
     case 3:
     case 0:
-      ukraine(i);
+      ukraine(i,j);
       break;
     case 4:
-      belarus(i);
+      belarus(i,j);
       break;
     case 5:
-      italy(i);
+      italy(i,j);
       break;
     case 6:
-      spain(i);
+      spain(i,j);
       break;
     case 7:
-      uk(i);
+      uk(i,j);
       break;
     case 8:
-      france(i);
+      france(i,j);
       break;
     case 9:
-      poland(i);
+      poland(i,j);
       break;
     
     default:
       break;
     }
 
-  }
+  }}
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   counter += (float)_speed * SPEED_ADJ;
   return true;
