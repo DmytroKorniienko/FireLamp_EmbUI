@@ -1834,7 +1834,7 @@ void EffectDrift::load(){
 
 // !++
 String EffectDrift::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) _dri_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 2., 20.);
+  if(_val->getId()==1) _dri_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 256., 2560.);
   else if(_val->getId()==4) driftType = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==5) flag = EffectCalc::setDynCtrl(_val).toInt() == 1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -1871,10 +1871,10 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  for (uint8_t i = 1; i < maxDim / 2U; i++) { // возможно, стоит здесь использовать const MINLENGTH
-    int8_t x = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
-    int8_t y = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
-    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, ColorFromPalette(*curPalette, (i - 1U) * maxDim_steps + _dri_delta));
+  for (uint8_t i = 1; i < maxDim; i++) { // возможно, стоит здесь использовать const MINLENGTH
+	int16_t x = beatsin16((float)(maxDim - i) * _dri_speed, (maxDim - 2 - i)*128, (maxDim + i)*128, 0, (64U + dri_phase)*256); // используем константы центра матрицы из эффекта Кометы
+    int16_t y = beatsin16((float)(maxDim - i) * _dri_speed, (maxDim - 2 - i)*128, (maxDim + i)*128, 0, dri_phase*256);       // используем константы центра матрицы из эффекта Кометы
+    EffectMath::wu_pixel(x-width_adj * 256, y-height_adj * 256, ColorFromPalette(*curPalette, (i - 1U) * maxDim_steps + _dri_delta));
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
@@ -1888,22 +1888,22 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 0; i < maxDim; i++)
   {
-    int8_t x = 0;
-    int8_t y = 0;
+    int16_t x = 0;
+    int16_t y = 0;
     CRGB color;
     if (i < maxDim / 2U)
     {
-      x = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim- 1 - i, 0, 64U + dri_phase);
-      y = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim - 1 - i, 0, dri_phase);
+      x = beatsin16((i + 1) * _dri_speed, (i + 1U)*256, (maxDim- 1 - i)*256, 0, 256*(64U + dri_phase));
+      y = beatsin16((i + 1) * _dri_speed, (i + 1U)*256, (maxDim - 1 - i)*256, 0, 256*dri_phase);
       color = ColorFromPalette(*curPalette, i * maxDim_steps * 2U + _dri_delta);
     }
     else
     {
-      x = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, dri_phase);
-      y = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, 64U + dri_phase);
+      x = beatsin16((maxDim - i) * _dri_speed, (maxDim - 1 - i)*256, (i + 1U)*256, 0, 256*dri_phase);
+      y = beatsin16((maxDim - i) * _dri_speed, (maxDim - 1 - i)*256, (i + 1U)*256, 0, 256*(64U + dri_phase));
       color = ColorFromPalette(*curPalette, ~(i * maxDim_steps + _dri_delta)); 
     }
-    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, color);
+    EffectMath::wu_pixel(x-width_adj*256, y-height_adj*256, color);
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
