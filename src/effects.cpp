@@ -1309,64 +1309,38 @@ bool EffectSpiro::run(CRGB *leds, EffectWorker *param) {
   if (curPalette == nullptr) {
     return false;
   }
-
-  bool change = false;
-  uint8_t spirooffset = 256 / spirocount;
-
-  //EffectMath::dimAll(254U - palettescale);
-  //EffectMath::dimAll(250-speed_factor*7);
   uint8_t dim = beatsin8(16. / speedFactor, 5, 10);
-  EffectMath::dimAll(254 - dim);
-
-  for (int i = 0; i < spirocount; i++) {
-    uint8_t  x = EffectMath::mapsincos8(MAP_SIN, spirotheta1 + i * spirooffset, spirominx, spiromaxx);
-    uint8_t  y = EffectMath::mapsincos8(MAP_COS, spirotheta1 + i * spirooffset, spirominy, spiromaxy);
-    uint8_t x2 = EffectMath::mapsincos8(MAP_SIN, spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
-    uint8_t y2 = EffectMath::mapsincos8(MAP_COS, spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
-    CRGB color = ColorFromPalette(*curPalette, (spirohueoffset + i * spirooffset), 128U);
-    EffectMath::getPixel(x2, y2) += color;
-
-    if(x2 == spirocenterX && y2 == spirocenterY) change = true; // в центре могут находится некоторое время
+	  fadeToBlackBy(leds, NUM_LEDS, dim);
+  static float t;t +=  speedFactor * 0.05f;
+  float CalcRad = (sin(t / 2) + 1);
+  if (CalcRad <= 0.001) {
+    if(!incenter){
+		if(AM<=1 || AM >= ((WIDTH + HEIGHT) / 2)) change = !change;
+          if (change) {
+            if(AM >= 4)
+              AM *= 2;
+            else
+              AM += 1;
+          }
+          else {
+            if(AM > 4)
+              AM /= 2;
+            else
+              AM -= 1;
+          }
+		  Angle = 6.28318531 / AM;
+	}
+    incenter = 1;
+  } else incenter = 0;
+  float radX = CalcRad * spirocenterX / 2;
+  float radY = CalcRad * spirocenterY / 2;
+  for (byte i = 0; i < AM; i++) {
+    EffectMath::drawPixelXYF((spirocenterX + sin(t + (Angle * i)) * radX), (spirocenterY + cos(t + (Angle * i)) * radY), ColorFromPalette(*curPalette, t*10 + ((256 / AM) * i)));
   }
-
-  spirotheta2 += speedFactor * 2;
-  spirotheta1 += speedFactor;
-  spirohueoffset += speedFactor;
-
-  if (change && !spirohandledChange) { // меняем кол-во спиралей
-    spirohandledChange = true;
-
-    if (spirocount >= WIDTH || spirocount == 1)
-      spiroincrement = !spiroincrement;
-
-    if (spiroincrement) {
-      if(spirocount >= 4)
-        spirocount *= 2;
-      else
-        spirocount += 1;
-    } else {
-      if(spirocount > 4)
-        spirocount /= 2;
-      else
-          spirocount -= 1;
-    }
-
-    spirooffset = 256 / spirocount;
-  }
-
-  // сброс спустя время, чтобы счетчик спиралей не менялся скачками
-  if(spirohandledChange){
-    if(internalCnt==25) { // спустя 25 кадров
-      spirohandledChange = false;
-      internalCnt=0;
-    } else {
-      internalCnt++;
-    }
-  }
-
   EffectMath::blur2d(32);
   return true;
 }
+	
 
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
 // ***** Парящий огонь, Кровавые Небеса, Радужный Змей и т.п.
@@ -7484,8 +7458,8 @@ bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
 		MoveX(0);
       break;
 	 default:
-		MoveY(sin8(beatsin88(1460*speedFactor, 0, 255, 0, _scale*256)));
-		MoveX(cos8(beatsin88(1502*speedFactor, 0, 255, 0, 0)));
+		MoveY(beatsin88(1460*speedFactor, 0, 255, 0, 32768));
+		MoveX(beatsin88(1502*speedFactor, 0, 255, 0, 0));
 		break;  }
 
   for (byte i = 0; i < _scale; i++) {

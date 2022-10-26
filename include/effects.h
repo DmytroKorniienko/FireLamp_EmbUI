@@ -380,24 +380,13 @@ public:
  */
 class EffectSpiro : public EffectCalc {
 private:
-  const uint8_t spiroradiusx = WIDTH /4; //((!WIDTH & 1) ? (WIDTH -1) : WIDTH) / 4;
-  const uint8_t spiroradiusy = HEIGHT /4;//(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 4;
+  const float spirocenterX = WIDTH /2-0.5; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
+  const float spirocenterY = HEIGHT /2-0.5; //(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 2;
 
-  const uint8_t spirocenterX = WIDTH /2; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
-  const uint8_t spirocenterY = HEIGHT /2; //(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 2;
-
-  const uint8_t spirominx = spirocenterX - spiroradiusx;
-  const uint8_t spiromaxx = spirocenterX + spiroradiusx - (WIDTH%2 == 0 ? 1:0);// + 1;
-  const uint8_t spirominy = spirocenterY - spiroradiusy;
-  const uint8_t spiromaxy = spirocenterY + spiroradiusy - (HEIGHT%2 == 0 ? 1:0); // + 1;
-
-  bool spiroincrement = false;
-  bool spirohandledChange = false;
-  float spirohueoffset = 0;
-  uint8_t spirocount = 1;
-  float spirotheta1 = 0;
-  float spirotheta2 = 0;
-  uint8_t internalCnt = 0;
+  byte AM = 1;
+  bool incenter;
+float Angle;
+bool change = false;
   float speedFactor;
 
   String setDynCtrl(UIControl*_val) override;
