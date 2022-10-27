@@ -7496,7 +7496,7 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
     thisVal = mix(inoise8(((float) i * DEVIATOR)-counter,counter/2,(float)i*SPEED_ADJ),128,i*(255/WIDTH));
     thisMax = map(thisVal, 0, 255, 0, HEIGHT - 1);
 	for (byte j = 0; j < HEIGHT; j++) {
-		if(j>((flag == 2 || flag == 7)? (HEIGHT-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || (thisMax>=HEIGHT/2 && j < ((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
+		if(j>((flag == 2 || flag == 7)? (HEIGHT-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || ((int8_t)j < (int8_t)((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
     switch (flag)
     {
     case 1:

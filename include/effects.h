@@ -1826,8 +1826,8 @@ private:
     void belarus(uint8_t i, uint8_t j)
     {
             EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 4) ? CHSV(0, 224, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 0, thisVal)
-            : CHSV(0, 224, thisVal);
+            (j < thisMax - HEIGHT / 4) ? CHSV(0, 0, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 224, thisVal)
+            : CHSV(0, 0, thisVal);
     }
 
     //Poland
