@@ -7184,53 +7184,58 @@ String EffectRacer::setDynCtrl(UIControl*_val){
 
 bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, 16. * speedFactor);
-
-  if (round(posX / 4) > aimX) {
-    posX -= speedFactor;
+  for(int a = 0; a <speedFactor*5; a++){
+  if (posX != aimX || posY != aimY) {
+      int16_t error2 = error * 2;
+      if (error2 > -deltaY) {
+        error -= deltaY;
+        posX += signX;
+      }
+      if (error2 < deltaX) {
+        error += deltaX;
+        posY += signY;
+      }
+    } else {
+      aimChange();
   }
-  if (round(posY / 4) > aimY) {
-    posY -= speedFactor;
-  }
-  if (round(posX / 4) < aimX) {
-    posX += speedFactor;
-  }
-  if (round(posY / 4) < aimY) {
-    posY += speedFactor;
-  }
-  if (round(posX / 4) == aimX && round(posY / 4) == aimY) {
-    aimChange();
   }
   radius += addRadius;
   angle += radius;
   switch (hue%3)
   {
   case 0:
-    EffectMath::drawCircleF(aimX, aimY, radius, color); // рисуем круг
+    EffectMath::drawCircleF(aimX/10, aimY/10, radius, color); // рисуем круг
     break;  
   case 1:
-    drawStarF(aimX, aimY, 1.3 * radius, radius, 4, angle, color); // рисуем квадрат
+    drawStarF(aimX/10, aimY/10, 1.3 * radius, radius, 4, angle, color); // рисуем квадрат
     break;
   case 2:
-    drawStarF(aimX, aimY, 2 * radius, radius, starPoints, angle, color); // рисуем звезду
+    drawStarF(aimX/10, aimY/10, 2 * radius, radius, starPoints, angle, color); // рисуем звезду
     break;
   }
   
-  EffectMath::drawPixelXYF(posX / 4, posY / 4, CHSV(0, 0, 255)); // отрисовываем бегуна
+  EffectMath::drawPixelXYF(posX/10.0, posY/10.0, CHSV(0, 0, 255)); // отрисовываем бегуна
 
   return true;
 }
 
 void EffectRacer::load() {
   palettesload();
+  aimChange();
 }
 
 void EffectRacer::aimChange() {
-  aimX = random(0, EffectMath::getmaxWidthIndex());  // позиция цели 
-  aimY = random(0, EffectMath::getmaxHeightIndex());
+  aimX = random(0, EffectMath::getmaxWidthIndex())*10;  // позиция цели 
+  aimY = random(0, EffectMath::getmaxHeightIndex())*10;
   radius = 1; // начальный размер цели = 1 пиксель
   hue = millis()>>1; //random(0, 255);
   color = ColorFromPalette(*curPalette, hue, 180);
   starPoints = random(3, 7); // количество лучей у звезды
+   deltaX = abs(aimX - posX);
+   deltaY = abs(aimY - posY);
+   signX = posX < aimX ? 1 : -1;
+   signY = posY < aimY ? 1 : -1;
+   error = deltaX - deltaY;
 }
 
 void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color) {

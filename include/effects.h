@@ -1730,10 +1730,11 @@ public:
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 class EffectRacer: public EffectCalc {
 private:
-    float posX = random(0, WIDTH-1);
-    float posY = random(0, HEIGHT-1);
-    uint8_t aimX = random(0, WIDTH)-1;
-    uint8_t aimY = random(0, HEIGHT-1);
+    uint16_t posX = random(0, WIDTH-1)*10;
+    uint16_t posY = random(0, HEIGHT-1)*10;
+    uint16_t aimX = random(0, WIDTH-1)*10;
+    uint16_t aimY = random(0, HEIGHT-1)*10;
+	int16_t deltaX, deltaY, signX, signY, error;
     float radius = 0;
     byte hue = millis()>>1; //random(0, 255);
     CRGB color;
