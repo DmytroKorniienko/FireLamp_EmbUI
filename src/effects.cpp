@@ -787,7 +787,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
 // ------------- пейнтбол -------------
 // !++
 String EffectLightBalls::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt() /255.0 +0.1;
+  if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt()*EffectCalc::getSpeedFactor() /255.0 +0.1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
