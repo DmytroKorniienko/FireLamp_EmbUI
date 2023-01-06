@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -128,9 +128,9 @@ void LAMP::handle()
   // будильник обрабатываем раз в секунду
   //alarmWorker();
 
-  if(lampState.isEffectsDisabledUntilText && !lampState.isStringPrinting) {
+  if(lampState.isEffectsDisabled && !lampState.isStringPrinting && !warningTask) {
     setBrightness(0,false,false); // напечатали, можно гасить матрицу :)
-    lampState.isEffectsDisabledUntilText = false;
+    lampState.isEffectsDisabled = false;
   }
 
   // отложенное включение/выключение
@@ -152,7 +152,7 @@ void LAMP::handle()
   }
 
   // EVERY_N_SECONDS(5){
-  //   LOG(printf_P, PSTR("Test: %d %d %d\n"),!lampState.isStringPrinting, !flags.ONflag, !LEDFader::getInstance());
+  //   LOG(printf_P, PSTR("Test: %d %d %d %d %d\n"), lampState.isOffAfterText, lampState.isWarning, lampState.isEffectsDisabled, lampState.isStringPrinting, flags.ONflag);
   // }
   if(!lampState.isStringPrinting && !flags.ONflag && !LEDFader::getInstance()){ // освобождать буфер только если не выводится строка, иначе держать его
     if(sledsbuff){
@@ -167,7 +167,7 @@ void LAMP::effectsTick(){
   uint32_t _begin = millis();
 
   if (effects.worker && (flags.ONflag || LEDFader::getInstance()) && !isAlarm() && !isRGB()) {
-    if(!lampState.isEffectsDisabledUntilText){
+    if(!lampState.isEffectsDisabled){
       if (sledsbuff) {
         //std::copy(sledsbuff, NUM_LEDS, getUnsafeLedsArray());
         memcpy(getUnsafeLedsArray(), sledsbuff, NUM_LEDS);
@@ -219,7 +219,7 @@ void LAMP::effectsTick(){
 
   GAUGE::GetGaugeInstance()->GaugeMix((GAUGETYPE)flags.GaugeType);
 
-  if (isRGB() || isWarning() || isAlarm() || lampState.isEffectsDisabledUntilText || LEDFader::getInstance() || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
+  if (isRGB() || isWarning() || isAlarm() || lampState.isEffectsDisabled || LEDFader::getInstance() || (effects.worker ? effects.worker->status() : 1) || lampState.isStringPrinting) {
     // выводим кадр только если есть текст или эффект
     effectsTimer(T_FRAME_ENABLE, _begin);
   } else if(isLampOn()) {
@@ -259,7 +259,7 @@ LAMP::LAMP() : tmStringStepTime(DEFAULT_TEXT_SPEED), tmNewYearMessage(0)
       lampState.isOptPass = false; // введен ли пароль для опций
       lampState.isInitCompleted = false; // завершилась ли инициализация лампы
       lampState.isStringPrinting = false; // печатается ли прямо сейчас строка?
-      lampState.isEffectsDisabledUntilText = false;
+      lampState.isEffectsDisabled = false;
       lampState.isOffAfterText = false;
       lampState.dawnFlag = false; // флаг устанавливается будильником "рассвет"
 //#ifdef MIC_EFFECTS
@@ -605,7 +605,7 @@ uint8_t LAMP::getFont(uint8_t bcount, uint8_t asciiCode, uint8_t row)       // �
 
 void LAMP::sendString(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue){
   if (!isLampOn() && forcePrint){
-      disableEffectsUntilText(); // будем выводить текст, при выкюченной матрице
+      disableEffects(); // будем выводить текст, при выкюченной матрице
       setOffAfterText();
       changePower(true);
       setBrightness(OFF_BRIGHTNESS, false, false); // выводить будем минимальной яркостью в OFF_BRIGHTNESS пункта
@@ -639,6 +639,15 @@ void LAMP::sendStringToLampDirect(const char* text, const CRGB &letterColor, boo
 
 void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forcePrint, bool clearQueue, int8_t textOffset, int16_t fixedPos)
 {
+  if(clearQueue){
+    LOG(println, F("Clear message queue"));
+    if(docArrMessages){ // очистить очередь, освободить память
+        delete docArrMessages;
+        docArrMessages = nullptr;
+    }
+    lampState.isStringPrinting = false; // сбросить текущий вывод строки
+  }
+
   if((!flags.ONflag && !forcePrint) || (isAlarm() && !forcePrint)) return; // если выключена, или если будильник, но не задан принудительный вывод - то на выход
   if(textOffset==-128) textOffset=this->txtOffset;
 
@@ -673,15 +682,6 @@ void LAMP::sendStringToLamp(const char* text, const CRGB &letterColor, bool forc
         return; // на выход
     }
   } else { // текст не пустой
-    if(clearQueue){
-      LOG(println, F("Clear message queue"));
-      if(docArrMessages){ // очистить очередь, освободить память
-          delete docArrMessages;
-          docArrMessages = nullptr;
-      }
-      lampState.isStringPrinting = false; // сбросить текущий вывод строки
-    }
-
     if(!lampState.isStringPrinting){ // ничего сейчас не печатается
       String storage = text;
       prepareText(storage);
@@ -1080,7 +1080,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
   }
 
   // отрисовать текущий эффект (только если лампа включена, иначе бессмысленно)
-  if(effects.worker && flags.ONflag && !lampState.isEffectsDisabledUntilText){
+  if(effects.worker && flags.ONflag && !lampState.isEffectsDisabled){
     effects.worker->run(getUnsafeLedsArray(), &effects);
 #if defined(PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED)
     HeapSelectIram ephemeral;
@@ -1235,11 +1235,15 @@ void LAMP::showWarning(
     warn_duration-=warn_blinkHalfPeriod;
   else
     warn_duration=0;
-  if(warn_duration){
+  if(warn_duration && isLampOn()){ // лише при вмикнуной лампі
     if(warningTask){
       warningTask->cancel();
     }
 
+    if(!lampState.isWarning){
+      FastLED.clear();
+    }
+    
     warningTask = new WarningTask(warn_color, warn_duration, warn_blinkHalfPeriod, msg, blinkHalfPeriod, TASK_ONCE
     //, std::bind(&LAMP::showWarning, this, warn_color, warn_duration, warn_blinkHalfPeriod, (uint8_t)lampState.warnType, !lampState.isWarning, msg)
     ,[this](){
@@ -1251,6 +1255,7 @@ void LAMP::showWarning(
   }
   else {
     lampState.isWarning = false;
+    FastLED.clear();
     if(warningTask)
       warningTask->cancel();
     warningTask = nullptr;

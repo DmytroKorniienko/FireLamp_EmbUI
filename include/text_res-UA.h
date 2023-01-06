@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -135,7 +135,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0D1 "Палітра/Масштаб"
 #define DFTINTF_0D2 "Ефект (0: циклічно)"
 #define DFTINTF_0D3 "Зміщення кольору (0: циклічно)"
-#define DFTINTF_0D4 "Cубпіксель"
+#define DFTINTF_0D4 "Субпіксель"
 #define DFTINTF_0D5 "Кількість"
 #define DFTINTF_0D6 "Генератор кольору"
 #define DFTINTF_0D7 "Відтінок"
@@ -164,7 +164,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0EE "Енергія"
 #define DFTINTF_0EF "Щільність"
 #define DFTINTF_0F0 "Колір/Обертання"
-#define DFTINTF_0F1 "Розмір/Шлейф (1-85-170-255)"
+#define DFTINTF_0F1 "Шлейф (0: немає)"
 #define DFTINTF_0F2 "Частота запусків"
 #define DFTINTF_0F3 "Поворот"
 #define DFTINTF_0F4 "Палітра (0: генератор)"
@@ -177,7 +177,7 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 #define DFTINTF_0FC "Колір (1: випадковий, 255: білий)"
 #define DFTINTF_0FD "Снігопад/Зорепад/Метеори"
 #define DFTINTF_0FE "Кількість"
-#define DFTINTF_0FF "Тип 1/2, Розмиття 3/4"
+//#define DFTINTF_0FF "Тип 1/2, Розмиття 3/4"
 #define DFTINTF_100 "Палітра (0: випадковий колір)"
 #define DFTINTF_101 "Колір 1 (0: циклічно)"
 #define DFTINTF_102 "Хмарка"
@@ -211,11 +211,11 @@ static const char TEFF_255[] PROGMEM = "Осцилограф";
 static const char TINTF_000[] PROGMEM = "Ефекти";
 static const char TINTF_001[] PROGMEM = "Вивід тексту";
 static const char TINTF_002[] PROGMEM = "Налаштування";
-static const char TINTF_003[] PROGMEM = "В загальному списку";
-static const char TINTF_004[] PROGMEM = "В списку \"Демо\"";
+static const char TINTF_003[] PROGMEM = "В списку";
+static const char TINTF_004[] PROGMEM = "В \"Демо\"";
 static const char TINTF_005[] PROGMEM = "Копіювати";
 static const char TINTF_006[] PROGMEM = "Видалити";
-static const char TINTF_007[] PROGMEM = "Оновити список ефектів";
+static const char TINTF_007[] PROGMEM = "Оновити список";
 static const char TINTF_008[] PROGMEM = "Зберегти";
 static const char TINTF_009[] PROGMEM = "Керування списком ефектів";
 static const char TINTF_00A[] PROGMEM = DFTINTF_00A;
@@ -226,7 +226,7 @@ static const char TINTF_00E[] PROGMEM = "Увімкнути";
 static const char TINTF_00F[] PROGMEM = "\"Демо\"";
 static const char TINTF_010[] PROGMEM = "Гл.Яскрав";
 static const char TINTF_011[] PROGMEM = "Події";
-static const char TINTF_012[] PROGMEM = "Мікр.";
+static const char TINTF_012[] PROGMEM = "Мікрофон";
 static const char TINTF_013[] PROGMEM = "Кнопка";
 static const char TINTF_014[] PROGMEM = "Додатково...";
 static const char TINTF_015[] PROGMEM = "<<<";
@@ -358,10 +358,10 @@ static const char TINTF_08A[] PROGMEM = "В алфавітному порядк�
 static const char TINTF_08B[] PROGMEM = "Скинути налаштування ефекта";
 static const char TINTF_08C[] PROGMEM = "Префікс топіків";
 static const char TINTF_08D[] PROGMEM = "Сортуваня по мікрофону";
-static const char TINTF_08E[] PROGMEM = "Налаштування";
+static const char TINTF_08E[] PROGMEM = "Debug";
 static const char TINTF_08F[] PROGMEM = "Налаштування ESP";
-static const char TINTF_090[] PROGMEM = "Нумерація в списку ефектів";
-static const char TINTF_091[] PROGMEM = "Символ мікрофона в списку";
+static const char TINTF_090[] PROGMEM = "Нумерація";
+static const char TINTF_091[] PROGMEM = "Мікрофон";
 static const char TINTF_092[] PROGMEM = "Налаштування пінів";
 static const char TINTF_093[] PROGMEM = "Показати налаштування ESP";
 static const char TINTF_094[] PROGMEM = "Пін кнопки";
@@ -394,7 +394,7 @@ static const char TINTF_0AE[] PROGMEM = "Бас";
 static const char TINTF_0AF[] PROGMEM = "MP3 плеєр";
 static const char TINTF_0B0[] PROGMEM = "Кількість файлів в теці MP3";
 static const char TINTF_0B1[] PROGMEM = "Режими озвучення";
-static const char TINTF_0B2[] PROGMEM = "Тека\\номер звукового файла (приклади: MP3\\17, 5\\19)";
+static const char TINTF_0B2[] PROGMEM = "Папка\\номер звукового файла (приклади: MP3\\17, 5\\19)";
 static const char TINTF_0B3[] PROGMEM = "Обмежити гучність будильника";
 static const char TINTF_0B4[] PROGMEM = "За замовчуванням";
 static const char TINTF_0B5[] PROGMEM = "Видалити зі списку";
@@ -459,6 +459,10 @@ static const char TINTF_0EF[] PROGMEM = "Вертикальна";
 static const char TINTF_0F0[] PROGMEM = "Горизонтальна";
 static const char TINTF_0F1[] PROGMEM = "Режим плеєра";
 static const char TINTF_0F2[] PROGMEM = "MP3 плеєр + скидання";
+static const char TINTF_0F3[] PROGMEM = "Список";
+static const char TINTF_0F4[] PROGMEM = "Скидання налаштувань лампи";
+static const char TINTF_0F5[] PROGMEM = "Операція скасована";
+static const char TINTF_0F6[] PROGMEM = "Перевірка ефектів";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";

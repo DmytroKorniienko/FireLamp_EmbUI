@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -162,7 +162,7 @@ void EVENT_MANAGER::loadConfig(const char *cfg)
     if(LittleFS.begin()){
         clear_events();
         DynamicJsonDocument doc(4096);
-        String filename = cfg ? String(cfg) : String(F("/events_config.json"));
+        String filename = cfg ? String(cfg) : String(FPSTR(TCONST_00A8));
         if (!deserializeFile(doc, filename.c_str())){
             LOG(print, F("deserializeJson error: "));
             LOG(println, filename);
@@ -195,7 +195,7 @@ void EVENT_MANAGER::saveConfig(const char *cfg)
     if(LittleFS.begin()){
         File configFile;
         if(cfg == nullptr)
-            configFile = LittleFS.open(F("/events_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+            configFile = LittleFS.open(FPSTR(TCONST_00A8), "w"); // PSTR("w") использовать нельзя, будет исключение!
         else
             configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
         configFile.print("[");

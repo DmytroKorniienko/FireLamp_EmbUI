@@ -14,6 +14,7 @@ Uploader*.bat
 /data/backup/evn/firelamp.json
 /data/backup/glb/firelamp.json
 /data/backup/idx/firelamp.json
+/data/backup/glb/default.json
 *.gif
 *.332
 *.565

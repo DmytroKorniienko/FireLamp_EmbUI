@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -44,8 +44,8 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 /*
  * Создаем экземпляр класса калькулятора в зависимости от требуемого эффекта
  */
-void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed){
-  if(worker && isCfgProceed){ // сначала сохраним текущий эффект
+void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed, const bool isSkipSave){
+  if(worker && isCfgProceed && !isSkipSave){ // сначала сохраним текущий эффект
     saveeffconfig(curEff); // пишем конфиг только если это требуется, для индекса - пропускаем, там свой механизм
   }
   if(worker)
@@ -336,69 +336,95 @@ void EffectWorker::clearControlsList()
 
 void EffectWorker::initDefault(const char *folder)
 {
+  LOG(println,F("initDefault"));
+
+#ifndef ESP8266
+  static const char *dirs[] = {TCONST_005A,TCONST_002B,TCONST_0033,TCONST_0032,TCONST_0031,TCONST_002C,TCONST_0078};
+  for(int i=0; i<sizeof(dirs)/sizeof(const char *);i++){
+    String dirname = FPSTR(dirs[i]);
+    dirname.remove(dirname.length()-1); // remove last '/'
+    if(!LittleFS.exists(dirname)){
+      LittleFS.mkdir(dirname);
+      LOG(printf_P,PSTR("%s %s\n"), FPSTR(TCONST_00D6), dirname.c_str());
+    }
+  }
+#endif
+
   String filename;
-  DynamicJsonDocument doc(4096); // отожрет много памяти, но имена все равно не храним, так что хрен с ним, писать ручной парсер как-то лень
-
-  if(!LittleFS.exists(F("/eff"))){
-    LittleFS.mkdir(F("/eff"));
-  }
-  if(!LittleFS.exists(F("/backup"))){
-    LittleFS.mkdir(F("/backup"));
-  }
-  if(!LittleFS.exists(F("/backup/btn"))){
-    LittleFS.mkdir(F("/backup/btn"));
-  }
-  if(!LittleFS.exists(F("/backup/evn"))){
-    LittleFS.mkdir(F("/backup/evn"));
-  }
-  if(!LittleFS.exists(F("/backup/glb"))){
-    LittleFS.mkdir(F("/backup/glb"));
-  }
-  if(!LittleFS.exists(F("/backup/idx"))){
-    LittleFS.mkdir(F("/backup/idx"));
-  }
-
   if(folder && folder[0])
     filename = folder;
   else
-    filename = F("/eff_index.json");
+    filename = FPSTR(TCONST_0059);
 
-  TRYAGAIN:
-  if (!deserializeFile(doc, filename.c_str())){
-    LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
-      makeIndexFile();
-      if (!deserializeFile(doc, filename.c_str())){
-        LOG(println, F("ERROR: Can't rebuild Index file"));
-        return;   // пересоздание индекса не помогло
-      }
+  const uint16_t buffersize = 32;
+  char storage[buffersize];
+  DynamicJsonDocument doc(buffersize*2+32);
+  size_t size;
+  uint32_t effcnt = 0, ntry=0;
+  DeserializationError error;
 
-  }
-
-  JsonArray arr = doc.as<JsonArray>();
-  if(arr.isNull() || arr.size()==0){
-          LOG(print, F("Index corrupted... "));
-          LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
-          goto TRYAGAIN;
-  }
-  //LOG(printf_P,PSTR("Создаю список эффектов конструктор (%d): %s\n"),arr.size(),idx.c_str());
   clearEffectList();
-  for (size_t i=0; i<arr.size(); i++) {
-      JsonObject item = arr[i];
-      if(item.containsKey("nb")) // на время миграции, далее убрать!!!
-        effects.add(new EffectListElem(item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>()));
+  do {
+    File idx = LittleFS.open(filename,"r");
+    //idx.seek(0, SeekMode::SeekSet);
+    while((size = idx.readBytesUntil('\n',storage,buffersize))){
+#ifdef ESP8266
+      ESP.wdtFeed();
+#elif defined ESP32
+      delay(1);
+#endif
+      if(size<=3) continue;
+      if(size && storage[size-1]==0x7D){
+        storage[size]=0x00;
+      }
+      if(size && storage[0]==','){
+        storage[0]=' ';
+      }
+      //LOG(println, storage);
+      error = deserializeJson(doc, storage);
+      if(!error){
+        //LOG(printf_P, PSTR("%d - %d\n"), doc[F("n")].as<uint16_t>(), doc[F("f")].as<uint8_t>());
+        effects.add(new EffectListElem(doc[F("n")].as<uint16_t>(), doc[F("f")].as<uint8_t>()));
+        effcnt++;
+      } else {
+        LOG(printf_P, PSTR("DeserializeJson error: %d - %s\n"), error.code(), storage);
+      }
+      doc.clear(); doc.garbageCollect();
+    }
+    if(!effcnt){
+      if (LittleFS.begin() && LittleFS.exists(filename))
+        LittleFS.remove(filename); // пересоздаем индекс и пробуем снова
+      if(ntry<2 && LittleFS.exists(FPSTR(TCONST_005A)))
+        makeIndexFileFromFS(NULL,NULL,true);
       else
-        effects.add(new EffectListElem(item[F("n")].as<uint16_t>(), item[F("f")].as<uint8_t>()));
-      //LOG(printf_P,PSTR("%d : %d\n"),item[F("nb")].as<uint16_t>(), item[F("fl")].as<uint8_t>());
+        makeIndexFile();
+    }
+    ntry++;
+    idx.close();
+  } while(!effcnt && ntry<3);
+  if(!effcnt){
+    LOG(println, F("Effect index currupted!"));
+    return;
+  } else {
+    LOG(printf_P, PSTR("Found index for %d effects\n"),effcnt);
   }
+
+  //LOG(printf_P,PSTR("Создаю список эффектов конструктор (%d): %s\n"),arr.size(),idx.c_str());
   effects.sort([](EffectListElem *&a, EffectListElem *&b){ return a->eff_nb - b->eff_nb;}); // сортирую по eff_nb
   int32_t chk = -1; // удаляю дубликаты
   for(int i=0; i<effects.size(); i++){
     if((int32_t)effects[i]->eff_nb==chk){
           delete effects.remove(i);
+          i--;
           continue;
         }
     chk = effects[i]->eff_nb;
   }
+
+  // for(int i=0; i<effects.size(); i++){
+  //   LOG(println,effects[i]->eff_nb);
+  // }
+
   effectsReSort();
 }
 
@@ -406,7 +432,9 @@ void EffectWorker::removeConfig(const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
   LOG(printf_P,PSTR("Remove from FS: %s\n"), filename.c_str());
-  LittleFS.remove(filename); // удаляем файл
+  saveeffconfig(nb,folder,true); // clear
+  if (isemptyconfig(nb,folder))
+    LittleFS.remove(filename); // удаляем файл
 }
 
 void EffectWorker::effectsReSort(SORT_TYPE _effSort)
@@ -452,19 +480,16 @@ void EffectWorker::effectsReSort(SORT_TYPE _effSort)
  */
 void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const char *folder)
 {
-// #ifdef CASHED_EFFECTS_NAMES
-//   EffectListElem *tmp = getEffect(nb);
-//   _effectName = tmp->getName();
-// #else
   String filename = geteffectpathname(nb,folder);
-  DynamicJsonDocument doc(2048);
-  bool ok = deserializeFile(doc, filename.c_str());
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  //const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  DynamicJsonDocument doc(bufsize*2);
+  bool ok = deserializeFile(doc, filename.c_str(),nb);
   if (ok && doc[F("name")]){
     _effectName = doc[F("name")].as<String>(); // перенакрываем именем из конфига, если есть
   } else if(!ok) {
     _effectName = FPSTR(T_EFFNAMEID[(uint8_t)nb]);   // выбираем имя по-умолчанию из флеша если конфиг поврежден
   }
-// #endif
 }
 
 /**
@@ -477,8 +502,10 @@ void EffectWorker::loadeffname(String& _effectName, const uint16_t nb, const cha
 void EffectWorker::loadsoundfile(String& _soundfile, const uint16_t nb, const char *folder)
 {
   String filename = geteffectpathname(nb,folder);
-  DynamicJsonDocument doc(2048);
-  bool ok = deserializeFile(doc, filename.c_str());
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  //const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  DynamicJsonDocument doc(bufsize*2);
+  bool ok = deserializeFile(doc, filename.c_str(),nb);
   LOG(printf_P,PSTR("snd: %s\n"),doc[F("snd")].as<String>().c_str());
   if (ok && doc[F("snd")]){
     _soundfile = doc[F("snd")].as<String>(); // перенакрываем именем из конфига, если есть
@@ -493,11 +520,18 @@ void EffectWorker::loadsoundfile(String& _soundfile, const uint16_t nb, const ch
  *  @param doc - DynamicJsonDocument куда будет загружен джейсон
  *  @param jsonfile - файл, для загрузки
  */
-bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepath){
+bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepath, int32_t nb){
   if (!filepath || !*filepath)
     return false;
 
   File jfile = LittleFS.open(filepath, "r");
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  const uint32_t pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+  if(nb!=-1){
+    jfile.seek(bufsize*pos, SeekMode::SeekSet);
+  }
+
   DeserializationError error;
   if (jfile){
     error = deserializeJson(doc, jfile);
@@ -507,8 +541,10 @@ bool EffectWorker::deserializeFile(DynamicJsonDocument& doc, const char* filepat
   }
 
   if (error) {
-    LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filepath);
-    LOG(println, error.code());
+    if(error && ((error.code()>DeserializationError::EmptyInput) || (error.code()==DeserializationError::EmptyInput && nb==-1))) {
+      LOG(printf_P, PSTR("File: failed to load json file: %s, deserializeJson error: "), filepath);
+      LOG(println, error.code());
+    }
     return false;
   }
   //LOG(printf_P,PSTR("File: %s deserialization took %d ms\n"), filepath, millis() - timest);
@@ -521,15 +557,16 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
     return 1;   // ошибка
   }
 
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  //const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
   String filename = geteffectpathname(nb,folder);
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(bufsize*2);
   READALLAGAIN:
 
-  if (!deserializeFile(doc, filename.c_str() )){
+  if (!deserializeFile(doc, filename.c_str(), nb)){
     doc.clear();
-    LittleFS.remove(filename);
-    savedefaulteffconfig(nb, filename);   // пробуем перегенерировать поврежденный конфиг
-    if (!deserializeFile(doc, filename.c_str() ))
+    savedefaulteffconfig(nb, filename, true);   // пробуем перегенерировать поврежденный конфиг
+    if (!deserializeFile(doc, filename.c_str(), nb))
       return 1;   // ошибка и в файле и при попытке сгенерить конфиг по-умолчанию - выходим
   }
 
@@ -537,7 +574,7 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
   if(geteffcodeversion((uint8_t)nb) != version && nb<=255){ // только для базовых эффектов эта проверка
       doc.clear();
       LOG(printf_P, PSTR("Wrong version of effect, rewrite with default (%d vs %d)\n"), version, geteffcodeversion((uint8_t)nb));
-      savedefaulteffconfig(nb, filename);
+      savedefaulteffconfig(nb, filename, true);
       goto READALLAGAIN;
   }
 
@@ -605,34 +642,68 @@ int EffectWorker::loadeffconfig(const uint16_t nb, const char *folder)
 }
 
 const String EffectWorker::geteffectpathname(const uint16_t nb, const char *folder){
-  uint16_t swapnb = nb>>8|nb<<8; // меняю местами 2 байта, так чтобы копии/верисии эффекта оказалась в имени файла позади
+  //const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  uint16_t swapnb = (nb>>8)?(((nb>>8)-1)/nbfiles+1)|(((nb&0xFF)/nbfiles)<<8):((nb/nbfiles)<<8); // меняю местами 2 байта, так чтобы копии/версии эффекта оказалась в имени файла позади
+  uint8_t fnb = (nb>>8)?((nb&0xFF)%nbfiles):0x00; // префікс для випадку коли декілька ефектів в однієму файлі (лише для копій ефектів)
   String filename;
-  char buffer[5];
+  char buffer[8];
   if (folder) {
       filename.concat(F("/"));
       filename.concat(folder);
   }
-  filename.concat(F("/eff/"));
-  sprintf_P(buffer,PSTR("%04x"), swapnb);
+  filename.concat(FPSTR(TCONST_005A));
+  sprintf_P(buffer,PSTR("e%02x%04x"), fnb, swapnb);
   filename.concat(buffer);
   filename.concat(F(".json"));
   return filename;
 }
 
-void EffectWorker::savedefaulteffconfig(uint16_t nb, String &filename){
+void EffectWorker::savedefaulteffconfig(uint16_t nb, const String &filename, bool force){
 
   const String efname(FPSTR(T_EFFNAMEID[(uint8_t)nb])); // выдергиваем имя эффекта из таблицы
-  LOG(printf_P,PSTR("Make default config: %d %s\n"), nb, efname.c_str());
+  LOG(printf_P,PSTR("Make default config: %d %s %s\n"), nb, efname.c_str(), filename.c_str());
 
   String  cfg(FPSTR(T_EFFUICFG[(uint8_t)nb]));    // извлекаем конфиг для UI-эффекта по-умолчанию из флеш-таблицы
   cfg.replace(F("@name@"), efname);
   cfg.replace(F("@ver@"), String(geteffcodeversion((uint8_t)nb)) );
   cfg.replace(F("@nb@"), String(nb));
   
-  File configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-  if (configFile){
-    configFile.print(cfg.c_str());
-    configFile.close();
+  if(LittleFS.begin()){
+    // якщо нема, то создаємо розміром 8000 байтів по 2000 байт на ефект
+    const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+    const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+    const uint32_t pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+    uint8_t *buffer = new uint8_t[bufsize];
+    memset(buffer,0,bufsize);
+    if(!LittleFS.exists(filename)){
+      File configFile = LittleFS.open(filename, "w");
+#ifdef ESP8266
+      configFile.truncate(bufsize*nbfiles);
+#endif
+      configFile.seek(bufsize*pos, SeekMode::SeekSet);
+      sprintf((char *)buffer, "%s",cfg.c_str());
+      configFile.write(buffer,bufsize);
+      configFile.close();
+    } else {
+      File configFile = LittleFS.open(filename, "r+");
+#ifdef ESP8266
+      if(configFile.size()!=bufsize*nbfiles)
+        configFile.truncate(bufsize*nbfiles);
+#endif
+      if(!force){
+        configFile.seek(bufsize*pos, SeekMode::SeekSet);
+        configFile.read(buffer,bufsize);
+      }
+      configFile.seek(bufsize*pos, SeekMode::SeekSet);
+      //LOG(printf_P,PSTR("pos: %d, char: %d\n"), configFile.position(), buffer[0]);
+      if(buffer[0]!='{' || force){
+        sprintf((char *)buffer, "%s",cfg.c_str());
+        configFile.write(buffer,bufsize);
+      }
+      configFile.close();
+    }
+    delete[] buffer;
   }
 }
 
@@ -640,18 +711,35 @@ String EffectWorker::getfseffconfig(uint16_t nb)
 {
   String cfg_str;
   String filename = geteffectpathname(nb);
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  const uint32_t pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
   File jfile = LittleFS.open(filename, "r");
+  if(nb!=-1){
+    jfile.seek(bufsize*pos, SeekMode::SeekSet);
+  }
   if(jfile)
-    cfg_str = jfile.readString();
+    cfg_str = jfile.readStringUntil(0);//jfile.readString();
   jfile.close();
 
+  //LOG(println,cfg_str);
   return cfg_str;
 }
 
-String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
+void EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, char *buffer)
 {
   // конфиг текущего эффекта
-  DynamicJsonDocument doc(2048);
+  String storage;
+  geteffconfig(nb,replaceBright,storage);
+  snprintf((char *)buffer,EFF_BUFFER_SIZE,"%s",storage.c_str());
+}
+
+String &EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright, String &str)
+{
+  // конфиг текущего эффекта
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  //const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  DynamicJsonDocument doc(bufsize*2);
   EffectListElem *eff = getEffect(nb);
   EffectWorker *tmp=this;
   bool isFader = (curEff != nb);
@@ -678,47 +766,151 @@ String EffectWorker::geteffconfig(uint16_t nb, uint8_t replaceBright)
     var[F("max")]=tmp->controls[i]->getMax();
     var[F("step")]=tmp->controls[i]->getStep();
   }
-  if(isFader)
+  if(tmp!=this)
     delete tmp;
 
-  String cfg_str;
-  serializeJson(doc, cfg_str);
+  serializeJson(doc, str);
   doc.clear();
-  //LOG(println,cfg_str);
-  return cfg_str;
+  return str;
 }
 
-void EffectWorker::saveeffconfig(uint16_t nb, char *folder){
+bool EffectWorker::isemptyconfig(uint16_t nb, const char *folder){
+  String filename = geteffectpathname(nb,folder);
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  //const uint32_t pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+  File configFile;
+  configFile = LittleFS.open(filename, "r");
+  int8_t cnt=0;
+  for(uint8_t i=0; i<nbfiles; i++){
+      uint8_t chk;
+      configFile.seek(bufsize*i, SeekMode::SeekSet);
+      configFile.read(&chk,1);
+      //LOG(printf_P,PSTR("pos: %d, char: %d\n"), configFile.position(), buffer[0]);
+      if(chk!='{'){
+        cnt++;
+      }
+  }
+  configFile.close();
+  if(cnt==nbfiles) return true; else return false;
+}
+
+void EffectWorker::saveeffconfig(uint16_t nb, const char *folder, bool clear){
   // а тут уже будем писать рабочий конфиг исходя из того, что есть в памяти
   if(millis()<10000) return; // в первые десять секунд после рестарта запрещаем запись
   if(tConfigSave)
     tConfigSave->cancel(); // если оказались здесь, и есть отложенная задача сохранения конфига, то отменить ее
   
-  File configFile;
   String filename = geteffectpathname(nb,folder);
-  configFile = LittleFS.open(filename, "w"); // PSTR("w") использовать нельзя, будет исключение!
-  configFile.print(geteffconfig(nb));
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  const uint32_t pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+  uint8_t *buffer = new uint8_t[bufsize];
+  memset(buffer,0,bufsize);
+  File configFile;
+  if(LittleFS.exists(filename))
+    configFile = LittleFS.open(filename, "r+");
+  else
+    configFile = LittleFS.open(filename, "w");
+#ifdef ESP8266
+  if(configFile.size()!=bufsize*nbfiles)
+    configFile.truncate(bufsize*nbfiles);
+#endif
+  configFile.seek(bufsize*pos, SeekMode::SeekSet);
+  if(!clear)
+    geteffconfig(nb,0,(char *)buffer);
+  configFile.write(buffer,bufsize);
   configFile.close();
+  delete[] buffer;
 }
 
 /**
  * проверка на существование "дефолтных" конфигов для всех статичных эффектов
  *
  */
-void EffectWorker::chckdefconfigs(const char *folder){
-  for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
-    if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
-      continue;
+void recreateoptionsTask(bool isCancelOnly);
+void EffectWorker::chkdefconfigs(const char *folder){
+//   uint16_t tst = 0;
+//   for (uint16_t i = ((uint16_t)EFF_ENUM::EFF_NONE); i < (uint16_t)256; i++){ // всего 254 базовых эффекта, 0 - служебный, 255 - последний
+//     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
+//       continue;
 
-#ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
-#endif
+// #ifndef MIC_EFFECTS
+//     if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+// #endif
+//     String cfgfilename = geteffectpathname(i, folder);
+//     if(!LittleFS.exists(cfgfilename) || tst>i){ // если конфига эффекта не существует, создаем дефолтный
+//       savedefaulteffconfig(i, cfgfilename);
+//       if(!tst)
+//         tst = i + EFF_NB_PER_FILE;
+//     } else {
+//       tst = 0;
+//     }
+// #ifdef ESP8266
+//     ESP.wdtFeed();
+// #endif
+//   }
 
-    String cfgfilename = geteffectpathname(i, folder);
-    if(!LittleFS.exists(cfgfilename)){ // если конфига эффекта не существует, создаем дефолтный
-      savedefaulteffconfig(i, cfgfilename);
-    }
+  DynamicJsonDocument doc(512);
+  JsonObject data = doc.to<JsonObject>();
+  data[FPSTR(TCONST_00EF)] = folder ? folder : "";
+  data[FPSTR(TCONST_00F0)] = EFF_ENUM::EFF_NONE;
+
+  LOG(println,F("Create chkdefconfigs task"));
+  String scurEff = embui.param(FPSTR(TCONST_0016)); // текущий создадим вне очереди
+  uint16_t ce = scurEff.toInt();
+  String cfgfilename = geteffectpathname(ce, folder);
+  if(getfseffconfig(ce).isEmpty()){ // если конфига эффекта не существует, создаем дефолтный
+    savedefaulteffconfig(ce, cfgfilename, true);
   }
+
+  Task *_t = new JsonTask(&data, 1000, TASK_FOREVER, [this](){
+    JsonTask *task = (JsonTask *)ts.getCurrentTask();
+    JsonObject storage = task->getData();
+    JsonObject *data = &storage; // task->getData();
+
+    //LOG(println,F("chkdefconfigs task"));
+
+    String folder=(*data)[FPSTR(TCONST_00EF)];
+    uint16_t i=(*data)[FPSTR(TCONST_00F0)].as<uint16_t>();
+
+    if(!(i < (uint16_t)256)){
+      //LOG(println,F("chkdefconfigs task canceled"));
+      task->cancel();
+      return;
+    }
+
+    uint16_t chk=i+1;
+    while(!strlen_P(T_EFFNAMEID[chk]) && chk<256){   // пропускаем индексы-"пустышки" без названия, кроме EFF_NONE
+      chk++;
+    }
+    (*data)[FPSTR(TCONST_00F0)]=chk;
+#ifndef MIC_EFFECTS
+    if(i>=254U) {return;} // пропускаем эффекты для микрофона, если отключен микрофон EFF_ENUM::EFF_VU +
+#endif
+#ifndef RGB_PLAYER
+    if(i==251U) {return;} // пропускаем плеер, если отключен
+#endif
+    String cfgfilename = geteffectpathname(i, folder.isEmpty() ? NULL : folder.c_str());
+    if((strlen_P(T_EFFNAMEID[i]) && getfseffconfig(i).isEmpty()) || !i){ // если конфига эффекта не существует или 0 эффект, создаем дефолтный
+      recreateoptionsTask(true);
+      savedefaulteffconfig(i, cfgfilename, true);
+    } else {
+      i=chk;
+      while(!getfseffconfig(i).isEmpty() && i<256 && i<=chk+10){ // знайти наступний порожній
+#ifdef ESP8266
+        ESP.wdtFeed(); // если читается список имен эффектов перебором, то возможен эксепшен вотчдога, сбрасываем его таймер...
+#elif defined ESP32
+        delay(1);
+#endif
+        recreateoptionsTask(true);
+        //LOG(println,i);
+        i++;
+      }
+      (*data)[FPSTR(TCONST_00F0)]=i;
+    }
+  }, &ts, false, nullptr, [this](){TASK_RECYCLE;});
+  _t->enable();
 }
 
 void EffectWorker::autoSaveConfig(bool force) {
@@ -801,7 +993,7 @@ File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
     LOG(print, F("index:"));
     LOG(println, filename.c_str());
   } else
-    filename.concat(F("/eff_index.json"));
+    filename.concat(FPSTR(TCONST_0059));
   
   fhandle = LittleFS.open(filename, "w");
   return fhandle;
@@ -812,20 +1004,21 @@ File& EffectWorker::openIndexFile(File& fhandle, const char *folder){
  *  процедура содания индекса "по-умолчанию" на основе "вшитых" в код enum/имен эффектов
  *
  */
-void EffectWorker::makeIndexFile(const char *folder)
+void EffectWorker::makeIndexFile(const char *folder, const bool forcechkdef)
 {
   uint32_t timest = millis();
 
   // LittleFS глючит при конкуретном доступе к файлам на запись, разносим разношерстные операции во времени
   // сначала проверяем наличие дефолтных конфигов для всех эффектов
-  chckdefconfigs(folder);
+  if(!LittleFS.exists(FPSTR(TCONST_005A)) || forcechkdef)
+    chkdefconfigs(folder);
 
   File indexFile;
 
   LOG(println, F("Rebuilding Index file..."));
   bool firstLine = true;
   openIndexFile(indexFile, folder);
-  indexFile.print("[");
+  indexFile.print(F("[\n"));
 
   EffectListElem *eff;
   uint8_t flags = SET_ALL_EFFFLAGS;
@@ -833,19 +1026,25 @@ void EffectWorker::makeIndexFile(const char *folder)
     if (!strlen_P(T_EFFNAMEID[i]) && i!=0)   // пропускаем индексы-"пустышки" без названия, кроме 0 "EFF_NONE"
       continue;
 
+#ifndef RGB_PLAYER
+    if(i==251U) continue; // пропускаем плеер, если отключен
+#endif
 #ifndef MIC_EFFECTS
-    if(i>EFF_ENUM::EFF_TIME) continue; // пропускаем эффекты для микрофона, если отключен микрофон
+    if(i>254U) continue; // пропускаем эффекты для микрофона, если отключен микрофон
 #endif
 
     eff = getEffect(i);
     if(eff)
       flags = eff->flags.mask;
 
-    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", i, i ? flags : 0); // дефолтный флаг SET_ALL_EFFFLAGS для любого эффекта, кроме 0
+    indexFile.printf_P(PGidxtemplate, firstLine ? " " : ",", i, i ? flags : 0); // дефолтный флаг SET_ALL_EFFFLAGS для любого эффекта, кроме 0
     firstLine = false; // сбрасываю признак перовой строки
-    //yield();
+#ifdef ESP8266
+    ESP.wdtFeed();
+#elif defined ESP32
+    delay(1);
+#endif
   }
-
   indexFile.print("]");
   indexFile.close();
 
@@ -854,6 +1053,7 @@ void EffectWorker::makeIndexFile(const char *folder)
 }
 
 void EffectWorker::removeLists(){
+  LOG(println, F("removeLists"));
   LittleFS.remove(FPSTR(TCONST_0082));
   LittleFS.remove(FPSTR(TCONST_0083));
   LittleFS.remove(FPSTR(TCONST_0086));
@@ -872,10 +1072,15 @@ void EffectWorker::makeIndexFileFromList(const char *folder, bool forceRemove)
   effectsReSort(SORT_TYPE::ST_IDX); // сброс сортировки перед записью
 
   bool firstLine = true;
-  indexFile.print("[");
+  indexFile.print(F("[\n"));
   for (uint8_t i = 0; i < effects.size(); i++){
-    indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", effects[i]->eff_nb, effects[i]->flags.mask);
+    indexFile.printf_P(PGidxtemplate, firstLine ? " " : ",", effects[i]->eff_nb, effects[i]->flags.mask);
     firstLine = false; // сбрасываю признак первой строки
+#ifdef ESP8266
+    ESP.wdtFeed();
+#elif defined ESP32
+    delay(1);
+#endif
   }
   indexFile.print("]");
   indexFile.close();
@@ -883,11 +1088,11 @@ void EffectWorker::makeIndexFileFromList(const char *folder, bool forceRemove)
   effectsReSort(); // восстанавливаем сортировку
 }
 
-void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder)
+void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofolder, const bool skipInit, const bool forcechkdef)
 {
   File indexFile;
   String sourcedir;
-  makeIndexFile(tofolder); // создать дефолтный набор прежде всего
+  makeIndexFile(tofolder,forcechkdef); // создать дефолтный набор прежде всего
 
   removeLists();
 
@@ -895,7 +1100,7 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
       sourcedir.concat(F("/"));
       sourcedir.concat(fromfolder);
   }
-  sourcedir.concat(F("/eff"));
+  sourcedir.concat(FPSTR(TCONST_005A));
 
 #ifdef ESP8266
   Dir dir = LittleFS.openDir(sourcedir);
@@ -912,9 +1117,11 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   String fn;
   openIndexFile(indexFile, tofolder);
   bool firstLine = true;
-  indexFile.print("[");
+  indexFile.print(F("[\n"));
 
-  DynamicJsonDocument doc(3072);
+  const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+  const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+  DynamicJsonDocument doc(bufsize*2);
 
 #ifdef ESP8266
   while (dir.next()) {
@@ -923,21 +1130,26 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
 #ifdef ESP32
   File _f = dir.openNextFile();
   while(_f){
-      fn = _f.name();
+      fn = sourcedir + _f.name();
 #endif
-
-      if (!deserializeFile(doc, fn.c_str())) { //  || doc[F("nb")].as<String>()=="0"
-        continue;
+      for(uint32_t i=0;i<nbfiles;i++){
+        if (!deserializeFile(doc, fn.c_str(), i)) {
+          continue;
+        }
+        uint16_t nb = doc[F("nb")].as<uint16_t>();
+        uint8_t flags = doc[F("flags")].as<uint8_t>();
+        doc.clear(); doc.garbageCollect();
+        EffectListElem *eff = getEffect(nb);
+        if(eff)
+          flags = eff->flags.mask;
+        indexFile.printf_P(PGidxtemplate, firstLine ? " " : ",", nb, flags);
+        firstLine = false; // сбрасываю признак первой строки
+#ifdef ESP8266
+        ESP.wdtFeed();
+#elif defined ESP32
+        delay(1);
+#endif
       }
-      uint16_t nb = doc[F("nb")].as<uint16_t>();
-      uint8_t flags = doc[F("flags")].as<uint8_t>();
-      EffectListElem *eff = getEffect(nb);
-      if(eff)
-        flags = eff->flags.mask;
-      indexFile.printf_P(PGidxtemplate, firstLine ? "" : ",", nb, flags);
-      firstLine = false; // сбрасываю признак первой строки
-      doc.clear();
-
 #ifdef ESP8266
   ESP.wdtFeed();
 #elif defined ESP32
@@ -949,7 +1161,8 @@ void EffectWorker::makeIndexFileFromFS(const char *fromfolder,const char *tofold
   indexFile.close();
 
   LOG(println,F("Индекс эффектов создан из FS!"));
-  initDefault(tofolder); // перечитаем вновь созданный индекс
+  if(!skipInit)
+    initDefault(tofolder); // перечитаем вновь созданный индекс
 }
 
 // создать или обновить текущий индекс эффекта
@@ -964,41 +1177,241 @@ void EffectWorker::deleteFromIndexFile(const uint16_t effect)
   makeIndexFileFromList();
 }
 
-// удалить эффект
-void EffectWorker::deleteEffect(const EffectListElem *eff, bool isCfgRemove)
+// створення резервної копії ефектів
+void EffectWorker::saveEffectsBackup(const char *filename)
 {
+  if(!filename) return;
+  String buffer;
+
+  File bkp = LittleFS.open(filename, "w");
+  bool firstLine = true;
+  bkp.print(F("[\n"));
+  for(int i=0; i<effects.size(); i++){
+    buffer = getfseffconfig(effects[i]->eff_nb);
+    if(!buffer.isEmpty()){
+      if(firstLine)
+        buffer=String(" ")+buffer;
+      else
+        buffer=String(",")+buffer;
+      bkp.println(buffer);
+      firstLine = false;
+    }
+  }
+  bkp.print(F("]"));
+  bkp.close();
+}
+
+// очищення папки з конфігураціями ефектів
+void EffectWorker::clearEffDir()
+{
+  LOG(println, F("Clear /eff folder"));
+  String effdir = FPSTR(TCONST_005A);
+#ifdef ESP8266
+  Dir dir = LittleFS.openDir(effdir);
+#endif
+
+#ifdef ESP32
+  File dir = LittleFS.open(effdir);
+  if (!dir || !dir.isDirectory()){
+    LOG(print, F("Can't open dir: ")); LOG(println, effdir);
+    return;
+  }
+#endif
+
+  String fn;
+#ifdef ESP8266
+  while (dir.next()) {
+      fn=effdir + "/" + dir.fileName();
+#endif
+#ifdef ESP32
+  File _f = dir.openNextFile();
+  while(_f){
+      fn = _f.name();
+#endif
+      LittleFS.remove(fn);
+#ifdef ESP8266
+  ESP.wdtFeed();
+#elif defined ESP32
+  delay(1);
+  _f = dir.openNextFile();
+#endif
+  }
+  //LittleFS.rmdir(effdir);
+}
+
+// завантаження резервної копії ефектів
+void EffectWorker::loadEffectsBackup(const char *filename, bool clear)
+{
+  if(!filename) return;
+//   const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+//   const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+//   DynamicJsonDocument doc(bufsize*2);
+//   File bkp = LittleFS.open(filename, "r");
+//   File configFile;
+//   uint8_t *buffer = new uint8_t[bufsize];
+//   uint32_t pos=0, nb=0;
+//   String cfilename;
+
+//   if(clear)
+//     clearEffDir();
+
+//   size_t size;
+//   memset(buffer,0,bufsize);
+//   while((size = bkp.readBytesUntil('\n',buffer,bufsize))){
+//     if(size<=3) continue;
+//     String storage = (char *)buffer;
+//     DeserializationError err = deserializeJson(doc, storage);
+//     if (err) {
+// 			LOG(print, F("deserializeJson error: "));
+// 			LOG(println, err.code());
+//       LOG(println, (char *)buffer);
+//     } else {
+//       if(size && buffer[size-1]==0x7D){
+//         buffer[size]=0x00;
+//       }
+//       if(size && buffer[0]==','){
+//         buffer[0]=' ';
+//       }
+//       nb=doc[F("nb")].as<uint16_t>();
+//       LOG(printf_P, PSTR("%d.%s "),nb,doc[F("name")].as<String>().c_str());
+//       doc.clear(); doc.garbageCollect(); storage=String();
+//       cfilename = geteffectpathname(nb);
+//       pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+//       if(LittleFS.exists(cfilename))
+//         configFile = LittleFS.open(cfilename, "r+");
+//       else
+//         configFile = LittleFS.open(cfilename, "w");
+//       if(configFile.size()!=bufsize*nbfiles)
+//         configFile.truncate(bufsize*nbfiles);
+//       configFile.seek(bufsize*pos, SeekMode::SeekSet);
+//       size_t size = configFile.write(buffer,bufsize);
+//       LOG(println, size);
+//       configFile.close();
+//     }
+//     memset(buffer,0,bufsize);
+// #ifdef ESP8266
+//     ESP.wdtFeed(); // long term operation...
+// #elif defined ESP32
+//     delay(1);
+// #endif
+//   }
+//   delete[] buffer;
+//   bkp.close();
+
+  DynamicJsonDocument doc(256);
+  JsonObject data = doc.to<JsonObject>();
+  data[FPSTR(TCONST_002A)] = filename ? filename : "";
+  data[FPSTR(TCONST_005B)] = 2;
+
+  if(clear)
+    clearEffDir();
+
+  LOG(println,F("Create loadEffectsBackup task"));
+
+  Task *_t = new JsonTask(&data, 1000, TASK_FOREVER, [this](){
+    JsonTask *task = (JsonTask *)ts.getCurrentTask();
+    JsonObject jstorage = task->getData();
+    JsonObject *data = &jstorage; // task->getData();
+
+    const uint32_t bufsize=EFF_BUFFER_SIZE; // повинно бути кратно 4
+    const uint32_t nbfiles=EFF_NB_PER_FILE; // EFF_BUFFER_SIZE*EFF_NB_PER_FILE десь 4-32кб
+    DynamicJsonDocument doc(bufsize*2);
+    File bkp = LittleFS.open((*data)[FPSTR(TCONST_002A)].as<String>(), "r");
+    bkp.seek((*data)[FPSTR(TCONST_005B)].as<size_t>(), SeekMode::SeekSet);
+    uint8_t *buffer = new uint8_t[bufsize];
+    memset(buffer,0,bufsize);
+    size_t size = bkp.readBytesUntil('\n',buffer,bufsize);
+    uint32_t pos=0, nb=0;
+    String cfilename;
+    File configFile;
+
+    if(size<=3) {
+      if(bkp.position()>=bkp.size()){
+        makeIndexFileFromFS();
+        setSelected(getSelected(),true);
+        LOG(println, F("loadEffectsBackup done"));
+        task->cancel();
+      }
+      else
+        (*data)[FPSTR(TCONST_005B)] = bkp.position();
+      bkp.close();
+      delete[] buffer;
+      return;
+    }
+    if(size && buffer[size-1]==0x7D){
+      buffer[size]=0x00;
+    }
+    if(size && buffer[0]==','){
+      buffer[0]=' ';
+    }
+
+    String storage = (char *)buffer;
+    DeserializationError err = deserializeJson(doc, storage);
+    if (err) {
+			LOG(print, F("deserializeJson error: "));
+			LOG(println, err.code());
+      LOG(println, (char *)buffer);
+    } else {
+      nb=doc[F("nb")].as<uint16_t>();
+      LOG(printf_P, PSTR("%d.%s "),nb,doc[F("name")].as<String>().c_str());
+      doc.clear(); doc.garbageCollect(); storage=String();
+      cfilename = geteffectpathname(nb);
+      pos=nb>255?(((nb>>8)-1)%nbfiles):((nb&0xFF)%nbfiles);
+      if(LittleFS.exists(cfilename))
+        configFile = LittleFS.open(cfilename, "r+");
+      else
+        configFile = LittleFS.open(cfilename, "w");
+#ifdef ESP8266
+      if(configFile.size()!=bufsize*nbfiles)
+        configFile.truncate(bufsize*nbfiles);
+#endif        
+      configFile.seek(bufsize*pos, SeekMode::SeekSet);
+      size_t size = configFile.write(buffer,bufsize);
+      LOG(println, size);
+      configFile.close();
+    }
+    (*data)[FPSTR(TCONST_005B)] = bkp.position();
+    delete[] buffer;
+    bkp.close();
+  }, &ts, false, nullptr, [this](){TASK_RECYCLE;});
+  _t->enable();
+}
+
+// удалить эффект
+uint16_t EffectWorker::deleteEffect(const EffectListElem *eff, bool isCfgRemove)
+{
+  uint16_t result = 0;
   for(int i=0; i<effects.size(); i++){
       if(effects[i]->eff_nb==eff->eff_nb){
           if(isCfgRemove)
             removeConfig(eff->eff_nb);
+          if(i>0)
+            result = effects[i-1]->eff_nb;
           delete effects.remove(i);
           break;
       }
   }
+  return result;
 }
 
 // копирование эффекта
-void EffectWorker::copyEffect(const EffectListElem *base)
+uint16_t EffectWorker::copyEffect(const EffectListElem *base)
 {
   EffectListElem *copy = new EffectListElem(base); // создать копию переданного эффекта
-  //uint8_t foundcnt=0;
   uint16_t maxfoundnb=base->eff_nb;
   for(int i=0; i<effects.size();i++){
     if(effects[i]->eff_nb>255 && ((effects[i]->eff_nb&0x00FF)==(copy->eff_nb&0x00FF))){ // найдены копии
-      //foundcnt++;
-      if(maxfoundnb<effects[i]->eff_nb) maxfoundnb=effects[i]->eff_nb;
+      if(maxfoundnb<effects[i]->eff_nb)
+        maxfoundnb=effects[i]->eff_nb;
+        //LOG(printf_P,PSTR("maxfoundnb=%d\n"),maxfoundnb);
     }
   }
-  //if(foundcnt){
-    // if(!foundcnt)
-    //   copy->eff_nb=(((foundcnt+1) << 8 ) | (copy->eff_nb&0xFF)); // в старшем байте увеличиваем значение на число имеющихся копий
-    // else
-      copy->eff_nb=(((((maxfoundnb&0xFF00)>>8)+1) << 8 ) | (copy->eff_nb&0xFF)); // в старшем байте увеличиваем значение на число имеющихся копий
-  //}
+  copy->eff_nb=(((((maxfoundnb&0xFF00)>>8)+1) << 8 ) | (copy->eff_nb&0xFF)); // в старшем байте увеличиваем значение на число имеющихся копий
 
   EffectWorker *effect = new EffectWorker(base,copy); // создать параметры для него (конфиг, индекс и т.д.)
   effects.add(copy);
   delete effect; // после того как все создано, временный экземпляр EffectWorker уже не нужен
+  return copy->eff_nb;
 }
 
 // вернуть выбранный элемент списка
@@ -1149,13 +1562,13 @@ uint16_t EffectWorker::getNext()
 }
 
 // выбор нового эффекта с отложенной сменой, на время смены эффекта читаем его список контроллов отдельно
-void EffectWorker::setSelected(uint16_t effnb)
+void EffectWorker::setSelected(uint16_t effnb, const bool move)
 {
-  //selcontrols.size()!=controls.size() || 
-  if(controls.size()==0 || selcontrols[0]!=controls[0]){
+  if(controls.size()==0 || selcontrols[0]!=controls[0] || !effnb){
     while(selcontrols.size()>0){ // очистить предыщий набор, если он только не отображен на текущий
       delete selcontrols.shift();
     }
+    selcontrols.clear();
   }
 
   selEff = effnb;
@@ -1168,12 +1581,14 @@ void EffectWorker::setSelected(uint16_t effnb)
   this->selcontrols = tmpEffect->controls; // копирую список контроллов, освобождать будет другой объект
   tmpEffect->controls = fake;
   delete tmpEffect;
+  if(move)
+    moveSelected(true);
 }
 
-void EffectWorker::moveSelected(){
+void EffectWorker::moveSelected(bool force){
   LOG(printf_P,PSTR("Синхронизация списков! Эффект: %d\n"), selEff);
-  if(curEff != selEff){
-    workerset(selEff);
+  if(curEff != selEff || force){
+    workerset(selEff, true, force);
     curEff = selEff;
     clearControlsList();
     controls = selcontrols; // теперь оба списка совпадают, смена эффекта завершена
@@ -1199,20 +1614,6 @@ void EffectCalc::init(EFF_ENUM _eff, LList<UIControl*>* controls, LAMPSTATE *_la
   isMicActive = isMicOnState();
   for(int i=0; i<controls->size(); i++){
     setDynCtrl((*controls)[i]);
-    // switch(i){
-    //   case 0:
-    //     setbrt((*controls)[i]->getVal().toInt());
-    //     break;
-    //   case 1:
-    //     setspd((*controls)[i]->getVal().toInt());
-    //     break;
-    //   case 2:
-    //     setscl((*controls)[i]->getVal().toInt());
-    //     break;
-    //   default:
-    //     setDynCtrl((*controls)[i]);
-    //     break;
-    // }
   }
 
   active=true;
@@ -1247,55 +1648,6 @@ bool EffectCalc::dryrun(float n, uint8_t delay){
  * status - статус воркера, если работает и загружен эффект, отдает true
  */
 bool EffectCalc::status(){return active;}
-
-// /**
-//  * setbrt - установка яркости для воркера
-//  */
-// void EffectCalc::setbrt(const byte _brt){
-//   if(isRandDemo()){
-//     brightness = random((*ctrls)[0]->getMin().toInt(),(*ctrls)[0]->getMax().toInt()+1);
-//   } else
-//     brightness = _brt;
-//   //LOG(printf_P, PSTR("Worker brt: %d\n"), brightness);
-//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-//   if (usepalettes && (*ctrls)[0]->getName().startsWith(FPSTR(TINTF_084))==1){
-//     palettemap(palettes, brightness, (*ctrls)[0]->getMin().toInt(), (*ctrls)[0]->getMax().toInt());
-//     paletteIdx = brightness;
-//   }
-// }
-
-// /**
-//  * setspd - установка скорости для воркера
-//  */
-// void EffectCalc::setspd(const byte _spd){
-//   if(isRandDemo()){
-//     speed = random((*ctrls)[1]->getMin().toInt(),(*ctrls)[1]->getMax().toInt()+1);
-//   } else
-//     speed = _spd;
-//   //LOG(printf_P, PSTR("Worker speed: %d\n"), speed);
-//   // менять палитру в соответствие со шкалой, если этот контрол начинается с "Палитра"
-//   if (usepalettes && (*ctrls)[1]->getName().startsWith(FPSTR(TINTF_084))==1){
-//     palettemap(palettes, speed, (*ctrls)[1]->getMin().toInt(), (*ctrls)[1]->getMax().toInt());
-//     paletteIdx = speed;
-//   }
-//   speedfactor = lampstate->speedfactor*SPEED_ADJ;
-// }
-
-// /**
-//  * setscl - установка шкалы для воркера
-//  */
-// void EffectCalc::setscl(byte _scl){
-//   //LOG(printf_P, PSTR("Worker scale: %d\n"), scale);
-//   if(isRandDemo()){
-//     scale = random((*ctrls)[2]->getMin().toInt(),(*ctrls)[2]->getMax().toInt()+1);
-//   } else
-//     scale = _scl;
-//   // менять палитру в соответствие со шкалой, если только 3 контрола или если нет контрола палитры или этот контрол начинается с "Палитра"
-//   if (usepalettes && (ctrls->size()<4 || (ctrls->size()>=4 && !isCtrlPallete) || (isCtrlPallete && (*ctrls)[2]->getName().startsWith(FPSTR(TINTF_084))==1))){
-//     palettemap(palettes, scale, (*ctrls)[2]->getMin().toInt(), (*ctrls)[2]->getMax().toInt());
-//     paletteIdx = scale;
-//   }
-// }
 
 /**
  * setDynCtrl - была смена динамического контрола, idx=3+
@@ -1397,9 +1749,6 @@ void EffectCalc::scale2pallete(){
     return;
 
   LOG(println, F("Reset all controls"));
-  // setbrt((*ctrls)[0]->getVal().toInt());
-  // setspd((*ctrls)[1]->getVal().toInt());
-  // setscl((*ctrls)[2]->getVal().toInt());
   for(int i=0;i<ctrls->size();i++){
     setDynCtrl((*ctrls)[i]);
   }

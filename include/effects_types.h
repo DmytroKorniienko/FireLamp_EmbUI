@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -64,7 +64,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-static const char PGidxtemplate[] PROGMEM  = "%s{\"n\":%d,\"f\":%d}";
+static const char PGidxtemplate[] PROGMEM  = "%s{\"n\":%d,\"f\":%d}\n";
 
 /** набор служебных текстовых констант (не для локализации)
  */
@@ -74,14 +74,14 @@ static const char TCONST_0002[] PROGMEM = "pMem";
 static const char TCONST_0003[] PROGMEM = "lamptext";
 static const char TCONST_0004[] PROGMEM = "settings";
 static const char TCONST_0005[] PROGMEM = "set_effect";
-static const char TCONST_0006[] PROGMEM = "eff_sel";
-static const char TCONST_0007[] PROGMEM = "eff_fav";
+static const char TCONST_0006[] PROGMEM = "cf_eff_sel";
+static const char TCONST_0007[] PROGMEM = "cf_eff_fav";
 static const char TCONST_0008[] PROGMEM = "encoder";
 static const char TCONST_0009[] PROGMEM = "copy";
 static const char TCONST_000A[] PROGMEM = "del*";
-static const char TCONST_000B[] PROGMEM = "makeidx";
+static const char TCONST_000B[] PROGMEM = "makeidxAll";
 static const char TCONST_000C[] PROGMEM = "set_enc";
-static const char TCONST_000D[] PROGMEM = "black";
+//static const char TCONST_000D[] PROGMEM = "black";
 static const char TCONST_000E[] PROGMEM = "AUX";
 static const char TCONST_000F[] PROGMEM = "effects_config";
 static const char TCONST_0010[] PROGMEM = "effListConf";
@@ -111,7 +111,7 @@ static const char TCONST_0027[] PROGMEM = "OTA";
 static const char TCONST_0028[] PROGMEM = "lamp_config";
 static const char TCONST_0029[] PROGMEM = "edit_lamp_config";
 static const char TCONST_002A[] PROGMEM = "fileName";
-static const char TCONST_002B[] PROGMEM = "/backup/idx";
+static const char TCONST_002B[] PROGMEM = "/backup/";
 static const char TCONST_002C[] PROGMEM = "/backup/idx/";
 static const char TCONST_002D[] PROGMEM = "load";
 static const char TCONST_002E[] PROGMEM = "save";
@@ -148,18 +148,18 @@ static const char TCONST_004C[] PROGMEM = "MIRR_H";
 static const char TCONST_004D[] PROGMEM = "MIRR_V";
 static const char TCONST_004E[] PROGMEM = "isFaderON";
 static const char TCONST_004F[] PROGMEM = "DRand";
-static const char TCONST_0050[] PROGMEM = "effSort";
+static const char TCONST_0050[] PROGMEM = "cf_eff_Sort";
 static const char TCONST_0051[] PROGMEM = "txtSpeed";
 static const char TCONST_0052[] PROGMEM = "txtOf";
 static const char TCONST_0053[] PROGMEM = "spdcf";
 static const char TCONST_0054[] PROGMEM = "ny_period";
 static const char TCONST_0055[] PROGMEM = "ny_unix";
 static const char TCONST_0056[] PROGMEM = "isPlayTime";
-// static const char TCONST_0057[] PROGMEM = "TZSET";
-// static const char TCONST_0058[] PROGMEM = "userntp";
-// static const char TCONST_0059[] PROGMEM = "setdatetime";
-// static const char TCONST_005A[] PROGMEM = "update";
-static const char TCONST_005B[] PROGMEM = "blue";
+static const char TCONST_0057[] PROGMEM = "set_cur_eff_param";
+static const char TCONST_0058[] PROGMEM = "cf_eff_*";
+static const char TCONST_0059[] PROGMEM = "/eff_index.json";
+static const char TCONST_005A[] PROGMEM = "/eff/";
+static const char TCONST_005B[] PROGMEM = "offset";
 static const char TCONST_005C[] PROGMEM = "show_event";
 static const char TCONST_005D[] PROGMEM = "event_conf";
 static const char TCONST_005E[] PROGMEM = "eventList";
@@ -188,10 +188,10 @@ static const char TCONST_0074[] PROGMEM = "bactList";
 static const char TCONST_0075[] PROGMEM = "set_butt";
 static const char TCONST_0076[] PROGMEM = "show_butt";
 static const char TCONST_0077[] PROGMEM = "Universe";
-// static const char TCONST_0078[] PROGMEM = "show_wifi";
+static const char TCONST_0078[] PROGMEM = "/backup/eff/";
 static const char TCONST_0079[] PROGMEM = "show_mic";
 static const char TCONST_007A[] PROGMEM = "show_other";
-//static const char TCONST_007B[] PROGMEM = "m_pref";
+static const char TCONST_007B[] PROGMEM = "cfg_eff";
 static const char TCONST_007C[] PROGMEM = "#ffffff";
 static const char TCONST_007D[] PROGMEM = "1609459200";
 static const char TCONST_007E[] PROGMEM = "main";
@@ -203,18 +203,18 @@ static const char TCONST_0083[] PROGMEM = "/fslowlist.json";
 static const char TCONST_0084[] PROGMEM = "/slowlist.json";
 static const char TCONST_0085[] PROGMEM = "/tmplist.tmp";
 static const char TCONST_0086[] PROGMEM = "/quicklist.json";
-// static const char TCONST_0087[] PROGMEM = "alarm";
-// static const char TCONST_0088[] PROGMEM = "aux_on";
-// static const char TCONST_0089[] PROGMEM = "aux_off";
-// static const char TCONST_008A[] PROGMEM = "aux_toggle";
+static const char TCONST_0087[] PROGMEM = "cfg_glb";
+static const char TCONST_0088[] PROGMEM = "cfg_idx";
+static const char TCONST_0089[] PROGMEM = "cfg_evn";
+static const char TCONST_008A[] PROGMEM = "cfg_btn";
 static const char TCONST_008B[] PROGMEM = "embui/pub/";
 static const char TCONST_008C[] PROGMEM = "pin";
 static const char TCONST_008D[] PROGMEM = "act";
 static const char TCONST_008E[] PROGMEM = "isClearing";
 static const char TCONST_008F[] PROGMEM = "pUptime";
-static const char TCONST_0090[] PROGMEM = "numInList";
-static const char TCONST_0091[] PROGMEM = "effHasMic";
-static const char TCONST_0092[] PROGMEM = "effname";
+static const char TCONST_0090[] PROGMEM = "cf_eff_numInList";
+static const char TCONST_0091[] PROGMEM = "cf_eff_HasMic";
+static const char TCONST_0092[] PROGMEM = "cf_eff_name";
 static const char TCONST_0093[] PROGMEM = "set_opt_pass";
 static const char TCONST_0094[] PROGMEM = "syslampFlags";
 static const char TCONST_0095[] PROGMEM = "debug";
@@ -233,13 +233,13 @@ static const char TCONST_00A1[] PROGMEM = "settings_mp3";
 static const char TCONST_00A2[] PROGMEM = "mp3volume";
 static const char TCONST_00A3[] PROGMEM = "playTime";
 static const char TCONST_00A4[] PROGMEM = "playName";
-//static const char TCONST_00A5[] PROGMEM = "playEffect";
+static const char TCONST_00A5[] PROGMEM = "/buttons_config.json";
 static const char TCONST_00A6[] PROGMEM = "alarmSound";
 static const char TCONST_00A7[] PROGMEM = "eqSetings";
-//static const char TCONST_00A8[] PROGMEM = "playMP3";
+static const char TCONST_00A8[] PROGMEM = "/events_config.json";
 static const char TCONST_00A9[] PROGMEM = "mp3count";
 static const char TCONST_00AA[] PROGMEM = "demo";
-static const char TCONST_00AB[] PROGMEM = "soundfile";
+static const char TCONST_00AB[] PROGMEM = "cf_eff_sndf";
 static const char TCONST_00AC[] PROGMEM = "embui/get/";
 static const char TCONST_00AD[] PROGMEM = "state";
 static const char TCONST_00AE[] PROGMEM = "eff_config";
@@ -247,7 +247,7 @@ static const char TCONST_00AF[] PROGMEM = "limitAlarmVolume";
 static const char TCONST_00B0[] PROGMEM = "delfromlist";
 static const char TCONST_00B1[] PROGMEM = "delall";
 static const char TCONST_00B2[] PROGMEM = "delCfg";
-static const char TCONST_00B3[] PROGMEM = "orange";
+static const char TCONST_00B3[] PROGMEM = "makeidxFS";
 static const char TCONST_00B4[] PROGMEM = "gbright";
 static const char TCONST_00B5[] PROGMEM = "bparam";
 static const char TCONST_00B6[] PROGMEM = "delete";
@@ -258,16 +258,16 @@ static const char TCONST_00BA[] PROGMEM = "edit_text_config";
 static const char TCONST_00BB[] PROGMEM = "alarmP";
 static const char TCONST_00BC[] PROGMEM = "alarmT";
 static const char TCONST_00BD[] PROGMEM = "alarmPT";
-// static const char TCONST_00BE[] PROGMEM = "mp3_prev";
-// static const char TCONST_00BF[] PROGMEM = "mp3_next";
+static const char TCONST_00BE[] PROGMEM = "mp3_prev";
+static const char TCONST_00BF[] PROGMEM = "mp3_next";
 static const char TCONST_00C0[] PROGMEM = "mp3_p5";
 static const char TCONST_00C1[] PROGMEM = "mp3_n5";
 static const char TCONST_00C2[] PROGMEM = "pFS";
 static const char TCONST_00C3[] PROGMEM = "txtBfade";
 static const char TCONST_00C4[] PROGMEM = "drawbuff";
-// static const char TCONST_00C5[] PROGMEM = "draw";
+static const char TCONST_00C5[] PROGMEM = "mp3_*";
 // static const char TCONST_00C6[] PROGMEM = "matrix";
-// static const char TCONST_00C7[] PROGMEM = "fillmatrix";
+static const char TCONST_00C7[] PROGMEM = "default.json";
 static const char TCONST_00C8[] PROGMEM = "drawing";
 static const char TCONST_00C9[] PROGMEM = "drawing_ctrl";
 static const char TCONST_00CA[] PROGMEM = "drawing_ctrl*";
@@ -282,7 +282,7 @@ static const char TCONST_00D2[] PROGMEM = "lV";
 static const char TCONST_00D3[] PROGMEM = "sT";
 static const char TCONST_00D4[] PROGMEM = "ra_call";
 static const char TCONST_00D5[] PROGMEM = "force";
-// static const char TCONST_00D6[] PROGMEM = "tm1637";
+static const char TCONST_00D6[] PROGMEM = "Make";
 static const char TCONST_00D7[] PROGMEM = "tmBright";
 static const char TCONST_00D8[] PROGMEM = "tmBrightOn";
 static const char TCONST_00D9[] PROGMEM = "tmBrightOff";
@@ -307,6 +307,9 @@ static const char TCONST_00EB[] PROGMEM = "RGB";
 static const char TCONST_00EC[] PROGMEM = "White";
 static const char TCONST_00ED[] PROGMEM = "Other";
 static const char TCONST_00EE[] PROGMEM = "Eff";
+static const char TCONST_00EF[] PROGMEM = "folder";
+static const char TCONST_00F0[] PROGMEM = "curEff";
+static const char TCONST_00F1[] PROGMEM = "refresh";
 
 /** набор служебных текстовых констант (HTTP/MQTT запросы)
  */
@@ -480,11 +483,11 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
  *  Не хочу создавать дополнительные массивы и лайеры существующих - kostyamat
  */
 static const uint8_t T_EFFVER[] PROGMEM = {
-  0, 6, 6, 4, 4, 1, 3, 3, 3, 5, 3, 6, 5, 1, 5, 10, // 0-15
+  0, 6, 6, 4, 4, 1, 3, 3, 3, 5, 1, 6, 5, 1, 5, 10, // 0-15
   1, 1, 3, 1, 3, 7, 5, 2, 1, 5, 5, 7, 7, 2, 1, 5, // 16-31
-  5, 5, 5, 3, 7, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
-  1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 3, 1, 5, 7, 6, // 48 - 63
-  5, 1, 1, 5, 1, 1, 7, 1, 3, 1, 1, 1, 1, 0, 0, 0, // 64 - 79
+  5, 1, 5, 3, 7, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
+  1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 1, 1, 5, 7, 6, // 48 - 63
+  5, 3, 1, 5, 1, 1, 7, 1, 3, 1, 1, 1, 1, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -552,7 +555,7 @@ static const char E_PRIZMATA[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_AQUARIUM[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"val\":160,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":3,\"val\":190,\"name\":\"" DFTINTF_0DA "\"},  {\"id\":4,\"min\":0,\"max\":2,\"name\":\"" DFTINTF_0E2 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_OSC[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0DC "\"},  {\"id\":2,\"val\":160,\"min\":1,\"max\":255,\"name\":\"" DFTINTF_0FC "\"},  {\"id\":3,\"name\":\"" DFTINTF_0DB "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 // размерность ползунка "Узор" должна быть MAX_PATTERN + 1 (patterns.h). При добавлении паттернов - менять и тут.
-static const char E_PATT[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48},  {\"id\":2,\"type\":48},  {\"id\":3,\"val\":0,\"min\":-32,\"max\":32,\"name\":\"" DFTINTF_0EA "\"},  {\"id\":4,\"val\":0,\"min\":-32,\"max\":32,\"name\":\"" DFTINTF_0EB "\"},  {\"id\":5,\"min\":0,\"max\":38,\"val\":0,\"name\":\"" DFTINTF_0EC "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":7,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_116 "\"}]}";
+static const char E_PATT[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"type\":48},  {\"id\":2,\"type\":48},  {\"id\":3,\"val\":33,\"min\":1,\"max\":65,\"name\":\"" DFTINTF_0EA "\"},  {\"id\":4,\"val\":33,\"min\":1,\"max\":65,\"name\":\"" DFTINTF_0EB "\"},  {\"id\":5,\"min\":0,\"max\":38,\"val\":0,\"name\":\"" DFTINTF_0EC "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":7,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_116 "\"}]}";
 static const char E_SHAD[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0ED "\"},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E4 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_ARR[]       PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":6,\"name\":\"" DFTINTF_0E5 "\"}]}";
 static const char E_F2018[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D7 "\"},  {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E4 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
@@ -561,10 +564,10 @@ static const char E_ATTRACT[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_FLOCK[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E8 "\"}]}";
 static const char E_WAVES[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"max\":8,\"name\":\"" DFTINTF_0E7 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_MUNCH[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":4,\"min\":0,\"max\":8,\"name\":\"" DFTINTF_10E "\"} ,{\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
-static const char E_DRIFT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"max\":4,\"name\":\"" DFTINTF_0FF "\"}]}";
+static const char E_DRIFT[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0F9 "\"}, {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DE "\"}]}";
 static const char E_CUBE2D[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":0,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_100 "\"},  {\"id\":4,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10D "\"},  {\"id\":5,\"val\":4,\"max\":7,\"name\":\"" DFTINTF_10F "\"} ,{\"id\":6,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_110 "\"}]}";
 static const char E_LIGHT2[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
-static const char E_CUBE[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0F1 "\"},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
+static const char E_CUBE[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":2,\"min\":1,\"max\":6,\"name\":\"" DFTINTF_10D "\"}, {\"id\":4,\"val\":2,\"min\":0,\"max\":2,\"name\":\"" DFTINTF_0F1 "\"}, {\"id\":5,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_STARFAIL[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"} , {\"id\":4,\"max\":3,\"name\":\"" DFTINTF_0FD "\"} ,{\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_108 "\"}]}"; 
 static const char E_SNAKE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"},  {\"id\":4,\"val\":4,\"max\":16,\"name\":\"" DFTINTF_0FE "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"},  {\"id\":6,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_111 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_NEXUS[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":5,\"max\":10,\"name\":\"" DFTINTF_0EF "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
@@ -617,7 +620,7 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_CELL,  E_PUZZLES, E_TLAND,    E_SPBALS,   E_3PAL,     E_WRAIN, E_FAIRY,      E_FOUNT,  E_BBALLS,    E_SINUS,     E_4PAL,   E_3PAL,  E_COMET,  E_4PAL_MIC, E_PRIZMATA, E_FLOCK, // 16-31
   E_3PAL,  E_DRIFT,   E_POPCORN,  E_4PAL,     E_RADAR255, E_WAVES, E_F2012_MIC,  E_FAIRY,  E_4PAL,      E_DNA,       E_F2018,  E_CLOCK, E_CUBE2D, E_NFIRE,    E_PICAS,    E_SSHIPS, // 32 - 47
   E_FLAGS, E_LEAPERS, E_3PAL_MIC, E_3PAL_MIC, E_AQUARIUM, E_FWORK, E_2,          E_MUNCH,  E_CNOISE,    E_BUTTERFLY, E_SHAD,   E_PATT,  E_ARR,    E_NBAL,     E_ATTRACT,  E_SNAKE, // 48 - 63
-  E_NEXUS, E_DEFUI,   E_DEFUI,    E_POLAR,    E_2_MIC,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_SMOKER, E_NFIRE, E_MIRAGE, E_DEFUI,    E_DEFUI,    E_DEFUI, // 64 - 79
+  E_NEXUS, E_2,       E_DEFUI,    E_POLAR,    E_2_MIC,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_SMOKER, E_NFIRE, E_MIRAGE, E_DEFUI,    E_DEFUI,    E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 112 - 127
@@ -1188,7 +1191,6 @@ class Boid {
 // refactored by Vortigont
 #define CUBE2D_MAX_SIZE 7       // максимальный размер обрабатываемых квадратов (AxA)
 #define CUBE2D_PAUSE_FRAMES 20   // число кадров паузы между трансформациями
-#endif
 
 // ----------- Эффект "Звезды" адаптация SottNick
 #define CENTER_DRIFT_SPEED 6U         // скорость перемещения плавающего центра возникновения звёзд
@@ -1303,20 +1305,10 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 #define GAMEMODE 0        // режим игры: 0 - видим весь лабиринт, 1 - видим вокруг себя часть
 #define FOV 3             // область видимости в режиме игры 1
 
-// размеры лабиринта ДОЛЖНЫ БЫТЬ НЕЧЁТНЫЕ независимо от размеров матрицы!
-// при SHIFT 1 размер лабиринта можно ставить на 1 длиннее матрицы (матрица 16х16 лабиринт 17х17)
-#if (WIDTH % 2 == 0)
-#define MAZE_WIDTH (WIDTH+1)      // ширина лабиринта
-#else
-#define MAZE_WIDTH WIDTH          // ширина лабиринта
-#endif
-
-#if (HEIGHT % 2 == 0)
-#define MAZE_HEIGHT (HEIGHT+1)    // высота лабиринта
-#else
-#define MAZE_HEIGHT HEIGHT        // высота лабиринта
-#endif
-#define MAZE_SHIFT (HEIGHT % 2 == 0)   // (1 да / 0 нет) смещение лабиринта (чтобы не видеть нижнюю и левую стену)
+#define M_HEIGHT HEIGHT + !(HEIGHT % 2)
+#define M_WIDTH WIDTH + !(WIDTH % 2)
+#define M_SHIFT_X !(WIDTH % 2)
+#define M_SHIFT_Y !(HEIGHT % 2)
 
 
 // VU-meter
@@ -1333,4 +1325,4 @@ const uint8_t CENTER_Y_MAJOR =  HEIGHT / 2  + (HEIGHT % 2);          // цент
 #define TOP            (HEIGHT - 1)                // Don't allow the bars to go offscreen
 //#define BAR_WIDTH      (WIDTH  / (NUM_BANDS - 1))  // If width >= 8 light 1 LED width per bar, >= 16 light 2 LEDs width bar etc
 
-
+#endif // #define __EFFECTS_TYPES_H

@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -56,13 +56,14 @@ const char *btn_get_desc(BA action){
 		case BA_WHITE_LO: return PSTR("WHITE LO");
 		case BA_WIFI_REC: return PSTR("WIFI REC");
 		case BA_EFFECT: return PSTR("EFFECT");
+		case BA_LAMPRESET: return PSTR("LAMP RESET");
 		default:;
 	}
 	return PSTR("");
 }
 
 Task *tReverseTimeout = nullptr; // задержка переключения направления
-bool Button::activate(btnflags& flg, bool reverse){
+bool ButtonAction::activate(btnflags& flg, bool reverse){
 		uint8_t newval;
 		RA ract = RA_UNKNOWN;
 		bool ret = false;
@@ -131,6 +132,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 			case BA_WHITE_LO: flags.direction=false; ract = RA_WHITE_LO; break;
 			case BA_WIFI_REC: ract = RA_WIFI_REC; break;
 			case BA_EFFECT: ract = RA_EFFECT; break;
+			case BA_LAMPRESET: ract = RA_LAMPRESET; break;
 			default:;
 		}
 		if(!(flg.onetime&2)){ // только если не установлен бит сработавшего однократного события
@@ -143,7 +145,7 @@ bool Button::activate(btnflags& flg, bool reverse){
 		return ret;
 }
 
-String Button::getName(){
+String ButtonAction::getName(){
 		String buffer;
 		buffer.concat(flags.on? F("ON: ") : F("OFF: "));
 		if (flags.hold) {
@@ -244,7 +246,7 @@ void Buttons::buttonTick(){
 		LOG(printf_P, PSTR("onetime click - buttonEnabled=%d, onoffLampState=%d, holding=%d, holded=%d, clicks=%d, reverse=%d\n"), buttonEnabled, onoffLampState, holding, holded, clicks, reverse);
 	}
 	
-	Button btn(onoffLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
+	ButtonAction btn(onoffLampState, holding, clicks, true); // myLamp.isLampOn() - анализироваться будет состояние на начало нажимания кнопки
 	for (int i = 0; i < buttons.size(); i++) {
 		if (btn == *buttons[i]) {
 			//if(buttons[i]->action==1) continue; // отладка, отключить действие увеличения яркости
@@ -270,7 +272,7 @@ void Buttons::buttonTick(){
 
 void Buttons::clear() {
 	while (buttons.size()) {
-		Button *btn = buttons.shift();
+		ButtonAction *btn = buttons.shift();
 		delete btn;
 	}
 }
@@ -280,7 +282,7 @@ int Buttons::loadConfig(const char *cfg){
 		File configFile;
 		if (cfg == nullptr) {
 			LOG(println, F("Load default buttons config file"));
-			configFile = LittleFS.open(F("/buttons_config.json"), "r"); // PSTR("r") использовать нельзя, будет исключение!
+			configFile = LittleFS.open(FPSTR(TCONST_00A5), "r"); // PSTR("r") использовать нельзя, будет исключение!
 		} else {
 			LOG(printf_P, PSTR("Load %s buttons config file\n"), cfg);
 			configFile = LittleFS.open(cfg, "r"); // PSTR("r") использовать нельзя, будет исключение!
@@ -306,9 +308,9 @@ int Buttons::loadConfig(const char *cfg){
 			BA ac = (BA)item[F("ac")].as<int>();
 			if(item.containsKey(F("p"))){
 				String param = item[F("p")].as<String>();
-				buttons.add(new Button(mask, ac, param));
+				buttons.add(new ButtonAction(mask, ac, param));
 			} else {
-				buttons.add(new Button(mask, ac));
+				buttons.add(new ButtonAction(mask, ac));
 			}
 		}
 		doc.clear();
@@ -321,7 +323,7 @@ void Buttons::saveConfig(const char *cfg){
 		File configFile;
 		if (cfg == nullptr) {
 			LOG(println, F("Save default buttons config file"));
-			configFile = LittleFS.open(F("/buttons_config.json"), "w"); // PSTR("w") использовать нельзя, будет исключение!
+			configFile = LittleFS.open(FPSTR(TCONST_00A5), "w"); // PSTR("w") использовать нельзя, будет исключение!
 		} else {
 			LOG(printf_P, PSTR("Save %s buttons config file\n"), cfg);
 			configFile = LittleFS.open(cfg, "w"); // PSTR("w") использовать нельзя, будет исключение!
@@ -329,7 +331,7 @@ void Buttons::saveConfig(const char *cfg){
 		configFile.print("[");
 
 		for (int i = 0; i < buttons.size(); i++) {
-			Button *btn = buttons[i];
+			ButtonAction *btn = buttons[i];
 			configFile.printf_P(PSTR("%s{\"flg\":%u,\"ac\":%u,\"p\":\"%s\"}"),
 				(char*)(i? F(",") : F("")), btn->flags.mask, btn->action, btn->getParam().c_str()
 			);

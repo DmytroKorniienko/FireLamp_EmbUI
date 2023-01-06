@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -166,7 +166,7 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 #define DFTINTF_0EE "Energía"
 #define DFTINTF_0EF "Densidad"
 #define DFTINTF_0F0 "Color/Rotación"
-#define DFTINTF_0F1 "Tamaño/Cola (1-85-170-255)"
+#define DFTINTF_0F1 "Cola (0: no hay)"
 #define DFTINTF_0F2 "Frecuencia de inicio"
 #define DFTINTF_0F3 "Rotar"
 #define DFTINTF_0F4 "Paleta (0: generador)"
@@ -179,7 +179,7 @@ static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 #define DFTINTF_0FC "Color (1: aleatorio, 255: blanco)"
 #define DFTINTF_0FD "Nevada/Starfall/Meteors"
 #define DFTINTF_0FE "Cantidad"
-#define DFTINTF_0FF "Tipo 1/2, Desenfoque 3/4"
+//#define DFTINTF_0FF "Tipo 1/2, Desenfoque 3/4"
 #define DFTINTF_100 "Paleta (0: color aleatorio)"
 #define DFTINTF_101 "Color 1 (0: cíclico)"
 #define DFTINTF_102 "Nube"
@@ -460,6 +460,10 @@ static const char TINTF_0EF[] PROGMEM = "Vertical";
 static const char TINTF_0F0[] PROGMEM = "Horizontal";
 static const char TINTF_0F1[] PROGMEM = "DFPlayer modo";
 static const char TINTF_0F2[] PROGMEM = "Reproductor de MP3 + reinicio";
+static const char TINTF_0F3[] PROGMEM = "Lista";
+static const char TINTF_0F4[] PROGMEM = "Restablecimiento de la lámpara";
+static const char TINTF_0F5[] PROGMEM = "Cancelada";
+static const char TINTF_0F6[] PROGMEM = "Comprobación de efectos";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";

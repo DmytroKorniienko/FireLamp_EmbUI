@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -787,7 +787,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
 // ------------- пейнтбол -------------
 // !++
 String EffectLightBalls::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt() /255.0 +0.1;
+  if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt()*EffectCalc::getSpeedFactor() /255.0 +0.1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -824,14 +824,10 @@ String EffectBall::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) {
     speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 0.15) * EffectCalc::speedfactor;
   }
-  else if(_val->getId()==2) {
-    EffectCalc::setDynCtrl(_val).toInt();
-    if (scale <= 85)
-      ballSize = map(scale, 1, 85, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-    else if (scale > 85 and scale <= 170)
-      ballSize = map(scale, 170, 86, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
-    else
-      ballSize = map(scale, 171, 255, 1U, max((uint8_t)min(WIDTH,HEIGHT) / 3, 1));
+  else if(_val->getId()==3) {
+    ballSize = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==4) {
+    scale = EffectCalc::setDynCtrl(_val).toInt();
   }
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
@@ -892,9 +888,9 @@ bool EffectBall::run(CRGB *leds, EffectWorker *param) {
     ballColor = ColorFromPalette(*curPalette, random(1, 250), random(200, 255));
   }
 
-  if (scale <= 85)  // при масштабе до 85 выводим кубик без шлейфа
+  if (scale == 0)  // при масштабе до 85 выводим кубик без шлейфа
     memset8( leds, 0, NUM_LEDS * 3);
-  else if (scale > 85 and scale <= 170)
+  else if (scale == 1)
     fadeToBlackBy(leds, NUM_LEDS, 255 - map(speed, 1, 255, 245, 200)); // выводим кубик со шлейфом, длинна которого зависит от скорости.
   else
     fadeToBlackBy(leds, NUM_LEDS, 255 - map(speed, 1, 255, 253, 248)); // выводим кубик с длинным шлейфом, длинна которого зависит от скорости.
@@ -1313,64 +1309,38 @@ bool EffectSpiro::run(CRGB *leds, EffectWorker *param) {
   if (curPalette == nullptr) {
     return false;
   }
-
-  bool change = false;
-  uint8_t spirooffset = 256 / spirocount;
-
-  //EffectMath::dimAll(254U - palettescale);
-  //EffectMath::dimAll(250-speed_factor*7);
   uint8_t dim = beatsin8(16. / speedFactor, 5, 10);
-  EffectMath::dimAll(254 - dim);
-
-  for (int i = 0; i < spirocount; i++) {
-    uint8_t  x = EffectMath::mapsincos8(MAP_SIN, spirotheta1 + i * spirooffset, spirominx, spiromaxx);
-    uint8_t  y = EffectMath::mapsincos8(MAP_COS, spirotheta1 + i * spirooffset, spirominy, spiromaxy);
-    uint8_t x2 = EffectMath::mapsincos8(MAP_SIN, spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
-    uint8_t y2 = EffectMath::mapsincos8(MAP_COS, spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
-    CRGB color = ColorFromPalette(*curPalette, (spirohueoffset + i * spirooffset), 128U);
-    EffectMath::getPixel(x2, y2) += color;
-
-    if(x2 == spirocenterX && y2 == spirocenterY) change = true; // в центре могут находится некоторое время
+	  fadeToBlackBy(leds, NUM_LEDS, dim);
+  static float t;t +=  speedFactor * 0.05f;
+  float CalcRad = (sin(t / 2) + 1);
+  if (CalcRad <= 0.001) {
+    if(!incenter){
+		if(AM<=1 || AM >= ((WIDTH + HEIGHT) / 2)) change = !change;
+          if (change) {
+            if(AM >= 4)
+              AM *= 2;
+            else
+              AM += 1;
+          }
+          else {
+            if(AM > 4)
+              AM /= 2;
+            else
+              AM -= 1;
+          }
+		  Angle = 6.28318531 / AM;
+	}
+    incenter = 1;
+  } else incenter = 0;
+  float radX = CalcRad * spirocenterX / 2;
+  float radY = CalcRad * spirocenterY / 2;
+  for (byte i = 0; i < AM; i++) {
+    EffectMath::drawPixelXYF((spirocenterX + sin(t + (Angle * i)) * radX), (spirocenterY + cos(t + (Angle * i)) * radY), ColorFromPalette(*curPalette, t*10 + ((256 / AM) * i)));
   }
-
-  spirotheta2 += speedFactor * 2;
-  spirotheta1 += speedFactor;
-  spirohueoffset += speedFactor;
-
-  if (change && !spirohandledChange) { // меняем кол-во спиралей
-    spirohandledChange = true;
-
-    if (spirocount >= WIDTH || spirocount == 1)
-      spiroincrement = !spiroincrement;
-
-    if (spiroincrement) {
-      if(spirocount >= 4)
-        spirocount *= 2;
-      else
-        spirocount += 1;
-    } else {
-      if(spirocount > 4)
-        spirocount /= 2;
-      else
-          spirocount -= 1;
-    }
-
-    spirooffset = 256 / spirocount;
-  }
-
-  // сброс спустя время, чтобы счетчик спиралей не менялся скачками
-  if(spirohandledChange){
-    if(internalCnt==25) { // спустя 25 кадров
-      spirohandledChange = false;
-      internalCnt=0;
-    } else {
-      internalCnt++;
-    }
-  }
-
   EffectMath::blur2d(32);
   return true;
 }
+	
 
 // ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
 // ***** Парящий огонь, Кровавые Небеса, Радужный Змей и т.п.
@@ -1864,14 +1834,15 @@ void EffectDrift::load(){
 
 // !++
 String EffectDrift::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) _dri_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 2., 20.);
+  if(_val->getId()==1) _dri_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 256., 2560.);
   else if(_val->getId()==4) driftType = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) flag = EffectCalc::setDynCtrl(_val).toInt() == 1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
 bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
-  if (driftType == 1 or driftType == 2)
+  if (!flag)
     FastLED.clear();
   else
     fadeToBlackBy(ledarr, NUM_LEDS, beatsin88(350. * EffectMath::fmap((float)speed, 1., 255., 1., 5.), 512, 4096) / 256);
@@ -1883,12 +1854,10 @@ bool EffectDrift::run(CRGB *ledarr, EffectWorker *opt){
 
   switch (driftType)
   {
-  case 1:
-  case 3:
+  case 0:
     return incrementalDriftRoutine(*&ledarr, &*opt);
     break;
-  case 2:
-  case 4:
+  case 1:
     return incrementalDriftRoutine2(*&ledarr, &*opt);
     break;
   default:
@@ -1902,19 +1871,15 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
     return false;
   }
 
-  for (uint8_t i = 1; i < maxDim / 2U; i++) { // возможно, стоит здесь использовать const MINLENGTH
-    int8_t x = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, 64U + dri_phase); // используем константы центра матрицы из эффекта Кометы
-    int8_t y = beatsin8((float)(maxDim/2 - i) * _dri_speed, maxDim / 2U - 1 - i, maxDim / 2U - 1 + 1U + i, 0, dri_phase);       // используем константы центра матрицы из эффекта Кометы
-    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, ColorFromPalette(RainbowColors_p, (i - 1U) * maxDim_steps + _dri_delta));
+  for (uint8_t i = 1; i < maxDim; i++) { // возможно, стоит здесь использовать const MINLENGTH
+	int16_t x = beatsin16((float)(maxDim - i) * _dri_speed, (maxDim - 2 - i)*128, (maxDim + i)*128, 0, (64U + dri_phase)*256); // используем константы центра матрицы из эффекта Кометы
+    int16_t y = beatsin16((float)(maxDim - i) * _dri_speed, (maxDim - 2 - i)*128, (maxDim + i)*128, 0, dri_phase*256);       // используем константы центра матрицы из эффекта Кометы
+    EffectMath::wu_pixel(x-width_adj * 256, y-height_adj * 256, ColorFromPalette(*curPalette, (i - 1U) * maxDim_steps + _dri_delta));
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
 }
 
-// ============= DRIFT 2 / ДРИФТ 2 ===============
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
-// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
-// https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift2.h
 bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
 {
   if (curPalette == nullptr) {
@@ -1923,22 +1888,22 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 0; i < maxDim; i++)
   {
-    int8_t x = 0;
-    int8_t y = 0;
+    int16_t x = 0;
+    int16_t y = 0;
     CRGB color;
     if (i < maxDim / 2U)
     {
-      x = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim- 1 - i, 0, 64U + dri_phase);
-      y = beatsin8((i + 1) * _dri_speed, i + 1U, maxDim - 1 - i, 0, dri_phase);
-      color = ColorFromPalette(RainbowColors_p, i * maxDim_steps * 2U + _dri_delta);
+      x = beatsin16((i + 1) * _dri_speed, (i + 1U)*256, (maxDim- 1 - i)*256, 0, 256*(64U + dri_phase));
+      y = beatsin16((i + 1) * _dri_speed, (i + 1U)*256, (maxDim - 1 - i)*256, 0, 256*dri_phase);
+      color = ColorFromPalette(*curPalette, i * maxDim_steps * 2U + _dri_delta);
     }
     else
     {
-      x = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, dri_phase);
-      y = beatsin8((maxDim - i) * _dri_speed, maxDim - 1 - i, i + 1U, 0, 64U + dri_phase);
-      color = ColorFromPalette(RainbowColors_p, ~(i * maxDim_steps + _dri_delta)); 
+      x = beatsin16((maxDim - i) * _dri_speed, (maxDim - 1 - i)*256, (i + 1U)*256, 0, 256*dri_phase);
+      y = beatsin16((maxDim - i) * _dri_speed, (maxDim - 1 - i)*256, (i + 1U)*256, 0, 256*(64U + dri_phase));
+      color = ColorFromPalette(*curPalette, ~(i * maxDim_steps + _dri_delta)); 
     }
-    EffectMath::wu_pixel((x-width_adj) * 256, (y-height_adj) * 256, color);
+    EffectMath::wu_pixel(x-width_adj*256, y-height_adj*256, color);
   }
   EffectMath::blur2d(beatsin8(3U, 5, 100));
   return true;
@@ -4559,8 +4524,8 @@ void EffectPatterns::load() {
 
 bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
 {
-  _speedX = EffectMath::fmap(_scale, -32, 32, 0.75, -0.75);
-  _speedY = EffectMath::fmap(_speed, -32, 32, 0.75, -0.75);
+  _speedX = EffectMath::fmap(_scale, 1, 65, 0.75, -0.75);
+  _speedY = EffectMath::fmap(_speed, 1, 65, 0.75, -0.75);
 
   if(!_sinMove){
     xsin += _speedX;
@@ -6919,190 +6884,43 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ---------- Эффект-игра "Лабиринт"
-void EffectMaze::newGameMaze() {
-  playerPos[0] = !MAZE_SHIFT;
-  playerPos[1] = !MAZE_SHIFT;
-
-  gameOverFlag = false;
-  buttons = 4;
-
-  GenerateMaze(maze, MAZE_WIDTH, MAZE_HEIGHT);    // генерировать лабиринт обычным способом
-  SolveMaze(maze, MAZE_WIDTH, MAZE_HEIGHT);       // найти путь
-
-  if (!(GAMEMODE || mazeMode)) {
-    for (byte y = 0; y < MAZE_HEIGHT; y++) {
-      for (byte x = 0; x < MAZE_WIDTH; x++) {
-        switch (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)]) {
-          case 1:  EffectMath::drawPixelXY(x, y, color); break;
-          case 2:
-            EffectMath::drawPixelXY(x, y, 0x000000);
-            break;
-          default: EffectMath::drawPixelXY(x, y, 0x000000); break;
-        }
-      }
-      // Отображаем сгенерированный лабиринт строка за строкой
-      FastLED.show();  // стоит убрать, и все начинает мерцать
-      delay(50);
-    }
-
-  } else {
-    for (byte y = 0; y < FOV; y++) {
-      for (byte x = 0; x < FOV; x++) {
-        switch (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)]) {
-          case 1:  EffectMath::drawPixelXY(x, y, color);  break;
-          case 2:
-            EffectMath::drawPixelXY(x, y, 0x000000);
-            break;
-          default: EffectMath::drawPixelXY(x, y, 0x000000);  break;
-        }
-      }
-    }
-  }
-
-  // Отрисовка - с видимыми границами по периметру (настройки MAZE_SHIFT выше)
-  // Слева от начальной позиции делаем дыру - это вход
-  if (playerPos[0]>0) {
-    playerPos[0] = playerPos[0] - 1;
-    EffectMath::drawPixelXY(playerPos[0], playerPos[1], 0x000000);
-  }
-  
-  EffectMath::drawPixelXY(playerPos[0], playerPos[1],  playerColor);
-
-  mazeStarted = false;  
-}
-
-bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
-  if (loadingFlag || gameOverFlag) {  
-    if (loadingFlag) FastLED.clear();
-    gameTimer = map(speed, 1, 255, 500, 50);   // установить начальную скорость
-    loadingFlag = false;
-    newGameMaze();
-    // modeCode = MC_MAZE;
-  }
-
-  if (gameDemo && !gamePaused) demoMaze();
-  buttonsTickMaze();
-  return true;
-}
-
-void EffectMaze::buttonsTickMaze() {
-
-  if (gameDemo && (millis() - timer < gameTimer)) { // тут крутим скорость в демо-режиме
-    return;
-  }
-  timer = millis();
-
-  if (checkButtons()) {
-    bool btnPressed = false;
-    if (buttons == 3) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[0] - 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxWidthIndex())
-        if (EffectMath::getPixColorXY(newPos, playerPos[1]) == 0) {
-          movePlayer(newPos, playerPos[1], playerPos[0], playerPos[1]);
-          playerPos[0] = newPos;
-        }
-    }
-    if (buttons == 1) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[0] + 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxWidthIndex())
-        if (EffectMath::getPixColorXY(newPos, playerPos[1]) == 0) {
-          movePlayer(newPos, playerPos[1], playerPos[0], playerPos[1]);
-          playerPos[0] = newPos;
-        }
-    }
-    if (buttons == 0) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[1] + 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxHeightIndex())
-        if (EffectMath::getPixColorXY(playerPos[0], newPos) == 0) {
-          movePlayer(playerPos[0], newPos, playerPos[0], playerPos[1]);
-          playerPos[1] = newPos;
-        }
-    }
-    if (buttons == 2) {   // кнопка нажата
-      btnPressed = true;
-      int8_t newPos = playerPos[1] - 1;
-      if (newPos >= 0 && newPos <= EffectMath::getmaxHeightIndex())
-        if (EffectMath::getPixColorXY(playerPos[0], newPos) == 0) {
-          movePlayer(playerPos[0], newPos, playerPos[0], playerPos[1]);
-          playerPos[1] = newPos;
-        }
-    }
-    if (btnPressed && !mazeStarted) {
-      mazeStarted = true;
-      labTimer = millis();
-    }
-    buttons = 4;
-  }
-}
-
-void EffectMaze::movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY) {
-  if (!track) EffectMath::drawPixelXY(prevX, prevY, 0x000000);
-  EffectMath::drawPixelXY(nowX, nowY,  playerColor);
-
-  if ((nowX == (MAZE_WIDTH - 2) - MAZE_SHIFT) && (nowY == (MAZE_HEIGHT - 1) - MAZE_SHIFT)) {
-    gameOverFlag = true;
-    return;
-  }
-
-  if (GAMEMODE || mazeMode) {
-    for (int8_t y = nowY - FOV; y < nowY + FOV; y++) {
-      for (int8_t x = nowX - FOV; x < nowX + FOV; x++) {
-        if (x < 0 || x > EffectMath::getmaxWidthIndex() || y < 0 || y > EffectMath::getmaxHeightIndex()) continue;
-        if (maze[(y + MAZE_SHIFT) * MAZE_WIDTH + (x + MAZE_SHIFT)] == 1) {
-          EffectMath::drawPixelXY(x, y, CRGB::Aqua);
-        }
-      }
-      FastLED.show();
-    }
-  }
-}
-
-void EffectMaze::demoMaze() {
-  if (checkPath(0, 1)) buttons = 0;
-  if (checkPath(1, 0)) buttons = 1;
-  if (checkPath(0, -1)) buttons = 2;
-  if (checkPath(-1, 0)) buttons = 3;
-}
-
-bool EffectMaze::checkPath(int8_t x, int8_t y) {
-  // если проверяемая клетка является путью к выходу
-  if ( (maze[(playerPos[1] + y + MAZE_SHIFT) * MAZE_WIDTH + (playerPos[0] + x + MAZE_SHIFT)]) == 2) {
-    maze[(playerPos[1] + MAZE_SHIFT) * MAZE_WIDTH + (playerPos[0] + MAZE_SHIFT)] = 4;   // убираем текущую клетку из пути (2 - метка пути, ставим любое число, например 4)
-    return true;
-  }
-  else return false;
-}
-
-// копаем лабиринт
-void EffectMaze::CarveMaze(char *maze, int width, int height, int x, int y) {
+// ---------- Ефект лабіринт
+//reworked by stepko
+void EffectMaze::digMaze(int x, int y) {
   int x1, y1;
-  int x2, y2;
+  uint16_t x2, y2;
   int dx, dy;
   int dir, count;
-
-  dir = random(10) % 4;
+  
+  dir = random8() % 4;
   count = 0;
   while (count < 4) {
-    dx = 0; dy = 0;
+    dx = 0;
+    dy = 0;
     switch (dir) {
-      case 0:  dx = 1;  break;
-      case 1:  dy = 1;  break;
-      case 2:  dx = -1; break;
-      default: dy = -1; break;
+      case 0:
+        dx = 1;
+        break;
+      case 1:
+        dy = 1;
+        break;
+      case 2:
+        dx = -1;
+        break;
+      default:
+        dy = -1;
+        break;
     }
     x1 = x + dx;
     y1 = y + dy;
     x2 = x1 + dx;
     y2 = y1 + dy;
-    if (   x2 > 0 && x2 < width && y2 > 0 && y2 < height
-           && maze[y1 * width + x1] == 1 && maze[y2 * width + x2] == 1) {
-      maze[y1 * width + x1] = 0;
-      maze[y2 * width + x2] = 0;
-      x = x2; y = y2;
+    if (x2 > 0 && x2 < M_WIDTH && y2 > 0 && y2 < M_HEIGHT &&
+      maze[x1][y1] && maze[x2][y2]) {
+      maze[x1][y1] = 0;
+      maze[x2][y2] = 0;
+      x = x2;
+      y = y2;
       dir = random(10) % 4;
       count = 0;
     } else {
@@ -7112,89 +6930,134 @@ void EffectMaze::CarveMaze(char *maze, int width, int height, int x, int y) {
   }
 }
 
-// генерацтор лабиринта
-void EffectMaze::GenerateMaze(char *maze, int width, int height) {
-  int x, y;
-  for (x = 0; x < width * height; x++) {
-    maze[x] = 1;
-  }
-  maze[1 * width + 1] = 0;
-  for (y = 1; y < height; y += 2) {
-    for (x = 1; x < width; x += 2) {
-      CarveMaze(maze, width, height, x, y);
+void EffectMaze::generateMaze() {
+  randomSeed(millis());
+  uint16_t x, y;
+  for (x = 0; x < M_WIDTH; x++) {
+    for (y = 0; y < M_HEIGHT; y++) {
+      maze[x][y] = 1;
     }
   }
-  // вход и выход
-  maze[0 * width + 1] = 0;
-  maze[(height - 1) * width + (width - 2)] = 0;
-
-  track = random8(0,2);
-  color = CHSV(hue += 8, random8(192, 255), 192);
-  
- /* CHSV tmp = rgb2hsv_approximate(color);
-  tmp.s = 255;
-  tmp.hue += 100;
-  tmp.val = 255; */
-
-  playerColor = CHSV(hue + random(63, 127), random8(127, 200), 255);;
-  
+  maze[1][1] = 0;
+  for (y = 1; y < M_HEIGHT; y += 2) {
+    for (x = 1; x < M_WIDTH; x += 2) {
+      digMaze(x, y);
+    }
+  }
+  maze[0][1] = 0;
+  maze[M_WIDTH - 2][M_HEIGHT - 1] = 0;
 }
 
-// решатель (ищет путь)
-void EffectMaze::SolveMaze(char *maze, int width, int height) {
-  int dir, count;
-  int x, y;
-  int dx, dy;
-  int forward;
-  // Remove the entry and exit. 
-  maze[0 * width + 1] = 1;
-  maze[(height - 1) * width + (width - 2)] = 1;
-
-  forward = 1;
-  dir = 0;
-  count = 0;
-  x = 1;
-  y = 1;
-  unsigned int attempts = 0;
-  while (x != width - 2 || y != height - 2) {
-    if (attempts++ > maxSolves) {   // если решатель не может найти решение (maxSolves в 5 раз больше числа клеток лабиринта)
-      gameOverFlag = true;          // перегенерировать лабиринт
-      break;                        // прервать решение
-    }
-    dx = 0; dy = 0;
-    switch (dir) {
-      case 0:  dx = 1;  break;
-      case 1:  dy = 1;  break;
-      case 2:  dx = -1; break;
-      default: dy = -1; break;
-    }
-    if (   (forward  && maze[(y + dy) * width + (x + dx)] == 0)
-           || (!forward && maze[(y + dy) * width + (x + dx)] == 2)) {
-      maze[y * width + x] = forward ? 2 : 3;
-      x += dx;
-      y += dy;
-      forward = 1;
-      count = 0;
-      dir = 0;
-    } else {
-      dir = (dir + 1) % 4;
-      count += 1;
-      if (count > 3) {
-        forward = 0;
-        count = 0;
-      }
+bool EffectMaze::run(CRGB *ledarr, EffectWorker *opt) {
+    if (start) {
+    start = 0;
+    color = random8();
+    generateMaze();
+    posX = 0, posY = 1;
+    checkFlag = 1;
+  }
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+      EffectMath::drawPixelXY(x, y,(maze[x + M_SHIFT_X][y + M_SHIFT_Y]) ? CHSV(color, 200, 255) : CHSV(0, 0, 0));
     }
   }
-  
-  // Replace the entry and exit.
-  maze[(height - 2) * width + (width - 2)] = 2;
-  maze[(height - 1) * width + (width - 2)] = 2;
+  if (checkFlag) {
+    switch (Lookdir) {
+      case 0:
+        if (!maze[posX][posY - 1]) {
+          Lookdir = 1;
+        }
+        break;
+      case 1:
+        if (!maze[posX - 1][posY]) {
+          Lookdir = 2;
+        }
+        break;
+      case 2:
+        if (!maze[posX][posY + 1]) {
+          Lookdir = 3;
+        }
+        break;
+      case 3:
+        if (!maze[posX + 1][posY]) {
+          Lookdir = 0;
+        }
+        break;
+    }
+    while (true) {
+      bool et1 = 0;
+      switch (Lookdir) {
+        case 0:
+          if (maze[posX + 1][posY]) {
+            Lookdir = 3;
+            et1 = 1;
+          }
+          break;
+        case 1:
+          if (maze[posX][posY - 1]) {
+            Lookdir = 0;
+            et1 = 1;
+          }
+          break;
+        case 2:
+          if (maze[posX - 1][posY]) {
+            Lookdir = 1;
+            et1 = 1;
+          }
+          break;
+        case 3:
+          if (maze[posX][posY + 1]) {
+            Lookdir = 2;
+            et1 = 1;
+          }
+          break;
+      }
+      if (!et1) break;
+    }
+    checkFlag = 0;
+  }
+  SubPos += _speed;
+  if (SubPos >= 255) {
+    SubPos %= 255;
+    checkFlag = 1;
+    switch (Lookdir) {
+      case 0:
+        posX += 1;
+        break;
+      case 1:
+        posY -= 1;
+        break;
+      case 2:
+        posX -= 1;
+        break;
+      case 3:
+        posY += 1;
+        break;
+    }
+  }
+  switch (Lookdir) {
+    case 0:
+      EffectMath::drawPixelXYF(float(posX - M_SHIFT_X) + (float(SubPos) / 255.), (posY - M_SHIFT_Y), CHSV(0, 0, 255));
+      break;
+    case 1:
+      EffectMath::drawPixelXYF((posX - M_SHIFT_X), float(posY - M_SHIFT_Y) - (float(SubPos) / 255.), CHSV(0, 0, 255));
+      break;
+    case 2:
+      EffectMath::drawPixelXYF(float(posX - M_SHIFT_X) - (float(SubPos) / 255.), (posY - M_SHIFT_Y), CHSV(0, 0, 255));
+      break;
+    case 3:
+      EffectMath::drawPixelXYF((posX - M_SHIFT_X), float(posY - M_SHIFT_Y) + (float(SubPos) / 255.), CHSV(0, 0, 255));
+      break;
+  }
+  if ((posX == M_WIDTH - 2) & (posY == M_HEIGHT - 1))
+    start = 1;
+  return true;
 }
 
 // !++
 String EffectMaze::setDynCtrl(UIControl*_val){
   if(_val->getId()==1)
-    gameTimer = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 500, 50);   // установить скорость
+   _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 147);   // установить скорость
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -7321,53 +7184,58 @@ String EffectRacer::setDynCtrl(UIControl*_val){
 
 bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, 16. * speedFactor);
-
-  if (round(posX / 4) > aimX) {
-    posX -= speedFactor;
+  for(int a = 0; a <speedFactor*5; a++){
+  if (posX != aimX || posY != aimY) {
+      int16_t error2 = error * 2;
+      if (error2 > -deltaY) {
+        error -= deltaY;
+        posX += signX;
+      }
+      if (error2 < deltaX) {
+        error += deltaX;
+        posY += signY;
+      }
+    } else {
+      aimChange();
   }
-  if (round(posY / 4) > aimY) {
-    posY -= speedFactor;
-  }
-  if (round(posX / 4) < aimX) {
-    posX += speedFactor;
-  }
-  if (round(posY / 4) < aimY) {
-    posY += speedFactor;
-  }
-  if (round(posX / 4) == aimX && round(posY / 4) == aimY) {
-    aimChange();
   }
   radius += addRadius;
   angle += radius;
   switch (hue%3)
   {
   case 0:
-    EffectMath::drawCircleF(aimX, aimY, radius, color); // рисуем круг
+    EffectMath::drawCircleF(aimX/10, aimY/10, radius, color); // рисуем круг
     break;  
   case 1:
-    drawStarF(aimX, aimY, 1.3 * radius, radius, 4, angle, color); // рисуем квадрат
+    drawStarF(aimX/10, aimY/10, 1.3 * radius, radius, 4, angle, color); // рисуем квадрат
     break;
   case 2:
-    drawStarF(aimX, aimY, 2 * radius, radius, starPoints, angle, color); // рисуем звезду
+    drawStarF(aimX/10, aimY/10, 2 * radius, radius, starPoints, angle, color); // рисуем звезду
     break;
   }
   
-  EffectMath::drawPixelXYF(posX / 4, posY / 4, CHSV(0, 0, 255)); // отрисовываем бегуна
+  EffectMath::drawPixelXYF(posX/10.0, posY/10.0, CHSV(0, 0, 255)); // отрисовываем бегуна
 
   return true;
 }
 
 void EffectRacer::load() {
   palettesload();
+  aimChange();
 }
 
 void EffectRacer::aimChange() {
-  aimX = random(0, EffectMath::getmaxWidthIndex());  // позиция цели 
-  aimY = random(0, EffectMath::getmaxHeightIndex());
+  aimX = random(0, EffectMath::getmaxWidthIndex())*10;  // позиция цели 
+  aimY = random(0, EffectMath::getmaxHeightIndex())*10;
   radius = 1; // начальный размер цели = 1 пиксель
   hue = millis()>>1; //random(0, 255);
   color = ColorFromPalette(*curPalette, hue, 180);
   starPoints = random(3, 7); // количество лучей у звезды
+   deltaX = abs(aimX - posX);
+   deltaY = abs(aimY - posY);
+   signX = posX < aimX ? 1 : -1;
+   signY = posY < aimY ? 1 : -1;
+   error = deltaX - deltaY;
 }
 
 void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t points, float dangle, CRGB color) {
@@ -7513,85 +7381,93 @@ void EffectStarShips::load() {
   FastLED.clear();
 }
 
+void EffectStarShips::MoveX(uint8_t am = 128, int8_t amplitude = 1, float shift = 0) {
+  CRGB ledsbuff[WIDTH];
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    int16_t amount = ((int16_t)am - 128) * 2 * amplitude + shift * 256  ;
+    int8_t delta = abs(amount) >> 8 ;
+    int8_t fraction = abs(amount) & 255;
+    for (uint8_t x = 0 ; x < WIDTH; x++) {
+      if (amount < 0) {
+        zD = x - delta; zF = zD - 1;
+      } else {
+        zD = x + delta; zF = zD + 1;
+      }
+      CRGB PixelA = CRGB::Black  ;
+      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(zD, y);
+      CRGB PixelB = CRGB::Black ;
+      if ((zF >= 0) && (zF < WIDTH)) PixelB = EffectMath::getPixel(zF, y);
+      ledsbuff[x] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
+    }
+    for(uint8_t x = 0; x < WIDTH; x++){
+    EffectMath::getPixel(x, y) = ledsbuff[x];}
+  }
+}
+
+void EffectStarShips::MoveY(uint8_t am = 128, int8_t amplitude = 1, float shift = 0) {
+  CRGB ledsbuff[HEIGHT];
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    int16_t amount = ((int16_t)am - 128) * 2 * amplitude + shift * 256 ;
+    int8_t delta = abs(amount) >> 8 ;
+    int8_t fraction = abs(amount) & 255;
+    for (uint8_t y = 0 ; y < HEIGHT; y++) {
+      if (amount < 0) {
+        zD = y - delta; zF = zD - 1;
+      } else {
+        zD = y + delta; zF = zD + 1;
+      }
+      CRGB PixelA = CRGB::Black ;
+      if ((zD >= 0) && (zD < HEIGHT)) PixelA = EffectMath::getPixel(x, zD);
+      CRGB PixelB = CRGB::Black ;
+      if ((zF >= 0) && (zF < HEIGHT)) PixelB = EffectMath::getPixel(x, zF);
+      ledsbuff[y] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+    }
+    for(uint8_t y = 0; y < HEIGHT; y++){
+    EffectMath::getPixel(x, y) = ledsbuff[y];}
+  }
+}
+
 bool EffectStarShips::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, _fade);
-  switch (dir) {
-    case 0: // Up
-      for (byte x = 0; x < WIDTH; x++) {
-		    if (!_dir and x > WIDTH/2 and random8(chance) == DIR_CHARGE) {count++; break;}
-        for (float y = 0; y < HEIGHT; y+=speedFactor) {
-          EffectMath::getPixel(x, y) = (((int)y == EffectMath::getmaxHeightIndex()) ? CRGB::Black : EffectMath::getPixel(x, y + 1));
-        }
-      }
+  switch (_dir) {
+    case 1: // Up
+        MoveY(255);
       break;
-    case 1: // Up - Right 
-      for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (byte y = 0; y < HEIGHT; y++) {
-          EffectMath::getPixel(x, y) = ((y == EffectMath::getmaxHeightIndex() or (int)x == EffectMath::getmaxWidthIndex()) ? CRGB::Black : EffectMath::getPixel(x + 1, y + 1));
-        }
-      }
+    case 2: // Up - Right 
+        MoveY(255);
+		MoveX(255);
       break;
-    case 2: // Right
-      for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = (((int)x == EffectMath::getmaxWidthIndex()) ? CRGB::Black : EffectMath::getPixel(x + 1, y));
-        }
-      }
+    case 3: // Right
+        MoveX(255);
       break;
-    case 3: // Down - Right 
-      for (float x = 0; x < WIDTH; x+=speedFactor) {
-        if (!_dir and (uint8_t)x > WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = (((int)x == EffectMath::getmaxWidthIndex() or y == 0) ? CRGB::Black : EffectMath::getPixel(x + 1, y - 1));
-        }
-      }
+    case 4: // Down - Right 
+        MoveY(0);
+		MoveX(255);
       break;
-    case 4: // Down
-      for (byte x = 0; x < WIDTH; x++) {
-		    if (!_dir and x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (float y = EffectMath::getmaxHeightIndex(); y > 0; y-=speedFactor) {
-          EffectMath::getPixel(x, y) = (((int)y == 0) ? CRGB::Black : EffectMath::getPixel(x, y - 1));
-        }
-      }
+    case 5: // Down
+        MoveY(0);
       break;
-    case 5: // Down - Left
-      for (float x = EffectMath::getmaxWidthIndex(); x > 0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = ((y == 0 or (int)x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y - 1));
-        }
-      }
+    case 6: // Down - Left
+       MoveY(0);
+	   MoveX(0);
       break;
-    case 6: // Left
-      for (float x = EffectMath::getmaxWidthIndex(); x > 0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = ((int)x == 0 ? CRGB::Black : EffectMath::getPixel(x - 1, y));
-        }
-      }
+    case 7: // Left
+        MoveX(0);
       break;
-    case 7: // Up - Left 
-      for (float x = WIDTH -1; x >0; x-=speedFactor) {
-        if (!_dir and (uint8_t)x < WIDTH/2 and random(chance) == DIR_CHARGE) {count++; break;}
-        for (uint8_t y = EffectMath::getmaxHeightIndex(); y > 0; y--) {
-          EffectMath::getPixel(x, y) = ((y == EffectMath::getmaxHeightIndex() or (int)x == 0) ? CRGB::Black : EffectMath::getPixel(x - 1, y + 1));
-        }
-      }
+    case 8: // Up - Left 
+        MoveY(255);
+		MoveX(0);
       break;
-  }
+	 default:
+		MoveY(beatsin88(1460*speedFactor, 0, 255, 0, 32768));
+		MoveX(beatsin88(1502*speedFactor, 0, 255, 0, 0));
+		break;  }
 
   for (byte i = 0; i < _scale; i++) {
     float x = (float)beatsin88(3840*speedFactor + i*256, 0, EffectMath::getmaxWidthIndex() *4, 0, _scale*i*256) /4;
     float y = (float)beatsin88(3072*speedFactor + i*256, 0, EffectMath::getmaxWidthIndex() *4, 0, 0) /4;
     if ((x >= 0 and x <= EffectMath::getmaxWidthIndex()) and (y >= 0 and y <= EffectMath::getmaxHeightIndex())) draw(x, y, ColorFromPalette(*curPalette, beatsin88(256*12.*speedFactor + i*256, 0, 255), 255));
   }
-
-  if (_dir) 
-    dir = _dir - 1;
-  else dir = count%8;
-  if (dir == 0) randomSeed(millis());
   EffectMath::blur2d(16);
   return true;
 }
@@ -7622,44 +7498,46 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
   changeFlags();
   fadeToBlackBy(leds, NUM_LEDS, 32);
   for (uint8_t i = 0; i < WIDTH; i++) {
-    thisVal = inoise8((float) i * DEVIATOR, counter, (int)count/*(float)i * SPEED_ADJ/2*/);
-    thisMax = map(thisVal, 0, 255, 0, EffectMath::getmaxHeightIndex());
+    thisVal = mix(inoise8(((float) i * DEVIATOR)-counter,counter/2,(float)i*SPEED_ADJ),128,i*(255/WIDTH));
+    thisMax = map(thisVal, 0, 255, 0, HEIGHT - 1);
+	for (byte j = 0; j < HEIGHT; j++) {
+		if(j>((flag == 2 || flag == 7)? (HEIGHT-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || ((int8_t)j < (int8_t)((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
     switch (flag)
     {
     case 1:
-      germany(i);
+      germany(i,j);
       break;
     case 2:
-      usa(i);
+      usa(i,j);
       break;
     case 3:
     case 0:
-      ukraine(i);
+      ukraine(i,j);
       break;
     case 4:
-      belarus(i);
+      belarus(i,j);
       break;
     case 5:
-      italy(i);
+      italy(i,j);
       break;
     case 6:
-      spain(i);
+      spain(i,j);
       break;
     case 7:
-      uk(i);
+      uk(i,j);
       break;
     case 8:
-      france(i);
+      france(i,j);
       break;
     case 9:
-      poland(i);
+      poland(i,j);
       break;
     
     default:
       break;
     }
 
-  }
+  }}
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   counter += (float)_speed * SPEED_ADJ;
   return true;
@@ -8161,85 +8039,71 @@ bool EffectPuzzles::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ============= Эффект Цветные драже ===============
-// (c) SottNick
-//по мотивам визуала эффекта by Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko программный код которого он запретил брать
-// !++
+// ============= Ефект Кольорові драже ===============
+// (c)stepko
+																				 
+																									   
+	  
 String EffectPile::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speed = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==1) speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 200);
   else if(_val->getId()==2) _scale = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  else EffectCalc::setDynCtrl(_val).toInt(); 
   return String();
 }
 
 void EffectPile::load() {
-  palettesload();    // подгружаем палитры
+  palettesload();
+}
+
+void EffectPile::changeFrame() {
+  memcpy(F[0], F[1], WIDTH * HEIGHT);
+				 
+																												  
+    uint8_t temp = map8(random(256), _scale, 255U);
+  if (pcnt >= map8(temp, 2U, HEIGHT - 3U)) {
+							 
+							   
+    temp = HEIGHT + 1U - pcnt;
+    if (!random8(4U))
+      if (random8(2U))
+        temp = 2U;
+      else
+        temp = 3U;
+    for (byte y = 0; y < pcnt; y++) {
+    for (byte x = 0; x < WIDTH; x++) {
+      if(random(255)%3) F[1][x][y] = 0;
+    }
+  }
+}
+pcnt = 0;
+  for (byte y = 0; y < HEIGHT; y++) {
+    for (byte x = 0; x < WIDTH; x++) {
+      if (!F[1][x][y]) continue;
+      if (F[1][x][y] && !F[1][x][y - 1] && y) {F[1][x][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+      else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x + 1][y - 1]  && !(x==WIDTH-1) && y) {F[1][x + 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+       else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x - 1][y - 1] && x && y) {F[1][x - 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+        else if (pcnt < y) pcnt = y;
+    }
+											  
+									  
+										 
+						  
+										
+  }
+  if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][HEIGHT - 1] = random(16, 255);
 }
 
 bool EffectPile::run(CRGB *leds, EffectWorker *param) {
-  if (dryrun(2.5))
-    return false;
-    // если насыпалось уже достаточно, бахаем рандомные песчинки
-  uint8_t temp = map8(random(256), _scale, 255U);
-  if (pcnt >= map8(temp, 2U, HEIGHT - 3U)) {
-    //temp = 255U - temp + 2;
-    //if (temp < 2) temp = 255;
-    temp = HEIGHT + 1U - pcnt;
-    if (!random(4U)) {// иногда песка осыпается до половины разом
-      if (random(2U)) {
-        temp = 2U;
-      } else {
-        temp = 3U;
-      }
-    }
-    //for (uint16_t i = 0U; i < NUM_LEDS; i++)
-    for (uint8_t y = 0; y < pcnt; y++)
-      for (uint8_t x = 0; x < WIDTH; x++)
-        if (!random(temp))
-          EffectMath::getPixel(x,y) = 0;
+  shift += speed;
+  if (shift >= 255) {
+    changeFrame();
+    shift = 0;
   }
-
-  pcnt = 0U;
-  // осыпаем всё, что есть на экране
-  for (uint8_t y = 1; y < HEIGHT; y++)
-    for (uint8_t x = 0; x < WIDTH; x++)
-      if (EffectMath::getPixel(x, y))
-      { // проверяем для каждой песчинки
-        if (!EffectMath::getPixel(x, y - 1))
-        { // если под нами пусто, просто падаем
-          EffectMath::getPixel(x, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-        }
-        else if (x > 0U && !EffectMath::getPixel(x - 1, y - 1) && x < WIDTH - 1 && !EffectMath::getPixel(x + 1, y - 1))
-        { // если под нами пик
-          if (random8(2U))
-            EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
-          else
-            EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-          pcnt = y - 1;
-        }
-        else if (x > 0U && !EffectMath::getPixel(x - 1, y - 1))
-        { // если под нами склон налево
-          EffectMath::getPixel(x - 1, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-          pcnt = y - 1;
-        }
-        else if (x < WIDTH - 1 && !EffectMath::getPixel(x + 1, y - 1))
-        { // если под нами склон направо
-          EffectMath::getPixel(x + 1, y - 1) = EffectMath::getPixel(x, y);
-          EffectMath::getPixel(x, y) = 0;
-          pcnt = y - 1;
-        }
-        else // если под нами плато
-          pcnt = y;
-      }
-  // эмиттер новых песчинок
-  if (!EffectMath::getPixel(CENTER_X_MINOR, HEIGHT - 2) && !EffectMath::getPixel(CENTER_X_MAJOR, HEIGHT - 2) && !random(3))
-  {
-    temp = random(2) ? CENTER_X_MINOR : CENTER_X_MAJOR;
-    EffectMath::getPixel(temp, HEIGHT - 1) = ColorFromPalette(*curPalette, random8());
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+      CRGB col1 = ColorFromPalette(*curPalette,F[0][x][y],(F[0][x][y]) ? 255 : 0);
+      EffectMath::drawPixelXY(x, y, nblend(col1, ColorFromPalette(*curPalette,F[1][x][y],(F[1][x][y]) ? 255 : 0), shift));
+    }
   }
   return true;
 }
@@ -8681,7 +8545,7 @@ void EffectPlayer::drawFrame () {
 }
 
 
-bool EffectPlayer::loadFile(String &filename) {
+bool EffectPlayer::loadFile(String filename) {
     if (!LittleFS.exists(filename)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
       LOG(println, filename);
       filename = F("/animations/Candle.565");

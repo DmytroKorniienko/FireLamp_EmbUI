@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -380,24 +380,13 @@ public:
  */
 class EffectSpiro : public EffectCalc {
 private:
-  const uint8_t spiroradiusx = WIDTH /4; //((!WIDTH & 1) ? (WIDTH -1) : WIDTH) / 4;
-  const uint8_t spiroradiusy = HEIGHT /4;//(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 4;
+  const float spirocenterX = WIDTH /2-0.5; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
+  const float spirocenterY = HEIGHT /2-0.5; //(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 2;
 
-  const uint8_t spirocenterX = WIDTH /2; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
-  const uint8_t spirocenterY = HEIGHT /2; //(!(HEIGHT & 1) ? (HEIGHT-1) : HEIGHT) / 2;
-
-  const uint8_t spirominx = spirocenterX - spiroradiusx;
-  const uint8_t spiromaxx = spirocenterX + spiroradiusx - (WIDTH%2 == 0 ? 1:0);// + 1;
-  const uint8_t spirominy = spirocenterY - spiroradiusy;
-  const uint8_t spiromaxy = spirocenterY + spiroradiusy - (HEIGHT%2 == 0 ? 1:0); // + 1;
-
-  bool spiroincrement = false;
-  bool spirohandledChange = false;
-  float spirohueoffset = 0;
-  uint8_t spirocount = 1;
-  float spirotheta1 = 0;
-  float spirotheta2 = 0;
-  uint8_t internalCnt = 0;
+  byte AM = 1;
+  bool incenter;
+float Angle;
+bool change = false;
   float speedFactor;
 
   String setDynCtrl(UIControl*_val) override;
@@ -508,6 +497,7 @@ private:
 	float _dri_speed;
 	uint8_t _dri_delta;
 	byte driftType = 0;
+    bool flag = false;
 
 	String setDynCtrl(UIControl*_val) override;
 	bool incrementalDriftRoutine(CRGB *leds, EffectWorker *param);
@@ -1670,43 +1660,21 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---------- Эффект-игра "Лабиринт"
+// ---------- Лабіринт
+//remade by stepko
 class EffectMaze : public EffectCalc {
 private:
-    const uint16_t maxSolves = MAZE_WIDTH * MAZE_WIDTH * 5;
-    char *maze = (char*)malloc(MAZE_WIDTH * MAZE_HEIGHT * sizeof(char));
-    int8_t playerPos[2];
-    uint32_t labTimer;
-    bool mazeMode = false;
-    bool mazeStarted = false;
-    uint8_t hue;
-    CRGB color;
-    CRGB playerColor = CRGB::White;
+    bool start = true;
+	bool checkFlag;
+	uint8_t posX, posY;
+	uint8_t color;
+	uint8_t Lookdir;
+	uint8_t _speed;
+	uint16_t SubPos;
+	bool maze[M_WIDTH][M_HEIGHT];
 
-    bool loadingFlag = true;
-    bool gameOverFlag = false;
-    bool gameDemo = true;
-    bool gamePaused = false;
-    bool track = random8(0,2);  // будет ли трек игрока
-    uint8_t buttons;
-
-    unsigned long timer = millis(), gameTimer = 200;         // Таймер скорости игр
-
-    void newGameMaze();
-    void buttonsTickMaze();
-    void movePlayer(int8_t nowX, int8_t nowY, int8_t prevX, int8_t prevY);
-    void demoMaze();
-    bool checkPath(int8_t x, int8_t y);
-    void CarveMaze(char *maze, int width, int height, int x, int y);
-    void GenerateMaze(char *maze, int width, int height);
-    void SolveMaze(char *maze, int width, int height);
-
-    bool checkButtons()
-    {
-        if (buttons != 4)
-            return true;
-        return false;
-    }
+	void digMaze(int x, int y);
+	void generateMaze();
 
     String setDynCtrl(UIControl*_val) override;
     //void setspd(const byte _spd) override; // перегрузка для скорости
@@ -1762,10 +1730,11 @@ public:
 // (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
 class EffectRacer: public EffectCalc {
 private:
-    float posX = random(0, WIDTH-1);
-    float posY = random(0, HEIGHT-1);
-    uint8_t aimX = random(0, WIDTH)-1;
-    uint8_t aimY = random(0, HEIGHT-1);
+    uint16_t posX = random(0, WIDTH-1)*10;
+    uint16_t posY = random(0, HEIGHT-1)*10;
+    uint16_t aimX = random(0, WIDTH-1)*10;
+    uint16_t aimY = random(0, HEIGHT-1)*10;
+	int16_t deltaX, deltaY, signX, signY, error;
     float radius = 0;
     byte hue = millis()>>1; //random(0, 255);
     CRGB color;
@@ -1835,89 +1804,69 @@ private:
 
     uint8_t thisVal;
     uint8_t thisMax;
+	
+	uint8_t mix(uint8_t a1, uint8_t a2, uint8_t l){
+	return ((a1*l)+(a2*(255-l)))/255;}
 
     //Germany
-    void germany(uint8_t i)
+    void germany(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (j < thisMax - HEIGHT / 4) ? CHSV(68, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 255, thisVal)
             : CHSV(0, 0, thisVal / 2.5);
-        }
     }
 
     //Ukraine
-    void ukraine(uint8_t i)
+    void ukraine(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (j < thisMax) ? CHSV(50, 255, thisVal) : CHSV(150, 255, thisVal);
-        }
     }
 
     //Belarus
-    void belarus(uint8_t i)
+    void belarus(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 4) ? CHSV(0, 224, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 0, thisVal)
-            : CHSV(0, 224, thisVal);
-        }
+            (j < thisMax - HEIGHT / 4) ? CHSV(0, 0, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 224, thisVal)
+            : CHSV(0, 0, thisVal);
     }
 
     //Poland
-    void poland(uint8_t i)
+    void poland(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (j < thisMax + 1) ? CHSV(248, 214, (float)thisVal * 0.83) : CHSV(25, 3, (float)thisVal * 0.91);
-        }
     }
 
     //The USA
-    void usa(uint8_t i)
+    void usa(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) +=
             ((i <= WIDTH / 2) && (j + thisMax > HEIGHT - 1 + HEIGHT / 16)) ? 
             ((i % 2 && ((int)j - HEIGHT / 16 + thisMax) % 2) ? 
             CHSV(160, 0, thisVal) : CHSV(160, 255, thisVal)) 
             : ((j + 1 + thisMax) % 6 < 3 ? CHSV(0, 0, thisVal) : CHSV(0, 255, thisVal));
-        }
     }
 
     //Italy
-    void italy(uint8_t i)
+    void italy(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (i < WIDTH / 3) ? CHSV(90, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
             : CHSV(0, 255, thisVal);
-        }
     }
 
     //France
-    void france(uint8_t i)
+    void france(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (i < WIDTH / 3) ? CHSV(160, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
             : CHSV(0, 255, thisVal);
-        }
     }
 
     //UK
-    void uk(uint8_t i)
+    void uk(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (
                 (
@@ -1940,21 +1889,16 @@ private:
             && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) 
             || (WIDTH / 2 + 1 - i == 0) || (WIDTH / 2 - 2 - i == 0) 
             || (HEIGHT + 1 - (j + thisMax) == 0) || (HEIGHT - 2 - (int)(j + thisMax) == 0)) ? 
-            CHSV(0, 0, thisVal)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  : CHSV(150, 255, thisVal);
-        }
+            CHSV(0, 0, thisVal) : CHSV(150, 255, thisVal);
     }
 
     //Spain
-    void spain(uint8_t i)
+    void spain(uint8_t i, uint8_t j)
     {
-        for (uint8_t j = 0; j < HEIGHT; j++)
-        {
             EffectMath::getPixel(i, j) += 
             (j < thisMax - HEIGHT / 3) ? 
             CHSV(250, 224, (float)thisVal * 0.68) : (j < thisMax + HEIGHT / 3) ? CHSV(64, 255, (float)thisVal * 0.98)
             : CHSV(250, 224, (float)thisVal * 0.68);
-        }
     }
 
 
@@ -1975,14 +1919,14 @@ private:
     byte _scale = 8;
     const byte DIR_CHARGE = 2; // Chance to change direction 1-5
     uint16_t chance = 4096;
-
-    byte dir = 3;
+	
     byte _dir;
-    byte count = 0;
     uint8_t _fade;
-
+	int8_t zF;int8_t zD;
 	float speedFactor;
-
+	
+	void MoveX(uint8_t am, int8_t amplitude, float shift);
+	void MoveY(uint8_t am, int8_t amplitude, float shift);
     void draw(float x, float y, CRGB color);
     String setDynCtrl(UIControl*_val) override;
 
@@ -1994,7 +1938,7 @@ public:
 /* -------------- эффект "VU-meter"
     (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
     reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
-    adopted for FireLamp_jeeUI by kostyamat, kDn
+    adopted for FireLamp_EmbUI by kostyamat, kDn
     reworked and updated (c) kostyamat 24.04.2021
 */
 class EffectVU: public EffectCalc {
@@ -2140,17 +2084,20 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= Эффект Цветные драже ===============
-// (c) SottNick
-//по мотивам визуала эффекта by Yaroslaw Turbin 14.12.2020
-//https://vk.com/ldirko программный код которого он запретил брать
+// ============= Ефект Кольорові драже ===============
+// (c)stepko
+																				 
+																									   
 class EffectPile : public EffectCalc {
 private:
     uint8_t pcnt = 0U, _scale;
     String setDynCtrl(UIControl*_val) override;
-
+    void changeFrame();
+    byte F[2][WIDTH][HEIGHT];
+    int shift;
 public:
     void load() override;
+    
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -2384,7 +2331,7 @@ class EffectPlayer : public EffectCalc {
         void getFromFile_332(uint8_t frame);
         void getFromFile_565(uint8_t frame);
         void drawFrame();
-        bool loadFile(String &filename);
+        bool loadFile(String filename);
         String setDynCtrl(UIControl*_val) override;
     
     public:

@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -44,7 +44,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "user_interface.h"
 ADC_MODE(ADC_TOUT);
 #endif
-
 
 void MICWORKER::read_data()
 {
@@ -75,8 +74,10 @@ void MICWORKER::read_data()
 #if defined(ESP8266) && defined(FAST_ADC_READ)
     system_adc_read_fast(adc_addr, 1, adc_clk_div);
     vReal[i] = adc_addr[0]; // использую system_adc_read_fast для бОльшей скорости
-#else
+#elif defined(ESP8266)
     vReal[i] = analogRead(MIC_PIN); // ESP8266 Analog Pin ADC0 = A0
+#else
+    vReal[i] = adc1_get_raw(adc1_channel_t::ADC1_CHANNEL_0);
 #endif
     if(useFixedFreq){ // используется фиксированное семплирование, организуем задержку
       while((micros() - m < sampling_period_us)){
@@ -89,6 +90,9 @@ void MICWORKER::read_data()
     samplingFrequency = ((1000UL*1000UL)/(micros()-_m))*(samples);
   // EVERY_N_SECONDS(3) {
   //   LOG(println, samplingFrequency);
+  //   int val = adc1_get_raw(adc1_channel_t::ADC1_CHANNEL_0);
+  //   int milliVolts = esp_adc_cal_raw_to_voltage(val, adc_chars);
+  //   LOG(printf_P, PSTR("Sample=%d, mV=%d\n"), val, milliVolts);
   // }
   FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency);
 }
@@ -301,10 +305,15 @@ void MICWORKER::calibrate()
     count+=cnt;
   }
   double D = sumSq / count; // dispersion
-  if(D>500) return; // слишком большой разброс, не включаем данный замер...
-  //sqrt(D); // standard error
-  //LOG(print(F("dispersion="));LOG(print(D);LOG(print(F(", standard error="));LOG(println, sqrt(D));
 
+  //sqrt(D); // standard error
+  LOG(print,F("dispersion=")); LOG(print,D); LOG(print,F(", standard error=")); LOG(println, sqrt(D));
+
+#ifdef ESP8266
+  if(D>500) return; // слишком большой разброс, не включаем данный замер...
+#else
+  if(D>5000) return; // слишком большой разброс, не включаем данный замер...
+#endif
   uint16_t step; // где мы сейчас
   for(step=0; step<samples/2; step++){ // делим на 2 диапазона AVG+stderr
     if(vImag[step]==0.0){

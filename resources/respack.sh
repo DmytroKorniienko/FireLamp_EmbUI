@@ -96,10 +96,10 @@ cat html/js/*.js | gzip -9 > ../data/js/lamp.js.gz
 [ ! -f ../data/favicon.ico.gz ] || [ html/favicon.ico -nt ../data/favicon.ico.gz ] &&  gzip -9k html/favicon.ico && mv -f html/favicon.ico.gz ../data/
 [ ! -f ../data/locale/emb.json.gz ]  || [ locale/emb.json -nt ../data/locale/emb.json.gz ] && gzip -9k locale/emb.json && mv -f locale/emb.json.gz ../data/locale/
 
-cp -u html/.exclude.files ../data/
-cp -u html/manifest.webmanifest ../data/
-cp -u html/css/*.svg ../data/css/
-cp -u html/css/*.png ../data/css/
+cp -f html/.exclude.files ../data/
+cp -f html/manifest.webmanifest ../data/
+cp -f html/css/*.svg ../data/css/
+cp -f html/css/*.png ../data/css/
 
 #cp -u html/events_config.json ../data/
 #cp -u html/buttons_config.json ../data/

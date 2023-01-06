@@ -2,30 +2,30 @@
 Copyright © 2020 Dmytro Korniienko (kDn)
 JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
-    This file is part of FireLamp_JeeUI.
+    This file is part of FireLamp_EmbUI.
 
-    FireLamp_JeeUI is free software: you can redistribute it and/or modify
+    FireLamp_EmbUI is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FireLamp_JeeUI is distributed in the hope that it will be useful,
+    FireLamp_EmbUI is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FireLamp_JeeUI.  If not, see <https://www.gnu.org/licenses/>.
+    along with FireLamp_EmbUI.  If not, see <https://www.gnu.org/licenses/>.
 
-(Цей файл є частиною FireLamp_JeeUI.
+(Цей файл є частиною FireLamp_EmbUI.
 
-   FireLamp_JeeUI - вільна програма: ви можете перепоширювати її та/або
+   FireLamp_EmbUI - вільна програма: ви можете перепоширювати її та/або
    змінювати її на умовах Стандартної громадської ліцензії GNU у тому вигляді,
    у якому вона була опублікована Фондом вільного програмного забезпечення;
    або версії 3 ліцензії, або (на ваш вибір) будь-якої пізнішої
    версії.
 
-   FireLamp_JeeUI поширюється в надії, що вона буде корисною,
+   FireLamp_EmbUI поширюється в надії, що вона буде корисною,
    але БЕЗ ВСЯКИХ ГАРАНТІЙ; навіть без неявної гарантії ТОВАРНОГО ВИГЛЯДУ
    або ПРИДАТНОСТІ ДЛЯ ВИЗНАЧЕНИХ ЦІЛЕЙ. Докладніше див. у Стандартній
    громадська ліцензія GNU.
@@ -188,14 +188,12 @@ private:
     LAMPFLAGS flags;
     LAMPSTATE lampState; // текущее состояние лампы, которое передается эффектам
 
-    uint8_t txtOffset = 0; // смещение текста относительно края матрицы
+    int8_t txtOffset = 0; // смещение текста относительно края матрицы
     uint8_t globalBrightness = 127; // глобальная яркость, пока что будет использоваться для демо-режимов
     uint8_t fps = 0;        // fps counter
 #ifdef LAMP_DEBUG
     uint16_t avgfps = 0;    // avarage fps counter
 #endif
-    //int mqtt_int = DEFAULT_MQTTPUB_INTERVAL;
-    uint8_t bPin = BTN_PIN;        // пин кнопки
     uint16_t curLimit = CURRENT_LIMIT; // ограничение тока
 
     LAMPMODE mode = LAMPMODE::MODE_NORMAL; // текущий режим
@@ -260,9 +258,8 @@ public:
     EVENT_MANAGER events; // Объект реализующий доступ к событиям
     uint64_t getLampFlags() {return flags.lampflags;} // возвращает упакованные флаги лампы
     const LAMPFLAGS &getLampSettings() {return flags;} // возвращает упакованные флаги лампы
-    //void setLampFlags(uint32_t _lampflags) {flags.lampflags=_lampflags;} // устананавливает упакованные флаги лампы
-    void setbPin(uint8_t val) {bPin = val;}
-    uint8_t getbPin() {return bPin;}
+    void setRefreshEffList(bool flag) { lampState.isEffListRefresh = flag; }
+    bool isRefreshEffList() { return lampState.isEffListRefresh; }
     void setcurLimit(uint16_t val) {curLimit = val;}
     uint16_t getcurLimit() {return curLimit;}
     LAMPSTATE &getLampState() {return lampState;}
@@ -329,18 +326,23 @@ public:
 
     void setSpeedFactor(float val) {
         lampState.speedfactor = val;
-        if(effects.worker) effects.worker->setDynCtrl(effects.getControls()[1]);
+        if(effects.worker) {
+            LList<UIControl*>&controls = effects.getControls();
+            if(controls.size()>1)
+                effects.worker->setDynCtrl(controls[1]);
+        }
     }
 
     // Lamp brightness control (здесь методы работы с конфигурационной яркостью, не с LED!)
     uint8_t getLampBrightness() { return flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt();}
-    uint8_t getNormalizedLampBrightness() { return (uint8_t)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls()[0]->getVal()).toInt()) / 255);}
+    uint8_t getNormalizedLampBrightness() { return (uint8_t)(BRIGHTNESS * (flags.isGlobalBrightness? globalBrightness : (effects.getControls().size() ? (effects.getControls()[0]->getVal()).toInt() : globalBrightness)) / 255);}
     void setLampBrightness(uint8_t brg) { lampState.brightness=brg; if (flags.isGlobalBrightness) setGlobalBrightness(brg); else effects.getControls()[0]->setVal(String(brg)); }
     void setGlobalBrightness(uint8_t brg) {globalBrightness = brg;}
     void setIsGlobalBrightness(bool val) {flags.isGlobalBrightness = val; if(effects.worker) { lampState.brightness=getLampBrightness(); effects.worker->setDynCtrl(effects.getControls()[0]);} }
     bool IsGlobalBrightness() {return flags.isGlobalBrightness;}
     bool isAlarm() {return mode == LAMPMODE::MODE_ALARMCLOCK;}
     bool isWarning() {return lampState.isWarning;}
+    bool isWarningTask() {return warningTask?1:0;} // чи є активна задача варнінгу
     //int getmqtt_int() {return mqtt_int;}
 
 #ifdef EMBUI_USE_MQTT
@@ -379,8 +381,8 @@ public:
     bool getFaderFlag() {return flags.isFaderON;}
     void setClearingFlag(bool flag) {flags.isEffClearing = flag;}
     bool getClearingFlag() {return flags.isEffClearing;}
-    void disableEffectsUntilText() {lampState.isEffectsDisabledUntilText = true; FastLED.clear();}
-    void setOffAfterText() {lampState.isOffAfterText = true;}
+    void disableEffects() {lampState.isEffectsDisabled = true; FastLED.clear();}
+    void setOffAfterText(const bool flag=true) {lampState.isOffAfterText = flag;}
     void setIsEventsHandled(bool flag) {flags.isEventsHandled = flag;}
     bool IsEventsHandled() {return flags.isEventsHandled;} // LOG(printf_P,PSTR("flags.isEventsHandled=%d\n"), flags.isEventsHandled);
     bool isLampOn() {return flags.ONflag;}
