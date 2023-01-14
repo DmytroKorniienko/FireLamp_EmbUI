@@ -824,7 +824,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- Эффект "Блики на воде Цвета"
+// ------------- Ефект "Відблиски на воді"
 // Идея SottNick
 // переписал на программные блики + паттерны - (c) kostyamat
 // Генератор бликов (c) stepko
@@ -832,14 +832,14 @@ class EffectAquarium : public EffectCalc {
 private:
 #define MAX_DIMENSION max(WIDTH, HEIGHT)
     CRGBPalette16 currentPalette;
-    const uint8_t _scale = 25;
+    const uint8_t _scale = 64;
     const uint8_t _speed = 3;
 
     float hue = 0.;
     uint16_t x;
     uint16_t y;
     uint16_t z;
-    byte ledbuff[WIDTH*2 * HEIGHT*2];
+	uint8_t noise[WIDTH + 1][HEIGHT + 1][2];
 #define amountDrops ((HEIGHT + WIDTH) / 6)
     const uint8_t maxRadius = WIDTH + HEIGHT;
     uint8_t posX[amountDrops];
@@ -852,7 +852,8 @@ private:
 
     void nGlare(uint8_t bri);
     void nDrops(uint8_t bri);
-    void fillNoiseLED(CRGB *leds);
+	void wu(uint16_t x, uint16_t y);
+    void fillNoise();
 
 public:
     void load() override;

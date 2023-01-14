@@ -3504,10 +3504,10 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ------------- Эффект "Блики на воде Цвета"
-// Идея SottNick
-// переписал на программные блики + паттерны - (c) kostyamat
-// Генератор бликов (c) stepko
+// ------------- Ефект "Відблиски на воді"
+// Ідея SottNick
+// переписані на програмні відблиски - (c) kostyamat
+// Генератор відблисків - (c) stepko
 
 void EffectAquarium::load(){
   currentPalette = PartyColors_p;
@@ -3552,22 +3552,34 @@ void EffectAquarium::nDrops(uint8_t bri) {
 
 void EffectAquarium::nGlare(uint8_t bri) {
 
-  fill_solid(currentPalette, 16, CHSV(hue, satur, bri));
-  currentPalette[10] = CHSV(hue, satur - 60, 225);
-  currentPalette[9] = CHSV(hue, 255 - satur, 180);
-  currentPalette[8] = CHSV(hue, 255 - satur, 180);
-  currentPalette[7] = CHSV(hue, satur - 60, 225);
-
-  fillNoiseLED(leds);
+  fillNoise();
   
+    for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      uint8_t n0 = noise[x][y][0];
+      uint8_t n1 = noise[x + 1][y][0];
+      uint8_t n2 = noise[x][y + 1][0];
+      int8_t xl = n0 - n1;
+      int8_t yl = n0 - n2;
+      uint16_t xa = (x << 8)-1 + ((xl * ((n0 + n1) >> 1)) >> 4);
+      uint16_t ya = (y << 8)-1 + ((yl * ((n0 + n2) >> 1)) >> 4);
+      wu(xa, ya);
+    }
+  }
+    for (uint8_t i = 0; i < WIDTH; i++) {
+      for (uint8_t j = 0; j < HEIGHT; j++) {
+	    uint8_t col = constrain(224 - noise[i][j][1], 0, 255);
+        EffectMath::drawPixelXY(i, j, CHSV(hue, map(col,0,224,~satur,satur), map(col,0,244,255,bri)));
+    }
+  }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 100);
 }
 
-void EffectAquarium::fillNoiseLED(CRGB *leds) {
+void EffectAquarium::fillNoise() {
   uint8_t  dataSmoothing = 200 - (_speed * 4);
-  for (uint8_t i = 0; i < MAX_DIMENSION; i++) {
+  for (uint8_t i = 0; i < WIDTH + 1; i++) {
     int32_t ioffset = _scale * i;
-    for (uint8_t j = 0; j < MAX_DIMENSION; j++) {
+    for (uint8_t j = 0; j < HEIGHT + 1; j++) {
       int32_t joffset = _scale * j;
       
       uint8_t data = inoise8(x + ioffset, y + joffset, z);
@@ -3575,24 +3587,36 @@ void EffectAquarium::fillNoiseLED(CRGB *leds) {
       data = qsub8(data, 16);
       data = qadd8(data, scale8(data, 39));
       
-      uint8_t newdata = scale8(ledbuff[EffectMath::getPixelNumberBuff(j, i, WIDTH, HEIGHT)], dataSmoothing) + scale8(data, 256 - dataSmoothing);
-      data = newdata;
+      data = scale8(noise[i][j][0], dataSmoothing) + scale8(data, 256 - dataSmoothing);
       
-      ledbuff[EffectMath::getPixelNumberBuff(j, i, WIDTH, HEIGHT)] = data;
+      noise[i][j][0] = data;
+	  noise[i][j][1] = 0;
     }
   }
   z += _speed;
-  x += _speed / 16 * sin8(millis() / 10000);
-  y += _speed / 16 * cos8(millis() / 10000);
-  
-  for (uint8_t i = 0; i < WIDTH; i++) {
-    for (uint8_t j = 0; j < HEIGHT; j++) {
-      uint8_t index = ledbuff[EffectMath::getPixelNumberBuff(j, i, WIDTH, HEIGHT)];
+  x += _speed >> 3;
+  y -= _speed >> 4;
+}
 
-      CRGB color = ColorFromPalette(currentPalette, index);
-      EffectMath::drawPixelXY(i, j, color);
-    }
+void EffectAquarium::wu(uint16_t x, uint16_t y) {
+  // extract the fractional parts and derive their inverses
+  uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
+  // calculate the intensities for each affected pixel
+  #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+  uint8_t wu[4] = {
+    WU_WEIGHT(ix, iy),
+    WU_WEIGHT(xx, iy),
+    WU_WEIGHT(ix, yy),
+    WU_WEIGHT(xx, yy)
+  };
+  // multiply the intensities by the colour, and saturating-add them to the pixels
+  for (uint8_t i = 0; i < 4; i++) {
+      uint8_t xn = (x >> 8) + (i & 1); uint8_t yn = (y >> 8) + ((i >> 1) & 1);
+	  if (xn >= 0 && xn < WIDTH + 1 && yn >= 0 && yn < HEIGHT + 1){
+	    noise[xn][yn][1] = constrain(noise[xn][yn][1] + (32 % ((wu[i])? wu[i] : 1)), 0, 255);
+	}
   }
+  #undef WU_WEIGHT
 }
 
 bool EffectAquarium::run(CRGB *leds, EffectWorker *param) {
