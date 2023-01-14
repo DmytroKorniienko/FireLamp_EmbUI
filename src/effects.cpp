@@ -8424,42 +8424,14 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-
-
-
-int16_t EffectFlower::ZVcalcRadius(int16_t x, int16_t y) {
-  x *= x;
-  y *= y;
-  int16_t radi = sin8(x + y);
-  return radi;
- 
-
-}
-
-int16_t EffectFlower::ZVcalcDist(uint8_t x, uint8_t y, float center_x, float center_y) {
-  int16_t a = (center_y - y - .5);
-  int16_t b = (center_x - x - .5);
-  int16_t dista = ZVcalcRadius(a, b);
-  return dista;
-}
-
 bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
 	effTimer = (1+sin(radians((float)millis()/6000)))*12.5;
 	ZVoffset += EffectMath::fmap((float)speed, 1, 255, 0.2, 6.0);;
 	
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      int dista = ZVcalcDist(x, y, COLS_HALF, ROWS_HALF);
-      
-      // exclude outside of circle
-      int brightness = 1;
-      if (dista += max(COLS_HALF,ROWS_HALF)) {
-        brightness = map(dista, -effTimer,max(COLS_HALF,ROWS_HALF), 255, 110);
-        brightness += ZVoffset;
-        brightness = sin8(brightness);
-      }
-      int hue = map(dista, max(COLS_HALF,ROWS_HALF),-3,  125, 255);
-      EffectMath::drawPixelXY(x, y, CHSV(hue+ZVoffset/4, 255, brightness));
+      uint8_t radius = sin8(pow(COLS_HALF-0.5-x,2)+pow(ROWS_HALF-0.5-y,2));
+      EffectMath::drawPixelXY(x, y, CHSV(map(radius,COLS_HALF,-3,125,255), 255,sin8(map(radius+COLS_HALF,-effTimer,COLS_HALF,255,110)+ZVoffset)));
     }
   } 
 	return true;
