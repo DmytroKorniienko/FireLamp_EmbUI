@@ -3509,9 +3509,11 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
 // переписані на програмні відблиски - (c) kostyamat
 // Генератор відблисків - (c) stepko
 
-void EffectAquarium::load(){
+void EffectAquarium::load()
+{
   currentPalette = PartyColors_p;
-  for (uint8_t i = 0; i < amountDrops-1; i++) {
+  for (uint8_t i = 0; i < amountDrops - 1; i++)
+  {
     posX[i] = random(WIDTH);
     posY[i] = random(HEIGHT);
     radius[i] = EffectMath::randomf(-1, maxRadius);
@@ -3519,16 +3521,23 @@ void EffectAquarium::load(){
 }
 
 // !++
-String EffectAquarium::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 1.);
-  else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==3) satur = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) glare = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+String EffectAquarium::setDynCtrl(UIControl *_val)
+{
+  if (_val->getId() == 1)
+    speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 1.);
+  else if (_val->getId() == 2)
+    scale = EffectCalc::setDynCtrl(_val).toInt();
+  else if (_val->getId() == 3)
+    satur = EffectCalc::setDynCtrl(_val).toInt();
+  else if (_val->getId() == 4)
+    glare = EffectCalc::setDynCtrl(_val).toInt();
+  else
+    EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-void EffectAquarium::nDrops(uint8_t bri) {
+void EffectAquarium::nDrops(uint8_t bri)
+{
 
   fill_solid(currentPalette, 16, CHSV(hue, satur, bri));
   currentPalette[10] = CHSV(hue, satur - 60, 255);
@@ -3536,61 +3545,71 @@ void EffectAquarium::nDrops(uint8_t bri) {
   currentPalette[8] = CHSV(hue, 255 - satur, 210);
   currentPalette[7] = CHSV(hue, satur - 60, 255);
   EffectMath::fillAll(ColorFromPalette(currentPalette, 1));
-  for (uint8_t i = amountDrops - 1; i > 0; i--) {
-    EffectMath::drawCircle(posX[i], posY[i], radius[i], ColorFromPalette(currentPalette, (256/16)*8.5-radius[i]));
-    EffectMath::drawCircle(posX[i], posY[i], radius[i] - 1., ColorFromPalette(currentPalette,(256/16)*7.5-radius[i] , 256/radius[i]));
-    if (radius[i] >= maxRadius) {
+  for (uint8_t i = amountDrops - 1; i > 0; i--)
+  {
+    EffectMath::drawCircle(posX[i], posY[i], radius[i], ColorFromPalette(currentPalette, (256 / 16) * 8.5 - radius[i]));
+    EffectMath::drawCircle(posX[i], posY[i], radius[i] - 1., ColorFromPalette(currentPalette, (256 / 16) * 7.5 - radius[i], 256 / radius[i]));
+    if (radius[i] >= maxRadius)
+    {
       radius[i] = -1;
       posX[i] = random(WIDTH);
       posY[i] = random(HEIGHT);
-    } else
+    }
+    else
       radius[i] += 0.25;
   }
 
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 128);
 }
 
-void EffectAquarium::nGlare(uint8_t bri) {
+void EffectAquarium::nGlare(uint8_t bri)
+{
 
   fillNoise();
-  
-    for (uint8_t x = 0; x < WIDTH; x++) {
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      uint8_t n0 = noise[x][y][0];
-      uint8_t n1 = noise[x + 1][y][0];
-      uint8_t n2 = noise[x][y + 1][0];
+  memset8(&noise[1][0][0],255,(WIDTH+1)*(HEIGHT+1)-1);
+  for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    for (uint8_t y = 0; y < HEIGHT; y++)
+    {
+      uint8_t n0 = noise[0][x][y];
+      uint8_t n1 = noise[0][x + 1][y];
+      uint8_t n2 = noise[0][x][y + 1];
       int8_t xl = n0 - n1;
       int8_t yl = n0 - n2;
-      uint16_t xa = (x << 8)-1 + ((xl * ((n0 + n1) >> 1)) >> 4);
-      uint16_t ya = (y << 8)-1 + ((yl * ((n0 + n2) >> 1)) >> 4);
+      uint16_t xa = (x * 255) + ((xl * ((n0 + n1) << 1)) >> 3);
+      uint16_t ya = (y * 255) + ((yl * ((n0 + n2) << 1)) >> 3);
       wu(xa, ya);
     }
   }
-    for (uint8_t i = 0; i < WIDTH; i++) {
-      for (uint8_t j = 0; j < HEIGHT; j++) {
-	    uint8_t col = constrain(224 - noise[i][j][1], 0, 255);
-        EffectMath::drawPixelXY(i, j, CHSV(hue, map(col,0,224,~satur,satur), map(col,0,244,255,bri)));
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    for (uint8_t j = 0; j < HEIGHT; j++)
+    {
+      uint8_t col = noise[1][i][j];
+      EffectMath::drawPixelXY(i, j,nblend(EffectMath::getPixel(i,j),  CHSV(hue, map(col, 0, 255, ~satur, satur), map(col, 0, 255, 255, bri)),32));
     }
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 100);
 }
 
-void EffectAquarium::fillNoise() {
-  uint8_t  dataSmoothing = 200 - (_speed * 4);
-  for (uint8_t i = 0; i < WIDTH + 1; i++) {
-    int32_t ioffset = _scale * i;
-    for (uint8_t j = 0; j < HEIGHT + 1; j++) {
-      int32_t joffset = _scale * j;
-      
+void EffectAquarium::fillNoise()
+{
+  uint8_t dataSmoothing = 200 - (_speed * 4);
+  for (uint8_t i = 0; i < WIDTH + 1; i++)
+  {
+    uint32_t ioffset = _scale * i;
+    for (uint8_t j = 0; j < HEIGHT + 1; j++)
+    {
+      uint32_t joffset = _scale * j;
+
       uint8_t data = inoise8(x + ioffset, y + joffset, z);
-      
+
       data = qsub8(data, 16);
       data = qadd8(data, scale8(data, 39));
-      
-      data = scale8(noise[i][j][0], dataSmoothing) + scale8(data, 256 - dataSmoothing);
-      
-      noise[i][j][0] = data;
-	  noise[i][j][1] = 0;
+
+      data = scale8(noise[0][i][j], dataSmoothing) + scale8(data, 256 - dataSmoothing);
+
+      noise[0][i][j] = data;
     }
   }
   z += _speed;
@@ -3598,34 +3617,37 @@ void EffectAquarium::fillNoise() {
   y -= _speed >> 4;
 }
 
-void EffectAquarium::wu(uint16_t x, uint16_t y) {
-  // extract the fractional parts and derive their inverses
+void EffectAquarium::wu(int16_t x, int16_t y)
+{
   uint8_t xx = x & 0xff, yy = y & 0xff, ix = 255 - xx, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
+#define WU_WEIGHT(a, b) ((uint8_t)(((a) * (b) + (a) + (b)) >> 8))
   uint8_t wu[4] = {
-    WU_WEIGHT(ix, iy),
-    WU_WEIGHT(xx, iy),
-    WU_WEIGHT(ix, yy),
-    WU_WEIGHT(xx, yy)
-  };
+      WU_WEIGHT(ix, iy),
+      WU_WEIGHT(xx, iy),
+      WU_WEIGHT(ix, yy),
+      WU_WEIGHT(xx, yy)};
   // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-      uint8_t xn = (x >> 8) + (i & 1); uint8_t yn = (y >> 8) + ((i >> 1) & 1);
-	  if (xn >= 0 && xn < WIDTH + 1 && yn >= 0 && yn < HEIGHT + 1){
-	    noise[xn][yn][1] = constrain(noise[xn][yn][1] + (32 % ((wu[i])? wu[i] : 1)), 0, 255);
-	}
+  for (uint8_t i = 0; i < 4; i++)
+  {
+    uint8_t xn = (x >> 8) + (i & 1);
+    uint8_t yn = (y >> 8) + ((i >> 1) & 1);
+    if (xn >= 0 && xn < WIDTH + 1 && yn >= 0 && yn < HEIGHT + 1)
+    {
+      noise[1][xn][yn] = constrain(sub8(noise[1][xn][yn], wu[i] >> 2), 15, 255);
+    }
   }
-  #undef WU_WEIGHT
+#undef WU_WEIGHT
 }
 
-bool EffectAquarium::run(CRGB *leds, EffectWorker *param) {
+bool EffectAquarium::run(CRGB *leds, EffectWorker *param)
+{
 #ifdef MIC_EFFECTS
   byte _video = isMicOn() ? constrain(getMicMaxPeak() * EffectMath::fmap(scale, 1.0f, 255.0f, 1.25f, 5.0f), 48U, 255U) : 255;
 #else
   byte _video = 255;
 #endif
-  switch (glare) { //
+  switch (glare)
+  { //
   case 0:
     break;
   case 2:
@@ -3636,26 +3658,30 @@ bool EffectAquarium::run(CRGB *leds, EffectWorker *param) {
     break;
   }
 
-  if (!glare) {// если блики выключены
+  if (!glare)
+  { // якщо відблиски відключені
     for (byte x = 0; x < WIDTH; x++)
-    for (byte y = 0U; y < HEIGHT; y++)
-    {
+      for (byte y = 0U; y < HEIGHT; y++)
+      {
 #ifdef MIC_EFFECTS
-      if (isMicOn()) {
-        hue = getMicMapFreq();
-        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, _video));
-      }
-      else
-        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
+        if (isMicOn())
+        {
+          hue = getMicMapFreq();
+          EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, _video));
+        }
+        else
+          EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
 #else
-      EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
+        EffectMath::drawPixelXY(x, y, CHSV((uint8_t)hue, satur, 255U));
 #endif
-    }
+      }
   }
-  if (speed == 1) {
+  if (speed == 1)
+  {
     hue = scale;
   }
-  else {
+  else
+  {
     hue += speedFactor;
   }
 

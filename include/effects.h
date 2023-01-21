@@ -825,21 +825,23 @@ public:
 };
 
 // ------------- Ефект "Відблиски на воді"
-// Идея SottNick
-// переписал на программные блики + паттерны - (c) kostyamat
-// Генератор бликов (c) stepko
-class EffectAquarium : public EffectCalc {
+// Ідея SottNick
+// переписані на програмні відблиски - (c) kostyamat
+// Генератор відблисків - (c) stepko
+
+class EffectAquarium : public EffectCalc
+{
 private:
 #define MAX_DIMENSION max(WIDTH, HEIGHT)
     CRGBPalette16 currentPalette;
-    const uint8_t _scale = 64;
-    const uint8_t _speed = 3;
+    const uint8_t _scale = 24;
+    const uint8_t _speed = 2;
 
     float hue = 0.;
     uint16_t x;
     uint16_t y;
     uint16_t z;
-	uint8_t noise[WIDTH + 1][HEIGHT + 1][2];
+    uint8_t noise[2][WIDTH + 1][HEIGHT + 1];
 #define amountDrops ((HEIGHT + WIDTH) / 6)
     const uint8_t maxRadius = WIDTH + HEIGHT;
     uint8_t posX[amountDrops];
@@ -848,19 +850,18 @@ private:
     uint8_t satur;
     uint8_t glare = 0;
     uint8_t iconIdx = 0;
-	float speedFactor;
+    float speedFactor;
 
     void nGlare(uint8_t bri);
     void nDrops(uint8_t bri);
-	void wu(uint16_t x, uint16_t y);
+    void wu(int16_t x, int16_t y);
     void fillNoise();
 
 public:
     void load() override;
-    String setDynCtrl(UIControl*_val) override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    String setDynCtrl(UIControl *_val) override;
+    bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
 };
-
 
 // ----------- Эффект "Звезды"
 // (c) SottNick
