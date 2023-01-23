@@ -835,7 +835,7 @@ private:
 #define MAX_DIMENSION max(WIDTH, HEIGHT)
     CRGBPalette16 currentPalette;
     const uint8_t _scale = 24;
-    const uint8_t _speed = 2;
+    const uint8_t _speed = 3;
 
     float hue = 0.;
     uint16_t x;
@@ -1411,7 +1411,7 @@ class EffectCell: public EffectCalc {
     void spider(CRGB *leds);
     void spruce(CRGB *leds);
     void vals(CRGB *leds);
-
+    void flower(CRGB *leds);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     String setDynCtrl(UIControl*_val) override;
@@ -2300,11 +2300,22 @@ public:
 
 class EffectFlower : public EffectCalc {
 	private:
-        uint32_t effTimer;
-        float ZVoffset = 0;
-        const float COLS_HALF = WIDTH * .5;
-        const float ROWS_HALF = HEIGHT * .5;
+        uint16_t mov;
+        int8_t zD;
+        int8_t zF;
+        uint8_t noise3d[WIDTH][HEIGHT];
+        uint32_t noise32_x;
+        uint32_t noise32_y;
+        uint32_t noise32_z;
+        uint32_t scale32_x;
+        uint32_t scale32_y;
+        uint8_t noisesmooth;
+
+        void NoiseFill();
+        void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0);
+        void MoveFractionalNoiseY(int8_t amplitude = 1, float shift = 0);
 	public:
+        void load() override;
         bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
