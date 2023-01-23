@@ -3586,7 +3586,7 @@ void EffectAquarium::nGlare(uint8_t bri)
     for (uint8_t j = 0; j < HEIGHT; j++)
     {
       uint8_t col = noise[1][i][j];
-      EffectMath::drawPixelXY(i, j,nblend(EffectMath::getPixel(i,j),  CHSV(hue, map(col, 0, 255, ~satur, satur), map(col, 0, 255, 255, bri)),32));
+      EffectMath::drawPixelXY(i, j,nblend(EffectMath::getPixel(i,j),  CHSV(hue, map(col, 0, 255, ~satur, satur), map(col, 0, 255, 255, bri)),64));
     }
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 100);
@@ -5743,6 +5743,9 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   case 6:
     vals(leds);
     break;
+  case 7:
+    flower(leds);
+    break;
   default:
     break;
   }
@@ -5791,6 +5794,17 @@ void EffectCell::vals(CRGB *leds) {
   for (byte i = 0; i < 12; i++) {
     EffectMath::drawLineF((float)beatsin88((10 + i) * speedFactor, 0, EffectMath::getmaxWidthIndex() * 2, i * i) / 2, (float)beatsin88((12 - i) * speedFactor, 0, EffectMath::getmaxHeightIndex() * 2, i * 5) / 2, (float)beatsin88((8 + i) * speedFactor, 0, EffectMath::getmaxWidthIndex() * 2, i * 20) / 2, (float)beatsin88((14 - i) * speedFactor, 0, EffectMath::getmaxHeightIndex() * 2, i * 5) / 2, CHSV(21 * i + (byte)a * i, 255, 255));
   }
+}
+
+void EffectCell::flower(CRGB *leds) {
+  uint32_t timer = (1+sin(radians((float)millis()/6000.0)))*12.5;
+	x += EffectMath::fmap((float)speed, 1, 255, 0.2, 6.0) * EffectCalc::speedfactor;
+  for (uint8_t i = 0; i < WIDTH; i++) {
+    for (uint8_t j = 0; j < HEIGHT; j++) {
+      uint8_t radius = sin8(pow((minDim/2)-0.5-i,2)+pow((minDim/2)-0.5-j,2));
+      EffectMath::drawPixelXY(i, j, CHSV(map(radius,maxDim/2,-3,125,255), 255,sin8(map(radius+(maxDim/2),-timer,maxDim/2,255,110)+x)));
+    }
+  } 
 }
 
 // ---------- Эффект "Тикси Ленд"
@@ -8474,19 +8488,99 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
-	effTimer = (1+sin(radians((float)millis()/6000)))*12.5;
-	ZVoffset += EffectMath::fmap((float)speed, 1, 255, 0.2, 6.0);;
-	
-  for (uint8_t x = 0; x < WIDTH; x++) {
-    for (uint8_t y = 0; y < HEIGHT; y++) {
-      uint8_t radius = sin8(pow(COLS_HALF-0.5-x,2)+pow(ROWS_HALF-0.5-y,2));
-      EffectMath::drawPixelXY(x, y, CHSV(map(radius,COLS_HALF,-3,125,255), 255,sin8(map(radius+COLS_HALF,-effTimer,COLS_HALF,255,110)+ZVoffset)));
+
+
+void EffectFlower::load() {
+  palettesload();
+  noise32_x = random16();
+  noise32_y = random16();
+  noise32_z = random16();
+  scale32_x = 160000/WIDTH;
+  scale32_y = 160000/HEIGHT;
+  NoiseFill();
+  for (uint8_t i = 0; i < WIDTH; i++) {
+   for (uint8_t j = 0; j < HEIGHT; j++) {
+      EffectMath::getPixel(i,j) = ColorFromPalette(*curPalette,~noise3d[i][j]*3);
     }
   } 
-	return true;
 }
 
+bool EffectFlower::run(CRGB *leds, EffectWorker *param) {
+  mov = maxDim * speed/4;
+  noise32_x += mov;
+  noise32_y += mov;
+  noise32_z += mov;
+  NoiseFill();
+  MoveFractionalNoiseX(WIDTH/8);
+  MoveFractionalNoiseY(HEIGHT/8);
+  return true;
+}
+
+void EffectFlower::NoiseFill() {
+  for (uint8_t i = 0; i < WIDTH; i++) {
+    int32_t ioffset = scale32_x * (i - CENTER_X_MINOR);
+    for (uint8_t j = 0; j < HEIGHT; j++) {
+      int32_t joffset = scale32_y * (j - CENTER_Y_MINOR);
+      int8_t data = inoise16(noise32_x + ioffset, noise32_y + joffset, noise32_z) >> 8;
+      int8_t olddata = noise3d[i][j];
+      int8_t newdata = scale8(olddata, noisesmooth) + scale8(data, 255 - noisesmooth);
+      data = newdata;
+      noise3d[i][j] = data;
+    }
+  }
+}
+
+void EffectFlower::MoveFractionalNoiseX(int8_t amplitude, float shift) {
+  CRGB ledsbuff[WIDTH];
+  for (uint8_t y = 0; y < HEIGHT; y++) {
+    int16_t amount = ((int16_t) noise3d[0][y] - 128) * 2 * amplitude + shift * 256;
+    int8_t delta = abs(amount) >> 8;
+    int8_t fraction = abs(amount) & 255;
+    for (uint8_t x = 0; x < WIDTH; x++) {
+      if (amount < 0) {
+        zD = x - delta;
+        zF = zD - 1;
+      } else {
+        zD = x + delta;
+        zF = zD + 1;
+      }
+      CRGB PixelA = CRGB::Black;
+      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(zD,y); else PixelA = ColorFromPalette(*curPalette,~noise3d[abs(zD)%WIDTH][y]*3);
+      CRGB PixelB = CRGB::Black;
+      if ((zF >= 0) && (zF < WIDTH)) PixelB = EffectMath::getPixel(zF,y); else PixelB = ColorFromPalette(*curPalette,~noise3d[abs(zF)%WIDTH][y]*3);
+      ledsbuff[x] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction))); // lerp8by8(PixelA, PixelB, fraction );
+    }
+    for (uint8_t x = 0; x < WIDTH; x++) {
+      EffectMath::getPixel(x,y) = ledsbuff[x];
+    }
+  }
+}
+
+void EffectFlower::MoveFractionalNoiseY(int8_t amplitude, float shift) {
+  CRGB ledsbuff[HEIGHT];
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    int16_t amount = ((int16_t) noise3d[x][0] - 128) * 2 * amplitude + shift * 256;
+    int8_t delta = abs(amount) >> 8;
+    int8_t fraction = abs(amount) & 255;
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      if (amount < 0) {
+        zD = y - delta;
+        zF = zD - 1;
+      } else {
+        zD = y + delta;
+        zF = zD + 1;
+      }
+      CRGB PixelA = CRGB::Black;
+      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(x,zD); else PixelA = ColorFromPalette(*curPalette, ~noise3d[x][abs(zD)%HEIGHT]*3); 
+      CRGB PixelB = CRGB::Black;
+      if ((zF >= 0) && (zF < WIDTH))PixelB = EffectMath::getPixel(x,zF);  else PixelB = ColorFromPalette(*curPalette, ~noise3d[x][abs(zF)%HEIGHT]*3);
+      ledsbuff[y] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+    }
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      EffectMath::getPixel(x,y) = ledsbuff[y];
+    }
+  }
+}
 
 #ifdef RGB_PLAYER
 // (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko
