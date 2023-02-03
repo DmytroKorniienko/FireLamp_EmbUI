@@ -1911,10 +1911,6 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
 
 
 // ------------------------------ ЭФФЕКТ МЕРЦАНИЕ ----------------------
-// (c) SottNick
-#define TWINKLES_SPEEDS 4     // всего 4 варианта скоростей мерцания
-#define TWINKLES_MULTIPLIER 24 // слишком медленно, если на самой медленной просто по единичке добавлять
-
 void EffectTwinkles::load(){
   palettesload();    // подгружаем дефолтные палитры
   setup();
@@ -1922,26 +1918,41 @@ void EffectTwinkles::load(){
 
 void EffectTwinkles::setup()
 {
-  //randomSeed(millis());
+  uint16_t listSize = 0;
   for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
-    if (random(0,255) < tnum) {                                // чем ниже tnum, тем чаще будут заполняться элементы лампы
-      ledsbuff[idx].r = random8();                           // оттенок пикселя
-      ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1); // скорость и направление (нарастает 1-4 или угасает 5-8)
-      ledsbuff[idx].b = random8();                           // яркость
+    if (random(0,255) < tnum) {
+      listSize++;
     }
-    else
-      ledsbuff[idx] = 0; // всё выкл
+  }
+
+  while (twinkles.size()<listSize){
+    TTWINKLE *el = new TTWINKLE();
+    el->pos = random16(NUM_LEDS);
+    el->color = random8();
+    el->brightness = random8();
+    el->direction = random8(2); //0...1
+    el->speed = random8(8); //0...7
+    twinkles.add(el);
+  }
+  while (twinkles.size()>listSize){
+    TTWINKLE *el = twinkles.shift();
+    delete el;
   }
 }
 
-// !++
+EffectTwinkles::~EffectTwinkles(){
+  while (twinkles.size()>0){
+    TTWINKLE *el = twinkles.shift();
+    delete el;
+  }
+}
+
 String EffectTwinkles::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 8);//((float)TWINKLES_MULTIPLIER * (float)EffectCalc::setDynCtrl(_val).toInt() / 380.0);
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 8)*speedfactor;
   else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 5, 132); setup(); } 
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
-
 
 bool EffectTwinkles::run(CRGB *ledarr, EffectWorker *opt){
   return twinklesRoutine(*&ledarr, &*opt);
@@ -1952,46 +1963,76 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
   if (curPalette == nullptr) {
     return false;
   }
-
-  for (uint16_t idx = 0; idx < NUM_LEDS; idx++)
-  {
-    if (ledsbuff[idx].b == 0)
-    {
-      if (random(0,255) < tnum && thue > 0)
-      {                                                         // если пиксель ещё не горит, зажигаем каждый ХЗй
-        ledsbuff[idx].r = random8();                            // оттенок пикселя
-        ledsbuff[idx].g = random8(1, TWINKLES_SPEEDS * 2 + 1);  // скорость и направление (нарастает 1-4, но не угасает 5-8)
-        ledsbuff[idx].b = ledsbuff[idx].g;                      // яркость
-        thue--;                                                 // уменьшаем количество погасших пикселей
+  FastLED.clear();
+  uint16_t it = 0;
+  while(it<twinkles.size()){
+    TTWINKLE *el = twinkles[it];
+    if(el->direction == DIR::FADEHI){ // підвищуємо яскравість
+      int16_t br = el->brightness;
+      br += (el->speed/8.0 + 1) * speedFactor;
+      if(br<255)
+        el->brightness = br;
+      else { 
+        el->brightness = 255;
+        el->direction = DIR::FADELOW;
+      }
+    } else { // зменьшуємо
+      int16_t br = el->brightness;
+      br -= (el->speed/8.0 + 1) * speedFactor;
+      if(br>0)
+        el->brightness = br;
+      else {
+        el->brightness = 0;
+        el->pos = random16(NUM_LEDS);
+        el->color = random8();
+        el->direction = DIR::FADEHI;
       }
     }
-    else if (ledsbuff[idx].g <= TWINKLES_SPEEDS)
-    { // если нарастание яркости
-      if (ledsbuff[idx].b > 255U - ledsbuff[idx].g - speedFactor)
-      { // если досигнут максимум
-        ledsbuff[idx].b = 255U;
-        ledsbuff[idx].g = ledsbuff[idx].g + TWINKLES_SPEEDS;
-      }
-      else
-        ledsbuff[idx].b = ledsbuff[idx].b + ledsbuff[idx].g + speedFactor;
-    }
-    else
-    { // если угасание яркости
-      if (ledsbuff[idx].b <= ledsbuff[idx].g - TWINKLES_SPEEDS + speedFactor)
-      {                      // если досигнут минимум
-        ledsbuff[idx].b = 0; // всё выкл
-        thue++;              // считаем количество погасших пикселей
-      }
-      else
-        ledsbuff[idx].b = ledsbuff[idx].b - ledsbuff[idx].g + TWINKLES_SPEEDS - speedFactor;
-    }
-    if (ledsbuff[idx].b == 0)
-      EffectMath::getLed(idx) = CRGB::Black;
-    else
-      EffectMath::getLed(idx) = ColorFromPalette(*curPalette, ledsbuff[idx].r, ledsbuff[idx].b);
-    }
-  EffectMath::blur2d(32); // так они не только разгороються, но и раздуваються. Красивше :)
+    EffectMath::getLed(el->pos) = ColorFromPalette(*curPalette, el->color, el->brightness);
+    it++;
+  }
+  EffectMath::blur2d(32);
   return true;
+
+  // for (uint16_t idx = 0; idx < NUM_LEDS; idx++)
+  // {
+  //   if (ledsbuff[idx].b == 0)
+  //   {
+  //     if (random(0,255) < tnum && thue > 0)
+  //     {                                                         // если пиксель ещё не горит, зажигаем каждый ХЗй
+  //       ledsbuff[idx].r = random8();                            // оттенок пикселя
+  //       ledsbuff[idx].g = random8(1, 8);  // скорость и направление (нарастает 1-4, но не угасает 5-8)
+  //       ledsbuff[idx].b = ledsbuff[idx].g;                      // яркость
+  //       thue--;                                                 // уменьшаем количество погасших пикселей
+  //     }
+  //   }
+  //   else if (ledsbuff[idx].g <= 4)
+  //   { // если нарастание яркости
+  //     if (ledsbuff[idx].b > 255U - ledsbuff[idx].g - speedFactor)
+  //     { // если досигнут максимум
+  //       ledsbuff[idx].b = 255U;
+  //       ledsbuff[idx].g = ledsbuff[idx].g + 4;
+  //     }
+  //     else
+  //       ledsbuff[idx].b = ledsbuff[idx].b + ledsbuff[idx].g + speedFactor;
+  //   }
+  //   else
+  //   { // если угасание яркости
+  //     if (ledsbuff[idx].b <= ledsbuff[idx].g - 4 + speedFactor)
+  //     {                      // если досигнут минимум
+  //       ledsbuff[idx].b = 0; // всё выкл
+  //       thue++;              // считаем количество погасших пикселей
+  //     }
+  //     else
+  //       ledsbuff[idx].b = ledsbuff[idx].b - ledsbuff[idx].g + 4 - speedFactor;
+  //   }
+  //   if (ledsbuff[idx].b == 0)
+  //     EffectMath::getLed(idx) = CRGB::Black;
+  //   else
+  //     EffectMath::getLed(idx) = ColorFromPalette(*curPalette, ledsbuff[idx].r, ledsbuff[idx].b);
+  //   }
+  // EffectMath::blur2d(32); // так они не только разгороються, но и раздуваються. Красивше :)
+  // return true;
 }
 
 // ============= RADAR / РАДАР ===============

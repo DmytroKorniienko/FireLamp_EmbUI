@@ -512,17 +512,30 @@ public:
 // (c) SottNick
 class EffectTwinkles : public EffectCalc {
 private:
-  uint8_t thue = 0U;
-  uint8_t tnum;
-  CRGB ledsbuff[NUM_LEDS];
+  typedef enum _DIR {FADEHI,FADELOW} DIR;
+  typedef struct _TTWINKLE {
+    uint16_t pos; // позиція може співпадати, не перевіряємо щоб працювало швидко
+    uint8_t color; // колір в палітрі
+    uint8_t brightness; // яскравість
+    union {
+        struct {
+            uint8_t direction:1;
+            uint8_t speed:3; // 0...7
+        };
+        uint8_t data;
+    };
+  } TTWINKLE;
+  LList<TTWINKLE *> twinkles;
+
+  uint16_t tnum;
   float speedFactor;
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
-  //void setscl(const byte _scl) override;
 public:
     void load() override;
     void setup();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    virtual ~EffectTwinkles();
 };
 
 class EffectWaves : public EffectCalc {
