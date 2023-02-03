@@ -2902,7 +2902,10 @@ void set_mp3flag(Interface *interf, JsonObject *data){
 void set_mp3volume(Interface *interf, JsonObject *data){
     if (!data) return;
     int volume = (*data)[FPSTR(TCONST_00A2)];
-    SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume(volume));
+    SETPARAM(FPSTR(TCONST_00A2), mp3->setVolume(volume%31));
+#ifdef EMBUI_USE_MQTT
+    embui.publish(String(FPSTR(TCONST_008B)) + FPSTR(CMD_TCONST_0024), String(mp3->getVolume()), true);
+#endif
 }
 
 void set_mp3_player(Interface *interf, JsonObject *data){
@@ -4034,6 +4037,9 @@ void remote_action(RA action, ...){
             obj[FPSTR(TCONST_00D5)] = "0"; // не озвучивать время
             CALL_INTF(FPSTR(TCONST_009D), value, set_mp3flag);
             break;
+        case RA::RA_MP3_VOLUME:
+            CALL_INTF(FPSTR(TCONST_00A2), value, set_mp3volume);
+            break;
 #endif
 #ifdef MIC_EFFECTS
         case RA::RA_MIC:
@@ -4405,6 +4411,8 @@ String httpCallback(const String &param, const String &value, bool isset){
             { result = String(mp3->getCurPlayingNb()); }
         else if (cmdParam == FPSTR(CMD_TCONST_0006)) { action = RA_MP3_PREV; remote_action(action, "1", NULL); }
         else if (cmdParam == FPSTR(CMD_TCONST_0007)) { action = RA_MP3_NEXT; remote_action(action, "1", NULL); }
+        else if (cmdParam == FPSTR(CMD_TCONST_0024)) 
+            { result = String(mp3->getVolume()); }
 #endif
 #ifdef MIC_EFFECTS
         else if (cmdParam == FPSTR(CMD_TCONST_0008)) 
@@ -4520,6 +4528,7 @@ String httpCallback(const String &param, const String &value, bool isset){
         else if (cmdParam == FPSTR(CMD_TCONST_0006)) action = RA_MP3_PREV;
         else if (cmdParam == FPSTR(CMD_TCONST_0007)) action = RA_MP3_NEXT;
         else if (cmdParam == FPSTR(CMD_TCONST_0005)) action = RA_MP3_SOUND;
+        else if (cmdParam == FPSTR(CMD_TCONST_0024)) action = RA_MP3_VOLUME;
         else if (cmdParam == FPSTR(CMD_TCONST_0004)) action = RA_PLAYERONOFF;
 #endif
 #ifdef MIC_EFFECTS
