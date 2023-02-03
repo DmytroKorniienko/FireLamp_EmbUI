@@ -7499,9 +7499,9 @@ void EffectStarShips::MoveX(uint8_t am = 128, int8_t amplitude = 1, float shift 
         zD = x + delta; zF = zD + 1;
       }
       CRGB PixelA = CRGB::Black  ;
-      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(zD, y);
+      if ((zD >= 0) && (zD < (int8_t)WIDTH)) PixelA = EffectMath::getPixel(zD, y);
       CRGB PixelB = CRGB::Black ;
-      if ((zF >= 0) && (zF < WIDTH)) PixelB = EffectMath::getPixel(zF, y);
+      if ((zF >= 0) && (zF < (int8_t)WIDTH)) PixelB = EffectMath::getPixel(zF, y);
       ledsbuff[x] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));   // lerp8by8(PixelA, PixelB, fraction );
     }
     for(uint8_t x = 0; x < WIDTH; x++){
@@ -7522,9 +7522,9 @@ void EffectStarShips::MoveY(uint8_t am = 128, int8_t amplitude = 1, float shift 
         zD = y + delta; zF = zD + 1;
       }
       CRGB PixelA = CRGB::Black ;
-      if ((zD >= 0) && (zD < HEIGHT)) PixelA = EffectMath::getPixel(x, zD);
+      if ((zD >= 0) && (zD < (int8_t)HEIGHT)) PixelA = EffectMath::getPixel(x, zD);
       CRGB PixelB = CRGB::Black ;
-      if ((zF >= 0) && (zF < HEIGHT)) PixelB = EffectMath::getPixel(x, zF);
+      if ((zF >= 0) && (zF < (int8_t)HEIGHT)) PixelB = EffectMath::getPixel(x, zF);
       ledsbuff[y] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
     }
     for(uint8_t y = 0; y < HEIGHT; y++){
@@ -8146,9 +8146,6 @@ bool EffectPuzzles::run(CRGB *leds, EffectWorker *param) {
 
 // ============= Ефект Кольорові драже ===============
 // (c)stepko
-																				 
-																									   
-	  
 String EffectPile::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 200);
   else if(_val->getId()==2) _scale = EffectCalc::setDynCtrl(_val).toInt();
@@ -8161,25 +8158,18 @@ void EffectPile::load() {
 }
 
 void EffectPile::changeFrame() {
-  memcpy(F[0], F[1], WIDTH * HEIGHT);
-				 
-																												  
-    uint8_t temp = map8(random(256), _scale, 255U);
+  memcpy(F[0], F[1], WIDTH * HEIGHT);																						  
+  uint8_t temp = map8(random(256), _scale, 255U);
   if (pcnt >= map8(temp, 2U, HEIGHT - 3U)) {
-							 
-							   
     temp = HEIGHT + 1U - pcnt;
     if (!random8(4U))
-      if (random8(2U))
-        temp = 2U;
-      else
-        temp = 3U;
+      temp = (random8(2U))? 2U : 3U;
     for (byte y = 0; y < pcnt; y++) {
-    for (byte x = 0; x < WIDTH; x++) {
-      if(random(255)%3) F[1][x][y] = 0;
+      for (byte x = 0; x < WIDTH; x++) {
+        if(random(255)%3) F[1][x][y] = 0;
+      }
     }
   }
-}
 pcnt = 0;
   for (byte y = 0; y < HEIGHT; y++) {
     for (byte x = 0; x < WIDTH; x++) {
@@ -8188,12 +8178,7 @@ pcnt = 0;
       else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x + 1][y - 1]  && !(x==WIDTH-1) && y) {F[1][x + 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
        else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x - 1][y - 1] && x && y) {F[1][x - 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
         else if (pcnt < y) pcnt = y;
-    }
-											  
-									  
-										 
-						  
-										
+    }									
   }
   if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][HEIGHT - 1] = random(16, 255);
 }
@@ -8586,9 +8571,9 @@ void EffectFlower::MoveFractionalNoiseX(int8_t amplitude, float shift) {
         zF = zD + 1;
       }
       CRGB PixelA = CRGB::Black;
-      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(zD,y); else PixelA = ColorFromPalette(*curPalette,~noise3d[abs(zD)%WIDTH][y]*3);
+      if ((zD >= 0) && (zD < (int8_t)WIDTH)) PixelA = EffectMath::getPixel(zD,y); else PixelA = ColorFromPalette(*curPalette,~noise3d[abs(zD)%WIDTH][y]*3);
       CRGB PixelB = CRGB::Black;
-      if ((zF >= 0) && (zF < WIDTH)) PixelB = EffectMath::getPixel(zF,y); else PixelB = ColorFromPalette(*curPalette,~noise3d[abs(zF)%WIDTH][y]*3);
+      if ((zF >= 0) && (zF < (int8_t)WIDTH)) PixelB = EffectMath::getPixel(zF,y); else PixelB = ColorFromPalette(*curPalette,~noise3d[abs(zF)%WIDTH][y]*3);
       ledsbuff[x] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction))); // lerp8by8(PixelA, PixelB, fraction );
     }
     for (uint8_t x = 0; x < WIDTH; x++) {
@@ -8612,9 +8597,9 @@ void EffectFlower::MoveFractionalNoiseY(int8_t amplitude, float shift) {
         zF = zD + 1;
       }
       CRGB PixelA = CRGB::Black;
-      if ((zD >= 0) && (zD < WIDTH)) PixelA = EffectMath::getPixel(x,zD); else PixelA = ColorFromPalette(*curPalette, ~noise3d[x][abs(zD)%HEIGHT]*3); 
+      if ((zD >= 0) && (zD < (int8_t)HEIGHT)) PixelA = EffectMath::getPixel(x,zD); else PixelA = ColorFromPalette(*curPalette, ~noise3d[x][abs(zD)%HEIGHT]*3); 
       CRGB PixelB = CRGB::Black;
-      if ((zF >= 0) && (zF < WIDTH))PixelB = EffectMath::getPixel(x,zF);  else PixelB = ColorFromPalette(*curPalette, ~noise3d[x][abs(zF)%HEIGHT]*3);
+      if ((zF >= 0) && (zF < (int8_t)HEIGHT))PixelB = EffectMath::getPixel(x,zF);  else PixelB = ColorFromPalette(*curPalette, ~noise3d[x][abs(zF)%HEIGHT]*3);
       ledsbuff[y] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
     }
     for (uint8_t y = 0; y < HEIGHT; y++) {
