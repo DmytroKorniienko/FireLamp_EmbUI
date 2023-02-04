@@ -1918,12 +1918,12 @@ void EffectTwinkles::load(){
 
 void EffectTwinkles::setup()
 {
-  uint16_t listSize = 0;
-  for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
-    if (random(0,255) < tnum) {
-      listSize++;
-    }
-  }
+  uint16_t listSize = tnum;
+  // for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
+  //   if (random(0,255) < tnum) {
+  //     listSize++;
+  //   }
+  // }
 
   while (twinkles.size()<listSize){
     TTWINKLE *el = new TTWINKLE();
@@ -1949,7 +1949,7 @@ EffectTwinkles::~EffectTwinkles(){
 
 String EffectTwinkles::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 8)*speedfactor;
-  else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 5, 132); setup(); } 
+  else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, NUM_LEDS/2); setup(); } 
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
