@@ -514,16 +514,16 @@ class EffectTwinkles : public EffectCalc {
 private:
   typedef enum _DIR {FADEHI,FADELOW} DIR;
   typedef struct _TTWINKLE {
-    uint16_t pos; // позиція може співпадати, не перевіряємо щоб працювало швидко
-    uint8_t color; // колір в палітрі
-    uint8_t brightness; // яскравість
     union {
         struct {
-            uint8_t direction:1;
-            uint8_t speed:3; // 0...7
+            uint16_t pos:12; // позиція може співпадати, не перевіряємо щоб працювало швидко, 4096 элементів ліміт ефекта
+            uint16_t direction:1;
+            uint16_t speed:3; // 0...7
         };
-        uint8_t data;
+        uint16_t data;
     };
+    uint8_t color; // колір в палітрі
+    uint8_t brightness; // яскравість
   } TTWINKLE;
   LList<TTWINKLE *> twinkles;
 
