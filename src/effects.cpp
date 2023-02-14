@@ -3563,7 +3563,27 @@ void EffectAquarium::nDrops(uint8_t bri)
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 128);
 }
 
-void EffectAquarium::nGlare(uint8_t bri)
+void EffectAquarium::nGlare(uint8_t bri) {
+
+  fill_solid(currentPalette, 16, CHSV(hue, satur, bri));
+  currentPalette[10] = CHSV(hue, satur - 60, 225);
+  currentPalette[9] = CHSV(hue, 255 - satur, 180);
+  currentPalette[8] = CHSV(hue, 255 - satur, 180);
+  currentPalette[7] = CHSV(hue, satur - 60, 225);
+
+  fillNoise();
+
+ for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    for (uint8_t y = 0; y < HEIGHT; y++)
+    {
+      EffectMath::drawPixelXY(x, y,  ColorFromPalette(currentPalette,noise[0][x][y]));
+    }
+  }
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 100);
+}
+
+void EffectAquarium::nTest(uint8_t bri)
 {
 
   fillNoise();
@@ -3590,7 +3610,6 @@ void EffectAquarium::nGlare(uint8_t bri)
       EffectMath::drawPixelXY(i, j,nblend(EffectMath::getPixel(i,j),  CHSV(hue, map(col, 0, 255, ~satur, satur), map(col, 0, 255, 255, bri)),64));
     }
   }
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, 100);
 }
 
 void EffectAquarium::fillNoise()
@@ -3653,6 +3672,9 @@ bool EffectAquarium::run(CRGB *leds, EffectWorker *param)
     break;
   case 2:
     nGlare(_video);
+    break;
+  case 3:
+    nTest(_video);
     break;
   default:
     nDrops(_video);
