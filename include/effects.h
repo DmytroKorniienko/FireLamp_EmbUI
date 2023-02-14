@@ -48,8 +48,7 @@ const byte minDim = min(WIDTH, HEIGHT);
 const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
 const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
 
-
-//-------------- Специально обученный пустой эффект :)
+//===== Спеціально навчений пустий ефект :) ====//
 class EffectNone : public EffectCalc {
 private:
     void load() override { FastLED.clear(); };
@@ -57,15 +56,15 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override {return true;};
 };
 
-//-------------- Эффект "Часы"
+//===== Ефект Годинник =========================//
 class EffectTime : public EffectCalc {
 private:
-    bool timeShiftDir; // направление сдвига
-    float curTimePos; // текущая позиция вывода
-    float color_idx; // индекс цвета
-    CRGB hColor[1]; // цвет часов и минут
-    CRGB mColor[1]; // цвет часов и минут
-    uint32_t lastrun=0;     /**< счетчик времени для эффектов с "задержкой" */
+    bool timeShiftDir; // Напрямок зсуву
+    float curTimePos;  // Позиція вводу
+    float color_idx;   // Індекс кольору
+    CRGB hColor[1];    // Колір годин
+    CRGB mColor[1];    // Колір хвилин
+    uint32_t lastrun=0;// Лічильник часу для ефектів з "затримкою"
     bool isMinute=false;
 
     bool timePrintRoutine(CRGB *leds, EffectWorker *param);
@@ -75,10 +74,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//===== Ефект Метасфери ========================//
 /*
- ***** METABALLS / МЕТАСФЕРЫ *****
-Metaballs proof of concept by Stefan Petrick 
-https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
+ Metaballs proof of concept by Stefan Petrick 
+ https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
 */
 class EffectMetaBalls : public EffectCalc {
 private:
@@ -91,11 +90,12 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ***** SINUSOID3 / СИНУСОИД3 *****
+//===== Ефект Синусоїд =========================//
 /*
-  Sinusoid3 by Stefan Petrick
-  read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
+ Sinusoid3 by Stefan Petrick
+ read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
+//Sinusoid I,II,IV recreation by Stepko
 class EffectSinusoid3 : public EffectCalc {
 private:
 	const uint8_t semiHeightMajor =  HEIGHT / 2 + (HEIGHT % 2);
@@ -111,10 +111,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-
-
-//----- Эффект "Прыгающие Мячики"
-// перевод на субпиксельную графику kostyamat
+//===== Ефект Стрибаючі м'ячики ================//
+// переведено на субпіксельну графіку kostyamat
 class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
@@ -141,7 +139,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- Эффект "Пейнтбол" -------------
+//===== Ефект Пейнтбол =========================//
 class EffectLightBalls : public EffectCalc {
 private:
 	#define BORDERTHICKNESS       (1U)   // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
@@ -155,7 +153,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------- Эффект "Пульс"
+//===== Ефект Пульс ============================//
 class EffectPulse : public EffectCalc {
 private:
     uint8_t pulse_hue;
@@ -171,7 +169,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- эффект "Блуждающий кубик" -------------
+//===== Ефект Блукаючий кубик ==================//
 class EffectBall : public EffectCalc {
 private:
     uint8_t ballSize;
@@ -188,7 +186,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// -------- Эффект "Светлячки со шлейфом"
+//===== Ефект Світлячки зі шлейфом =============//
 #define _AMOUNT 16U
 class EffectLighterTracers : public EffectCalc {
 private:
@@ -206,6 +204,7 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
+//===== Ефект Веселка ==========================//
 class EffectRainbow : public EffectCalc {
 private:
     float hue; // вещественное для малых скоростей, нужно приведение к uint8_t по месту
@@ -219,6 +218,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//===== Ефект Кольори ==========================//
 class EffectColors : public EffectCalc {
 private:
     uint8_t ihue;
@@ -233,7 +233,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффект "Белая Лампа"
+//===== Ефект Біла лампа =======================//
 class EffectWhiteColorStripe : public EffectCalc {
 private:
     uint8_t shift=0;
@@ -243,7 +243,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Конфетти"
+//===== Ефект Конфеті ==========================//
 class EffectSparcles : public EffectCalc {
 private:
     uint8_t eff = 1;
@@ -254,8 +254,7 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ========== Эффект "Эффектопад"
-// совместное творчество юзеров форума community.alexgyver.ru
+//===== Ефект Ефектопад ========================//
 class EffectEverythingFall : public EffectCalc {
 private:
     byte heat[WIDTH][HEIGHT];
@@ -265,12 +264,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= FIRE 2012 /  ОГОНЬ 2012 ===============
-// based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
-/*
- * Эффект "Огонь 2012"
- */
+//===== Ефект Вогонь 2012 ======================//
+// based on FastLED example Fire2012WithPalette
+// https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
+// Updated by SottNick 17.04.2020
 class EffectFire2012 : public EffectCalc {
 private:
 #define NUMPALETTES 10
@@ -293,8 +290,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- класс Светлячки -------------
-// нужен для некоторых эффектов
+//===== Клас "Світлячків" ======================//
+// потрібний для деяких ефектів
 class EffectLighters : public EffectCalc {
 protected:
     uint8_t cnt = 1;
@@ -312,7 +309,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- Эффект "New Матрица" ---------------
+//===== Ефект Матриця ==========================//
+// (c)Kostyamat
 class EffectMatrix : public EffectLighters {
 private:
     bool matrixRoutine(CRGB *leds, EffectWorker *param);
@@ -329,7 +327,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- звездопад/метель -------------
+//===== Ефект Хурделиця, Зіркопад, Метеори =====//
+// (c)Kostyamat
 class EffectStarFall : public EffectLighters {
 private:
     uint8_t _scale = 1;
@@ -345,7 +344,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффекты "Лава, Зебра, etc"
+//===== Ефект Шум 3D ===========================//
 class Effect3DNoise : public EffectCalc {
 private:
     void fillNoiseLED();
@@ -371,13 +370,10 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ***** Эффект "Спираль"     ****
-/*
- * Aurora: https://github.com/pixelmatix/aurora
- * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
- * Copyright (c) 2014 Jason Coon
- * Неполная адаптация SottNick
- */
+//===== Ефект Спіраль ==========================//
+// https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
+// Copyright (c) 2014 Jason Coon
+// Перевів на субпіксель Stepko
 class EffectSpiro : public EffectCalc {
 private:
   const float spirocenterX = WIDTH /2-0.5; //(!(WIDTH & 1) ? (WIDTH -1) : WIDTH) / 2;
@@ -396,8 +392,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= ЭФФЕКТ ПРИЗМАТА ===============
-// Prismata Loading Animation
+//===== Ефект Призмата =========================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternPendulumWave.h
+// Copyright (c) 2014 Jason Coon
+// Перевів на субпіксель Kostyamat
 class EffectPrismata : public EffectCalc {
 private:
     byte spirohueoffset = 0;
@@ -410,8 +408,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= ЭФФЕКТ СТАЯ ===============
-// Адаптация от (c) SottNick
+//===== Ефект Стадо та хижак ===================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternFlock.h
+// Copyright (c) 2014 Jason Coon
+// Адаптація (c)SottNick
 class EffectFlock : public EffectCalc {
 private:
   Boid boids[AVAILABLE_BOID_COUNT];
@@ -430,9 +430,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
-// ***** Парящий огонь, Кровавые Небеса, Радужный Змей и т.п.
-// базис (c) Stefan Petrick
+//===== Ефект Комети, Витаючі Вогні ++ =========//
+// Фундамент (c) Stefan Petrick
 class EffectComet : public EffectCalc {
 private:
     byte hue;
@@ -474,7 +473,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= SWIRL /  ВОДОВОРОТ ===============
+//===== Ефект Водоверть ========================//
 // https://gist.github.com/kriegsman/5adca44e14ad025e6d3b
 // Copyright (c) 2014 Mark Kriegsman
 class EffectSwirl : public EffectCalc {
@@ -486,10 +485,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= DRIFT / ДРИФТ ===============
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
-// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
+//===== Ефект Дрифт ============================//
 // https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
+// Copyright(c) 2014 Jason Coon
+// Subpixel ver by Stepko
 class EffectDrift : public EffectCalc {
 private:
 	const byte maxDim_steps = 256 / max(WIDTH, HEIGHT);
@@ -508,8 +507,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------------------------ ЭФФЕКТ МЕРЦАНИЕ ----------------------
-// (c) SottNick
+//===== Ефект Мерехтіння =======================//
+// Ідея від SottNick
 class EffectTwinkles : public EffectCalc {
 private:
   typedef enum _DIR {FADEHI,FADELOW} DIR;
@@ -551,8 +550,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= RADAR / РАДАР ===============
-// Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternRadar.h
+//===== Ефект Радар ============================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternRadar.h
 // Copyright(c) 2014 Jason Coon
 class EffectRadar : public EffectCalc {
 private:
@@ -570,6 +569,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//===== Ефект Вогонь 2018 ======================//
+// https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
+// https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
+// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
 class EffectFire2018 : public EffectCalc {
 private:
   const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
@@ -590,7 +593,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// -------------- Эффект "Кодовый замок"
+//===== Ефект Кодовий замок ====================//
 // (c) SottNick
 class EffectRingsLock : public EffectCalc {
 private:
@@ -613,7 +616,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
+//===== Ефект Куб 2D ===========================//
 // (c) SottNick
 // refactored by Vortigont
 class EffectCube2d : public EffectCalc {
@@ -649,7 +652,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффекты "Пикассо"
+//===== Ефект Пікассо ==========================//
 // (c) obliterator
 class EffectPicasso : public EffectCalc {
     typedef struct Particle{
@@ -670,10 +673,6 @@ private:
     void generate(bool reset = false);
     void position();
     bool picassoRoutine(CRGB *leds, EffectWorker *param);
-    /*
-    bool picassoRoutine2(CRGB *leds, EffectWorker *param);
-    bool picassoRoutine3(CRGB *leds, EffectWorker *param);
-    */
     bool metaBallsRoutine(CRGB *leds, EffectWorker *param);
     GradientPaletteList *palettes;
 public:
@@ -718,7 +717,7 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ------ Эффект "Прыгуны" (c) obliterator
+//===== Ефект Стрибуни =========================//
 class EffectLeapers : public EffectCalc {
     typedef struct Leaper{
         float x, y;
@@ -741,7 +740,7 @@ public:
 
 };
 
-// ------ Эффект "Лавовая Лампа"
+//===== Ефект Лавова лампа =====================//
 // (c) obliterator
 class EffectLiquidLamp : public EffectCalc {
     typedef struct Particle{
@@ -813,10 +812,10 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ------- Эффект "Вихри"
-// Based on Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
+//===== Ефект Вихорі ===========================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
 // Copyright(c) 2014 Jason Coon
-//адаптация SottNick
+// адаптація SottNick
 class EffectWhirl : public EffectCalc {
 private:
     float ff_x;
@@ -837,11 +836,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- Ефект "Відблиски на воді"
+//===== Ефект Відблиски на воді ================//
 // Ідея SottNick
-// переписані на програмні відблиски - (c) kostyamat
-// Генератор відблисків - (c) stepko
-
+// переписані на програмні відблиски - (c)Kostyamat
+// Генератор відблисків - (c)Stepko
 class EffectAquarium : public EffectCalc
 {
 private:
@@ -867,6 +865,7 @@ private:
 
     void nGlare(uint8_t bri);
     void nDrops(uint8_t bri);
+    void nTest(uint8_t bri);
     void wu(int16_t x, int16_t y);
     void fillNoise();
 
@@ -876,8 +875,11 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
 };
 
-// ----------- Эффект "Звезды"
-// (c) SottNick
+//===== Ефект Зірки ============================//
+// https://github.com/marcmerlin/NeoMatrix-FastLED-IR/blob/master/Table_Mark_Estes_Impl.h
+// https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/LEDMatrix/Table_Mark_Estes/Table_Mark_Estes.ino
+// (c)Marc Merlin
+// Адаптація (c)SottNick
 #define STARS_NUM (16)
 class EffectStar : public EffectCalc {
 private:
@@ -905,9 +907,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//---------- Эффект "Фейерверк"
-//адаптация и переписал - kostyamat
-//https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
+//===== Ефект Феєрверк =========================//
+// https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
+// адаптований і переписаний Kostyamat
 class EffectFireworks : public EffectCalc {
 private:
     DOTS_STORE store;
@@ -927,12 +929,12 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------ Эффект "Тихий Океан"
-//  "Pacifica" перенос кода kostyamat
+//===== Ефект Тихий Океан ======================//
+// https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
 //  Gentle, blue-green ocean waves.
 //  December 2019, Mark Kriegsman and Mary Corey March.
 //  For Dan.
-// https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
+//  "Pacifica" перенос коду kostyamat
 class EffectPacific : public EffectCalc {
 private:
 	uint32_t speedFactor;
@@ -947,7 +949,8 @@ public:
 };
 
 #ifdef MIC_EFFECTS
-//----- Эффект "Осциллограф" 
+
+//===== Ефект Осцилограф =======================// 
 // (c) kostyamat
 class EffectOsc : public EffectCalc {
 private:
@@ -962,13 +965,13 @@ private:
     
 
 public:
-    //void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 #endif
 
-// ------ Эффект "Вышиванка" 
-// (с) проект Aurora "Munch"
+//===== Ефект Вишиванка ========================// 
+// https://github.com/pixelmatix/aurora/blob/master/PatternMunch.h
+// Copyright(c) 2014 Jason Coon
 class EffectMunch : public EffectCalc {
 private:
     byte count = 0;
@@ -988,7 +991,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффект "Цветной шум" 
+//===== Ефект Кольоровий шум ===================//
 // (с) https://gist.github.com/StefanPetrick/c856b6d681ec3122e5551403aabfcc68
 class EffectNoise : public EffectCalc {
 private:
@@ -1011,7 +1014,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Мотыльки"
+//===== Ефект Метелики =========================//
 // (с) SottNick
 class EffectButterfly : public EffectCalc {
 private:
@@ -1039,7 +1042,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Тени"
+//===== Ефект Тіні =============================//
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
 class EffectShadows : public EffectCalc {
 private:
@@ -1051,10 +1054,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---- Эффект "Узоры"
+//===== Ефект Візерунки ========================//
+// Ідея https://github.com/vvip-68/GyverPanelWiFi/
 // (c) kostyamat (Kostyantyn Matviyevskyy) 2020
-// переделано kDn
-// идея отсюда https://github.com/vvip-68/GyverPanelWiFi/
+// перероблено kDn
 class EffectPatterns : public EffectCalc {
 private:
     int8_t patternIdx = -1;
@@ -1095,9 +1098,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-
-// ***************************** "Стрелки" *****************************
-// взято отсюда https://github.com/vvip-68/GyverPanelWiFi/
+//===== Ефект Стрілки ==========================//
+// https://github.com/vvip-68/GyverPanelWiFi/
 class EffectArrows : public EffectCalc {
 private:
     float arrow_x[4], arrow_y[4], stop_x[4], stop_y[4];
@@ -1126,8 +1128,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффект "Дикие шарики"
-// (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
+//===== Ефект Дикі кульки ======================//
+// https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
 class EffectNBals : public EffectCalc {
 private:
     uint8_t lastSecond = 99;
@@ -1145,9 +1147,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------ Эффект "Притяжение"
-// project Aurora
-// доведено до ума - kostyamat
+//===== Ефект Притягування =====================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternAttract.h
+// причесав kostyamat
 class EffectAttract : public EffectCalc {
 private:
     const uint8_t spirocenterX = WIDTH / 2;
@@ -1165,7 +1167,6 @@ private:
     PVector location;   // Location
     String setDynCtrl(UIControl*_val) override;
     void setup();
-
 
     PVector attract(Boid m) {
         PVector force = location - m.location;   // Calculate direction of force
@@ -1187,8 +1188,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//------------ Эффект "Змейки"
-// вариант субпикселя и поведения от kDn
+//===== Ефект Змійки ===========================//
+// варіант субпікселя і поведінка від kDn
 class EffectSnake : public EffectCalc {
 private:
     float hue;
@@ -1297,7 +1298,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//------------ Эффект "Nexus"
+//===== Ефект Nexus ============================//
 // База паттерн "Змейка" из проекта Аврора, 
 // перенос и переписан - kostyamat
 #define NEXUS (WIDTH)
@@ -1326,9 +1327,9 @@ class EffectNexus: public EffectCalc {
     void load() override;
 };
 
-// ----------- Эфеект "Змеиный Остров"
-// (c) Сотнег
-// адаптация и доработки kostyamat
+//===== Ефект Зміїний острів ===================//
+// (c)SottNick
+// адаптація і допороблення kostyamat
 class EffectTest : public EffectCalc {
 private:
 //#define MAX_SNAKES    (WIDTH * 2)          // максимальное количество червяков
@@ -1351,9 +1352,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эфеект "Попкорн"
+//===== Ефект Попкорн ==========================//
 // (C) Aaron Gotwalt (Soulmate)
-// адаптация и доработки kostyamat
+// адаптація і дороблення kostyamat
 class EffectPopcorn : public EffectCalc {
 private:
     uint8_t numRockets = 10;
@@ -1382,8 +1383,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//-------- Эффект "Детские сны"
-// (c) Stepko https://editor.soulmatelights.com/gallery/505
+//===== Ефект Полумняні мрії ===================//
+// https://editor.soulmatelights.com/gallery/505
+// (с)stepko
 #define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
@@ -1402,9 +1404,10 @@ class EffectSmokeballs: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Ёлки-Палки"
-// "Cell" (C) Elliott Kember из примеров программы Soulmate
-// Spaider и Spruce (c) stepko
+//===== Ефект Клітинки-ялинки ==================//
+// Cell (C)Elliott Kember from Soulmate-IDE examples
+// Spider, Spruce, Lines (c)stepko
+// Flowering (c)Taras Yuzov
 class EffectCell: public EffectCalc {
   private:
     const uint8_t Lines = 5;
@@ -1430,8 +1433,9 @@ class EffectCell: public EffectCalc {
     String setDynCtrl(UIControl*_val) override;
 };
 
-// ---------- Эффект "Тикси Ленд"
-// (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
+//===== Ефект Тіксі Ленд =======================//
+// https://github.com/owenmcateer/tixy.land-display
+// (c)Martin Kleppe @aemkei
 class EffectTLand: public EffectCalc {
   private:
     bool isSeq = false;
@@ -1450,8 +1454,8 @@ class EffectTLand: public EffectCalc {
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Осцилятор"
-// (c) Сотнег (SottNick)
+//===== Ефект Осцилятор ========================//
+// (c)SottNick
 class EffectOscilator: public EffectCalc {
   private:
     uint8_t hue, hue2;                                 // постепенный сдвиг оттенка или какой-нибудь другой цикличный счётчик
@@ -1481,8 +1485,8 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//------------ Эффект "Шторм" 
-// (с) kostyamat 1.12.2020
+//===== Ефект Шторм ============================// 
+// (с)kostyamat 1.12.2020
 #define counts  (WIDTH*3)
 
 class EffectWrain: public EffectCalc {
@@ -1519,14 +1523,12 @@ class EffectWrain: public EffectCalc {
     void load() override;
 };
 
-//-------- по мотивам Эффектов Particle System -------------------------
+//===== За мотивами ефектів Particle System ====//
 // https://github.com/fuse314/arduino-particle-sys
 // https://github.com/giladaya/arduino-particle-sys
 // https://www.youtube.com/watch?v=S6novCRlHV8&t=51s
-//при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
-//ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
 
-// ============= ЭФФЕКТ Фея/Источник ===============
+//===== Ефекти Фея і Джерело ====================//
 // (c) SottNick
 
 #define trackingOBJECT_MAX_COUNT    (WIDTH * 3)  // максимальное количество отслеживаемых объектов (очень влияет на расход памяти)
@@ -1571,9 +1573,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---------- Эффект "Бульбулятор"
-// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
-// адаптация и переделка - kostyamat
+//===== Ефект Бульбулятор ======================//
+// https://editor.soulmatelights.com/gallery/11
+// (C)Elliott Kember 
+// перероблено і адаптовано kostyamat
 #define NUMBER_OF_CIRCLES (NUM_LEDS / 16U)
 class EffectCircles : public EffectCalc {
 private:
@@ -1619,8 +1622,9 @@ public:
 
 }; 
 
-// ----------- Эффект "Бенгальские Огни"
-// (c) stepko https://wokwi.com/arduino/projects/289797125785520649
+//===== Ефект Бенгальські вогні ================//
+// https://wokwi.com/arduino/projects/289797125785520649
+// (c)Stepko
 // 06.02.2021
 class EffectBengalL : public EffectCalc {
 private:
@@ -1649,8 +1653,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Шары"
-// (c) stepko and kostyamat https://wokwi.com/arduino/projects/289839434049782281
+//===== Ефект кульки ===========================//
+// https://wokwi.com/arduino/projects/289839434049782281
+// (c) stepko and kostyamat
 // 07.02.2021
 class EffectBalls : public EffectCalc {
 private:
@@ -1675,8 +1680,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ---------- Лабіринт
-//remade by stepko
+//===== Ефект Лабіринт =========================//
+// solving algorithm by Stepko
 class EffectMaze : public EffectCalc {
 private:
     bool start = true;
@@ -1698,8 +1703,9 @@ public:
 
 }; 
 
-// --------- Эффект "Вьющийся Цвет"
-// (c) Stepko https://wokwi.com/arduino/projects/283705656027906572
+//===== Ефект В'юнкі кольори ===================//
+// https://wokwi.com/arduino/projects/283705656027906572
+// (c) Stepko
 class EffectFrizzles : public EffectCalc {
 private:
     float _speed;
@@ -1711,11 +1717,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// --------- Эффект "Северное Сияние"
+//===== Ефект Північне Сяйво ===================//
 // (c) kostyamat 05.02.2021
-// идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
-
-// Палитры, специально созданные под этот эффект, огромная благодарность @Stepko
+// Велике дякую @Stepko за створені палітри спеціально для цього ефекту
 static const TProgmemRGBPalette16 GreenAuroraColors_p FL_PROGMEM ={0x000000, 0x003300, 0x006600, 0x009900, 0x00cc00,0x00ff00, 0x33ff00, 0x66ff00, 0x99ff00,0xccff00, 0xffff00, 0xffcc00, 0xff9900, 0xff6600, 0xff3300, 0xff0000};
 static const TProgmemRGBPalette16 BlueAuroraColors_p FL_PROGMEM ={0x000000, 0x000033, 0x000066, 0x000099, 0x0000cc,0x0000ff, 0x3300ff, 0x6600ff, 0x9900ff,0xcc00ff, 0xff00ff, 0xff33ff, 0xff66ff, 0xff99ff, 0xffccff, 0xffffff};
 static const TProgmemRGBPalette16 NeonAuroraColors_p FL_PROGMEM ={0x000000, 0x003333, 0x006666, 0x009999, 0x00cccc,0x00ffff, 0x33ffff, 0x66ffff, 0x99ffff,0xccffff, 0xffffff, 0xffccff, 0xff99ff, 0xff66ff, 0xff33ff, 0xff00ff};
@@ -1741,8 +1745,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// --------- Эффект "Космо-Гонщик"
-// (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
+//===== Ефект Космо-Рейсер =====================//
+// https://editor.soulmatelights.com/gallery/655
+// (c)Stepko + Kostyamat
 class EffectRacer: public EffectCalc {
 private:
     uint16_t posX = random(0, WIDTH-1)*10;
@@ -1772,9 +1777,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------------- Эффект "Магма"
-// (c) Сотнег (SottNick) 2021
-// адаптация и доводка до ума - kostyamat
+//===== Ефект Магма ============================//
+// (c)SottNick 2021
+// адаптація і доведення до розуму kostyamat
 class EffectMagma: public EffectCalc {
 private:
     //uint16_t ff_x;
@@ -1803,10 +1808,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ------------- Эффект "Флаги"
+//===== Ефект Прапори ==========================//
+// https://editor.soulmatelights.com/gallery/739-flags
 // (c) Stepko + kostyamat
 // 17.03.21
-// https://editor.soulmatelights.com/gallery/739-flags
 class EffectFlags: public EffectCalc {
 private:
     const float DEVIATOR = 512. / WIDTH;
@@ -1921,11 +1926,10 @@ private:
     String setDynCtrl(UIControl*_val) override;
 
 public:
-    //void load () override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// --------------------- Эффект "Звездный Десант"
+//===== Ефект Зоряний десант ===================//
 // Starship Troopers https://editor.soulmatelights.com/gallery/839-starship-troopers
 // Based on (c) stepko`s codes https://editor.soulmatelights.com/gallery/639-space-ships
 // reworked (c) kostyamat (subpixel, shift speed control, etc) 08.04.2021
@@ -1950,12 +1954,12 @@ public:
     void load() override;
 };
 #ifdef MIC_EFFECTS
-/* -------------- эффект "VU-meter"
-    (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
-    reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
-    adopted for FireLamp_EmbUI by kostyamat, kDn
-    reworked and updated (c) kostyamat 24.04.2021
-*/
+
+//===== Ефект Частотний аналізатор =============//
+/* (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
+   reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
+   adopted for FireLamp_EmbUI by kostyamat, kDn
+   reworked and updated (c) kostyamat 24.04.2021 */
 class EffectVU: public EffectCalc {
 private:
     CRGBPalette16 gradPal[5] = { 
@@ -2002,10 +2006,10 @@ public:
 };
 #endif
 
-// ----------- Эффект "Огненная лампа"
+//===== Ефект Вогняна лампа ====================//
 // https://editor.soulmatelights.com/gallery/546-fire
 // (c) Stepko 17.06.21
-// sparks (c) kostyamat 10.01.2022 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
+// sparks (c) kostyamat 10.01.22 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
 class EffectFire2021 : public EffectCalc {
 private:
     byte _pal = 8;
@@ -2065,7 +2069,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Пятнашки"
+//===== Ефект П'ятнашки ========================//
 // https://editor.soulmatelights.com/gallery/1471-puzzles-subpixel
 // (c) Stepko 10.12.21
 class EffectPuzzles : public EffectCalc {
@@ -2087,7 +2091,6 @@ private:
     float shift[2] = { 0, 0 };
     bool XorY;
 
-
     void draw_square(byte x1, byte y1, byte x2, byte y2, byte col);
     void draw_squareF(float x1, float y1, float x2, float y2, byte col);
     void regen();
@@ -2099,10 +2102,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= Ефект Кольорові драже ===============
-// (c)stepko
-																				 
-																									   
+//===== Ефект Кольорові драже ==================//
+// (c)stepko																									   
 class EffectPile : public EffectCalc {
 private:
     uint8_t pcnt = 0U, _scale;
@@ -2116,11 +2117,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ============= Эффект ДНК ===============
+//===== Ефект ДНК ==============================//
 // (c) Stepko
 // https://editor.soulmatelights.com/gallery/1520-dna
-//по мотивам визуала эффекта by Yaroslaw Turbin
-//https://vk.com/ldirko программный код которого он запретил брать
+// за мотивами візуалу від Yaroslaw Turbin aka ldir
 class EffectDNA : public EffectCalc {
 private:
     float a = (256.0 / (float)WIDTH);
@@ -2137,8 +2137,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Дым"
-// based on cod by @Stepko (c) 23/12/2021
+//===== Ефект Дим ==============================//
+// based on code by @Stepko (c) 23/12/2021
 class EffectSmoker : public EffectCalc {
 private:
     byte color, saturation;
@@ -2153,7 +2153,7 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Мираж"
+//===== Ефект Міраж ============================//
 // based on cod by @Stepko (c) 23/12/2021
 class EffectMirage : public EffectCalc {
 private:
@@ -2175,9 +2175,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// -------------------- Эффект "Акварель"
-// (c) kostyamat 26.12.2021
+//===== Ефект Акварель =========================//
 // https://editor.soulmatelights.com/gallery/1587-oil
+// (c) kostyamat 26.12.2021
 #define BLOT_SIZE WIDTH/2
 class EffectWcolor : public EffectCalc {
 private:
@@ -2204,7 +2204,6 @@ private:
             }
         }
         
-
         void reset(byte num, byte Counts) {  
             x0 = random(-5, WIDTH - 5);
             float y0 = EffectMath::randomf(-1, HEIGHT+1);
@@ -2220,8 +2219,7 @@ private:
             }
             hue = random(0, 256);
             sat = random(160, 256);
-            bri = random(128, 256);
-            
+            bri = random(128, 256);    
         }
 
         double getY() {
@@ -2239,9 +2237,7 @@ private:
                     EffectMath::drawPixelXYF(x[i], y[i], CHSV(hue, sat, bright), 0);
             }
         }
-
     };
-
 
     std::vector<Blot> blots;
 
@@ -2252,10 +2248,10 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------- Эффект "Неопалимая купина"
-//RadialFire
-// (c) Stepko and Sutaburosu https://editor.soulmatelights.com/gallery/1570-radialfire
-//23/12/21
+//===== Ефект Неопалима купина =================//
+// https://editor.soulmatelights.com/gallery/1570-radialfire
+// (c) Stepko and Sutaburosu
+// 23.12.21
 class EffectRadialFire : public EffectCalc {
 private:
     const int8_t MIN_MAX = max(WIDTH, HEIGHT);
@@ -2268,7 +2264,6 @@ private:
     uint8_t _scale;
     bool mode = false;
 
-
     String setDynCtrl(UIControl*_val) override;
     // void palettesload();
 
@@ -2277,6 +2272,8 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//===== Ефект Нікола Тесла =====================//
+// (c)Stepko
 class EffectSplashBals : public EffectCalc {
 private:
     uint8_t count = 3;
@@ -2291,7 +2288,6 @@ private:
 
     float speedFactor;
 
-
     float dist(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
         float dist;
         int a = y2 - y1;
@@ -2303,7 +2299,6 @@ private:
         return dist;
     };
     
-
     String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -2311,6 +2306,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//===== Ефект Мильні розводи ===================//
+// https://editor.soulmatelights.com/gallery/1626-soap
+// (c)Stepko
 class EffectFlower : public EffectCalc {
 	private:
         uint16_t mov;
@@ -2333,9 +2331,11 @@ class EffectFlower : public EffectCalc {
 };
 
 #ifdef RGB_PLAYER
-// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko
-// 27.01.2022
+
+//===== Програвач 332/556 файлів ===============//
 // https://editor.soulmatelights.com/gallery/1684-pgm-player-with-resize
+// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko and Sutaburosu
+// 27.01.2022
 // License GPL v.3 as a part of the FireLamp_EmbUI project
 #define MULTIPLIC 256
 class EffectPlayer : public EffectCalc {
