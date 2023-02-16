@@ -42,7 +42,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 // непустой дефолтный деструктор (если понадобится)
 // EffectCalc::~EffectCalc(){LOG(println, "Effect object destroyed");}
 
-// ------------- Эффект "Конфетти" --------------
+//===== Ефект Конфеті ==========================//
 bool EffectSparcles::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
     return false;
@@ -116,8 +116,7 @@ bool EffectSparcles::sparklesRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------ Эффект "Белая Лампа"
-// ------------- белый свет (светится горизонтальная полоса по центру лампы; масштаб - высота центральной горизонтальной полосы; скорость - регулировка от холодного к тёплому; яркость - общая яркость) -------------
+//===== Ефект Біла лампа =======================//
 bool EffectWhiteColorStripe::run(CRGB *ledarr, EffectWorker *opt){
   return whiteColorStripeRoutine(*&ledarr, &*opt);
 }
@@ -191,8 +190,7 @@ bool EffectWhiteColorStripe::whiteColorStripeRoutine(CRGB *leds, EffectWorker *p
   return true;
 }
 
-// ========== Эффект "Эффектопад"
-// совместное творчество юзеров форума community.alexgyver.ru
+//===== Ефект Ефектопад ========================//
 void EffectEverythingFall::load(){
     palettesload();    // подгружаем дефолтные палитры
 }
@@ -235,9 +233,8 @@ bool EffectEverythingFall::run(CRGB *ledarr, EffectWorker *opt){
   return true;
 }
 
-// --------------------------- эффект пульс ----------------------
+//===== Ефект Пульс ============================//
 // Stefan Petrick's PULSE Effect
-
 // !++
 String EffectPulse::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.05, 1.0) * EffectCalc::speedfactor;
@@ -323,8 +320,8 @@ bool EffectPulse::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// радуги 2D
-// ------------- радуга вертикальная/горизонтальная ----------------
+//===== Ефект Веселка ==========================//
+//Вертикальна і горизонтальна
 bool EffectRainbow::run(CRGB *ledarr, EffectWorker *opt){
   // коэф. влияния замаплен на скорость, 4 ползунок нафиг не нужен
   hue += (6.0 * (speed / 255.0) + 0.05 ); // скорость смещения цвета зависит от кривизны наклна линии, коэф. 6.0 и 0.05
@@ -357,8 +354,7 @@ bool EffectRainbow::rainbowHorVertRoutine(bool isVertical)
   }
   return true;
 }
-
-// ------------- радуга диагональная -------------
+//Діагональна
 bool EffectRainbow::rainbowDiagonalRoutine()
 {
   for (uint8_t i = 0U; i < WIDTH; i++)
@@ -372,7 +368,7 @@ bool EffectRainbow::rainbowDiagonalRoutine()
   return true;
 }
 
-// ------------- цвета -----------------
+//===== Ефект Кольори ==========================//
 void EffectColors::load(){
     EffectMath::fillAll(CHSV(scale, 255U, 55U));
 }
@@ -470,8 +466,8 @@ EVERY_N_SECONDS(1){
   return true;
 }
 
-// ------------- Эффект "New Матрица" ---------------
-// !--
+//===== Ефект Матриця ==========================//
+// (c)Kostyamat
 String EffectMatrix::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==1) speedFactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.06, 0.4)*EffectCalc::speedfactor;
@@ -556,7 +552,8 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------------- звездопад/метель -------------
+//===== Ефект Хурделиця, Зіркопад, Метеори =====//
+// (c)Kostyamat
 bool EffectStarFall::run(CRGB *ledarr, EffectWorker *opt){
   return snowStormStarfallRoutine(*&ledarr, &*opt);
 }
@@ -636,7 +633,8 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------------- светлячки --------------
+//===== Клас "Світлячків" ======================//
+// потрібний для деяких ефектів
 //#define LIGHTERS_AM           (100U)
 void EffectLighters::load(){
   randomSeed(millis());
@@ -710,8 +708,7 @@ bool EffectLighters::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------------- светлячки со шлейфом -------------
-// !++
+//===== Ефект Світлячки зі шлейфом =============//
 String EffectLighterTracers::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.01, .1)*EffectCalc::speedfactor;
   else if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
@@ -784,8 +781,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   return true;
 }
 
-// ------------- пейнтбол -------------
-// !++
+//===== Ефект Пейнтбол =========================//
 String EffectLightBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt()*EffectCalc::getSpeedFactor() /255.0 +0.1;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -818,8 +814,7 @@ bool EffectLightBalls::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------------- эффект "блуждающий кубик" -------------
-// !++
+//===== Ефект Блукаючий кубик ==================//
 String EffectBall::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) {
     speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 0.15) * EffectCalc::speedfactor;
@@ -905,7 +900,7 @@ bool EffectBall::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ----------- Эффекты "Лава, Зебра, etc"
+//===== Ефект Шум 3D ===========================//
 void Effect3DNoise::fillNoiseLED()
 {
   uint8_t dataSmoothing = 0;
@@ -1015,14 +1010,13 @@ bool Effect3DNoise::run(CRGB *ledarr, EffectWorker *opt){
   return true;
 }
 
-//----- Эффект "Прыгающие Мячики"
+//===== Ефект Стрибаючі м'ячики ================//
 //  BouncingBalls2014 is a program that lets you animate an LED strip
 //  to look like a group of bouncing balls
 //  Daniel Wilson, 2014
 //  https://github.com/githubcdr/Arduino/blob/master/bouncingballs/bouncingballs.ino
 //  With BIG thanks to the FastLED community!
-//  адаптация от SottNick
-// перевод на субпиксельную графику kostyamat
+//  переведено на субпіксельну графіку kostyamat
 bool EffectBBalls::run(CRGB *ledarr, EffectWorker *opt){
   return bBallsRoutine(ledarr, opt);
 }
@@ -1111,13 +1105,12 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ***** SINUSOID / СИНУСОИД *****
+//===== Ефект Синусоїд =========================//
 /*
-  Sinusoid3 by Stefan Petrick
-  read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
-  Sinusoid1/2/4 remade by Stepko
+ Sinusoid3 by Stefan Petrick
+ read more about the concept: https://www.youtube.com/watch?v=mubH-w_gwdA
 */
-// !++
+//Sinusoid I,II,IV recreation by Stepko
 String EffectSinusoid3::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) e_s3_speed = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.033, 1) * EffectCalc::speedfactor;
   else if(_val->getId()==2) _scale = map8(EffectCalc::setDynCtrl(_val).toInt(),50,150);
@@ -1130,7 +1123,6 @@ String EffectSinusoid3::setDynCtrl(UIControl*_val){
 bool EffectSinusoid3::run(CRGB *leds, EffectWorker *param) {
   float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
 
-  
 switch (type) {
     case 0: //Sinusoid I
       for (uint8_t y = 0; y < HEIGHT; y++) {
@@ -1215,13 +1207,11 @@ switch (type) {
   return true;
 }
 
+//===== Ефект Метасфери ========================//
 /*
- ***** METABALLS / МЕТАСФЕРЫ *****
-Metaballs proof of concept by Stefan Petrick 
-https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
+ Metaballs proof of concept by Stefan Petrick 
+ https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
 */
-
-// !++
 String EffectMetaBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 2);
   else if(_val->getId()==2) scale = EffectCalc::setDynCtrl(_val).toInt();
@@ -1237,11 +1227,8 @@ bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
   // get some 3 random moving points
   unsigned long t = millis() * speedFactor;
   // get some 3 random moving points
-  uint8_t x1 = beatsin88(23 * 256 * speedFactor, 0, EffectMath::getmaxWidthIndex());//V1
+  uint8_t x1 = beatsin88(23 * 256 * speedFactor, 0, EffectMath::getmaxWidthIndex());
   uint8_t y1 = beatsin88(28 * 256 * speedFactor, 0, EffectMath::getmaxHeightIndex());
-
-  //uint8_t x1 = inoise8(t, 12355, 85) / hormap;// V2
-  //uint8_t y1 = inoise8(t, 5, 685) / vermap;
 
   uint8_t x2 = inoise8(t, 25355, 685) / hormap;
   uint8_t y2 = inoise8(t, 355, 11685) / vermap;
@@ -1286,13 +1273,10 @@ bool EffectMetaBalls::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ***** Эффект "Спираль"     ****
-/*
- * Aurora: https://github.com/pixelmatix/aurora
- * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
- * Copyright (c) 2014 Jason Coon
- * Неполная адаптация SottNick
- */
+//===== Ефект Спіраль ==========================//
+// https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
+// Copyright (c) 2014 Jason Coon
+// Перевів на субпіксель Stepko
 void EffectSpiro::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
@@ -1341,10 +1325,8 @@ bool EffectSpiro::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 	
-
-// ***** RAINBOW COMET / РАДУЖНАЯ КОМЕТА *****
-// ***** Парящий огонь, Кровавые Небеса, Радужный Змей и т.п.
-// базис (c) Stefan Petrick
+//===== Ефект Комети, Витаючі Вогні ++ =========//
+// Фундамент (c) Stefan Petrick
 void EffectComet::drawFillRect2_fast(int8_t x1, int8_t y1, int8_t x2, int8_t y2, CRGB color)
 { // Fine if: 0<x1<x2<WIDTH && 0<y1<y2<HEIGHT
   for (int8_t xP = x1; xP <= x2; xP++)
@@ -1657,8 +1639,10 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ============= ЭФФЕКТ ПРИЗМАТА ===============
-// Prismata Loading Animation
+//===== Ефект Призмата =========================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternPendulumWave.h
+// Copyright (c) 2014 Jason Coon
+// Перевів на субпіксель Kostyamat
 void EffectPrismata::load(){
   palettesload();
 }
@@ -1685,8 +1669,10 @@ String EffectPrismata::setDynCtrl(UIControl*_val){
   return String();
 }
 
-// ============= ЭФФЕКТ СТАЯ ===============
-// Адаптация от (c) SottNick
+//===== Ефект Стадо та хижак ===================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternFlock.h
+// Copyright (c) 2014 Jason Coon
+// Адаптація (c)SottNick
 void EffectFlock::load(){
   palettesload();    // подгружаем дефолтные палитры
   for (uint8_t i = 0; i < AVAILABLE_BOID_COUNT; i++)
@@ -1770,7 +1756,7 @@ bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ============= SWIRL /  ВОДОВОРОТ ===============
+//===== Ефект Водоверть ========================//
 // https://gist.github.com/kriegsman/5adca44e14ad025e6d3b
 // Copyright (c) 2014 Mark Kriegsman
 void EffectSwirl::load(){
@@ -1823,11 +1809,10 @@ bool EffectSwirl::swirlRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ============= DRIFT / ДРИФТ ===============
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 12.04.2020
-// v1.1 - +dither, +phase shifting by PalPalych 12.04.2020
+//===== Ефект Дрифт ============================//
 // https://github.com/pixelmatix/aurora/blob/master/PatternIncrementalDrift.h
-
+// Copyright(c) 2014 Jason Coon
+// Subpixel ver by Stepko
 void EffectDrift::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
@@ -1909,8 +1894,8 @@ bool EffectDrift::incrementalDriftRoutine2(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-
-// ------------------------------ ЭФФЕКТ МЕРЦАНИЕ ----------------------
+//===== Ефект Мерехтіння =======================//
+// Ідея від SottNick
 void EffectTwinkles::load(){
   palettesload();    // подгружаем дефолтные палитры
   setup();
@@ -1995,7 +1980,9 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ============= RADAR / РАДАР ===============
+//===== Ефект Радар ============================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternRadar.h
+// Copyright(c) 2014 Jason Coon
 void EffectRadar::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
@@ -2051,11 +2038,10 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ============= WAVES /  ВОЛНЫ ===============
-// Prismata Loading Animation
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 11.04.2020
+//===== Ефект Хвилі ============================//
 // https://github.com/pixelmatix/aurora/blob/master/PatternWave.h
-// Адаптация от (c) SottNick
+// Copyright(c) 2014 Jason Coon
+// Адаптовано (c)SottNick
 void EffectWaves::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
@@ -2121,12 +2107,10 @@ bool EffectWaves::wavesRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ============= FIRE 2012 /  ОГОНЬ 2012 ===============
-// based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
-/*
- * Эффект "Огонь 2012"
- */
+//===== Ефект Вогонь 2012 ======================//
+// based on FastLED example Fire2012WithPalette
+// https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
+// Updated by SottNick 17.04.2020
 void EffectFire2012::load(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
@@ -2207,11 +2191,10 @@ bool EffectFire2012::fire2012Routine(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ============= FIRE 2018 /  ОГОНЬ 2018 ===============
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+//===== Ефект Вогонь 2018 ======================//
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
-// !++
+// Updating by SottNick 17.04.2020
 String EffectFire2018::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) isLinSpeed = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -2324,18 +2307,8 @@ bool EffectFire2018::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------------------------------ ЭФФЕКТ КОЛЬЦА / КОДОВЫЙ ЗАМОК ----------------------
+//===== Ефект Кодовий замок ====================//
 // (c) SottNick
-// из-за повторного использоваия переменных от других эффектов теперь в этом коде невозможно что-то понять.
-// поэтому для понимания придётся сперва заменить названия переменных на человеческие. но всё равно это песец, конечно.
-
-//uint8_t ringColor[HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
-//uint8_t huePos[HEIGHT]; // местоположение начального оттенка кольца 0-EffectMath::getmaxWidthIndex()
-//uint8_t shiftHueDir[HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
-////ringHueShift[ringsCount]; // шаг градиета оттенка внутри кольца -8 - +8 случайное число
-////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
-//uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
-//uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
 bool EffectRingsLock::run(CRGB *ledarr, EffectWorker *opt){
   if (dryrun(3.0))
     return false;
@@ -2411,7 +2384,6 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
           }
       }
     }
-
     // отрисовываем кольца
     h = (shiftHueDir[i] >> 4) & 0x0F; // берём шаг для градиента вутри кольца
     if (h > 8U)
@@ -2436,9 +2408,9 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------------------------------ ЭФФЕКТ КУБИК 2D ----------------------
-// Classic (c) SottNick
-// New (c) Vortigont
+//===== Ефект Куб 2D ===========================//
+// (c) SottNick
+// refactored by Vortigont
 #define PAUSE_MAX 7
 
 void EffectCube2d::swapBuff() {
@@ -2516,11 +2488,9 @@ void EffectCube2d::cubesize() {
       while (1) // немного потенциально опасно, но у нас, если палитры не подгружены, - return, думаю это сводит опасность практически к нулю, иначе сработает вачдог
         // не вижу другого способа перестать получать почти черные кубики, это раздражает, впечатление будто лампе глаз выбили, или зуб :))
       {
-
         color = scale > 0 ? ColorFromPalette(*curPalette, random(1024)>>1, random8(128, 255)) : CRGB(random8(), random8(), random8());
         if (color >= CRGB(10,10,10)) break;  // Не хотелось бы получать слишком тёмные кубики
       }
-
       for (uint8_t k = 0U; k < sizeY; k++){
         for (uint8_t m = 0U; m < sizeX; m++){
           ledbuff[EffectMath::getPixelNumberBuff(x+m, y+k, fieldX, fieldY)] = color;
@@ -2567,8 +2537,6 @@ bool EffectCube2d::cube2dRoutine(CRGB *leds, EffectWorker *param)
     shiftSteps = ((direction ? sizeY : sizeX)+1) * random8(direction ? cntY : cntX);  // такой рандом добавляет случайную задержку в паузу, попадая на "0"
     return false;
   }
-
-
   //двигаем, что получилось...
   shiftSteps--;
 
@@ -2609,7 +2577,6 @@ void EffectCube2d::cube2dmoveCols(uint8_t moveItem, bool movedirection){
             ledbuff[EffectMath::getPixelNumberBuff(m, anim0+fieldY-1, fieldX, fieldY)] = color;
           return;
         }
-
       // крутим столбец вверх
       // берём цвет от верхней строчки
       color = ledbuff[EffectMath::getPixelNumberBuff(x,anim0+fieldY-1, fieldX, fieldY)];
@@ -2625,7 +2592,6 @@ void EffectCube2d::cube2dmoveCols(uint8_t moveItem, bool movedirection){
         // цвет верхней строчки копируем на всю нижнюю
         ledbuff[EffectMath::getPixelNumberBuff(m, anim0, fieldX, fieldY)] = color;
 }
-
 // идём по вертикали, крутим по горизонтали (строки двигаются)
 void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
   uint16_t y, anim0;
@@ -2633,7 +2599,6 @@ void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
 
   y = moveItem * (sizeY + 1U);
   anim0 = 0;
-
   // крутим строку влево
   if (!movedirection)
   {
@@ -2652,7 +2617,6 @@ void EffectCube2d::cube2dmoveRows(uint8_t moveItem, bool movedirection){
       ledbuff[EffectMath::getPixelNumberBuff(anim0+fieldX-1, m, fieldX, fieldY)] = color;
    return;
   }
-
   //  крутим строку вправо
   // берём цвет от правой колонки
   color = ledbuff[EffectMath::getPixelNumberBuff(anim0+fieldX-1, y, fieldX, fieldY)];
@@ -2674,7 +2638,6 @@ bool EffectCube2d::cube2dClassicRoutine(CRGB *leds, EffectWorker *param)
   CRGB color, color2;
   int8_t shift, shiftAll;
   uint8_t anim0, x, y;
-
   //двигаем, что получилось...
   if (pauseSteps == 0 && currentStep < shiftSteps) // если пауза закончилась, а цикл вращения ещё не завершён
   {
@@ -2873,7 +2836,7 @@ bool EffectCube2d::cube2dClassicRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-//-------------- Эффект "Часы"
+//===== Ефект Годинник =========================//
 bool EffectTime::run(CRGB *ledarr, EffectWorker *opt){
   // if(isDebug())
   //   return palleteTest(ledarr, opt);
@@ -2970,10 +2933,10 @@ bool EffectTime::timePrintRoutine(CRGB *leds, EffectWorker *param)
     curTimePos=curTimePos+(0.23*(speed/255.0))*(timeShiftDir?-1:1); // смещаем
   }
   return true;
-
 }
 
-// ----------- Эффекты "Пикассо" (c) obliterator
+//===== Ефект Пікассо ==========================//
+// (c) obliterator
 void EffectPicasso::generate(bool reset){
   double minSpeed = 0.2, maxSpeed = 0.8;
   unsigned num = map(scale, 0U, 255U, 6U, sizeof(particles) / sizeof(*particles));
@@ -3015,7 +2978,6 @@ void EffectPicasso::position(){
     if (curr->position_y + curr->speed_y > HEIGHT || curr->position_y + curr->speed_y < 0) {
       curr->speed_y = -curr->speed_y;
     }
-
     curr->position_x += curr->speed_x*speedFactor;
     curr->position_y += curr->speed_y*speedFactor;
   };
@@ -3141,7 +3103,7 @@ bool EffectPicasso::run(CRGB *ledarr, EffectWorker *opt){
   return true;
 }
 
-// -------- Эффект "Прыгуны" (c) obliterator
+//===== Ефект Стрибуни =========================//
 void EffectLeapers::load() {
   generate();
 }
@@ -3157,13 +3119,11 @@ void EffectLeapers::restart_leaper(EffectLeapers::Leaper * l) {
   l->xd = (1 * (float)random8(5, 50 + _rv * 4) / 100);
   l->yd = (2 * (float)random8(5, 100 + _rv * 3) / 100);
 #endif
-
   // for variety, sometimes go 20% faster
   if (random8() < 12) {
     l->xd += l->xd * 0.2;
     l->yd += l->yd * 0.2;
   }
-
   // leap towards the centre of the screen
   if (l->x > (WIDTH / 2)) {
     l->xd = -l->xd;
@@ -3179,7 +3139,6 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
 
   l->x += l->xd * speedFactor;
   l->y += l->yd * speedFactor;
-
   // bounce off the floor and ceiling?
   if (l->y < 0 || l->y > (EffectMath::getmaxHeightIndex() - SETTLED_THRESHOLD)) {
     l->yd = (-l->yd * WALL_FRICTION);
@@ -3191,7 +3150,6 @@ void EffectLeapers::move_leaper(EffectLeapers::Leaper * l) {
       restart_leaper(l);
     }
   }
-
   // bounce off the sides of the screen?
   if (l->x <= 0 || l->x >= EffectMath::getmaxWidthIndex()) {
     l->xd = (-l->xd * WALL_FRICTION);
@@ -3237,7 +3195,6 @@ bool EffectLeapers::run(CRGB *leds, EffectWorker *param){
   EVERY_N_SECONDS(30) {
     randomSeed(millis());
   }
-
   //EffectMath::dimAll(0);
   FastLED.clear();
 
@@ -3250,9 +3207,8 @@ bool EffectLeapers::run(CRGB *leds, EffectWorker *param){
   return true;
 }
 
-
-
-// ----------- Эффекты "Лавовая лампа" (c) obliterator
+//===== Ефект Лавова лампа =====================//
+// (c) obliterator
 void EffectLiquidLamp::generate(bool reset){
   unsigned num = map(scale, 0U, 255, 10, sizeof(particles) / sizeof(*particles));
 
@@ -3327,7 +3283,6 @@ void EffectLiquidLamp::physic(){
     }
   }
 }
-
 // !++
 String EffectLiquidLamp::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt() / 127.0 + 0.1)*EffectCalc::speedfactor;
@@ -3400,7 +3355,7 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       }
     }
   } else {
-    float min =0, max = 0;
+    float min = 0, max = 0;
     // Оператор Щарра
     int oper_h[3][3] = {{3, 10, 3}, {0, 0, 0}, {-3, -10, -3}};
     int oper_v[3][3] = {{3, 0, -3}, {10, 0, -10}, {3, 0, -3}};
@@ -3420,8 +3375,8 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       }
     }
 
-    for (unsigned x = 0; x < (unsigned)EffectMath::getmaxWidthIndex(); x++) {
-      for (unsigned y = 0; y < (unsigned)EffectMath::getmaxHeightIndex(); y++) {
+    for (unsigned x = 0; x < WIDTH; x++) {
+      for (unsigned y = 0; y < HEIGHT; y++) {
         float val = buff2[x][y];
         unsigned step = filter - 1;
         val = 1 - (val - min) / (max - min);
@@ -3438,10 +3393,10 @@ bool EffectLiquidLamp::run(CRGB *ledarr, EffectWorker *opt){
   return Routine(*&ledarr, &*opt);
 }
 
-// ------- Эффект "Вихри"
-// Based on Aurora : https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
+//===== Ефект Вихори ===========================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
 // Copyright(c) 2014 Jason Coon
-//адаптация SottNick
+// адаптація SottNick
 bool EffectWhirl::run(CRGB *ledarr, EffectWorker *opt){
 
   return whirlRoutine(*&ledarr, &*opt);
@@ -3505,11 +3460,10 @@ bool EffectWhirl::whirlRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ------------- Ефект "Відблиски на воді"
+//===== Ефект Відблиски на воді ================//
 // Ідея SottNick
-// переписані на програмні відблиски - (c) kostyamat
-// Генератор відблисків - (c) stepko
-
+// переписані на програмні відблиски - (c)Kostyamat
+// Генератор відблисків - (c)Stepko
 void EffectAquarium::load()
 {
   currentPalette = PartyColors_p;
@@ -3711,8 +3665,11 @@ bool EffectAquarium::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ------- Эффект "Звезды"
-// !++
+//===== Ефект Зірки ============================//
+// https://github.com/marcmerlin/NeoMatrix-FastLED-IR/blob/master/Table_Mark_Estes_Impl.h
+// https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/LEDMatrix/Table_Mark_Estes/Table_Mark_Estes.ino
+// (c)Marc Merlin
+// Адаптація (c)SottNick
 String EffectStar::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
     speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt()/380.0+0.05) * EffectCalc::speedfactor;
@@ -3725,7 +3682,6 @@ String EffectStar::setDynCtrl(UIControl*_val){
 void EffectStar::load(){
   palettesload();    // подгружаем дефолтные палитры
   counter = 0.0;
-
   // стартуем с центра
   driftx = (float)WIDTH/2.0;
   drifty = (float)HEIGHT/2.0;
@@ -3805,10 +3761,9 @@ bool EffectStar::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-//---------- Эффект "Фейерверк"
-//адаптация и переписал - kostyamat
-//https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
-// !++
+//===== Ефект Феєрверк =========================//
+// https://gist.github.com/jasoncoon/0cccc5ba7ab108c0a373
+// адаптований і переписаний Kostyamat
 String EffectFireworks::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) flashing = EffectCalc::setDynCtrl(_val).toInt();
@@ -3983,11 +3938,9 @@ void EffectFireworks::sparkGen() {
 
 bool EffectFireworks::fireworksRoutine(CRGB *leds, EffectWorker *param)
 {
-
   fadeToBlackBy(leds, NUM_LEDS, valDim);
   sparkGen();
   //memset8( leds, 0, NUM_LEDS * 3);
-
   for (byte a = 0; a < cnt; a++) {
     gDot[a].Move(store, flashing);
     gDot[a].Draw(leds);
@@ -3999,14 +3952,12 @@ bool EffectFireworks::fireworksRoutine(CRGB *leds, EffectWorker *param)
     return true;
 }
 
-// ------------ Эффект "Тихий Океан"
-//  "Pacifica" перенос кода kostyamat
+//===== Ефект Тихий Океан ======================//
+// https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
 //  Gentle, blue-green ocean waves.
 //  December 2019, Mark Kriegsman and Mary Corey March.
 //  For Dan.
-// https://raw.githubusercontent.com/FastLED/FastLED/master/examples/Pacifica/Pacifica.ino
-
-// Add one layer of waves into the led array
+//  "Pacifica" перенос коду kostyamat
 void EffectPacific::pacifica_one_layer(const TProgmemRGBPalette16& p, uint16_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff)
 {
   uint16_t ci = cistart;
@@ -4023,7 +3974,6 @@ void EffectPacific::pacifica_one_layer(const TProgmemRGBPalette16& p, uint16_t c
     EffectMath::getLed(i) += c;
   }
 }
-
 // Add extra 'white' to areas where the four layers of light have lined up brightly
 void EffectPacific::pacifica_add_whitecaps()
 {
@@ -4041,7 +3991,6 @@ void EffectPacific::pacifica_add_whitecaps()
     }
   }
 }
-
 // Deepen the blues and greens
 void EffectPacific::pacifica_deepen_colors()
 {
@@ -4051,7 +4000,6 @@ void EffectPacific::pacifica_deepen_colors()
     EffectMath::getLed(i) |= CRGB( 2, 5, 7);
   }
 }
-
 // !++
 String EffectPacific::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1)  speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 620, 60)*EffectCalc::speedfactor;
@@ -4077,29 +4025,25 @@ bool EffectPacific::run(CRGB *leds, EffectWorker *param)
   sCIStart2 -= (deltams21 * beatsin88(777,8,11));
   sCIStart3 -= (deltams1 * beatsin88(501,5,7));
   sCIStart4 -= (deltams2 * beatsin88(257,4,6));
-
   // Clear out the LED array to a dim background blue-green
   fill_solid( leds, NUM_LEDS, CRGB( 2, 6, 10));
-
   // Render each of four layers, with different scales and speeds, that vary over time
   pacifica_one_layer(pacifica_palette_1, sCIStart1, beatsin16( 3, 11 * 256, 14 * 256), beatsin8( 10, 70, 130), 0-beat16( 301) );
   pacifica_one_layer(pacifica_palette_2, sCIStart2, beatsin16( 4,  6 * 256,  9 * 256), beatsin8( 17, 40,  80), beat16( 401) );
   pacifica_one_layer(pacifica_palette_3, sCIStart3, 6 * 256, beatsin8( 9, 10,38), 0-beat16(503));
   pacifica_one_layer(pacifica_palette_3, sCIStart4, 5 * 256, beatsin8( 8, 10,28), beat16(601));
-
   // Add brighter 'whitecaps' where the waves lines up more
   pacifica_add_whitecaps();
-
   // Deepen the blues and greens a bit
   pacifica_deepen_colors();
-
   EffectMath::blur2d(20);
   return true;
 }
 
 #ifdef MIC_EFFECTS
-//----- Эффект "Осциллограф" (c) kostyamat
-// !++
+
+//===== Ефект Осцилограф =======================// 
+// (c) kostyamat
 String EffectOsc::setDynCtrl(UIControl*_val) {
 #ifdef ESP32
   pointer = 4096/(getMicScale()*2);
@@ -4163,12 +4107,13 @@ return true;
 }
 #endif
 
-// ------ Эффект "Вышиванка" (с) проект Aurora "Munch"
+//===== Ефект Вишиванка ========================// 
+// https://github.com/pixelmatix/aurora/blob/master/PatternMunch.h
+// Copyright(c) 2014 Jason Coon
 void EffectMunch::load() {
   palettesload();
 }
 
-// !++
 String EffectMunch::setDynCtrl(UIControl*_val){
   if(_val->getId()==4) rand = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -4219,7 +4164,8 @@ bool EffectMunch::munchRoutine(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ------ Эффект "Цветной шум" (с) https://gist.github.com/StefanPetrick/c856b6d681ec3122e5551403aabfcc68
+//===== Ефект Кольоровий шум ===================//
+// (с) https://gist.github.com/StefanPetrick/c856b6d681ec3122e5551403aabfcc68
 DEFINE_GRADIENT_PALETTE( pit ) {
   0,     3,   3,   3,
   64,   13,   13, 255,  //blue
@@ -4241,7 +4187,6 @@ bool EffectNoise::run(CRGB *leds, EffectWorker *param) {
     uint8_t layer = 0;
 
   CRGBPalette16 Pal( pit );
-
   //modulate the position so that it increases/decreases x
   //(here based on the top left pixel - it could be any position else)
   //the factor "2" defines the max speed of the x movement
@@ -4258,7 +4203,6 @@ bool EffectNoise::run(CRGB *leds, EffectWorker *param) {
   //here you can set the range of the zoom in both dimensions
   scale_x[layer] = 8000 + (noise[layer][0][CentreY] * 16);
   scale_y[layer] = 8000 + (noise[layer][EffectMath::getmaxWidthIndex()][CentreY] * 16);
-
   //calculate the noise data
   for (uint8_t i = 0; i < WIDTH; i++) {
     uint32_t ioffset = scale_x[layer] * (i - CentreX);
@@ -4276,7 +4220,6 @@ bool EffectNoise::run(CRGB *leds, EffectWorker *param) {
       noise[layer][i][j] = data;
     }
   }
-
   //map the colors
   for (uint8_t y = 0; y < HEIGHT; y++) {
     for (uint8_t x = 0; x < WIDTH; x++) {
@@ -4290,7 +4233,6 @@ bool EffectNoise::run(CRGB *leds, EffectWorker *param) {
       else EffectMath::drawPixelXY(x, y, ColorFromPalette(palettepos > 0 ? *curPalette : Pal, noise[layer][EffectMath::getmaxWidthIndex()][EffectMath::getmaxHeightIndex()] + noise[layer][x][y]) + overlay);
     }
   }
-
   //make it looking nice
   if (palettepos != 4) {
     if (type) EffectMath::nightMode(*&leds);
@@ -4305,8 +4247,8 @@ void EffectNoise::load() {
   palettesload();
 }
 
-// ---- Эффект "Мотыльки"
-// (с) Сотнег
+//===== Ефект Метелики =========================//
+// (с) SottNick
 void EffectButterfly::load()
 {
   for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
@@ -4490,7 +4432,7 @@ bool EffectButterfly::run(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ---- Эффект "Тени"
+//===== Ефект Тіні =============================//
 // https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/effects.ino
 bool EffectShadows::run(CRGB *leds, EffectWorker *param) {
 
@@ -4531,11 +4473,10 @@ bool EffectShadows::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ---- Эффект "Узоры"
+//===== Ефект Візерунки ========================//
+// Ідея https://github.com/vvip-68/GyverPanelWiFi/
 // (c) kostyamat (Kostyantyn Matviyevskyy) 2020
-// переделано kDn
-// идея https://github.com/vvip-68/GyverPanelWiFi/blob/master/firmware/GyverPanelWiFi_v1.02/patterns.ino
-// !++
+// перероблено kDn
 String EffectPatterns::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3) _speed = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) _scale = EffectCalc::setDynCtrl(_val).toInt();
@@ -4554,7 +4495,6 @@ void EffectPatterns::drawPicture_XY() {
   float vx, vy, f;
   vx = modff(xsin, &f);
   vy = modff(ysin, &f);
-
   //FastLED.clear();
   EffectMath::dimAll(127);
 
@@ -4636,7 +4576,8 @@ bool EffectPatterns::patternsRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-// ***************************** "Стрелки" *****************************
+//===== Ефект Стрілки ==========================//
+// https://github.com/vvip-68/GyverPanelWiFi/
 void EffectArrows::load(){
     FastLED.clear();
     arrow_complete = false;
@@ -4687,7 +4628,6 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
     }
     arrow_x[0]+= speedFactor;
   }
-
   // движение стрелки - cнизу вверх
   if ((arrow_direction & 0x02) > 0) {
     color = CHSV(arrow_hue[1], 255, 255);
@@ -4702,7 +4642,6 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
     }
     arrow_y[1]+= speedFactor;
   }
-
   // движение стрелки - cправа налево
   if ((arrow_direction & 0x04) > 0) {
     color = CHSV(arrow_hue[2], 255, 255);
@@ -4717,7 +4656,6 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
     }
     arrow_x[2]-= speedFactor;
   }
-
   // движение стрелки - cверху вниз
   if ((arrow_direction & 0x08) > 0) {
     color = CHSV(arrow_hue[3], 255, 255);
@@ -4732,9 +4670,7 @@ bool EffectArrows::run(CRGB *leds, EffectWorker *param) {
     }
     arrow_y[3]-= speedFactor;
   }
-
   // Проверка завершения движения стрелки, переход к следующей фазе или режиму
-
   switch (arrow_mode) {
 
     case 1:
@@ -4995,9 +4931,8 @@ void EffectArrows::arrowSetup_mode4() {
   }
 }
 
-// ------ Эффект "Дикие шарики"
-// (с) https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
-// !++
+//===== Ефект Дикі кульки ======================//
+// https://gist.github.com/bonjurroughs/9c107fa5f428fb01d484#file-noise-balls
 String EffectNBals::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) beat1 = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 8, 128);
   else if(_val->getId()==3) beat2 = EffectCalc::setDynCtrl(_val).toInt();
@@ -5058,8 +4993,9 @@ void EffectNBals::balls_timer() {
   }
 }
 
-// ------ Эффект "Притяжение"
-// Базовый Attract проект Аврора
+//===== Ефект Притягування =====================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternAttract.h
+// причесав kostyamat
 void EffectAttract::load() {
   palettesload();
   //speedFactor = EffectMath::fmap((float)speed, 1., 255., 0.02*EffectCalc::speedfactor, 1.*EffectCalc::speedfactor);
@@ -5078,7 +5014,6 @@ void EffectAttract::load() {
   }
 
 }
-
 // !++
 String EffectAttract::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap((float)EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.02, 1.) * EffectCalc::speedfactor;
@@ -5123,8 +5058,8 @@ bool EffectAttract::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-//------------ Эффект "Змейки"
-// вариант субпикселя и поведения от kDn
+//===== Ефект Змійки ===========================//
+// варіант субпікселя і поведінка від kDn
 void EffectSnake::load() {
   palettesload();
 
@@ -5136,7 +5071,6 @@ void EffectSnake::load() {
     snakes[i].internal_speedf = ((random(2) ? 0.5 : 0.33)+1.0/(random(i+1)+1))+0.5;
   }
 }
-
 // !++
 String EffectSnake::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt()/ 512.0 + 0.025) * EffectCalc::speedfactor;
@@ -5210,8 +5144,9 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], int snakenb, bool subpi
   }
 }
 
-//------------ Эффект "Nexus"
-// (с) kostyamat 4.12.2020
+//===== Ефект Nexus ============================//
+// База паттерн "Змейка" з проекту Аврора, 
+// Переписано kostyamat
 void EffectNexus::reload() {
   for (byte i = 0; i < NEXUS; i++) {
     dotDirect[i] = random(0, 4);                     // задаем направление
@@ -5221,7 +5156,6 @@ void EffectNexus::reload() {
     dotAccel[i] = (float)random(5, 11) / 70;        // делаем частицам немного разное ускорение 
   }
 }
-
 // !++
 String EffectNexus::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, .33) * EffectCalc::speedfactor;
@@ -5326,10 +5260,9 @@ void EffectNexus::resetDot(uint8_t idx) {
   } 
 }
 
-// ----------- Эфеект "Змеиный Остров"
-// (c) Сотнег
-// адаптация и доработки kostyamat
-// !++
+//===== Ефект Зміїний острів ===================//
+// (c)SottNick
+// адаптація і допороблення kostyamat
 String EffectTest::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.06, 0.5) * EffectCalc::speedfactor;
   else if(_val->getId()==3) SnakeNum = EffectCalc::setDynCtrl(_val).toInt();
@@ -5546,9 +5479,9 @@ void EffectTest::load() {
   regen();
 }
 
-// ----------- Эфеект "Попкорн"
+//===== Ефект Попкорн ==========================//
 // (C) Aaron Gotwalt (Soulmate)
-// адаптация и доработки kostyamat
+// адаптація і дороблення kostyamat
 void EffectPopcorn::restart_rocket(uint8_t r) {
   rockets[r].xd = (float)(random(-(WIDTH * HEIGHT + (WIDTH*2)), WIDTH * HEIGHT + (WIDTH*2))) / 256.0; 
   if ((rockets[r].x < 0 && rockets[r].xd < 0) || (rockets[r].x > EffectMath::getmaxWidthIndex() && rockets[r].xd > 0)) { // меняем направление только после выхода за пределы экрана
@@ -5564,7 +5497,6 @@ void EffectPopcorn::restart_rocket(uint8_t r) {
 void EffectPopcorn::reload(){
   //numRockets = map(scale, 1, 32, 6, WIDTH * 3);
   //rockets.resize(numRockets);
-
   for (uint8_t r = 0; r < numRockets; r++) {
     rockets[r].x = random8(WIDTH);
     rockets[r].y = random8(HEIGHT);
@@ -5606,7 +5538,6 @@ bool EffectPopcorn::run(CRGB *leds, EffectWorker *param) {
     if (rockets[r].y <= -1)
       restart_rocket(r);
 
-
     // bounce off the sides of the screen?
     /*if (rockets[r].x < 0 || rockets[r].x > (int)WIDTH * 256) {
       rockets[r].xd = (-rockets[r].xd * 248) >> 8;
@@ -5618,15 +5549,11 @@ bool EffectPopcorn::run(CRGB *leds, EffectWorker *param) {
         rockets[r].x = (WIDTH * 256) - rockets[r].xd;
       }
     }*/
-
     // popcornGravity
     rockets[r].yd -= popcornGravity;
-
     // viscosity
     rockets[r].xd *= 0.875;
     rockets[r].yd *= 0.875;
-
-
     // make the acme gray, because why not
     if (-0.004 > rockets[r].yd and rockets[r].yd < 0.004)
       EffectMath::drawPixelXYF(rockets[r].x, rockets[r].y, revCol ?
@@ -5639,7 +5566,6 @@ bool EffectPopcorn::run(CRGB *leds, EffectWorker *param) {
   }
   return true;
 }
-
 // !++
 String EffectPopcorn::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) { speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., 0.25, 0.75)*EffectCalc::speedfactor; }
@@ -5655,9 +5581,9 @@ void EffectPopcorn::load() {
   reload();
 }
 
-//-------- Эффект "Детские сны"
-// (c) Stepko https://editor.soulmatelights.com/gallery/505
-// !++
+//===== Ефект Полумняні мрії ===================//
+// https://editor.soulmatelights.com/gallery/505
+// (с)Stepko
 String EffectSmokeballs::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1., 255., .02, .1)*EffectCalc::speedfactor; // попробовал разные способы управления скоростью. Этот максимально приемлемый, хотя и сильно тупой.
   else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
@@ -5710,9 +5636,10 @@ void EffectSmokeballs::shiftUp(){
   }
 }
 
-// ----------- Эффект "Ёлки-Палки"
-// "Cell" (C) Elliott Kember из примеров программы Soulmate
-// Spaider и Spruce (c) stepko
+//===== Ефект Клітинки-ялинки ==================//
+// Cell (C)Elliott Kember from Soulmate-IDE examples
+// Spider, Spruce, Lines (c)stepko
+// Flowering (c)Taras Yuzov
 void EffectCell::cell(CRGB *leds) {
   speedFactor = EffectMath::fmap((float)speed, 1., 255., .33*EffectCalc::speedfactor, 3.*EffectCalc::speedfactor);
   offsetX = beatsin16(6. * speedFactor, -180, 180);
@@ -5721,7 +5648,6 @@ void EffectCell::cell(CRGB *leds) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
       //int16_t index = myLamp.getPixelNumber(x, y);
       //if (index < 0) break;
-
       int16_t hue = x * beatsin16(10. * speedFactor, 1, 10) + offsetY;
       EffectMath::drawPixelXY(x, y, CHSV(hue, 200, sin8(x * 30 + offsetX)));
       hue = y * 3 + offsetX;
@@ -5730,7 +5656,6 @@ void EffectCell::cell(CRGB *leds) {
   }
   EffectMath::nightMode(leds); // пригасим немного, чтобы видить структуру, и убрать пересветы
 } 
-
 // !++ Тут лучше все оставить как есть, пускай в теле эффекта скорость пересчитывает
 String EffectCell::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speed = EffectCalc::setDynCtrl(_val).toInt();
@@ -5772,7 +5697,6 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   default:
     break;
   }
-
   return true;
 }
 
@@ -5806,7 +5730,6 @@ void EffectCell::spider(CRGB *leds) {
     float xx = 2. + sin8((float)(millis() & 0x7FFFFF) / speedFactor + 1000 * c * Scale) / 12.;
     float yy = 2. + cos8((float)(millis() & 0x7FFFFF) / speedFactor + 1500 * c * Scale) / 12.;
     EffectMath::drawLineF(xx, yy, (float)WIDTH - xx - 1, (float)HEIGHT - yy - 1, CHSV(c * (256 / Lines), 200, 255));
-    
   }
 }
 
@@ -5830,9 +5753,9 @@ void EffectCell::flower(CRGB *leds) {
   } 
 }
 
-// ---------- Эффект "Тикси Ленд"
-// (c)  Martin Kleppe @aemkei, https://github.com/owenmcateer/tixy.land-display
-// !++
+//===== Ефект Тіксі Ленд =======================//
+// https://github.com/owenmcateer/tixy.land-display
+// (c)Martin Kleppe @aemkei
 String EffectTLand::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) { animation = EffectCalc::setDynCtrl(_val).toInt(); isSeq = animation ? false : true; if(!animation) animation = random(_val->getMin().toInt()+1, _val->getMax().toInt()+1);}
   else if(_val->getId()==4) { hue = EffectCalc::setDynCtrl(_val).toInt(); ishue = hue; }
@@ -5950,7 +5873,6 @@ float EffectTLand::code(double i, double x, double y) {
       //return (x - 8) * (y - 8) - sin(t / 2.) * 64;
       return (x - (WIDTH/2)) * (y - (HEIGHT/2)) - sin16(t*4096.0)/512.0;
       break;
-
 
     /**
      * Reddit
@@ -6117,15 +6039,14 @@ float EffectTLand::code(double i, double x, double y) {
   }
 }
 
-// ----------- Эффект "Осцилятор"
-// (c) Сотнег (SottNick)
+//===== Ефект Осцилятор ========================//
+// (c)SottNick
 bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
   if (millis() - timer < (unsigned)map(speed, 1U, 255U, 70, 15)) return true;
   else timer = millis(); // не могу сообразить, как по другому скоростью управлять
   CRGB currColors[3];
   for (uint8_t c = 0; c < 3; c++)
     currColors[c] = ColorFromPalette(*curPalette, c * 85U + hue);
-
   // расчёт химической реакции и отрисовка мира
   uint16_t colorCount[3] = {0U, 0U, 0U};
   hue++;
@@ -6150,8 +6071,6 @@ bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
           drawPixelXYFseamless((float)x + 0.5, (float)y + 0.5, currColors[oscillatingWorld[x][y].color]);
       }
   }
-
-
   // проверка зацикливания
   if (colorCount[0] == deltaHue && colorCount[1] == deltaHue2 && colorCount[2] == deltaValue) {
     step++;
@@ -6168,7 +6087,6 @@ bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
   }
   else
     step = 0U;
-  
   // вброс хаоса
   if (hue == hue2){// чтобы не каждый ход
     hue2 += random8(220U) + 36U;
@@ -6183,7 +6101,6 @@ bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
   deltaHue = colorCount[0];
   deltaHue2 = colorCount[1];
   deltaValue = colorCount[2];
-
   // вброс исчезнувшего цвета
   for (uint8_t c = 0; c < 3; c++)
   {
@@ -6202,14 +6119,12 @@ bool EffectOscilator::run(CRGB *leds, EffectWorker *opt) {
       }
     }
   }
-
   // перенос на следующий цикл
   for (uint8_t x = 0; x < WIDTH; x++) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
           setCellColors(x, y);
       }
   }
-
   //fpsmeter();
   return true;
 }
@@ -6285,9 +6200,8 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }
 
-//------------ Эффект "Шторм" 
-// (с) kostyamat 1.12.2020
-// !++
+//===== Ефект Шторм ============================// 
+// (с)kostyamat 1.12.2020
 String EffectWrain::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==1) {
@@ -6349,12 +6263,10 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     } 
   }
 
-  //
   for (byte i = 0; i < map(_scale, 1, 45, 2, counts); i++) {
     dotColor[i]++;
     dotPosX[i] += (speedFactor * dotChaos + dotAccel[i]) * dotDirect; // смещение по горизонтали
     dotPosY[i] -= (speedFactor + dotAccel[i]);
-
     // Обеспечиваем бесшовность по Y.
     if (dotPosY[i] < 0)
     {                                                             // достигли низа, обновляем каплю
@@ -6364,7 +6276,6 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     }
     if (dotPosY[i] > (EffectMath::getmaxHeightIndex()))
       dotPosY[i] = 0;
-
     // Обеспечиваем бесшовность по X.
     if (dotPosX[i] < 0)
       dotPosX[i] = EffectMath::getmaxWidthIndex();
@@ -6387,7 +6298,6 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
       else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], color);
     }
   }
-
   // Раздуваем\угасаем ветер
   if (type <= 4) {
     uint8_t val = triwave8(windProgress += speedFactor);
@@ -6396,7 +6306,6 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
       dotDirect = random(-1, 2); //выбираем направление ветра лево-право, рандом 2 не возвращает (как не странно).
     }
   } else dotDirect = 0;
-
     // Рисуем тучку и молнию
   if (clouds) {
     if (randColor) curPalette = palettes.at(0);  // устанавливаем палитру RainbowColors_p
@@ -6451,13 +6360,11 @@ if (random16() < chanse)
         }
       }
     }
-
     //free(lightning);
     return true;
   }
   return false;
 }
-
 // Функция рисует тучу в верхней части матрицы 
 void EffectWrain::Clouds(bool flash)
 {
@@ -6496,14 +6403,13 @@ void EffectWrain::Clouds(bool flash)
   }
 }
 
-//-------- по мотивам Эффектов Particle System -------------------------
+//===== За мотивами ефектів Particle System ====//
 // https://github.com/fuse314/arduino-particle-sys
 // https://github.com/giladaya/arduino-particle-sys
 // https://www.youtube.com/watch?v=S6novCRlHV8&t=51s
 
-//при попытке вытащить из этой библиотеки только минимально необходимое выяснилось, что там очередной (третий) вариант реализации субпиксельной графики.
-//ну его нафиг. лучше будет повторить визуал имеющимися в прошивке средствами.
-
+//===== Ефекти Фея і Джерело ====================//
+// (c) SottNick
 void EffectFairy::particlesUpdate(uint8_t i) {
   trackingObjectState[i] -= 1 * speedFactor; 
 
@@ -6514,17 +6420,12 @@ void EffectFairy::particlesUpdate(uint8_t i) {
     trackingObjectIsShift[i] = false;
 }
 
-// ============= ЭФФЕКТ ИСТОЧНИК ===============
-// (c) SottNick
-// выглядит как https://github.com/fuse314/arduino-particle-sys/blob/master/examples/StarfieldFastLED/StarfieldFastLED.ino
-
 void EffectFairy::fountEmit(uint8_t i) {
   if (hue++ & 0x01)
     hue2++;
 
   trackingObjectPosX[i] = WIDTH * 0.5;
   trackingObjectPosY[i] = HEIGHT * 0.5;
-
 
   trackingObjectSpeedX[i] = (((float)random8()-127.)/512.); 
   trackingObjectSpeedY[i] = EffectMath::sqrt(0.0626-trackingObjectSpeedX[i] * trackingObjectSpeedX[i]); 
@@ -6571,8 +6472,6 @@ void EffectFairy::fount(CRGB *leds){
   if (blur) EffectMath::blur2d(blur * 10); // Размытие 
 }
 
-// ============= ЭФФЕКТ ФЕЯ ===============
-// (c) SottNick
 #define FAIRY_BEHAVIOR //типа сложное поведение
 
 void EffectFairy::fairyEmit(uint8_t i) {
@@ -6673,7 +6572,6 @@ bool EffectFairy::fairy(CRGB *leds) {
       EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB, 0);
     }
   }
-
   EffectMath::drawPixelXYF(boids[0].location.x, boids[0].location.y, CHSV(hue, 160U, 255U) /*temp*/, 0);  
   return true;
 }
@@ -6697,7 +6595,6 @@ bool EffectFairy::run(CRGB *leds, EffectWorker *opt) {
   //fpsmeter();
   return true;
 }
-
 
 void EffectFairy::load(){
   //---- Общее для двух эффектов
@@ -6741,11 +6638,10 @@ String EffectFairy::setDynCtrl(UIControl*_val){
   return String();
 }
 
-// ---------- Эффект "Бульбулятор"
-// "Circles" (C) Elliott Kember https://editor.soulmatelights.com/gallery/11
-// адаптация и переделка - kostyamat
-
-//!++
+//===== Ефект Бульбулятор ======================//
+// https://editor.soulmatelights.com/gallery/11
+// (C)Elliott Kember 
+// перероблено і адаптовано kostyamat
 String EffectCircles::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 5) * EffectCalc::speedfactor;
   else if(_val->getId()==2) count = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, NUMBER_OF_CIRCLES);
@@ -6812,8 +6708,9 @@ bool EffectCircles::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ----------- Эффект "Бенгальские Огни"
-// (c) stepko https://wokwi.com/arduino/projects/289797125785520649
+//===== Ефект Бенгальські вогні ================//
+// https://wokwi.com/arduino/projects/289797125785520649
+// (c)Stepko
 // 06.02.2021
 void EffectBengalL::load() {
   for (byte i = 0; i < sparksNum; i++) {
@@ -6855,7 +6752,6 @@ void EffectBengalL::regen(byte id) {
   sparksFade[id] = 255;
 }
 
-
 bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, beatsin8(5, 20, 100));
   if (centerRun) {
@@ -6881,8 +6777,9 @@ bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ----------- Эффект "Шары"
-// (c) stepko and kostyamat https://wokwi.com/arduino/projects/289839434049782281
+//===== Ефект кульки ===========================//
+// https://wokwi.com/arduino/projects/289839434049782281
+// (c) stepko and kostyamat
 // 07.02.2021
 void EffectBalls::load() {
   randomSeed(millis());
@@ -6899,8 +6796,6 @@ void EffectBalls::load() {
     color[i] = random(0, 255);
   }
 }
-
-
 // !++
 String EffectBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.15, 0.5) * EffectCalc::speedfactor;
@@ -6924,14 +6819,11 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
         color[i] = random(0, 255);
       }
     }
-
-
     //EffectMath::drawCircleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]), 0.5);
     if (radius[i] > 1) 
       EffectMath::fill_circleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]));
     else 
       EffectMath::drawPixelXYF(ball[i][1], ball[i][0], ColorFromPalette(*curPalette, color[i]));
-
 
     if (ball[i][0] + radius[i] >= EffectMath::getmaxHeightIndex())
       ball[i][0] += (ball[i][2] * ((EffectMath::getmaxHeightIndex() - ball[i][0]) / radius[i] + 0.005));
@@ -6971,8 +6863,8 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// ---------- Ефект лабіринт
-//reworked by stepko
+//===== Ефект Лабіринт =========================//
+// solving algorithm by Stepko
 void EffectMaze::digMaze(int x, int y) {
   int x1, y1;
   uint16_t x2, y2;
@@ -7149,10 +7041,9 @@ String EffectMaze::setDynCtrl(UIControl*_val){
   return String();
 }
 
-
-// --------- Эффект "Вьющийся Цвет"
-// (c) Stepko https://wokwi.com/arduino/projects/283705656027906572
-// доработка - kostyamat
+//===== Ефект В'юнкі кольори ===================//
+// https://wokwi.com/arduino/projects/283705656027906572
+// (c) Stepko
 bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
   _speed = EffectMath::fmap(speed, 1, 255, 0.25, 3);
   if (scale <= 127) _scale = EffectMath::fmap(scale, 1, 255, 1, 8);
@@ -7164,9 +7055,9 @@ bool EffectFrizzles::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-// --------- Эффект "Северное Сияние"
+//===== Ефект Північне Сяйво ===================//
 // (c) kostyamat 05.02.2021
-// идеи подсмотрены тут https://www.reddit.com/r/FastLED/comments/jyly1e/challenge_fastled_sketch_that_fits_entirely_in_a/
+// Велике дякую @Stepko за створені палітри спеціально для цього ефекту
 void EffectPolarL::load() {
   adjastHeight = EffectMath::fmap((float)HEIGHT, 8, 32, 28, 12);
   adjScale = map((int)WIDTH, 8, 64, 310, 63);
@@ -7194,10 +7085,8 @@ void EffectPolarL::palettesload(){
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
 }
-
 // нахрена кастомный мапинг тут???
 // А потому, что мне нужно переменную flag получить! Есть варианты? Вариант ничем не хуже setDynCtrl
-
 void EffectPolarL::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _val, const uint8_t _min, const uint8_t _max){
   std::size_t idx = (_val-1); // т.к. сюда передается точное значение контрола, то приводим его к 0
   if (!_pals.size() || idx>=_pals.size()) {
@@ -7207,7 +7096,6 @@ void EffectPolarL::palettemap(std::vector<PGMPalette*> &_pals, const uint8_t _va
   flag = idx;
   curPalette = _pals.at(idx);
 }
-
 // !++
 String EffectPolarL::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 128, 16);
@@ -7248,12 +7136,12 @@ bool EffectPolarL::run(CRGB *leds, EffectWorker *opt) {
       }
     }
   }
-
   return true;
 }
 
-// --------- Эффект "Космо-Гонщик"
-// (c) Stepko + kostyamat https://editor.soulmatelights.com/my-patterns/655
+//===== Ефект Космо-Рейсер =====================//
+// https://editor.soulmatelights.com/gallery/655
+// (c)Stepko + Kostyamat
 // void EffectRacer::setspd(const byte _spd) {
 //   EffectCalc::setspd(_spd);
 //   speedFactor = _speed * EffectMath::fmap(speed, 1, 255, 0.33, 2);
@@ -7284,7 +7172,7 @@ bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
       }
     } else {
       aimChange();
-  }
+    }
   }
   radius += addRadius;
   angle += radius;
@@ -7300,9 +7188,7 @@ bool EffectRacer::run(CRGB *leds, EffectWorker *opt) {
     drawStarF(aimX/10, aimY/10, 2 * radius, radius, starPoints, angle, color); // рисуем звезду
     break;
   }
-  
   EffectMath::drawPixelXYF(posX/10.0, posY/10.0, CHSV(0, 0, 255)); // отрисовываем бегуна
-
   return true;
 }
 
@@ -7330,13 +7216,12 @@ void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t
   for (int i = 0; i < points; i++) {
     EffectMath::drawLineF(x + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
     EffectMath::drawLineF(x + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), y + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), x + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), y + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), color);
-
   }
 }
 
-// ----------------- Эффект "Магма"
-// (c) Сотнег (SottNick) 2021
-// адаптация и доводка до ума - kostyamat
+//===== Ефект Магма ============================//
+// (c)SottNick 2021
+// адаптація і доведення до розуму kostyamat
 void EffectMagma::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
@@ -7375,8 +7260,6 @@ void EffectMagma::regen() {
   for (uint8_t j = 0; j < HEIGHT; j++) {
     shiftHue[j] = map(j, 0, HEIGHT+HEIGHT/4, 255, 0);// init colorfade table
   }
-
-
   for (uint8_t i = 0 ; i < enlargedOBJECT_MAX_COUNT ; i++) {
     LeapersRestart_leaper(i);  
     trackingObjectHue[i] = 50U;
@@ -7408,17 +7291,14 @@ void EffectMagma::LeapersMove_leaper(uint8_t l) {
 
   trackingObjectPosX[l] += trackingObjectSpeedX[l] * speedFactor;
   trackingObjectPosY[l] += trackingObjectShift[l] * speedFactor;
-
   // bounce off the ceiling?
   if (trackingObjectPosY[l] > HEIGHT + HEIGHT/4) {
     trackingObjectShift[l] = -trackingObjectShift[l];
   }
-  
   // settled on the floor?
   if (trackingObjectPosY[l] <= (HEIGHT/8-1)) {
     LeapersRestart_leaper(l);
   }
-
   // bounce off the sides of the screen?
   if (trackingObjectPosX[l] < 0 || trackingObjectPosX[l] > EffectMath::getmaxWidthIndex()) {
     LeapersRestart_leaper(l);
@@ -7434,20 +7314,16 @@ void EffectMagma::LeapersRestart_leaper(uint8_t l) {
   trackingObjectShift[l] = EffectMath::randomf(0.50, 0.85);
   trackingObjectPosX[l] = EffectMath::randomf(0, WIDTH);
   trackingObjectPosY[l] = EffectMath::randomf(0, (float)HEIGHT/4-1);
-
   // for variety, sometimes go 100% faster
   if (random8() < 12) {
     trackingObjectShift[l] += trackingObjectShift[l] * EffectMath::randomf(1.5, 2.5);
   }
 }
 
-
-// --------------------- Эффект "Звездный Десант"
+//===== Ефект Зоряний десант ===================//
 // Starship Troopers https://editor.soulmatelights.com/gallery/839-starship-troopers
 // Based on (c) stepko`s codes https://editor.soulmatelights.com/gallery/639-space-ships
-// reworked (c) kostyamat (subpixel, shift speed control, etc)  08.04.2021
-
-// !++
+// reworked (c) kostyamat (subpixel, shift speed control, etc) 08.04.2021
 String EffectStarShips::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
@@ -7569,10 +7445,10 @@ void EffectStarShips::draw(float x, float y, CRGB color) {
   }
 }
 
-// ------------- Эффект "Флаги"
+//===== Ефект Прапори ==========================//
+// https://editor.soulmatelights.com/gallery/739-flags
 // (c) Stepko + kostyamat
 // 17.03.21
-// https://editor.soulmatelights.com/gallery/739-flags
 String EffectFlags::setDynCtrl(UIControl*_val){
   if (_val->getId()==1)
     _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 16);
@@ -7586,9 +7462,9 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, 32);
   for (uint8_t i = 0; i < WIDTH; i++) {
     thisVal = mix(inoise8(((float) i * DEVIATOR)-counter,counter/2,(float)i*SPEED_ADJ),128,i*(255/WIDTH));
-    thisMax = map(thisVal, 0, 255, 0, HEIGHT - 1);
+    thisMax = map(thisVal, 0, 255, 0, EffectMath::getmaxWidthIndex());
 	for (byte j = 0; j < HEIGHT; j++) {
-		if(j>((flag == 2 || flag == 7)? (HEIGHT-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || ((int8_t)j < (int8_t)((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
+		if(j>((flag == 2 || flag == 7)? (EffectMath::getmaxWidthIndex()-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || ((int8_t)j < (int8_t)((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
     switch (flag)
     {
     case 1:
@@ -7623,8 +7499,8 @@ bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
     default:
       break;
     }
-
-  }}
+  }
+  }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
   counter += (float)_speed * SPEED_ADJ;
   return true;
@@ -7642,12 +7518,11 @@ void EffectFlags::changeFlags() {
 }
 
 #ifdef MIC_EFFECTS
-/* -------------- эффект "VU-Meter"
-    (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
-    reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
-    adopted for FireLamp_EmbUI by kostyamat, kDn
-    reworked and updated (c) kostyamat 24.04.2021
-*/
+//===== Ефект Частотний аналізатор =============//
+/* (c) G6EJD, https://www.youtube.com/watch?v=OStljy_sUVg&t=0s
+   reworked by s-marley https://github.com/s-marley/ESP32_FFT_VU
+   adopted for FireLamp_EmbUI by kostyamat, kDn
+   reworked and updated (c) kostyamat 24.04.2021 */
 String EffectVU::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) amplitude = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.025, 0.5);
   else if (_val->getId()==2) threshold = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0, 30);
@@ -7655,7 +7530,6 @@ String EffectVU::setDynCtrl(UIControl*_val){
     effId = EffectCalc::setDynCtrl(_val).toInt() - 1;
     NUM_BANDS = effId & 01 ? (WIDTH/2 + (WIDTH & 01 ? 1:0)) : WIDTH;
     BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
-
     //memset(oldBarHeights,0,sizeof(oldBarHeights));
     for(uint16_t i = 0; i < WIDTH; i++) {
       oldBarHeights[i] = 0.;
@@ -7680,7 +7554,6 @@ void EffectVU::load() {
 #endif
     NUM_BANDS = effId & 01 ? (WIDTH/2 + (WIDTH & 01 ? 1:0)) : WIDTH;
     BAR_WIDTH =  (WIDTH  / (NUM_BANDS - 1));
-
   //memset(oldBarHeights,0,sizeof(oldBarHeights));
   for(uint16_t i = 0; i < WIDTH; i++) {
     oldBarHeights[i] = 0.0;
@@ -7744,22 +7617,17 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
 #endif
 */
   FastLED.clear();
-
   // Process the FFT data into bar heights
   for (byte band = 0; band < NUM_BANDS; band++) {
-
     // Scale the bars for the display
     float barHeight = bandValues[band] * _scale > threshold ? (bandValues[band] * _scale) : 0.;
     if (barHeight > TOP) barHeight = TOP;
-
     // Small amount of averaging between frames
     if (averaging) barHeight = (oldBarHeights[band] + barHeight) / 2;
-
     // Move peak up
     if (barHeight > peak[band]) {
       peak[band] = min((float)TOP, barHeight);
     }
-
   // EVERY_N_SECONDS(1){
   //     LOG(printf_P,PSTR("%d: %d %d %d %d,\n"),band, (int)bandValues[band], peak[band], (int)barHeight, oldBarHeights[band]);
   // }
@@ -7801,11 +7669,9 @@ bool EffectVU::run(CRGB *leds, EffectWorker *opt) {
         whitePeak(band);
         break;
       }
-
     // Save oldBarHeights for averaging later
     if (averaging) oldBarHeights[band] = barHeight;
   }
-
 // Decay peak
  // EVERY_N_MILLISECONDS(EFFECTS_RUN_TIMER +1) {
     for (byte band = 0; band < NUM_BANDS; band++)
@@ -7826,9 +7692,7 @@ if (colorShifting) {
 */
   return true;
 }
-
 // PATTERNS BELOW //
-
 void EffectVU::horizontalColoredBars(uint8_t band, float barHeight, uint8_t type, uint8_t colorShift) {
   colorShift--;
   uint8_t xStart = BAR_WIDTH * band;
@@ -7938,7 +7802,6 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
       EffectMath::drawPixelXY(x, 0, CHSV((x / BAR_WIDTH) * (255 / NUM_BANDS), 255, 255));
     //}
   }
-
   // Move screen up starting at 2nd row from top
   if (band == NUM_BANDS - 1){
     for (byte x = 0; x < WIDTH; x++) {
@@ -7950,10 +7813,10 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
 }
 #endif
 
-// ----------- Эффект "Огненная Лампа"
+//===== Ефект Вогняна лампа ====================//
 // https://editor.soulmatelights.com/gallery/546-fire
 // (c) Stepko 17.06.21
-// sparks (c) kostyamat 10.01.2022 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
+// sparks (c) kostyamat 10.01.22 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
 void EffectFire2021::load() {
   palettesload();    // подгружаем палитры
 }
@@ -7981,8 +7844,6 @@ void EffectFire2021::palettesload(){
   for (byte i = 0; i < sparksCount; i++) 
     sparks[i].reset();
 }
-
-
 // !++
 String EffectFire2021::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 100) * speedfactor;
@@ -8015,7 +7876,7 @@ bool EffectFire2021::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ----------- Эффект "Пятнашки"
+//===== Ефект П'ятнашки ========================//
 // https://editor.soulmatelights.com/gallery/1471-puzzles-subpixel
 // (c) Stepko 10.12.21
 String EffectPuzzles::setDynCtrl(UIControl*_val) {
@@ -8126,7 +7987,7 @@ bool EffectPuzzles::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ============= Ефект Кольорові драже ===============
+//===== Ефект Кольорові драже ==================//
 // (c)stepko
 String EffectPile::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 20, 200);
@@ -8157,12 +8018,12 @@ pcnt = 0;
     for (byte x = 0; x < WIDTH; x++) {
       if (!F[1][x][y]) continue;
       if (F[1][x][y] && !F[1][x][y - 1] && y) {F[1][x][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
-      else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x + 1][y - 1]  && !(x==WIDTH-1) && y) {F[1][x + 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
+      else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x + 1][y - 1]  && !(x == EffectMath::getmaxWidthIndex()) && y) {F[1][x + 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
        else if (F[1][x][y] && F[1][x][y - 1] && !F[1][x - 1][y - 1] && x && y) {F[1][x - 1][y - 1] = F[1][x][y]; F[1][x][y] = 0; }
         else if (pcnt < y) pcnt = y;
     }									
   }
-  if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][HEIGHT - 1] = random(16, 255);
+  if (!(random(255) % 6)) F[1][WIDTH/2 - (random(-2, WIDTH%2 ? 3 : 4))][EffectMath::getmaxHeightIndex() ] = random(16, 255);
 }
 
 bool EffectPile::run(CRGB *leds, EffectWorker *param) {
@@ -8180,12 +8041,10 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ============= Эффект ДНК ===============
+//===== Ефект ДНК ==============================//
 // (c) Stepko
 // https://editor.soulmatelights.com/gallery/1520-dna
-//по мотивам визуала эффекта by Yaroslaw Turbin
-//https://vk.com/ldirko программный код которого он запретил брать
-// !++
+// за мотивами візуалу від Yaroslaw Turbin aka ldir
 String EffectDNA::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor  = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 5) * speedfactor;
   else if(_val->getId()==3)  type = EffectCalc::setDynCtrl(_val).toInt();
@@ -8258,10 +8117,8 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ----------- Эффект "Дым"
+//===== Ефект Дим ==============================//
 // based on code by @Stepko (c) 23/12/2021
-
-// !++
 String EffectSmoker::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 3, 20) * speedfactor;
   else if(_val->getId()==2) color = EffectCalc::setDynCtrl(_val).toInt();
@@ -8284,10 +8141,8 @@ bool EffectSmoker::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ----------- Эффект "Мираж"
-// based on code by @Stepko (c) 23/12/2021
-
-// !++
+//===== Ефект Міраж ============================//
+// based on cod by @Stepko (c) 23/12/2021
 String EffectMirage::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 64, 512) * speedfactor;
   else if(_val->getId()==2) {
@@ -8354,10 +8209,9 @@ bool EffectMirage::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// -------------------- Эффект "Акварель"
-// (c) kostyamat 26.12.2021
+//===== Ефект Акварель =========================//
 // https://editor.soulmatelights.com/gallery/1587-oil
-// !++
+// (c) kostyamat 26.12.2021
 String EffectWcolor::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
     speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.1, 0.5);
@@ -8393,11 +8247,10 @@ bool EffectWcolor::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// ----------- Эффект "Неопалимая купина"
-//RadialFire
-// (c) Stepko and Sutaburosu https://editor.soulmatelights.com/gallery/1570-radialfire
-//23/12/21
-// !++
+//===== Ефект Неопалима купина =================//
+// https://editor.soulmatelights.com/gallery/1570-radialfire
+// (c) Stepko and Sutaburosu
+// 23.12.21
 String EffectRadialFire::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
@@ -8458,7 +8311,8 @@ bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-// 
+//===== Ефект Нікола Тесла =====================//
+// (c)Stepko
 String EffectSplashBals::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
@@ -8482,8 +8336,8 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
   hue++;
 
   for (byte i = 0; i < count; i++) {
-    x[i] = (float)beatsin88(((10UL + iniX[i]) * 256) * speedFactor, 0, (WIDTH - 1) * DEV) / DEV;
-    y[i] = (float)beatsin88(((10UL + iniY[i]) * 256) * speedFactor, 0, (HEIGHT - 1) * DEV) / DEV;
+    x[i] = (float)beatsin88(((10UL + iniX[i]) * 256) * speedFactor, 0, EffectMath::getmaxWidthIndex() * DEV) / DEV;
+    y[i] = (float)beatsin88(((10UL + iniY[i]) * 256) * speedFactor, 0, EffectMath::getmaxHeightIndex() * DEV) / DEV;
     for (byte j = i; j < count; j++) {
       byte a = dist(x[i], y[i], x[j], y[j]);
       if ((i != j) & (a <= float(min(WIDTH, HEIGHT) / 2))) {
@@ -8496,8 +8350,9 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
   return true;
 }
 
-
-
+//===== Ефект Мильні розводи ===================//
+// https://editor.soulmatelights.com/gallery/1626-soap
+// (c)Stepko
 void EffectFlower::load() {
   palettesload();
   noise32_x = random16();
@@ -8591,9 +8446,11 @@ void EffectFlower::MoveFractionalNoiseY(int8_t amplitude, float shift) {
 }
 
 #ifdef RGB_PLAYER
-// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko
-// 27.01.2022
+
+//===== Програвач 332/556 файлів ===============//
 // https://editor.soulmatelights.com/gallery/1684-pgm-player-with-resize
+// (c) Kostyantyn Matviyevskyy aka kostyamat, file format and decoder\encoder (c) Stepko and Sutaburosu
+// 27.01.2022
 // License GPL v.3 as a part of the FireLamp_EmbUI project
 String EffectPlayer::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) {
@@ -8624,7 +8481,6 @@ void EffectPlayer::calc() {
     }
     bufSize = newBufSize;
     LOG(printf_P, PSTR("RGBPlayer: Framebuffer size is %d bytes.\n"), newBufSize);
-
 }
 
 void EffectPlayer::getFromFile_332(uint8_t frame) {
@@ -8668,7 +8524,6 @@ void EffectPlayer::drawFrame () {
     if (blur) EffectMath::blur2d(64);
 }
 
-
 bool EffectPlayer::loadFile(String filename) {
     if (!LittleFS.exists(filename)) {                                // якщо він відсутній, то загружаємо тестовий, який гарантовано має бути в ФС
       LOG(println, filename);
@@ -8708,6 +8563,5 @@ bool EffectPlayer::run(CRGB *leds, EffectWorker *param) {
     frame = 0;
   return true;
 }
-
 
 #endif

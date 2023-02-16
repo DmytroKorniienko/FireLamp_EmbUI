@@ -112,7 +112,12 @@ public:
 };
 
 //===== Ефект Стрибаючі м'ячики ================//
-// переведено на субпіксельну графіку kostyamat
+//  BouncingBalls2014 is a program that lets you animate an LED strip
+//  to look like a group of bouncing balls
+//  Daniel Wilson, 2014
+//  https://github.com/githubcdr/Arduino/blob/master/bouncingballs/bouncingballs.ino
+//  With BIG thanks to the FastLED community!
+//  переведено на субпіксельну графіку kostyamat
 class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
@@ -154,6 +159,7 @@ public:
 };
 
 //===== Ефект Пульс ============================//
+// Stefan Petrick's PULSE Effect
 class EffectPulse : public EffectCalc {
 private:
     uint8_t pulse_hue;
@@ -537,6 +543,10 @@ public:
     virtual ~EffectTwinkles();
 };
 
+//===== Ефект Хвилі ============================//
+// https://github.com/pixelmatix/aurora/blob/master/PatternWave.h
+// Copyright(c) 2014 Jason Coon
+// Адаптовано (c)SottNick
 class EffectWaves : public EffectCalc {
 private:
   float whue;
@@ -572,7 +582,7 @@ public:
 //===== Ефект Вогонь 2018 ======================//
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
-// v1.0 - Updating for GuverLamp v1.7 by SottNick 17.04.2020
+// Updating by SottNick 17.04.2020
 class EffectFire2018 : public EffectCalc {
 private:
   const uint8_t CentreY = HEIGHT / 2 + (HEIGHT % 2);
@@ -812,7 +822,7 @@ public:
     String setDynCtrl(UIControl*_val) override;
 };
 
-//===== Ефект Вихорі ===========================//
+//===== Ефект Вихори ===========================//
 // https://github.com/pixelmatix/aurora/blob/master/PatternFlowField.h
 // Copyright(c) 2014 Jason Coon
 // адаптація SottNick
@@ -963,7 +973,6 @@ private:
     float y[2] = {0., 0.};
     String setDynCtrl(UIControl*_val) override;
     
-
 public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
@@ -1299,8 +1308,8 @@ public:
 };
 
 //===== Ефект Nexus ============================//
-// База паттерн "Змейка" из проекта Аврора, 
-// перенос и переписан - kostyamat
+// База паттерн "Змейка" з проекту Аврора, 
+// Переписано kostyamat
 #define NEXUS (WIDTH)
 
 class EffectNexus: public EffectCalc {
@@ -1316,7 +1325,6 @@ class EffectNexus: public EffectCalc {
     bool randColor = false;
     float windProgress;
 	float speedFactor;
-    
 
     void reload();
     void resetDot(uint8_t idx);
@@ -1385,7 +1393,7 @@ public:
 
 //===== Ефект Полумняні мрії ===================//
 // https://editor.soulmatelights.com/gallery/505
-// (с)stepko
+// (с)Stepko
 #define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
@@ -2166,7 +2174,6 @@ private:
     bool a = true;
 	float speedFactor;
 
-
     String setDynCtrl(UIControl*_val) override;
     void drawDot(float x, float y, byte a);
     void blur();
@@ -2196,7 +2203,6 @@ private:
         float y[BLOT_SIZE];
 
     public:
-
         void appendXY(float nx, float ny) {
             for (byte i = 0; i < BLOT_SIZE; i++) {
                 x[i] += nx;
