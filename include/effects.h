@@ -771,7 +771,6 @@ private:
     unsigned MASS_MAX = 50;
     Particle particles[20];
     uint8_t buff[WIDTH][HEIGHT];
-    float buff2[WIDTH][HEIGHT];
     uint8_t pidx = 0;
     unsigned numParticles = 0;
     unsigned physic_on = 1;

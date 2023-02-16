@@ -3355,33 +3355,10 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
       }
     }
   } else {
-    float min = 0, max = 0;
-    // Оператор Щарра
-    int oper_h[3][3] = {{3, 10, 3}, {0, 0, 0}, {-3, -10, -3}};
-    int oper_v[3][3] = {{3, 0, -3}, {10, 0, -10}, {3, 0, -3}};
-    for (unsigned x = 0; x < (unsigned)EffectMath::getmaxWidthIndex(); x++) {
-      for (unsigned y = 0; y < (unsigned)EffectMath::getmaxHeightIndex(); y++) {
-        int valh = 0, valv = 0;
-        for (int j = -1; j <= 1; j++) {
-          for (int i = -1; i <= 1; i++) {
-            valh += oper_h[j + 1][i + 1] * buff[(int)x + j][(int)y + i];
-            valv += oper_v[j + 1][i + 1] * buff[(int)x + j][(int)y + i];
-          }
-        }
-        float val = EffectMath::sqrt((valh * valh) + (valv * valv));
-        buff2[x][y] = val;
-        if (val < min) min = val;
-        if (val > max) max = val;
-      }
-    }
-
-    for (unsigned x = 0; x < WIDTH; x++) {
-      for (unsigned y = 0; y < HEIGHT; y++) {
-        float val = buff2[x][y];
-        unsigned step = filter - 1;
-        val = 1 - (val - min) / (max - min);
-        while (step) { val *= val; --step; } // почему-то это быстрее чем pow
-        CRGB color = myPal->GetColor(buff[x][y], val * 255);
+    for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        uint8_t step = (32-((filter-2)*8));
+        CRGB color = myPal->GetColor(buff[x][y], (buff[x][y] <= step)?map(buff[x][y],0,step,255,0):(((buff[x][y] > step) && buff[x][y] < 128)?0:map(buff[x][y],128,255,0,255)));
         EffectMath::drawPixelXY(x, y, color);
       }
     }
