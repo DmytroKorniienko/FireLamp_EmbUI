@@ -3357,8 +3357,13 @@ bool EffectLiquidLamp::Routine(CRGB *leds, EffectWorker *param){
   } else {
     for (uint8_t x = 0; x < WIDTH; x++) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
-        uint8_t step = (32-((filter-2)*8));
-        CRGB color = myPal->GetColor(buff[x][y], (buff[x][y] <= step)?map(buff[x][y],0,step,255,0):(((buff[x][y] > step) && buff[x][y] < 128)?0:map(buff[x][y],128,255,0,255)));
+        uint8_t step = (filter == 2)? 64 : (filter == 3)? 24 : 6;
+        uint8_t bri = 0;
+        if(buff[x][y] <= step)
+          bri = map(buff[x][y], 0, step, 255, 0);
+        else if(buff[x][y] >= 128)
+          bri = map(buff[x][y], 128, 255, 0, 255);
+        CRGB color = myPal->GetColor(buff[x][y], bri);
         EffectMath::drawPixelXY(x, y, color);
       }
     }
@@ -8047,10 +8052,9 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
 
   for (byte i = 0; i < ((_type == 1) ? HEIGHT : WIDTH); i++) {
     uint16_t shift = (i * _scale);
-    float sin1 = (1.0 + sin(radians(t + shift))) * 128.0;
-    byte brightFront =  constrain(112 * (1 + sin(radians(t + shift + 90))) + 30, 96, 255); 
-    byte brightBack =  constrain(112 * (1 + sin(radians(t + shift + 270))) + 30, 96, 255);
-
+    uint8_t sin1 = sin8(t + shift); 
+    uint8_t brightFront =  map(sin8(t + shift + 64),0,255,96,255); 
+    uint8_t brightBack =  map(sin8(t + shift + 128 + 64),0,255,96,255);
     float x = 0, y = 0, x1 = 0, y1 = 0;
     uint8_t width_height;
 
@@ -8058,21 +8062,21 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
     {
     case 1: // Вертикальная ДНК
       width_height = WIDTH;
-      x = sin1 /a;
+      x = sin1 / a;
       y = i;
       x1 = (float)(width_height - 1) - (sin1 / a);
       y1 = i;
       break;
     case 2: // Вертикально-горизонтальная
       width_height = HEIGHT;
-      x = sin1 /a;
+      x = sin1 / a;
       y = i;
       y1 = (float)(width_height - 1) - (sin1 / a);
       x1 = i;
       break;
     case 3: // Горизонтальная ДНК
       width_height = HEIGHT;
-      y = sin1 /a;
+      y = sin1 / a;
       x = i;
       y1 = (float)(width_height - 1) - (sin1 / a);
       x1 = i;
@@ -8086,7 +8090,7 @@ bool EffectDNA::run(CRGB *leds, EffectWorker *param) {
       EffectMath::drawPixelXYF(x, y, CHSV(sin1, 255, brightFront));
     }
     if (!flag or !bals)
-      EffectMath::drawPixelXYF(x1, y1, CHSV(~(byte)sin1, 255, brightBack));
+      EffectMath::drawPixelXYF(x1, y1, CHSV(~sin1, 255, brightBack));
     flag = !flag; 
   }
   blur2d(leds, WIDTH, HEIGHT, 64);
