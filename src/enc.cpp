@@ -52,12 +52,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 #ifndef ENC_STRING_EFFNUM_DELAY
-#define ENC_STRING_EFFNUM_DELAY 17
+  #define ENC_STRING_EFFNUM_DELAY 17
 #endif
 
 Encoder enc;
-
-Task encTask(1 * TASK_MILLISECOND, TASK_FOREVER, &callEncTick, &ts, true);
 
 // Функція копіює вміст одного файлу в інший (немає стандартної в LittleFS)
 void copyPastFile(String FileFrom, String FileTo) {
@@ -94,10 +92,6 @@ void resetLamp() { // Функція відновлює дефолтні нал�
     ESP.restart();  // Приміняємо зміни, перезагрузивши лампу
 }
 
-void callEncTick () {
-  enc.tick();
-}
-
 // Поместить в общий setup()
 void Encoder::init() {
   currAction = WAIT; // id операции, котору нужно выпонить в enc_loop
@@ -109,26 +103,40 @@ void Encoder::init() {
   currDynCtrl = 1;
   interrupt(); // включаем прерывания энкодера и кнопки
   //enc.counter = 100;      // изменение счётчика
-//   enc.attach(TURN_HANDLER, isTurn);
-//   enc.attach(CLICK_HANDLER, isClick);
-//   enc.attach(HOLDED_HANDLER, isHolded);
-//  // enc.attach(STEP_HANDLER, myStep);
-//   enc.attach(CLICKS_HANDLER, myClicks);
-  //enc.attachClicks(6, isClick6);
-
 }
 
 void Encoder::handle() {
   static uint16_t valRepiteChk = anyValue;
   noInterrupt();
   enc.tick();
+  interrupt();
 
-    if (isClick())
-        click();
-    if (isTurn())
-        turn();
-    if (isHolded())
-        hold();
+  uint8_t state = getState();
+  resetState();
+
+  switch (state)
+  {
+  case CLICK:
+    click();
+    break;
+
+  case HOLD:
+    hold();
+    break;
+
+  case RIGHT:
+  case RIGHT_HOLD:
+  case LEFT:
+  case LEFT_HOLD:
+    turn(state);
+    break;
+
+  default:
+    break;
+  }
+
+  if (hasClicks())
+    myClicks();
 
   if (inSettings) { // Время от времени выводим название контрола (в режиме "Настройки эффекта")
     resetTimers();
@@ -200,95 +208,68 @@ void Encoder::handle() {
       currAction = WAIT;
     }
   }
-  // interrupt();
 }
 
 
-// // Обработчик прерываний
-//void IRAM_ATTR isrEnc() {
-//  noInterrupt();
-//  enc.tick();  // отработка в прерывании
-//  interrupt();
-//}
-
-// Функция запрещает прерывания от энкодера, на время других операций, чтобы не спамить контроллер
-void interrupt() {
-  //attachInterrupt(digitalPinToInterrupt(DT), isrEnc, FALLING/*CHANGE*/);   // прерывание на DT пине
-  //attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, FALLING);  // прерывание на CLK пине
-  // attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
+// Обработчик прерываний
+void IRAM_ATTR Encoder::isrEnc() {
+ noInterrupt();
+ enc.tick();  // отработка в прерывании
+ interrupt();
 }
 
 // Функция восстанавливает прерывания энкодера
-void noInterrupt() {
-  //detachInterrupt(DT);
-  // detachInterrupt(CLK);
-  // detachInterrupt(SW);
+void Encoder::interrupt() {
+  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, FALLING/*CHANGE*/);   // прерывание на DT пине
+  attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, FALLING);  // прерывание на CLK пине
+  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
+}
+
+// Функция запрещает прерывания от энкодера, на время других операций, чтобы не спамить контроллер
+void Encoder::noInterrupt() {
+  detachInterrupt(DT);
+  detachInterrupt(CLK);
+  detachInterrupt(SW);
 }
 
 // Функция обрабатывает повороты энкодера
-void Encoder::turn() {
+void Encoder::turn(uint8_t turnType) {
   if (!myLamp.isLampOn()) return;
-  // noInterrupt();
-  // resetTimers();
-  uint8_t turnType = 0;
-
-  // тут опрос эвентов с энкодера Right, Left, etc.
-    if (enc.isLeft()) {
-        if (enc.isFast()) {turnType = 2; }  // Fast left
-        else {turnType = 1; } // Left
-    } else if (enc.isLeftH()) {
-        if (enc.isFast()) {turnType = 4; }  // Fast left hold
-        else {turnType = 3; }  // Hold left
-    } else
-    if (enc.isRight()) {
-        if (enc.isFast()) {turnType = 6; }  // Fast right
-        else {turnType = 5; }  // Right
-    } else if (enc.isRightH()) {
-        if (enc.isFast()) {turnType = 8; }  // Fast right hold
-        else {turnType = 7; } // Hold right
-    }
+  resetTimers();
+  bool fast = isFast();
 
   switch (turnType)
   {
-  case 1: // Влево
-  case 2: // Влево быстро
+  case LEFT:
     if (inSettings) {
-      setDynCtrl(turnType == 1 ? -1 : -16);
+      setDynCtrl(fast == false ? -1 : -16);
     }
     else
-      setBri(turnType == 1 ? -1 : -16);
+      setBri(fast == false ? -1 : -16);
     break;
-  case 3: // нажатый влево
-    setEffect(-1);
-    break;
-  case 4: // влево нажатый и быстро
+  case LEFT_HOLD:
+    setEffect(fast == false ? -1 : -5);
     setEffect(-5);
     break;
-  case 5: // Вправо
-  case 6:  // Вправо быстро
+  case RIGHT:
     if (inSettings) {
-      setDynCtrl(turnType == 5 ? 1 : 16);
+      setDynCtrl(fast == false ? 1 : 16);
     }
     else
-      setBri(turnType == 5 ? 1 : 16);
+      setBri(fast == false ? 1 : 16);
     break;
-  case 7: // вправо нажатый
-    setEffect(1);
+  case RIGHT_HOLD: // вправо нажатый
+    setEffect(fast == false ? 1 : 5);
     break;
-  case 8: // вправо нажатый и быстро
-    setEffect(5);
-    break;
-
+  case NONE:
   default:
     break;
   }
   LOG(printf_P, PSTR("Enc: Turn type: %d\n"), turnType);
-  interrupt();
 }
 
 // Функция обрабатывает клики по кнопке
 void Encoder::click() {
-  noInterrupt();
   resetTimers();
   if (!inSettings) display(enc.clicks, String(F("CL.")));
   else {
@@ -302,13 +283,11 @@ void Encoder::click() {
         break;
       }
 
-
       if (validControl(myLamp.getEffControls()[currDynCtrl]->getType())) break;
     }
     display(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(FPSTR(".")));
     sendString(myLamp.getEffControls()[currDynCtrl]->getName(), txtColor, true, txtDelay);
   }
-  interrupt();
 }
 
 // Функция проверяет может ли контрол быть использоваан (проверка на скрытость, на скрытость по микрофону и т.п.)
@@ -350,7 +329,6 @@ bool Encoder::validControl(const CONTROL_TYPE ctrlCaseType) {
 
 // Функция обрабатывает состояние "кнопка нажата и удержана"
 void Encoder::hold() {
-  noInterrupt();
   LOG(printf_P, PSTR("Enc: Pressed and holded\n"));
 
   if (!myLamp.isLampOn()) {
@@ -373,13 +351,11 @@ void Encoder::hold() {
   } else {
       exitSettings();
   }
-  interrupt();
 }
 
 // Функция выхода из режима "Настройки эффекта", восстанавливает состояния до, форсирует запись конфига эффекта
 void Encoder::exitSettings() {
   if (!inSettings) return;
-  noInterrupt();
   currDynCtrl = 1;
   done = true;
   loops = 0;
@@ -393,12 +369,10 @@ void Encoder::exitSettings() {
   canDisplayTemp() = true;
 #endif
   LOG(printf_P, PSTR("Enc: exit Settings\n"));
-  interrupt();
 }
 
 // Функция обрабатывает клики по кнопке
 void Encoder::myClicks() {
-  noInterrupt();
   resetTimers();
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
@@ -464,7 +438,6 @@ void Encoder::myClicks() {
     LOG(printf_P, PSTR("Enc: Click: %d\n"), enc.clicks);
     break;
   }
-  interrupt();
 }
 
 
@@ -491,7 +464,6 @@ void Encoder::setBri(int val) {
 
 // Функция смены эффекта зажатым энкодером
 void Encoder::setEffect(int val) {
-  noInterrupt();
   resetTimers();
   if (inSettings) { // если в режиме "Настройки эффекта" выходим из него
     exitSettings();
@@ -525,12 +497,10 @@ void Encoder::setEffect(int val) {
   }
   currEffNum = myLamp.effects.realEffNumdByList(anyValue);
   display(currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U)));
-  interrupt();
 }
 
 // Функция настройки динамического контрола в режиме "Настройки эффекта"
 void Encoder::setDynCtrl(int val) {
-  noInterrupt();
   resetTimers();
   loops = 0;
 
@@ -551,7 +521,6 @@ void Encoder::setDynCtrl(int val) {
   }
   display(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
   LOG(printf_P, PSTR("Enc: dynCtrl: %d Value %d\n"), myLamp.getEffControls()[currDynCtrl]->getId(), myLamp.getEffControls()[currDynCtrl]->getVal().toInt());
-  interrupt();
 }
 
 

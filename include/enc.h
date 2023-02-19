@@ -44,76 +44,87 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "main.h"
 
 // Опциональные настройки (показаны по умолчанию)
-#define EB_FAST 65     // таймаут быстрого поворота, мс 30
-//#define EB_DEB 80      // дебаунс кнопки, мс
-//#define EB_HOLD 1000   // таймаут удержания кнопки, мс
-//#define EB_STEP 500    // период срабатывания степ, мс
-//#define EB_CLICK 400   // таймаут накликивания, мс
+#define EB_FAST 65 // таймаут быстрого поворота, мс 30
+// #define EB_DEB 80      // дебаунс кнопки, мс
+// #define EB_HOLD 1000   // таймаут удержания кнопки, мс
+// #define EB_STEP 500    // период срабатывания степ, мс
+// #define EB_CLICK 400   // таймаут накликивания, мс
 
 #include "EncButton.h"
-
 
 class Encoder : public EncButton<EB_CALLBACK, DT, CLK, SW>
 {
 public:
-    Encoder() : EncButton(){}
-    void init();
-    void handle();
-    uint8_t getEncTxtDelay(){ return txtDelay;}
-    void setTxtDelay(const uint8_t speed){ txtDelay = speed;}
-    CRGB getTxtColor(){ return txtColor;}
-    void setTxtColor(const CRGB color){ txtColor = color;}
-    void exitSettings();
+  Encoder() : EncButton() {}
+  void init();
+  void handle();
+  uint8_t getEncTxtDelay() { return txtDelay; }
+  void setTxtDelay(const uint8_t speed) { txtDelay = speed; }
+  CRGB getTxtColor() { return txtColor; }
+  void setTxtColor(const CRGB color) { txtColor = color; }
+  void exitSettings();
 
 private:
-    void turn();
-    void click();
-    void hold();
-    void setBri(int val);
-    void setEffect(int val);
-    void setDynCtrl(int val);
-    void display(uint16_t value, String type = "");
-    void display(float value);
-    void display(String str);
-    void resetTimers();
-    void sendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
-    void sendStringNumEff(String str, CRGB color);
-    bool validControl(const CONTROL_TYPE ctrlCaseType);
-    void myClicks();
+  void turn(uint8_t turnType);
+  void click();
+  void hold();
+  void setBri(int val);
+  void setEffect(int val);
+  void setDynCtrl(int val);
+  void display(uint16_t value, String type = "");
+  void display(float value);
+  void display(String str);
+  void resetTimers();
+  void sendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
+  void sendStringNumEff(String str, CRGB color);
+  bool validControl(const CONTROL_TYPE ctrlCaseType);
+  void myClicks();
 
-    void toggleDemo();
-    void toggleGBright();
-    void toggleMic();
-    void toggleAUX();
-    void sendTime();
-    void sendIP();
+  void toggleDemo();
+  void toggleGBright();
+  void toggleMic();
+  void toggleAUX();
+  void sendTime();
+  void sendIP();
 
-    enum ENC_ACTION {
-        WAIT,
-        SET_BRIGHT,
-        SET_EFFECT,
-        SET_CONTROL,
-    } currAction = WAIT;        // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
-    uint8_t speed = 0U, fade = 0U;
-    uint8_t txtDelay = 40U;
-    uint8_t currDynCtrl = 0U;        // текущий контрол, с которым работаем 
-    uint8_t loops = 0U;              // счетчик псевдотаймера
-    bool done = false;                  // true == все отложенные до enc_loop операции выполнены.
-    bool inSettings = false;            // флаг - мы в настройках эффекта
-    uint16_t currEffNum = 0U;        // текущий номер эффекта
-    uint16_t anyValue  = 0U;          // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
+  static void IRAM_ATTR isrEnc();
+  static void interrupt();
+  static void noInterrupt();
 
-    CRGB txtColor = CRGB::Orange;
-    CRGB gaugeCol = CRGB::Orange;
+  enum ENC_ACTION
+  {
+    WAIT,
+    SET_BRIGHT,
+    SET_EFFECT,
+    SET_CONTROL,
+  } currAction = WAIT; // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
+
+  enum TurnState
+  {
+    NONE,
+    RIGHT,
+    LEFT,
+    RIGHT_HOLD,
+    LEFT_HOLD,
+    CLICK,
+    HOLD,
+    STEP
+  };
+
+  uint8_t speed = 0U, fade = 0U;
+  uint8_t txtDelay = 40U;
+  uint8_t currDynCtrl = 0U; // текущий контрол, с которым работаем
+  uint8_t loops = 0U;       // счетчик псевдотаймера
+  bool done = false;        // true == все отложенные до enc_loop операции выполнены.
+  bool inSettings = false;  // флаг - мы в настройках эффекта
+  uint16_t currEffNum = 0U; // текущий номер эффекта
+  uint16_t anyValue = 0U;   // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
+
+  CRGB txtColor = CRGB::Orange;
+  CRGB gaugeCol = CRGB::Orange;
 };
 
-extern Encoder enc;   // энкодер с кнопкой <A, B, KEY>
+extern Encoder enc; // encoder with button <A, B, KEY>
 
-void callEncTick ();
-//void IRAM_ATTR isrEnc();
-void interrupt();
-void noInterrupt();
-
-//void myStep();
 #endif
 #endif

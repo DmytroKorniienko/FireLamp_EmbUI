@@ -72,7 +72,7 @@ public:
 			pinMode(S1, INPUT_PULLUP);
 			pinMode(S2, INPUT_PULLUP);
 			pinMode(KEY, INPUT_PULLUP);
-		}		
+		}
 	}
 
 	void tick(bool hold = 0) {
@@ -94,11 +94,11 @@ public:
 				}
 				if (EBState != 0) {
 					if (MODE) _dir = EBState;
-					
+
 					if (debounce < EB_FAST) _setFlag(1);	// быстрый поворот
-					else _clrFlag(1);						// обычный поворот					
+					else _clrFlag(1);						// обычный поворот
 				}
-				
+
 				_clrFlag(0);
 				_debTimer = thisMls;
 			}
@@ -154,21 +154,21 @@ public:
 		if (MODE) {
 			if (*_callback[0] && isTurn()) _callback[0]();
 			switch (EBState) {
-			case 1: if (*_callback[1]) _callback[1](); break;	// isRight			
-			case 2: if (*_callback[2]) _callback[2](); break;	// isLeft			
-			case 3: if (*_callback[3]) _callback[3](); break;	// isRightH			
-			case 4: if (*_callback[4]) _callback[4](); break;	// isLeftH			
-			case 5: if (*_callback[5]) _callback[5](); break;	// isClick			
-			case 6: if (*_callback[6]) _callback[6](); break;	// isHolded			
-			case 7: if (*_callback[7]) _callback[7](); break;	// isStep					
+			case 1: if (*_callback[1]) _callback[1](); break;	// isRight
+			case 2: if (*_callback[2]) _callback[2](); break;	// isLeft
+			case 3: if (*_callback[3]) _callback[3](); break;	// isRightH
+			case 4: if (*_callback[4]) _callback[4](); break;	// isLeftH
+			case 5: if (*_callback[5]) _callback[5](); break;	// isClick
+			case 6: if (*_callback[6]) _callback[6](); break;	// isHolded
+			case 7: if (*_callback[7]) _callback[7](); break;	// isStep
 			}
 			EBState = 0;
 			if (*_callback[8] && _readFlag(4)) _callback[8](); 	// isHold
-			if (_readFlag(6)) {			
+			if (_readFlag(6)) {
 				if (*_callback[9]) _callback[9]();				// clicks
 				if (*_callback[10] && clicks == _amount) _callback[10]();
 				_clrFlag(6);
-			}		
+			}
 		}
 	}
 
@@ -185,7 +185,7 @@ public:
 	void detachClicks() {
 		_callback[10] = NULL;
 	}
-	
+
 	bool isRight() { return MODE ? (_dir == 1 ? 1 : 0) : checkState(1); }
 	bool isLeft() { return MODE ? (_dir == 2 ? 1 : 0) : checkState(2); }
 	bool isRightH() { return MODE ? (_dir == 3 ? 1 : 0) : checkState(3); }
@@ -211,9 +211,10 @@ public:
 		if (_readFlag(6)) {
 			_clrFlag(6);
 			return clicks;
-		} return 0;	
+		} return 0;
 	}
 
+protected:
 	int counter = 0;
 	uint8_t clicks = 0;
 
@@ -238,7 +239,7 @@ private:
 	#endif
 	return 0;
 	}
-	
+
 	bool checkState(uint8_t val) {
 		if (EBState == val) {
 			EBState = 0;
@@ -249,7 +250,7 @@ private:
 	uint8_t _lastState = 0, EBState = 0;
 	bool _btnState = 0;
 	uint8_t flags = 0;
-	
+
 
 	uint8_t _dir = 0;
 	void (*_callback[MODE ? 11 : 0])() = {};
