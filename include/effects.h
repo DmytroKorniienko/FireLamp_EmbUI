@@ -571,7 +571,6 @@ private:
     byte hue;
     const float width_adj_f = (float)(WIDTH < HEIGHT ? (HEIGHT - WIDTH) / 2. : 0);
     const float height_adj_f= (float)(HEIGHT < WIDTH ? (WIDTH - HEIGHT) / 2. : 0);
-    bool radarRoutine(CRGB *leds, EffectWorker *param);
     String setDynCtrl(UIControl *_val) override;
 
 public:

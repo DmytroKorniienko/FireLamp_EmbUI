@@ -486,7 +486,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
 static const uint8_t T_EFFVER[] PROGMEM = {
   0, 6, 6, 4, 4, 1, 3, 3, 3, 5, 1, 6, 5, 1, 5, 10, // 0-15
   3, 1, 3, 1, 3, 7, 5, 2, 1, 5, 5, 7, 7, 2, 1, 5, // 16-31
-  5, 1, 5, 3, 7, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
+  5, 1, 5, 3, 9, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
   1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 1, 1, 5, 7, 6, // 48 - 63
   5, 3, 1, 5, 3, 1, 7, 1, 3, 1, 1, 1, 1, 0, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
@@ -546,7 +546,7 @@ static const char E_4PAL_MIC[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFF
 static const char E_PUZZLES[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":4,\"min\":4,\"max\":8,\"name\":\"" DFTINTF_10D "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_SPARCLES[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"type\":16,\"max\":10,\"name\":\"" DFTINTF_0D0 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_LIGHTERS[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":16,\"max\":32,\"name\":\"" DFTINTF_0D5 "\"}, {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
-static const char E_RADAR255[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"name\":\"" DFTINTF_0D1 "\"}, {\"id\":3,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
+static const char E_RADAR255[]  PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}, {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0D4 "\"}]}";
 static const char E_WHITE[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":1,\"name\":\"" DFTINTF_0D7 "\"}, {\"id\":3,\"name\":\"" DFTINTF_0E6 "\"}, {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_LEAPERS[]   PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"max\":50,\"name\":\"" DFTINTF_0D8 "\"},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";
 static const char E_BUTTERFLY[] PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"max\":64,\"name\":\"" DFTINTF_0D9 "\"}, {\"id\":4,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0DF "\"},  {\"id\":5,\"type\":2,\"val\":1,\"name\":\"" DFTINTF_0E0 "\"}]}";
