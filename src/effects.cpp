@@ -1720,7 +1720,7 @@ bool EffectFlock::run(CRGB *ledarr, EffectWorker *opt){
 bool EffectFlock::flockRoutine(CRGB *leds, EffectWorker *param) {
   hueoffset += (speedFactor/5.0+0.1);
 
-  fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 220, 10));
+  fadeToBlackBy(leds, NUM_LEDS, map(scale, 1, 255, 220, 10));
 
   bool applyWind = random(0, 255) > 240;
   if (applyWind) {
