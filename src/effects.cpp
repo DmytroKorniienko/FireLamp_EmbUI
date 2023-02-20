@@ -747,7 +747,7 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   uint8_t maxBalls = cnt;
   for (uint8_t j = 0U; j < maxBalls; j++)
   {
-    ballColors[j] = (maxBalls-j) * _AMOUNT + j;
+    ballColors[j] = (uint8_t)((maxBalls-j) * _AMOUNT + j);
 
     // движение шариков
     for (uint8_t i = 0U; i < 2U; i++)

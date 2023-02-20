@@ -199,7 +199,7 @@ private:
     uint8_t cnt = 1;
     float vector[_AMOUNT][2U];
     float coord[_AMOUNT][2U];
-    int16_t ballColors[_AMOUNT];
+    uint8_t ballColors[_AMOUNT];
     byte light[_AMOUNT];
     float speedFactor;
     bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
@@ -497,7 +497,7 @@ public:
 // Subpixel ver by Stepko
 class EffectDrift : public EffectCalc {
 private:
-	const byte maxDim_steps = 256 / max(WIDTH, HEIGHT);
+	const byte maxDim_steps = 256 / maxDim;
 	uint8_t dri_phase;
 	float _dri_speed;
 	uint8_t _dri_delta;
@@ -852,7 +852,6 @@ public:
 class EffectAquarium : public EffectCalc
 {
 private:
-#define MAX_DIMENSION max(WIDTH, HEIGHT)
     CRGBPalette16 currentPalette;
     const uint8_t _scale = 24;
     const uint8_t _speed = 3;
