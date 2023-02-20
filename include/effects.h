@@ -44,7 +44,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 
 const uint8_t maxDim = (WIDTH > HEIGHT)? WIDTH : HEIGHT;
-const uint8_t minDim = (WIDTH > HEIGHT)? WIDTH : HEIGHT;
+const uint8_t minDim = (WIDTH < HEIGHT)? WIDTH : HEIGHT;
 const uint8_t width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
 const uint8_t height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
 
