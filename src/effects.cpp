@@ -1986,26 +1986,21 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
 void EffectRadar::load(){
   palettesload();    // подгружаем дефолтные палитры
 }
-
-bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt){
-  return radarRoutine(*&ledarr, &*opt);
-}
-
 // !++
 String EffectRadar::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==3) subPix = EffectCalc::setDynCtrl(_val).toInt();
+  if(_val->getId()==4) subPix = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
+bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt)
 {
   if (curPalette == nullptr)
     return false;
 
   if (subPix)
   {
-    fadeToBlackBy(leds, NUM_LEDS, 5 + 20 * (float)speed / 255);
+    fadeToBlackBy(leds, NUM_LEDS, 5 + scale * (float)speed / 255);
     for (float offset = 0.0f; offset < (float)maxDim /2; offset +=0.25)
     {
       float x = (float)EffectMath::mapsincos8(false, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - width_adj_f;
@@ -2016,9 +2011,8 @@ bool EffectRadar::radarRoutine(CRGB *leds, EffectWorker *param)
   }
   else
   {
-    uint8_t _scale = palettescale; // диапазоны внутри палитры, влияют на степень размытия хвоста
     EffectMath::blur2d(beatsin8(5U, 3U, 10U));
-    EffectMath::dimAll(255U - (0 + _scale * 1.5));
+    EffectMath::dimAll(127+scale/2);
 
     for (uint8_t offset = 0; offset < maxDim /2; offset++)
     {
