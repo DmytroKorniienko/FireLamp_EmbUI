@@ -43,10 +43,10 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectmath.h"
 
 
-const byte maxDim = max(WIDTH, HEIGHT);
-const byte minDim = min(WIDTH, HEIGHT);
-const byte width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
-const byte height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
+const uint8_t maxDim = (WIDTH > HEIGHT)? WIDTH : HEIGHT;
+const uint8_t minDim = (WIDTH > HEIGHT)? WIDTH : HEIGHT;
+const uint8_t width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
+const uint8_t height_adj = (HEIGHT < WIDTH ? (WIDTH - HEIGHT) /2: 0);
 
 //===== Спеціально навчений пустий ефект :) ====//
 class EffectNone : public EffectCalc {
@@ -2259,11 +2259,10 @@ public:
 // 23.12.21
 class EffectRadialFire : public EffectCalc {
 private:
-    const int8_t MIN_MAX = max(WIDTH, HEIGHT);
     const int8_t C_X = (WIDTH / 2);
 	const int8_t C_Y = (HEIGHT / 2);
-    std::vector<std::vector<int>> XY_angle;
-    std::vector<std::vector<byte>> XY_radius;
+    uint16_t XY_angle[maxDim][maxDim];
+    uint8_t XY_radius[maxDim][maxDim];
     float t;
     float speedFactor;
     uint8_t _scale;
