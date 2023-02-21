@@ -1903,38 +1903,34 @@ void EffectTwinkles::load(){
 
 void EffectTwinkles::setup()
 {
-  uint16_t listSize = tnum;
-  // for (uint32_t idx = 0; idx < NUM_LEDS; idx++) {
-  //   if (random(0,255) < tnum) {
-  //     listSize++;
-  //   }
-  // }
-
-  while (twinkles.size()<listSize){
-    TTWINKLE *el = new TTWINKLE();
-    el->pos = random16(NUM_LEDS);
-    el->color = random8();
-    el->brightness = random8();
-    el->direction = random8(2); //0...1
-    el->speed = random8(8); //0...7
-    twinkles.add(el);
-  }
-  while (twinkles.size()>listSize){
-    TTWINKLE *el = twinkles.shift();
-    delete el;
+  if(curtnum<tnum){
+    while(curtnum<tnum){
+      twinkles[curtnum].pos = random16(NUM_LEDS);
+      twinkles[curtnum].color = random8();
+      twinkles[curtnum].brightness = random8();
+      twinkles[curtnum].direction = random8(2); //0...1
+      twinkles[curtnum].speed = random8(8); //0...7
+      curtnum++;
+    }
+  } else {
+    while(curtnum>tnum){
+      twinkles[curtnum].pos = 0;
+      twinkles[curtnum].color = 0;
+      twinkles[curtnum].brightness = 0;
+      twinkles[curtnum].direction = 0; //0...1
+      twinkles[curtnum].speed = 0; //0...7
+      curtnum--;
+    }
   }
 }
 
 EffectTwinkles::~EffectTwinkles(){
-  while (twinkles.size()>0){
-    TTWINKLE *el = twinkles.shift();
-    delete el;
-  }
+  // зараз статічний массив
 }
 
 String EffectTwinkles::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 8)*speedfactor;
-  else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, NUM_LEDS/2); setup(); } 
+  else if(_val->getId()==2) { tnum = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, EffectTwinkles::storagesize); setup(); } 
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -1950,8 +1946,8 @@ bool EffectTwinkles::twinklesRoutine(CRGB *leds, EffectWorker *param)
   }
   FastLED.clear();
   uint16_t it = 0;
-  while(it<twinkles.size()){
-    TTWINKLE *el = twinkles[it];
+  while(it<curtnum){
+    TTWINKLE *el = &twinkles[it];
     if(el->direction == DIR::FADEHI){ // підвищуємо яскравість
       int16_t br = el->brightness;
       br += (el->speed/8.0 + 1) * speedFactor;
