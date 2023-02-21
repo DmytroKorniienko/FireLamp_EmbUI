@@ -530,9 +530,12 @@ private:
     uint8_t color; // колір в палітрі
     uint8_t brightness; // яскравість
   } TTWINKLE;
-  LList<TTWINKLE *> twinkles;
 
+  static const uint16_t storagesize = NUM_LEDS/2;
+  TTWINKLE twinkles[storagesize];
   uint16_t tnum;
+  uint16_t curtnum = 0;
+
   float speedFactor;
   bool twinklesRoutine(CRGB *leds, EffectWorker *param);
   String setDynCtrl(UIControl*_val) override;
