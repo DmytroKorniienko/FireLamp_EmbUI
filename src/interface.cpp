@@ -122,7 +122,7 @@ String ulltos(uint64_t longlong){
     return tmp;
 }
 
-bool check_recovery_state(bool isSet){
+bool check_recovery_state(bool isSet, uint16_t *rcnt = NULL){
     //return false; // оключено до выяснения... какого-то хрена не работает :(
 #ifndef ESP8266
     static RTC_DATA_ATTR uint32_t chk;
@@ -138,6 +138,8 @@ bool check_recovery_state(bool isSet){
 #ifdef ESP8266
         ESP.rtcUserMemoryWrite(0, &chk, sizeof(chk));
 #endif
+        if(rcnt)
+           *rcnt = data; 
         if(data>3)
             return true; // все плохо, три перезагрузки...
         else
@@ -3536,9 +3538,20 @@ void sync_parameters(){
     //JsonDocument::to<T>() clears the document and converts it to the specified type. Don’t confuse this function with JsonDocument::as<T>() that returns a reference only if the requested type matches the one in the document.
     JsonObject obj = doc.to<JsonObject>();
 
-    if(check_recovery_state(true)){
+    uint16_t rcnt; // скільки було ребутів...
+    if(check_recovery_state(true, &rcnt)){
         LOG(printf_P,PSTR("Critical Error: Lamp recovered from corrupted effect number: %s\n"),String(embui.param(FPSTR(TCONST_0016))).c_str());
         embui.var(FPSTR(TCONST_0016),String(0)); // что-то пошло не так, был циклический ребут, сбрасываем эффект
+        if(rcnt>9){ // усе зовсім погано, спробуємо скинути усю конфігурацію
+            myLamp.effects.clearEffDir();
+            myLamp.effects.removeLists();
+            LittleFS.remove(FPSTR(P_cfgfile));  // видаляємо файли конфігурації, як оригінал, так і копію
+            LittleFS.remove(FPSTR(P_cfgfile_bkp));
+            LittleFS.remove(FPSTR(TCONST_00A5));
+            LittleFS.remove(FPSTR(TCONST_00A8));
+            LittleFS.remove(FPSTR(TCONST_0059));
+            ESP.restart();
+        }
     }
 
 #ifdef EMBUI_USE_MQTT
@@ -3766,13 +3779,19 @@ void sync_parameters(){
 #endif
     //--------------- начальная инициализация состояния
 
-    check_recovery_state(false); // удаляем маркер, считаем что у нас все хорошо...
     Task *_t = new Task(TASK_SECOND, TASK_ONCE, [](){ // откладыаем задачу на 1 секунду, т.к. выше есть тоже отложенные инициализации, см. set_settings_other()
         LOG(println, F("InitCompleted"));
         myLamp.getLampState().isInitCompleted = true; // ставим признак того, что инициализация уже завершилась, больше его не менять и должен быть в самом конце sync_parameters() !!!
         TASK_RECYCLE;
     }, &ts, false);
     _t->enableDelayed();
+
+    _t = new Task(TASK_MINUTE, TASK_ONCE, [](){ // якщо лампа працює мінуту без ребутів, вважаємо що усе добре і не треба скидати ефект
+        check_recovery_state(false); // видаляємо маркер, вважаємо що усе добре...
+        TASK_RECYCLE;
+    }, &ts, false);
+    _t->enableDelayed();
+
     LOG(println, F("sync_parameters() done"));
     if(millis()<10000)
         CALL_INTF_OBJ(section_main_frame); // вернемся на главный экран при начальном запуске
