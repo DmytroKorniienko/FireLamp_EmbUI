@@ -214,7 +214,7 @@ public:
         if(message){
             buffer.concat(F(","));
             if(message.length()>5){
-                buffer.concat(message.substring(0,4)+"...");
+                buffer.concat(message.substring(0,message.substring(3,4).c_str()[0]==0xD0?5:4)+"..."); // UTF8 fix
             } else {
                 buffer.concat(message);
             }
