@@ -52,7 +52,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #include "EncButton.h"
 
-class Encoder : public EncButton<EB_CALLBACK, DT, CLK, SW>
+class Encoder : public EncButton<EB_TICK, DT, CLK, SW>
 {
 public:
   Encoder() : EncButton() {}
@@ -65,7 +65,27 @@ public:
   void exitSettings();
 
 private:
-  void turn(uint8_t turnType);
+  enum ENC_ACTION
+  {
+    WAIT,
+    SET_BRIGHT,
+    SET_EFFECT,
+    SET_CONTROL,
+  } currAction = WAIT; // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
+
+  enum EncState
+  {
+    NONE,
+    RIGHT,
+    LEFT,
+    RIGHT_HOLD,
+    LEFT_HOLD,
+    CLICK,
+    HOLD,
+    STEP
+  };
+
+  void turn(EncState turnType);
   void click();
   void hold();
   void setBri(int val);
@@ -90,26 +110,12 @@ private:
   static void IRAM_ATTR isrEnc();
   static void interrupt();
   static void noInterrupt();
+  void disableInterrupt(uint16 time_ms = 0);
+  void enableInterrupt();
 
-  enum ENC_ACTION
-  {
-    WAIT,
-    SET_BRIGHT,
-    SET_EFFECT,
-    SET_CONTROL,
-  } currAction = WAIT; // идент текущей операции: 0 - ничего, 1 - крутим яркость, 2 - меняем эффекты, 3 - меняем динамические контролы
-
-  enum TurnState
-  {
-    NONE,
-    RIGHT,
-    LEFT,
-    RIGHT_HOLD,
-    LEFT_HOLD,
-    CLICK,
-    HOLD,
-    STEP
-  };
+  #if LAMP_DEBUG == 1
+  static const char* getStateName(EncState state);
+  #endif
 
   uint8_t speed = 0U, fade = 0U;
   uint8_t txtDelay = 40U;
@@ -119,6 +125,8 @@ private:
   bool inSettings = false;  // флаг - мы в настройках эффекта
   uint16_t currEffNum = 0U; // текущий номер эффекта
   uint16_t anyValue = 0U;   // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
+  uint32 int_stop_time = 0U;
+  uint32 int_delay = 0U;
 
   CRGB txtColor = CRGB::Orange;
   CRGB gaugeCol = CRGB::Orange;

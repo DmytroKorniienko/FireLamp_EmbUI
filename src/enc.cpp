@@ -48,13 +48,14 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "extra_tasks.h"
 
 #ifndef EXIT_TIMEOUT
-#define EXIT_TIMEOUT 3U
+  #define EXIT_TIMEOUT (3U)
 #endif
 
 #ifndef ENC_STRING_EFFNUM_DELAY
-  #define ENC_STRING_EFFNUM_DELAY 17
+  #define ENC_STRING_EFFNUM_DELAY (17)
 #endif
 
+#define ENC_INT_DELAY_AFTER_EFF_SWITCH (5000U)
 Encoder enc;
 
 // Функція копіює вміст одного файлу в інший (немає стандартної в LittleFS)
@@ -101,17 +102,17 @@ void Encoder::init() {
   loops = 0;
   inSettings = false;
   currDynCtrl = 1;
-  interrupt(); // включаем прерывания энкодера и кнопки
+  enableInterrupt(); // включаем прерывания энкодера и кнопки
   //enc.counter = 100;      // изменение счётчика
 }
 
 void Encoder::handle() {
   static uint16_t valRepiteChk = anyValue;
-  noInterrupt();
+  disableInterrupt();
   enc.tick();
-  interrupt();
+  enableInterrupt();
 
-  uint8_t state = getState();
+  EncState state = (EncState)getState();
   resetState();
 
   switch (state)
@@ -163,7 +164,7 @@ void Encoder::handle() {
 /*
 *     Оперативные изменения, яркость например, чтобы было видно что происходит
 */
-  if (SET_BRIGHT != currAction) {
+  if (SET_EFFECT != currAction) {
     if (valRepiteChk != (SET_CONTROL == currAction ? myLamp.getEffControls()[currDynCtrl]->getVal().toInt() : anyValue) && !done) {  // проверим менялось ли значение, чтобы не дергать почем зря
       valRepiteChk = (SET_CONTROL == currAction ? myLamp.getEffControls()[currDynCtrl]->getVal().toInt() : anyValue);
       switch (currAction)
@@ -201,6 +202,7 @@ void Encoder::handle() {
     if (!done && digitalRead(SW)) { // если эффект еще не меняли и кнопка уже отпущена - переключаем эффект
       resetTimers();
       LOG(printf_P, PSTR("Enc: New effect number: %d\n"), currEffNum);
+      disableInterrupt(ENC_INT_DELAY_AFTER_EFF_SWITCH);
       myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
       remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
       sendString(String(FPSTR(TINTF_00A)) + ": " + (currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U))), txtColor, true, txtDelay);
@@ -220,8 +222,8 @@ void IRAM_ATTR Encoder::isrEnc() {
 
 // Функция восстанавливает прерывания энкодера
 void Encoder::interrupt() {
-  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, FALLING/*CHANGE*/);   // прерывание на DT пине
-  attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, FALLING);  // прерывание на CLK пине
+  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, CHANGE/*CHANGE*/);   // прерывание на DT пине
+  attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, CHANGE);  // прерывание на CLK пине
   attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
 }
 
@@ -232,8 +234,26 @@ void Encoder::noInterrupt() {
   detachInterrupt(SW);
 }
 
+void Encoder::disableInterrupt(uint16 time_ms) {
+  noInterrupt();
+
+  if (time_ms > 0U)
+  {
+    int_stop_time = millis();
+    int_delay = time_ms;
+  }
+}
+
+void Encoder::enableInterrupt() {
+  if (millis() - int_stop_time  > int_delay)
+  {
+    int_delay = 0U;
+    interrupt();
+  }
+}
+
 // Функция обрабатывает повороты энкодера
-void Encoder::turn(uint8_t turnType) {
+void Encoder::turn(EncState turnType) {
   if (!myLamp.isLampOn()) return;
   resetTimers();
   bool fast = isFast();
@@ -265,7 +285,10 @@ void Encoder::turn(uint8_t turnType) {
   default:
     break;
   }
-  LOG(printf_P, PSTR("Enc: Turn type: %d\n"), turnType);
+
+  LOG(printf_P, PSTR("Enc: Turn type: %s%s\n"),
+                getStateName((EncState)turnType),
+                (fast ? PSTR("_FAST") : PSTR("")));
 }
 
 // Функция обрабатывает клики по кнопке
@@ -617,5 +640,32 @@ void Encoder::sendIP() {
   tm1637.setIpShow();
   #endif
 }
+
+#if LAMP_DEBUG == 1
+const char* Encoder::getStateName(EncState state) {
+
+  switch (state)
+  {
+  case NONE:
+    return PSTR("NONE");
+  case RIGHT:
+    return PSTR("RIGHT");
+  case LEFT:
+    return PSTR("LEFT");
+  case RIGHT_HOLD:
+    return PSTR("RIGHT_HOLD");
+  case LEFT_HOLD:
+    return PSTR("LEFT_HOLD");
+  case CLICK:
+    return PSTR("CLICK");
+  case HOLD:
+    return PSTR("HOLD");
+  case STEP:
+    return PSTR("STEP");
+  default:
+    return PSTR("DEFAULT");
+  }
+}
+#endif
 
 #endif
