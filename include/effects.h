@@ -2128,7 +2128,6 @@ public:
 //===== Ефект ДНК ==============================//
 // (c) Stepko
 // https://editor.soulmatelights.com/gallery/1520-dna
-// за мотивами візуалу від Yaroslaw Turbin aka ldir
 class EffectDNA : public EffectCalc {
 private:
     float a = (256.0 / (float)WIDTH);
