@@ -1607,18 +1607,18 @@ bool EffectComet::rainbowComet3Routine(CRGB *leds, EffectWorker *param)
   if (colorId == 1) color.hue += hue;
   else if (colorId == 255) color.sat = 64;
   else color.hue += colorId;
-  EffectMath::drawPixelXYF((float)WIDTH / 2, (float)HEIGHT / 2, color, 0); // зеленый стоит по центру
+  EffectMath::drawPixelXYF((float)WIDTH / 2.0f - 0.5, (float)HEIGHT / 2.0f - 0.5, color, 0); // зеленый стоит по центру
 
   color = rgb2hsv_approximate(CRGB::Red);
   if (colorId == 1) color.hue += hue;
   else if (colorId == 255) color.sat = 64;
   else color.hue += colorId;
-  float xx = 2. + (float)sin8( millis() / (10. / speedFactor)) / 22.;
-  float yy = 2. + (float)cos8( millis() / (9. / speedFactor)) / 22.;
+  float xx = (float)sin8( millis() / (5. / speedFactor)) / (float)(255.0/(EffectMath::getmaxWidthIndex()-(float)WIDTH/8.0));
+  float yy = (float)cos8( millis() / (5. / speedFactor)) / (float)(255.0/(EffectMath::getmaxHeightIndex()-(float)WIDTH/8.0));
   EffectMath::drawPixelXYF(xx, yy, color, 0);
 
-  xx = 4. + (float)sin8( millis() / (10. / speedFactor)) / 32.;
-  yy = 4. + (float)sin8( millis() / (7. / speedFactor)) / 32.;
+  xx = (float)sin8( millis() / (23. / speedFactor)) / (float)(255.0/(EffectMath::getmaxWidthIndex()-(float)WIDTH/4.0));
+  yy = (float)sin8( millis() / (7. / speedFactor)) / (float)(255.0/(EffectMath::getmaxHeightIndex()-(float)WIDTH/4.0));
   color = rgb2hsv_approximate(CRGB::Blue);
   if (colorId == 1) color.hue += hue;
   else if (colorId == 255) color.sat = 64;
@@ -1996,7 +1996,7 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt)
 
   if (subPix)
   {
-    fadeToBlackBy(leds, NUM_LEDS, 5 + scale * (float)speed / 255);
+    fadeToBlackBy(leds, NUM_LEDS, 5 + (~(127+scale/2)) * (float)speed / 255);
     for (float offset = 0.0f; offset < (float)maxDim /2; offset +=0.25)
     {
       float x = (float)EffectMath::mapsincos8(false, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - width_adj_f;
@@ -3511,8 +3511,9 @@ void EffectAquarium::nGlare(uint8_t bri) {
 
 void EffectAquarium::nTest(uint8_t bri)
 {
-
-  fillNoise();
+  for(uint8_t i = 0; i < 4; i++){
+  fillNoise();//x3 speed (idk, it's better when it's faster)
+  }
   memset8(&noise[1][0][0],255,(WIDTH+1)*(HEIGHT+1)-1);
   for (uint8_t x = 0; x < WIDTH; x++)
   {
@@ -8016,7 +8017,6 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
 //===== Ефект ДНК ==============================//
 // (c) Stepko
 // https://editor.soulmatelights.com/gallery/1520-dna
-// за мотивами візуалу від Yaroslaw Turbin aka ldir
 String EffectDNA::setDynCtrl(UIControl*_val) {
   if(_val->getId()==1) speedFactor  = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 5) * speedfactor;
   else if(_val->getId()==3)  type = EffectCalc::setDynCtrl(_val).toInt();
