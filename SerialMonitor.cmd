@@ -9,4 +9,4 @@ if exist "%USERPROFILE%\Python\python.exe" (
 PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;%PYTHONPATH%;
 @chcp UTF8>nul
 cls 
-platformio.exe device monitor
+platformio.exe device monitor -f esp8266_exception_decoder -f log2file

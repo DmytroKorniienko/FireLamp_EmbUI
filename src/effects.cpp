@@ -908,10 +908,10 @@ void Effect3DNoise::fillNoiseLED()
   {
     dataSmoothing = 200 - (speed * 4);
   }
-  for (uint8_t i = 0; i < EffectMath::getminDim()*2; i++)
+  for (uint8_t i = 0; i < maxDim; i++)
   {
     int32_t ioffset = _scale * i;
-    for (uint8_t j = 0; j < EffectMath::getmaxDim(); j++)
+    for (uint8_t j = 0; j < maxDim; j++)
     {
       int32_t joffset = _scale * j;
 
@@ -940,8 +940,8 @@ void Effect3DNoise::fillNoiseLED()
   {
     for (uint8_t j = 0; j < HEIGHT; j++)
     {
-      uint8_t index = noise[j%(EffectMath::getminDim()*2)][i];
-      uint8_t bri =   noise[i%(EffectMath::getminDim()*2)][j];
+      uint8_t index = noise[j][i];
+      uint8_t bri =   noise[i][j];
       // if this palette is a 'loop', add a slowly-changing base value
       if ( colorLoop)
       {
@@ -967,10 +967,10 @@ void Effect3DNoise::fillNoiseLED()
 
 void Effect3DNoise::fillnoise8()
 {
-  for (uint8_t i = 0; i < EffectMath::getminDim()*2; i++)
+  for (uint8_t i = 0; i < maxDim; i++)
   {
     int32_t ioffset = _scale * i;
-    for (uint8_t j = 0; j < EffectMath::getmaxDim(); j++)
+    for (uint8_t j = 0; j < maxDim; j++)
     {
       int32_t joffset = _scale * j;
       noise[i][j] = inoise8(x + ioffset, y + joffset, z);
@@ -988,6 +988,8 @@ void Effect3DNoise::load(){
 String Effect3DNoise::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
+  if(_val->getId()==3 && _val->getVal().toInt()==1 && !isRandDemo())
+    curPalette = &RainbowStripeColors_p;
   else if(_val->getId()==4) blurIm = EffectCalc::setDynCtrl(_val).toInt();
    else if(_val->getId()==5) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
    else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
