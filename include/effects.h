@@ -364,11 +364,7 @@ private:
     float x;
     float y;
     float z;
-    #if (WIDTH > HEIGHT)
-    uint8_t noise[2*HEIGHT][WIDTH];
-    #else
-    uint8_t noise[2*WIDTH][HEIGHT];
-    #endif
+    uint8_t noise[maxDim][maxDim];
 
 public:
     void load() override;
