@@ -269,7 +269,6 @@ void Encoder::turn(EncState turnType) {
     break;
   case LEFT_HOLD:
     setEffect(fast == false ? -1 : -5);
-    setEffect(-5);
     break;
   case RIGHT:
     if (inSettings) {
