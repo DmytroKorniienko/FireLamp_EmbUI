@@ -460,6 +460,8 @@ void Encoder::myClicks() {
     LOG(printf_P, PSTR("Enc: Click: %d\n"), enc.clicks);
     break;
   }
+
+  done = true;
 }
 
 
