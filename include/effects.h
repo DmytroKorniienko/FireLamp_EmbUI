@@ -144,17 +144,21 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//===== Ефект Пейнтбол =========================//
+//===== Ефект Восьминіг =========================//
+//Stepko and Sutaburosu
+//Idea from https://www.youtube.com/watch?v=HsA-6KIbgto&ab_channel=GreatScott%21
+//22/05/22
 class EffectLightBalls : public EffectCalc {
 private:
-	#define BORDERTHICKNESS       (1U)   // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
-	const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
-	const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
-	float speedFactor;
-	
-	String setDynCtrl(UIControl*_val) override;
-
+    const int8_t C_X = WIDTH / 2;
+    const int8_t C_Y = HEIGHT / 2;
+    uint8_t m_angle[WIDTH][HEIGHT];
+    uint8_t m_radius[WIDTH][HEIGHT];
+    float t = 0;
+    float speedFactor;
+    String setDynCtrl(UIControl*_val) override;
 public:
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -188,7 +192,7 @@ private:
 	String setDynCtrl(UIControl*_val);
 	
 public:
-    void load();
+    void load() override;
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
@@ -1432,6 +1436,7 @@ class EffectCell: public EffectCalc {
     void spruce(CRGB *leds);
     void vals(CRGB *leds);
     void flower(CRGB *leds);
+    void lightBalls(CRGB *leds);
   public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     String setDynCtrl(UIControl*_val) override;
