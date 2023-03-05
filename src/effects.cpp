@@ -781,36 +781,35 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   return true;
 }
 
-//===== Ефект Пейнтбол =========================//
-String EffectLightBalls::setDynCtrl(UIControl*_val){
-  if(_val->getId()==1) speedFactor = (float)EffectCalc::setDynCtrl(_val).toInt()*EffectCalc::getSpeedFactor() /255.0 +0.1;
+//===== Ефект Восьминіг =========================//
+//Stepko and Sutaburosu
+//Idea from https://www.youtube.com/watch?v=HsA-6KIbgto&ab_channel=GreatScott%21
+//22/05/22
+String EffectLightBalls::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.5, 4)*EffectCalc::speedfactor;
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
+void EffectLightBalls::load(){
+  for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
+        for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
+          m_angle[x + C_X][y + C_Y] = 128 * (atan2(y, x) / PI);
+          m_radius[x + C_X][y + C_Y] = hypot(x, y);  //thanks Sutaburosu
+    }
+  }
+}
+
 bool EffectLightBalls::run(CRGB *leds, EffectWorker *param)
 {
-
-  // Apply some blurring to whatever's already on the matrix
-  // Note that we never actually clear the matrix, we just constantly
-  // blur it repeatedly.  Since the blurring is 'lossy', there's
-  // an automatic trend toward black -- by design.
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, dim8_raw(beatsin8(3,64,100)));
-
-  // Use two out-of-sync sine waves
-  uint16_t  i = beatsin16( 79 * speedFactor, 0, 255); //91
-  uint16_t  j = beatsin16( 67 * speedFactor, 0, 255); //109
-  uint16_t  k = beatsin16( 53 * speedFactor, 0, 255); //73
-  uint16_t  m = beatsin16( 97 * speedFactor, 0, 255); //123
-
-  // The color of each point shifts over time, each at a different speed.
-  uint16_t ms = millis() / (scale /16 + 1);
-
-  EffectMath::getPixel( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS) += CHSV( ms / 29, 200U, 255U);
-  EffectMath::getPixel( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS) += CHSV( ms / 41, 200U, 255U);
-  EffectMath::getPixel( highByte(k * paintWidth) + BORDERTHICKNESS, highByte(m * paintHeight) + BORDERTHICKNESS) += CHSV( ms / 37, 200U, 255U);
-  EffectMath::getPixel( highByte(m * paintWidth) + BORDERTHICKNESS, highByte(i * paintHeight) + BORDERTHICKNESS) += CHSV( ms / 53, 200U, 255U);
-
+   t+=speedFactor;
+      for (uint8_t x = 0; x < WIDTH; x++) {
+        for (uint8_t y = 0; y < HEIGHT; y++) {
+          uint8_t angle = m_angle[x][y];
+          uint8_t radius = m_radius[x][y];
+          EffectMath::drawPixelXY(x, y, CHSV(t * 2 - radius * (255 / maxDim), 255, sin8(sin8((angle * 4 - (radius * (255 / maxDim))) / 4 + t) + radius * (255 / maxDim) - t * 2 + angle * 3)));
+      }
+     }
   return true;
 }
 
@@ -5645,10 +5644,10 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
   if (_scale == 0) {
     EVERY_N_SECONDS(60) {
       effId ++;
-      if (effId == 7)
+      if (effId == 8)
         effId = 1;
     }
-  } else effId = constrain(_scale, 1, 7);
+  } else effId = constrain(_scale, 1, 8);
 
   switch (effId)
   {
@@ -5668,6 +5667,9 @@ bool EffectCell::run(CRGB *leds, EffectWorker *opt){
     break;
   case 7:
     flower(leds);
+    break;
+  case 8:
+    lightBalls(leds);
     break;
   default:
     break;
@@ -5726,6 +5728,33 @@ void EffectCell::flower(CRGB *leds) {
       EffectMath::drawPixelXY(i, j, CHSV(map(radius,maxDim/2,-3,125,255), 255,sin8(map(radius+(maxDim/2),-timer,maxDim/2,255,110)+x)));
     }
   } 
+}
+
+void EffectCell::lightBalls(CRGB *leds){
+  speedFactor = (float)speed*EffectCalc::getSpeedFactor() /255.0 +0.1;
+  // Apply some blurring to whatever's already on the matrix
+  // Note that we never actually clear the matrix, we just constantly
+  // blur it repeatedly.  Since the blurring is 'lossy', there's
+  // an automatic trend toward black -- by design.
+  uint8_t paintWidth = WIDTH - 2;
+	uint8_t paintHeight = HEIGHT - 2;
+
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, dim8_raw(beatsin8(3,64,100)));
+
+  // Use two out-of-sync sine waves
+  uint16_t  i = beatsin16( 79 * speedFactor, 0, 255); //91
+  uint16_t  j = beatsin16( 67 * speedFactor, 0, 255); //109
+  uint16_t  k = beatsin16( 53 * speedFactor, 0, 255); //73
+  uint16_t  m = beatsin16( 97 * speedFactor, 0, 255); //123
+
+  // The color of each point shifts over time, each at a different speed.
+  uint16_t ms = millis();
+
+  EffectMath::getPixel( ((i * paintWidth) >> 8) + 1, ((j * paintHeight) >> 8) + 1) += CHSV( ms / 29, 200U, 255U);
+  EffectMath::getPixel( ((j * paintWidth) >> 8) + 1, ((k * paintHeight) >> 8) + 1) += CHSV( ms / 41, 200U, 255U);
+  EffectMath::getPixel( ((k * paintWidth) >> 8) + 1, ((m * paintHeight) >> 8) + 1) += CHSV( ms / 37, 200U, 255U);
+  EffectMath::getPixel( ((m * paintWidth) >> 8) + 1, ((i * paintHeight) >> 8) + 1) += CHSV( ms / 53, 200U, 255U);
+
 }
 
 //===== Ефект Тіксі Ленд =======================//
