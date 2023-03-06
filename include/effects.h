@@ -134,6 +134,7 @@ private:
     float bballsShift[bballsMaxNUM_BALLS];
     float hue;
     bool halo = false;                                  // ореол
+    bool bluring = false;
     uint8_t _scale=1;
     uint16_t _speed;
     bool bBallsRoutine(CRGB *leds, EffectWorker *param);

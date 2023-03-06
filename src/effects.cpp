@@ -1025,11 +1025,7 @@ bool EffectBBalls::run(CRGB *ledarr, EffectWorker *opt){
 void EffectBBalls::regen(){
   FastLED.clear();
   randomSeed(millis());
-  if (_scale <= 16) {
-    bballsNUM_BALLS =  map(_scale, 1, 16, 1, bballsMaxNUM_BALLS);
-  } else {
-    bballsNUM_BALLS =  map(_scale, 32, 17, 1, bballsMaxNUM_BALLS);
-  }
+  bballsNUM_BALLS =  map(_scale, 1, 16, 1, bballsMaxNUM_BALLS);
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
     bballsCOLOR[i] = random(0, 255);
     bballsBri[i] = 156;
@@ -1047,7 +1043,8 @@ void EffectBBalls::regen(){
 String EffectBBalls::setDynCtrl(UIControl*_val){
   if(_val->getId()==1) _speed = (1550 - EffectCalc::setDynCtrl(_val).toInt() * 3);
   else if(_val->getId()==3) { _scale = EffectCalc::setDynCtrl(_val).toInt(); regen(); }
-  else if(_val->getId()==4) halo = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==4) bluring = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==5) halo = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
@@ -1058,7 +1055,7 @@ void EffectBBalls::load(){
 
 bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
 {
-  fadeToBlackBy(leds, NUM_LEDS, _scale <= 16 ? 255 : 50);
+  fadeToBlackBy(leds, NUM_LEDS, bluring ? 50 : 255);
   hue += (float)speed/ 1024;
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
     bballsTCycle =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
