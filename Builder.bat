@@ -62,11 +62,11 @@ Set /p choice="Your choice (Ваш вибір): "
 
 if "%choice%"=="1" (
 	call update-DEV-from-Git.cmd 1
-	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" lib update
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" pkg update
 )
 if "%choice%"=="2" (
 	call update-DEV-from-Git.cmd 2
-	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" lib update
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" pkg update
 )
 if "%choice%"=="3" call update-DEV-from-Git.cmd 3
 if "%choice%"=="4" (
