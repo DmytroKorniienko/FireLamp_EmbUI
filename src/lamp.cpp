@@ -991,7 +991,7 @@ void LAMP::switcheffect(EFFSWITCH action, bool fade, uint16_t effnb, bool skip) 
 #endif
 
 #ifdef ENCODER
- exitSettings();
+ enc.exitSettings();
 #endif
 
   if (!skip) {
