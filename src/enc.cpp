@@ -55,7 +55,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
   #define ENC_STRING_EFFNUM_DELAY (17)
 #endif
 
-#define ENC_INT_DELAY_AFTER_EFF_SWITCH (5000U)
+#define ENC_INT_DELAY_AFTER_ACTION (5000U)
 Encoder enc;
 
 // Функція копіює вміст одного файлу в інший (немає стандартної в LittleFS)
@@ -202,7 +202,7 @@ void Encoder::handle() {
     if (!done && digitalRead(SW)) { // если эффект еще не меняли и кнопка уже отпущена - переключаем эффект
       resetTimers();
       LOG(printf_P, PSTR("Enc: New effect number: %d\n"), currEffNum);
-      disableInterrupt(ENC_INT_DELAY_AFTER_EFF_SWITCH);
+      disableInterrupt(ENC_INT_DELAY_AFTER_ACTION);
       myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
       remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
       sendString(String(FPSTR(TINTF_00A)) + ": " + (currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U))), txtColor, true, txtDelay);
@@ -396,6 +396,7 @@ void Encoder::exitSettings() {
 // Функция обрабатывает клики по кнопке
 void Encoder::myClicks() {
   resetTimers();
+  disableInterrupt(ENC_INT_DELAY_AFTER_ACTION);
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
     clicks = 0;
