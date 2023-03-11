@@ -397,6 +397,7 @@ void Encoder::exitSettings() {
 void Encoder::myClicks() {
   resetTimers();
   disableInterrupt(ENC_INT_DELAY_AFTER_ACTION);
+
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
     clicks = 0;
@@ -614,7 +615,7 @@ void Encoder::toggleDemo() {
 }
 
 void Encoder::toggleGBright() {
-  remote_action(RA::RA_GLOBAL_BRIGHT, myLamp.IsGlobalBrightness() ? "0" : "1", NULL);
+  remote_action(RA::RA_GLOBAL_BRIGHT, myLamp.IsGlobalBrightness() ? "0" : String(myLamp.getGlobalBrightness()).c_str(), NULL);
   sendString(String(FPSTR(TINTF_00C)) + String(myLamp.IsGlobalBrightness() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
 }
 
