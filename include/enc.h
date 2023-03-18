@@ -108,10 +108,8 @@ private:
   void sendIP();
 
   static void IRAM_ATTR isrEnc();
-  static void interrupt();
-  static void noInterrupt();
-  void disableInterrupt(uint16 time_ms = 0);
-  void enableInterrupt();
+  void interruptEn();
+  void interruptOff();
 
   #if LAMP_DEBUG == 1
   static const char* getStateName(EncState state);
@@ -125,8 +123,6 @@ private:
   bool inSettings = false;  // флаг - мы в настройках эффекта
   uint16_t currEffNum = 0U; // текущий номер эффекта
   uint16_t anyValue = 0U;   // просто любое значение, которое крутим прямо сейчас, очищается в enc_loop
-  uint32 int_stop_time = 0U;
-  uint32 int_delay = 0U;
 
   CRGB txtColor = CRGB::Orange;
   CRGB gaugeCol = CRGB::Orange;
