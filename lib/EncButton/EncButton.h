@@ -75,7 +75,7 @@ public:
     }
   }
 
-  void tick(bool hold = 0) {
+  void IRAM_ATTR tick(bool hold = 0) {
     uint32_t thisMls = millis();
     uint32_t debounce = thisMls - _debTimer;
 
@@ -219,7 +219,7 @@ protected:
   uint8_t clicks = 0;
 
 private:
-  bool FastRead(const uint8_t pin) {
+  inline bool FORCE_INLINE FastRead(const uint8_t pin) {
   #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
   if (pin < 8) return bitRead(PIND, pin);
   else if (pin < 14) return bitRead(PINB, pin - 8);
@@ -232,8 +232,24 @@ private:
   uint8_t *_pin_reg = portInputRegister(digitalPinToPort(pin));
   uint8_t _bit_mask = digitalPinToBitMask(pin);
   return bool(*_pin_reg & _bit_mask);
-
+  #elif defined(ESP8266)
+  if (pin < 16) {
+    return GPIP(pin);
+  } else if (pin == 16) {
+    return GP16I & 0x01;
+  }
+  #elif defined (CONFIG_IDF_TARGET_ESP32)   || \
+        defined (CONFIG_IDF_TARGET_ESP32S2) || \
+        defined (CONFIG_IDF_TARGET_ESP32S3)
+  if(pin < 32) {
+      return (GPIO.in >> pin) & 0x1;
+  } else if(pin < 40) {
+      return (GPIO.in1.val >> (pin - 32)) & 0x1;
+  }
+  #elif defined (CONFIG_IDF_TARGET_ESP32C3)
+  return (GPIO.in.data >> pin) & 0x1;
   #else
+  #warning "ENCODER: NO FAST READ DEFINED"
   return digitalRead(pin);
 
   #endif

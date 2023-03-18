@@ -55,7 +55,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
   #define ENC_STRING_EFFNUM_DELAY (17)
 #endif
 
-#define ENC_INT_DELAY_AFTER_ACTION (5000U)
 Encoder enc;
 
 // Функція копіює вміст одного файлу в інший (немає стандартної в LittleFS)
@@ -102,15 +101,15 @@ void Encoder::init() {
   loops = 0;
   inSettings = false;
   currDynCtrl = 1;
-  enableInterrupt(); // включаем прерывания энкодера и кнопки
+  interruptEn(); // включаем прерывания энкодера и кнопки
   //enc.counter = 100;      // изменение счётчика
 }
 
 void Encoder::handle() {
   static uint16_t valRepiteChk = anyValue;
-  disableInterrupt();
+  interruptOff();
   enc.tick();
-  enableInterrupt();
+  interruptEn();
 
   EncState state = (EncState)getState();
   resetState();
@@ -202,7 +201,6 @@ void Encoder::handle() {
     if (!done && digitalRead(SW)) { // если эффект еще не меняли и кнопка уже отпущена - переключаем эффект
       resetTimers();
       LOG(printf_P, PSTR("Enc: New effect number: %d\n"), currEffNum);
-      disableInterrupt(ENC_INT_DELAY_AFTER_ACTION);
       myLamp.switcheffect(SW_SPECIFIC, myLamp.getFaderFlag(), currEffNum);
       remote_action(RA::RA_EFFECT, String(myLamp.effects.getSelected()).c_str(), NULL);
       sendString(String(FPSTR(TINTF_00A)) + ": " + (currEffNum <= 255 ? String(currEffNum) : (String((byte)(currEffNum & 0xFF)) + "." + String((byte)(currEffNum >> 8) - 1U))), txtColor, true, txtDelay);
@@ -215,42 +213,23 @@ void Encoder::handle() {
 
 // Обработчик прерываний
 void IRAM_ATTR Encoder::isrEnc() {
- noInterrupt();
  enc.tick();  // отработка в прерывании
- interrupt();
 }
 
 // Функция восстанавливает прерывания энкодера
-void Encoder::interrupt() {
-  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, CHANGE/*CHANGE*/);   // прерывание на DT пине
+void Encoder::interruptEn() {
+  attachInterrupt(digitalPinToInterrupt(DT), isrEnc, CHANGE);   // прерывание на DT пине
   attachInterrupt(digitalPinToInterrupt(CLK), isrEnc, CHANGE);  // прерывание на CLK пине
-  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);   // прерывание на SW пине
+  attachInterrupt(digitalPinToInterrupt(SW), isrEnc, FALLING);  // прерывание на SW пине
 }
 
 // Функция запрещает прерывания от энкодера, на время других операций, чтобы не спамить контроллер
-void Encoder::noInterrupt() {
+void Encoder::interruptOff() {
   detachInterrupt(DT);
   detachInterrupt(CLK);
   detachInterrupt(SW);
 }
 
-void Encoder::disableInterrupt(uint16 time_ms) {
-  noInterrupt();
-
-  if (time_ms > 0U)
-  {
-    int_stop_time = millis();
-    int_delay = time_ms;
-  }
-}
-
-void Encoder::enableInterrupt() {
-  if (millis() - int_stop_time  > int_delay)
-  {
-    int_delay = 0U;
-    interrupt();
-  }
-}
 
 // Функция обрабатывает повороты энкодера
 void Encoder::turn(EncState turnType) {
@@ -396,7 +375,6 @@ void Encoder::exitSettings() {
 // Функция обрабатывает клики по кнопке
 void Encoder::myClicks() {
   resetTimers();
-  disableInterrupt(ENC_INT_DELAY_AFTER_ACTION);
 
 	if (myLamp.isAlarm()) {
 		// нажатие во время будильника
