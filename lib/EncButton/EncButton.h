@@ -81,7 +81,7 @@ public:
 
     // обработка энка (компилятор вырежет блок если не используется)
     if (S1 != 255 && S2 != 255) {
-      uint8_t state = FastRead(S1) | (FastRead(S2) << 1);                 // получаем код
+      uint8_t state = getDataClkStatus();                 // получаем код
       if (_readFlag(0) && state == 0b11) {                               // ресет и энк защёлкнул позицию
         if (S2 == 255 || KEY != 255) {                                  // энкодер с кнопкой
           if (!_readFlag(4)) {                                        // если кнопка не "удерживается"
@@ -254,6 +254,34 @@ private:
 
   #endif
   return 0;
+  }
+
+  inline uint8_t FORCE_INLINE getDataClkStatus() {
+  #if defined(ESP8266)
+  uint32_t regData = GPI;
+    if (S1 < 16 && S2 < 16)
+      return (regData >> S1 & 0x1) | ((regData >> S2 & 0x1) << 1);
+    else if (S1 == 16 && S2 < 16)
+      return (GP16I & 0x01) | ((regData >> S2 & 0x1) << 1);
+    else if (S1 < 16 && S2 == 16)
+      return (regData >> S1 & 0x1) | ((GP16I & 0x01) << 1);
+  #elif defined (CONFIG_IDF_TARGET_ESP32)   || \
+        defined (CONFIG_IDF_TARGET_ESP32S2) || \
+        defined (CONFIG_IDF_TARGET_ESP32S3)
+    uint32_t regData = GPIO.in;
+    if (S1 < 32 && S2 < 32)
+      return (regData >> S1 & 0x1) | ((regData >> S2 & 0x1) << 1);
+    else if (S1 < 40 && S2 < 32)
+      return ((GPIO.in1.val >> (S1 - 32)) & 0x1) | ((regData >> S2 & 0x1) << 1);
+    else if (S1 < 32 && S2 < 40)
+      return (regData >> S1 & 0x1) | (((GPIO.in1.val >> (S2 - 32)) & 0x1) << 1);
+  #elif defined (CONFIG_IDF_TARGET_ESP32C3)
+    uint32_t regData = GPIO.in.data;
+    return (regData >> S1 & 0x1) | ((regData >> S2 & 0x1) << 1);
+  #else
+    return FastRead(S1) | (FastRead(S2) << 1);
+  #endif
+    return 0;
   }
 
   bool checkState(uint8_t val) {
