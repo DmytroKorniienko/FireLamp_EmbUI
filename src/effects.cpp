@@ -7791,6 +7791,10 @@ void EffectVU::waterfall(uint8_t band, uint8_t barHeight) {
 // sparks (c) kostyamat 10.01.22 https://editor.soulmatelights.com/gallery/1619-fire-with-sparks
 void EffectFire2021::load() {
   palettesload();    // подгружаем палитры
+
+    sparks.resize(sparksCount);
+  for (byte i = 0; i < sparksCount; i++) 
+    sparks[i].reset();
 }
 
 void EffectFire2021::palettesload(){
@@ -7812,9 +7816,6 @@ void EffectFire2021::palettesload(){
   usepalettes = true; // включаем флаг палитр
   scale2pallete();    // выставляем текущую палитру
   
-  sparks.resize(sparksCount);
-  for (byte i = 0; i < sparksCount; i++) 
-    sparks[i].reset();
 }
 // !++
 String EffectFire2021::setDynCtrl(UIControl*_val) {
@@ -8243,25 +8244,26 @@ void EffectRadialFire::load() {
 
 }
 
-// void EffectRadialFire::palettesload(){
-//   // собираем свой набор палитр для эффекта
-//   palettes.reserve(NUMPALETTES);
-//   palettes.push_back(&NormalFire_p);
-//   palettes.push_back(&LithiumFireColors_p);
-//   palettes.push_back(&NormalFire2_p);
-//   palettes.push_back(&WoodFireColors_p);
-//   palettes.push_back(&NormalFire3_p);
-//   palettes.push_back(&CopperFireColors_p);
-//   palettes.push_back(&HeatColors_p);
-//   palettes.push_back(&PotassiumFireColors_p);
-//   palettes.push_back(&MagmaColor_p);
-//   palettes.push_back(&RubidiumFireColors_p);
-//   palettes.push_back(&AlcoholFireColors_p); 
-//   palettes.push_back(&WaterfallColors_p);
+void EffectRadialFire::palettesload(){
+  // собираем свой набор палитр для эффекта
+  palettes.reserve(NUMPALETTES);
+  palettes.push_back(&NormalFire_p);
+  palettes.push_back(&LithiumFireColors_p);
+  palettes.push_back(&NormalFire2_p);
+  palettes.push_back(&WoodFireColors_p);
+  palettes.push_back(&NormalFire3_p);
+  palettes.push_back(&CopperFireColors_p);
+  palettes.push_back(&HeatColors_p);
+  palettes.push_back(&PotassiumFireColors_p);
+  palettes.push_back(&MagmaColor_p);
+  palettes.push_back(&RubidiumFireColors_p);
+  palettes.push_back(&AlcoholFireColors_p); 
+  palettes.push_back(&WaterfallColors_p);
 
-//   usepalettes = true; // включаем флаг палитр
-//   scale2pallete();    // выставляем текущую палитру
-// }
+  usepalettes = true; // включаем флаг палитр
+  scale2pallete();    // выставляем текущую палитру
+  
+}
 
 bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
   t += speedFactor;
