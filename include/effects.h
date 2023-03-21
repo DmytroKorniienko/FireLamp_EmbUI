@@ -2266,7 +2266,7 @@ private:
     bool mode = false;
 
     String setDynCtrl(UIControl*_val) override;
-    // void palettesload();
+    void palettesload();
 
 public:
     void load() override;
