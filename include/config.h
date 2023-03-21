@@ -41,9 +41,9 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 #if defined __has_include
 #  if defined ESP8266
-#    if __has_include("user_config.h")          // this check has no reason for ESP8266, maybe will be fixed at future core update
+//#    if __has_include("user_config.h")          // this check has no reason for ESP8266, maybe will be fixed at future core update
 #      include "user_config.h"                  //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
-#    endif
+//#    endif
 #  elif defined ESP32
 #    if __has_include("user_config_esp32.h")    // first include user_config_esp32.h if it exist
 #      include "user_config32.h"                //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
