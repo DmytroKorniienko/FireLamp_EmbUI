@@ -92,7 +92,6 @@ private:
   void setEffect(int val);
   void setDynCtrl(int val);
   void display(uint16_t value, String type = "");
-  void display(float value);
   void display(String str);
   void resetTimers();
   void sendString(String str, CRGB color, bool force = true, uint8_t delay = 40U);
