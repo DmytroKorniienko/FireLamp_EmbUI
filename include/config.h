@@ -39,23 +39,20 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 
 // DO NON CHANGE THIS FILE! If you need change config, please use "user_config*.h"
 
-#if defined __has_include
+// #if defined __has_include                            // disabled, enable if ESP8266 will have support
 #  if defined ESP8266
-//#    if __has_include("user_config.h")          // this check has no reason for ESP8266, maybe will be fixed at future core update
-#      include "user_config.h"                  //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
-//#    endif
+// #    if __has_include("user_config_esp8266.h")       // this check has no reason for ESP8266, maybe will be fixed at future core update
+#      include "user_config_esp8266.h"                  //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
+// #    endif
 #  elif defined ESP32
-#    if __has_include("user_config_esp32.h")    // first include user_config_esp32.h if it exist
-#      include "user_config32.h"                //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
-// #      pragma message "CONFIG: user_config32.h"    // disabled, can be annoying
-#    elif __has_include("user_config.h")        // include user_config.h if esp32 not exist
-#      include "user_config.h"                  //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
-// #      pragma message "CONFIG: user_config.h"      // disabled, can be annoying
-#    else                                       // no user_config.h file - warning
-#      warning "CONFIG: user_config.h file was NOT included!"
+#    if __has_include("user_config_esp32.h")            // first include user_config_esp32.h if it exist
+#      include "user_config_esp32.h"                    //<- користувацькі налаштування, міняйте конфігурацію ТАМ, ЦЕЙ ФАЙЛ (config.h) НЕ МІНЯЙТЕ!
+// #      pragma message "CONFIG: user_config_esp32.h"  // disabled, can be annoying
+#    else                                               // no user_config_esp32.h file - warning
+#      warning "CONFIG: user_config_esp32.h file was NOT included!"
 #    endif
 #  endif
-#endif
+// #endif  // __has_include
 
 
 #define SF(s) __SFSTR(s)
