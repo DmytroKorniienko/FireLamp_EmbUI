@@ -536,13 +536,6 @@ void Encoder::display(uint16_t value, String type) {
 #endif
 }
 
-void Encoder::display(float value) {
-#ifdef TM1637_CLOCK
-  tm1637.getSetDelay() = TM_TIME_DELAY;
-  tm1637.clearScreen();
-  tm1637.display(value, false, true); //, true, false, value >= 100 ? 1 : (value >= 10 ? 2 : 3) );
-#endif
-}
 
 void Encoder::display(String str) {
 #ifdef TM1637_CLOCK
