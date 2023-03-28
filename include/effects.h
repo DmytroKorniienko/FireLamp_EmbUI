@@ -1541,14 +1541,16 @@ class EffectWrain: public EffectCalc {
 
 class EffectFairy : public EffectCalc {
 private:
-    float   trackingObjectPosX[trackingOBJECT_MAX_COUNT];
-    float   trackingObjectPosY[trackingOBJECT_MAX_COUNT];
-    float   trackingObjectSpeedX[trackingOBJECT_MAX_COUNT];
-    float   trackingObjectSpeedY[trackingOBJECT_MAX_COUNT];
-    float   trackingObjectShift[trackingOBJECT_MAX_COUNT];
-    uint8_t trackingObjectHue[trackingOBJECT_MAX_COUNT];
-    float   trackingObjectState[trackingOBJECT_MAX_COUNT];
-    bool    trackingObjectIsShift[trackingOBJECT_MAX_COUNT];
+    struct{
+        float PosX;
+        float PosY;
+        uint8_t Hue;
+        float SpeedX;
+        float SpeedY;
+        float State;
+        float Shift;
+        bool IsShift;
+    }trackingObject[enlargedOBJECT_MAX_COUNT];
     uint8_t enlargedObjectNUM;                                       // используемое в эффекте количество объектов
 
     Boid boids[2];
@@ -1634,14 +1636,14 @@ public:
 class EffectBengalL : public EffectCalc {
 private:
     #define sparksNum  WIDTH*4
-
-    float sparksPos[2][sparksNum];
-    float sparksSpeed[2][sparksNum];
-    byte sparksColor[sparksNum];
-    float sparksSat[sparksNum];
-    float sparksFade[sparksNum];
-    uint8_t gPos[2];
-
+    struct{
+        float PosX, PosY;
+        float SpeedX, SpeedY;
+        uint8_t Color;
+        float Sat;
+        float Fade;
+    }spark[sparksNum];
+    uint16_t gPosX, gPosY;
     bool centerRun = true;
     byte period = 10;
     byte _x = WIDTH/2;
@@ -1669,10 +1671,16 @@ private:
 #else
     #define ballsAmount HEIGHT
 #endif
-    float ball[ballsAmount][4]; //0-PosY 1-PosX 2-SpeedY 3-SpeedX
-    float radius[ballsAmount];
-    bool rrad[ballsAmount];
-    byte color[ballsAmount];
+    struct{
+    //float ball[4]; //0-PosY 1-PosX 2-SpeedY 3-SpeedX //Темне минуле
+    float PosX;
+    float PosY;
+    float SpeedX;
+    float SpeedY;
+    float radius;
+    bool rrad;
+    uint8_t color;
+    }ball[ballsAmount];
     const float radiusMax = (float)ballsAmount /5;
 
     float speedFactor;
@@ -1795,11 +1803,13 @@ private:
     const float Gravity = 0.1;
     uint8_t step, ObjectNUM = WIDTH; 
     uint8_t shiftHue[HEIGHT];
-    float trackingObjectPosX[enlargedOBJECT_MAX_COUNT];
-    float trackingObjectPosY[enlargedOBJECT_MAX_COUNT];
-    uint8_t trackingObjectHue[enlargedOBJECT_MAX_COUNT];
-    float trackingObjectSpeedX[enlargedOBJECT_MAX_COUNT];
-    float trackingObjectShift[enlargedOBJECT_MAX_COUNT];
+    struct{
+        float PosX;
+        float PosY;
+        uint8_t Hue;
+        float SpeedX;
+        float Shift;
+    }trackingObject[enlargedOBJECT_MAX_COUNT];
     float speedFactor;
 
     void palettesload();
@@ -2284,11 +2294,12 @@ private:
     const uint8_t DEV = 5;
     const float R = (float)NUM_LEDS/128;
 
-    float x[6];
-    float y[6];
-    uint8_t iniX[6];
-    uint8_t iniY[6];
-
+    struct{
+        float x;
+        float y;
+        uint8_t iniX;
+        uint8_t iniY;
+    }ball[6];
     float speedFactor;
 
     float dist(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {

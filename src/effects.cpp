@@ -6383,40 +6383,40 @@ void EffectWrain::Clouds(bool flash)
 //===== Ефекти Фея і Джерело ====================//
 // (c) SottNick
 void EffectFairy::particlesUpdate(uint8_t i) {
-  trackingObjectState[i] -= 1 * speedFactor; 
+  trackingObject[i].State -= 1 * speedFactor; 
 
   //apply velocity
-  trackingObjectPosX[i] += trackingObjectSpeedX[i] * speedFactor;
-  trackingObjectPosY[i] += trackingObjectSpeedY[i] * speedFactor;
-  if(trackingObjectState[i] == 0 || trackingObjectPosX[i] <= -1 || trackingObjectPosX[i] >= WIDTH || trackingObjectPosY[i] <= -1 || trackingObjectPosY[i] >= HEIGHT) 
-    trackingObjectIsShift[i] = false;
+  trackingObject[i].PosX += trackingObject[i].SpeedX * speedFactor;
+  trackingObject[i].PosY += trackingObject[i].SpeedY * speedFactor;
+  if(trackingObject[i].State == 0 || trackingObject[i].PosX <= -1 || trackingObject[i].PosX >= WIDTH || trackingObject[i].PosY <= -1 || trackingObject[i].PosY >= HEIGHT) 
+    trackingObject[i].IsShift = false;
 }
 
 void EffectFairy::fountEmit(uint8_t i) {
   if (hue++ & 0x01)
     hue2++;
 
-  trackingObjectPosX[i] = WIDTH * 0.5;
-  trackingObjectPosY[i] = HEIGHT * 0.5;
+  trackingObject[i].PosX = WIDTH * 0.5;
+  trackingObject[i].PosY = HEIGHT * 0.5;
 
-  trackingObjectSpeedX[i] = (((float)random8()-127.)/512.); 
-  trackingObjectSpeedY[i] = EffectMath::sqrt(0.0626-trackingObjectSpeedX[i] * trackingObjectSpeedX[i]); 
+  trackingObject[i].SpeedX = (((float)random8()-127.)/512.); 
+  trackingObject[i].SpeedY = EffectMath::sqrt(0.0626-trackingObject[i].SpeedX * trackingObject[i].SpeedX); 
   
-  if(random8(2U)) trackingObjectSpeedY[i]=-trackingObjectSpeedY[i];
+  if(random8(2U)) trackingObject[i].SpeedY=-trackingObject[i].SpeedY;
 
-  trackingObjectState[i] = EffectMath::randomf(50, 250); 
+  trackingObject[i].State = EffectMath::randomf(50, 250); 
 #ifdef MIC_EFFECTS
   if (type)
-    trackingObjectHue[i] = isMicOn() ? getMicMapFreq() : hue2;
+    trackingObject[i].Hue = isMicOn() ? getMicMapFreq() : hue2;
   else 
-    trackingObjectHue[i] = random8(getMicMapFreq(), 255);
+    trackingObject[i].Hue = random8(getMicMapFreq(), 255);
 #else
   if (type)
-    trackingObjectHue[i] = hue2;
+    trackingObject[i].Hue = hue2;
   else 
-    trackingObjectHue[i] = random8(255);
+    trackingObject[i].Hue = random8(255);
 #endif
-  trackingObjectIsShift[i] = true; 
+  trackingObject[i].IsShift = true; 
 }
 
 void EffectFairy::fount(CRGB *leds){
@@ -6426,19 +6426,19 @@ void EffectFairy::fount(CRGB *leds){
 
   //go over particles and update matrix cells on the way
   for (int i = 0; i < enlargedObjectNUM; i++) {
-    if (!trackingObjectIsShift[i] && step) {
+    if (!trackingObject[i].IsShift && step) {
       fountEmit(i);
       step--;
     }
-    if (trackingObjectIsShift[i]) { 
+    if (trackingObject[i].IsShift) { 
       particlesUpdate(i);
 
       //generate RGB values for particle
       CRGB baseRGB;
-        baseRGB = CHSV(trackingObjectHue[i], 255, _video); 
+        baseRGB = CHSV(trackingObject[i].Hue, 255, _video); 
 
-      baseRGB.nscale8(trackingObjectState[i]);
-      EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB, 0);
+      baseRGB.nscale8(trackingObject[i].State);
+      EffectMath::drawPixelXYF(trackingObject[i].PosX, trackingObject[i].PosY, baseRGB, 0);
     }
   }
   if (blur) EffectMath::blur2d(blur * 10); // Размытие 
@@ -6450,18 +6450,18 @@ void EffectFairy::fairyEmit(uint8_t i) {
     if (deltaHue++ & 0x01)
       if (hue++ & 0x01)
         hue2++;//counter++;
-    trackingObjectPosX[i] = boids[0].location.x;
-    trackingObjectPosY[i] = boids[0].location.y;
+    trackingObject[i].PosX = boids[0].location.x;
+    trackingObject[i].PosY = boids[0].location.y;
 
     //хотите навставлять speedFactor? - тут не забудьте
     //trackingObjectSpeedX[i] = ((float)random8()-127.)/512./0.25*speedFactor; 
-    trackingObjectSpeedX[i] = ((float)random8()-127.)/512.; 
-    trackingObjectSpeedY[i] = EffectMath::sqrt(0.0626-trackingObjectSpeedX[i]*trackingObjectSpeedX[i]); 
-    if(random8(2U)) { trackingObjectSpeedY[i]=-trackingObjectSpeedY[i]; }
+    trackingObject[i].SpeedX = ((float)random8()-127.)/512.; 
+    trackingObject[i].SpeedY = EffectMath::sqrt(0.0626-trackingObject[i].SpeedX*trackingObject[i].SpeedX); 
+    if(random8(2U)) { trackingObject[i].SpeedY=-trackingObject[i].SpeedY; }
 
-    trackingObjectState[i] = random8(20, 80); 
-    trackingObjectHue[i] = hue2;
-    trackingObjectIsShift[i] = true; 
+    trackingObject[i].State = random8(20, 80); 
+    trackingObject[i].Hue = hue2;
+    trackingObject[i].IsShift = true; 
 }
 
 bool EffectFairy::fairy(CRGB *leds) {
@@ -6528,20 +6528,20 @@ bool EffectFairy::fairy(CRGB *leds) {
 
   //go over particles and update matrix cells on the way
   for(int i = 0; i<enlargedObjectNUM; i++) {
-    if (!trackingObjectIsShift[i] && step) {
+    if (!trackingObject[i].IsShift && step) {
       fairyEmit(i);
       step--;
     }
-    if (trackingObjectIsShift[i]){ 
+    if (trackingObject[i].IsShift){ 
       // вернуться и поглядеть, что это
-      if (type && trackingObjectSpeedY[i] > -1) trackingObjectSpeedY[i] -= 0.05; //apply acceleration
+      if (type && trackingObject[i].SpeedY > -1) trackingObject[i].SpeedY -= 0.05; //apply acceleration
       particlesUpdate(i);
 
       //generate RGB values for particle
-      CRGB baseRGB = CHSV(trackingObjectHue[i], 255,255); 
+      CRGB baseRGB = CHSV(trackingObject[i].Hue, 255,255); 
 
-      baseRGB.nscale8(trackingObjectState[i]);//эквивалент
-      EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], baseRGB, 0);
+      baseRGB.nscale8(trackingObject[i].State);//эквивалент
+      EffectMath::drawPixelXYF(trackingObject[i].PosX, trackingObject[i].PosY, baseRGB, 0);
     }
   }
   EffectMath::drawPixelXYF(boids[0].location.x, boids[0].location.y, CHSV(hue, 160U, 255U) /*temp*/, 0);  
@@ -6579,7 +6579,7 @@ void EffectFairy::load(){
   if (enlargedObjectNUM > trackingOBJECT_MAX_COUNT)
     enlargedObjectNUM = trackingOBJECT_MAX_COUNT;
   for (uint16_t i = 0; i < enlargedOBJECT_MAX_COUNT; i++)
-    trackingObjectIsShift[i] = false; 
+    trackingObject[i].IsShift = false; 
 
   //---- Только для эффекта Фея
   // лень было придумывать алгоритм для таектории феи, поэтому это будет нулевой "бойд" из эффекта Притяжение
@@ -6700,44 +6700,44 @@ String EffectBengalL::setDynCtrl(UIControl*_val){
 }
 
 void EffectBengalL::phisics(byte id) {
-  sparksPos[0][id] += sparksSpeed[0][id] * speedFactor;
-  sparksPos[1][id] += sparksSpeed[1][id] * speedFactor;
-  sparksSpeed[1][id] -= .98 * speedFactor;
-  sparksSat[id] += (255. / (float)WIDTH) * speedFactor;            // остывание искор
-  sparksFade[id] -= (255. / (float)(HEIGHT*1.5)) * speedFactor;    // угасание искор
-  if (sparksSpeed[0][id] > 0)
-    sparksSpeed[0][id] -= 0.1 * speedFactor;
+  spark[id].PosX += spark[id].SpeedX * speedFactor;
+  spark[id].PosY += spark[id].SpeedY * speedFactor;
+  spark[id].SpeedY -= .98 * speedFactor;
+  spark[id].Sat += (255. / (float)WIDTH) * speedFactor;            // остывание искор
+  spark[id].Fade -= (255. / (float)(HEIGHT*1.5)) * speedFactor;    // угасание искор
+  if (spark[id].SpeedX > 0)
+    spark[id].SpeedX -= 0.1 * speedFactor;
   else
-    sparksSpeed[0][id] += 0.1 * speedFactor;
-  if (sparksPos[0][id] <= 0 || sparksPos[0][id] >= WIDTH * 10 || sparksPos[1][id] < 0) {
+    spark[id].SpeedX += 0.1 * speedFactor;
+  if (spark[id].PosX <= 0 || spark[id].PosX >= WIDTH * 10 || spark[id].PosY < 0) {
     regen(id);
   }
 }
 
 void EffectBengalL::regen(byte id) {
-  sparksPos[0][id] = gPos[0];
-  sparksPos[1][id] = gPos[1];
-  sparksSpeed[0][id] = random(-10, 10);
-  sparksSpeed[1][id] = random(-5, 20);
-  sparksColor[id] = random8();
-  sparksSat[id] = 10;
-  sparksFade[id] = 255;
+  spark[id].PosX = gPosX;
+  spark[id].PosY = gPosY;
+  spark[id].SpeedX = random(-10, 10);
+  spark[id].SpeedY = random(-5, 20);
+  spark[id].Color = random8();
+  spark[id].Sat = 10;
+  spark[id].Fade = 255;
 }
 
 bool EffectBengalL::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, beatsin8(5, 20, 100));
   if (centerRun) {
-    gPos[0] = beatsin16(_x, 0, EffectMath::getmaxWidthIndex() * 10);
-    gPos[1] = beatsin16(_y, 0, EffectMath::getmaxHeightIndex() * 10);
+    gPosX = beatsin16(_x, 0, EffectMath::getmaxWidthIndex() * 10);
+    gPosY = beatsin16(_y, 0, EffectMath::getmaxHeightIndex() * 10);
   } else {
-    gPos[0] = WIDTH / 2 * 10;
-    gPos[1] = HEIGHT / 2 * 10;
+    gPosX = WIDTH * 5;
+    gPosY = HEIGHT * 5;
   }
   for (byte i = 0; i < map(scale, 1, 255, 8, sparksNum); i++) {
     phisics(i);
-    if (sparksPos[1][i] < (EffectMath::getmaxHeightIndex() * 10) and sparksPos[1][i] >= 0)
-      if (sparksPos[0][i] < (EffectMath::getmaxWidthIndex() * 10) and sparksPos[0][i] >= 0)
-        EffectMath::drawPixelXYF(sparksPos[0][i] / 10,  sparksPos[1][i] / 10, CHSV(sparksColor[i], constrain(sparksSat[i], 5, 255), constrain(sparksFade[i], 32, 255)));
+    if (spark[i].PosY < (EffectMath::getmaxHeightIndex() * 10) && spark[i].PosY >= 0)
+      if (spark[i].PosX < (EffectMath::getmaxWidthIndex() * 10) && spark[i].PosX >= 0)
+        EffectMath::drawPixelXYF(spark[i].PosX / 10.0f,  spark[i].PosY / 10, CHSV(spark[i].Color, constrain(spark[i].Sat, 5, 255), constrain(spark[i].Fade, 32, 255)));
   }
 
   EVERY_N_SECONDS(period) {
@@ -6760,12 +6760,12 @@ void EffectBalls::load() {
   speedFactor = EffectMath::fmap(speed, 1, 255, 0.15, 0.5) * EffectCalc::speedfactor;
 
   for (byte i = 0; i < ballsAmount; i++) {
-    radius[i] = EffectMath::randomf(0.5, radiusMax);
-    ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
-    ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
-    ball[i][0] = random(0, WIDTH);
-    ball[i][1] = random(0, HEIGHT);
-    color[i] = random(0, 255);
+    ball[i].radius = EffectMath::randomf(0.5, radiusMax);
+    ball[i].SpeedY = EffectMath::randomf(0.5, 1.1) * speedFactor;
+    ball[i].SpeedX = EffectMath::randomf(0.5, 1.1) * speedFactor;
+    ball[i].PosX = random(0, WIDTH);
+    ball[i].PosY = random(0, HEIGHT);
+    ball[i].color = random(0, 255);
   }
 }
 // !++
@@ -6779,56 +6779,56 @@ bool EffectBalls::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 5, 20));
 
   for (byte i = 0; i < map(scale, 1, 255, 2, ballsAmount); i++) {
-    if (rrad[i]) {  // тут у нас шарики надуваются\сдуваются по ходу движения
-      radius[i] += (fabs(ball[i][2]) > fabs(ball[i][3])? fabs(ball[i][2]) : fabs(ball[i][3])) * 0.1 * speedFactor;
-      if (radius[i] >= radiusMax) {
-        rrad[i] = false;
+    if (ball[i].rrad) {  // тут у нас шарики надуваются\сдуваются по ходу движения
+      ball[i].radius += ((fabs(ball[i].SpeedY) > fabs(ball[i].SpeedX))? fabs(ball[i].SpeedY) : fabs(ball[i].SpeedX)) * 0.1 * speedFactor;
+      if (ball[i].radius >= radiusMax) {
+        ball[i].rrad = false;
       }
     } else {
-      radius[i] -= (fabs(ball[i][2]) > fabs(ball[i][3])? fabs(ball[i][2]) : fabs(ball[i][3])) * 0.1 * speedFactor;
-      if (radius[i] < 1.) {
-        rrad[i] = true;
-        color[i] = random(0, 255);
+      ball[i].radius -= (fabs(ball[i].SpeedY) > fabs(ball[i].SpeedX)? fabs(ball[i].SpeedY) : fabs(ball[i].SpeedX)) * 0.1 * speedFactor;
+      if (ball[i].radius < 1.) {
+        ball[i].rrad = true;
+        ball[i].color = random(0, 255);
       }
     }
     //EffectMath::drawCircleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]), 0.5);
-    if (radius[i] > 1) 
-      EffectMath::fill_circleF(ball[i][1], ball[i][0], radius[i], ColorFromPalette(*curPalette, color[i]));
+    if (ball[i].radius > 1) 
+      EffectMath::fill_circleF(ball[i].PosX, ball[i].PosY, ball[i].radius, ColorFromPalette(*curPalette, ball[i].color));
     else 
-      EffectMath::drawPixelXYF(ball[i][1], ball[i][0], ColorFromPalette(*curPalette, color[i]));
+      EffectMath::drawPixelXYF(ball[i].PosX, ball[i].PosY, ColorFromPalette(*curPalette, ball[i].color));
 
-    if (ball[i][0] + radius[i] >= EffectMath::getmaxHeightIndex())
-      ball[i][0] += (ball[i][2] * ((EffectMath::getmaxHeightIndex() - ball[i][0]) / radius[i] + 0.005));
-    else if (ball[i][0] - radius[i] <= 0)
-      ball[i][0] += (ball[i][2] * (ball[i][0] / radius[i] + 0.005));
+    if (ball[i].PosY + ball[i].radius >= EffectMath::getmaxHeightIndex())
+      ball[i].PosY += (ball[i].SpeedY * ((EffectMath::getmaxHeightIndex() - ball[i].PosY) / ball[i].radius + 0.005));
+    else if (ball[i].PosY - ball[i].radius <= 0)
+      ball[i].PosY += (ball[i].SpeedY * (ball[i].PosY / ball[i].radius + 0.005));
     else
-      ball[i][0] += ball[i][2];
+      ball[i].PosY += ball[i].SpeedY;
     //-----------------------
-    if (ball[i][1] + radius[i] >= EffectMath::getmaxWidthIndex())
-      ball[i][1] += (ball[i][3] * ((EffectMath::getmaxWidthIndex() - ball[i][1]) / radius[i] + 0.005));
-    else if (ball[i][1] - radius[i] <= 0)
-      ball[i][1] += (ball[i][3] * (ball[i][1] / radius[i] + 0.005));
+    if (ball[i].PosX + ball[i].radius >= EffectMath::getmaxWidthIndex())
+      ball[i].PosX += (ball[i].SpeedX * ((EffectMath::getmaxWidthIndex() - ball[i].PosX) / ball[i].radius + 0.005));
+    else if (ball[i].PosX - ball[i].radius <= 0)
+      ball[i].PosX += (ball[i].SpeedX * (ball[i].PosX / ball[i].radius + 0.005));
     else
-      ball[i][1] += ball[i][3];
+      ball[i].PosX += ball[i].SpeedX;
     //------------------------
-    if (ball[i][0] < 0.01) {
-      ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
-      ball[i][0] = 0.01;
+    if (ball[i].PosY < 0.01) {
+      ball[i].SpeedY = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i].PosY = 0.01;
     }
-    else if (ball[i][0] > (float)EffectMath::getmaxHeightIndex()) {
-      ball[i][2] = EffectMath::randomf(0.5, 1.1) * speedFactor;
-      ball[i][2] = -ball[i][2];
-      ball[i][0] = (float)EffectMath::getmaxHeightIndex();
+    else if (ball[i].PosY > (float)EffectMath::getmaxHeightIndex()) {
+      ball[i].SpeedY = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i].SpeedY = -ball[i].SpeedY;
+      ball[i].PosY = (float)EffectMath::getmaxHeightIndex();
     }
     //----------------------
-    if (ball[i][1] < 0.01) {
-      ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
-      ball[i][1] = 0.01;
+    if (ball[i].PosX < 0.01) {
+      ball[i].SpeedX = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i].PosX = 0.01;
     }
-    else if (ball[i][1] > EffectMath::getmaxWidthIndex()) {
-      ball[i][3] = EffectMath::randomf(0.5, 1.1) * speedFactor;
-      ball[i][3] = -ball[i][3];
-      ball[i][1] = EffectMath::getmaxWidthIndex();
+    else if (ball[i].PosX > EffectMath::getmaxWidthIndex()) {
+      ball[i].SpeedX = EffectMath::randomf(0.5, 1.1) * speedFactor;
+      ball[i].SpeedX = -ball[i].SpeedX;
+      ball[i].PosX = EffectMath::getmaxWidthIndex();
     }
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 48);
@@ -7234,7 +7234,7 @@ void EffectMagma::regen() {
   }
   for (uint8_t i = 0 ; i < enlargedOBJECT_MAX_COUNT ; i++) {
     LeapersRestart_leaper(i);  
-    trackingObjectHue[i] = 50U;
+    trackingObject[i].Hue = 50U;
   }
 }
 
@@ -7244,7 +7244,7 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 
   for (uint8_t i = 0; i < ObjectNUM; i++) {
     LeapersMove_leaper(i);
-    EffectMath::drawPixelXYF(trackingObjectPosX[i], trackingObjectPosY[i], ColorFromPalette(*curPalette, trackingObjectHue[i]), 0);
+    EffectMath::drawPixelXYF(trackingObject[i].PosX, trackingObject[i].PosY, ColorFromPalette(*curPalette, trackingObject[i].Hue), 0);
   }
 
   for (uint8_t i = 0; i < WIDTH; i++) {
@@ -7261,34 +7261,34 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
 
 void EffectMagma::LeapersMove_leaper(uint8_t l) {
 
-  trackingObjectPosX[l] += trackingObjectSpeedX[l] * speedFactor;
-  trackingObjectPosY[l] += trackingObjectShift[l] * speedFactor;
+  trackingObject[l].PosX += trackingObject[l].SpeedX * speedFactor;
+  trackingObject[l].PosY += trackingObject[l].Shift * speedFactor;
   // bounce off the ceiling?
-  if (trackingObjectPosY[l] > HEIGHT + HEIGHT/4) {
-    trackingObjectShift[l] = -trackingObjectShift[l];
+  if (trackingObject[l].PosY > HEIGHT + HEIGHT/4) {
+    trackingObject[l].Shift = -trackingObject[l].Shift;
   }
   // settled on the floor?
-  if (trackingObjectPosY[l] <= (HEIGHT/8-1)) {
+  if (trackingObject[l].PosY <= (HEIGHT/8-1)) {
     LeapersRestart_leaper(l);
   }
   // bounce off the sides of the screen?
-  if (trackingObjectPosX[l] < 0 || trackingObjectPosX[l] > EffectMath::getmaxWidthIndex()) {
+  if (trackingObject[l].PosX < 0 || trackingObject[l].PosX > EffectMath::getmaxWidthIndex()) {
     LeapersRestart_leaper(l);
   }
   
-  trackingObjectShift[l] -= Gravity * speedFactor;
+  trackingObject[l].Shift -= Gravity * speedFactor;
 }
 
 void EffectMagma::LeapersRestart_leaper(uint8_t l) {
   randomSeed(millis());
   // leap up and to the side with some random component
-  trackingObjectSpeedX[l] = EffectMath::randomf(-0.75, 0.75);
-  trackingObjectShift[l] = EffectMath::randomf(0.50, 0.85);
-  trackingObjectPosX[l] = EffectMath::randomf(0, WIDTH);
-  trackingObjectPosY[l] = EffectMath::randomf(0, (float)HEIGHT/4-1);
+  trackingObject[l].SpeedX = EffectMath::randomf(-0.75, 0.75);
+  trackingObject[l].Shift = EffectMath::randomf(0.50, 0.85);
+  trackingObject[l].PosX = EffectMath::randomf(0, WIDTH);
+  trackingObject[l].PosY = EffectMath::randomf(0, (float)HEIGHT/4-1);
   // for variety, sometimes go 100% faster
   if (random8() < 12) {
-    trackingObjectShift[l] += trackingObjectShift[l] * EffectMath::randomf(1.5, 2.5);
+    trackingObject[l].Shift += trackingObject[l].Shift * EffectMath::randomf(1.5, 2.5);
   }
 }
 
@@ -8295,8 +8295,8 @@ String EffectSplashBals::setDynCtrl(UIControl*_val){
 
 void EffectSplashBals::load() {
   for (uint8_t i = 0; i < 6; i++) {
-    iniX[i] = random(0, 8);
-    iniY[i] = random(1, 9);
+    ball[i].iniX = random(0, 8);
+    ball[i].iniY = random(1, 9);
   }
   palettesload();
 }
@@ -8306,15 +8306,15 @@ bool EffectSplashBals::run(CRGB *leds, EffectWorker *param) {
   hue++;
 
   for (byte i = 0; i < count; i++) {
-    x[i] = (float)beatsin88(((10UL + iniX[i]) * 256) * speedFactor, 0, EffectMath::getmaxWidthIndex() * DEV) / DEV;
-    y[i] = (float)beatsin88(((10UL + iniY[i]) * 256) * speedFactor, 0, EffectMath::getmaxHeightIndex() * DEV) / DEV;
+    ball[i].x = (float)beatsin88(((10UL + ball[i].iniX) * 256) * speedFactor, 0, EffectMath::getmaxWidthIndex() * DEV) / DEV;
+    ball[i].y = (float)beatsin88(((10UL + ball[i].iniY) * 256) * speedFactor, 0, EffectMath::getmaxHeightIndex() * DEV) / DEV;
     for (byte j = i; j < count; j++) {
-      byte a = dist(x[i], y[i], x[j], y[j]);
+      byte a = dist(ball[i].x , ball[i].y, ball[j].x , ball[j].x );
       if ((i != j) & (a <= float(min(WIDTH, HEIGHT) / 2))) {
-        EffectMath::drawLineF(x[i], y[i], x[j], y[j], CHSV(0, 0, EffectMath::fmap(a, min(WIDTH, HEIGHT), 0, 48, 255)));
+        EffectMath::drawLineF(ball[i].x, ball[i].y, ball[j].x, ball[j].y, CHSV(0, 0, EffectMath::fmap(a, min(WIDTH, HEIGHT), 0, 48, 255)));
       }
     }
-    EffectMath::fill_circleF(x[i], y[i], EffectMath::fmap(fabs(float(WIDTH / 2) - x[i]), 0, WIDTH / 2, R, 0.2), ColorFromPalette(*curPalette, 256 - 256/HEIGHT * fabs(float(HEIGHT/2) - y[i])));
+    EffectMath::fill_circleF(ball[i].x, ball[i].y, EffectMath::fmap(fabs(float(WIDTH / 2) - ball[i].x), 0, WIDTH / 2, R, 0.2), ColorFromPalette(*curPalette, 256 - 256/HEIGHT * fabs(float(HEIGHT/2) - ball[i].y)));
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 48);
   return true;
