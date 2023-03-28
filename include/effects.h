@@ -2258,8 +2258,10 @@ class EffectRadialFire : public EffectCalc {
 private:
     const int8_t C_X = (WIDTH / 2);
 	const int8_t C_Y = (HEIGHT / 2);
-    uint16_t XY_angle[maxDim][maxDim];
-    uint8_t XY_radius[maxDim][maxDim];
+    struct {
+            uint16_t angle;
+            uint8_t radius;
+    }rMap[WIDTH][HEIGHT];
     float t;
     float speedFactor;
     uint8_t _scale;
@@ -2327,6 +2329,22 @@ class EffectFlower : public EffectCalc {
         void MoveFractionalNoiseX(int8_t amplitude = 1, float shift = 0);
         void MoveFractionalNoiseY(int8_t amplitude = 1, float shift = 0);
 	public:
+        void load() override;
+        bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+};
+
+//===== Ефект Калейдоскоп ======================//
+//https://editor.soulmatelights.com/gallery/1569-radialnuclearnoise
+// (c)Stepko and Sutaburosu
+class EffectRadialNoise : public EffectCalc {
+    private:
+    const int8_t C_X = WIDTH / 2;
+    const int8_t C_Y = HEIGHT / 2;
+        struct {
+            uint8_t angle;
+            uint8_t radius;
+        }rMap[WIDTH][HEIGHT];
+    public:
         void load() override;
         bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };

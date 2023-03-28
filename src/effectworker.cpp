@@ -78,7 +78,7 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed, const boo
   case EFF_ENUM::EFF_METABALLS :
     worker = std::unique_ptr<EffectMetaBalls>(new EffectMetaBalls());
     break;
-  case EFF_ENUM::EFF_SINUSOID3 :
+  case EFF_ENUM::EFF_SINUSOID :
     worker = std::unique_ptr<EffectSinusoid3>(new EffectSinusoid3());
     break;
   case EFF_ENUM::EFF_BBALS :
@@ -242,10 +242,10 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed, const boo
   case EFF_ENUM::EFF_POLARL :
     worker = std::unique_ptr<EffectPolarL>(new EffectPolarL());
     break;
-  case EFF_ENUM::EFF_FLOWER :
+  case EFF_ENUM::EFF_SOAP :
     worker = std::unique_ptr<EffectFlower>(new EffectFlower());
     break;
-  case EFF_ENUM::EFF_TEST :
+  case EFF_ENUM::EFF_SNK_ISLAND :
     worker = std::unique_ptr<EffectTest>(new EffectTest());
     break;
    case EFF_ENUM::EFF_SMOKEBALLS :
@@ -278,11 +278,14 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed, const boo
   case EFF_ENUM::EFF_WATERCOLORS :
     worker = std::unique_ptr<EffectWcolor>(new EffectWcolor());
     break;
-  case EFF_ENUM::EFF_FIRE :
+  case EFF_ENUM::EFF_R_FIRE :
     worker = std::unique_ptr<EffectRadialFire>(new EffectRadialFire());
     break;
   case EFF_ENUM::EFF_SPBALS :
     worker = std::unique_ptr<EffectSplashBals>(new EffectSplashBals());
+    break;
+  case EFF_ENUM::EFF_KALEIDOSCOPE :
+    worker = std::unique_ptr<EffectRadialNoise>(new EffectRadialNoise());
     break;
 #ifdef RGB_PLAYER
   case EFF_ENUM::EEF_RGBPLAYER :
