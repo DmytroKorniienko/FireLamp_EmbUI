@@ -108,29 +108,25 @@ public:
         if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
         if(type==GAUGETYPE::GT_VERT){
-            /*
-            uint8_t ind = (uint8_t)((gauge_val + 1) * HEIGHT / (float)gauge_max + 1);
+            uint16_t ind = EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT)*255;
+            uint8_t subPart = ind % 256;
+            ind >>= 8;
             for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
-                for (uint8_t y = 0; y < HEIGHT ; y++) {
-                if (ind > y)
-                    EffectMath::drawPixelXY(x, y, CHSV(gauge_hue, 255, 255));
-                else
-                    EffectMath::drawPixelXY(x, y,  0);
+                for(uint8_t y = 0; y < HEIGHT; y++){
+                    EffectMath::drawPixelXY(x, y, (y < ind)? ((gauge_hue)? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)):
+                     ((ind == y)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
+                      CRGB(0,0,0)));
                 }
             }
-            */
-            for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
-                EffectMath::drawLine(x, 0, x, HEIGHT, 0);
-                EffectMath::drawLineF(x, 0, x, EffectMath::fmap(gauge_val, 0, gauge_max, 0, HEIGHT), (gauge_hue ? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)));
-            }
         } else {
-            uint8_t ind = (uint8_t)((gauge_val + 1) * WIDTH / (float)gauge_max + 1);
-            for (uint8_t y = 0; y <= yCol * (yStep - 1) ; y += yStep) {
-                for (uint8_t x = 0; x < WIDTH ; x++) {
-                if (ind > x)
-                    EffectMath::drawPixelXY((x + y) % WIDTH, y, CHSV(gauge_hue, 255, 255));
-                else
-                    EffectMath::drawPixelXY((x + y) % WIDTH, y,  0);
+            uint16_t ind = EffectMath::fmap(gauge_val, 0 , gauge_max, 0, WIDTH)*255;
+            uint16_t subPart = ind % 256;
+            ind >>= 8;
+            for (uint8_t y = 0; y <= yCol * (yStep - 1); y += yStep) {
+                for(uint8_t x = 0; x < WIDTH; x++){
+                    EffectMath::drawPixelXY((x + y) % WIDTH, y, (x < ind)? ((gauge_hue)? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)):
+                     ((ind == x)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
+                      CHSV(0,0,0)));
                 }
             }
         }
