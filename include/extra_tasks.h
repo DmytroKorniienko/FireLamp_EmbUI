@@ -55,7 +55,7 @@ class GAUGE : public Task {
 private:
     static GAUGE *gauge; // статический объект индикатора
 
-    uint16_t xStep; uint16_t xCol; uint16_t yStep; uint16_t yCol; // для индикатора
+    uint16_t xStep; uint16_t xCol; // для индикатора
     unsigned long gauge_time = 0;
     unsigned gauge_val = 0;
     unsigned gauge_max = 0;
@@ -86,19 +86,6 @@ public:
           xCol = 1;
         }
 
-        yStep = HEIGHT / 4;
-        yCol = 4;
-        if(yStep<2) {
-          yStep = HEIGHT / 3;
-          yCol = 3;
-        } else if(yStep<2) {
-          yStep = HEIGHT / 2;
-          yCol = 2;
-        } else if(yStep<2) {
-          yStep = 1;
-          yCol = 1;
-        }
-
         this->enableDelayed();
     };
     ~GAUGE() {GAUGE::gauge = nullptr;}
@@ -122,13 +109,11 @@ public:
             uint16_t ind = EffectMath::fmap(gauge_val, 0 , gauge_max, 0, WIDTH)*255;
             uint16_t subPart = ind % 256;
             ind >>= 8;
-            for (uint8_t y = 0; y <= yCol * (yStep - 1); y += yStep) {
                 for(uint8_t x = 0; x < WIDTH; x++){
-                    EffectMath::drawPixelXY((x + y) % WIDTH, y, (x < ind)? ((gauge_hue)? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)):
+                    EffectMath::drawPixelXY(x, HEIGHT / 2, (x < ind)? ((gauge_hue)? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)):
                      ((ind == x)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
                       CHSV(0,0,0)));
                 }
-            }
         }
     }
 
