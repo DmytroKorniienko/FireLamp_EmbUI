@@ -1320,7 +1320,7 @@ bool EffectSpiro::run(CRGB *leds, EffectWorker *param) {
   for (byte i = 0; i < AM; i++) {
     EffectMath::drawPixelXYF((spirocenterX + sin(t + (Angle * i)) * radX), (spirocenterY + cos(t + (Angle * i)) * radY), ColorFromPalette(*curPalette, t*10 + ((256 / AM) * i)));
   }
-  EffectMath::blur2d(32);
+  EffectMath::blur2d(16);
   return true;
 }
 	
@@ -1860,7 +1860,7 @@ bool EffectDrift::incrementalDriftRoutine(CRGB *leds, EffectWorker *param)
     int16_t y = beatsin16((float)(maxDim - i) * _dri_speed, (maxDim - 2 - i)*128, (maxDim + i)*128, 0, dri_phase*256);       // используем константы центра матрицы из эффекта Кометы
     EffectMath::wu_pixel(x-width_adj * 256, y-height_adj * 256, ColorFromPalette(*curPalette, (i - 1U) * maxDim_steps + _dri_delta));
   }
-  EffectMath::blur2d(beatsin8(3U, 5, 100));
+  EffectMath::blur2d(beatsin8(3U, 2, 50));
   return true;
 }
 
