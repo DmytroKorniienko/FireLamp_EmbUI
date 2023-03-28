@@ -359,97 +359,99 @@ static const char TCONST_FFFF[] PROGMEM = "1";
 */
 
 typedef enum : uint8_t {
-EFF_NONE = (0U),                              // Специальный служебный эффект, не комментировать и индекс не менять константу!
-EFF_WHITE_COLOR,                              // Белый свет
-EFF_COLORS,                                   // Смена цвета
-EFF_RAINBOW_2D,                               // Радуга универсальная
-EFF_SPARKLES,                                 // Конфетти
-EFF_PILE,                                     // Цветные Драже
-EFF_SNOWSTORMSTARFALL,                        // Метель + Звездопад
-EFF_MATRIX,                                   // Матрица
+EFF_NONE = (0U),                              // Службовий ефект !НЕ КОМЕНТУВАТИ!НЕ МІНЯТИ КОНСТАНТУ!
+EFF_WHITE_COLOR,                              // Біла лампа
+EFF_COLORS,                                   // Кольори
+EFF_RAINBOW_2D,                               // Веселка
+EFF_SPARKLES,                                 // Конфеті
+EFF_PILE,                                     // Кольорові драже
+EFF_SNOWSTORMSTARFALL,                        // Хурделиця, Зіркопад, Метеори
+EFF_MATRIX,                                   // Матриця
 EFF_WATERCOLORS,                              // Акварель
-EFF_LIGHTER_TRACES,                           // Светлячки со шлейфом
+EFF_LIGHTER_TRACES,                           // Світлячки зі шлейфом
 // 10
-EFF_CUBE,                                     // Блуждающий кубик
+EFF_CUBE,                                     // Блукаючий кубик
 EFF_PULSE,                                    // Пульс
-EFF_EVERYTHINGFALL,                           // Водо/огне/лава/радуга/хренопад
-EFF_FIRE,                                     // Огонь
+EFF_EVERYTHINGFALL,                           // Ефектопад
+EFF_R_FIRE,                                   // Неопалима купина
 EFF_PAINTBALL,                                // Пейнтбол
-EFF_3DNOISE,                                  // 3D-шум
-EFF_CELL,                                     // Клеточки
-EFF_PUZZLES,                                  // Пятнашки
-EFF_T_LEND,                                   // Тикси Ленд
+EFF_3DNOISE,                                  // Шум 3Д
+EFF_CELL,                                     // Клітинки-ялинки
+EFF_PUZZLES,                                  // П'ятнашки
+EFF_T_LEND,                                   // Tixy.land
 EFF_SPBALS,                                   // Н.Тесла
 //20
 EFF_OSCIL,                                    // Осцилятор 
 EFF_WRAIN,                                    // Шторм 
 EFF_FAIRY,                                    // Фея
-EFF_FOUNT,                                    // Источник
-EFF_BBALS,                                    // Прыгающие мячики
-EFF_SINUSOID3,                                // Синусоид
-EFF_METABALLS,                                // Метасферы
-EFF_SPIRO,                                    // Спираль
-EFF_COMET,                                    // Кометы, Парящие огни +
+EFF_FOUNT,                                    // Джерело
+EFF_BBALS,                                    // Стрибаючі м'ячики
+EFF_SINUSOID,                                 // Синусоїд
+EFF_METABALLS,                                // Метасфери
+EFF_SPIRO,                                    // Спіраль
+EFF_COMET,                                    // Комети, Витаючі вогні +
 EFF_CIRCLES,                                  // Бульбулятор
 //30
 EFF_PRIZMATA,                                 // Призмата
-EFF_FLOCK,                                    // Стая и Хищник
-EFF_SWIRL,                                    // Водоворот
+EFF_FLOCK,                                    // Стая і Хижак
+EFF_SWIRL,                                    // Водоверть
 EFF_DRIFT,                                    // Дрифт
 EFF_POPCORN,                                  // Попкорн
-EFF_TWINKLES,                                 // Мерцание
+EFF_TWINKLES,                                 // Мерехтіння
 EFF_RADAR,                                    // Радар
-EFF_WAVES,                                    // Волны
-EFF_FIRE2012,                                 // Огонь 2012
-EFF_BENGALL,                                  // Бенгальские Огни
+EFF_WAVES,                                    // Хвилі
+EFF_FIRE2012,                                 // Вогонь 2012
+EFF_BENGALL,                                  // Бенгальські вогні
 //40
-EFF_BALLS,                                    // Шары
+EFF_BALLS,                                    // Кульки
 EFF_DNA,                                      // ДНК
-EFF_FIRE2018,                                 // Огонь 2018
-EFF_RINGS,                                    // Кодовый замок
+EFF_FIRE2018,                                 // Вогонь 2018
+EFF_RINGS,                                    // Кодовий замок
 EFF_CUBE2,                                    // Куб 2D
 EFF_MAGMA,                                    // Магма
-EFF_PICASSO,                                  // Пикассо
-EFF_STARSHIPS,                                // Звездный Десант
-EFF_FLAGS,                                    // Флаги
-EFF_LEAPERS,                                  // Прыгуны
+EFF_PICASSO,                                  // Пікассо
+EFF_STARSHIPS,                                // Зоряний Десант
+EFF_FLAGS,                                    // Прапори
+EFF_LEAPERS,                                  // Стрибунці
 //50
-EFF_WHIRL,                                    // Вихри
-EFF_STAR,                                     // Звезды
-EFF_AQUARIUM,                                 // Аквариум
+EFF_WHIRL,                                    // Вихори
+EFF_STAR,                                     // Зірки
+EFF_AQUARIUM,                                 // Акваріум
 EFF_FIREWORKS,                                // Фейерверк
 EFF_PACIFIC,                                  // Тихий Океан
-EFF_MUNCH,                                    // Вышиванка
-EFF_NOISE,                                    // Цветной шум
-EFF_BUTTERFLY,                                // Мотыльки
-EFF_SHADOWS,                                  // Тени
-EFF_PATTERNS,                                 // Узоры
+EFF_MUNCH,                                    // Вишиванка
+EFF_NOISE,                                    // Кольоровий шум
+EFF_BUTTERFLY,                                // Мотильки
+EFF_SHADOWS,                                  // Тіні
+EFF_PATTERNS,                                 // Візерунки
 //60
-EFF_ARROWS,                                   // Стрелки
-EFF_NBALLS,                                   // Дикие шарики
-EFF_ATTRACT,                                  // Притяжение
-EFF_SNAKE,                                    // Змейки by kDn
+EFF_ARROWS,                                   // Стрілки
+EFF_NBALLS,                                   // Дикі кульки
+EFF_ATTRACT,                                  // Притягування
+EFF_SNAKE,                                    // Змійки
 EFF_NEXUS,                                    // Nexus
-EFF_MAZE,                                     // Лабиринт
-EFF_FRIZZLES,                                 // Вьющийся цвет (с) Stepko
-EFF_POLARL,                                   // Северное Сияние
-EFF_FLOWER,                                   // Цветение
-EFF_TEST,                                     // Змеиный Остров
+EFF_MAZE,                                     // Лабіринт
+EFF_FRIZZLES,                                 // В'юнкі кольори
+EFF_POLARL,                                   // Північне сяйво
+EFF_SOAP,                                     // Мильні розводи
+EFF_SNK_ISLAND,                               // Зміїний острів
 //70
-EFF_SMOKEBALLS,                               // Детские Сны (stepko)
-EFF_PICASSO4,                                 // Меташары
-EFF_LIQUIDLAMP,                               // Лаваламп 
-EFF_RACER,                                    // Космо-Гонщик
-EFF_SMOKER,                                   // Дым
-EFF_FIRE2021,                                 // Огонь от Степко
-EFF_MIRAGE,                                   // Мираж
-EFF_TIME = (250U)                             // Часы (служебный, смещаем в конец)
+EFF_SMOKEBALLS,                               // Полумняні мрії
+EFF_PICASSO4,                                 // Метакулі
+EFF_LIQUIDLAMP,                               // Лаво-лампа 
+EFF_RACER,                                    // Космо-Рейсер
+EFF_SMOKER,                                   // Дим
+EFF_FIRE2021,                                 // Вогняна лампа
+EFF_MIRAGE,                                   // Міраж
+EFF_KALEIDOSCOPE,                             // Калейдоскоп
+//...
+EFF_TIME = (250U)                             // Годинник(службовий, тягнемо в кінець)
 #ifdef RGB_PLAYER
-,EEF_RGBPLAYER = (251)
+,EEF_RGBPLAYER = (251)                        // Програвач "гіфок"
 #endif
 #ifdef MIC_EFFECTS
-,EFF_VU = (254U)                              // Частотный анализатор (служебный, смещаем в конец)
-,EFF_OSC = (255U)                             // Осциллограф
+,EFF_VU = (254U)                              // VU-meter(службовий, тягнемо в кінець)
+,EFF_OSC = (255U)                             // Осцилограф
 #endif
 } EFF_ENUM;
 
@@ -462,7 +464,7 @@ static const char* const T_EFFNAMEID[] PROGMEM = {
   TEFF_016, TEFF_017, TEFF_018, TEFF_019, TEFF_020, TEFF_021, TEFF_022, TEFF_023, TEFF_024, TEFF_025, TEFF_026, TEFF_027, TEFF_028, TEFF_029, TEFF_030, TEFF_031, // 16-31
   TEFF_032, TEFF_033, TEFF_034, TEFF_035, TEFF_036, TEFF_037, TEFF_038, TEFF_039, TEFF_040, TEFF_041, TEFF_042, TEFF_043, TEFF_044, TEFF_045, TEFF_046, TEFF_047, // 32 - 47
   TEFF_048, TEFF_049, TEFF_050, TEFF_051, TEFF_052, TEFF_053, TEFF_054, TEFF_055, TEFF_056, TEFF_057, TEFF_058, TEFF_059, TEFF_060, TEFF_061, TEFF_062, TEFF_063, // 48 - 63
-  TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_073, TEFF_074, TEFF_075, TEFF_076, TEFF_000, TEFF_000, TEFF_000, // 64 - 79
+  TEFF_064, TEFF_065, TEFF_066, TEFF_067, TEFF_068, TEFF_069, TEFF_070, TEFF_071, TEFF_072, TEFF_073, TEFF_074, TEFF_075, TEFF_076, TEFF_077, TEFF_000, TEFF_000, // 64 - 79
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 80 - 95
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 96 - 111
   TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, TEFF_000, // 112 - 127
@@ -488,7 +490,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   3, 1, 3, 1, 3, 7, 5, 2, 3, 5, 5, 7, 7, 2, 1, 7, // 16-31
   5, 1, 5, 3, 9, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
   1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 1, 1, 5, 7, 6, // 48 - 63
-  5, 3, 1, 5, 3, 1, 7, 1, 3, 1, 1, 1, 1, 0, 0, 0, // 64 - 79
+  5, 3, 1, 5, 3, 1, 7, 1, 3, 1, 1, 1, 1, 1, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -621,7 +623,7 @@ static const char* const T_EFFUICFG[] PROGMEM = {
   E_CELL,  E_PUZZLES, E_TLAND,    E_SPBALS,   E_3PAL,     E_WRAIN, E_FAIRY,      E_FOUNT,  E_BBALLS,    E_SINUS,     E_4PAL,   E_3PAL,  E_COMET,  E_4PAL_MIC, E_PRIZMATA, E_FLOCK, // 16-31
   E_3PAL,  E_DRIFT,   E_POPCORN,  E_4PAL,     E_RADAR255, E_WAVES, E_F2012_MIC,  E_FAIRY,  E_4PAL,      E_DNA,       E_F2018,  E_CLOCK, E_CUBE2D, E_NFIRE,    E_PICAS,    E_SSHIPS, // 32 - 47
   E_FLAGS, E_LEAPERS, E_3PAL_MIC, E_3PAL_MIC, E_AQUARIUM, E_FWORK, E_2,          E_MUNCH,  E_CNOISE,    E_BUTTERFLY, E_SHAD,   E_PATT,  E_ARR,    E_NBAL,     E_ATTRACT,  E_SNAKE, // 48 - 63
-  E_NEXUS, E_2,       E_DEFUI,    E_POLAR,    E_3PAL,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_SMOKER, E_NFIRE, E_MIRAGE, E_DEFUI,    E_DEFUI,    E_DEFUI, // 64 - 79
+  E_NEXUS, E_2,       E_DEFUI,    E_POLAR,    E_3PAL,    E_NEXUS, E_SMOKBALLS,  E_MBL,    E_LIQLAM,    E_3PAL,      E_SMOKER, E_NFIRE, E_MIRAGE, E_2,    E_DEFUI,    E_DEFUI, // 64 - 79
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 80 - 95
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 96 - 111
   E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, E_DEFUI, // 112 - 127

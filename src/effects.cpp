@@ -8235,8 +8235,8 @@ String EffectRadialFire::setDynCtrl(UIControl*_val){
 void EffectRadialFire::load() {
   for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
     for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
-      XY_angle[x + C_X][y + C_Y] = atan2(y, x) * (180. / 2. / PI) * maxDim;
-      XY_radius[x + C_X][y + C_Y] = hypotf(x, y); // thanks Sutaburosu
+      rMap[x + C_X][y + C_Y].angle = atan2(y, x) * (180. / 2. / PI) * maxDim;
+      rMap[x + C_X][y + C_Y].radius = hypotf(x, y); // thanks Sutaburosu
     }
   }
   // palettesload();
@@ -8269,8 +8269,8 @@ bool EffectRadialFire::run(CRGB *leds, EffectWorker *param) {
   t += speedFactor;
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      int angle = XY_angle[x][y];
-      byte radius = mode ? maxDim - 3 - XY_radius[x][y] : XY_radius[x][y];
+      int angle = rMap[x][y].angle;
+      byte radius = mode ? maxDim - 3 - rMap[x][y].radius : rMap[x][y].radius;
       int16_t Bri = inoise8(angle, radius * _scale - t, x * _scale) - radius * (256 / maxDim);
       byte Col = Bri;
       if (Bri < 0) Bri = 0; 
@@ -8413,6 +8413,35 @@ void EffectFlower::MoveFractionalNoiseY(int8_t amplitude, float shift) {
       EffectMath::getPixel(x,y) = ledsbuff[y];
     }
   }
+}
+
+//===== Ефект Калейдоскоп ======================//
+//https://editor.soulmatelights.com/gallery/1569-radialnuclearnoise
+// (c)Stepko and Sutaburosu
+void EffectRadialNoise::load() {
+  for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
+      for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
+        rMap[x + C_X][y + C_Y].angle = 128 * (atan2(y, x) / PI);
+        rMap[x + C_X][y + C_Y].radius = hypot(x, y) * (255 / maxDim); //thanks Sutaburosu
+      }
+    }
+}
+bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
+  static float t;
+  t += EffectMath::fmap(speed,0,255,2,20);
+  uint16_t t1 = t / 2;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = sin8(t1 / 2 + rMap[x][y].angle * 3);
+      byte radius = rMap[x][y].radius * 2 - t;
+      byte noise[3] = { inoise8(angle, radius, t1), inoise8(angle, 12032 + t1, radius), inoise8(radius, 120021 + t1, angle) };
+      for(uint8_t i = 0; i < 3; i++){
+        noise[i] = (noise[i] < 128) ? 0 : constrain((noise[i] - 128) * 3,0,255);
+      }
+      EffectMath::drawPixelXY(x, y,CRGB(noise[0], noise[1], noise[2]));
+    }
+  }
+  return true;
 }
 
 #ifdef RGB_PLAYER
