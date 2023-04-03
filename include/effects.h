@@ -1490,20 +1490,24 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//===== Ефект Шторм ============================// 
-// (с)kostyamat 1.12.2020
-#define counts  (WIDTH*3)
+//------------ Эффект "Шторм" 
+// (с) kostyamat 1.12.2020
+#define DROP_CNT  (WIDTH*3)
 
 class EffectWrain: public EffectCalc {
   private:
+
+    struct Drop {
+        float posX{0};
+        float posY{0};
+        uint8_t color{0};    // цвет капли
+        float accell{0};     // персональное ускорение каждой капли
+        uint8_t bri{0};      // яркость капли
+    };
+
     static const uint8_t cloudHeight = HEIGHT / 5 + 1;
-    float dotPosX[counts];
-    float dotPosY[counts];
     float dotChaos;         // сила ветра
     int8_t dotDirect;       // направление ветра 
-    byte dotColor[counts];  // цвет капли
-    float dotAccel[counts]; // персональное ускорение каждой капли
-    byte dotBri[counts];    // яркость капли
     bool clouds = false;
     bool storm = false;
     bool white = false;
@@ -1511,12 +1515,11 @@ class EffectWrain: public EffectCalc {
     byte type = 1;
     bool _flash;
     bool randColor = false;
-    float windProgress;
-	float speedFactor;
-    uint8_t *_noise = (uint8_t *)malloc(WIDTH * cloudHeight);
-    uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);  
+    float windProgress = 0;
+    float speedFactor = 0.5;
     uint32_t timer = 0;
-    
+    std::array<uint8_t, WIDTH * cloudHeight> _noise;
+    std::vector<Drop> drops {std::vector<Drop>(DROP_CNT)};
 
     void reload();
     String setDynCtrl(UIControl*_val) override;
@@ -1790,32 +1793,35 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//===== Ефект Магма ============================//
-// (c)SottNick 2021
-// адаптація і доведення до розуму kostyamat
+// ----------------- Эффект "Магма"
+// (c) Сотнег (SottNick) 2021
+// адаптация и доводка до ума - kostyamat
+#define MAGMA_MIN_OBJ   (WIDTH/2)
+#define MAGMA_MAX_OBJ   (WIDTH*3)
 class EffectMagma: public EffectCalc {
 private:
-    //uint16_t ff_x;
-    float ff_y, ff_z;                         // большие счётчики
+
+    struct Magma {
+        float posX{0}, posY{0};
+        float speedX{0};
+        float shift{0};
+        uint8_t hue{0};
+    };
+
+    float ff_y{0}, ff_z{0};         // большие счётчики
     //control magma bursts
-    const byte deltaValue = 6U; // 2-12 
-    const byte deltaHue = 8U; // высота языков пламени должна уменьшаться не так быстро, как ширина
-    const float Gravity = 0.1;
-    uint8_t step, ObjectNUM = WIDTH; 
-    uint8_t shiftHue[HEIGHT];
-    struct{
-        float PosX;
-        float PosY;
-        uint8_t Hue;
-        float SpeedX;
-        float Shift;
-    }trackingObject[enlargedOBJECT_MAX_COUNT];
-    float speedFactor;
+    const byte deltaValue = 6U;     // 2-12 
+    const byte deltaHue = 8U;       // высота языков пламени должна уменьшаться не так быстро, как ширина
+    const float gravity = 0.1;
+    uint8_t step = WIDTH;
+    float speedFactor{0.1};
+    std::array<uint8_t, HEIGHT> shiftHue;
+    std::vector<Magma> particles{std::vector<Magma>(WIDTH, Magma())};
 
     void palettesload();
     void regen();
-    void LeapersMove_leaper(uint8_t l);
-    void LeapersRestart_leaper(uint8_t l);
+    void leapersMove_leaper(Magma &l);
+    void leapersRestart_leaper(Magma &l);
     String setDynCtrl(UIControl*_val) override;
 
 public:
