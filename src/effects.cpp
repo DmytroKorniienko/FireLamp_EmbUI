@@ -6172,8 +6172,9 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }
 
-//===== Ефект Шторм ============================// 
-// (с)kostyamat 1.12.2020
+//------------ Эффект "Шторм" 
+// (с) kostyamat 1.12.2020
+// !++
 String EffectWrain::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==1) {
@@ -6191,12 +6192,12 @@ String EffectWrain::setDynCtrl(UIControl*_val)
 
 void EffectWrain::reload() {
   randomSeed(millis());
-  for (byte i = 0; i < counts; i++) {
-    dotPosX[i] = EffectMath::randomf(0, WIDTH); // Разбрасываем капли по ширине
-    dotPosY[i] = EffectMath::randomf(0, HEIGHT);  // и по высоте
-    dotColor[i] = random(0, 9) * 31;              // цвет капли
-    dotAccel[i] = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
-    dotBri[i] = random(170, 255);
+  for (byte i = 0; i < DROP_CNT; i++) {
+    drops[i].posX = EffectMath::randomf(0, WIDTH); // Разбрасываем капли по ширине
+    drops[i].posY = EffectMath::randomf(0, HEIGHT);  // и по высоте
+    drops[i].color = random(0, 9) * 31;              // цвет капли
+    drops[i].accell = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
+    drops[i].bri = random(170, 255);
   }
 }
 
@@ -6207,7 +6208,7 @@ void EffectWrain::load() {
 
 bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
 
-  if (_flash and (millis() - timer < 500)) 
+  if (_flash and (millis() - timer < 1000)) 
     _flash = true;
   else _flash = false;
 
@@ -6235,41 +6236,45 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     } 
   }
 
-  for (byte i = 0; i < map(_scale, 1, 45, 2, counts); i++) {
-    dotColor[i]++;
-    dotPosX[i] += (speedFactor * dotChaos + dotAccel[i]) * dotDirect; // смещение по горизонтали
-    dotPosY[i] -= (speedFactor + dotAccel[i]);
+  //
+  for (byte i = 0; i < map(_scale, 1, 45, 2, DROP_CNT); i++) {
+    drops[i].color++;
+    drops[i].posX += (speedFactor * dotChaos + drops[i].accell) * dotDirect; // смещение по горизонтали
+    drops[i].posY -= (speedFactor + drops[i].accell);
+
     // Обеспечиваем бесшовность по Y.
-    if (dotPosY[i] < 0)
+    if (drops[i].posY < 0)
     {                                                             // достигли низа, обновляем каплю
-      dotPosY[i] = ((float)HEIGHT - (clouds ? cloudHeight : 1.)); // переносим каплю в начало трека
-      dotPosX[i] += EffectMath::randomf(-1, 1);                   // сдвигаем каплю туда-сюда по горизонтали
-      dotBri[i] = random(170, 200);                               // задаем капле новое значение яркости
+      drops[i].posY = ((float)HEIGHT - (clouds ? cloudHeight : 1.)); // переносим каплю в начало трека
+      drops[i].posX += EffectMath::randomf(-1, 1);                   // сдвигаем каплю туда-сюда по горизонтали
+      drops[i].bri = random(170, 200);                               // задаем капле новое значение яркости
     }
-    if (dotPosY[i] > (EffectMath::getmaxHeightIndex()))
-      dotPosY[i] = 0;
+    if (drops[i].posY > (EffectMath::getmaxHeightIndex()))
+      drops[i].posY = 0;
+
     // Обеспечиваем бесшовность по X.
-    if (dotPosX[i] < 0)
-      dotPosX[i] = EffectMath::getmaxWidthIndex();
-    if (dotPosX[i] > EffectMath::getmaxWidthIndex())
-      dotPosX[i] = 0;
+    if (drops[i].posX < 0)
+      drops[i].posX = EffectMath::getmaxWidthIndex();
+    if (drops[i].posX > EffectMath::getmaxWidthIndex())
+      drops[i].posX = 0;
 
     if (randColor) {
-      if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
-      else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], CHSV(dotColor[i], 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
+      if (dotDirect) EffectMath::drawPixelXYF(drops[i].posX, drops[i].posY, CHSV(drops[i].color, 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
+      else EffectMath::drawPixelXYF_Y(drops[i].posX, drops[i].posY, CHSV(drops[i].color, 256U - beatsin88(2 * speed, 1, 196), beatsin88(1 * speed, 64, 255)));
     } else if (white) {
       CHSV color = rgb2hsv_approximate(CRGB::Gray);
-      color.value = dotBri[i] - 48;
-      if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], color);
-      else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], color);
+      color.value = drops[i].bri - 48;
+      if (dotDirect) EffectMath::drawPixelXYF(drops[i].posX, drops[i].posY, color);
+      else EffectMath::drawPixelXYF_Y(drops[i].posX, drops[i].posY, color);
     }
     else {
-      CHSV color = rgb2hsv_approximate(ColorFromPalette(*curPalette, dotColor[i], dotBri[i]));
+      CHSV color = rgb2hsv_approximate(ColorFromPalette(*curPalette, drops[i].color, drops[i].bri));
       color.sat = 128;
-      if (dotDirect) EffectMath::drawPixelXYF(dotPosX[i], dotPosY[i], color);
-      else EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], color);
+      if (dotDirect) EffectMath::drawPixelXYF(drops[i].posX, drops[i].posY, color);
+      else EffectMath::drawPixelXYF_Y(drops[i].posX, drops[i].posY, color);
     }
   }
+
   // Раздуваем\угасаем ветер
   if (type <= 4) {
     uint8_t val = triwave8(windProgress += speedFactor);
@@ -6278,6 +6283,7 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
       dotDirect = random(-1, 2); //выбираем направление ветра лево-право, рандом 2 не возвращает (как не странно).
     }
   } else dotDirect = 0;
+
     // Рисуем тучку и молнию
   if (clouds) {
     if (randColor) curPalette = palettes.at(0);  // устанавливаем палитру RainbowColors_p
@@ -6292,13 +6298,12 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
 
 bool EffectWrain::Lightning(uint16_t chanse)
 {
+  if (random16() > chanse) return false;  // no lightning this time
+
   CRGB lightningColor = CHSV(30,90,255);
-  //uint8_t lightning[WIDTH][HEIGHT];
-  // ESP32 does not like static arrays  https://github.com/espressif/arduino-esp32/issues/2567
-if (random16() < chanse)
-  {            
-    timer = millis();
-    //uint8_t *lightning = (uint8_t *)malloc(WIDTH * HEIGHT);                                                           // Odds of a lightning bolt
+  timer = millis();
+  std::vector<uint8_t>lightning(WIDTH*HEIGHT, 0);
+
     lightning[scale8(random8(), EffectMath::getmaxWidthIndex()) + EffectMath::getmaxHeightIndex() * WIDTH] = 255; // Random starting location
     for (uint8_t ly = EffectMath::getmaxHeightIndex(); ly > 1; ly--)
     {
@@ -6332,11 +6337,10 @@ if (random16() < chanse)
         }
       }
     }
-    //free(lightning);
+
     return true;
-  }
-  return false;
 }
+
 // Функция рисует тучу в верхней части матрицы 
 void EffectWrain::Clouds(bool flash)
 {
@@ -6345,10 +6349,8 @@ void EffectWrain::Clouds(bool flash)
   uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
   uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
   uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-  //uint8_t *_noise = (uint8_t *)malloc(WIDTH * cloudHeight);
 
   // This is the array that we keep our computed noise values in
-  //static uint8_t _noise[WIDTH][cloudHeight];
   for (uint8_t x = 0; x < WIDTH; x++)
   {
     int xoffset = noiseScale * x;
@@ -6365,11 +6367,9 @@ void EffectWrain::Clouds(bool flash)
     }
     noiseZ++;
   }
-
-  if (millis() - timer < 300) {
+  if (millis() - timer < 500) {
     for (uint8_t i = 0; i < WIDTH; i++)
     {
-      //for (byte z = 0; z < 10; z++)
         EffectMath::drawPixelXYF(i, EffectMath::randomf((float)HEIGHT - 4.5, (float)HEIGHT - 2.5), CHSV(0, 250, random8(120, 200)), 0);
     }
   }
@@ -7191,9 +7191,9 @@ void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t
   }
 }
 
-//===== Ефект Магма ============================//
-// (c)SottNick 2021
-// адаптація і доведення до розуму kostyamat
+// ----------------- Эффект "Магма"
+// (c) Сотнег (SottNick) 2021
+// адаптация и доводка до ума - kostyamat
 void EffectMagma::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
@@ -7222,19 +7222,23 @@ void EffectMagma::load() {
 // !++
 String EffectMagma::setDynCtrl(UIControl*_val){
   if (_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.075, .5) * EffectCalc::speedfactor;
-  else if(_val->getId()==3) ObjectNUM = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, WIDTH/2, enlargedOBJECT_MAX_COUNT);
+  else if(_val->getId()==3) {
+    long scale = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 100, MAGMA_MIN_OBJ, MAGMA_MAX_OBJ);
+    particles.assign(scale, Magma());
+  }
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   regen();
   return String();
 }
 
 void EffectMagma::regen() {
-  for (uint8_t j = 0; j < HEIGHT; j++) {
+  for (uint8_t j = 0; j != shiftHue.size(); ++j){
     shiftHue[j] = map(j, 0, HEIGHT+HEIGHT/4, 255, 0);// init colorfade table
   }
-  for (uint8_t i = 0 ; i < enlargedOBJECT_MAX_COUNT ; i++) {
-    LeapersRestart_leaper(i);  
-    trackingObject[i].Hue = 50U;
+
+  for (auto &i : particles){
+    leapersRestart_leaper(i);
+    i.hue = 50U;
   }
 }
 
@@ -7242,9 +7246,10 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, 50);
   
 
-  for (uint8_t i = 0; i < ObjectNUM; i++) {
-    LeapersMove_leaper(i);
-    EffectMath::drawPixelXYF(trackingObject[i].PosX, trackingObject[i].PosY, ColorFromPalette(*curPalette, trackingObject[i].Hue), 0);
+  for (auto &i : particles){
+    leapersMove_leaper(i);
+    i.hue = 50U;
+    EffectMath::drawPixelXYF(i.posX, i.posY, ColorFromPalette(*curPalette, i.hue), 0);
   }
 
   for (uint8_t i = 0; i < WIDTH; i++) {
@@ -7259,38 +7264,43 @@ bool EffectMagma::run(CRGB *leds, EffectWorker *opt) {
   return true;
 }
 
-void EffectMagma::LeapersMove_leaper(uint8_t l) {
+void EffectMagma::leapersMove_leaper(Magma &l) {
 
-  trackingObject[l].PosX += trackingObject[l].SpeedX * speedFactor;
-  trackingObject[l].PosY += trackingObject[l].Shift * speedFactor;
+  l.posX += l.speedX * speedFactor;
+  l.posY += l.shift * speedFactor;
+
   // bounce off the ceiling?
-  if (trackingObject[l].PosY > HEIGHT + HEIGHT/4) {
-    trackingObject[l].Shift = -trackingObject[l].Shift;
-  }
-  // settled on the floor?
-  if (trackingObject[l].PosY <= (HEIGHT/8-1)) {
-    LeapersRestart_leaper(l);
-  }
-  // bounce off the sides of the screen?
-  if (trackingObject[l].PosX < 0 || trackingObject[l].PosX > EffectMath::getmaxWidthIndex()) {
-    LeapersRestart_leaper(l);
+  if (l.posY > HEIGHT + HEIGHT/4) {
+    l.shift *= -1;
   }
   
-  trackingObject[l].Shift -= Gravity * speedFactor;
+  // settled on the floor?
+  if (l.posY <= (HEIGHT/8-1)) {
+    leapersRestart_leaper(l);
+  }
+
+  // bounce off the sides of the screen?
+  if (l.posX < 0 || l.posX > EffectMath::getmaxWidthIndex()) {
+    leapersRestart_leaper(l);
+  }
+  
+  l.shift -= gravity * speedFactor;
 }
 
-void EffectMagma::LeapersRestart_leaper(uint8_t l) {
+void EffectMagma::leapersRestart_leaper(Magma &l) {
   randomSeed(millis());
   // leap up and to the side with some random component
-  trackingObject[l].SpeedX = EffectMath::randomf(-0.75, 0.75);
-  trackingObject[l].Shift = EffectMath::randomf(0.50, 0.85);
-  trackingObject[l].PosX = EffectMath::randomf(0, WIDTH);
-  trackingObject[l].PosY = EffectMath::randomf(0, (float)HEIGHT/4-1);
+  l.speedX = EffectMath::randomf(-0.75, 0.75);
+  l.shift = EffectMath::randomf(0.50, 0.85);
+  l.posX = EffectMath::randomf(0, WIDTH);
+  l.posY = EffectMath::randomf(0, (float)HEIGHT/4-1);
+
   // for variety, sometimes go 100% faster
   if (random8() < 12) {
-    trackingObject[l].Shift += trackingObject[l].Shift * EffectMath::randomf(1.5, 2.5);
+    l.shift += l.shift * EffectMath::randomf(1.5, 2.5);
   }
 }
+
 
 //===== Ефект Зоряний десант ===================//
 // Starship Troopers https://editor.soulmatelights.com/gallery/839-starship-troopers
