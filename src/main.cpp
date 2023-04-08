@@ -200,7 +200,7 @@ void loop() {
 String ha_autodiscovery()
 {
     LOG(println,F("MQTT: Autodiscovery"));
-    DynamicJsonDocument hass_discover(1024);
+    DynamicJsonDocument hass_discover(2048);
     String name = embui.param(FPSTR(P_hostname));
     String unique_id = embui.mc;
 
@@ -246,23 +246,14 @@ String ha_autodiscovery()
     hass_discover[F("min_mireds")] = 1;
     hass_discover[F("max_mireds")] = 255;
 
-    // JsonObject devobj = hass_discover.createNestedObject(F("dev"));
-    // //JsonArray devids = devobj.createNestedArray(F("ids"));
-    // //devids.add()
-    // devobj[F("name")] = F("Firelamp");
-    // devobj[F("mdl")] = F("Firelamp");
-    // devobj[F("sw")] = F("2.7.0");
-    // devobj[F("mf")] = F("kDn");
-    
-
-    // "\"dev\":{"
-    //   "\"ids\":[\"%s\"],"                                //clientId
-    //   "\"name\":\"%s\","                              //host
-    //   "\"mdl\":\"%s\","                                 //host
-    //   "\"sw\":\"%s\","                                  //version
-    //   "\"mf\":\"lg\""
-    // "}"
-
+    JsonObject device = hass_discover.createNestedObject(F("device"));
+    device[F("manufacturer")] = F("EmbUI");
+    device[F("model")] = F("FireLamp");
+    device[F("name")] = name;
+    device[F("sw_version")] = embui.getEmbUIver();
+    device[F("configuration_url")] = String(F("http://"))+WiFi.localIP().toString();
+    JsonArray identifiers = device.createNestedArray(F("identifiers"));
+    identifiers.add(unique_id);
 
     // hass_discover[F("whit_val_cmd_t")] = F("~set/scale");     // scale as white level (Яркость белого)
     // hass_discover[F("whit_val_stat_t")] = F("~pub/scale");    // scale as white level
