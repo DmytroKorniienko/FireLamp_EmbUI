@@ -23,9 +23,9 @@ Exit
 :M2
 if exist "%workdir%\ftpscript.txt" (del %workdir%\ftpscript.txt)
 
-echo open %LAMP_IP% >> %workdir%\ftpscript.txt
-echo %FTP_USER% >> %workdir%\ftpscript.txt
-echo %FTP_PASSWORD% >> %workdir%\ftpscript.txt
+echo open %LAMP_IP: =% >> %workdir%\ftpscript.txt
+echo %FTP_USER: =% >> %workdir%\ftpscript.txt
+echo %FTP_PASSWORD: =% >> %workdir%\ftpscript.txt
 echo binary >> %workdir%\ftpscript.txt
 echo cd animations >> %workdir%\ftpscript.txt
 echo put %1 >> %workdir%\ftpscript.txt
@@ -57,13 +57,13 @@ if "%choice%"=="3" exit
 :M1
 if exist "%workdir%\ftpscript.txt" (del %workdir%\ftpscript.txt)
 cls
-echo open %LAMP_IP% >> %workdir%\ftpscript.txt
-echo %FTP_USER% >> %workdir%\ftpscript.txt
-echo %FTP_PASSWORD% >> %workdir%\ftpscript.txt
+echo open %LAMP_IP: =% >> %workdir%\ftpscript.txt
+echo %FTP_USER: =% >> %workdir%\ftpscript.txt
+echo %FTP_PASSWORD: =% >> %workdir%\ftpscript.txt
 rem echo binary >> %workdir%\ftpscript.txt
 echo cd animations >> %workdir%\ftpscript.txt
 if "%choice%"=="2" (
-	echo del %filename%  >> %workdir%\ftpscript.txt
+	echo delete %filename%  >> %workdir%\ftpscript.txt
 )
 echo dir >> %workdir%\ftpscript.txt
 echo quit >> %workdir%\ftpscript.txt
