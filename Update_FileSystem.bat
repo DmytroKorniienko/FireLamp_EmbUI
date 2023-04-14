@@ -13,5 +13,7 @@ rem Read values from cfg file
 For /F "eol=# tokens=1* delims==" %%i In (%workdir%\LAMP_user.cfg) Do Set %%i=%%j
 @echo on
 curl -v http://%LAMP_IP: =%/update -F "name=@out_bin\littlefs.bin"
+@echo off
 pause
 exit
+

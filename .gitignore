@@ -19,3 +19,5 @@ Uploader*.bat
 *.332
 *.565
 *.cfg
+platformio-device-monitor-*.log
+
