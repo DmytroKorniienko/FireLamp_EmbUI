@@ -355,7 +355,6 @@ public:
 class Effect3DNoise : public EffectCalc {
 private:
     void fillNoiseLED();
-    void fillnoise8();
 
     uint8_t ihue;
     bool colorLoop;
@@ -365,7 +364,6 @@ private:
     float x;
     float y;
     float z;
-    uint8_t noise[maxDim][maxDim];
 
 public:
     void load() override;

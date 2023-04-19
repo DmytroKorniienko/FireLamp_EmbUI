@@ -916,32 +916,17 @@ void Effect3DNoise::fillNoiseLED()
       int32_t joffset = _scale * j;
 
       uint8_t data = inoise8(x + ioffset, y + joffset, z);
+      uint8_t data1 = inoise8(y + joffset, x + ioffset, z);
 
       data = qsub8(data, 16);
       data = qadd8(data, scale8(data, 39));
 
-      if (dataSmoothing)
-      {
-        uint8_t olddata = noise[i][j];
-        uint8_t newdata = scale8( olddata, dataSmoothing) + scale8( data, 256 - dataSmoothing);
-        data = newdata;
-      }
+      data1 = qsub8(data1, 16);
+      data1 = qadd8(data1, scale8(data1, 39));
 
-      noise[i][j] = data;
-    }
-  }
-  z += _speed;
 
-  // apply slow drift to X and Y, just for visual variation.
-  x += _speed * 0.125; // 1/8
-  y -= _speed * 0.0625; // 1/16
-
-  for (uint8_t i = 0; i < WIDTH; i++)
-  {
-    for (uint8_t j = 0; j < HEIGHT; j++)
-    {
-      uint8_t index = noise[j][i];
-      uint8_t bri =   noise[i][j];
+      uint8_t index = data;
+      uint8_t bri = data1;
       // if this palette is a 'loop', add a slowly-changing base value
       if ( colorLoop)
       {
@@ -958,42 +943,32 @@ void Effect3DNoise::fillNoiseLED()
         bri = dim8_raw( bri * 2);
       }
       CRGB color = ColorFromPalette( *curPalette, index, bri);
-
-      EffectMath::drawPixelXY(i, j, color);
-    }
-  }
-  ihue += 1;
-}
-
-void Effect3DNoise::fillnoise8()
-{
-  for (uint8_t i = 0; i < maxDim; i++)
-  {
-    int32_t ioffset = _scale * i;
-    for (uint8_t j = 0; j < maxDim; j++)
-    {
-      int32_t joffset = _scale * j;
-      noise[i][j] = inoise8(x + ioffset, y + joffset, z);
+      if (dataSmoothing)
+      {
+        nblend(EffectMath::getPixel(i, j), color, speed * 2);
+      }
+      else EffectMath::drawPixelXY(i, j, color);
     }
   }
   z += _speed;
+
+  // apply slow drift to X and Y, just for visual variation.
+  x += _speed * 0.125; // 1/8
+  y -= _speed * 0.0625; // 1/16
+  ihue += 1;
 }
 
 void Effect3DNoise::load(){
   palettesload();
-  fillnoise8();
 }
 
 // !++
 String Effect3DNoise::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
-  if(_val->getId()==3 && _val->getVal().toInt()==1 && !isRandDemo())
-    curPalette = &RainbowStripeColors_p;
   else if(_val->getId()==4) blurIm = EffectCalc::setDynCtrl(_val).toInt();
    else if(_val->getId()==5) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
    else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  fillnoise8();
   return String();
 }
 
@@ -1121,19 +1096,28 @@ String EffectSinusoid3::setDynCtrl(UIControl*_val){
 
 bool EffectSinusoid3::run(CRGB *leds, EffectWorker *param) {
   float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
-
+struct {
+    float X;
+    float Y;
+  }sshft[3];
+  sshft[0].X = float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0;
+  sshft[0].Y = float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+  sshft[1].X = float(e_s3_size * (sin16(e_s3_speed * 134.3447 * time_shift))) / 32767.0;
+  sshft[1].Y = float(e_s3_size * (cos16(e_s3_speed * 170.3884 * time_shift))) / 32767.0;
+  sshft[2].X = float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
+  sshft[2].Y = float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
 switch (type) {
     case 0: //Sinusoid I
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
           CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X; // the 8 centers the middle on a 16x16
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 134.3447 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 170.3884 * time_shift))) / 32767.0;
+          cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.b = ~v;
           EffectMath::drawPixelXY(x, y, color);
@@ -1144,13 +1128,13 @@ switch (type) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
 		  CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X; // the 8 centers the middle on a 16x16
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (float(0.002 * time_shift * e_s3_speed) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
+          cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (((float)(0.003 * time_shift * e_s3_speed)) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = (uint8_t(~v)>color.r)?~v:color.r;
 		  color.g = uint8_t(~v)/2;
@@ -1162,18 +1146,18 @@ switch (type) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
           CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X;
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
+         cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.g = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 134.3447 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 170.3884 * time_shift))) / 32767.0;
+          cx = (y - semiHeightMajor) + sshft[2].X;
+          cy = (x - semiWidthMajor) + sshft[2].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.b = ~v;
           EffectMath::drawPixelXY(x, y, color);
@@ -1184,13 +1168,13 @@ switch (type) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
           CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X;
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy))) + (time_shift * e_s3_speed * 100)) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
+         cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy))) + (time_shift * e_s3_speed * 100)) / 32767.0);
           color.g = ~v;
           
