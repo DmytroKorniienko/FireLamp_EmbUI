@@ -304,10 +304,12 @@ protected:
     uint8_t cnt = 1;
     bool subPix = false;
     uint16_t lightersIdx;
-    float lightersSpeed[2U][LIGHTERS_AM];
-    uint8_t lightersColor[LIGHTERS_AM];
-    float lightersPos[2U][LIGHTERS_AM];
-    byte light[LIGHTERS_AM];
+    struct{
+    float SpeedX, SpeedY;
+    uint8_t Color;
+    float PosX, PosY;
+    uint8_t Light;
+    }lighter[LIGHTERS_AM];
     float speedFactor;
 private:
     String setDynCtrl(UIControl*_val) override;
@@ -1309,11 +1311,13 @@ public:
 
 class EffectNexus: public EffectCalc {
   private:
-    float dotPosX[NEXUS];
-    float dotPosY[NEXUS];
-    int8_t dotDirect[NEXUS];       // направление точки 
-    CRGB dotColor[NEXUS];          // цвет точки
-    float dotAccel[NEXUS];         // персональное ускорение каждой точки
+    struct{
+        float PosX;
+        float PosY;
+        uint8_t Direct;       // направление точки 
+        CRGB Color;          // цвет точки
+        float Accel;         // персональное ускорение каждой точки
+    }dot[NEXUS];
     bool white = false;
     byte type = 1;
     uint8_t _scale = 1;
@@ -1488,8 +1492,8 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//------------ Эффект "Шторм" 
-// (с) kostyamat 1.12.2020
+//===== Ефект Шторм ============================// 
+// (с)kostyamat 1.12.2020
 #define DROP_CNT  (WIDTH*3)
 
 class EffectWrain: public EffectCalc {
@@ -1791,9 +1795,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------------- Эффект "Магма"
-// (c) Сотнег (SottNick) 2021
-// адаптация и доводка до ума - kostyamat
+//===== Ефект Магма ============================//
+// (c)SottNick 2021
+// адаптація і доведення до розуму kostyamat
 #define MAGMA_MIN_OBJ   (WIDTH/2)
 #define MAGMA_MAX_OBJ   (WIDTH*3)
 class EffectMagma: public EffectCalc {
