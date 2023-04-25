@@ -987,15 +987,15 @@ void EffectBBalls::regen(){
   randomSeed(millis());
   bballsNUM_BALLS =  map(_scale, 1, 16, 1, bballsMaxNUM_BALLS);
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
-    bballsCOLOR[i] = random(0, 255);
-    bballsBri[i] = 156;
-    bballsX[i] = ceil((float)WIDTH / (bballsNUM_BALLS + 1) * (i + 1)) - 1; // random(0, WIDTH);
-    bballsBri[i] = halo ? 200 : (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-    bballsTLast[i] = millis();
-    bballsPos[i] = 0;                                 // Balls start on the ground
-    bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
-    bballsCOR[i] = 0.9 - float(i) / pow(bballsNUM_BALLS, 2);
-    bballsShift[i] = false;
+    bball[i].COLOR = random(0, 255);
+    bball[i].Bri = 156;
+    bball[i].X = ceil((float)WIDTH / (bballsNUM_BALLS + 1) * (i + 1)) - 1; // random(0, WIDTH);
+    bball[i].Bri = halo ? 200 : (bball[i - 1].X == bball[i].X ? bball[i].Bri + 32 : 156);
+    bball[i].TLast = millis();
+    bball[i].Pos = 0;                                 // Balls start on the ground
+    bball[i].VImpact = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
+    bball[i].COR = 0.9 - float(i) / pow(bballsNUM_BALLS, 2);
+    bball[i].Shift = false;
   }
 }
 
@@ -1018,45 +1018,45 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
   fadeToBlackBy(leds, NUM_LEDS, bluring ? 50 : 255);
   hue += (float)speed/ 1024;
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
-    bballsTCycle =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
+    bballsTCycle =  millis() - bball[i].TLast ;     // Calculate the time since the last time the ball was on the ground
 
     // A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
-    bballsHi = 0.55 * bballsGRAVITY * pow( (float)bballsTCycle / _speed , 2) + bballsVImpact[i] * (float)bballsTCycle / _speed;
+    bballsHi = 0.55 * bballsGRAVITY * pow( (float)bballsTCycle / _speed , 2) + bball[i].VImpact * (float)bballsTCycle / _speed;
 
     if ( bballsHi < 0 ) {
-      bballsTLast[i] = millis();
+      bball[i].TLast = millis();
       bballsHi = 0.0f;                            // If the ball crossed the threshold of the "ground," put it back on the ground
-      bballsVImpact[i] = bballsCOR[i] * bballsVImpact[i] ;   // and recalculate its new upward velocity as it's old velocity * COR
+      bball[i].VImpact = bball[i].COR * bball[i].VImpact;   // and recalculate its new upward velocity as it's old velocity * COR
 
 
       //if ( bballsVImpact[i] < 0.01 ) bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
-      if ( bballsVImpact[i] < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
+      if ( bball[i].VImpact < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
       {
-        bballsCOR[i] = 0.90 - (EffectMath::randomf(0., 9.)) / pow(EffectMath::randomf(4., 9.), 2.); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
-        bballsShift[i] = bballsCOR[i] >= 0.85;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
-        bballsVImpact[i] = bballsVImpact0;
+        bball[i].COR = 0.90 - (EffectMath::randomf(0., 9.)) / pow(EffectMath::randomf(4., 9.), 2.); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
+        bball[i].Shift = bball[i].COR >= 0.85;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
+        bball[i].VImpact = bballsVImpact0;
       }
     }
-    bballsPos[i] = bballsHi * (float)EffectMath::getmaxHeightIndex() / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)EffectMath::getmaxHeightIndex() - .5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
-      bballsShift[i] = 0.0f;
-      if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
-        if (bballsX[i] < 0) bballsX[i] = (EffectMath::getmaxWidthIndex());
-        else bballsX[i] -= 1;
+    bball[i].Pos = bballsHi * (float)EffectMath::getmaxHeightIndex() / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
+    if (bball[i].Shift > 0.0f && bball[i].Pos >= (float)EffectMath::getmaxHeightIndex() - .5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+      bball[i].Shift = 0.0f;
+      if (bball[i].COLOR % 2 == 0) {                                       // чётные налево, нечётные направо
+        if (bball[i].X < 0) bball[i].X = (EffectMath::getmaxWidthIndex());
+        else bball[i].X -= 1;
       } else {
-        if (bballsX[i] > EffectMath::getmaxWidthIndex()) bballsX[i] = 0;
-        else bballsX[i] += 1;
+        if (bball[i].X > EffectMath::getmaxWidthIndex()) bball[i].X = 0;
+        else bball[i].X += 1;
       }
     }
 
 
     if (halo){ // если ореол включен
-      EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i] + (byte)hue, 225, bballsBri[i]));
+      EffectMath::drawCircleF(bball[i].X, bball[i].Pos + 2.75, 3., CHSV(bball[i].COLOR + (byte)hue, 225, bball[i].Bri));
     } else {
         // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой,
         // который движится в том же Х. И каждый следующий ярче предыдущего.
-      bballsBri[i] = (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i] + (byte)hue, 255, bballsBri[i]), 5);
+      bball[i].Bri = (bball[i - 1].X == bball[i].X ? bball[i - 1].Bri+ 32 : 156);
+      EffectMath::drawPixelXYF_Y(bball[i].X, bball[i].Pos, CHSV(bball[i].COLOR + (byte)hue, 255, bball[i].Bri), 5);
 
     }
   }

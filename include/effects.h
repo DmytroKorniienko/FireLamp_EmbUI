@@ -122,16 +122,19 @@ class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
     uint8_t bballsNUM_BALLS;                            // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-    byte bballsCOLOR[bballsMaxNUM_BALLS] ;              // прикручено при адаптации для разноцветных мячиков
-    byte bballsBri[bballsMaxNUM_BALLS];                 // --- // ---
-    int8_t bballsX[bballsMaxNUM_BALLS] ;                // прикручено при адаптации для распределения мячиков по радиусу лампы
-    float bballsPos[bballsMaxNUM_BALLS] ;               // The integer position of the dot on the strip (LED index)
+    
     float bballsHi = 0.0;                               // An array of heights
-    float bballsVImpact[bballsMaxNUM_BALLS] ;           // As time goes on the impact velocity will change, so make an array to store those values
     uint32_t bballsTCycle = 0;                        // The time since the last time the ball struck the ground
-    float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
-    long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
-    float bballsShift[bballsMaxNUM_BALLS];
+    struct{
+        byte COLOR;              // прикручено при адаптации для разноцветных мячиков
+        byte Bri;                 // --- // ---
+        int8_t X;                // прикручено при адаптации для распределения мячиков по радиусу лампы
+        float Pos;               // The integer position of the dot on the strip (LED index)
+        float VImpact;           // As time goes on the impact velocity will change, so make an array to store those values
+        float COR;               // Coefficient of Restitution (bounce damping)
+        long TLast;             // The clock time of the last ground strike
+        float Shift;
+    } bball[bballsMaxNUM_BALLS];
     float hue;
     bool halo = false;                                  // ореол
     bool bluring = false;
