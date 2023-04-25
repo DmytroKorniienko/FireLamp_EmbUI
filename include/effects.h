@@ -193,24 +193,6 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-//===== Ефект Світлячки зі шлейфом =============//
-#define _AMOUNT 16U
-class EffectLighterTracers : public EffectCalc {
-private:
-    uint8_t cnt = 1;
-    float vector[_AMOUNT][2U];
-    float coord[_AMOUNT][2U];
-    uint8_t ballColors[_AMOUNT];
-    byte light[_AMOUNT];
-    float speedFactor;
-    bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
-
-public:
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    String setDynCtrl(UIControl*_val) override;
-};
-
 //===== Ефект Веселка ==========================//
 class EffectRainbow : public EffectCalc {
 private:
@@ -302,7 +284,6 @@ public:
 class EffectLighters : public EffectCalc {
 protected:
     uint8_t cnt = 1;
-    bool subPix = false;
     uint16_t lightersIdx;
     struct{
     float SpeedX, SpeedY;
@@ -311,11 +292,20 @@ protected:
     uint8_t Light;
     }lighter[LIGHTERS_AM];
     float speedFactor;
+};
+
+//===== Ефект Світлячки зі шлейфом =============//
+class EffectLighterTracers : public EffectLighters{
 private:
-    String setDynCtrl(UIControl*_val) override;
+    bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
+    bool lighterRoutine(CRGB *leds, EffectWorker *param);
+    bool var = false;
+    void regen();
 public:
     void load() override;
+    
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 //===== Ефект Матриця ==========================//
@@ -2133,7 +2123,7 @@ private:
     String setDynCtrl(UIControl*_val) override;
     void changeFrame();
     byte F[2][WIDTH][HEIGHT];
-    int shift;
+    uint16_t shift;
 public:
     void load() override;
     

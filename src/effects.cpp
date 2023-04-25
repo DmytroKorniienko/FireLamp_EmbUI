@@ -633,33 +633,45 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
   return true;
 }
 
-//===== Клас "Світлячків" ======================//
-// потрібний для деяких ефектів
-//#define LIGHTERS_AM           (100U)
-void EffectLighters::load(){
-  randomSeed(millis());
-  for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
-  {
-    lightersIdx=0;
-    lighter[i].PosX = random(0, WIDTH);
-    lighter[i].PosY = random(0, HEIGHT);
-    lighter[i].SpeedX = (float)random(-200, 200) / 10.0f;
-    lighter[i].SpeedY = (float)random(-200, 200) / 10.0f;
-    lighter[i].Color = random(0U, 255U);
-    lighter[i].Light = random(1U, 3U)*127U;
-  }
-}
-
-// !++
-String EffectLighters::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt() / 4096.0f + 0.005f)*EffectCalc::speedfactor;
+//===== Ефект Світлячки зі шлейфом =============//
+String EffectLighterTracers::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==4) {var = EffectCalc::setDynCtrl(_val).toInt(); regen();}
+  else if(_val->getId()==1) {speedFactor = EffectCalc::setDynCtrl(_val).toInt(); speedFactor = ((var)? (EffectMath::fmap(speedFactor, 1, 255, 0.01, .1)) : ((speedFactor / 4096.0f + 0.005f)) * EffectCalc::speedfactor);}
   else if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) subPix = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectLighters::run(CRGB *leds, EffectWorker *param)
+void EffectLighterTracers::regen(){
+  randomSeed(millis());
+  if (var){
+    for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+    {
+      int8_t sign;
+      lighter[i].PosX = WIDTH / 2;
+      lighter[i].PosY = HEIGHT / 2;
+      random(255)%2 ? sign = 1 : sign = -1;
+      lighter[i].SpeedX = ((float)random(40, 150) / 10.0f) * sign;
+      random(255)%2 ? sign = 1 : sign = -1;
+      lighter[i].SpeedY = ((float)random(40, 150) / 10.0f) * sign;
+      lighter[i].Light = 127U;
+      lighter[i].Color = random(0, 9) * 28;
+    }
+  }
+  else {
+    for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+    {
+      lightersIdx=0;
+      lighter[i].PosX = random(0, WIDTH);
+      lighter[i].PosY = random(0, HEIGHT);
+      lighter[i].SpeedX = (float)random(-200, 200) / 10.0f;
+      lighter[i].SpeedY = (float)random(-200, 200) / 10.0f;
+      lighter[i].Color = random(0U, 255U);
+    }
+  }
+}
+
+bool EffectLighterTracers::lighterRoutine(CRGB *leds, EffectWorker *param)
 {
   memset8( leds, 0, NUM_LEDS * 3);
 
@@ -699,43 +711,9 @@ bool EffectLighters::run(CRGB *leds, EffectWorker *param)
       lighter[i].SpeedY  = -lighter[i].SpeedY;
       lighter[i].SpeedX  = -lighter[i].SpeedX;
     }
-
-    if (subPix)
       EffectMath::drawPixelXYF(lighter[i].PosX, lighter[i].PosY, CHSV(lighter[i].Color, 255U-(i*2), lighter[i].Light), 0);
-    else
-      EffectMath::drawPixelXY((uint8_t)lighter[i].PosX, (uint8_t)lighter[i].PosY, CHSV(lighter[i].Color, 255U-(i*2), lighter[i].Light));
   }
   return true;
-}
-
-//===== Ефект Світлячки зі шлейфом =============//
-String EffectLighterTracers::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.01, .1)*EffectCalc::speedfactor;
-  else if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  return String();
-}
-
-void EffectLighterTracers::load(){
-  for (uint8_t j = 0U; j < _AMOUNT; j++)
-  {
-    int8_t sign;
-    // забиваем случайными данными
-    coord[j][0U] = (float)WIDTH / 2.0f;
-    random(0, 2) ? sign = 1 : sign = -1;
-    vector[j][0U] = ((float)random(40, 150) / 10.0f) * sign;
-    coord[j][1U] = (float)HEIGHT / 2;
-    random(0, 2) ? sign = 1 : sign = -1;
-    vector[j][1U] = ((float)random(40, 150) / 10.0f) * sign;
-    light[j] = 127;
-    //ballColors[j] = random(0, 9) * 28;
-  }
-}
-
-
-bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
-
-  return lighterTracersRoutine(*&ledarr, &*opt);
 }
 
 bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param)
@@ -747,38 +725,44 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   uint8_t maxBalls = cnt;
   for (uint8_t j = 0U; j < maxBalls; j++)
   {
-    ballColors[j] = (uint8_t)((maxBalls-j) * _AMOUNT + j);
+    lighter[j].Color = (uint8_t)((maxBalls-j) * LIGHTERS_AM + j);
 
-    // движение шариков
-    for (uint8_t i = 0U; i < 2U; i++)
+    lighter[j].PosX += lighter[j].SpeedX * speedFactor;
+    lighter[j].PosY += lighter[j].SpeedY * speedFactor;
+    if (lighter[j].PosX < 0)
     {
-      coord[j][i] += vector[j][i] * speedFactor;
-      if (coord[j][i] < 0)
-      {
-        coord[j][i] = 0.0f;
-        vector[j][i] = -vector[j][i];
-      }
+      lighter[j].PosX = 0.0f;
+      lighter[j].SpeedX = -lighter[j].SpeedX;
     }
-
-    if ((uint16_t)coord[j][0U] > EffectMath::getmaxWidthIndex())
+    if (lighter[j].PosY < 0)
     {
-      coord[j][0U] = EffectMath::getmaxWidthIndex();
-      vector[j][0U] = -vector[j][0U];
+      lighter[j].PosY = 0.0f;
+      lighter[j].SpeedY = -lighter[j].SpeedY;
     }
-    if ((uint16_t)coord[j][1U] > EffectMath::getmaxHeightIndex())
+    if ((uint16_t)lighter[j].PosX > EffectMath::getmaxWidthIndex())
     {
-      coord[j][1U] = EffectMath::getmaxHeightIndex();
-      vector[j][1U] = -vector[j][1U];
+      lighter[j].PosX = EffectMath::getmaxWidthIndex();
+      lighter[j].SpeedX = -lighter[j].SpeedX;
     }
-    EVERY_N_MILLIS(random16(256, 1024)) {
-      if (light[j] == 127)
-        light[j] = 255;
-      else light[j] = 127;
+    if ((uint16_t)lighter[j].PosY > EffectMath::getmaxHeightIndex())
+    {
+      lighter[j].PosY = EffectMath::getmaxHeightIndex();
+      lighter[j].SpeedY = -lighter[j].SpeedY;
     }
-    EffectMath::drawPixelXYF(coord[j][0U], coord[j][1U], CHSV(ballColors[j], 200U, 255U));
+    
+    EffectMath::drawPixelXYF(lighter[j].PosX, lighter[j].PosY, CHSV(lighter[j].Color, 200U, 255));
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 5);
   return true;
+}
+
+void EffectLighterTracers::load(){
+  regen();
+}
+
+bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
+
+  return (var)? lighterTracersRoutine(*&ledarr, &*opt) : lighterRoutine(*&ledarr, &*opt);
 }
 
 //===== Ефект Пейнтбол =========================//
@@ -7996,7 +7980,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   shift += speed;
   if (shift >= 255) {
     changeFrame();
-    shift = 0;
+    shift%=256;
   }
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
