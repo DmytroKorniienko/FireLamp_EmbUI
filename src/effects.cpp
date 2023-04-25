@@ -1028,7 +1028,6 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
       bballsHi = 0.0f;                            // If the ball crossed the threshold of the "ground," put it back on the ground
       bball[i].VImpact = bball[i].COR * bball[i].VImpact;   // and recalculate its new upward velocity as it's old velocity * COR
 
-
       //if ( bballsVImpact[i] < 0.01 ) bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
       if ( bball[i].VImpact < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
       {
@@ -1048,8 +1047,6 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
         else bball[i].X += 1;
       }
     }
-
-
     if (halo){ // если ореол включен
       EffectMath::drawCircleF(bball[i].X, bball[i].Pos + 2.75, 3., CHSV(bball[i].COLOR + (byte)hue, 225, bball[i].Bri));
     } else {
@@ -1057,7 +1054,6 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
         // который движится в том же Х. И каждый следующий ярче предыдущего.
       bball[i].Bri = (bball[i - 1].X == bball[i].X ? bball[i - 1].Bri+ 32 : 156);
       EffectMath::drawPixelXYF_Y(bball[i].X, bball[i].Pos, CHSV(bball[i].COLOR + (byte)hue, 255, bball[i].Bri), 5);
-
     }
   }
   return true;
@@ -4193,13 +4189,13 @@ void EffectButterfly::load()
 {
   for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
   {
-    butterflysPosX[i] = random8(WIDTH);
-    butterflysPosY[i] = random8(HEIGHT);
-    butterflysSpeedX[i] = 0;
-    butterflysSpeedY[i] = 0;
-    butterflysTurn[i] = 0;
-    butterflysColor[i] = (isColored) ? random8() : 0U;
-    butterflysBrightness[i] = 255U;
+    butterfly[i].PosX = random8(WIDTH);
+    butterfly[i].PosY = random8(HEIGHT);
+    butterfly[i].SpeedX = 0;
+    butterfly[i].SpeedY = 0;
+    butterfly[i].Turn = 0;
+    butterfly[i].Color = (isColored) ? random8() : 0U;
+    butterfly[i].Brightness = 255U;
   }
 }
 
@@ -4214,7 +4210,7 @@ String EffectButterfly::setDynCtrl(UIControl*_val) {
 
     for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
     {
-      butterflysColor[i] = (isColored) ? random8() : 0U;
+      butterfly[i].Color = (isColored) ? random8() : 0U;
     }
   }
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -4245,122 +4241,122 @@ bool EffectButterfly::run(CRGB *leds, EffectWorker *param)
     step = 0U;
   for (uint8_t i = 0U; i < deltaValue; i++)
   {
-    butterflysPosX[i] += butterflysSpeedX[i]*speedFactor;
-    butterflysPosY[i] += butterflysSpeedY[i]*speedFactor;
+    butterfly[i].PosX += butterfly[i].SpeedX * speedFactor;
+    butterfly[i].PosY += butterfly[i].SpeedY * speedFactor;
 
-    if (butterflysPosX[i] < 0)
-      butterflysPosX[i] = (float)EffectMath::getmaxWidthIndex() + butterflysPosX[i];
-    if (butterflysPosX[i] > EffectMath::getmaxWidthIndex())
-      butterflysPosX[i] = butterflysPosX[i] + 1 - WIDTH;
+    if (butterfly[i].PosX < 0)
+      butterfly[i].PosX = (float)EffectMath::getmaxWidthIndex() + butterfly[i].PosX;
+    if (butterfly[i].PosX > EffectMath::getmaxWidthIndex())
+     butterfly[i].PosX = butterfly[i].PosX + 1 - WIDTH;
 
-    if (butterflysPosY[i] < 0)
+    if (butterfly[i].PosY < 0)
     {
-      butterflysPosY[i] = -butterflysPosY[i];
-      butterflysSpeedY[i] = -butterflysSpeedY[i];
+      butterfly[i].PosY = -butterfly[i].PosY;
+      butterfly[i].SpeedY = -butterfly[i].SpeedY;
       //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
-    if (butterflysPosY[i] > EffectMath::getmaxHeightIndex())
+    if (butterfly[i].PosY > EffectMath::getmaxHeightIndex())
     {
-      butterflysPosY[i] = (HEIGHT << 1U) - 2U - butterflysPosY[i];
-      butterflysSpeedY[i] = -butterflysSpeedY[i];
+      butterfly[i].PosY = (HEIGHT << 1U) - 2U - butterfly[i].PosY;
+      butterfly[i].SpeedY = -butterfly[i].SpeedY;
       //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
 
     //проворот траектории
-    maxspeed = fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]); // максимальная суммарная скорость
-    if (maxspeed == fabs(butterflysSpeedX[i] + butterflysSpeedY[i]))
+    maxspeed = fabs(butterfly[i].SpeedX)+fabs(butterfly[i].SpeedY); // максимальная суммарная скорость
+    if (maxspeed == fabs(butterfly[i].SpeedX + butterfly[i].SpeedY))
       {
-          if (butterflysSpeedX[i] > 0) // правый верхний сектор вектора
+          if (butterfly[i].SpeedX > 0) // правый верхний сектор вектора
           {
-            butterflysSpeedX[i] += butterflysTurn[i];
-            if (butterflysSpeedX[i] > maxspeed) // если вектор переехал вниз
+            butterfly[i].SpeedX += butterfly[i].Turn;
+            if (butterfly[i].SpeedX > maxspeed) // если вектор переехал вниз
               {
-                butterflysSpeedX[i] = maxspeed + maxspeed - butterflysSpeedX[i];
-                butterflysSpeedY[i] = butterflysSpeedX[i] - maxspeed;
+                butterfly[i].SpeedX = maxspeed + maxspeed - butterfly[i].SpeedX;
+                butterfly[i].SpeedY  = butterfly[i].SpeedX - maxspeed;
               }
             else
-              butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
+              butterfly[i].SpeedY = maxspeed - fabs(butterfly[i].SpeedX);
           }
           else                           // левый нижний сектор
           {
-            butterflysSpeedX[i] -= butterflysTurn[i];
-            if (butterflysSpeedX[i] + maxspeed < 0) // если вектор переехал вверх
+            butterfly[i].SpeedX -= butterfly[i].Turn;
+            if (butterfly[i].SpeedX + maxspeed < 0) // если вектор переехал вверх
               {
-                butterflysSpeedX[i] = 0 - butterflysSpeedX[i] - maxspeed - maxspeed;
-                butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
+                butterfly[i].SpeedX = 0 - butterfly[i].SpeedX - maxspeed - maxspeed;
+                butterfly[i].SpeedY = maxspeed - fabs(butterfly[i].SpeedX);
               }
             else
-              butterflysSpeedY[i] = fabs(butterflysSpeedX[i]) - maxspeed;
+              butterfly[i].SpeedY = fabs(butterfly[i].SpeedX) - maxspeed;
           }
       }
     else //левый верхний и правый нижний секторы вектора
       {
-          if (butterflysSpeedX[i] > 0) // правый нижний сектор
+          if (butterfly[i].SpeedX > 0) // правый нижний сектор
           {
-            butterflysSpeedX[i] -= butterflysTurn[i];
-            if (butterflysSpeedX[i] > maxspeed) // если вектор переехал наверх
+            butterfly[i].SpeedX -= butterfly[i].Turn;
+            if (butterfly[i].SpeedX > maxspeed) // если вектор переехал наверх
               {
-                butterflysSpeedX[i] = maxspeed + maxspeed - butterflysSpeedX[i];
-                butterflysSpeedY[i] = maxspeed - butterflysSpeedX[i];
+                butterfly[i].SpeedX = maxspeed + maxspeed - butterfly[i].SpeedX;
+                butterfly[i].SpeedY = maxspeed - butterfly[i].SpeedX;
               }
             else
-              butterflysSpeedY[i] = fabs(butterflysSpeedX[i]) - maxspeed;
+              butterfly[i].SpeedY = fabs(butterfly[i].SpeedX) - maxspeed;
           }
           else                           // левый верхний сектор
           {
-            butterflysSpeedX[i] += butterflysTurn[i];
-            if (butterflysSpeedX[i] + maxspeed < 0) // если вектор переехал вниз
+            butterfly[i].SpeedX += butterfly[i].Turn;
+            if (butterfly[i].SpeedX + maxspeed < 0) // если вектор переехал вниз
               {
-                butterflysSpeedX[i] = 0 - butterflysSpeedX[i] - maxspeed - maxspeed;
-                butterflysSpeedY[i] = 0 - butterflysSpeedX[i] - maxspeed;
+                butterfly[i].SpeedX = 0 - butterfly[i].SpeedX - maxspeed - maxspeed;
+                butterfly[i].SpeedY = 0 - butterfly[i].SpeedX - maxspeed;
               }
             else
-              butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
+              butterfly[i].SpeedY = maxspeed - fabs(butterfly[i].SpeedX);
           }
       }
 
-    if (butterflysBrightness[i] == 255U)
+    if (butterfly[i].Brightness == 255U)
     {
       if (step == i && random8(2U) == 0U)//(step == 0U && ((pcnt + i) & 0x01))
       {
-        butterflysBrightness[i] = random8(220U,244U);
-        butterflysSpeedX[i] = (float)random8(101U) / 20.0f + 1.0f;
-        if (random8(2U) == 0U) butterflysSpeedX[i] = -butterflysSpeedX[i];
-        butterflysSpeedY[i] = (float)random8(101U) / 20.0f + 1.0f;
-        if (random8(2U) == 0U) butterflysSpeedY[i] = -butterflysSpeedY[i];
+        butterfly[i].Brightness = random8(220U,244U);
+        butterfly[i].SpeedX = (float)random8(101U) / 20.0f + 1.0f;
+        if (random8(2U) == 0U) butterfly[i].SpeedX = -butterfly[i].SpeedX;
+        butterfly[i].SpeedY = (float)random8(101U) / 20.0f + 1.0f;
+        if (random8(2U) == 0U) butterfly[i].SpeedY = -butterfly[i].SpeedY;
         // проворот траектории
         //butterflysTurn[i] = (float)random8((fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]))*2.0+2.0) / 40.0f;
-        butterflysTurn[i] = (float)random8((fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]))*20.0f+2.0f) / 200.0f;
-        if (random8(2U) == 0U) butterflysTurn[i] = -butterflysTurn[i];
+        butterfly[i].Turn = (float)random8((fabs(butterfly[i].SpeedX)+fabs(butterfly[i].SpeedY))*20.0f+2.0f) / 200.0f;
+        if (random8(2U) == 0U) butterfly[i].Turn = -butterfly[i].Turn;
       }
     }
     else
     {
       if (step == i)
-        butterflysBrightness[i]++;
-      tmp = 255U - butterflysBrightness[i];
-      if (tmp == 0U || ((uint16_t)(butterflysPosX[i] * tmp) % tmp == 0U && (uint16_t)(butterflysPosY[i] * tmp) % tmp == 0U))
+        butterfly[i].Brightness++;
+      tmp = 255U - butterfly[i].Brightness;
+      if (tmp == 0U || ((uint16_t)(butterfly[i].PosX * tmp) % tmp == 0U && (uint16_t)(butterfly[i].PosY * tmp) % tmp == 0U))
       {
-        butterflysPosX[i] = round(butterflysPosX[i]);
-        butterflysPosY[i] = round(butterflysPosY[i]);
-        butterflysSpeedX[i] = 0;
-        butterflysSpeedY[i] = 0;
-        butterflysTurn[i] = 0;
-        butterflysBrightness[i] = 255U;
+        butterfly[i].PosX = round(butterfly[i].PosX);
+        butterfly[i].PosY = round(butterfly[i].PosY);
+        butterfly[i].SpeedX = 0;
+        butterfly[i].SpeedY = 0;
+        butterfly[i].Turn = 0;
+        butterfly[i].Brightness = 255U;
       }
     }
 
     if (wings)
-      EffectMath::drawPixelXYF(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, (butterflysBrightness[i] == 255U) ? 255U : 128U + random8(2U) * 111U)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
+      EffectMath::drawPixelXYF(butterfly[i].PosX, butterfly[i].PosY, CHSV(butterfly[i].Color, 255U, (butterfly[i].Brightness == 255U) ? 255U : 128U + random8(2U) * 111U)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
     else
-      EffectMath::drawPixelXYF(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, butterflysBrightness[i])); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
+      EffectMath::drawPixelXYF(butterfly[i].PosX, butterfly[i].PosY, CHSV(butterfly[i].Color, 255U, butterfly[i].Brightness)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
   }
 
   // постобработка кадра
   if (isColored){
     for (uint8_t i = 0U; i < deltaValue; i++) // ещё раз рисуем всех Мотыльков, которые "сидят на стекле"
-      if (butterflysBrightness[i] == 255U)
-        EffectMath::drawPixelXY(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, butterflysBrightness[i]));
+      if (butterfly[i].Brightness == 255U)
+        EffectMath::drawPixelXY(butterfly[i].PosX, butterfly[i].PosY, CHSV(butterfly[i].Color, 255U, butterfly[i].Brightness));
   }
   else {
     //теперь инверсия всей матрицы
@@ -5215,14 +5211,14 @@ void EffectTest::regen() {
 
   for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
-    snakeLast[i] = 0;
-    snakePosX[i] = random8(WIDTH / 2 - WIDTH / 4, WIDTH/2 + WIDTH / 4);
-    snakePosY[i] = random8(HEIGHT / 2 - HEIGHT / 4, HEIGHT / 2 + HEIGHT / 4);
-    snakeSpeedX[i] = EffectMath::randomf(0.2, 1.5);//(255. + random8()) / 255.;
-    snakeSpeedY[i] = EffectMath::randomf(0.2, 1.5);
-    //snakeTurn[i] = 0;
-    snakeColor[i] = random8(map(SnakeNum, 1, 10, 2, MAX_SNAKES) * 255/map(SnakeNum, 1, 10, 2, MAX_SNAKES));
-    snakeDirect[i] = random8(4); //     B00           направление головы змейки
+    snake[i].Last = 0;
+    snake[i].PosX = random8(WIDTH / 2 - WIDTH / 4, WIDTH/2 + WIDTH / 4);
+    snake[i].PosY = random8(HEIGHT / 2 - HEIGHT / 4, HEIGHT / 2 + HEIGHT / 4);
+    snake[i].SpeedX = EffectMath::randomf(0.2, 1.5);//(255. + random8()) / 255.;
+    snake[i].SpeedY = EffectMath::randomf(0.2, 1.5);
+    //snakeTurn = 0;
+    snake[i].Color = random8(map(SnakeNum, 1, 10, 2, MAX_SNAKES) * 255/map(SnakeNum, 1, 10, 2, MAX_SNAKES));
+    snake[i].Direct = random8(4); //     B00           направление головы змейки
                                  // B10     B11
                                  //     B01
   }
@@ -5233,114 +5229,114 @@ bool EffectTest::run(CRGB *leds, EffectWorker *param) {
   int8_t dx = 0, dy = 0;
   for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
-    snakeSpeedY[i] += snakeSpeedX[i] * speedFactor;
-    if (snakeSpeedY[i] >= 1)
+    snake[i].SpeedY += snake[i].SpeedX * speedFactor;
+    if (snake[i].SpeedY >= 1)
     {
-      snakeSpeedY[i] = snakeSpeedY[i] - (int)snakeSpeedY[i];
+      snake[i].SpeedY = snake[i].SpeedY - (int)snake[i].SpeedY;
       if (random8(8) <= 1U)
         if (random8(2U))
         {                                           // <- поворот налево
-          snakeLast[i] = (snakeLast[i] << 2) | B01; // младший бит = поворот
-          switch (snakeDirect[i])
+          snake[i].Last = (snake[i].Last << 2) | B01; // младший бит = поворот
+          switch (snake[i].Direct)
           {
           case B10:
-            snakeDirect[i] = B01;
-            if (snakePosY[i] == 0U)
-              snakePosY[i] = EffectMath::getmaxHeightIndex();
+            snake[i].Direct = B01;
+            if (snake[i].PosY == 0U)
+              snake[i].PosY = EffectMath::getmaxHeightIndex();
             else
-              snakePosY[i]--;
+              snake[i].PosY--;
             break;
           case B11:
-            snakeDirect[i] = B00;
-            if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
-              snakePosY[i] = 0U;
+            snake[i].Direct = B00;
+            if (snake[i].PosY >= EffectMath::getmaxHeightIndex())
+              snake[i].PosY = 0U;
             else
-              snakePosY[i]++;
+              snake[i].PosY++;
             break;
           case B00:
-            snakeDirect[i] = B10;
-            if (snakePosX[i] == 0U)
-              snakePosX[i] = EffectMath::getmaxWidthIndex();
+            snake[i].Direct = B10;
+            if (snake[i].PosX == 0U)
+              snake[i].PosX = EffectMath::getmaxWidthIndex();
             else
-              snakePosX[i]--;
+              snake[i].PosX--;
             break;
           case B01:
-            snakeDirect[i] = B11;
-            if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
-              snakePosX[i] = 0U;
+            snake[i].Direct = B11;
+            if (snake[i].PosX >= EffectMath::getmaxWidthIndex())
+              snake[i].PosX = 0U;
             else
-              snakePosX[i]++;
+              snake[i].PosX++;
             break;
           }
         }
         else
         {                                           // -> поворот направо
-          snakeLast[i] = (snakeLast[i] << 2) | B11; // младший бит = поворот, старший = направо
-          switch (snakeDirect[i])
+          snake[i].Last = (snake[i].Last << 2) | B11; // младший бит = поворот, старший = направо
+          switch (snake[i].Direct)
           {
           case B11:
-            snakeDirect[i] = B01;
-            if (snakePosY[i] == 0U)
-              snakePosY[i] = EffectMath::getmaxHeightIndex();
+            snake[i].Direct = B01;
+            if (snake[i].PosY == 0U)
+              snake[i].PosY = EffectMath::getmaxHeightIndex();
             else
-              snakePosY[i]--;
+              snake[i].PosY--;
             break;
           case B10:
-            snakeDirect[i] = B00;
-            if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
-              snakePosY[i] = 0U;
+            snake[i].Direct = B00;
+            if (snake[i].PosY >= EffectMath::getmaxHeightIndex())
+              snake[i].PosY = 0U;
             else
-              snakePosY[i]++;
+              snake[i].PosY++;
             break;
           case B01:
-            snakeDirect[i] = B10;
-            if (snakePosX[i] == 0U)
-              snakePosX[i] = EffectMath::getmaxWidthIndex();
+            snake[i].Direct = B10;
+            if (snake[i].PosX == 0U)
+              snake[i].PosX = EffectMath::getmaxWidthIndex();
             else
-              snakePosX[i]--;
+              snake[i].PosX--;
             break;
           case B00:
-            snakeDirect[i] = B11;
-            if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
-              snakePosX[i] = 0U;
+            snake[i].Direct = B11;
+            if (snake[i].PosX >= EffectMath::getmaxWidthIndex())
+              snake[i].PosX = 0U;
             else
-              snakePosX[i]++;
+              snake[i].PosX++;
             break;
           }
         }
       else
       { // двигаем без поворота
-        snakeLast[i] = (snakeLast[i] << 2);
-        switch (snakeDirect[i])
+        snake[i].Last = (snake[i].Last << 2);
+        switch (snake[i].Direct)
         {
         case B01:
-          if (snakePosY[i] == 0U)
-            snakePosY[i] = EffectMath::getmaxHeightIndex();
+          if (snake[i].PosY == 0U)
+            snake[i].PosY = EffectMath::getmaxHeightIndex();
           else
-            snakePosY[i]--;
+            snake[i].PosY--;
           break;
         case B00:
-          if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
-            snakePosY[i] = 0U;
+          if (snake[i].PosY >= EffectMath::getmaxHeightIndex())
+            snake[i].PosY = 0U;
           else
-            snakePosY[i]++;
+            snake[i].PosY++;
           break;
         case B10:
-          if (snakePosX[i] == 0U)
-            snakePosX[i] = EffectMath::getmaxWidthIndex();
+          if (snake[i].PosX == 0U)
+            snake[i].PosX = EffectMath::getmaxWidthIndex();
           else
-            snakePosX[i]--;
+            snake[i].PosX--;
           break;
         case B11:
-          if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
-            snakePosX[i] = 0U;
+          if (snake[i].PosX >= EffectMath::getmaxWidthIndex())
+            snake[i].PosX = 0U;
           else
-            snakePosX[i]++;
+            snake[i].PosX++;
           break;
         }
       }
     }
-    switch (snakeDirect[i])
+    switch (snake[i].Direct)
     {
     case B01:
       dy = 1;
@@ -5360,15 +5356,15 @@ bool EffectTest::run(CRGB *leds, EffectWorker *param) {
       break;
     }
 
-    long temp = snakeLast[i];
-    uint8_t x = snakePosX[i];
-    uint8_t y = snakePosY[i];
-    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i], snakeSpeedY[i] * 255));
+    long temp = snake[i].Last;
+    uint8_t x = snake[i].PosX;
+    uint8_t y = snake[i].PosY;
+    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snake[i].Color, snake[i].SpeedY * 255));
     for (uint8_t m = 0; m < SNAKE_LENGTH; m++)
     { // 16 бит распаковываем, 14 ещё остаётся без дела в запасе, 2 на хвостик
       x = (WIDTH + x + dx) % WIDTH;
       y = (HEIGHT + y + dy) % HEIGHT;  
-      EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i] + m * 4U, 255U));
+      EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snake[i].Color + m * 4U, 255U));
 
       if (temp & B01)
       { // младший бит = поворот, старший = направо
@@ -5408,7 +5404,7 @@ bool EffectTest::run(CRGB *leds, EffectWorker *param) {
     }
     x = (WIDTH + x + dx) % WIDTH;
     y = (HEIGHT + y + dy) % HEIGHT;
-    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i] + SNAKE_LENGTH * 4U, (1 - snakeSpeedY[i]) * 255)); // хвостик
+    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snake[i].Color + SNAKE_LENGTH * 4U, (1 - snake[i].SpeedY) * 255)); // хвостик
   }
 
   return true;

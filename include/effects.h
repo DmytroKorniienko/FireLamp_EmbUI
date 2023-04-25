@@ -1017,13 +1017,16 @@ public:
 // (с) SottNick
 class EffectButterfly : public EffectCalc {
 private:
-    float butterflysPosX[BUTTERFLY_MAX_COUNT];
-    float butterflysPosY[BUTTERFLY_MAX_COUNT];
-    float butterflysSpeedX[BUTTERFLY_MAX_COUNT];
-    float butterflysSpeedY[BUTTERFLY_MAX_COUNT];
-    float butterflysTurn[BUTTERFLY_MAX_COUNT];
-    uint8_t butterflysColor[BUTTERFLY_MAX_COUNT];
-    uint8_t butterflysBrightness[BUTTERFLY_MAX_COUNT];
+    struct
+    {
+        float PosX;
+        float PosY;
+        float SpeedX;
+        float SpeedY;
+        float Turn;
+        uint8_t Color;
+        uint8_t Brightness;
+    }butterfly[BUTTERFLY_MAX_COUNT];
     uint8_t deltaValue;
     uint8_t deltaHue;
     uint8_t hue;
@@ -1334,15 +1337,17 @@ class EffectTest : public EffectCalc {
 private:
 //#define MAX_SNAKES    (WIDTH * 2)          // максимальное количество червяков
     uint8_t SnakeNum;                        // выбранное количество червяков
-    long  snakeLast[MAX_SNAKES] ;            // тут будет траектория тела червяка
-    float snakePosX[MAX_SNAKES];             // тут будет позиция головы
-    float snakePosY[MAX_SNAKES];             // тут будет позиция головы
-    float snakeSpeedX[MAX_SNAKES];           // тут будет скорость червяка
-    float snakeSpeedY[MAX_SNAKES];           // тут будет дробная часть позиции головы
-    //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
-    uint8_t snakeColor[MAX_SNAKES];          // тут будет начальный цвет червяка
-    uint8_t snakeDirect[MAX_SNAKES];         //тут будет направление червяка
-	float speedFactor;
+    struct{
+        long  Last;             // тут будет траектория тела червяка
+        float PosX;             // тут будет позиция головы
+        float PosY;             // тут будет позиция головы
+        float SpeedX;           // тут будет скорость червяка
+        float SpeedY;           // тут будет дробная часть позиции головы
+        //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
+        uint8_t Color;          // тут будет начальный цвет червяка
+        uint8_t Direct;         //тут будет направление червяка
+    }snake[MAX_SNAKES];
+    float speedFactor;
 
     String setDynCtrl(UIControl*_val) override;
     void regen();
