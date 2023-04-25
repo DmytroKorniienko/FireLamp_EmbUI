@@ -5535,28 +5535,28 @@ void EffectSmokeballs::load(){
 
 void EffectSmokeballs::regen() {
   randomSeed(millis());
-  for (byte j = 0; j < WAVES_AMOUNT; j++) {
-    reg[j] =  random((WIDTH * 10) - ((WIDTH / 3) * 20)); // сумма maxMin + reg не должна выскакивать за макс.Х
-    sSpeed[j] = EffectMath::randomf(5., (float)(16 * WIDTH)); //random(50, 16 * WIDTH) / random(1, 10);
-    maxMin[j] = random((WIDTH / 2) * 10, (WIDTH / 3) * 20);
-    waveColors[j] = random(0, 9) * 28;
-    pos[j] = reg[j];
+  for (byte j = 0; j < WIDTH; j++) {
+    wave[j].Reg =  random((WIDTH * 10) - ((WIDTH / 3) * 20)); // сумма maxMin + reg не должна выскакивать за макс.Х
+    wave[j].Speed = EffectMath::randomf(5., (float)(16 * WIDTH)); //random(50, 16 * WIDTH) / random(1, 10);
+    wave[j].maxMin = random((WIDTH / 2) * 10, (WIDTH / 3) * 20);
+    wave[j].Color = random(0, 9) * 28;
+    wave[j].Pos = wave[j].Reg;
   }
 }
 
 bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
-  uint8_t _amount = map(_scale, 1, 16, 2, WAVES_AMOUNT);
+  uint8_t _amount = map(_scale, 1, 16, 2, WIDTH);
   shiftUp();
   EffectMath::dimAll(240);
   EffectMath::blur2d(20);
   for (byte j = 0; j < _amount; j++) {
-    pos[j] = beatsin16((uint8_t)(sSpeed[j] * (speedFactor * 5.)), reg[j], maxMin[j] + reg[j], waveColors[j]*256, waveColors[j]*8);
-      EffectMath::drawPixelXYF((float)pos[j] / 10., 0.05, ColorFromPalette(*curPalette, waveColors[j]));
+    wave[j].Pos = beatsin16((uint8_t)(wave[j].Speed * (speedFactor * 5.)), wave[j].Reg, wave[j].maxMin + wave[j].Reg, wave[j].Color * 256, wave[j].Color * 8);
+      EffectMath::drawPixelXYF((float)wave[j].Pos / 10., 0.05, ColorFromPalette(*curPalette, wave[j].Color));
   }
   EVERY_N_SECONDS(20){
     for (byte j = 0; j < _amount; j++) {
-      reg[j] += random(-20,20);
-      waveColors[j] += 28;
+      wave[j].Reg += random(-20,20);
+      wave[j].Color += 28;
     }
   }
 

@@ -1304,7 +1304,6 @@ public:
 // База паттерн "Змейка" з проекту Аврора, 
 // Переписано kostyamat
 #define NEXUS (WIDTH)
-
 class EffectNexus: public EffectCalc {
   private:
     struct{
@@ -1391,16 +1390,18 @@ public:
 //===== Ефект Полумняні мрії ===================//
 // https://editor.soulmatelights.com/gallery/505
 // (с)Stepko
-#define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
     uint8_t _scale = 1;
-    uint16_t reg[WAVES_AMOUNT];
-    uint16_t pos[WAVES_AMOUNT];
-    float sSpeed[WAVES_AMOUNT];
-    uint8_t maxMin[WAVES_AMOUNT];
+    struct{
+        uint8_t Color;
+        uint16_t Reg;
+        uint16_t Pos;
+        float Speed;
+        uint8_t maxMin;
+    }wave[WIDTH];
     float speedFactor;
-    uint8_t waveColors[WAVES_AMOUNT];
+    
     void shiftUp();
     void regen();
     String setDynCtrl(UIControl*_val) override;
@@ -1496,7 +1497,6 @@ class EffectOscilator: public EffectCalc {
 
 class EffectWrain: public EffectCalc {
   private:
-
     struct Drop {
         float posX{0};
         float posY{0};
@@ -1669,11 +1669,7 @@ public:
 // 07.02.2021
 class EffectBalls : public EffectCalc {
 private:
-#if WIDTH >= HEIGHT
-    #define ballsAmount WIDTH
-#else
-    #define ballsAmount HEIGHT
-#endif
+    #define ballsAmount maxDim
     struct{
     //float ball[4]; //0-PosY 1-PosX 2-SpeedY 3-SpeedX //Темне минуле
     float PosX;
