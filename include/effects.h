@@ -42,7 +42,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectworker.h"
 #include "effectmath.h"
 
-
 const uint8_t maxDim = (WIDTH > HEIGHT)? WIDTH : HEIGHT;
 const uint8_t minDim = (WIDTH < HEIGHT)? WIDTH : HEIGHT;
 const uint8_t width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
@@ -602,12 +601,13 @@ private:
   uint8_t ringWidth; // максимальне количество пикселей в кольце (толщина кольца) от 1 до height / 2 + 1
   uint8_t ringNb; // количество колец от 2 до height
   uint8_t downRingHue, upRingHue; // количество пикселей в нижнем (downRingHue) и верхнем (upRingHue) кольцах
-
-  uint8_t ringColor[HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
-  uint8_t huePos[HEIGHT]; // местоположение начального оттенка кольца 0-WIDTH-1
-  uint8_t shiftHueDir[HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
+  struct{
+  uint8_t Color; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
+  uint8_t huePos; // местоположение начального оттенка кольца 0-WIDTH-1
+  uint8_t shiftHueDir; // 4 бита на ringHueShift, 4 на ringHueShift2
   ////ringHueShift[ringsCount]; // шаг градиета оттенка внутри кольца -8 - +8 случайное число
   ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
+  } ring[HEIGHT];
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
   void ringsSet();

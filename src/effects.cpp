@@ -2293,10 +2293,10 @@ void EffectRingsLock::ringsSet(){
 
   for (uint8_t i = 0; i < ringNb; i++)
   {
-    if (!i) ringColor[i] = 0; //random(255U - WIDTH / 4U);
-    ringColor[i] = ringColor[i - 1] + 64; // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
-    shiftHueDir[i] = random8();
-    huePos[i] = random8(); 
+    if (!i) ring[i].Color = 0; //random(255U - WIDTH / 4U);
+    ring[i].Color = ring[i - 1].Color + 64; // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
+    ring[i].shiftHueDir = random8();
+    ring[i].huePos = random8(); 
     stepCount = 0U;
     currentRing = random(ringNb);
   }
@@ -2311,13 +2311,13 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
   {
     if (i != currentRing) // если это не активное кольцо
     {
-       h = shiftHueDir[i] & 0x0F; // сдвигаем оттенок внутри кольца
+       h = ring[i].shiftHueDir & 0x0F; // сдвигаем оттенок внутри кольца
        if (h > 8U)
          //ringColor[i] += (uint8_t)(7U - h); // с такой скоростью сдвиг оттенка от вращения кольца не отличается
-         ringColor[i]--;
+         ring[i].Color--;
        else
          //ringColor[i] += h;
-         ringColor[i]++;
+         ring[i].Color++;
     } else {
       if (stepCount == 0) { // если сдвиг активного кольца завершён, выбираем следующее
         currentRing = random(ringNb);
@@ -2328,17 +2328,17 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
         if (stepCount > 127U)
           {
             stepCount++;
-            huePos[i] = (huePos[i] + 1U) % WIDTH;
+            ring[i].huePos = (ring[i].huePos + 1U) % WIDTH;
           }
         else
           {
             stepCount--;
-            huePos[i] = (huePos[i] - 1U + WIDTH) % WIDTH;
+            ring[i].huePos = (ring[i].huePos - 1U + WIDTH) % WIDTH;
           }
       }
     }
     // отрисовываем кольца
-    h = (shiftHueDir[i] >> 4) & 0x0F; // берём шаг для градиента вутри кольца
+    h = (ring[i].shiftHueDir >> 4) & 0x0F; // берём шаг для градиента вутри кольца
     if (h > 8U)
       h = 7U - h;
     for (uint8_t j = 0U; j < ((i == 0U) ? downRingHue : ((i == ringNb - 1U) ? upRingHue : ringWidth)); j++) // от 0 до (толщина кольца - 1)
@@ -2346,15 +2346,15 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
       y = i * ringWidth + j - ((i == 0U) ? 0U : ringWidth - downRingHue);
       for (uint8_t k = 0; k < WIDTH / 2U - 1; k++) // полукольцо
         {
-          x = (huePos[i] + k) % WIDTH; // первая половина кольца
-          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i]/* + k * h*/));
-          x = (EffectMath::getmaxWidthIndex() + huePos[i] - k) % WIDTH; // вторая половина кольца (зеркальная первой)
-          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i] + k * h));
+          x = (ring[i].huePos + k) % WIDTH; // первая половина кольца
+          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ring[i].Color/* + k * h*/));
+          x = (EffectMath::getmaxWidthIndex() + ring[i].huePos - k) % WIDTH; // вторая половина кольца (зеркальная первой)
+          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ring[i].Color + k * h));
         }
       if (WIDTH & 0x01) //(WIDTH % 2U > 0U) // если число пикселей по ширине матрицы нечётное, тогда не забываем и про среднее значение
       {
-        x = (huePos[i] + WIDTH / 2U) % WIDTH;
-        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i] + WIDTH / 2U * h));
+        x = (ring[i].huePos + WIDTH / 2U) % WIDTH;
+        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ring[i].Color + WIDTH / 2U * h));
       }
     }
   }
