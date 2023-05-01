@@ -2353,10 +2353,23 @@ class EffectRadialNoise : public EffectCalc {
     private:
     const int8_t C_X = WIDTH / 2;
     const int8_t C_Y = HEIGHT / 2;
+        
         struct {
             uint8_t angle;
             uint8_t radius;
         }rMap[WIDTH][HEIGHT];
+        
+        uint8_t legs = 2;
+        uint8_t eff = 0;
+
+        void RNoise(float t);
+        void RWave(float t);
+        void ROctopus(float t);
+        void RLotus(float t);
+        void RFlower(float t);
+
+        String setDynCtrl(UIControl*_val) override;
+
     public:
         void load() override;
         bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;

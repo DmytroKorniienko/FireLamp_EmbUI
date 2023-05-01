@@ -8224,7 +8224,7 @@ void EffectRadialFire::palettesload(){
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&NormalFire2_p);
   palettes.push_back(&WoodFireColors_p);
-  palettes.push_back(&NormalFire3_p);
+  palettes.push_back(&HeatColors_p);
   palettes.push_back(&CopperFireColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&PotassiumFireColors_p);
@@ -8391,6 +8391,15 @@ void EffectFlower::MoveFractionalNoiseY(int8_t amplitude, float shift) {
 //===== Ефект Калейдоскоп ======================//
 //https://editor.soulmatelights.com/gallery/1569-radialnuclearnoise
 // (c)Stepko and Sutaburosu
+String EffectRadialNoise::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3) {
+    legs = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==4) {
+    eff = EffectCalc::setDynCtrl(_val).toInt();}
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
 void EffectRadialNoise::load() {
   for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
       for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
@@ -8399,13 +8408,12 @@ void EffectRadialNoise::load() {
       }
     }
 }
-bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
-  static float t;
-  t += EffectMath::fmap(speed,0,255,2,20);
+
+void EffectRadialNoise::RNoise(float t){
   uint16_t t1 = t / 2;
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      byte angle = sin8(t1 / 2 + rMap[x][y].angle * 3);
+      byte angle = sin8(t1 / 2 + rMap[x][y].angle * legs);
       byte radius = rMap[x][y].radius * 2 - t;
       byte noise[3] = { inoise8(angle, radius, t1), inoise8(angle, 12032 + t1, radius), inoise8(radius, 120021 + t1, angle) };
       for(uint8_t i = 0; i < 3; i++){
@@ -8413,6 +8421,63 @@ bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
       }
       EffectMath::drawPixelXY(x, y,CRGB(noise[0], noise[1], noise[2]));
     }
+  }
+}
+
+void EffectRadialNoise::ROctopus(float t){
+  uint16_t t1 = t / 5;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y,CHSV(t1 / 2 - radius, 255, sin8(sin8((angle * 4 - radius) / 4 + t1) + radius - t1 * 2 + angle * legs)));
+    }
+  }
+}
+
+void EffectRadialNoise::RWave(float t){
+  uint16_t t1 = t / 10;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y,CHSV(t1 + radius, 255, sin8(t1 * 4 + sin8(t1 * 4 - radius) + angle * legs)));
+    }
+  }
+}
+
+void EffectRadialNoise::RFlower(float t){
+  uint16_t t1 = t / 5;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y, CHSV(t1 + radius, 255, sin8(sin8(t1 + angle * legs + radius) + t1 * 4 + sin8(t1 * 4 - radius) + angle * legs)));
+    }
+  }
+}
+
+void EffectRadialNoise::RLotus(float t){
+  uint16_t t1 = t / 20;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y, CHSV(248,181,sin8(t1 - radius+sin8(t1 + angle * legs)/5)));
+    }
+  }
+}
+
+bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
+  static float t;
+  t += EffectMath::fmap(speed,0,255,2,20);
+  switch (eff)
+  {
+    case 1: RWave(t);    break;
+    case 2: ROctopus(t); break;
+    case 3: RLotus(t);   break;
+    case 4: RFlower(t);  break;
+    default: RNoise(t);  break;
   }
   return true;
 }
