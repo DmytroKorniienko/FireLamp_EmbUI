@@ -1959,7 +1959,7 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt)
 
   if (subPix)
   {
-    fadeToBlackBy(leds, NUM_LEDS, 5 + (~(127+scale/2)) * (float)speed / 255);
+    fadeToBlackBy(leds, NUM_LEDS, 5 + (~(127+scale/2)));
     for (float offset = 0.0f; offset < (float)maxDim /2; offset +=0.25)
     {
       float x = (float)EffectMath::mapsincos8(false, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - width_adj_f;
@@ -6142,7 +6142,7 @@ String EffectWrain::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
-    speedFactor = EffectMath::fmap(speed, 1, 255, 0.125, .75) * EffectCalc::speedfactor;
+    speedFactor = EffectMath::fmap(speed, 1, 255, 0.125, 1.0) * EffectCalc::speedfactor;
   }
   else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) { uint8_t val = EffectCalc::setDynCtrl(_val).toInt(); white = (val == FASTLED_PALETTS_COUNT); randColor = (val == 0); }
@@ -6159,7 +6159,7 @@ void EffectWrain::reload() {
     drops[i].posX = EffectMath::randomf(0, WIDTH); // Разбрасываем капли по ширине
     drops[i].posY = EffectMath::randomf(0, HEIGHT);  // и по высоте
     drops[i].color = random(0, 9) * 31;              // цвет капли
-    drops[i].accell = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
+    drops[i].accell = (float)random(5, 10) / 100.0;     // делаем частицам немного разное ускорение 
     drops[i].bri = random(170, 255);
   }
 }
@@ -6208,7 +6208,7 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     // Обеспечиваем бесшовность по Y.
     if (drops[i].posY < 0)
     {                                                             // достигли низа, обновляем каплю
-      drops[i].posY = ((float)HEIGHT - (clouds ? cloudHeight : 1.)); // переносим каплю в начало трека
+      drops[i].posY = ((float)HEIGHT - (clouds ? (float)cloudHeight / 4.0 : 1.)); // переносим каплю в начало трека
       drops[i].posX += EffectMath::randomf(-1, 1);                   // сдвигаем каплю туда-сюда по горизонтали
       drops[i].bri = random(170, 200);                               // задаем капле новое значение яркости
     }
@@ -6306,29 +6306,19 @@ bool EffectWrain::Lightning(uint16_t chanse)
 
 // Функция рисует тучу в верхней части матрицы 
 void EffectWrain::Clouds(bool flash)
-{
-  uint8_t dataSmoothing = 50; //196
-  uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
-  uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
+{ 
+  uint8_t noiseScaleX = map(WIDTH, 8, 255, 40, 1);
+  uint8_t noiseScaleY = map(HEIGHT, 8, 255, 100, 3);
   uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
-  uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-
   // This is the array that we keep our computed noise values in
   for (uint8_t x = 0; x < WIDTH; x++)
   {
-    int xoffset = noiseScale * x;
-
-    for (uint8_t z = 0; z < cloudHeight; z++) {
-      int yoffset = noiseScale * z ;
-      uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
-      noiseData = qadd8(noiseData, scale8(noiseData, 39));
-      _noise[x * cloudHeight + z] = scale8(_noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
-      if (flash)
-        EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
-      else 
-        nblend(EffectMath::getPixel(x, EffectMath::getmaxHeightIndex() - z), ColorFromPalette(*curPalette, _noise[x * cloudHeight + z], _noise[x * cloudHeight + z]), (500 / cloudHeight));
+    uint16_t xoffset = noiseScaleX * x;
+    for (uint8_t y = 0; y < cloudHeight + 2; y++) {
+      uint16_t yoffset = noiseScaleY * y ;
+      uint8_t noise = constrain(constrain((inoise8(xoffset + noiseZ, yoffset + noiseZ) * 3) / 2, 0, 255) - y * (382 / HEIGHT), 0, 255);
+      EffectMath::getPixel(x, HEIGHT - 1 - y) += (noise < 96)? CRGB(0,0,0) : ColorFromPalette(*curPalette, noise, noise / 2);
     }
-    noiseZ++;
   }
   if (millis() - timer < 500) {
     for (uint8_t i = 0; i < WIDTH; i++)
@@ -8447,7 +8437,7 @@ void EffectRadialNoise::RWave(float t){
 }
 
 void EffectRadialNoise::RFlower(float t){
-  uint16_t t1 = t / 5;
+  uint16_t t1 = t / 10;
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
       byte angle = rMap[x][y].angle;
@@ -8458,7 +8448,7 @@ void EffectRadialNoise::RFlower(float t){
 }
 
 void EffectRadialNoise::RLotus(float t){
-  uint16_t t1 = t / 20;
+  uint16_t t1 = t / 10;
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
       byte angle = rMap[x][y].angle;

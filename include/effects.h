@@ -1505,7 +1505,7 @@ class EffectWrain: public EffectCalc {
         uint8_t bri{0};      // яркость капли
     };
 
-    static const uint8_t cloudHeight = HEIGHT / 5 + 1;
+    static const uint8_t cloudHeight = HEIGHT / 2;
     float dotChaos;         // сила ветра
     int8_t dotDirect;       // направление ветра 
     bool clouds = false;
@@ -1518,7 +1518,6 @@ class EffectWrain: public EffectCalc {
     float windProgress = 0;
     float speedFactor = 0.5;
     uint32_t timer = 0;
-    std::array<uint8_t, WIDTH * cloudHeight> _noise;
     std::vector<Drop> drops {std::vector<Drop>(DROP_CNT)};
 
     void reload();
