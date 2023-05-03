@@ -6314,10 +6314,11 @@ void EffectWrain::Clouds(bool flash)
   for (uint8_t x = 0; x < WIDTH; x++)
   {
     uint16_t xoffset = noiseScaleX * x;
-    for (uint8_t y = 0; y < cloudHeight + 2; y++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
       uint16_t yoffset = noiseScaleY * y ;
-      uint8_t noise = constrain(constrain((inoise8(xoffset + noiseZ, yoffset + noiseZ) * 3) / 2, 0, 255) - y * (382 / HEIGHT), 0, 255);
-      EffectMath::getPixel(x, HEIGHT - 1 - y) += (noise < 96)? CRGB(0,0,0) : ColorFromPalette(*curPalette, noise, noise / 2);
+      int16_t noise = (inoise8(xoffset + noiseZ, yoffset + noiseZ) * 3) / 2 - y * (382 / HEIGHT);
+      CRGB col = (noise < 96)? CRGB(0,0,0) : ColorFromPalette(*curPalette, noise, noise).nscale8(noise);
+      EffectMath::getPixel(x, HEIGHT - 1 - y) += CRGB(col.r * noise / 255, col.g * noise / 255, col.b * noise / 255);
     }
   }
   if (millis() - timer < 500) {
