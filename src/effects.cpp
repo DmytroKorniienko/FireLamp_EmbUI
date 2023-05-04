@@ -6250,7 +6250,7 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     // Рисуем тучку и молнию
   if (clouds) {
     if (randColor) curPalette = palettes.at(0);  // устанавливаем палитру RainbowColors_p
-    if (white) curPalette = palettes.at(FASTLED_PALETTS_COUNT-1);     // WaterfallColors_p
+    if (white || clouds == 1) curPalette = palettes.at(FASTLED_PALETTS_COUNT-1);     // WaterfallColors_p
     if (storm) _flash = Lightning(200);
     Clouds((storm ? _flash : false));
   } else if (storm) {

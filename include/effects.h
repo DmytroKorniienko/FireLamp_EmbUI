@@ -1508,7 +1508,7 @@ class EffectWrain: public EffectCalc {
     static const uint8_t cloudHeight = HEIGHT / 2;
     float dotChaos;         // сила ветра
     int8_t dotDirect;       // направление ветра 
-    bool clouds = false;
+    uint8_t clouds = 0;
     bool storm = false;
     bool white = false;
     uint8_t _scale=1;
