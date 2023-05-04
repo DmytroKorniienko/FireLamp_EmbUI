@@ -6250,7 +6250,7 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     // Рисуем тучку и молнию
   if (clouds) {
     if (randColor) curPalette = palettes.at(0);  // устанавливаем палитру RainbowColors_p
-    if (white || clouds == 1) curPalette = palettes.at(FASTLED_PALETTS_COUNT-1);     // WaterfallColors_p
+    if (white) curPalette = palettes.at(FASTLED_PALETTS_COUNT-1);     // WaterfallColors_p
     if (storm) _flash = Lightning(200);
     Clouds((storm ? _flash : false));
   } else if (storm) {
@@ -6317,7 +6317,7 @@ void EffectWrain::Clouds(bool flash)
     for (uint8_t y = 0; y < HEIGHT; y++) {
       uint16_t yoffset = noiseScaleY * y ;
       int16_t noise = (inoise8(xoffset + noiseZ, yoffset + noiseZ) * 3) / 2 - y * (382 / HEIGHT);
-      CRGB col = (noise < 96)? CRGB(0,0,0) : ColorFromPalette(*curPalette, noise, noise).nscale8(noise);
+      CRGB col = (noise < 96)? CRGB(0,0,0) : ColorFromPalette((clouds == 1)? WaterfallColors_p : *curPalette, noise, noise).nscale8(noise);
       EffectMath::getPixel(x, HEIGHT - 1 - y) += CRGB(col.r * noise / 255, col.g * noise / 255, col.b * noise / 255);
     }
   }
