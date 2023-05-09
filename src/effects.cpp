@@ -8394,22 +8394,22 @@ String EffectRadialNoise::setDynCtrl(UIControl*_val){
 }
 
 void EffectRadialNoise::reloadMap(uint8_t var) {
-  float XS, YS;
+  float XS, YS, radius;
   switch(var){
-    case 1: XS = C_X; YS = 0; break;
-    case 2: XS = EffectMath::getmaxWidthIndex(); YS = 0; break;
-    case 3: XS = 0; YS = C_Y; break;
-    case 4: XS = C_X; YS = C_Y; break;
-    case 5: XS = EffectMath::getmaxWidthIndex(); YS = C_Y; break;
-    case 6: XS = 0; YS = EffectMath::getmaxHeightIndex(); break;
-    case 7: XS = C_X; YS = EffectMath::getmaxHeightIndex(); break;
-    case 8: XS = EffectMath::getmaxWidthIndex(); YS = EffectMath::getmaxHeightIndex(); break;
-    default: XS = 0; YS = 0; break;
+    case 1: XS = C_X; YS = 0; radius = hypot(WIDTH, HEIGHT); break;
+    case 2: XS = EffectMath::getmaxWidthIndex(); YS = 0; radius = hypot(WIDTH, HEIGHT) * 2; break;
+    case 3: XS = 0; YS = C_Y; radius = hypot(WIDTH, HEIGHT); break;
+    case 4: XS = C_X; YS = C_Y; radius = maxDim; break;
+    case 5: XS = EffectMath::getmaxWidthIndex(); YS = C_Y; radius = hypot(WIDTH, HEIGHT); break;
+    case 6: XS = 0; YS = EffectMath::getmaxHeightIndex(); radius = hypot(WIDTH, HEIGHT) * 2; break;
+    case 7: XS = C_X; YS = EffectMath::getmaxHeightIndex(); radius = hypot(WIDTH, HEIGHT); break;
+    case 8: XS = EffectMath::getmaxWidthIndex(); YS = EffectMath::getmaxHeightIndex(); radius = hypot(WIDTH, HEIGHT) * 2; break;
+    default: XS = 0; YS = 0; radius = hypot(WIDTH, HEIGHT) * 2; break;
   }
   for (uint8_t x = 0; x < WIDTH; x++) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         rMap[x][y].angle = 128 * (atan2(y - YS, x - XS) / PI);
-        rMap[x][y].radius = hypot(x - XS, y - YS) * (255 / maxDim); //thanks Sutaburosu
+        rMap[x][y].radius = hypot(x - XS, y - YS) * (255 / radius); //thanks Sutaburosu
       }
     }
 }
