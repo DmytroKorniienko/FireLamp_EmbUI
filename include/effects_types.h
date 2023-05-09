@@ -490,7 +490,7 @@ static const uint8_t T_EFFVER[] PROGMEM = {
   3, 1, 3, 1, 3, 9, 5, 2, 3, 5, 5, 7, 7, 2, 1, 7, // 16-31
   5, 1, 5, 3, 9, 3, 4, 3, 3, 1, 4, 5, 7, 1, 1, 3, // 32 - 47
   1, 6, 6, 6, 4, 7, 5, 4, 1, 5, 6, 1, 1, 5, 7, 6, // 48 - 63
-  5, 3, 1, 5, 3, 1, 7, 1, 3, 1, 1, 1, 1, 3, 0, 0, // 64 - 79
+  5, 3, 1, 5, 3, 1, 7, 1, 3, 1, 1, 1, 1, 5, 0, 0, // 64 - 79
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 80 - 95
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 96 - 111
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
@@ -609,7 +609,7 @@ static const char E_MIRAGE[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAG
 static const char E_WCOLOR[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":1,\"max\":8,\"val\":4,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0F9 "\"}]}"; 
 static const char E_SPBALS[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"min\":3,\"max\":6,\"val\":3,\"name\":\"" DFTINTF_0D5 "\"},  {\"id\":4,\"max\":" SF(FASTLED_PALETTS_COUNT) ",\"name\":\"" DFTINTF_084 "\"}]}";
 static const char E_PLAYER[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"type\":2,\"val\":0,\"name\":\"" DFTINTF_0DE "\"}, {\"id\":4,\"type\":3,\"name\":\"" DFTINTF_00A "\", \"step\":\"/animations/\"}]}";
-static const char E_KALEID[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"val\":3,\"min\":2,\"max\":8,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_00A "\"}]}";
+static const char E_KALEID[]    PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48}, {\"id\":3,\"val\":3,\"min\":2,\"max\":8,\"name\":\"" DFTINTF_0EF "\"}, {\"id\":4,\"val\":0,\"min\":0,\"max\":4,\"name\":\"" DFTINTF_00A "\"}, {\"id\":5,\"val\":0,\"min\":0,\"max\":8,\"name\":\"" DFTINTF_0E6 "\"}]}";
 // Инженерный
 //static const char E_TEST[]      PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":2,\"type\":48},  {\"id\":3,\"val\":8,\"max\":16,\"name\":\"" DFTINTF_0D5 "\"}]}";
 static const char E_TEST2[]     PROGMEM = "{" COTNROLS_PREFIX SF(SET_ALL_EFFFLAGS) ",\"ctrls\":[{\"id\":3,\"name\":\"" DFTINTF_084 "\"},  {\"id\":4},  {\"id\":5},  {\"id\":6},  {\"id\":7,\"type\":18,\"val\":1,\"name\":\"" DFTINTF_020 "\"}]}";

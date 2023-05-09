@@ -8386,16 +8386,30 @@ String EffectRadialNoise::setDynCtrl(UIControl*_val){
   if(_val->getId()==3) {
     legs = EffectCalc::setDynCtrl(_val).toInt();
   } else if(_val->getId()==4) {
-    eff = EffectCalc::setDynCtrl(_val).toInt();}
+    eff = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==5) {
+    pos_var = EffectCalc::setDynCtrl(_val).toInt(); reloadMap(pos_var);}
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-void EffectRadialNoise::load() {
-  for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
-      for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
-        rMap[x + C_X][y + C_Y].angle = 128 * (atan2(y, x) / PI);
-        rMap[x + C_X][y + C_Y].radius = hypot(x, y) * (255 / maxDim); //thanks Sutaburosu
+void EffectRadialNoise::reloadMap(uint8_t var) {
+  float XS, YS;
+  switch(var){
+    case 1: XS = C_X; YS = 0; break;
+    case 2: XS = EffectMath::getmaxWidthIndex(); YS = 0; break;
+    case 3: XS = 0; YS = C_Y; break;
+    case 4: XS = C_X; YS = C_Y; break;
+    case 5: XS = EffectMath::getmaxWidthIndex(); YS = C_Y; break;
+    case 6: XS = 0; YS = EffectMath::getmaxHeightIndex(); break;
+    case 7: XS = C_X; YS = EffectMath::getmaxHeightIndex(); break;
+    case 8: XS = EffectMath::getmaxWidthIndex(); YS = EffectMath::getmaxHeightIndex(); break;
+    default: XS = 0; YS = 0; break;
+  }
+  for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        rMap[x][y].angle = 128 * (atan2(y - YS, x - XS) / PI);
+        rMap[x][y].radius = hypot(x - XS, y - YS) * (255 / maxDim); //thanks Sutaburosu
       }
     }
 }

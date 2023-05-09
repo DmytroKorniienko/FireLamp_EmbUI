@@ -2350,8 +2350,8 @@ class EffectFlower : public EffectCalc {
 // (c)Stepko and Sutaburosu
 class EffectRadialNoise : public EffectCalc {
     private:
-    const int8_t C_X = WIDTH / 2;
-    const int8_t C_Y = HEIGHT / 2;
+    const float C_X = ((float)WIDTH / 2.) - 0.5;
+    const float C_Y = ((float)HEIGHT / 2.) - 0.5;
         
         struct {
             uint8_t angle;
@@ -2360,17 +2360,18 @@ class EffectRadialNoise : public EffectCalc {
         
         uint8_t legs = 2;
         uint8_t eff = 0;
+        uint8_t pos_var;
 
         void RNoise(float t);
         void RWave(float t);
         void ROctopus(float t);
         void RLotus(float t);
         void RFlower(float t);
-
+        
+        void reloadMap(uint8_t var);
         String setDynCtrl(UIControl*_val) override;
 
     public:
-        void load() override;
         bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
