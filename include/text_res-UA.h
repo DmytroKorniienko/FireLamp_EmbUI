@@ -464,7 +464,7 @@ static const char TINTF_0F3[] PROGMEM = "Список";
 static const char TINTF_0F4[] PROGMEM = "Скидання налаштувань лампи";
 static const char TINTF_0F5[] PROGMEM = "Операція скасована";
 static const char TINTF_0F6[] PROGMEM = "Перевірка ефектів";
-static const char TINTF_0F7[] PROGMEM = "Ви можете переглянути як налаштовувати розмітку матриці в Jinx";
+static const char TINTF_0F7[] PROGMEM = "Інструкція як налаштовувати розмітку матриці в Jinx";
 static const char TINTF_0F8[] PROGMEM = "тут";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";

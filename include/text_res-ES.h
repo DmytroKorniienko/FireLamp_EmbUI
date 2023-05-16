@@ -113,9 +113,9 @@ static const char TEFF_064 [] PROGMEM = "Nexus";
 static const char TEFF_065 [] PROGMEM = "Laberinto";
 static const char TEFF_066 [] PROGMEM = "Colores rizados";
 static const char TEFF_067 [] PROGMEM = "Aurora boreal";
-static const char TEFF_068 [] PROGMEM = "Jabón";
+static const char TEFF_068 [] PROGMEM = "Arcoiris de jabón";
 static const char TEFF_069 [] PROGMEM = "Isla de Serpientes";
-static const char TEFF_070 [] PROGMEM = "Sueños de fuego";
+static const char TEFF_070 [] PROGMEM = "Sueños ardientes";
 static const char TEFF_071 [] PROGMEM = "Metabolas";
 static const char TEFF_072 [] PROGMEM = "Lámpara de lava";
 static const char TEFF_073 [] PROGMEM = "Corredor Espacial";
@@ -125,7 +125,7 @@ static const char TEFF_076 [] PROGMEM = "Espejismo";
 static const char TEFF_077 [] PROGMEM = "Caleidoscopio";
 static const char TEFF_250 [] PROGMEM = "Reloj";
 static const char TEFF_251 [] PROGMEM = "Reproductor RGB 332/565";
-static const char TEFF_254 [] PROGMEM = "Analizador de frecuencia";
+static const char TEFF_254 [] PROGMEM = "Analizador de frecuencias";
 static const char TEFF_255 [] PROGMEM = "Osciloscopio";
 
 
@@ -465,8 +465,8 @@ static const char TINTF_0F3[] PROGMEM = "Lista";
 static const char TINTF_0F4[] PROGMEM = "Restablecimiento de la lámpara";
 static const char TINTF_0F5[] PROGMEM = "Cancelada";
 static const char TINTF_0F6[] PROGMEM = "Comprobación de efectos";
-static const char TINTF_0F7[] PROGMEM = "Puede encontrar el tutorial de configuración de la matriz Jinx";
-static const char TINTF_0F8[] PROGMEM = "allí";
+static const char TINTF_0F7[] PROGMEM = "Cómo configurar la matriz para Jinx se puede ver";
+static const char TINTF_0F8[] PROGMEM = "aqui";
 
 static const char NY_MDG_STRING1[] PROGMEM = "Hasta que se quede el año nuevo %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "Feliz año nuevo %d!";
