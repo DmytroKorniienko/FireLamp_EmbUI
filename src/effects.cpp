@@ -2442,7 +2442,7 @@ void EffectCube2d::cubesize() {
         // не вижу другого способа перестать получать почти черные кубики, это раздражает, впечатление будто лампе глаз выбили, или зуб :))
       {
         color = scale > 0 ? ColorFromPalette(*curPalette, random(1024)>>1, random8(128, 255)) : CRGB(random8(), random8(), random8());
-        if (color >= CRGB(10,10,10)) break;  // Не хотелось бы получать слишком тёмные кубики
+        if (color.r + color.b + color.g >= 30) break; // Не хотелось бы получать слишком тёмные кубики
       }
       for (uint8_t k = 0U; k < sizeY; k++){
         for (uint8_t m = 0U; m < sizeX; m++){
