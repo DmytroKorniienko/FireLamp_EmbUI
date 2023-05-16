@@ -30,12 +30,12 @@ Echo  *  Build - Esp32                         6 *  Зібрати для Esp32           
 Echo  *  HTTP Update - Firmware               uf *  Обновити прошивку через HTTP           *
 Echo  #------------------------------------------#-----------------------------------------#
 Echo  *             Build and flash              *            Збірка і прошивання          *
-Echo  *  Build and flash - Esp8266@160         7 *  Зібрати і прошити - Esp8266 на 160МГц  *
+Echo  *  Build and flash - Esp8266_160         7 *  Зібрати і прошити - Esp8266 на 160МГц  *
 Echo  *  Build and flash - Esp8266@80          8 *  Зібрати і прошити - Esp8266 на 80МГц   *
 Echo  *  Build and flash - Esp32               9 *  Зібрати і прошити - Esp32              *
 Echo  #------------------------------------------#-----------------------------------------#
 Echo  *         Build and flash (DEBUG)          *      Збірка і прошивання  (ДЕБАГ)       *
-Echo  *  Build and flash - Esp8266@160        7D *  Зібрати і прошити - Esp8266 на 160МГц  *
+Echo  *  Build and flash - Esp8266_160        7D *  Зібрати і прошити - Esp8266 на 160МГц  *
 Echo  *  Build and flash - Esp8266@80         8D *  Зібрати і прошити - Esp8266 на 80МГц   *
 Echo  *  Serial port monitor (USB)             D *  Монітор відладки (USB)                 *
 Echo  #------------------------------------------#-----------------------------------------#
@@ -69,8 +69,8 @@ if "%choice%"=="2" (
 )
 if "%choice%"=="3" call %workdir%\resources\update-DEV-from-Git.cmd 3
 if "%choice%"=="4" (
-	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266@160
-	copy %workdir%\.pio\build\esp8266@160\firmware.bin %workdir%\out_bin
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266_160
+	copy %workdir%\.pio\build\esp8266_160\firmware.bin %workdir%\out_bin
 )
 if "%choice%"=="5" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp8266
@@ -86,10 +86,10 @@ if "%choice%"=="uf" (
 if "%choice%"=="us" (
 	start %workdir%\Update_FileSystem.bat
 )
-if "%choice%"=="7" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266@160)
+if "%choice%"=="7" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266_160)
 if "%choice%"=="8" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266)
 if "%choice%"=="9" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp32)
-if "%choice%"=="7D" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266@160dev)
+if "%choice%"=="7D" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266_160dev)
 if "%choice%"=="8D" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266dev)
 if "%choice%"=="D" (start %workdir%\resources\SerialMonitor.cmd)
 if "%choice%"=="u" (
@@ -98,11 +98,11 @@ if "%choice%"=="u" (
 	cd %workdir%
 )
 if "%choice%"=="b" (
-	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266@160
-	copy %workdir%\.pio\build\esp8266@160\littlefs.bin %workdir%\out_bin
+	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266_160
+	copy %workdir%\.pio\build\esp8266_160\littlefs.bin %workdir%\out_bin
 )
-if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs--environment esp8266@160)
-if "%choice%"=="e" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266@160)
+if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs--environment esp8266_160)
+if "%choice%"=="e" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266_160)
 if "%choice%"=="b1" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp32
 	copy %workdir%\.pio\build\esp32\littlefs.bin %workdir%\out_bin
