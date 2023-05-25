@@ -103,7 +103,7 @@ public:
     };
     ~GAUGE() {GAUGE::gauge = nullptr;}
 
-    void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE) {
+void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE) {
         if(GAUGE::gauge==nullptr) return;
         if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
@@ -114,7 +114,7 @@ public:
             for (uint8_t x = 0; x <= xCol * (xStep - 1); x += xStep) {
                 for(uint8_t y = 0; y < HEIGHT; y++){
                     EffectMath::drawPixelXY(x, y, (y < ind)? ((gauge_hue)? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)):
-                     ((ind == y)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
+                     ((ind == y && subPart)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
                       CRGB(0,0,0)));
                 }
             }
@@ -125,7 +125,7 @@ public:
             for (uint8_t y = 0; y <= yCol * (yStep - 1); y += yStep) {
                 for(uint8_t x = 0; x < WIDTH; x++){
                     EffectMath::drawPixelXY((x + y) % WIDTH, y, (x < ind)? ((gauge_hue)? CHSV(gauge_hue, 255, 255) : CRGB(gauge_color)):
-                     ((ind == x)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
+                     ((ind == x && subPart)? ((gauge_hue)? CHSV(gauge_hue, 255, subPart) : CRGB(gauge_color.r*255/subPart,gauge_color.g*255/subPart,gauge_color.b*255/subPart)):
                       CHSV(0,0,0)));
                 }
             }

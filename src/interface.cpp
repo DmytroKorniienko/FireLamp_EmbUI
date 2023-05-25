@@ -2969,7 +2969,7 @@ void block_streaming(Interface *interf, JsonObject *data){
         if (embui.param(FPSTR(TCONST_0047)).toInt() == E131){
             interf->range(FPSTR(TCONST_0077), embui.param(FPSTR(TCONST_0077)), F("1"), F("255"), F("1"), (String)FPSTR(TINTF_0E8), true);
             interf->comment(String(F("Universes:")) + String(ceil((float)HEIGHT / (512U / (WIDTH * 3))), 0U) + String(F(";    X:")) + String(WIDTH) + String(F(";    Y:")) + String(512U / (WIDTH * 3)));
-            interf->comment(String(F("Как настроить разметку матрицы в Jinx! можно посмотреть <a href=\"https://github.com/DmytroKorniienko/FireLamp_EmbUI\">на форуме</a>")));
+            interf->comment(String(FPSTR(TINTF_0F7)) + String(F("<a href=\"https://github.com/DmytroKorniienko/FireLamp_EmbUI\"> ")) + String(FPSTR(TINTF_0F8)) + String(F("</a>")));
         }
     interf->json_section_end();
 }

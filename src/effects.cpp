@@ -497,12 +497,12 @@ void EffectMatrix::load(){
   randomSeed(millis());
   for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
   {
-    lightersPos[0U][i] = random(0, WIDTH);
-    lightersPos[1U][i] = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
-    lightersSpeed[0U][i] = 1;
-    lightersSpeed[1U][i] = (float)random(10, 20) / 10.0f;
-    lightersColor[i] = hue;
-    light[i] = random(196,255);
+    lighter[i].PosX = random(0, WIDTH);
+    lighter[i].PosY = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
+    lighter[i].SpeedX = 1;
+    lighter[i].SpeedY = (float)random(10, 20) / 10.0f;
+    lighter[i].Color = hue;
+    lighter[i].Light = random(196,255);
   }
 }
 
@@ -515,37 +515,37 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 
   for (uint8_t i = 0U; i < map(_scale, 1, 32, 1, LIGHTERS_AM); i++)
   {
-    lightersPos[1U][i] -= lightersSpeed[1U][i] * speedFactor;
+    lighter[i].PosY -= lighter[i].SpeedY * speedFactor;
 
     if (white) {
       color = rgb2hsv_approximate(CRGB::Gray);
-      color.val = light[i];
+      color.val = lighter[i].Light;
     } else if (randColor) {
       EVERY_N_MILLIS(600*EffectCalc::speedfactor / speedFactor) {
         hue = random(1, 250);
       }
-      color = CHSV(hue, 255, light[i]);
+      color = CHSV(hue, 255, lighter[i].Light);
     } else {
-      color = CHSV(_hue, 255, light[i]);
+      color = CHSV(_hue, 255, lighter[i].Light);
     }
 
 
-    EffectMath::drawPixelXYF_Y(lightersPos[0U][i], lightersPos[1U][i], color);
+    EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, color);
 
     count += speedFactor;
 
     if (gluk > 1 and (uint8_t)count%2 == 0) 
       if (random8() < gluk * 2) {
-        lightersPos[0U][i] = lightersPos[0U][i] + random(-1, 2);
-        light[i] = random(196,255);
+        lighter[i].PosX = lighter[i].PosX + random(-1, 2);
+        lighter[i].Light = random(196,255);
       }
 
-    if(lightersPos[1U][i] < -1) {
-      lightersPos[0U][i] = random(0, WIDTH);
-      lightersPos[1U][i] = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
-      lightersSpeed[1U][i] = EffectMath::randomf(1.5, 2.5); 
-      light[i] = random(127U, 255U);
-      lightersColor[i] = hue;
+    if(lighter[i].PosY < -1) {
+      lighter[i].PosX = random(0, WIDTH);
+      lighter[i].PosY = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
+      lighter[i].SpeedY = EffectMath::randomf(1.5, 2.5); 
+      lighter[i].Light = random(127U, 255U);
+      lighter[i].Color = hue;
     }
   }
 
@@ -562,12 +562,12 @@ void EffectStarFall::load(){
   randomSeed(millis());
   for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
   {
-    lightersPos[0U][i] = random(-(int)WIDTH, WIDTH);
-    lightersPos[1U][i] = random(EffectMath::getmaxHeightIndex(), HEIGHT + 4);
-    lightersSpeed[0U][i] = EffectMath::randomf(-1, 1);  // X
-    lightersSpeed[1U][i] = EffectMath::randomf(1, 2);   // Y
-    lightersColor[i] = random(0U, 255U);
-    light[i] = 255;
+    lighter[i].PosX = random(-(int)WIDTH, WIDTH);
+    lighter[i].PosY = random(EffectMath::getmaxHeightIndex(), HEIGHT + 4);
+    lighter[i].SpeedX = EffectMath::randomf(-1, 1);  // X
+    lighter[i].SpeedY = EffectMath::randomf(1, 2);   // Y
+    lighter[i].Color = random(0U, 255U);
+    lighter[i].Light = 255;
   }
 }
 
@@ -591,88 +591,100 @@ bool EffectStarFall::snowStormStarfallRoutine(CRGB *leds, EffectWorker *param)
     switch (effId)
     {
     case 1:
-      color = CHSV(127, 0, light[i]);
+      color = CHSV(127, 0, lighter[i].Light);
       break;
     case 2:
-      if (light[i] > 10) { byte tmp = light[i] - 10 * speedFactor; color = CHSV(lightersColor[i], 255 - light[i], tmp); light[i]=tmp; }
+      if (lighter[i].Light > 10) { byte tmp = lighter[i].Light - 10 * speedFactor; color = CHSV(lighter[i].Color, 255 - lighter[i].Light, tmp); lighter[i].Light = tmp; }
       else color = rgb2hsv_approximate( CRGB::Black);
       break;
     case 3:
-      color = CHSV(lightersColor[i], 255, light[i]);
+      color = CHSV(lighter[i].Color, 255, lighter[i].Light);
       break;
     default:
       break;
     }
 
     if (isNew) {
-      lightersPos[0U][i] -= lightersSpeed[0U][effId == 1 ? 0 : i] * speedFactor;
-      lightersPos[1U][i] -= 1 * speedFactor;
+      lighter[i].PosX -= lighter[effId == 1 ? 0 : i].SpeedX * speedFactor;
+      lighter[i].PosY -= 1 * speedFactor;
     } else {
-      lightersPos[0U][i] += lightersSpeed[0U][i] * (speedFactor / 2);
-      lightersPos[1U][i] -= lightersSpeed[1U][0] * (speedFactor / 2);
+      lighter[i].PosX += lighter[i].SpeedX * (speedFactor / 2);
+      lighter[i].PosY -= lighter[0].SpeedY * (speedFactor / 2);
     }
 
-    EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], color, 0);
+    EffectMath::drawPixelXYF(lighter[i].PosX, lighter[i].PosY, color, 0);
 
-    if(lightersPos[1U][i] < -1) {
+    if(lighter[i].PosY < -1) {
       if (isNew) {
-        lightersPos[0U][i] = random(-(int)WIDTH, WIDTH);
-        lightersPos[1U][i] = effId > 1 ? random(HEIGHT / 2, HEIGHT + 4) : random(EffectMath::getmaxHeightIndex(), HEIGHT + 4);
-        lightersSpeed[0U][i] = EffectMath::randomf(-1, 1);  // X
-        lightersSpeed[1U][i] = EffectMath::randomf(1, 2);   // Y
+        lighter[i].PosX = random(-(int)WIDTH, WIDTH);
+        lighter[i].PosY = effId > 1 ? random(HEIGHT / 2, HEIGHT + 4) : random(EffectMath::getmaxHeightIndex(), HEIGHT + 4);
+        lighter[i].SpeedX = EffectMath::randomf(-1, 1);  // X
+        lighter[i].SpeedY = EffectMath::randomf(1, 2);   // Y
       } else {
-        lightersPos[0U][i] = (float)random(-(WIDTH * 10 - 2), (WIDTH * 10 - 2)) / 10.0f;
-        lightersPos[1U][i] = random(HEIGHT, HEIGHT + 4);
-        lightersSpeed[0U][i] = (float)random(15, 25) / 10.0f;   // X
-        lightersSpeed[1U][i] = lightersSpeed[0U][i]; // Y
+        lighter[i].PosX = (float)random(-(WIDTH * 10 - 2), (WIDTH * 10 - 2)) / 10.0f;
+        lighter[i].PosY = random(HEIGHT, HEIGHT + 4);
+        lighter[i].SpeedX = (float)random(15, 25) / 10.0f;   // X
+        lighter[i].SpeedY = lighter[i].SpeedX; // Y
       }
-      lightersColor[i] = random(0U, 255U);
-      light[i] = random(127U, 255U);
+      lighter[i].Color = random(0U, 255U);
+      lighter[i].Light = random(127U, 255U);
     }
   }
   return true;
 }
 
-//===== Клас "Світлячків" ======================//
-// потрібний для деяких ефектів
-//#define LIGHTERS_AM           (100U)
-void EffectLighters::load(){
-  randomSeed(millis());
-  for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
-  {
-    lightersIdx=0;
-    lightersPos[0U][i] = random(0, WIDTH);
-    lightersPos[1U][i] = random(0, HEIGHT);
-    lightersSpeed[0U][i] = (float)random(-200, 200) / 10.0f;
-    lightersSpeed[1U][i] = (float)random(-200, 200) / 10.0f;
-    lightersColor[i] = random(0U, 255U);
-    light[i] = random(1U, 3U)*127U;
-  }
-}
-
-// !++
-String EffectLighters::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = ((float)EffectCalc::setDynCtrl(_val).toInt() / 4096.0f + 0.005f)*EffectCalc::speedfactor;
+//===== Ефект Світлячки зі шлейфом =============//
+String EffectLighterTracers::setDynCtrl(UIControl*_val) {
+  if(_val->getId()==4) {var = EffectCalc::setDynCtrl(_val).toInt(); regen();}
+  else if(_val->getId()==1) {speedFactor = EffectCalc::setDynCtrl(_val).toInt(); speedFactor = ((var)? (EffectMath::fmap(speedFactor, 1, 255, 0.01, .1)) : ((speedFactor / 4096.0f + 0.005f)) * EffectCalc::speedfactor);}
   else if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  else if(_val->getId()==4) subPix = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectLighters::run(CRGB *leds, EffectWorker *param)
+void EffectLighterTracers::regen(){
+  randomSeed(millis());
+  if (var){
+    for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+    {
+      int8_t sign;
+      lighter[i].PosX = WIDTH / 2;
+      lighter[i].PosY = HEIGHT / 2;
+      random(255)%2 ? sign = 1 : sign = -1;
+      lighter[i].SpeedX = ((float)random(40, 150) / 10.0f) * sign;
+      random(255)%2 ? sign = 1 : sign = -1;
+      lighter[i].SpeedY = ((float)random(40, 150) / 10.0f) * sign;
+      lighter[i].Light = 127U;
+      lighter[i].Color = random(0, 9) * 28;
+    }
+  }
+  else {
+    for (uint8_t i = 0U; i < LIGHTERS_AM; i++)
+    {
+      lightersIdx=0;
+      lighter[i].PosX = random(0, WIDTH);
+      lighter[i].PosY = random(0, HEIGHT);
+      lighter[i].SpeedX = (float)random(-200, 200) / 10.0f;
+      lighter[i].SpeedY = (float)random(-200, 200) / 10.0f;
+      lighter[i].Color = random(0U, 255U);
+    }
+  }
+}
+
+bool EffectLighterTracers::lighterRoutine(CRGB *leds, EffectWorker *param)
 {
   memset8( leds, 0, NUM_LEDS * 3);
 
   EVERY_N_MILLIS(333)
   {
     lightersIdx = (lightersIdx+1)%constrain(cnt,1,LIGHTERS_AM);
-    lightersSpeed[0U][lightersIdx] += random(-10, 10);
-    lightersSpeed[1U][lightersIdx] += random(-10, 10);
-    lightersSpeed[0U][lightersIdx] = fmod(lightersSpeed[0U][lightersIdx], 21);
-    lightersSpeed[1U][lightersIdx] = fmod(lightersSpeed[1U][lightersIdx], 21);
-    light[lightersIdx] = random(255U-(cnt*8),255U);
+    lighter[lightersIdx].SpeedX += random(-10, 10);
+    lighter[lightersIdx].SpeedY += random(-10, 10);
+    lighter[lightersIdx].SpeedX = fmod(lighter[lightersIdx].SpeedX, 21);
+    lighter[lightersIdx].SpeedY = fmod(lighter[lightersIdx].SpeedY, 21);
+    lighter[lightersIdx].Light = random(255U-(cnt*8),255U);
     if(!random(cnt+3))
-      light[lightersIdx] = 127;
+      lighter[lightersIdx].Light = 127;
   }
 
   for (uint8_t i = 0U; i < constrain(cnt,1,LIGHTERS_AM); i++) // масштабируем на LIGHTERS_AM, чтобы не было выхода за диапазон
@@ -681,61 +693,27 @@ bool EffectLighters::run(CRGB *leds, EffectWorker *param)
     // {
     //   LOG.printf_P("S0:%d S1:%d P0:%3.2f P1:%3.2f, cnt:%3.2f\n", lightersSpeed[0U][i], lightersSpeed[1U][i],lightersPos[0U][i],lightersPos[1U][i],speedFactor);
     // }
-    lightersPos[0U][i] += lightersSpeed[0U][i]*speedFactor;
-    lightersPos[1U][i] += lightersSpeed[1U][i]*speedFactor;
+    lighter[i].PosX += lighter[i].SpeedX * speedFactor;
+    lighter[i].PosY += lighter[i].SpeedY  * speedFactor;
 
-    if (lightersPos[0U][i] < 0) lightersPos[0U][i] = (float)EffectMath::getmaxWidthIndex();
-    if (lightersPos[0U][i] >= (float)WIDTH) lightersPos[0U][i] = 0.0f;
+    if (lighter[i].PosX < 0) lighter[i].PosX = (float)EffectMath::getmaxWidthIndex();
+    if (lighter[i].PosX >= (float)WIDTH) lighter[i].PosX = 0.0f;
 
-    if (lightersPos[1U][i] <= 0.0f)
+    if (lighter[i].PosY <= 0.0f)
     {
-      lightersPos[1U][i] = 0.0f;
-      lightersSpeed[1U][i] = -lightersSpeed[1U][i];
-      lightersSpeed[0U][i] = -lightersSpeed[0U][i];
+      lighter[i].PosY = 0.0f;
+      lighter[i].SpeedY  = -lighter[i].SpeedY;
+      lighter[i].SpeedX  = -lighter[i].SpeedX;
     }
-    if (lightersPos[1U][i] >= (int32_t)(EffectMath::getmaxHeightIndex()))
+    if (lighter[i].PosY >= (int32_t)(EffectMath::getmaxHeightIndex()))
     {
-      lightersPos[1U][i] = (EffectMath::getmaxHeightIndex());
-      lightersSpeed[1U][i] = -lightersSpeed[1U][i];
-      lightersSpeed[0U][i] = -lightersSpeed[0U][i];
+      lighter[i].PosY = (EffectMath::getmaxHeightIndex());
+      lighter[i].SpeedY  = -lighter[i].SpeedY;
+      lighter[i].SpeedX  = -lighter[i].SpeedX;
     }
-
-    if (subPix)
-      EffectMath::drawPixelXYF(lightersPos[0U][i], lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]), 0);
-    else
-      EffectMath::drawPixelXY((uint8_t)lightersPos[0U][i], (uint8_t)lightersPos[1U][i], CHSV(lightersColor[i], 255U-(i*2), light[i]));
+      EffectMath::drawPixelXYF(lighter[i].PosX, lighter[i].PosY, CHSV(lighter[i].Color, 255U-(i*2), lighter[i].Light), 0);
   }
   return true;
-}
-
-//===== Ефект Світлячки зі шлейфом =============//
-String EffectLighterTracers::setDynCtrl(UIControl*_val) {
-  if(_val->getId()==1) speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 0.01, .1)*EffectCalc::speedfactor;
-  else if(_val->getId()==3) cnt = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  return String();
-}
-
-void EffectLighterTracers::load(){
-  for (uint8_t j = 0U; j < _AMOUNT; j++)
-  {
-    int8_t sign;
-    // забиваем случайными данными
-    coord[j][0U] = (float)WIDTH / 2.0f;
-    random(0, 2) ? sign = 1 : sign = -1;
-    vector[j][0U] = ((float)random(40, 150) / 10.0f) * sign;
-    coord[j][1U] = (float)HEIGHT / 2;
-    random(0, 2) ? sign = 1 : sign = -1;
-    vector[j][1U] = ((float)random(40, 150) / 10.0f) * sign;
-    light[j] = 127;
-    //ballColors[j] = random(0, 9) * 28;
-  }
-}
-
-
-bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
-
-  return lighterTracersRoutine(*&ledarr, &*opt);
 }
 
 bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param)
@@ -747,38 +725,44 @@ bool EffectLighterTracers::lighterTracersRoutine(CRGB *leds, EffectWorker *param
   uint8_t maxBalls = cnt;
   for (uint8_t j = 0U; j < maxBalls; j++)
   {
-    ballColors[j] = (uint8_t)((maxBalls-j) * _AMOUNT + j);
+    lighter[j].Color = (uint8_t)((maxBalls-j) * LIGHTERS_AM + j);
 
-    // движение шариков
-    for (uint8_t i = 0U; i < 2U; i++)
+    lighter[j].PosX += lighter[j].SpeedX * speedFactor;
+    lighter[j].PosY += lighter[j].SpeedY * speedFactor;
+    if (lighter[j].PosX < 0)
     {
-      coord[j][i] += vector[j][i] * speedFactor;
-      if (coord[j][i] < 0)
-      {
-        coord[j][i] = 0.0f;
-        vector[j][i] = -vector[j][i];
-      }
+      lighter[j].PosX = 0.0f;
+      lighter[j].SpeedX = -lighter[j].SpeedX;
     }
-
-    if ((uint16_t)coord[j][0U] > EffectMath::getmaxWidthIndex())
+    if (lighter[j].PosY < 0)
     {
-      coord[j][0U] = EffectMath::getmaxWidthIndex();
-      vector[j][0U] = -vector[j][0U];
+      lighter[j].PosY = 0.0f;
+      lighter[j].SpeedY = -lighter[j].SpeedY;
     }
-    if ((uint16_t)coord[j][1U] > EffectMath::getmaxHeightIndex())
+    if ((uint16_t)lighter[j].PosX > EffectMath::getmaxWidthIndex())
     {
-      coord[j][1U] = EffectMath::getmaxHeightIndex();
-      vector[j][1U] = -vector[j][1U];
+      lighter[j].PosX = EffectMath::getmaxWidthIndex();
+      lighter[j].SpeedX = -lighter[j].SpeedX;
     }
-    EVERY_N_MILLIS(random16(256, 1024)) {
-      if (light[j] == 127)
-        light[j] = 255;
-      else light[j] = 127;
+    if ((uint16_t)lighter[j].PosY > EffectMath::getmaxHeightIndex())
+    {
+      lighter[j].PosY = EffectMath::getmaxHeightIndex();
+      lighter[j].SpeedY = -lighter[j].SpeedY;
     }
-    EffectMath::drawPixelXYF(coord[j][0U], coord[j][1U], CHSV(ballColors[j], 200U, 255U));
+    
+    EffectMath::drawPixelXYF(lighter[j].PosX, lighter[j].PosY, CHSV(lighter[j].Color, 200U, 255));
   }
   EffectMath::blur2d(leds, WIDTH, HEIGHT, 5);
   return true;
+}
+
+void EffectLighterTracers::load(){
+  regen();
+}
+
+bool EffectLighterTracers::run(CRGB *ledarr, EffectWorker *opt){
+
+  return (var)? lighterTracersRoutine(*&ledarr, &*opt) : lighterRoutine(*&ledarr, &*opt);
 }
 
 //===== Ефект Пейнтбол =========================//
@@ -906,7 +890,7 @@ void Effect3DNoise::fillNoiseLED()
   uint8_t dataSmoothing = 0;
   if (speed < 50)
   {
-    dataSmoothing = 200 - (speed * 4);
+    dataSmoothing = speed * 3;
   }
   for (uint8_t i = 0; i < maxDim; i++)
   {
@@ -916,32 +900,17 @@ void Effect3DNoise::fillNoiseLED()
       int32_t joffset = _scale * j;
 
       uint8_t data = inoise8(x + ioffset, y + joffset, z);
+      uint8_t data1 = inoise8(y + joffset, x + ioffset, z);
 
       data = qsub8(data, 16);
       data = qadd8(data, scale8(data, 39));
 
-      if (dataSmoothing)
-      {
-        uint8_t olddata = noise[i][j];
-        uint8_t newdata = scale8( olddata, dataSmoothing) + scale8( data, 256 - dataSmoothing);
-        data = newdata;
-      }
+      data1 = qsub8(data1, 16);
+      data1 = qadd8(data1, scale8(data1, 39));
 
-      noise[i][j] = data;
-    }
-  }
-  z += _speed;
 
-  // apply slow drift to X and Y, just for visual variation.
-  x += _speed * 0.125; // 1/8
-  y -= _speed * 0.0625; // 1/16
-
-  for (uint8_t i = 0; i < WIDTH; i++)
-  {
-    for (uint8_t j = 0; j < HEIGHT; j++)
-    {
-      uint8_t index = noise[j][i];
-      uint8_t bri =   noise[i][j];
+      uint8_t index = data;
+      uint8_t bri = data1;
       // if this palette is a 'loop', add a slowly-changing base value
       if ( colorLoop)
       {
@@ -958,42 +927,32 @@ void Effect3DNoise::fillNoiseLED()
         bri = dim8_raw( bri * 2);
       }
       CRGB color = ColorFromPalette( *curPalette, index, bri);
-
-      EffectMath::drawPixelXY(i, j, color);
-    }
-  }
-  ihue += 1;
-}
-
-void Effect3DNoise::fillnoise8()
-{
-  for (uint8_t i = 0; i < maxDim; i++)
-  {
-    int32_t ioffset = _scale * i;
-    for (uint8_t j = 0; j < maxDim; j++)
-    {
-      int32_t joffset = _scale * j;
-      noise[i][j] = inoise8(x + ioffset, y + joffset, z);
+      if (dataSmoothing)
+      {
+        nblend(EffectMath::getPixel(i, j), color, dataSmoothing);
+      }
+      else EffectMath::drawPixelXY(i, j, color);
     }
   }
   z += _speed;
+
+  // apply slow drift to X and Y, just for visual variation.
+  x += _speed * 0.125; // 1/8
+  y -= _speed * 0.0625; // 1/16
+  ihue += 1;
 }
 
 void Effect3DNoise::load(){
   palettesload();
-  fillnoise8();
 }
 
 // !++
 String Effect3DNoise::setDynCtrl(UIControl*_val) {
   if(_val->getId()==3 && _val->getVal().toInt()==0 && !isRandDemo())
     curPalette = &ZeebraColors_p;
-  if(_val->getId()==3 && _val->getVal().toInt()==1 && !isRandDemo())
-    curPalette = &RainbowStripeColors_p;
   else if(_val->getId()==4) blurIm = EffectCalc::setDynCtrl(_val).toInt();
    else if(_val->getId()==5) colorLoop = EffectCalc::setDynCtrl(_val).toInt();
    else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
-  fillnoise8();
   return String();
 }
 
@@ -1028,15 +987,15 @@ void EffectBBalls::regen(){
   randomSeed(millis());
   bballsNUM_BALLS =  map(_scale, 1, 16, 1, bballsMaxNUM_BALLS);
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {          // Initialize variables
-    bballsCOLOR[i] = random(0, 255);
-    bballsBri[i] = 156;
-    bballsX[i] = ceil((float)WIDTH / (bballsNUM_BALLS + 1) * (i + 1)) - 1; // random(0, WIDTH);
-    bballsBri[i] = halo ? 200 : (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-    bballsTLast[i] = millis();
-    bballsPos[i] = 0;                                 // Balls start on the ground
-    bballsVImpact[i] = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
-    bballsCOR[i] = 0.9 - float(i) / pow(bballsNUM_BALLS, 2);
-    bballsShift[i] = false;
+    bball[i].COLOR = random(0, 255);
+    bball[i].Bri = 156;
+    bball[i].X = ceil((float)WIDTH / (bballsNUM_BALLS + 1) * (i + 1)) - 1; // random(0, WIDTH);
+    bball[i].Bri = halo ? 200 : (bball[i - 1].X == bball[i].X ? bball[i].Bri + 32 : 156);
+    bball[i].TLast = millis();
+    bball[i].Pos = 0;                                 // Balls start on the ground
+    bball[i].VImpact = bballsVImpact0 + EffectMath::randomf( - 2., 2.);                   // And "pop" up at vImpact0
+    bball[i].COR = 0.9 - float(i) / pow(bballsNUM_BALLS, 2);
+    bball[i].Shift = false;
   }
 }
 
@@ -1059,46 +1018,42 @@ bool EffectBBalls::bBallsRoutine(CRGB *leds, EffectWorker *param)
   fadeToBlackBy(leds, NUM_LEDS, bluring ? 50 : 255);
   hue += (float)speed/ 1024;
   for (int i = 0 ; i < bballsNUM_BALLS ; i++) {
-    bballsTCycle =  millis() - bballsTLast[i] ;     // Calculate the time since the last time the ball was on the ground
+    bballsTCycle =  millis() - bball[i].TLast ;     // Calculate the time since the last time the ball was on the ground
 
     // A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
-    bballsHi = 0.55 * bballsGRAVITY * pow( (float)bballsTCycle / _speed , 2) + bballsVImpact[i] * (float)bballsTCycle / _speed;
+    bballsHi = 0.55 * bballsGRAVITY * pow( (float)bballsTCycle / _speed , 2) + bball[i].VImpact * (float)bballsTCycle / _speed;
 
     if ( bballsHi < 0 ) {
-      bballsTLast[i] = millis();
+      bball[i].TLast = millis();
       bballsHi = 0.0f;                            // If the ball crossed the threshold of the "ground," put it back on the ground
-      bballsVImpact[i] = bballsCOR[i] * bballsVImpact[i] ;   // and recalculate its new upward velocity as it's old velocity * COR
-
+      bball[i].VImpact = bball[i].COR * bball[i].VImpact;   // and recalculate its new upward velocity as it's old velocity * COR
 
       //if ( bballsVImpact[i] < 0.01 ) bballsVImpact[i] = bballsVImpact0;  // If the ball is barely moving, "pop" it back up at vImpact0
-      if ( bballsVImpact[i] < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
+      if ( bball[i].VImpact < 0.1 ) // сделал, чтобы мячики меняли свою прыгучесть и положение каждый цикл
       {
-        bballsCOR[i] = 0.90 - (EffectMath::randomf(0., 9.)) / pow(EffectMath::randomf(4., 9.), 2.); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
-        bballsShift[i] = bballsCOR[i] >= 0.85;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
-        bballsVImpact[i] = bballsVImpact0;
+        bball[i].COR = 0.90 - (EffectMath::randomf(0., 9.)) / pow(EffectMath::randomf(4., 9.), 2.); // сделал, чтобы мячики меняли свою прыгучесть каждый цикл
+        bball[i].Shift = bball[i].COR >= 0.85;                             // если мячик максимальной прыгучести, то разрешаем ему сдвинуться
+        bball[i].VImpact = bballsVImpact0;
       }
     }
-    bballsPos[i] = bballsHi * (float)EffectMath::getmaxHeightIndex() / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
-    if (bballsShift[i] > 0.0f && bballsPos[i] >= (float)EffectMath::getmaxHeightIndex() - .5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
-      bballsShift[i] = 0.0f;
-      if (bballsCOLOR[i] % 2 == 0) {                                       // чётные налево, нечётные направо
-        if (bballsX[i] < 0) bballsX[i] = (EffectMath::getmaxWidthIndex());
-        else bballsX[i] -= 1;
+    bball[i].Pos = bballsHi * (float)EffectMath::getmaxHeightIndex() / bballsH0;       // Map "h" to a "pos" integer index position on the LED strip
+    if (bball[i].Shift > 0.0f && bball[i].Pos >= (float)EffectMath::getmaxHeightIndex() - .5) {                  // если мячик получил право, то пускай сдвинется на максимальной высоте 1 раз
+      bball[i].Shift = 0.0f;
+      if (bball[i].COLOR % 2 == 0) {                                       // чётные налево, нечётные направо
+        if (bball[i].X < 0) bball[i].X = (EffectMath::getmaxWidthIndex());
+        else bball[i].X -= 1;
       } else {
-        if (bballsX[i] > EffectMath::getmaxWidthIndex()) bballsX[i] = 0;
-        else bballsX[i] += 1;
+        if (bball[i].X > EffectMath::getmaxWidthIndex()) bball[i].X = 0;
+        else bball[i].X += 1;
       }
     }
-
-
     if (halo){ // если ореол включен
-      EffectMath::drawCircleF(bballsX[i], bballsPos[i] + 2.75, 3., CHSV(bballsCOLOR[i] + (byte)hue, 225, bballsBri[i]));
+      EffectMath::drawCircleF(bball[i].X, bball[i].Pos + 2.75, 3., CHSV(bball[i].COLOR + (byte)hue, 225, bball[i].Bri));
     } else {
         // попытка создать объем с помощью яркости. Идея в том, что шарик на переднем фоне должен быть ярче, чем другой,
         // который движится в том же Х. И каждый следующий ярче предыдущего.
-      bballsBri[i] = (bballsX[i - 1] == bballsX[i] ? bballsBri[i-1] + 32 : 156);
-      EffectMath::drawPixelXYF_Y(bballsX[i], bballsPos[i], CHSV(bballsCOLOR[i] + (byte)hue, 255, bballsBri[i]), 5);
-
+      bball[i].Bri = (bball[i - 1].X == bball[i].X ? bball[i - 1].Bri+ 32 : 156);
+      EffectMath::drawPixelXYF_Y(bball[i].X, bball[i].Pos, CHSV(bball[i].COLOR + (byte)hue, 255, bball[i].Bri), 5);
     }
   }
   return true;
@@ -1121,19 +1076,28 @@ String EffectSinusoid3::setDynCtrl(UIControl*_val){
 
 bool EffectSinusoid3::run(CRGB *leds, EffectWorker *param) {
   float time_shift = millis()&0xFFFFF; // на больших значениях будет страннео поведение, поэтому уменьшаем точность, хоть и будет иногда срыв картинки, но в 18 минут, так что - хрен с ним
-
+struct {
+    float X;
+    float Y;
+  }sshft[3];
+  sshft[0].X = float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0;
+  sshft[0].Y = float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+  sshft[1].X = float(e_s3_size * (sin16(e_s3_speed * 134.3447 * time_shift))) / 32767.0;
+  sshft[1].Y = float(e_s3_size * (cos16(e_s3_speed * 170.3884 * time_shift))) / 32767.0;
+  sshft[2].X = float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
+  sshft[2].Y = float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
 switch (type) {
     case 0: //Sinusoid I
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
           CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X; // the 8 centers the middle on a 16x16
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 134.3447 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 170.3884 * time_shift))) / 32767.0;
+          cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.b = ~v;
           EffectMath::drawPixelXY(x, y, color);
@@ -1144,13 +1108,13 @@ switch (type) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
 		  CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X; // the 8 centers the middle on a 16x16
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (float(0.002 * time_shift * e_s3_speed) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
+          cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (((float)(0.003 * time_shift * e_s3_speed)) + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = (uint8_t(~v)>color.r)?~v:color.r;
 		  color.g = uint8_t(~v)/2;
@@ -1162,18 +1126,18 @@ switch (type) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
           CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X;
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
+         cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.g = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 134.3447 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 170.3884 * time_shift))) / 32767.0;
+          cx = (y - semiHeightMajor) + sshft[2].X;
+          cy = (x - semiWidthMajor) + sshft[2].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy)))) / 32767.0);
           color.b = ~v;
           EffectMath::drawPixelXY(x, y, color);
@@ -1184,13 +1148,13 @@ switch (type) {
       for (uint8_t y = 0; y < HEIGHT; y++) {
         for (uint8_t x = 0; x < WIDTH; x++) {
           CRGB color;
-          float cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 98.301 * time_shift))) / 32767.0; // the 8 centers the middle on a 16x16
-          float cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 72.0874 * time_shift))) / 32767.0;
+          float cx = (y - semiHeightMajor) + sshft[0].X;
+          float cy = (x - semiWidthMajor) + sshft[0].Y;
           int8_t v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy))) + (time_shift * e_s3_speed * 100)) / 32767.0);
           color.r = ~v;
           
-          cx = (y - semiHeightMajor) + float(e_s3_size * (sin16(e_s3_speed * 68.8107 * time_shift))) / 32767.0;
-          cy = (x - semiWidthMajor) + float(e_s3_size * (cos16(e_s3_speed * 65.534 * time_shift))) / 32767.0;
+         cx = (y - semiHeightMajor) + sshft[1].X;
+          cy = (x - semiWidthMajor) + sshft[1].Y;
           v = 127 * (1 + sin16(127 * _scale * EffectMath::sqrt((((float) cx * cx) + ((float) cy * cy))) + (time_shift * e_s3_speed * 100)) / 32767.0);
           color.g = ~v;
           
@@ -1995,7 +1959,7 @@ bool EffectRadar::run(CRGB *ledarr, EffectWorker *opt)
 
   if (subPix)
   {
-    fadeToBlackBy(leds, NUM_LEDS, 5 + (~(127+scale/2)) * (float)speed / 255);
+    fadeToBlackBy(leds, NUM_LEDS, 5 + (~(127+scale/2)));
     for (float offset = 0.0f; offset < (float)maxDim /2; offset +=0.25)
     {
       float x = (float)EffectMath::mapsincos8(false, eff_theta, offset * 4, maxDim * 4 - offset * 4) / 4.  - width_adj_f;
@@ -2329,10 +2293,10 @@ void EffectRingsLock::ringsSet(){
 
   for (uint8_t i = 0; i < ringNb; i++)
   {
-    if (!i) ringColor[i] = 0; //random(255U - WIDTH / 4U);
-    ringColor[i] = ringColor[i - 1] + 64; // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
-    shiftHueDir[i] = random8();
-    huePos[i] = random8(); 
+    if (!i) ring[i].Color = 0; //random(255U - WIDTH / 4U);
+    ring[i].Color = ring[i - 1].Color + 64; // начальный оттенок кольца из палитры 0-255 за минусом длины кольца, делённой пополам
+    ring[i].shiftHueDir = random8();
+    ring[i].huePos = random8(); 
     stepCount = 0U;
     currentRing = random(ringNb);
   }
@@ -2347,13 +2311,13 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
   {
     if (i != currentRing) // если это не активное кольцо
     {
-       h = shiftHueDir[i] & 0x0F; // сдвигаем оттенок внутри кольца
+       h = ring[i].shiftHueDir & 0x0F; // сдвигаем оттенок внутри кольца
        if (h > 8U)
          //ringColor[i] += (uint8_t)(7U - h); // с такой скоростью сдвиг оттенка от вращения кольца не отличается
-         ringColor[i]--;
+         ring[i].Color--;
        else
          //ringColor[i] += h;
-         ringColor[i]++;
+         ring[i].Color++;
     } else {
       if (stepCount == 0) { // если сдвиг активного кольца завершён, выбираем следующее
         currentRing = random(ringNb);
@@ -2364,17 +2328,17 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
         if (stepCount > 127U)
           {
             stepCount++;
-            huePos[i] = (huePos[i] + 1U) % WIDTH;
+            ring[i].huePos = (ring[i].huePos + 1U) % WIDTH;
           }
         else
           {
             stepCount--;
-            huePos[i] = (huePos[i] - 1U + WIDTH) % WIDTH;
+            ring[i].huePos = (ring[i].huePos - 1U + WIDTH) % WIDTH;
           }
       }
     }
     // отрисовываем кольца
-    h = (shiftHueDir[i] >> 4) & 0x0F; // берём шаг для градиента вутри кольца
+    h = (ring[i].shiftHueDir >> 4) & 0x0F; // берём шаг для градиента вутри кольца
     if (h > 8U)
       h = 7U - h;
     for (uint8_t j = 0U; j < ((i == 0U) ? downRingHue : ((i == ringNb - 1U) ? upRingHue : ringWidth)); j++) // от 0 до (толщина кольца - 1)
@@ -2382,15 +2346,15 @@ bool EffectRingsLock::ringsRoutine(CRGB *leds, EffectWorker *param)
       y = i * ringWidth + j - ((i == 0U) ? 0U : ringWidth - downRingHue);
       for (uint8_t k = 0; k < WIDTH / 2U - 1; k++) // полукольцо
         {
-          x = (huePos[i] + k) % WIDTH; // первая половина кольца
-          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i]/* + k * h*/));
-          x = (EffectMath::getmaxWidthIndex() + huePos[i] - k) % WIDTH; // вторая половина кольца (зеркальная первой)
-          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i] + k * h));
+          x = (ring[i].huePos + k) % WIDTH; // первая половина кольца
+          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ring[i].Color/* + k * h*/));
+          x = (EffectMath::getmaxWidthIndex() + ring[i].huePos - k) % WIDTH; // вторая половина кольца (зеркальная первой)
+          EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ring[i].Color + k * h));
         }
       if (WIDTH & 0x01) //(WIDTH % 2U > 0U) // если число пикселей по ширине матрицы нечётное, тогда не забываем и про среднее значение
       {
-        x = (huePos[i] + WIDTH / 2U) % WIDTH;
-        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ringColor[i] + WIDTH / 2U * h));
+        x = (ring[i].huePos + WIDTH / 2U) % WIDTH;
+        EffectMath::drawPixelXY(x, y, ColorFromPalette(*curPalette, ring[i].Color + WIDTH / 2U * h));
       }
     }
   }
@@ -2478,7 +2442,7 @@ void EffectCube2d::cubesize() {
         // не вижу другого способа перестать получать почти черные кубики, это раздражает, впечатление будто лампе глаз выбили, или зуб :))
       {
         color = scale > 0 ? ColorFromPalette(*curPalette, random(1024)>>1, random8(128, 255)) : CRGB(random8(), random8(), random8());
-        if (color >= CRGB(10,10,10)) break;  // Не хотелось бы получать слишком тёмные кубики
+        if (color.r + color.b + color.g >= 30) break; // Не хотелось бы получать слишком тёмные кубики
       }
       for (uint8_t k = 0U; k < sizeY; k++){
         for (uint8_t m = 0U; m < sizeX; m++){
@@ -4225,13 +4189,13 @@ void EffectButterfly::load()
 {
   for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
   {
-    butterflysPosX[i] = random8(WIDTH);
-    butterflysPosY[i] = random8(HEIGHT);
-    butterflysSpeedX[i] = 0;
-    butterflysSpeedY[i] = 0;
-    butterflysTurn[i] = 0;
-    butterflysColor[i] = (isColored) ? random8() : 0U;
-    butterflysBrightness[i] = 255U;
+    butterfly[i].PosX = random8(WIDTH);
+    butterfly[i].PosY = random8(HEIGHT);
+    butterfly[i].SpeedX = 0;
+    butterfly[i].SpeedY = 0;
+    butterfly[i].Turn = 0;
+    butterfly[i].Color = (isColored) ? random8() : 0U;
+    butterfly[i].Brightness = 255U;
   }
 }
 
@@ -4246,7 +4210,7 @@ String EffectButterfly::setDynCtrl(UIControl*_val) {
 
     for (uint8_t i = 0U; i < BUTTERFLY_MAX_COUNT; i++)
     {
-      butterflysColor[i] = (isColored) ? random8() : 0U;
+      butterfly[i].Color = (isColored) ? random8() : 0U;
     }
   }
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
@@ -4277,122 +4241,122 @@ bool EffectButterfly::run(CRGB *leds, EffectWorker *param)
     step = 0U;
   for (uint8_t i = 0U; i < deltaValue; i++)
   {
-    butterflysPosX[i] += butterflysSpeedX[i]*speedFactor;
-    butterflysPosY[i] += butterflysSpeedY[i]*speedFactor;
+    butterfly[i].PosX += butterfly[i].SpeedX * speedFactor;
+    butterfly[i].PosY += butterfly[i].SpeedY * speedFactor;
 
-    if (butterflysPosX[i] < 0)
-      butterflysPosX[i] = (float)EffectMath::getmaxWidthIndex() + butterflysPosX[i];
-    if (butterflysPosX[i] > EffectMath::getmaxWidthIndex())
-      butterflysPosX[i] = butterflysPosX[i] + 1 - WIDTH;
+    if (butterfly[i].PosX < 0)
+      butterfly[i].PosX = (float)EffectMath::getmaxWidthIndex() + butterfly[i].PosX;
+    if (butterfly[i].PosX > EffectMath::getmaxWidthIndex())
+     butterfly[i].PosX = butterfly[i].PosX + 1 - WIDTH;
 
-    if (butterflysPosY[i] < 0)
+    if (butterfly[i].PosY < 0)
     {
-      butterflysPosY[i] = -butterflysPosY[i];
-      butterflysSpeedY[i] = -butterflysSpeedY[i];
+      butterfly[i].PosY = -butterfly[i].PosY;
+      butterfly[i].SpeedY = -butterfly[i].SpeedY;
       //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
-    if (butterflysPosY[i] > EffectMath::getmaxHeightIndex())
+    if (butterfly[i].PosY > EffectMath::getmaxHeightIndex())
     {
-      butterflysPosY[i] = (HEIGHT << 1U) - 2U - butterflysPosY[i];
-      butterflysSpeedY[i] = -butterflysSpeedY[i];
+      butterfly[i].PosY = (HEIGHT << 1U) - 2U - butterfly[i].PosY;
+      butterfly[i].SpeedY = -butterfly[i].SpeedY;
       //butterflysSpeedX[i] = -butterflysSpeedX[i];
     }
 
     //проворот траектории
-    maxspeed = fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]); // максимальная суммарная скорость
-    if (maxspeed == fabs(butterflysSpeedX[i] + butterflysSpeedY[i]))
+    maxspeed = fabs(butterfly[i].SpeedX)+fabs(butterfly[i].SpeedY); // максимальная суммарная скорость
+    if (maxspeed == fabs(butterfly[i].SpeedX + butterfly[i].SpeedY))
       {
-          if (butterflysSpeedX[i] > 0) // правый верхний сектор вектора
+          if (butterfly[i].SpeedX > 0) // правый верхний сектор вектора
           {
-            butterflysSpeedX[i] += butterflysTurn[i];
-            if (butterflysSpeedX[i] > maxspeed) // если вектор переехал вниз
+            butterfly[i].SpeedX += butterfly[i].Turn;
+            if (butterfly[i].SpeedX > maxspeed) // если вектор переехал вниз
               {
-                butterflysSpeedX[i] = maxspeed + maxspeed - butterflysSpeedX[i];
-                butterflysSpeedY[i] = butterflysSpeedX[i] - maxspeed;
+                butterfly[i].SpeedX = maxspeed + maxspeed - butterfly[i].SpeedX;
+                butterfly[i].SpeedY  = butterfly[i].SpeedX - maxspeed;
               }
             else
-              butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
+              butterfly[i].SpeedY = maxspeed - fabs(butterfly[i].SpeedX);
           }
           else                           // левый нижний сектор
           {
-            butterflysSpeedX[i] -= butterflysTurn[i];
-            if (butterflysSpeedX[i] + maxspeed < 0) // если вектор переехал вверх
+            butterfly[i].SpeedX -= butterfly[i].Turn;
+            if (butterfly[i].SpeedX + maxspeed < 0) // если вектор переехал вверх
               {
-                butterflysSpeedX[i] = 0 - butterflysSpeedX[i] - maxspeed - maxspeed;
-                butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
+                butterfly[i].SpeedX = 0 - butterfly[i].SpeedX - maxspeed - maxspeed;
+                butterfly[i].SpeedY = maxspeed - fabs(butterfly[i].SpeedX);
               }
             else
-              butterflysSpeedY[i] = fabs(butterflysSpeedX[i]) - maxspeed;
+              butterfly[i].SpeedY = fabs(butterfly[i].SpeedX) - maxspeed;
           }
       }
     else //левый верхний и правый нижний секторы вектора
       {
-          if (butterflysSpeedX[i] > 0) // правый нижний сектор
+          if (butterfly[i].SpeedX > 0) // правый нижний сектор
           {
-            butterflysSpeedX[i] -= butterflysTurn[i];
-            if (butterflysSpeedX[i] > maxspeed) // если вектор переехал наверх
+            butterfly[i].SpeedX -= butterfly[i].Turn;
+            if (butterfly[i].SpeedX > maxspeed) // если вектор переехал наверх
               {
-                butterflysSpeedX[i] = maxspeed + maxspeed - butterflysSpeedX[i];
-                butterflysSpeedY[i] = maxspeed - butterflysSpeedX[i];
+                butterfly[i].SpeedX = maxspeed + maxspeed - butterfly[i].SpeedX;
+                butterfly[i].SpeedY = maxspeed - butterfly[i].SpeedX;
               }
             else
-              butterflysSpeedY[i] = fabs(butterflysSpeedX[i]) - maxspeed;
+              butterfly[i].SpeedY = fabs(butterfly[i].SpeedX) - maxspeed;
           }
           else                           // левый верхний сектор
           {
-            butterflysSpeedX[i] += butterflysTurn[i];
-            if (butterflysSpeedX[i] + maxspeed < 0) // если вектор переехал вниз
+            butterfly[i].SpeedX += butterfly[i].Turn;
+            if (butterfly[i].SpeedX + maxspeed < 0) // если вектор переехал вниз
               {
-                butterflysSpeedX[i] = 0 - butterflysSpeedX[i] - maxspeed - maxspeed;
-                butterflysSpeedY[i] = 0 - butterflysSpeedX[i] - maxspeed;
+                butterfly[i].SpeedX = 0 - butterfly[i].SpeedX - maxspeed - maxspeed;
+                butterfly[i].SpeedY = 0 - butterfly[i].SpeedX - maxspeed;
               }
             else
-              butterflysSpeedY[i] = maxspeed - fabs(butterflysSpeedX[i]);
+              butterfly[i].SpeedY = maxspeed - fabs(butterfly[i].SpeedX);
           }
       }
 
-    if (butterflysBrightness[i] == 255U)
+    if (butterfly[i].Brightness == 255U)
     {
       if (step == i && random8(2U) == 0U)//(step == 0U && ((pcnt + i) & 0x01))
       {
-        butterflysBrightness[i] = random8(220U,244U);
-        butterflysSpeedX[i] = (float)random8(101U) / 20.0f + 1.0f;
-        if (random8(2U) == 0U) butterflysSpeedX[i] = -butterflysSpeedX[i];
-        butterflysSpeedY[i] = (float)random8(101U) / 20.0f + 1.0f;
-        if (random8(2U) == 0U) butterflysSpeedY[i] = -butterflysSpeedY[i];
+        butterfly[i].Brightness = random8(220U,244U);
+        butterfly[i].SpeedX = (float)random8(101U) / 20.0f + 1.0f;
+        if (random8(2U) == 0U) butterfly[i].SpeedX = -butterfly[i].SpeedX;
+        butterfly[i].SpeedY = (float)random8(101U) / 20.0f + 1.0f;
+        if (random8(2U) == 0U) butterfly[i].SpeedY = -butterfly[i].SpeedY;
         // проворот траектории
         //butterflysTurn[i] = (float)random8((fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]))*2.0+2.0) / 40.0f;
-        butterflysTurn[i] = (float)random8((fabs(butterflysSpeedX[i])+fabs(butterflysSpeedY[i]))*20.0f+2.0f) / 200.0f;
-        if (random8(2U) == 0U) butterflysTurn[i] = -butterflysTurn[i];
+        butterfly[i].Turn = (float)random8((fabs(butterfly[i].SpeedX)+fabs(butterfly[i].SpeedY))*20.0f+2.0f) / 200.0f;
+        if (random8(2U) == 0U) butterfly[i].Turn = -butterfly[i].Turn;
       }
     }
     else
     {
       if (step == i)
-        butterflysBrightness[i]++;
-      tmp = 255U - butterflysBrightness[i];
-      if (tmp == 0U || ((uint16_t)(butterflysPosX[i] * tmp) % tmp == 0U && (uint16_t)(butterflysPosY[i] * tmp) % tmp == 0U))
+        butterfly[i].Brightness++;
+      tmp = 255U - butterfly[i].Brightness;
+      if (tmp == 0U || ((uint16_t)(butterfly[i].PosX * tmp) % tmp == 0U && (uint16_t)(butterfly[i].PosY * tmp) % tmp == 0U))
       {
-        butterflysPosX[i] = round(butterflysPosX[i]);
-        butterflysPosY[i] = round(butterflysPosY[i]);
-        butterflysSpeedX[i] = 0;
-        butterflysSpeedY[i] = 0;
-        butterflysTurn[i] = 0;
-        butterflysBrightness[i] = 255U;
+        butterfly[i].PosX = round(butterfly[i].PosX);
+        butterfly[i].PosY = round(butterfly[i].PosY);
+        butterfly[i].SpeedX = 0;
+        butterfly[i].SpeedY = 0;
+        butterfly[i].Turn = 0;
+        butterfly[i].Brightness = 255U;
       }
     }
 
     if (wings)
-      EffectMath::drawPixelXYF(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, (butterflysBrightness[i] == 255U) ? 255U : 128U + random8(2U) * 111U)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
+      EffectMath::drawPixelXYF(butterfly[i].PosX, butterfly[i].PosY, CHSV(butterfly[i].Color, 255U, (butterfly[i].Brightness == 255U) ? 255U : 128U + random8(2U) * 111U)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
     else
-      EffectMath::drawPixelXYF(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, butterflysBrightness[i])); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
+      EffectMath::drawPixelXYF(butterfly[i].PosX, butterfly[i].PosY, CHSV(butterfly[i].Color, 255U, butterfly[i].Brightness)); // это процедура рисования с нецелочисленными координатами. ищите её в прошивке
   }
 
   // постобработка кадра
   if (isColored){
     for (uint8_t i = 0U; i < deltaValue; i++) // ещё раз рисуем всех Мотыльков, которые "сидят на стекле"
-      if (butterflysBrightness[i] == 255U)
-        EffectMath::drawPixelXY(butterflysPosX[i], butterflysPosY[i], CHSV(butterflysColor[i], 255U, butterflysBrightness[i]));
+      if (butterfly[i].Brightness == 255U)
+        EffectMath::drawPixelXY(butterfly[i].PosX, butterfly[i].PosY, CHSV(butterfly[i].Color, 255U, butterfly[i].Brightness));
   }
   else {
     //теперь инверсия всей матрицы
@@ -5121,11 +5085,11 @@ void EffectSnake::Snake::draw(CRGB colors[SNAKE_LENGTH], int snakenb, bool subpi
 // Переписано kostyamat
 void EffectNexus::reload() {
   for (byte i = 0; i < NEXUS; i++) {
-    dotDirect[i] = random(0, 4);                     // задаем направление
-    dotPosX[i] = random(0, WIDTH);                   // Разбрасываем частицы по ширине
-    dotPosY[i] = random(0, HEIGHT);                  // и по высоте
-    dotColor[i] = ColorFromPalette(*curPalette, random8(0, 9) * 31, 255); // цвет капли
-    dotAccel[i] = (float)random(5, 11) / 70;        // делаем частицам немного разное ускорение 
+    dot[i].Direct = random(0, 4);                     // задаем направление
+    dot[i].PosX = random(0, WIDTH);                   // Разбрасываем частицы по ширине
+    dot[i].PosY = random(0, HEIGHT);                  // и по высоте
+    dot[i].Color = ColorFromPalette(*curPalette, random8(0, 9) * 31, 255); // цвет капли
+    dot[i].Accel = (float)random(5, 11) / 70;        // делаем частицам немного разное ускорение 
   }
 }
 // !++
@@ -5146,54 +5110,54 @@ bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 11, 33));
 
   for (byte i = 0; i < map(_scale, 1, 10, 4, NEXUS); i++) {
-    switch (dotDirect[i])
+    switch (dot[i].Direct)
     {
     case 0:   // вверх
-      dotPosY[i] += (speedFactor + dotAccel[i]);
+      dot[i].PosY += (speedFactor + dot[i].Accel);
       break;
     case 1:   //  вниз 
-      dotPosY[i] -= (speedFactor + dotAccel[i]);
+      dot[i].PosY -= (speedFactor + dot[i].Accel);
       break;
     case 2:   // вправо
-      dotPosX[i] += (speedFactor + dotAccel[i]);
+      dot[i].PosX += (speedFactor + dot[i].Accel);
       break;
     case 3:   // влево
-      dotPosX[i] -= (speedFactor + dotAccel[i]);
+      dot[i].PosX -= (speedFactor + dot[i].Accel);
       break;
     default:
       break;
     } 
 
     // Обеспечиваем бесшовность по Y. И переносим каплю в начало трека
-    if (dotPosY[i] < 0) {
-      dotPosY[i] = (float)EffectMath::getmaxHeightIndex();    
+    if (dot[i].PosY < 0) {
+      dot[i].PosY = (float)EffectMath::getmaxHeightIndex();    
       resetDot(i);
     }
 
-    if (dotPosY[i] > (EffectMath::getmaxHeightIndex())) {
-      dotPosY[i] = 0;
+    if (dot[i].PosY > (EffectMath::getmaxHeightIndex())) {
+      dot[i].PosY = 0;
       resetDot(i);
     }
 
     // Обеспечиваем бесшовность по X.
-    if (dotPosX[i] < 0) {
-      dotPosX[i] = EffectMath::getmaxWidthIndex();
+    if (dot[i].PosX < 0) {
+      dot[i].PosX = EffectMath::getmaxWidthIndex();
       resetDot(i);
     }
-    if (dotPosX[i] > EffectMath::getmaxWidthIndex()) {
-      dotPosX[i] = 0;
+    if (dot[i].PosX > EffectMath::getmaxWidthIndex()) {
+      dot[i].PosX = 0;
       resetDot(i);
     }
 
-   switch (dotDirect[i])
+   switch (dot[i].Direct)
   {
   case 0:   // вверх
   case 1:   //  вниз 
-    EffectMath::drawPixelXYF_Y(dotPosX[i], dotPosY[i], dotColor[i], 0);
+    EffectMath::drawPixelXYF_Y(dot[i].PosX, dot[i].PosY, dot[i].Color, 0);
     break;
   case 2:   // вправо
   case 3:   // влево
-    EffectMath::drawPixelXYF_X(dotPosX[i], dotPosY[i], dotColor[i], 0);
+    EffectMath::drawPixelXYF_X(dot[i].PosX, dot[i].PosY, dot[i].Color, 0);
     break;
   default:
     break;
@@ -5206,26 +5170,26 @@ bool EffectNexus::run(CRGB *leds, EffectWorker *opt) {
 
 void EffectNexus::resetDot(uint8_t idx) {
   randomSeed(micros());
-  dotDirect[idx] = random8(0, 4);                     // задаем направление
-  dotColor[idx] = ColorFromPalette(*curPalette, random(0, 9) * 31, 255);              // цвет 
-  dotAccel[idx] = (float)random(5, 10) / 70;     // делаем частицам немного разное ускорение 
-  switch (dotDirect[idx])
+  dot[idx].Direct = random8(0, 4);                     // задаем направление
+  dot[idx].Color = ColorFromPalette(*curPalette, random(0, 9) * 31, 255);              // цвет 
+  dot[idx].Accel = (float)random(5, 10) / 70;     // делаем частицам немного разное ускорение 
+  switch (dot[idx].Direct)
   {
   case 0:   // вверх
-    dotPosX[idx] = random8(0, WIDTH); // Разбрасываем капли по ширине
-    dotPosY[idx] = 0;  // и по высоте
+    dot[idx].PosX = random8(0, WIDTH); // Разбрасываем капли по ширине
+    dot[idx].PosY = 0;  // и по высоте
     break;
   case 1:   //  вниз 
-    dotPosX[idx] = random8(0, WIDTH); // Разбрасываем капли по ширине
-    dotPosY[idx] = EffectMath::getmaxHeightIndex();  // и по высоте
+    dot[idx].PosX = random8(0, WIDTH); // Разбрасываем капли по ширине
+    dot[idx].PosY = EffectMath::getmaxHeightIndex();  // и по высоте
     break;
   case 2:   // вправо
-    dotPosX[idx] = 0; // Разбрасываем капли по ширине
-    dotPosY[idx] = random8(0, HEIGHT);  // и по высоте
+    dot[idx].PosX = 0; // Разбрасываем капли по ширине
+    dot[idx].PosY = random8(0, HEIGHT);  // и по высоте
     break;
   case 3:   // влево
-    dotPosX[idx] = EffectMath::getmaxWidthIndex(); // Разбрасываем капли по ширине
-    dotPosY[idx] = random8(0, HEIGHT);  // и по высоте
+    dot[idx].PosX = EffectMath::getmaxWidthIndex(); // Разбрасываем капли по ширине
+    dot[idx].PosY = random8(0, HEIGHT);  // и по высоте
     break;
   default:
     break;
@@ -5247,14 +5211,14 @@ void EffectTest::regen() {
 
   for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
-    snakeLast[i] = 0;
-    snakePosX[i] = random8(WIDTH / 2 - WIDTH / 4, WIDTH/2 + WIDTH / 4);
-    snakePosY[i] = random8(HEIGHT / 2 - HEIGHT / 4, HEIGHT / 2 + HEIGHT / 4);
-    snakeSpeedX[i] = EffectMath::randomf(0.2, 1.5);//(255. + random8()) / 255.;
-    snakeSpeedY[i] = EffectMath::randomf(0.2, 1.5);
-    //snakeTurn[i] = 0;
-    snakeColor[i] = random8(map(SnakeNum, 1, 10, 2, MAX_SNAKES) * 255/map(SnakeNum, 1, 10, 2, MAX_SNAKES));
-    snakeDirect[i] = random8(4); //     B00           направление головы змейки
+    snake[i].Last = 0;
+    snake[i].PosX = random8(WIDTH / 2 - WIDTH / 4, WIDTH/2 + WIDTH / 4);
+    snake[i].PosY = random8(HEIGHT / 2 - HEIGHT / 4, HEIGHT / 2 + HEIGHT / 4);
+    snake[i].SpeedX = EffectMath::randomf(0.2, 1.5);//(255. + random8()) / 255.;
+    snake[i].SpeedY = EffectMath::randomf(0.2, 1.5);
+    //snakeTurn = 0;
+    snake[i].Color = random8(map(SnakeNum, 1, 10, 2, MAX_SNAKES) * 255/map(SnakeNum, 1, 10, 2, MAX_SNAKES));
+    snake[i].Direct = random8(4); //     B00           направление головы змейки
                                  // B10     B11
                                  //     B01
   }
@@ -5265,114 +5229,114 @@ bool EffectTest::run(CRGB *leds, EffectWorker *param) {
   int8_t dx = 0, dy = 0;
   for (uint8_t i = 0; i < map(SnakeNum, 1, 10, 2, MAX_SNAKES); i++)
   {
-    snakeSpeedY[i] += snakeSpeedX[i] * speedFactor;
-    if (snakeSpeedY[i] >= 1)
+    snake[i].SpeedY += snake[i].SpeedX * speedFactor;
+    if (snake[i].SpeedY >= 1)
     {
-      snakeSpeedY[i] = snakeSpeedY[i] - (int)snakeSpeedY[i];
+      snake[i].SpeedY = snake[i].SpeedY - (int)snake[i].SpeedY;
       if (random8(8) <= 1U)
         if (random8(2U))
         {                                           // <- поворот налево
-          snakeLast[i] = (snakeLast[i] << 2) | B01; // младший бит = поворот
-          switch (snakeDirect[i])
+          snake[i].Last = (snake[i].Last << 2) | B01; // младший бит = поворот
+          switch (snake[i].Direct)
           {
           case B10:
-            snakeDirect[i] = B01;
-            if (snakePosY[i] == 0U)
-              snakePosY[i] = EffectMath::getmaxHeightIndex();
+            snake[i].Direct = B01;
+            if (snake[i].PosY == 0U)
+              snake[i].PosY = EffectMath::getmaxHeightIndex();
             else
-              snakePosY[i]--;
+              snake[i].PosY--;
             break;
           case B11:
-            snakeDirect[i] = B00;
-            if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
-              snakePosY[i] = 0U;
+            snake[i].Direct = B00;
+            if (snake[i].PosY >= EffectMath::getmaxHeightIndex())
+              snake[i].PosY = 0U;
             else
-              snakePosY[i]++;
+              snake[i].PosY++;
             break;
           case B00:
-            snakeDirect[i] = B10;
-            if (snakePosX[i] == 0U)
-              snakePosX[i] = EffectMath::getmaxWidthIndex();
+            snake[i].Direct = B10;
+            if (snake[i].PosX == 0U)
+              snake[i].PosX = EffectMath::getmaxWidthIndex();
             else
-              snakePosX[i]--;
+              snake[i].PosX--;
             break;
           case B01:
-            snakeDirect[i] = B11;
-            if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
-              snakePosX[i] = 0U;
+            snake[i].Direct = B11;
+            if (snake[i].PosX >= EffectMath::getmaxWidthIndex())
+              snake[i].PosX = 0U;
             else
-              snakePosX[i]++;
+              snake[i].PosX++;
             break;
           }
         }
         else
         {                                           // -> поворот направо
-          snakeLast[i] = (snakeLast[i] << 2) | B11; // младший бит = поворот, старший = направо
-          switch (snakeDirect[i])
+          snake[i].Last = (snake[i].Last << 2) | B11; // младший бит = поворот, старший = направо
+          switch (snake[i].Direct)
           {
           case B11:
-            snakeDirect[i] = B01;
-            if (snakePosY[i] == 0U)
-              snakePosY[i] = EffectMath::getmaxHeightIndex();
+            snake[i].Direct = B01;
+            if (snake[i].PosY == 0U)
+              snake[i].PosY = EffectMath::getmaxHeightIndex();
             else
-              snakePosY[i]--;
+              snake[i].PosY--;
             break;
           case B10:
-            snakeDirect[i] = B00;
-            if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
-              snakePosY[i] = 0U;
+            snake[i].Direct = B00;
+            if (snake[i].PosY >= EffectMath::getmaxHeightIndex())
+              snake[i].PosY = 0U;
             else
-              snakePosY[i]++;
+              snake[i].PosY++;
             break;
           case B01:
-            snakeDirect[i] = B10;
-            if (snakePosX[i] == 0U)
-              snakePosX[i] = EffectMath::getmaxWidthIndex();
+            snake[i].Direct = B10;
+            if (snake[i].PosX == 0U)
+              snake[i].PosX = EffectMath::getmaxWidthIndex();
             else
-              snakePosX[i]--;
+              snake[i].PosX--;
             break;
           case B00:
-            snakeDirect[i] = B11;
-            if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
-              snakePosX[i] = 0U;
+            snake[i].Direct = B11;
+            if (snake[i].PosX >= EffectMath::getmaxWidthIndex())
+              snake[i].PosX = 0U;
             else
-              snakePosX[i]++;
+              snake[i].PosX++;
             break;
           }
         }
       else
       { // двигаем без поворота
-        snakeLast[i] = (snakeLast[i] << 2);
-        switch (snakeDirect[i])
+        snake[i].Last = (snake[i].Last << 2);
+        switch (snake[i].Direct)
         {
         case B01:
-          if (snakePosY[i] == 0U)
-            snakePosY[i] = EffectMath::getmaxHeightIndex();
+          if (snake[i].PosY == 0U)
+            snake[i].PosY = EffectMath::getmaxHeightIndex();
           else
-            snakePosY[i]--;
+            snake[i].PosY--;
           break;
         case B00:
-          if (snakePosY[i] >= EffectMath::getmaxHeightIndex())
-            snakePosY[i] = 0U;
+          if (snake[i].PosY >= EffectMath::getmaxHeightIndex())
+            snake[i].PosY = 0U;
           else
-            snakePosY[i]++;
+            snake[i].PosY++;
           break;
         case B10:
-          if (snakePosX[i] == 0U)
-            snakePosX[i] = EffectMath::getmaxWidthIndex();
+          if (snake[i].PosX == 0U)
+            snake[i].PosX = EffectMath::getmaxWidthIndex();
           else
-            snakePosX[i]--;
+            snake[i].PosX--;
           break;
         case B11:
-          if (snakePosX[i] >= EffectMath::getmaxWidthIndex())
-            snakePosX[i] = 0U;
+          if (snake[i].PosX >= EffectMath::getmaxWidthIndex())
+            snake[i].PosX = 0U;
           else
-            snakePosX[i]++;
+            snake[i].PosX++;
           break;
         }
       }
     }
-    switch (snakeDirect[i])
+    switch (snake[i].Direct)
     {
     case B01:
       dy = 1;
@@ -5392,15 +5356,15 @@ bool EffectTest::run(CRGB *leds, EffectWorker *param) {
       break;
     }
 
-    long temp = snakeLast[i];
-    uint8_t x = snakePosX[i];
-    uint8_t y = snakePosY[i];
-    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i], snakeSpeedY[i] * 255));
+    long temp = snake[i].Last;
+    uint8_t x = snake[i].PosX;
+    uint8_t y = snake[i].PosY;
+    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snake[i].Color, snake[i].SpeedY * 255));
     for (uint8_t m = 0; m < SNAKE_LENGTH; m++)
     { // 16 бит распаковываем, 14 ещё остаётся без дела в запасе, 2 на хвостик
       x = (WIDTH + x + dx) % WIDTH;
       y = (HEIGHT + y + dy) % HEIGHT;  
-      EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i] + m * 4U, 255U));
+      EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snake[i].Color + m * 4U, 255U));
 
       if (temp & B01)
       { // младший бит = поворот, старший = направо
@@ -5440,7 +5404,7 @@ bool EffectTest::run(CRGB *leds, EffectWorker *param) {
     }
     x = (WIDTH + x + dx) % WIDTH;
     y = (HEIGHT + y + dy) % HEIGHT;
-    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snakeColor[i] + SNAKE_LENGTH * 4U, (1 - snakeSpeedY[i]) * 255)); // хвостик
+    EffectMath::drawPixelXYF(x, y, ColorFromPalette(*curPalette, snake[i].Color + SNAKE_LENGTH * 4U, (1 - snake[i].SpeedY) * 255)); // хвостик
   }
 
   return true;
@@ -5571,28 +5535,28 @@ void EffectSmokeballs::load(){
 
 void EffectSmokeballs::regen() {
   randomSeed(millis());
-  for (byte j = 0; j < WAVES_AMOUNT; j++) {
-    reg[j] =  random((WIDTH * 10) - ((WIDTH / 3) * 20)); // сумма maxMin + reg не должна выскакивать за макс.Х
-    sSpeed[j] = EffectMath::randomf(5., (float)(16 * WIDTH)); //random(50, 16 * WIDTH) / random(1, 10);
-    maxMin[j] = random((WIDTH / 2) * 10, (WIDTH / 3) * 20);
-    waveColors[j] = random(0, 9) * 28;
-    pos[j] = reg[j];
+  for (byte j = 0; j < WIDTH; j++) {
+    wave[j].Reg =  random((WIDTH * 10) - ((WIDTH / 3) * 20)); // сумма maxMin + reg не должна выскакивать за макс.Х
+    wave[j].Speed = EffectMath::randomf(5., (float)(16 * WIDTH)); //random(50, 16 * WIDTH) / random(1, 10);
+    wave[j].maxMin = random((WIDTH / 2) * 10, (WIDTH / 3) * 20);
+    wave[j].Color = random(0, 9) * 28;
+    wave[j].Pos = wave[j].Reg;
   }
 }
 
 bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
-  uint8_t _amount = map(_scale, 1, 16, 2, WAVES_AMOUNT);
+  uint8_t _amount = map(_scale, 1, 16, 2, WIDTH);
   shiftUp();
   EffectMath::dimAll(240);
   EffectMath::blur2d(20);
   for (byte j = 0; j < _amount; j++) {
-    pos[j] = beatsin16((uint8_t)(sSpeed[j] * (speedFactor * 5.)), reg[j], maxMin[j] + reg[j], waveColors[j]*256, waveColors[j]*8);
-      EffectMath::drawPixelXYF((float)pos[j] / 10., 0.05, ColorFromPalette(*curPalette, waveColors[j]));
+    wave[j].Pos = beatsin16((uint8_t)(wave[j].Speed * (speedFactor * 5.)), wave[j].Reg, wave[j].maxMin + wave[j].Reg, wave[j].Color * 256, wave[j].Color * 8);
+      EffectMath::drawPixelXYF((float)wave[j].Pos / 10., 0.05, ColorFromPalette(*curPalette, wave[j].Color));
   }
   EVERY_N_SECONDS(20){
     for (byte j = 0; j < _amount; j++) {
-      reg[j] += random(-20,20);
-      waveColors[j] += 28;
+      wave[j].Reg += random(-20,20);
+      wave[j].Color += 28;
     }
   }
 
@@ -6172,14 +6136,13 @@ void EffectOscilator::setCellColors(uint8_t x, uint8_t y) {
   oscillatingWorld[x][y].blue = (oscillatingWorld[x][y].color == 2U);
 }
 
-//------------ Эффект "Шторм" 
-// (с) kostyamat 1.12.2020
-// !++
+//===== Ефект Шторм ============================// 
+// (с)kostyamat 1.12.2020
 String EffectWrain::setDynCtrl(UIControl*_val)
 {
   if(_val->getId()==1) {
     speed = EffectCalc::setDynCtrl(_val).toInt();
-    speedFactor = EffectMath::fmap(speed, 1, 255, 0.125, .75) * EffectCalc::speedfactor;
+    speedFactor = EffectMath::fmap(speed, 1, 255, 0.125, 1.0) * EffectCalc::speedfactor;
   }
   else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) { uint8_t val = EffectCalc::setDynCtrl(_val).toInt(); white = (val == FASTLED_PALETTS_COUNT); randColor = (val == 0); }
@@ -6196,7 +6159,7 @@ void EffectWrain::reload() {
     drops[i].posX = EffectMath::randomf(0, WIDTH); // Разбрасываем капли по ширине
     drops[i].posY = EffectMath::randomf(0, HEIGHT);  // и по высоте
     drops[i].color = random(0, 9) * 31;              // цвет капли
-    drops[i].accell = (float)random(5, 10) / 100;     // делаем частицам немного разное ускорение 
+    drops[i].accell = (float)random(5, 10) / 100.0;     // делаем частицам немного разное ускорение 
     drops[i].bri = random(170, 255);
   }
 }
@@ -6245,7 +6208,7 @@ bool EffectWrain::run(CRGB *leds, EffectWorker *opt) {
     // Обеспечиваем бесшовность по Y.
     if (drops[i].posY < 0)
     {                                                             // достигли низа, обновляем каплю
-      drops[i].posY = ((float)HEIGHT - (clouds ? cloudHeight : 1.)); // переносим каплю в начало трека
+      drops[i].posY = ((float)HEIGHT - (clouds ? (float)cloudHeight / 4.0 : 1.)); // переносим каплю в начало трека
       drops[i].posX += EffectMath::randomf(-1, 1);                   // сдвигаем каплю туда-сюда по горизонтали
       drops[i].bri = random(170, 200);                               // задаем капле новое значение яркости
     }
@@ -6343,29 +6306,20 @@ bool EffectWrain::Lightning(uint16_t chanse)
 
 // Функция рисует тучу в верхней части матрицы 
 void EffectWrain::Clouds(bool flash)
-{
-  uint8_t dataSmoothing = 50; //196
-  uint16_t noiseX = beatsin16(1, 10, 4000, 0, 150);
-  uint16_t noiseY = beatsin16(1, 1000, 10000, 0, 50);
+{ 
+  uint8_t noiseScaleX = map(WIDTH, 8, 255, 40, 1);
+  uint8_t noiseScaleY = map(HEIGHT, 8, 255, 100, 3);
   uint16_t noiseZ = beatsin16(1, 10, 4000, 0, 100);
-  uint16_t noiseScale = 50; // A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-
   // This is the array that we keep our computed noise values in
   for (uint8_t x = 0; x < WIDTH; x++)
   {
-    int xoffset = noiseScale * x;
-
-    for (uint8_t z = 0; z < cloudHeight; z++) {
-      int yoffset = noiseScale * z ;
-      uint8_t noiseData = qsub8(inoise8(noiseX + xoffset, noiseY + yoffset, noiseZ), 16);
-      noiseData = qadd8(noiseData, scale8(noiseData, 39));
-      _noise[x * cloudHeight + z] = scale8(_noise[x * cloudHeight + z], dataSmoothing) + scale8(noiseData, 256 - dataSmoothing);
-      if (flash)
-        EffectMath::drawPixelXY(x, HEIGHT - z - 1, CHSV(random8(20,30), 250, random8(64, 100)));
-      else 
-        nblend(EffectMath::getPixel(x, EffectMath::getmaxHeightIndex() - z), ColorFromPalette(*curPalette, _noise[x * cloudHeight + z], _noise[x * cloudHeight + z]), (500 / cloudHeight));
+    uint16_t xoffset = noiseScaleX * x;
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      uint16_t yoffset = noiseScaleY * y ;
+      int16_t noise = (inoise8(xoffset + noiseZ, yoffset + noiseZ) * 3) / 2 - y * (382 / HEIGHT);
+      CRGB col = (noise < 96)? CRGB(0,0,0) : ColorFromPalette((clouds == 1)? WaterfallColors_p : *curPalette, noise, noise).nscale8(noise);
+      EffectMath::getPixel(x, HEIGHT - 1 - y) += CRGB(col.r * noise / 255, col.g * noise / 255, col.b * noise / 255);
     }
-    noiseZ++;
   }
   if (millis() - timer < 500) {
     for (uint8_t i = 0; i < WIDTH; i++)
@@ -7191,9 +7145,9 @@ void EffectRacer::drawStarF(float x, float y, float biggy, float little, int16_t
   }
 }
 
-// ----------------- Эффект "Магма"
-// (c) Сотнег (SottNick) 2021
-// адаптация и доводка до ума - kostyamat
+//===== Ефект Магма ============================//
+// (c)SottNick 2021
+// адаптація і доведення до розуму kostyamat
 void EffectMagma::palettesload(){
   // собираем свой набор палитр для эффекта
   palettes.reserve(NUMPALETTES);
@@ -8013,7 +7967,7 @@ bool EffectPile::run(CRGB *leds, EffectWorker *param) {
   shift += speed;
   if (shift >= 255) {
     changeFrame();
-    shift = 0;
+    shift%=256;
   }
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT; y++) {
@@ -8261,7 +8215,7 @@ void EffectRadialFire::palettesload(){
   palettes.push_back(&LithiumFireColors_p);
   palettes.push_back(&NormalFire2_p);
   palettes.push_back(&WoodFireColors_p);
-  palettes.push_back(&NormalFire3_p);
+  palettes.push_back(&HeatColors_p);
   palettes.push_back(&CopperFireColors_p);
   palettes.push_back(&HeatColors_p);
   palettes.push_back(&PotassiumFireColors_p);
@@ -8428,21 +8382,43 @@ void EffectFlower::MoveFractionalNoiseY(int8_t amplitude, float shift) {
 //===== Ефект Калейдоскоп ======================//
 //https://editor.soulmatelights.com/gallery/1569-radialnuclearnoise
 // (c)Stepko and Sutaburosu
-void EffectRadialNoise::load() {
-  for (int8_t x = -C_X; x < C_X + (int8_t)(WIDTH % 2); x++) {
-      for (int8_t y = -C_Y; y < C_Y + (int8_t)(HEIGHT % 2); y++) {
-        rMap[x + C_X][y + C_Y].angle = 128 * (atan2(y, x) / PI);
-        rMap[x + C_X][y + C_Y].radius = hypot(x, y) * (255 / maxDim); //thanks Sutaburosu
+String EffectRadialNoise::setDynCtrl(UIControl*_val){
+  if(_val->getId()==3) {
+    legs = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==4) {
+    eff = EffectCalc::setDynCtrl(_val).toInt();
+  } else if(_val->getId()==5) {
+    pos_var = EffectCalc::setDynCtrl(_val).toInt(); reloadMap(pos_var);}
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+void EffectRadialNoise::reloadMap(uint8_t var) {
+  float XS, YS, radius;
+  switch(var){
+    case 1: XS = C_X; YS = 0; radius = hypot(WIDTH, HEIGHT); break;
+    case 2: XS = EffectMath::getmaxWidthIndex(); YS = 0; radius = hypot(WIDTH, HEIGHT) * 2; break;
+    case 3: XS = 0; YS = C_Y; radius = hypot(WIDTH, HEIGHT); break;
+    case 4: XS = C_X; YS = C_Y; radius = maxDim; break;
+    case 5: XS = EffectMath::getmaxWidthIndex(); YS = C_Y; radius = hypot(WIDTH, HEIGHT); break;
+    case 6: XS = 0; YS = EffectMath::getmaxHeightIndex(); radius = hypot(WIDTH, HEIGHT) * 2; break;
+    case 7: XS = C_X; YS = EffectMath::getmaxHeightIndex(); radius = hypot(WIDTH, HEIGHT); break;
+    case 8: XS = EffectMath::getmaxWidthIndex(); YS = EffectMath::getmaxHeightIndex(); radius = hypot(WIDTH, HEIGHT) * 2; break;
+    default: XS = 0; YS = 0; radius = hypot(WIDTH, HEIGHT) * 2; break;
+  }
+  for (uint8_t x = 0; x < WIDTH; x++) {
+      for (uint8_t y = 0; y < HEIGHT; y++) {
+        rMap[x][y].angle = 128 * (atan2(y - YS, x - XS) / PI);
+        rMap[x][y].radius = hypot(x - XS, y - YS) * (255 / radius); //thanks Sutaburosu
       }
     }
 }
-bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
-  static float t;
-  t += EffectMath::fmap(speed,0,255,2,20);
+
+void EffectRadialNoise::RNoise(float t){
   uint16_t t1 = t / 2;
   for (uint8_t x = 0; x < WIDTH; x++) {
     for (uint8_t y = 0; y < HEIGHT; y++) {
-      byte angle = sin8(t1 / 2 + rMap[x][y].angle * 3);
+      byte angle = sin8(t1 / 2 + rMap[x][y].angle * legs);
       byte radius = rMap[x][y].radius * 2 - t;
       byte noise[3] = { inoise8(angle, radius, t1), inoise8(angle, 12032 + t1, radius), inoise8(radius, 120021 + t1, angle) };
       for(uint8_t i = 0; i < 3; i++){
@@ -8450,6 +8426,63 @@ bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
       }
       EffectMath::drawPixelXY(x, y,CRGB(noise[0], noise[1], noise[2]));
     }
+  }
+}
+
+void EffectRadialNoise::ROctopus(float t){
+  uint16_t t1 = t / 5;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y,CHSV(t1 / 2 - radius, 255, sin8(sin8((angle * 4 - radius) / 4 + t1) + radius - t1 * 2 + angle * legs)));
+    }
+  }
+}
+
+void EffectRadialNoise::RWave(float t){
+  uint16_t t1 = t / 10;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y,CHSV(t1 + radius, 255, sin8(t1 * 4 + sin8(t1 * 4 - radius) + angle * legs)));
+    }
+  }
+}
+
+void EffectRadialNoise::RFlower(float t){
+  uint16_t t1 = t / 10;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y, CHSV(t1 + radius, 255, sin8(sin8(t1 + angle * legs + radius) + t1 * 4 + sin8(t1 * 4 - radius) + angle * legs)));
+    }
+  }
+}
+
+void EffectRadialNoise::RLotus(float t){
+  uint16_t t1 = t / 10;
+  for (uint8_t x = 0; x < WIDTH; x++) {
+    for (uint8_t y = 0; y < HEIGHT; y++) {
+      byte angle = rMap[x][y].angle;
+      byte radius = rMap[x][y].radius;
+      EffectMath::drawPixelXY(x, y, CHSV(248,181,sin8(t1 - radius+sin8(t1 + angle * legs)/5)));
+    }
+  }
+}
+
+bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
+  static float t;
+  t += EffectMath::fmap(speed,0,255,2,20);
+  switch (eff)
+  {
+    case 1: RWave(t);    break;
+    case 2: ROctopus(t); break;
+    case 3: RLotus(t);   break;
+    case 4: RFlower(t);  break;
+    default: RNoise(t);  break;
   }
   return true;
 }
