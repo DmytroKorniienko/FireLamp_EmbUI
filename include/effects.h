@@ -42,7 +42,6 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #include "effectworker.h"
 #include "effectmath.h"
 
-
 const uint8_t maxDim = (WIDTH > HEIGHT)? WIDTH : HEIGHT;
 const uint8_t minDim = (WIDTH < HEIGHT)? WIDTH : HEIGHT;
 const uint8_t width_adj = (WIDTH < HEIGHT ? (HEIGHT - WIDTH) /2 : 0);
@@ -122,16 +121,19 @@ class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
     uint8_t bballsNUM_BALLS;                            // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-    byte bballsCOLOR[bballsMaxNUM_BALLS] ;              // прикручено при адаптации для разноцветных мячиков
-    byte bballsBri[bballsMaxNUM_BALLS];                 // --- // ---
-    int8_t bballsX[bballsMaxNUM_BALLS] ;                // прикручено при адаптации для распределения мячиков по радиусу лампы
-    float bballsPos[bballsMaxNUM_BALLS] ;               // The integer position of the dot on the strip (LED index)
+    
     float bballsHi = 0.0;                               // An array of heights
-    float bballsVImpact[bballsMaxNUM_BALLS] ;           // As time goes on the impact velocity will change, so make an array to store those values
     uint32_t bballsTCycle = 0;                        // The time since the last time the ball struck the ground
-    float bballsCOR[bballsMaxNUM_BALLS] ;               // Coefficient of Restitution (bounce damping)
-    long  bballsTLast[bballsMaxNUM_BALLS] ;             // The clock time of the last ground strike
-    float bballsShift[bballsMaxNUM_BALLS];
+    struct{
+        byte COLOR;              // прикручено при адаптации для разноцветных мячиков
+        byte Bri;                 // --- // ---
+        int8_t X;                // прикручено при адаптации для распределения мячиков по радиусу лампы
+        float Pos;               // The integer position of the dot on the strip (LED index)
+        float VImpact;           // As time goes on the impact velocity will change, so make an array to store those values
+        float COR;               // Coefficient of Restitution (bounce damping)
+        long TLast;             // The clock time of the last ground strike
+        float Shift;
+    } bball[bballsMaxNUM_BALLS];
     float hue;
     bool halo = false;                                  // ореол
     bool bluring = false;
@@ -191,24 +193,6 @@ private:
 public:
     void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-};
-
-//===== Ефект Світлячки зі шлейфом =============//
-#define _AMOUNT 16U
-class EffectLighterTracers : public EffectCalc {
-private:
-    uint8_t cnt = 1;
-    float vector[_AMOUNT][2U];
-    float coord[_AMOUNT][2U];
-    uint8_t ballColors[_AMOUNT];
-    byte light[_AMOUNT];
-    float speedFactor;
-    bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
-
-public:
-    void load() override;
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
-    String setDynCtrl(UIControl*_val) override;
 };
 
 //===== Ефект Веселка ==========================//
@@ -302,18 +286,28 @@ public:
 class EffectLighters : public EffectCalc {
 protected:
     uint8_t cnt = 1;
-    bool subPix = false;
     uint16_t lightersIdx;
-    float lightersSpeed[2U][LIGHTERS_AM];
-    uint8_t lightersColor[LIGHTERS_AM];
-    float lightersPos[2U][LIGHTERS_AM];
-    byte light[LIGHTERS_AM];
+    struct{
+    float SpeedX, SpeedY;
+    uint8_t Color;
+    float PosX, PosY;
+    uint8_t Light;
+    }lighter[LIGHTERS_AM];
     float speedFactor;
+};
+
+//===== Ефект Світлячки зі шлейфом =============//
+class EffectLighterTracers : public EffectLighters{
 private:
-    String setDynCtrl(UIControl*_val) override;
+    bool lighterTracersRoutine(CRGB *leds, EffectWorker *param);
+    bool lighterRoutine(CRGB *leds, EffectWorker *param);
+    bool var = false;
+    void regen();
 public:
     void load() override;
+    
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    String setDynCtrl(UIControl*_val) override;
 };
 
 //===== Ефект Матриця ==========================//
@@ -355,7 +349,6 @@ public:
 class Effect3DNoise : public EffectCalc {
 private:
     void fillNoiseLED();
-    void fillnoise8();
 
     uint8_t ihue;
     bool colorLoop;
@@ -365,7 +358,6 @@ private:
     float x;
     float y;
     float z;
-    uint8_t noise[maxDim][maxDim];
 
 public:
     void load() override;
@@ -609,12 +601,13 @@ private:
   uint8_t ringWidth; // максимальне количество пикселей в кольце (толщина кольца) от 1 до height / 2 + 1
   uint8_t ringNb; // количество колец от 2 до height
   uint8_t downRingHue, upRingHue; // количество пикселей в нижнем (downRingHue) и верхнем (upRingHue) кольцах
-
-  uint8_t ringColor[HEIGHT]; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
-  uint8_t huePos[HEIGHT]; // местоположение начального оттенка кольца 0-WIDTH-1
-  uint8_t shiftHueDir[HEIGHT]; // 4 бита на ringHueShift, 4 на ringHueShift2
+  struct{
+  uint8_t Color; // начальный оттенок каждого кольца (оттенка из палитры) 0-255
+  uint8_t huePos; // местоположение начального оттенка кольца 0-WIDTH-1
+  uint8_t shiftHueDir; // 4 бита на ringHueShift, 4 на ringHueShift2
   ////ringHueShift[ringsCount]; // шаг градиета оттенка внутри кольца -8 - +8 случайное число
   ////ringHueShift2[ringsCount]; // обычная скорость переливания оттенка всего кольца -8 - +8 случайное число
+  } ring[HEIGHT];
   uint8_t currentRing; // кольцо, которое в настоящий момент нужно провернуть
   uint8_t stepCount; // оставшееся количество шагов, на которое нужно провернуть активное кольцо - случайное от WIDTH/5 до WIDTH-3
   void ringsSet();
@@ -1024,13 +1017,16 @@ public:
 // (с) SottNick
 class EffectButterfly : public EffectCalc {
 private:
-    float butterflysPosX[BUTTERFLY_MAX_COUNT];
-    float butterflysPosY[BUTTERFLY_MAX_COUNT];
-    float butterflysSpeedX[BUTTERFLY_MAX_COUNT];
-    float butterflysSpeedY[BUTTERFLY_MAX_COUNT];
-    float butterflysTurn[BUTTERFLY_MAX_COUNT];
-    uint8_t butterflysColor[BUTTERFLY_MAX_COUNT];
-    uint8_t butterflysBrightness[BUTTERFLY_MAX_COUNT];
+    struct
+    {
+        float PosX;
+        float PosY;
+        float SpeedX;
+        float SpeedY;
+        float Turn;
+        uint8_t Color;
+        uint8_t Brightness;
+    }butterfly[BUTTERFLY_MAX_COUNT];
     uint8_t deltaValue;
     uint8_t deltaHue;
     uint8_t hue;
@@ -1308,14 +1304,15 @@ public:
 // База паттерн "Змейка" з проекту Аврора, 
 // Переписано kostyamat
 #define NEXUS (WIDTH)
-
 class EffectNexus: public EffectCalc {
   private:
-    float dotPosX[NEXUS];
-    float dotPosY[NEXUS];
-    int8_t dotDirect[NEXUS];       // направление точки 
-    CRGB dotColor[NEXUS];          // цвет точки
-    float dotAccel[NEXUS];         // персональное ускорение каждой точки
+    struct{
+        float PosX;
+        float PosY;
+        uint8_t Direct;       // направление точки 
+        CRGB Color;          // цвет точки
+        float Accel;         // персональное ускорение каждой точки
+    }dot[NEXUS];
     bool white = false;
     byte type = 1;
     uint8_t _scale = 1;
@@ -1339,15 +1336,17 @@ class EffectTest : public EffectCalc {
 private:
 //#define MAX_SNAKES    (WIDTH * 2)          // максимальное количество червяков
     uint8_t SnakeNum;                        // выбранное количество червяков
-    long  snakeLast[MAX_SNAKES] ;            // тут будет траектория тела червяка
-    float snakePosX[MAX_SNAKES];             // тут будет позиция головы
-    float snakePosY[MAX_SNAKES];             // тут будет позиция головы
-    float snakeSpeedX[MAX_SNAKES];           // тут будет скорость червяка
-    float snakeSpeedY[MAX_SNAKES];           // тут будет дробная часть позиции головы
-    //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
-    uint8_t snakeColor[MAX_SNAKES];          // тут будет начальный цвет червяка
-    uint8_t snakeDirect[MAX_SNAKES];         //тут будет направление червяка
-	float speedFactor;
+    struct{
+        long  Last;             // тут будет траектория тела червяка
+        float PosX;             // тут будет позиция головы
+        float PosY;             // тут будет позиция головы
+        float SpeedX;           // тут будет скорость червяка
+        float SpeedY;           // тут будет дробная часть позиции головы
+        //float snakeTurn[MAX_SNAKES];           //не пригодилось пока что
+        uint8_t Color;          // тут будет начальный цвет червяка
+        uint8_t Direct;         //тут будет направление червяка
+    }snake[MAX_SNAKES];
+    float speedFactor;
 
     String setDynCtrl(UIControl*_val) override;
     void regen();
@@ -1391,16 +1390,18 @@ public:
 //===== Ефект Полумняні мрії ===================//
 // https://editor.soulmatelights.com/gallery/505
 // (с)Stepko
-#define WAVES_AMOUNT WIDTH
 class EffectSmokeballs: public EffectCalc {
   private:
     uint8_t _scale = 1;
-    uint16_t reg[WAVES_AMOUNT];
-    uint16_t pos[WAVES_AMOUNT];
-    float sSpeed[WAVES_AMOUNT];
-    uint8_t maxMin[WAVES_AMOUNT];
+    struct{
+        uint8_t Color;
+        uint16_t Reg;
+        uint16_t Pos;
+        float Speed;
+        uint8_t maxMin;
+    }wave[WIDTH];
     float speedFactor;
-    uint8_t waveColors[WAVES_AMOUNT];
+    
     void shiftUp();
     void regen();
     String setDynCtrl(UIControl*_val) override;
@@ -1490,13 +1491,12 @@ class EffectOscilator: public EffectCalc {
     void load() override;
 };
 
-//------------ Эффект "Шторм" 
-// (с) kostyamat 1.12.2020
+//===== Ефект Шторм ============================// 
+// (с)kostyamat 1.12.2020
 #define DROP_CNT  (WIDTH*3)
 
 class EffectWrain: public EffectCalc {
   private:
-
     struct Drop {
         float posX{0};
         float posY{0};
@@ -1505,10 +1505,10 @@ class EffectWrain: public EffectCalc {
         uint8_t bri{0};      // яркость капли
     };
 
-    static const uint8_t cloudHeight = HEIGHT / 5 + 1;
+    static const uint8_t cloudHeight = HEIGHT / 2;
     float dotChaos;         // сила ветра
     int8_t dotDirect;       // направление ветра 
-    bool clouds = false;
+    uint8_t clouds = 0;
     bool storm = false;
     bool white = false;
     uint8_t _scale=1;
@@ -1518,7 +1518,6 @@ class EffectWrain: public EffectCalc {
     float windProgress = 0;
     float speedFactor = 0.5;
     uint32_t timer = 0;
-    std::array<uint8_t, WIDTH * cloudHeight> _noise;
     std::vector<Drop> drops {std::vector<Drop>(DROP_CNT)};
 
     void reload();
@@ -1669,11 +1668,7 @@ public:
 // 07.02.2021
 class EffectBalls : public EffectCalc {
 private:
-#if WIDTH >= HEIGHT
-    #define ballsAmount WIDTH
-#else
-    #define ballsAmount HEIGHT
-#endif
+    #define ballsAmount maxDim
     struct{
     //float ball[4]; //0-PosY 1-PosX 2-SpeedY 3-SpeedX //Темне минуле
     float PosX;
@@ -1793,9 +1788,9 @@ public:
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
-// ----------------- Эффект "Магма"
-// (c) Сотнег (SottNick) 2021
-// адаптация и доводка до ума - kostyamat
+//===== Ефект Магма ============================//
+// (c)SottNick 2021
+// адаптація і доведення до розуму kostyamat
 #define MAGMA_MIN_OBJ   (WIDTH/2)
 #define MAGMA_MAX_OBJ   (WIDTH*3)
 class EffectMagma: public EffectCalc {
@@ -2131,7 +2126,7 @@ private:
     String setDynCtrl(UIControl*_val) override;
     void changeFrame();
     byte F[2][WIDTH][HEIGHT];
-    int shift;
+    uint16_t shift;
 public:
     void load() override;
     
@@ -2355,14 +2350,28 @@ class EffectFlower : public EffectCalc {
 // (c)Stepko and Sutaburosu
 class EffectRadialNoise : public EffectCalc {
     private:
-    const int8_t C_X = WIDTH / 2;
-    const int8_t C_Y = HEIGHT / 2;
+    const float C_X = ((float)WIDTH / 2.) - 0.5;
+    const float C_Y = ((float)HEIGHT / 2.) - 0.5;
+        
         struct {
             uint8_t angle;
             uint8_t radius;
         }rMap[WIDTH][HEIGHT];
+        
+        uint8_t legs = 2;
+        uint8_t eff = 0;
+        uint8_t pos_var;
+
+        void RNoise(float t);
+        void RWave(float t);
+        void ROctopus(float t);
+        void RLotus(float t);
+        void RFlower(float t);
+        
+        void reloadMap(uint8_t var);
+        String setDynCtrl(UIControl*_val) override;
+
     public:
-        void load() override;
         bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 

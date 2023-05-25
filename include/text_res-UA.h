@@ -54,7 +54,7 @@ static const char TEFF_005[] PROGMEM = "Кольорові драже";
 static const char TEFF_006[] PROGMEM = "Хурделиця, Зіркопад, Метеори";
 static const char TEFF_007[] PROGMEM = "Матриця";
 static const char TEFF_008[] PROGMEM = "Акварель";
-static const char TEFF_009[] PROGMEM = "Світлячки зі шлейфом";
+static const char TEFF_009[] PROGMEM = "Світлячки";
 static const char TEFF_010[] PROGMEM = "Блукаючий кубик";
 static const char TEFF_011[] PROGMEM = "Пульс";
 static const char TEFF_012[] PROGMEM = "Ефектопад";
@@ -464,6 +464,8 @@ static const char TINTF_0F3[] PROGMEM = "Список";
 static const char TINTF_0F4[] PROGMEM = "Скидання налаштувань лампи";
 static const char TINTF_0F5[] PROGMEM = "Операція скасована";
 static const char TINTF_0F6[] PROGMEM = "Перевірка ефектів";
+static const char TINTF_0F7[] PROGMEM = "Інструкція як налаштовувати розмітку матриці в Jinx";
+static const char TINTF_0F8[] PROGMEM = "тут";
 
 static const char NY_MDG_STRING1[] PROGMEM = "До нового року залишилось %d %s";
 static const char NY_MDG_STRING2[] PROGMEM = "З новим %d роком!";
