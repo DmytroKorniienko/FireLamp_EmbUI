@@ -2375,6 +2375,34 @@ class EffectRadialNoise : public EffectCalc {
         bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
 };
 
+//===== Ефект Примарний вершник ================//
+// https://editor.soulmatelights.com/gallery/716-ghost-rider
+// (c)Stepko
+class EffectGhostRider : public EffectCalc {
+    private:
+        uint8_t traceCount = 1;
+        float speedFactor;
+        struct {
+            int16_t PosX;
+            int16_t PosY;
+            float Angle;
+            uint16_t vSpeed;
+            int8_t angleSpeed;
+        } rider;
+        struct {
+            int16_t PosX;
+            int16_t PosY;
+            int16_t SpeedX;
+            int16_t SpeedY;
+            float time;
+            bool reg;
+        } trace[LIGHTERS_AM];
+    void load() override;
+    String setDynCtrl(UIControl*_val) override;
+    public:
+    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+
+};
 #ifdef RGB_PLAYER
 
 //===== Програвач 332/556 файлів ===============//

@@ -8487,6 +8487,71 @@ bool EffectRadialNoise::run(CRGB *ledarr, EffectWorker *opt){
   return true;
 }
 
+//===== Ефект Примарний вершник ================//
+// https://editor.soulmatelights.com/gallery/716-ghost-rider
+// (c)Stepko
+void EffectGhostRider::load(){
+  palettesload();
+  randomSeed(millis());
+  rider.angleSpeed = random(-10, 10);
+  rider.vSpeed = 128;
+  rider.PosX = (WIDTH / 2) << 8;
+  rider.PosY = (HEIGHT / 2) << 8;
+  for (byte i = 0; i < LIGHTERS_AM; i++) {
+    trace[i].PosX = rider.PosX;
+    trace[i].PosY = rider.PosY + (i * 25);
+    trace[i].time = i * 2;}
+}
+
+String EffectGhostRider::setDynCtrl(UIControl*_val){
+    if(_val->getId()==1) {
+    speedFactor = EffectMath::fmap(EffectCalc::setDynCtrl(_val).toInt(),0,255,0.05,0.5);
+  } else if(_val->getId()==3) {
+    traceCount = EffectCalc::setDynCtrl(_val).toInt();}
+  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  return String();
+}
+
+bool EffectGhostRider::run(CRGB *ledarr, EffectWorker *opt){
+  fadeToBlackBy(leds, NUM_LEDS, 60);
+  CRGB color = ColorFromPalette(*curPalette, 255);
+  EffectMath::wu_pixel(rider.PosX, rider.PosY, color);
+  rider.PosX += rider.vSpeed * sin(radians(rider.Angle)) * speedFactor;
+  rider.PosY += rider.vSpeed * cos(radians(rider.Angle)) * speedFactor;
+  rider.Angle += rider.angleSpeed * speedFactor;
+  if (rider.PosX < 0) rider.PosX = (WIDTH - 1) << 8;
+  if (rider.PosX > int(WIDTH - 1) << 8) rider.PosX = 0;
+  if (rider.PosY < 0) rider.PosY = (HEIGHT - 1) << 8;
+  if (rider.PosY > int(HEIGHT - 1) << 8) rider.PosY = 0;
+  for (uint8_t i = 0; i < map(traceCount,0,10,0,LIGHTERS_AM); i++) {
+    trace[i].time += (float)random(5, 20) * speedFactor;
+    if (trace[i].time >= 255) { trace[i].reg = true; }
+    if (trace[i].PosX < 0) trace[i].PosX = (WIDTH - 1) << 8;
+    if (trace[i].PosX > int(WIDTH - 1) << 8) trace[i].PosX = 0;
+    if (trace[i].PosY < 0) trace[i].PosY = (HEIGHT - 1) << 8;
+    if (trace[i].PosY > int(HEIGHT - 1) << 8) trace[i].PosY = 0;
+    if (trace[i].reg) {
+      trace[i].PosY = rider.PosY;
+      trace[i].PosX = rider.PosX;
+      int8_t angleoffset = ((2 * random(255)%2) - 1) * (random(255) % 10);
+      trace[i].SpeedX = -sin(radians(rider.Angle + angleoffset)) * 244;
+      trace[i].SpeedY = -cos(radians(rider.Angle + angleoffset)) * 244;
+      trace[i].time = 0;
+      trace[i].reg = false;
+    } else {
+      trace[i].PosX += trace[i].SpeedX * speedFactor;
+      trace[i].PosY += trace[i].SpeedY * speedFactor;}
+    EffectMath::wu_pixel(trace[i].PosX, trace[i].PosY, ColorFromPalette(*curPalette, (256 - trace[i].time)));
+  }
+  EVERY_N_SECONDS(10) {
+    randomSeed(millis());
+    rider.angleSpeed = ((2 * random(255)%2) - 1) * (random(255) % 10);
+    rider.vSpeed = random(128, 255);
+  }
+  blur2d(leds, WIDTH, HEIGHT, 32);
+  return true;
+}
+
 #ifdef RGB_PLAYER
 
 //===== Програвач 332/556 файлів ===============//

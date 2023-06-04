@@ -287,6 +287,9 @@ void EffectWorker::workerset(uint16_t effect, const bool isCfgProceed, const boo
   case EFF_ENUM::EFF_KALEIDOSCOPE :
     worker = std::unique_ptr<EffectRadialNoise>(new EffectRadialNoise());
     break;
+  case EFF_ENUM::EFF_GHOST_RIDER :
+    worker = std::unique_ptr<EffectGhostRider>(new EffectGhostRider());
+    break;
 #ifdef RGB_PLAYER
   case EFF_ENUM::EEF_RGBPLAYER :
     worker = std::unique_ptr<EffectPlayer>(new EffectPlayer());

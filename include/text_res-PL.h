@@ -48,7 +48,7 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 static const char TEFF_000[] PROGMEM = ""; // "Puste"
 static const char TEFF_001[] PROGMEM = "Biała lampa";
 static const char TEFF_002[] PROGMEM = "Kolory";
-static const char TEFF_003[] PROGMEM = "Tęcza 2D";
+static const char TEFF_003[] PROGMEM = "Tęcza";
 static const char TEFF_004[] PROGMEM = "Konfetti";
 static const char TEFF_005[] PROGMEM = "Kolorowe drażetki";
 static const char TEFF_006[] PROGMEM = "Burza, Spadająca gwiazda, Meteory";//nie burza
@@ -123,6 +123,7 @@ static const char TEFF_074[] PROGMEM = "Dym";
 static const char TEFF_075[] PROGMEM = "Lampa ognia";
 static const char TEFF_076[] PROGMEM = "Miraż";
 static const char TEFF_077[] PROGMEM = "Kalejdoskop";
+static const char TEFF_078[] PROGMEM = "Ghost Rider";
 static const char TEFF_250[] PROGMEM = "Zegar";
 static const char TEFF_251[] PROGMEM = "Odtwarzacz RGB 332/565";
 static const char TEFF_254[] PROGMEM = "Analizator częstotliwości";
