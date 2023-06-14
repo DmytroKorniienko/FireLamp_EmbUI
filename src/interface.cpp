@@ -2860,9 +2860,9 @@ void set_settings_enc(Interface *interf, JsonObject *data){
     myLamp.setGaugeType((*data)[FPSTR(TCONST_003F)].as<GAUGETYPE>());
     save_lamp_flags();
     SETPARAM(FPSTR(TCONST_0040));
-    // String tmpStr = (*data)[FPSTR(TCONST_0040)];
-    // tmpStr.replace(F("#"), F("0x"));
-    // GAUGE::GetGaugeInstance()->setGaugeTypeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
+    String tmpStr = (*data)[FPSTR(TCONST_0040)];
+    tmpStr.replace(F("#"), F("0x"));
+    enc.setGaugeColor((CRGB)strtol(tmpStr.c_str(), NULL, 0));
 
     SETPARAM(FPSTR(TCONST_0042));
     String tmpStr2 = (*data)[FPSTR(TCONST_0042)];

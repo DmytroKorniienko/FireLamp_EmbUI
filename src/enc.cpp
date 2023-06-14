@@ -460,7 +460,7 @@ void Encoder::setBri(int val) {
   currAction = SET_BRIGHT;
   anyValue = constrain(anyValue + val, 1, 255);
   if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-      GAUGE::GaugeShow(anyValue, 255);
+      GAUGE::GaugeShow(anyValue, 255, 0, getGaugeColor());
   }
   display(anyValue, String(F("b.")));
   LOG(printf_P, PSTR("Enc: setBri Value %d\n"), anyValue);
@@ -521,7 +521,7 @@ void Encoder::setDynCtrl(int val) {
 
   if ((myLamp.getEffControls()[currDynCtrl]->getType() & 0x0F) == 2) sendString(myLamp.getEffControls()[currDynCtrl]->getName() + String(myLamp.getEffControls()[currDynCtrl]->getVal().toInt() ? F(": ON") : F(": OFF")), txtColor, true, txtDelay);
   else if (myLamp.getGaugeType()!=GAUGETYPE::GT_NONE){
-      GAUGE::GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt());
+      GAUGE::GaugeShow(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), myLamp.getEffControls()[currDynCtrl]->getMax().toInt(), 0, getGaugeColor());
   }
   display(myLamp.getEffControls()[currDynCtrl]->getVal().toInt(), String(myLamp.getEffControls()[currDynCtrl]->getId()) + String(F(".")));
   LOG(printf_P, PSTR("Enc: dynCtrl: %d Value %d\n"), myLamp.getEffControls()[currDynCtrl]->getId(), myLamp.getEffControls()[currDynCtrl]->getVal().toInt());
