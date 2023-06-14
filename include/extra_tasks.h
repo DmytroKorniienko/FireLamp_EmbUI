@@ -103,7 +103,7 @@ public:
     };
     ~GAUGE() {GAUGE::gauge = nullptr;}
 
-    void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE) {
+void GaugeMix(GAUGETYPE type = GAUGETYPE::GT_NONE) {
         if(GAUGE::gauge==nullptr) return;
         if (gauge_time + 3000 < millis() || millis()<5000) return; // в первые 5 секунд после перезагрузки не показываем :)
 
