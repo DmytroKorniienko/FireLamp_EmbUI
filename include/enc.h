@@ -62,6 +62,8 @@ public:
   void setTxtDelay(const uint8_t speed) { txtDelay = speed; }
   CRGB getTxtColor() { return txtColor; }
   void setTxtColor(const CRGB color) { txtColor = color; }
+  CRGB getGaugeColor() { return gaugeCol; }
+  void setGaugeColor(const CRGB color) { gaugeCol = color; }
   void exitSettings();
 
 private:
