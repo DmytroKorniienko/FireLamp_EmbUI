@@ -474,6 +474,7 @@ String EffectMatrix::setDynCtrl(UIControl*_val)
   else if(_val->getId()==3) _scale = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==4) _hue = EffectCalc::setDynCtrl(_val).toInt();
   else if(_val->getId()==5) gluk = EffectCalc::setDynCtrl(_val).toInt();
+  else if(_val->getId()==6) colortail = EffectCalc::setDynCtrl(_val).toInt();
   else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
 
   if (_hue == 1) {
@@ -508,33 +509,38 @@ void EffectMatrix::load(){
 
 bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
 {
-  
-  EffectMath::dimAll(map(speed, 1, 255, 252, 240));
-  
+
   CHSV color;
+  if (white) {
+    color = rgb2hsv_approximate(CRGB::Gray);
+  } else if (randColor) {
+    EVERY_N_MILLIS(600*EffectCalc::speedfactor / speedFactor) {
+      hue = random(1, 250);
+    }
+    color = CHSV(hue, 255, 255);
+  } else {
+    color = CHSV(_hue, 255, 255);
+  }
+
+  if(!colortail)
+    fadeUsingColor(leds, NUM_LEDS, color);
+  EffectMath::dimAll(map(speed, 1, 255, 252, 240));
 
   for (uint8_t i = 0U; i < map(_scale, 1, 32, 1, LIGHTERS_AM); i++)
   {
+    CHSV lightcol;
     lighter[i].PosY -= lighter[i].SpeedY * speedFactor;
 
-    if (white) {
-      color = rgb2hsv_approximate(CRGB::Gray);
-      color.val = lighter[i].Light;
-    } else if (randColor) {
-      EVERY_N_MILLIS(600*EffectCalc::speedfactor / speedFactor) {
-        hue = random(1, 250);
-      }
-      color = CHSV(hue, 255, lighter[i].Light);
-    } else {
-      color = CHSV(_hue, 255, lighter[i].Light);
-    }
+    lightcol = color;
+    lightcol.val = lighter[i].Light;
 
-
-    EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, color);
-
+    if(colortail)
+      EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, lightcol);
+    else
+      EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, CHSV(255,0, lighter[i].Light));
     count += speedFactor;
 
-    if (gluk > 1 and (uint8_t)count%2 == 0) 
+    if (gluk > 1 and (uint8_t)count%2 == 0)
       if (random8() < gluk * 2) {
         lighter[i].PosX = lighter[i].PosX + random(-1, 2);
         lighter[i].Light = random(196,255);
@@ -543,7 +549,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
     if(lighter[i].PosY < -1) {
       lighter[i].PosX = random(0, WIDTH);
       lighter[i].PosY = EffectMath::randomf(HEIGHT - HEIGHT /2, HEIGHT);
-      lighter[i].SpeedY = EffectMath::randomf(1.5, 2.5); 
+      lighter[i].SpeedY = EffectMath::randomf(1.5, 2.5);
       lighter[i].Light = random(127U, 255U);
       lighter[i].Color = hue;
     }
@@ -3978,7 +3984,7 @@ bool EffectPacific::run(CRGB *leds, EffectWorker *param)
 
 #ifdef MIC_EFFECTS
 
-//===== Ефект Осцилограф =======================// 
+//===== Ефект Осцилограф =======================//
 // (c) kostyamat
 String EffectOsc::setDynCtrl(UIControl*_val) {
 #ifdef ESP32

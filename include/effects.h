@@ -75,7 +75,7 @@ public:
 
 //===== Ефект Метасфери ========================//
 /*
- Metaballs proof of concept by Stefan Petrick 
+ Metaballs proof of concept by Stefan Petrick
  https://gist.github.com/StefanPetrick/170fbf141390fafb9c0c76b8a0d34e54
 */
 class EffectMetaBalls : public EffectCalc {
@@ -103,7 +103,7 @@ private:
 	float e_s3_size;
 	uint8_t _scale;
 	uint8_t type;
-	
+
 	String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -121,7 +121,7 @@ class EffectBBalls : public EffectCalc {
 private:
     // можно переписать на динамческую память
     uint8_t bballsNUM_BALLS;                            // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-    
+
     float bballsHi = 0.0;                               // An array of heights
     uint32_t bballsTCycle = 0;                        // The time since the last time the ball struck the ground
     struct{
@@ -154,7 +154,7 @@ private:
 	const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
 	const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
 	float speedFactor;
-	
+
 	String setDynCtrl(UIControl*_val) override;
 
 public:
@@ -189,7 +189,7 @@ private:
 	float speedFactor;
 
 	String setDynCtrl(UIControl*_val);
-	
+
 public:
     void load();
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
@@ -305,7 +305,7 @@ private:
     void regen();
 public:
     void load() override;
-    
+
     bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
     String setDynCtrl(UIControl*_val) override;
 };
@@ -320,6 +320,7 @@ private:
     uint8_t hue, _hue;
     bool randColor = false;
     bool white = false;
+    bool colortail = false;
     float count;
     float speedFactor;
     String setDynCtrl(UIControl*_val) override;

@@ -4,6 +4,7 @@
 eff
 data/*.json
 include/user_config*.h
+include/XY.h
 user_*.ini
 /out_bin/*.*
 /resources/embui.zip
