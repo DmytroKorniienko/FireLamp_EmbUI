@@ -323,6 +323,8 @@ private:
     bool colortail = false;
     float count;
     float speedFactor;
+    void fillPix(CRGB color);
+
     String setDynCtrl(UIControl*_val) override;
 public:
     void load() override;

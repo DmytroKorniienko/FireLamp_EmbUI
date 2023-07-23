@@ -523,7 +523,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
   }
 
   if(!colortail)
-    fadeUsingColor(leds, NUM_LEDS, color);
+    fillPix(color);
   EffectMath::dimAll(map(speed, 1, 255, 252, 240));
 
   for (uint8_t i = 0U; i < map(_scale, 1, 32, 1, LIGHTERS_AM); i++)
@@ -537,7 +537,7 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
     if(colortail)
       EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, lightcol);
     else
-      EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, CHSV(255,0, lighter[i].Light));
+      EffectMath::drawPixelXYF_Y(lighter[i].PosX, lighter[i].PosY, CHSV(0,0, lighter[i].Light));
     count += speedFactor;
 
     if (gluk > 1 and (uint8_t)count%2 == 0)
@@ -556,6 +556,17 @@ bool EffectMatrix::matrixRoutine(CRGB *leds, EffectWorker *param)
   }
 
   return true;
+}
+
+void EffectMatrix::fillPix(CRGB color)
+{
+  for(uint8_t y = 0; y < HEIGHT; y++){
+    for(uint8_t x = 0; x < WIDTH; x++){
+      CRGB pixcol = EffectMath::getPixColorXY(x, y);
+      if (!white && pixcol.r && pixcol.g && pixcol.b)
+        EffectMath::drawPixelXY(x, y, color);
+    }
+  }
 }
 
 //===== Ефект Хурделиця, Зіркопад, Метеори =====//
