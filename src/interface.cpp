@@ -1075,7 +1075,7 @@ void block_main_flags(Interface *interf, JsonObject *data){
     if (!interf) return;
     interf->json_section_begin(FPSTR(TCONST_0019));
     interf->json_section_line("");
-    interf->checkbox(FPSTR(TCONST_001A), String(myLamp.isLampOn()), FPSTR(TINTF_00E), true);
+    interf->button(FPSTR(TCONST_001A), FPSTR(TINTF_00E));
     interf->checkbox(FPSTR(TCONST_001B), String(myLamp.getMode() == LAMPMODE::MODE_DEMO), FPSTR(TINTF_00F), true);
     interf->checkbox(FPSTR(TCONST_001C), String(myLamp.IsGlobalBrightness()), FPSTR(TINTF_010), true);
 #ifndef MOOT
@@ -1106,7 +1106,7 @@ void block_main_flags(Interface *interf, JsonObject *data){
         interf->button(FPSTR(TCONST_00C0), FPSTR(TINTF_0BF), FPSTR(P_GRAY));
         interf->button(FPSTR(TCONST_00C1), FPSTR(TINTF_0C0), FPSTR(P_GRAY));
     }
-    //interf->button("time", FPSTR(TINTF_016), FPSTR(TCONST_0025));    
+    //interf->button("time", FPSTR(TINTF_016), FPSTR(TCONST_0025));
     interf->json_section_end();
     interf->range(String(FPSTR(TCONST_00A2)), String(1), String(30), String(1), String(FPSTR(TINTF_09B)), true);
 #endif
@@ -1137,7 +1137,7 @@ void block_effects_main(Interface *interf, JsonObject *data, bool fast=true){
     interf->json_section_main(FPSTR(TCONST_0000), FPSTR(TINTF_000));
 
     interf->json_section_line(FPSTR(TCONST_0019));
-    interf->checkbox(FPSTR(TCONST_001A), myLamp.isLampOn()? "1" : "0", FPSTR(TINTF_00E), true);
+    interf->button(FPSTR(TCONST_001A), FPSTR(TINTF_00E));
     interf->button(FPSTR(TCONST_0020), FPSTR(TINTF_014));
     interf->json_section_end();
 
@@ -2956,7 +2956,7 @@ void block_streaming(Interface *interf, JsonObject *data){
     //Страница "Трансляция"
     interf->json_section_main(FPSTR(TCONST_0044), FPSTR(TINTF_0E2));
         interf->json_section_line();
-            interf->checkbox(FPSTR(TCONST_001A), String(myLamp.isLampOn()), FPSTR(TINTF_00E), true);
+            interf->button(FPSTR(TCONST_001A), FPSTR(TINTF_00E));
             interf->checkbox(FPSTR(TCONST_0046), myLamp.isStreamOn() ? F("1") : F("0"), FPSTR(TINTF_0E2), true);
             interf->checkbox(FPSTR(TCONST_0049), myLamp.isDirect() ? F("1") : F("0"), FPSTR(TINTF_0E6), true);
             interf->checkbox(FPSTR(TCONST_004A), myLamp.isMapping() ? F("1") : F("0"), FPSTR(TINTF_0E7), true);
