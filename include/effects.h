@@ -1831,6 +1831,7 @@ public:
 // https://editor.soulmatelights.com/gallery/739-flags
 // (c) Stepko + kostyamat
 // 17.03.21
+// v2 by St3P40 aka Stepko 24.08.23
 class EffectFlags: public EffectCalc {
 private:
     const float DEVIATOR = 512. / WIDTH;
@@ -1842,110 +1843,106 @@ private:
     const uint8_t CHANGE_FLAG = 30; // >= 10 Autochange
 
     uint8_t thisVal;
-    uint8_t thisMax;
-	
-	uint8_t mix(uint8_t a1, uint8_t a2, uint8_t l){
-	return ((a1*l)+(a2*(255-l)))/255;}
+    float thisMax;
 
-    //Germany
+    uint8_t mix(uint8_t a1, uint8_t a2, uint8_t l)
+    {
+        return ((a1 * l) + (a2 * (255 - l))) / 255;
+    }
+
+    // Germany
     void germany(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 4) ? CHSV(68, 255, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 255, thisVal)
-            : CHSV(0, 0, thisVal / 2.5);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (j < HEIGHT / 3) ? CHSV(68, 255, thisVal) : (HEIGHT - j > HEIGHT / 3) ? CHSV(0, 255, thisVal)
+                                                                                                         : CHSV(0, 0, thisVal / 2.5));
     }
 
-    //Ukraine
+    // Ukraine
     void ukraine(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax) ? CHSV(50, 255, thisVal) : CHSV(150, 255, thisVal);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (j < (HEIGHT / 2)) ? CHSV(50, 255, thisVal) : CHSV(150, 255, thisVal));
     }
 
-    //Belarus
+    // Belarus
     void belarus(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 4) ? CHSV(0, 0, thisVal) : (j < thisMax + HEIGHT / 4) ? CHSV(0, 224, thisVal)
-            : CHSV(0, 0, thisVal);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (j < HEIGHT / 3) ? CHSV(0, 0, thisVal) : (HEIGHT - j > HEIGHT / 3) ? CHSV(0, 224, thisVal)
+                                                                                                      : CHSV(0, 0, thisVal));
     }
 
-    //Poland
+    // Poland
     void poland(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax + 1) ? CHSV(248, 214, (float)thisVal * 0.83) : CHSV(25, 3, (float)thisVal * 0.91);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (j < (HEIGHT / 2)) ? CHSV(248, 214, thisVal * 0.83) : CHSV(25, 3, thisVal * 0.91));
     }
 
-    //The USA
+    // The USA
     void usa(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) +=
-            ((i <= WIDTH / 2) && (j + thisMax > HEIGHT - 1 + HEIGHT / 16)) ? 
-            ((i % 2 && ((int)j - HEIGHT / 16 + thisMax) % 2) ? 
-            CHSV(160, 0, thisVal) : CHSV(160, 255, thisVal)) 
-            : ((j + 1 + thisMax) % 6 < 3 ? CHSV(0, 0, thisVal) : CHSV(0, 255, thisVal));
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   ((i <= WIDTH / 2) && ((HEIGHT - 1 - j) < (HEIGHT / 3))) ? ((i % 2 && j % 2) ? CHSV(160, 0, thisVal) : CHSV(160, 255, thisVal))
+                                                                                   : (j % 4 < 2 ? CHSV(0, 0, thisVal) : CHSV(0, 255, thisVal)));
     }
 
-    //Italy
+    // Italy
     void italy(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (i < WIDTH / 3) ? CHSV(90, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
-            : CHSV(0, 255, thisVal);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (i < WIDTH / 3) ? CHSV(90, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
+                                                                                                          : CHSV(0, 255, thisVal));
     }
 
-    //France
+    // France
     void france(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (i < WIDTH / 3) ? CHSV(160, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
-            : CHSV(0, 255, thisVal);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (i < WIDTH / 3) ? CHSV(160, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
+                                                                                                           : CHSV(0, 255, thisVal));
     }
 
-    //UK
+    // UK
     void uk(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (
-                (
-                    (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -2) && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2))
-                )
-                    ||
-                (
-                    (i > WIDTH / 2 + 1 || i < WIDTH / 2 - 2) && ( (((int)WIDTH - 1 - i - ((int)j + thisMax - (int)(HEIGHT * 2 - WIDTH) / 2) > -2) && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 2)) )
-                )
-            || 
-            (WIDTH / 2 - i == 0) || (WIDTH / 2 - 1 - i == 0) 
-            || 
-            ((HEIGHT - (j + thisMax)) == 0) || ((HEIGHT - 1 - (j + thisMax)) == 0)) ? 
-            CHSV(0, 255, thisVal) 
-            : 
-            (((i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -4) 
-            && (i - (j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) 
-            || 
-            (((int)WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) > -4) 
-            && (WIDTH - 1 - i - (int)(j + thisMax - (HEIGHT * 2 - WIDTH) / 2) < 4)) 
-            || (WIDTH / 2 + 1 - i == 0) || (WIDTH / 2 - 2 - i == 0) 
-            || (HEIGHT + 1 - (j + thisMax) == 0) || (HEIGHT - 2 - (int)(j + thisMax) == 0)) ? 
-            CHSV(0, 0, thisVal) : CHSV(150, 255, thisVal);
+        int adj = (WIDTH - HEIGHT) / 2;
+        int diag1 = adj + j - i;
+        int diag2 = adj + HEIGHT - 1 - j - i;
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                    (((diag1 > -3) && ((diag1 < 3))) || ((diag2 > -3) && ((diag2 < 3)))
+                                    || ((i > ((WIDTH / 2) - 3)) && ((WIDTH - 1 - i) > ((WIDTH / 2) - 3)))
+                                    || ((j > ((HEIGHT / 2) - 3)) && ((HEIGHT - 1 - j) > ((HEIGHT / 2) - 3))))
+                                    ? ((((diag1 > -2) && (diag1 < 2) && (((i < ((WIDTH / 2) - 2)) || ((WIDTH - 1 - i) < ((WIDTH / 2) - 2))) && ((j < ((HEIGHT / 2) - 2)) || ((HEIGHT - 1 - j) < ((HEIGHT / 2) - 2)))))
+                                    || ((diag2 > -2) && (diag2 < 2) && ((((i < ((WIDTH / 2) - 2))) || ((WIDTH - 1 - i) < ((WIDTH / 2) - 2))) && ((j < ((HEIGHT / 2) - 2)) || ((HEIGHT - 1 - j) < ((HEIGHT / 2) - 2)))))
+                                    || ((i > ((WIDTH / 2) - 2)) && ((WIDTH - 1 - i) > ((WIDTH / 2) - 2)))
+                                    || ((j > ((HEIGHT / 2) - 2)) && ((HEIGHT - 1 - j) > ((HEIGHT / 2) - 2))))
+                                    ? CHSV(0, 255, thisVal)
+                                    : CHSV(0, 0, thisVal))
+                                    : CHSV(150, 255, thisVal));
     }
 
-    //Spain
+    // Spain
     void spain(uint8_t i, uint8_t j)
     {
-            EffectMath::getPixel(i, j) += 
-            (j < thisMax - HEIGHT / 3) ? 
-            CHSV(250, 224, (float)thisVal * 0.68) : (j < thisMax + HEIGHT / 3) ? CHSV(64, 255, (float)thisVal * 0.98)
-            : CHSV(250, 224, (float)thisVal * 0.68);
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                   (j < HEIGHT / 4) ? CHSV(250, 224, (float)thisVal * 0.68) : (HEIGHT - j > HEIGHT / 4) ? CHSV(64, 255, (float)thisVal * 0.98)
+                                                                                                                        : CHSV(250, 224, (float)thisVal * 0.68));
     }
 
+    void japan(uint8_t i, uint8_t j)
+    {
+        EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
+                                  ((pow((int)(i - (WIDTH / 2)),2) + pow((int)(j - (HEIGHT / 2)),2)) < EffectMath::minDim) ? CHSV(0, 255, thisVal)
+                                                                                                                        : CHSV(0, 0, thisVal));
+    }
 
     void changeFlags();
-    String setDynCtrl(UIControl*_val) override;
+    String setDynCtrl(UIControl *_val) override;
 
 public:
-    bool run(CRGB *ledarr, EffectWorker *opt=nullptr) override;
+    bool run(CRGB *ledarr, EffectWorker *opt = nullptr) override;
 };
 
 //===== Ефект Зоряний десант ===================//
