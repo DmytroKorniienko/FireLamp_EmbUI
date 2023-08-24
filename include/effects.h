@@ -1892,16 +1892,16 @@ private:
     void italy(uint8_t i, uint8_t j)
     {
         EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
-                                   (i < WIDTH / 3) ? CHSV(90, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
-                                                                                                          : CHSV(0, 255, thisVal));
+                                   (i < (WIDTH / 3)) ? CHSV(90, 255, thisVal) : ((WIDTH - 1 - i) < (WIDTH / 3)) ? CHSV(0, 255, thisVal)
+                                                                                                          : CHSV(0, 0, thisVal));
     }
 
     // France
     void france(uint8_t i, uint8_t j)
     {
         EffectMath::drawPixelXYF_Y(i, (float)j + thisMax,
-                                   (i < WIDTH / 3) ? CHSV(160, 255, thisVal) : (i < WIDTH - 1 - WIDTH / 3) ? CHSV(0, 0, thisVal)
-                                                                                                           : CHSV(0, 255, thisVal));
+                                   (i < (WIDTH / 3)) ? CHSV(160, 255, thisVal) : ((WIDTH - 1 - i) < (WIDTH / 3)) ? CHSV(0, 255, thisVal)
+                                                                                                           : CHSV(0, 0, thisVal));
     }
 
     // UK
@@ -2206,33 +2206,32 @@ private:
         byte hue, sat;
         float bri;
         int x0, y0;
-        float x[BLOT_SIZE]; 
+        float x[BLOT_SIZE];
         float y[BLOT_SIZE];
 
     public:
         void appendXY(float nx, float ny) {
             for (byte i = 0; i < BLOT_SIZE; i++) {
                 x[i] += nx;
-                y[i] += ny; 
+                y[i] += ny;
             }
         }
-        
-        void reset(byte num, byte Counts) {  
+        void reset(byte num, byte Counts) {
             x0 = random(-5, WIDTH - 5);
             float y0 = EffectMath::randomf(-1, HEIGHT+1);
             uint8_t dy;
             for (uint8_t i = 0; i < BLOT_SIZE; i++) {
                 bool f = random(0,2);
-                dy = random(0, 2); 
+                dy = random(0, 2);
                 x[i] = x0 + i;
                 if (f)
                 y[i] = float((i ? y[i-1] : y0) + dy);
-                else 
+                else
                 y[i] = float((i ? y[i-1] : y0) - dy);
             }
             hue = random(0, 256);
             sat = random(160, 256);
-            bri = random(128, 256);    
+            bri = random(128, 256);
         }
 
         double getY() {

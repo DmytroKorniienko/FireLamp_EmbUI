@@ -360,22 +360,16 @@ void EffectMath::wu_pixel(uint32_t x, uint32_t y, CRGB col) {      //awesome wu_
   #undef WU_WEIGHT
 }
 
-CRGB colorsmear(const CRGB &col1, const CRGB &col2, byte l) {
-  CRGB temp1 = col1;
-  nblend(temp1, col2, l);
-  return temp1;
-}
-
 void EffectMath::sDrawPixelXYF(float x, float y, const CRGB &color) {
   byte ax = byte(x);
   byte xsh = (x - byte(x)) * 255;
   byte ay = byte(y);
   byte ysh = (y - byte(y)) * 255;
-  CRGB colP1 = colorsmear(color, CRGB(0, 0, 0), xsh);
-  CRGB col1 = colorsmear(colP1, CRGB(0, 0, 0), ysh);
-  CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
-  CRGB col3 = colorsmear(CRGB(0, 0, 0),colP1, ysh);
-  CRGB col4 = colorsmear(CRGB(0, 0, 0),col2, ysh);
+  CRGB colP1 = blend(color, CRGB(0, 0, 0), xsh);
+  CRGB col1 = blend(colP1, CRGB(0, 0, 0), ysh);
+  CRGB col2 = blend(CRGB(0, 0, 0), color, xsh);
+  CRGB col3 = blend(CRGB(0, 0, 0),colP1, ysh);
+  CRGB col4 = blend(CRGB(0, 0, 0),col2, ysh);
 
   getPixel(ax, ay) += col1;
   getPixel(ax+1, ay) += col2;
@@ -386,8 +380,8 @@ void EffectMath::sDrawPixelXYF(float x, float y, const CRGB &color) {
 void EffectMath::sDrawPixelXYF_X(float x, int16_t y, const CRGB &color) {
   byte ax = byte(x);
   byte xsh = (x - byte(x)) * 255;
-  CRGB col1 = colorsmear(color, CRGB(0, 0, 0), xsh);
-  CRGB col2 = colorsmear(CRGB(0, 0, 0), color, xsh);
+  CRGB col1 = blend(color, CRGB(0, 0, 0), xsh);
+  CRGB col2 = blend(CRGB(0, 0, 0), color, xsh);
   getPixel(ax, y) += col1;
   getPixel(ax + 1, y) += col2;
 }
@@ -395,13 +389,13 @@ void EffectMath::sDrawPixelXYF_X(float x, int16_t y, const CRGB &color) {
 void EffectMath::sDrawPixelXYF_Y(int16_t x, float y, const CRGB &color) {
   byte ay = byte(y);
   byte ysh = (y - byte(y)) * 255;
-  CRGB col1 = colorsmear(color, CRGB(0, 0, 0), ysh);
-  CRGB col2 = colorsmear(CRGB(0, 0, 0), color, ysh);
+  CRGB col1 = blend(color, CRGB(0, 0, 0), ysh);
+  CRGB col2 = blend(CRGB(0, 0, 0), color, ysh);
   getPixel(x, ay) += col1;
-  getPixel(x, ay+1) += col2; 
+  getPixel(x, ay+1) += col2;
 }
 
-void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel)
+void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darklevel, bool variant)
 {
 #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
   // extract the fractional parts and derive their inverses
@@ -412,12 +406,16 @@ void EffectMath::drawPixelXYF(float x, float y, const CRGB &color, uint8_t darkl
   // multiply the intensities by the colour, and saturating-add them to the pixels
   for (uint8_t i = 0; i < 4; i++) {
     int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-    // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается, 
+    // тут нам, ИМХО, незачем гонять через прокладки, и потом сдвигать регистры. А в случае сегмента подразумевается,
     // что все ЛЕД в одном сегменте одинакового цвета, и достаточно получить цвет любого из них.
-    CRGB clr = getPixel(xn, yn); 
+    CRGB clr = getPixel(xn, yn);
+    if(variant){
+      clr = blend(clr, color, wu[i]);
+    }
+    else{
     clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
     clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);}
     if (darklevel > 0) getPixel(xn, yn) = EffectMath::makeDarker(clr, darklevel);
     else getPixel(xn, yn) = clr;
   }
