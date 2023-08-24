@@ -5568,7 +5568,7 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   EffectMath::blur2d(20);
   for (byte j = 0; j < _amount; j++) {
     wave[j].Pos = beatsin16((uint8_t)(wave[j].Speed * (speedFactor * 5.)), wave[j].Reg, wave[j].maxMin + wave[j].Reg, wave[j].Color * 256, wave[j].Color * 8);
-      EffectMath::drawPixelXYF((float)wave[j].Pos / 10., 0.05, ColorFromPalette(*curPalette, wave[j].Color));
+      EffectMath::drawPixelXYF((float)wave[j].Pos / 10., 0.05, ColorFromPalette(*curPalette, wave[j].Color), 0, true);
   }
   EVERY_N_SECONDS(20){
     for (byte j = 0; j < _amount; j++) {
@@ -5581,7 +5581,7 @@ bool EffectSmokeballs::run(CRGB *ledarr, EffectWorker *opt){
   return true;
 }
 
-void EffectSmokeballs::shiftUp(){       
+void EffectSmokeballs::shiftUp(){
   for (byte x = 0; x < WIDTH; x++) {
     for (float y = (float)HEIGHT; y > 0.; y-= speedFactor) {
       EffectMath::drawPixelXY(x, y, EffectMath::getPixColorXY(x, y - 1));
