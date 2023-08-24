@@ -7402,68 +7402,57 @@ void EffectStarShips::draw(float x, float y, CRGB color) {
 // https://editor.soulmatelights.com/gallery/739-flags
 // (c) Stepko + kostyamat
 // 17.03.21
-String EffectFlags::setDynCtrl(UIControl*_val){
-  if (_val->getId()==1)
+String EffectFlags::setDynCtrl(UIControl *_val)
+{
+  if (_val->getId() == 1)
     _speed = map(EffectCalc::setDynCtrl(_val).toInt(), 1, 255, 1, 16);
-  else if (_val->getId()==3) _flag = EffectCalc::setDynCtrl(_val).toInt();
-  else EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
+  else if (_val->getId() == 3)
+    _flag = EffectCalc::setDynCtrl(_val).toInt();
+  else
+    EffectCalc::setDynCtrl(_val).toInt(); // для всех других не перечисленных контролов просто дергаем функцию базового класса (если это контролы палитр, микрофона и т.д.)
   return String();
 }
 
-bool EffectFlags::run(CRGB *leds, EffectWorker *opt) {
+bool EffectFlags::run(CRGB *leds, EffectWorker *opt)
+{
   changeFlags();
-  fadeToBlackBy(leds, NUM_LEDS, 32);
-  for (uint8_t i = 0; i < WIDTH; i++) {
-    thisVal = mix(inoise8(((float) i * DEVIATOR)-counter,counter/2,(float)i*SPEED_ADJ),128,i*(255/WIDTH));
-    thisMax = map(thisVal, 0, 255, 0, EffectMath::getmaxWidthIndex());
-	for (byte j = 0; j < HEIGHT; j++) {
-		if(j>((flag == 2 || flag == 7)? (EffectMath::getmaxWidthIndex()-1-thisMax+HEIGHT/2) :(thisMax+HEIGHT/2)) || ((int8_t)j < (int8_t)((flag == 2 || flag == 7)?HEIGHT/2-1-thisMax:thisMax-HEIGHT/2))) EffectMath::getPixel(i, j)=0; else
+  fadeToBlackBy(leds, NUM_LEDS, 64);
+  for (uint8_t i = 0; i < WIDTH; i++)
+  {
+    thisVal = mix(inoise8(((float)i * DEVIATOR) - counter, counter / 2, (float)i * SPEED_ADJ), 128, i * (255 / WIDTH));
+    thisMax = EffectMath::fmap(thisVal, 0, 255, -((float)HEIGHT / 2.0), ((float)HEIGHT / 2.0));
+    for (byte j = 0; j < HEIGHT; j++)
+    {
     switch (flag)
     {
-    case 1:
-      germany(i,j);
-      break;
-    case 2:
-      usa(i,j);
-      break;
-    case 3:
-    case 0:
-      ukraine(i,j);
-      break;
-    case 4:
-      belarus(i,j);
-      break;
-    case 5:
-      italy(i,j);
-      break;
-    case 6:
-      spain(i,j);
-      break;
-    case 7:
-      uk(i,j);
-      break;
-    case 8:
-      france(i,j);
-      break;
-    case 9:
-      poland(i,j);
-      break;
-    
-    default:
-      break;
+    case 0: ukraine(i, j); break;
+    case 1: germany(i, j); break;
+    case 2: usa(i, j); break;
+    case 3: japan(i, j); break;
+    case 4: belarus(i, j); break;
+    case 5: italy(i, j); break;
+    case 6: spain(i, j); break;
+    case 7: uk(i, j); break;
+    case 8: france(i, j); break;
+    case 9: poland(i, j); break;
+
+    default: break;
+    }
     }
   }
-  }
-  EffectMath::blur2d(leds, WIDTH, HEIGHT, 32);
+  EffectMath::blur2d(leds, WIDTH, HEIGHT, 16);
   counter += (float)_speed * SPEED_ADJ;
   return true;
 }
 
-void EffectFlags::changeFlags() {
-  if (!_flag) {
-    EVERY_N_SECONDS(CHANGE_FLAG) {
-      count++;
-      flag = count % 10;
+void EffectFlags::changeFlags()
+{
+  if (!_flag)
+  {
+    EVERY_N_SECONDS(CHANGE_FLAG)
+    {
+    count++;
+    flag = count % 10;
     }
   }
   else
