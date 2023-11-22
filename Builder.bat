@@ -17,48 +17,48 @@ if not exist "%workdir%\out_bin" (mkdir %workdir%\out_bin)
 :m1
 
 Echo  *------------------------------------------*-----------------------------------------* 
-Echo  *  Switch/update - MASTER branch         1 *  Переключити\оновити- гілка MASTER      *
-Echo  *  Switch/update - DEV branch            2 *  Переключити\оновити- гілка DEV         *
+Echo  *  Switch/update - MASTER branch         1 *  ГЏГҐГ°ГҐГЄГ«ГѕГ·ГЁГІГЁ\Г®Г­Г®ГўГЁГІГЁ- ГЈВіГ«ГЄГ  MASTER      *
+Echo  *  Switch/update - DEV branch            2 *  ГЏГҐГ°ГҐГЄГ«ГѕГ·ГЁГІГЁ\Г®Г­Г®ГўГЁГІГЁ- ГЈВіГ«ГЄГ  DEV         *
 Echo  #------------------------------------------#-----------------------------------------# 
-echo  *  Reset changes in local repo!          3 *  Відмінити зміни в репозиторії на ПК!   *
-Echo  *  WARNING! This will revert all changes!  *  УВАГА! Це відмінить всі зміни          *
+echo  *  Reset changes in local repo!          3 *  Г‚ВіГ¤Г¬ВіГ­ГЁГІГЁ Г§Г¬ВіГ­ГЁ Гў Г°ГҐГЇГ®Г§ГЁГІГ®Г°ВіВї Г­Г  ГЏГЉ!   *
+Echo  *  WARNING! This will revert all changes!  *  Г“Г‚ГЂГѓГЂ! Г–ГҐ ГўВіГ¤Г¬ВіГ­ГЁГІГј ГўГ±Ві Г§Г¬ВіГ­ГЁ          *
 Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                Build only                *              Тільки збірка              *
-Echo  *  Build - Esp8266 160MHz                4 *  Зібрати для Esp8266 на 160МГц          *
-Echo  *  Build - Esp8266 80MHz                 5 *  Зібрати для Esp8266 на 80МГц           *
-Echo  *  Build - Esp32                         6 *  Зібрати для Esp32                      *
-Echo  *  HTTP Update - Firmware               uf *  Обновити прошивку через HTTP           *
+Echo  *                Build only                *              Г’ВіГ«ГјГЄГЁ Г§ГЎВіГ°ГЄГ               *
+Echo  *  Build - Esp8266 160MHz                4 *  Г‡ВіГЎГ°Г ГІГЁ Г¤Г«Гї Esp8266 Г­Г  160ГЊГѓГ¶          *
+Echo  *  Build - Esp8266 80MHz                 5 *  Г‡ВіГЎГ°Г ГІГЁ Г¤Г«Гї Esp8266 Г­Г  80ГЊГѓГ¶           *
+Echo  *  Build - Esp32                         6 *  Г‡ВіГЎГ°Г ГІГЁ Г¤Г«Гї Esp32                      *
+Echo  *  HTTP Update - Firmware               uf *  ГЋГЎГ­Г®ГўГЁГІГЁ ГЇГ°Г®ГёГЁГўГЄГі Г·ГҐГ°ГҐГ§ HTTP           *
 Echo  #------------------------------------------#-----------------------------------------#
-Echo  *             Build and flash              *            Збірка і прошивання          *
-Echo  *  Build and flash - Esp8266_160         7 *  Зібрати і прошити - Esp8266 на 160МГц  *
-Echo  *  Build and flash - Esp8266@80          8 *  Зібрати і прошити - Esp8266 на 80МГц   *
-Echo  *  Build and flash - Esp32               9 *  Зібрати і прошити - Esp32              *
+Echo  *             Build and flash              *            Г‡ГЎВіГ°ГЄГ  Ві ГЇГ°Г®ГёГЁГўГ Г­Г­Гї          *
+Echo  *  Build and flash - Esp8266_160         7 *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ - Esp8266 Г­Г  160ГЊГѓГ¶  *
+Echo  *  Build and flash - Esp8266@80          8 *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ - Esp8266 Г­Г  80ГЊГѓГ¶   *
+Echo  *  Build and flash - Esp32               9 *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ - Esp32              *
 Echo  #------------------------------------------#-----------------------------------------#
-Echo  *         Build and flash (DEBUG)          *      Збірка і прошивання  (ДЕБАГ)       *
-Echo  *  Build and flash - Esp8266_160        7D *  Зібрати і прошити - Esp8266 на 160МГц  *
-Echo  *  Build and flash - Esp8266@80         8D *  Зібрати і прошити - Esp8266 на 80МГц   *
-Echo  *  Serial port monitor (USB)             D *  Монітор відладки (USB)                 *
+Echo  *         Build and flash (DEBUG)          *      Г‡ГЎВіГ°ГЄГ  Ві ГЇГ°Г®ГёГЁГўГ Г­Г­Гї  (Г„Г…ГЃГЂГѓ)       *
+Echo  *  Build and flash - Esp8266_160        7D *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ - Esp8266 Г­Г  160ГЊГѓГ¶  *
+Echo  *  Build and flash - Esp8266@80         8D *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ - Esp8266 Г­Г  80ГЊГѓГ¶   *
+Echo  *  Serial port monitor (USB)             D *  ГЊГ®Г­ВіГІГ®Г° ГўВіГ¤Г«Г Г¤ГЄГЁ (USB)                 *
 Echo  #------------------------------------------#-----------------------------------------#
-Echo  *  Update FS data from framework         u *  Оновити файли ФС з фреймворка          *
-Echo  *          FS for ESP8266                  *              для ESP8266                *
-Echo  *  Build File System image               b *  Зібрати файлову систему                *
-Echo  *  Build and flash File System           f *  Зібрати і прошити файлову систему      *
-Echo  *            FS for ESP32                  *              для ESP32                  *
-Echo  *  Build File System image              b1 *  Зібрати файлову систему                *
-Echo  *  Build and flash File System          f1 *  Зібрати і прошити файлову систему      *
-Echo  *  HTTP Update - FileSystem             us *  Обновити файлову систему через HTTP    *
+Echo  *  Update FS data from framework         u *  ГЋГ­Г®ГўГЁГІГЁ ГґГ Г©Г«ГЁ Г”Г‘ Г§ ГґГ°ГҐГ©Г¬ГўГ®Г°ГЄГ           *
+Echo  *          FS for ESP8266                  *              Г¤Г«Гї ESP8266                *
+Echo  *  Build File System image               b *  Г‡ВіГЎГ°Г ГІГЁ ГґГ Г©Г«Г®ГўГі Г±ГЁГ±ГІГҐГ¬Гі                *
+Echo  *  Build and flash File System           f *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ ГґГ Г©Г«Г®ГўГі Г±ГЁГ±ГІГҐГ¬Гі      *
+Echo  *            FS for ESP32                  *              Г¤Г«Гї ESP32                  *
+Echo  *  Build File System image              b1 *  Г‡ВіГЎГ°Г ГІГЁ ГґГ Г©Г«Г®ГўГі Г±ГЁГ±ГІГҐГ¬Гі                *
+Echo  *  Build and flash File System          f1 *  Г‡ВіГЎГ°Г ГІГЁ Ві ГЇГ°Г®ГёГЁГІГЁ ГґГ Г©Г«Г®ГўГі Г±ГЁГ±ГІГҐГ¬Гі      *
+Echo  *  HTTP Update - FileSystem             us *  ГЋГЎГ­Г®ГўГЁГІГЁ ГґГ Г©Г«Г®ГўГі Г±ГЁГ±ГІГҐГ¬Гі Г·ГҐГ°ГҐГ§ HTTP    *
 Echo  #------------------------------------------#-----------------------------------------#
-Echo  *  Erase Flash    ESP8266                e *  Стерти Флеш    ESP8266                 *
-Echo  *  Erase Flash    ESP32                 e1 *  Стерти флеш    ESP32                   *
+Echo  *  Erase Flash    ESP8266                e *  Г‘ГІГҐГ°ГІГЁ Г”Г«ГҐГё    ESP8266                 *
+Echo  *  Erase Flash    ESP32                 e1 *  Г‘ГІГҐГ°ГІГЁ ГґГ«ГҐГё    ESP32                   *
 Echo  #------------------------------------------#-----------------------------------------#
-Echo  *  Update libs and PIO Core              g *  Оновити бібліотеки\серидовище PIO Core *
-Echo  *  Clean up temp files .pio              c *  Ввидалити тимчасові файли .pio         *
+Echo  *  Update libs and PIO Core              g *  ГЋГ­Г®ГўГЁГІГЁ ГЎВіГЎГ«ВіГ®ГІГҐГЄГЁ\Г±ГҐГ°ГЁГ¤Г®ГўГЁГ№ГҐ PIO Core *
+Echo  *  Clean up temp files .pio              c *  Г‚ГўГЁГ¤Г Г«ГЁГІГЁ ГІГЁГ¬Г·Г Г±Г®ГўВі ГґГ Г©Г«ГЁ .pio         *
 Echo  *------------------------------------------#-----------------------------------------*
-Echo  *  CMD window                            m *  Відкрити командний рядок CMD           *
+Echo  *  CMD window                            m *  Г‚ВіГ¤ГЄГ°ГЁГІГЁ ГЄГ®Г¬Г Г­Г¤Г­ГЁГ© Г°ГїГ¤Г®ГЄ CMD           *
 Echo  *------------------------------------------#-----------------------------------------*
 Echo.
 Echo.
-Set /p choice="Your choice (Ваш вибір): "
+Set /p choice="Your choice (Г‚Г Гё ГўГЁГЎВіГ°): "
 
 
 if "%choice%"=="1" (
@@ -101,7 +101,7 @@ if "%choice%"=="b" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266_160
 	copy %workdir%\.pio\build\esp8266_160\littlefs.bin %workdir%\out_bin
 )
-if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs--environment esp8266_160)
+if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs --environment esp8266_160)
 if "%choice%"=="e" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266_160)
 if "%choice%"=="b1" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp32
