@@ -1,64 +1,58 @@
 color 0A
-setlocal
+setlocal enabledelayedexpansion
 set workdir=%~dp0
 echo off
 if exist "%USERPROFILE%\Python\python.exe" (
 	set PYTHONHOME=%USERPROFILE%\Python
 	set PYTHONPATH=%USERPROFILE%\Python
+	"%USERPROFILE%\Python\python.exe" builder_translate.py en_EN.lang
 )
 PATH=%PATH%;%workdir%;%USERPROFILE%\.platformio\penv\Scripts;%PYTHONPATH%;;%ProgramFiles%\Git
-@chcp 1251>nul
+@chcp 65001>nul
 mode con: cols=88 lines=45
 cls 
 
 if not exist "%workdir%\out_bin" (mkdir %workdir%\out_bin)
 
 
-:m1
+set "counter=0"
+set "selection=-1"
 
-Echo  *------------------------------------------*-----------------------------------------* 
-Echo  *  Switch/update - MASTER branch         1 *  Переключити\оновити- гілка MASTER      *
-Echo  *  Switch/update - DEV branch            2 *  Переключити\оновити- гілка DEV         *
-Echo  #------------------------------------------#-----------------------------------------# 
-echo  *  Reset changes in local repo!          3 *  Відмінити зміни в репозиторії на ПК!   *
-Echo  *  WARNING! This will revert all changes!  *  УВАГА! Це відмінить всі зміни          *
-Echo  #------------------------------------------#-----------------------------------------# 
-Echo  *                Build only                *              Тільки збірка              *
-Echo  *  Build - Esp8266 160MHz                4 *  Зібрати для Esp8266 на 160МГц          *
-Echo  *  Build - Esp8266 80MHz                 5 *  Зібрати для Esp8266 на 80МГц           *
-Echo  *  Build - Esp32                         6 *  Зібрати для Esp32                      *
-Echo  *  HTTP Update - Firmware               uf *  Обновити прошивку через HTTP           *
-Echo  #------------------------------------------#-----------------------------------------#
-Echo  *             Build and flash              *            Збірка і прошивання          *
-Echo  *  Build and flash - Esp8266_160         7 *  Зібрати і прошити - Esp8266 на 160МГц  *
-Echo  *  Build and flash - Esp8266@80          8 *  Зібрати і прошити - Esp8266 на 80МГц   *
-Echo  *  Build and flash - Esp32               9 *  Зібрати і прошити - Esp32              *
-Echo  #------------------------------------------#-----------------------------------------#
-Echo  *         Build and flash (DEBUG)          *      Збірка і прошивання  (ДЕБАГ)       *
-Echo  *  Build and flash - Esp8266_160        7D *  Зібрати і прошити - Esp8266 на 160МГц  *
-Echo  *  Build and flash - Esp8266@80         8D *  Зібрати і прошити - Esp8266 на 80МГц   *
-Echo  *  Serial port monitor (USB)             D *  Монітор відладки (USB)                 *
-Echo  #------------------------------------------#-----------------------------------------#
-Echo  *  Update FS data from framework         u *  Оновити файли ФС з фреймворка          *
-Echo  *          FS for ESP8266                  *              для ESP8266                *
-Echo  *  Build File System image               b *  Зібрати файлову систему                *
-Echo  *  Build and flash File System           f *  Зібрати і прошити файлову систему      *
-Echo  *            FS for ESP32                  *              для ESP32                  *
-Echo  *  Build File System image              b1 *  Зібрати файлову систему                *
-Echo  *  Build and flash File System          f1 *  Зібрати і прошити файлову систему      *
-Echo  *  HTTP Update - FileSystem             us *  Обновити файлову систему через HTTP    *
-Echo  #------------------------------------------#-----------------------------------------#
-Echo  *  Erase Flash    ESP8266                e *  Стерти Флеш    ESP8266                 *
-Echo  *  Erase Flash    ESP32                 e1 *  Стерти флеш    ESP32                   *
-Echo  #------------------------------------------#-----------------------------------------#
-Echo  *  Update libs and PIO Core              g *  Оновити бібліотеки\серидовище PIO Core *
-Echo  *  Clean up temp files .pio              c *  Ввидалити тимчасові файли .pio         *
-Echo  *------------------------------------------#-----------------------------------------*
-Echo  *  CMD window                            m *  Відкрити командний рядок CMD           *
-Echo  *------------------------------------------#-----------------------------------------*
-Echo.
-Echo.
-Set /p choice="Your choice (Ваш вибір): "
+:menu
+cls
+
+set "fileCount=0"
+for %%f in (*.lang) do (
+    set /a "fileCount+=1"
+    set "fileName=%%~nf"
+    echo !fileCount!. !fileName!
+)
+
+if %fileCount% equ 0 (
+    echo There are no files with the extension .lang
+    pause
+    exit
+)
+
+choice /c 1234567890 /n /m "Choice your language: "
+set "key=%errorlevel%"
+
+if %key% gtr %fileCount% goto menu
+
+set "selectedFile="
+set "fileCount=0"
+for %%f in (*.lang) do (
+    set /a "fileCount+=1"
+    if %key% equ !fileCount! set "selectedFile=%%~nf"
+)
+
+
+:m1
+cls
+type !selectedFile!.lang
+Echo .
+Echo .
+Set /p choice="Your choice (Р’Р°С€ РІРёР±С–СЂ): "
 
 
 if "%choice%"=="1" (
@@ -80,10 +74,10 @@ if "%choice%"=="6" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --environment esp32
 	copy %workdir%\.pio\build\esp32\firmware.bin %workdir%\out_bin
 )
-if "%choice%"=="uf" (
+if "%choice%"=="u1" (
 	start %workdir%\Update_Firmware.bat
 )
-if "%choice%"=="us" (
+if "%choice%"=="u2" (
 	start %workdir%\Update_FileSystem.bat
 )
 if "%choice%"=="7" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target upload --environment esp8266_160)
@@ -97,12 +91,12 @@ if "%choice%"=="u" (
 	start respack.cmd
 	cd %workdir%
 )
-if "%choice%"=="b" (
+if "%choice%"=="b0" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp8266_160
 	copy %workdir%\.pio\build\esp8266_160\littlefs.bin %workdir%\out_bin
 )
-if "%choice%"=="f" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs--environment esp8266_160)
-if "%choice%"=="e" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266_160)
+if "%choice%"=="f0" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target uploadfs--environment esp8266_160)
+if "%choice%"=="e0" ("%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target erase --environment esp8266_160)
 if "%choice%"=="b1" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" run --target buildfs --environment esp32
 	copy %workdir%\.pio\build\esp32\littlefs.bin %workdir%\out_bin
@@ -118,7 +112,7 @@ if "%choice%"=="g" (
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" update
 	"%USERPROFILE%\.platformio\penv\Scripts\pio.exe" pkg update
 )
-if "%choice%"=="m" (start cmd)
+if "%choice%"=="w" (start cmd)
 
 Echo.
 Echo.

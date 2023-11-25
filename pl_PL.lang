@@ -1,0 +1,40 @@
+-----------------------------------------
+   1: Przełączenie/aktualizacja - gałąź MASTER
+   2: Przełącznik/aktualizacja - oddział DEV
+  #----------------------------------------------------------------------
+   3: Zresetuj zmiany w lokalnym repozytorium!
+   OSTRZEŻENIE! Spowoduje to cofnięcie wszystkich zmian!
+  #----------------------------------------------------------------------
+                  Tylko buduj
+   4: Kompilacja - Esp8266 160 MHz
+   5: Kompilacja – Esp8266 80 MHz
+   6: Kompilacja - Esp32
+   u1: Aktualizacja HTTP — oprogramowanie sprzętowe
+  #----------------------------------------------------------------------
+               Kompiluj i flashuj
+   7: Kompiluj i flashuj - Esp8266 160 MHz
+   8: Kompiluj i flashuj - Esp8266 80 MHz
+   9: Kompiluj i flashuj - Esp32
+  #----------------------------------------------------------------------
+           Kompiluj i flashuj (DEBUG)
+   7D: Kompilacja i flashowanie - Esp8266 160 MHz
+   8D: Kompilacja i flashowanie - Esp8266 80 MHz
+   D: Monitor portu szeregowego USB
+  #----------------------------------------------------------------------
+   u: Zaktualizuj dane FS z repozytorium
+            FS dla ESP8266
+   b0: Zbuduj obraz systemu plików
+   f0: Kompiluj i flashuj system plików
+              FS dla ESP32
+   b1: Zbuduj obraz systemu plików
+   f1: Zbuduj i flashuj system plików
+   u2: Aktualizacja HTTP - System plików
+  #----------------------------------------------------------------------
+   e0: Usuń Flash ESP8266
+   e1: Usuń Flash ESP32
+  #----------------------------------------------------------------------
+   g: Zaktualizuj biblioteki i rdzeń Platformio
+   c: Wyczyść pliki tymczasowe .pio
+  -----------------------------------------
+   w: Okno CMD
+  -----------------------------------------

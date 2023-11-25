@@ -1,0 +1,40 @@
+  -----------------------------------------
+   1: Switch/update - MASTER branch
+   2: Switch/update - DEV branch
+  #-----------------------------------------
+   3:Reset changes in local repo!
+   WARNING! This will revert all changes!
+  #-----------------------------------------
+                  Build only               
+   4: Build - Esp8266 160MHz
+   5: Build - Esp8266 80MHz
+   6: Build - Esp32
+   u1: HTTP Update - Firmware
+  #-----------------------------------------
+               Build and flash
+   7: Build and flash - Esp8266 160MHz
+   8: Build and flash - Esp8266 80MHz
+   9: Build and flash - Esp32
+  #-----------------------------------------
+           Build and flash (DEBUG)
+   7D: Build and flash - Esp8266 160MHz
+   8D: Build and flash - Esp8266 80MHz
+   D: Serial port monitor USB
+  #-----------------------------------------
+   u: Update FS data from repo        
+            FS for ESP8266                 
+   b0: Build File System image
+   f0: Build and flash File System
+              FS for ESP32
+   b1: Build File System image
+   f1: Build and flash File System
+   u2: HTTP Update - FileSystem
+  #-----------------------------------------
+   e0: Erase Flash    ESP8266
+   e1: Erase Flash    ESP32
+  #-----------------------------------------
+   g: Update libs and Platformio core
+   c: Clean up temp files .pio
+  -----------------------------------------
+   w: CMD window
+  -----------------------------------------

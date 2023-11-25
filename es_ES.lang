@@ -1,0 +1,40 @@
+-----------------------------------------
+   1: Cambiar/actualizar - rama MASTER
+   2: Cambiar/actualizar - rama DEV
+  #-----------------------------------------
+   3: ¡Restablecer cambios en el repositorio local!
+   ¡ADVERTENCIA! ¡Esto revertirá todos los cambios!
+  #-----------------------------------------
+                  Sólo construir
+   4: Construcción - Esp8266 160MHz
+   5: Construir - Esp8266 80MHz
+   6: Construir - Esp32
+   u1: Actualización HTTP - Firmware
+  #-----------------------------------------
+               Construir y flashear
+   7: Construir y flashear - Esp8266 160MHz
+   8: Construir y flashear - Esp8266 80MHz
+   9: Construir y flashear - Esp32
+  #-----------------------------------------
+           Construir y flashear (DEBUG)
+   7D: Construir y flashear - Esp8266 160MHz
+   8D: Construir y flashear - Esp8266 80MHz
+   D: monitor de puerto serie USB
+  #-----------------------------------------
+   u: Actualizar datos de FS desde el repositorio
+            FS para ESP8266
+   b0: Crear imagen del sistema de archivos
+   f0: compilar y actualizar el sistema de archivos
+              FS para ESP32
+   b1: Crear imagen del sistema de archivos
+   f1: compilar y actualizar el sistema de archivos
+   u2: Actualización HTTP - Sistema de archivos
+  #-----------------------------------------
+   e0: Borrar Flash ESP8266
+   e1: Borrar Flash ESP32
+  #-----------------------------------------
+   g: Actualizar bibliotecas y núcleo de Platformio
+   c: Limpiar archivos temporales .pio
+  -----------------------------------------
+   w: ventana CMD
+  -----------------------------------------
